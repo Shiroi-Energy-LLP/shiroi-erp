@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Oswald:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Oswald", sans-serif;
+  --font-brand: "Rajdhani", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-shiroi-green: #00B050;
+  --color-shiroi-green-dark: #007A38;
+  --color-shiroi-green-forest: #004D22;
+  --color-shiroi-green-night: #001F0D;
+  --color-solar-yellow: #FFC300;
+  --color-solar-amber: #FACB01;
+  --color-lime: #9ECC3B;
+  --color-cyan: #00BFD8;
+  --color-steel: #4F81BD;
+
+  --color-n900: #0C1A0E;
+  --color-n800: #1C2F1F;
+  --color-n700: #2E4A32;
+  --color-n600: #456848;
+  --color-n500: #668B6A;
+  --color-n400: #92AF95;
+  --color-n300: #BDD1BF;
+  --color-n200: #DCE9DD;
+  --color-n100: #EDF5EE;
+  --color-n050: #F6FAF6;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --shadow-sm: 0 1px 4px rgba(0, 60, 20, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 60, 20, 0.12);
+  --shadow-lg: 0 8px 24px rgba(0, 60, 20, 0.16);
+  --shadow-xl: 0 16px 40px rgba(0, 60, 20, 0.20);
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-n050 text-n900;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display uppercase tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-shiroi-green text-white font-semibold rounded-sm transition-all hover:bg-shiroi-green-dark active:scale-95;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 border-2 border-shiroi-green text-shiroi-green font-semibold rounded-sm transition-all hover:bg-n100 active:scale-95;
+  }
+  .btn-solar {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-linear-to-br from-solar-yellow via-solar-yellow to-solar-amber text-n900 font-semibold rounded-sm transition-all hover:brightness-110 active:scale-95;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 border-2 border-n200 text-n600 font-semibold rounded-sm transition-all hover:bg-n100 active:scale-95;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-sm transition-all hover:bg-red-700 active:scale-95;
+  }
+
+  .gradient-hero {
+    @apply bg-linear-to-br from-shiroi-green-night via-shiroi-green-forest to-shiroi-green-dark;
+  }
+  .gradient-solar {
+    @apply bg-linear-to-br from-[#FFD700] via-solar-yellow to-solar-amber;
+  }
+  .gradient-forest {
+    @apply bg-linear-to-br from-lime via-shiroi-green to-shiroi-green-dark;
+  }
+  .gradient-energy {
+    @apply bg-linear-to-br from-cyan via-steel to-[#1E3A5F];
+  }
+}

@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* V2 Design System — desaturated warm-gray neutrals */
+    --background: 220 20% 98%;
+    --foreground: 227 10% 27%;
+    --card: 0 0% 100%;
+    --card-foreground: 227 10% 27%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 227 10% 27%;
+    --primary: 145 100% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 87% 55%;
+    --secondary-foreground: 228 16% 8%;
+    --muted: 216 19% 96%;
+    --muted-foreground: 223 8% 52%;
+    --accent: 145 100% 35%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 14% 89%;
+    --input: 220 14% 89%;
+    --ring: 145 100% 35%;
+    --radius: 0.5rem;
+
+    /* V2 status tokens */
+    --success-bg: #ECFDF5;
+    --success-text: #065F46;
+    --success-border: #A7F3D0;
+    --warning-bg: #FFFBEB;
+    --warning-text: #92400E;
+    --warning-border: #FDE68A;
+    --error-bg: #FEF2F2;
+    --error-text: #991B1B;
+    --error-border: #FECACA;
+    --info-bg: #EFF6FF;
+    --info-text: #1E40AF;
+    --info-border: #BFDBFE;
+    --progress-bg: #FFF7ED;
+    --progress-text: #9A3412;
+    --progress-border: #FED7AA;
+    --neutral-status-bg: #F3F4F6;
+    --neutral-status-text: #4B5563;
+    --neutral-status-border: #D1D5DB;
+
+    /* V2 shadows */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -1px rgba(0,0,0,.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.07), 0 4px 6px -2px rgba(0,0,0,.03);
+  }
+
+  .dark {
+    --background: 228 16% 8%;
+    --foreground: 222 10% 77%;
+    --card: 222 15% 12%;
+    --card-foreground: 222 10% 77%;
+    --popover: 222 15% 12%;
+    --popover-foreground: 222 10% 77%;
+    --primary: 145 100% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 87% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 225 12% 20%;
+    --muted-foreground: 223 8% 52%;
+    --accent: 145 100% 35%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 225 12% 20%;
+    --input: 225 12% 20%;
+    --ring: 145 100% 35%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

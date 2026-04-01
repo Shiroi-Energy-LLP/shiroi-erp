@@ -1,0 +1,5 @@
+{
+  "name": "Shiroi Solar Project Management",
+  "description": "Comprehensive dashboard for solar project lifecycle management, including site surveys, BOQ, execution, and AMC tracking.",
+  "requestFramePermissions": ["geolocation"]
+}

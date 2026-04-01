@@ -10452,7 +10452,9 @@ export type Database = {
         | "founder"
         | "hr_manager"
         | "sales_engineer"
+        | "designer"
         | "project_manager"
+        | "purchase_officer"
         | "site_supervisor"
         | "om_technician"
         | "finance"
@@ -10669,7 +10671,9 @@ export const Constants = {
         "founder",
         "hr_manager",
         "sales_engineer",
+        "designer",
         "project_manager",
+        "purchase_officer",
         "site_supervisor",
         "om_technician",
         "finance",

@@ -7,12 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@repo/ui": "workspace:*",
-    "@repo/types": "workspace:*",
     "@repo/supabase": "workspace:*",
+    "@repo/types": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "@sentry/nextjs": "^10.46.0",
+    "decimal.js": "^10.6.0",
+    "lucide-react": "^1.7.0",
     "next": "14.2.29",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
@@ -23,7 +27,12 @@
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "autoprefixer": "^10.4.27",
     "eslint": "^9.39.1",
-    "typescript": "5.9.2"
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.19",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "5.9.2",
+    "vitest": "^4.1.2"
   }
 }

@@ -3,12 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    "./*": "./src/*.tsx"
+    ".": "./src/index.ts",
+    "./*": "./src/*.tsx",
+    "./index": "./src/index.ts",
+    "./formatters": "./src/formatters.ts",
+    "./globals.css": "./src/globals.css",
+    "./lib/utils": "./src/lib/utils.ts",
+    "./tailwind.config": "./tailwind.config.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
@@ -17,10 +24,18 @@
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "eslint": "^9.39.1",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^4.1.2"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.7.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^3.4.19",
+    "tailwindcss-animate": "^1.0.7"
   }
 }
