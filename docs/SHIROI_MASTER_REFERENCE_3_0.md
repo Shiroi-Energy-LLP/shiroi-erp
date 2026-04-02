@@ -24,17 +24,18 @@
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned sidebar (10 roles), topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper, founder role switcher |
-| Sentry | ✅ Configured | Client, server, edge configs + global error boundary (needs DSN in .env.local) |
+| Sentry | ✅ Live | @sentry/nextjs v10, client+server+edge+onRequestError, DSN configured |
 | Migration scripts | ✅ Complete | HubSpot, actuals, commissioning — all with --dry-run |
 | RLS recursion fix | ✅ Applied | get_my_role() + get_my_employee_id() — migration 008a |
 | New roles migration | ✅ Written | migration 009 — designer + purchase_officer roles + RLS (paste into SQL Editor) |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
-| **Deployment** | 🔜 **NEXT** | **Run migration 009, regenerate types, set up Sentry, begin data migration** |
+| **Deployment** | 🔜 **NEXT** | **Begin data migration, Vercel deployment, git branching** |
 
 **Coding workflow (locked):**
 Claude Code writes code directly in the repo → Vivek reviews every file → git commit and push.
 SQL migrations: pasted into Supabase SQL Editor (dev first, then prod). Every SQL change documented in migrations immediately.
+**After completing any task or milestone**, Claude Code must immediately update the status tables and next-steps lists in both `CLAUDE.md` and this file. This is automatic — do not wait to be asked.
 
 **TypeScript type generation command (run after every schema change):**
 ```bash
@@ -956,12 +957,27 @@ CREATE POLICY "customer_own_plant_only" ON plants FOR SELECT USING (
 
 ## 14. Observability & Monitoring
 
-### Sentry — install on day one
-```bash
-npm install @sentry/nextjs
-npx expo install @sentry/react-native
-```
-Every unhandled exception → Sentry → email + WhatsApp alert to Vivek.
+### Sentry — LIVE (April 2, 2026)
+
+**Package:** `@sentry/nextjs` v10.46.0 (installed in apps/erp)
+
+**Configuration files:**
+- `apps/erp/sentry.client.config.ts` — browser SDK, 10% traces, 100% error replays
+- `apps/erp/sentry.server.config.ts` — Node.js server SDK, 10% traces
+- `apps/erp/sentry.edge.config.ts` — Edge runtime SDK, 10% traces
+- `apps/erp/src/instrumentation.ts` — registers server/edge configs + `onRequestError` capture
+- `apps/erp/src/app/global-error.tsx` — React error boundary, reports to Sentry
+- `apps/erp/next.config.js` — `withSentryConfig` wrapper, source maps, `/monitoring` tunnel route
+
+**Env vars (all in .env.local):**
+- `NEXT_PUBLIC_SENTRY_DSN` — client-side (must have NEXT_PUBLIC_ prefix for browser)
+- `SENTRY_DSN` — server-side / webpack build plugin
+- `SENTRY_ORG` — org slug for source map uploads
+- `SENTRY_PROJECT` — project slug
+
+**Behaviour:** SDK enabled in production only. Every unhandled exception → Sentry → email alert to Vivek.
+
+**Mobile (future):** `npx expo install @sentry/react-native` when React Native app is built.
 
 ### system_logs table
 Critical edge function operations logged here after completion. Never log: salary, Aadhar, bank account, PAN.
@@ -1112,7 +1128,7 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 | Git branching | Deferred until first screen ready. Will use: main / staging / feature branches. | Mar 2026 |
 | Dev machine | Windows, Surface Pro. Git Bash inside Windows Terminal. | Mar 2026 |
 | Node version | Node 24 (installed directly, not via nvm). | Mar 2026 |
-| Error logging | Named operations, verbose try/catch, Sentry, system_logs table for critical functions. | Mar 2026 |
+| Error logging | Named operations, verbose try/catch, Sentry (live, @sentry/nextjs v10), system_logs table for critical functions. | Apr 2026 |
 | HubSpot | Full cutover once lead module stable. One-time data import on cutover day. | Mar 2026 |
 | UI/UX tooling | No Figma. Claude generates specs + components directly. v0.dev for complex visuals. | Mar 2026 |
 | Design system | Shiroi Brand Guide V6 as foundation. packages/ui holds tokens, shadcn/ui overrides, Tailwind config. | Mar 2026 |

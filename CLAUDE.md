@@ -34,17 +34,16 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned role-based sidebar, topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper, 14 placeholder pages |
-| Sentry | ⏳ Config ready | Code written, needs Sentry account + DSN in .env.local |
+| Sentry | ✅ Live | @sentry/nextjs v10, client+server+edge+onRequestError, DSN in .env.local |
 | Data migration | ⏳ Scripts ready | HubSpot, actuals, commissioning scripts — DB is empty, needs CSV imports |
-| **Migration 009** | 🔜 **NEXT** | **Paste into Supabase SQL Editor to add designer + purchase_officer roles** |
+| Migration 009 | ✅ Applied (dev) | designer + purchase_officer roles + RLS — prod pending |
 | Vercel | ⏳ Deferred | Config done, connect when ready to deploy |
 | Git branching | ⏳ Deferred | Set up when first screen ready to deploy |
 
 **Immediate next steps:**
-1. Run migration 009 in Supabase SQL Editor (dev first, then prod)
-2. Regenerate TypeScript types after migration
-3. Set up Sentry account + add DSN
-4. Begin data migration (HubSpot CSV export first)
+1. Begin data migration (HubSpot CSV export first)
+2. Vercel deployment + domain setup
+3. Git branching (main / staging / feature)
 
 ---
 
@@ -113,6 +112,12 @@ SUPABASE_SECRET_KEY=sb_secret_...                          # server/edge ONLY
 PROD_SUPABASE_URL=https://kfkydkwycgijvexqiysc.supabase.co
 PROD_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 PROD_SUPABASE_SECRET_KEY=sb_secret_...
+
+# SENTRY
+NEXT_PUBLIC_SENTRY_DSN=           # client-side — must have NEXT_PUBLIC_ prefix
+SENTRY_DSN=                       # server-side / build plugin
+SENTRY_ORG=                       # Sentry org slug
+SENTRY_PROJECT=                   # Sentry project slug
 
 # INTEGRATIONS
 ANTHROPIC_API_KEY=
@@ -361,6 +366,12 @@ Schema change: regenerate types immediately
 
 No autonomous commits to main. No skipping review. No "I'll clean this up later."
 
+**After completing any task or milestone**, immediately update:
+1. The **CURRENT STATE** table in this file (`CLAUDE.md`) — mark items as ✅ and update details
+2. The **status table + relevant sections** in `docs/SHIROI_MASTER_REFERENCE_3_0.md`
+3. Remove completed items from "Immediate next steps" lists in both files
+This is automatic — do not wait for Vivek to ask.
+
 ---
 
 ## KEY INTEGRATIONS
@@ -407,4 +418,4 @@ No autonomous commits to main. No skipping review. No "I'll clean this up later.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 1, 2026 — Phase 2A complete, V2 design system applied*
+*Last updated: April 2, 2026 — Sentry live, Phase 2A complete, V2 design system applied*
