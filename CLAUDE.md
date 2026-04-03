@@ -28,7 +28,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
 | Database schema | ✅ Complete | 135 tables, 91 triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — never edit by hand |
-| Migrations | ✅ Committed | supabase/migrations/ — 27 files (001 through 014) |
+| Migrations | ✅ Committed | supabase/migrations/ — 28 files (001 through 015) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, DM Sans headings, warm-gray neutrals, 9 shadcn components |
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned role-based sidebar, topbar with role switcher |
@@ -43,14 +43,15 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | File upload UI | ✅ Complete | Upload/download files on proposal detail page via Supabase Storage |
 | Completion tracking | ✅ Complete | Weighted milestone completion %, Decimal.js calc, progress bars on projects |
 | Proposal engine spec | ✅ Designed | Budgetary quotes, price discipline, branded PDFs, n8n automations — spec approved |
-| Proposal engine code | ✅ Implemented | Quick Quote modal, BOM generator (9 tests), React-PDF budgetary template, price override modal, PDF API route, notifications CRUD |
+| Proposal engine code | ✅ Implemented | Quick Quote, BOM generator (9 tests), budgetary + detailed PDF (10 pages), savings page, price override modal, PDF API route, notifications CRUD |
 | Migration 014 | ✅ Applied (dev) | is_budgetary, tariff_escalation_pct, notifications table — prod pending |
+| Migration 015 | ✅ Applied (dev) | Price book seeded: 35 items, 14 correction factors — prod pending |
 | Vercel | ⏳ Deferred | Config done, connect when ready to deploy |
 | Git branching | ⏳ Deferred | Set up when first screen ready to deploy |
 
 **Immediate next steps:**
-1. Apply migrations 013 + 014 to prod
-2. Seed price book with real Shiroi pricing data (needed for Quick Quote to work)
+1. Apply migrations 013 + 014 + 015 to prod
+2. Set up employee accounts on prod
 3. Set up employee accounts on prod
 4. Vercel deployment + domain setup
 5. Git branching (main / staging / feature)
