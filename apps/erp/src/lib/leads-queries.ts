@@ -11,6 +11,7 @@ export interface LeadFilters {
   source?: Database['public']['Enums']['lead_source'];
   search?: string;
   assignedTo?: string;
+  includeConverted?: boolean;
 }
 
 export async function getLeads(filters: LeadFilters = {}) {
@@ -23,7 +24,12 @@ export async function getLeads(filters: LeadFilters = {}) {
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
-  if (filters.status) query = query.eq('status', filters.status);
+  if (filters.status) {
+    query = query.eq('status', filters.status);
+  } else if (!filters.includeConverted) {
+    // By default, hide migration placeholder leads (converted = already a project)
+    query = query.not('status', 'eq', 'converted');
+  }
   if (filters.source) query = query.eq('source', filters.source);
   if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
   if (filters.search) query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);

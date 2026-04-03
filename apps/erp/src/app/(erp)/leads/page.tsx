@@ -20,17 +20,19 @@ import type { Database } from '@repo/types/database';
 type LeadStatus = Database['public']['Enums']['lead_status'];
 type LeadSource = Database['public']['Enums']['lead_source'];
 
-const STATUS_OPTIONS: { value: LeadStatus; label: string }[] = [
+const STATUS_OPTIONS: { value: LeadStatus | 'converted'; label: string }[] = [
   { value: 'new', label: 'New' },
   { value: 'contacted', label: 'Contacted' },
   { value: 'site_survey_scheduled', label: 'Survey Scheduled' },
   { value: 'site_survey_done', label: 'Survey Done' },
   { value: 'proposal_sent', label: 'Proposal Sent' },
+  { value: 'design_confirmed', label: 'Design Confirmed' },
   { value: 'negotiation', label: 'Negotiation' },
   { value: 'won', label: 'Won' },
   { value: 'lost', label: 'Lost' },
   { value: 'on_hold', label: 'On Hold' },
   { value: 'disqualified', label: 'Disqualified' },
+  { value: 'converted', label: 'Converted (Projects)' },
 ];
 
 const SOURCE_OPTIONS: { value: LeadSource; label: string }[] = [
