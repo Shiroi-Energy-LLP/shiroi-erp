@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { navSectionsForRole, type AppRole } from '@/lib/roles';
 import {
   LayoutDashboard, Users, FileText, HardHat, ShoppingCart,
@@ -21,7 +21,15 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export function Sidebar({ role }: { role: AppRole }) {
   const pathname = usePathname();
-  const sections = navSectionsForRole(role);
+  const searchParams = useSearchParams();
+
+  // When founder uses "view as" role switcher, sidebar should reflect the viewed role
+  const viewAs = searchParams.get('view_as');
+  const effectiveRole = (role === 'founder' && viewAs)
+    ? (viewAs as AppRole)
+    : role;
+
+  const sections = navSectionsForRole(effectiveRole);
 
   return (
     <aside className="w-60 h-full bg-[#111318] flex flex-col border-r border-[rgba(255,255,255,0.06)]">

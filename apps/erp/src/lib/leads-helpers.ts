@@ -7,11 +7,12 @@ const VALID_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
   contacted: ['site_survey_scheduled', 'on_hold', 'disqualified'],
   site_survey_scheduled: ['site_survey_done', 'on_hold', 'disqualified'],
   site_survey_done: ['proposal_sent', 'on_hold', 'disqualified'],
-  proposal_sent: ['negotiation', 'on_hold', 'disqualified'],
+  proposal_sent: ['design_confirmed', 'negotiation', 'on_hold', 'disqualified'],
+  design_confirmed: ['negotiation', 'won', 'lost', 'on_hold', 'disqualified'],
   negotiation: ['won', 'lost', 'on_hold', 'disqualified'],
   won: [],
   lost: [],
-  on_hold: ['new', 'contacted', 'site_survey_scheduled', 'site_survey_done', 'proposal_sent', 'negotiation', 'disqualified'],
+  on_hold: ['new', 'contacted', 'site_survey_scheduled', 'site_survey_done', 'proposal_sent', 'design_confirmed', 'negotiation', 'disqualified'],
   disqualified: [],
 };
 
