@@ -26,35 +26,31 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Next.js ERP app | ✅ Running | apps/erp on localhost:3000 |
 | Supabase dev | ✅ Live | actqtzoxjilqnldnacqz.supabase.co |
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
-| Database schema | ✅ Complete | 135 tables, 91 triggers, RLS on ALL tables |
+| Database schema | ✅ Complete | 134 tables, 91 triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — never edit by hand |
-| Migrations | ✅ Committed | supabase/migrations/ — 28 files (001 through 015) |
+| Migrations | ✅ Committed | supabase/migrations/ — 28+ files (001 through 012) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, DM Sans headings, warm-gray neutrals, 9 shadcn components |
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned role-based sidebar, topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
-| Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper, 14 placeholder pages |
-| Phase 2C Data Migration | ✅ Complete | HubSpot leads, Drive proposals (1,354 folders across 4 years), file uploads to Supabase Storage |
+| Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper |
+| Phase 2B All Screens | ✅ Complete | 53 routes total — all sidebar links are real data-driven pages, 0 placeholders |
 | Sentry | ✅ Live | @sentry/nextjs v10, client+server+edge+onRequestError, DSN in .env.local |
-| Data migration | ✅ Complete (dev) | 1,140 leads, 339 proposals, 314 projects. All Drive files in proposal-files bucket |
-| Migration 009 | ✅ Applied (dev) | designer + purchase_officer roles + RLS — prod pending |
-| Migration 013 | ✅ Applied (dev) | proposal-files storage bucket — prod pending |
-| Proposal wizard | ✅ Functional | 4-step wizard with server action, saves to proposals + BOM + payment schedule |
-| File upload UI | ✅ Complete | Upload/download files on proposal detail page via Supabase Storage |
-| Completion tracking | ✅ Complete | Weighted milestone completion %, Decimal.js calc, progress bars on projects |
-| Proposal engine spec | ✅ Designed | Budgetary quotes, price discipline, branded PDFs, n8n automations — spec approved |
-| Proposal engine code | ✅ Implemented | Quick Quote, BOM generator (9 tests), budgetary + detailed PDF (10 pages), savings page, price override modal, PDF API route, notifications CRUD |
-| Migration 014 | ✅ Applied (dev) | is_budgetary, tariff_escalation_pct, notifications table — prod pending |
-| Migration 015 | ✅ Applied (dev) | Price book seeded: 35 items, 14 correction factors — prod pending |
-| Vercel | ⏳ Deferred | Config done, connect when ready to deploy |
-| Git branching | ⏳ Deferred | Set up when first screen ready to deploy |
+| Migration 010 | ✅ Applied (dev) | lead_status 'converted' + project_site_expenses + project-files bucket |
+| Data migration | ✅ Complete | 108 vendors, ~160 projects, 850 POs (2,348 items), 1,164 expenses, 916 files from Google Drive |
+| HubSpot cutover | ✅ Complete (V2) | 1,115 leads, 314 projects, 314 proposals, 30 payments migrated. Correct FY project numbers (2024-25: 50, 2025-26: 264). 0 unmatched payments. 6 new projects (Maharajan, Subramaniam Nithya, Rakshas Enterprises, Radiance Splendour, GRN Rajagopal, Navins Hanging Garden). HubSpot stages mapped (Appointment Scheduled → site_survey_scheduled, Design Confirmation → design_confirmed). Payment stages: Advance, Supply, Installation, Commissioning, Retention. |
+| Migration 011 | ✅ Applied (dev) | `design_confirmed` added to `lead_status` enum after `proposal_sent` |
+| Migration 012 | ✅ Applied (dev) | `lead_status_history.changed_by` now nullable for system/migration operations |
+| Google Drive migration | 🔜 Step 41–42 | 1,200 folders with project sheets, proposals, photos — next priority |
+| Budgetary quote engine | 🔜 Step 44 | Lead → instant rough quote from price book rates |
+| Design-to-BOM + detailed quote | 🔜 Steps 45–47 | Designer BOM → detailed proposal → branded PDF template |
+| Completion % tracking | 🔜 Step 48 | Objective model from sub-components (not supervisor estimate) |
+| Daily file sync | 🔜 Step 49 | n8n cron (Drive → Storage) + in-ERP upload UI |
+| Vercel + domain | 🔜 Steps 56–57 | erp.shiroienergy.com on GoDaddy → Vercel CNAME |
+| Prod deployment | 🔜 Steps 52–58 | Clean schema on prod, employee accounts, verified data, go-live |
 
-**Immediate next steps:**
-1. Apply migrations 013 + 014 + 015 to prod
-2. Set up employee accounts on prod
-3. Set up employee accounts on prod
-4. Vercel deployment + domain setup
-5. Git branching (main / staging / feature)
+**Current phase: 2C — Data Completion + Automation + Deployment (Steps 40–58)**
+Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
 ---
 
@@ -75,7 +71,7 @@ shiroi-erp/                        ← root, pnpm workspace
 │   ├── eslint-config/
 │   └── typescript-config/
 ├── supabase/
-│   └── migrations/                ← 25 SQL files — source of truth for schema
+│   └── migrations/                ← 28+ SQL files (001–012) — source of truth for schema
 ├── docs/                          ← Reference documents (read-only, do not edit)
 │   ├── SHIROI_MASTER_REFERENCE_3_0.md
 │   ├── Shiroi_ERP_Design_System.md  ← V2 design system (merged, single source of truth)
@@ -279,7 +275,7 @@ Never log: `bank_account_number`, `aadhar_number`, `pan_number`, `gross_monthly`
 ## DATABASE — KEY FACTS
 
 - **134 tables**, 91 triggers, RLS on every table (verified March 29, 2026)
-- **All migrations committed** to `supabase/migrations/` — 23 files (001 through 007f)
+- **All migrations committed** to `supabase/migrations/` — 28+ files (001 through 012)
 - **Run migrations** by pasting SQL into Supabase SQL Editor dashboard — no CLI needed
 - **After every schema change**, regenerate types:
   ```bash
@@ -352,6 +348,22 @@ Format: `SHIROI/INV/2025-26/0042`
 - ✅ KPI cards + My Tasks widget on every dashboard
 - ✅ 142 tests passing, 0 type errors
 
+### All ERP screens — COMPLETE (Phase 2B, April 2 2026)
+
+53 routes total, 0 type errors, all data-driven with Supabase queries:
+- ✅ Procurement: `/procurement` (PO list with filters), `/deliveries`, `/vendor-payments`, `/msme-compliance`
+- ✅ Vendors: `/vendors` (full vendor list with search/filter)
+- ✅ Tasks: `/tasks` (all tasks across entities), `/my-tasks` (personal)
+- ✅ Daily Reports: `/daily-reports` (all), `/my-reports` (personal)
+- ✅ Finance: `/invoices`, `/payments`, `/profitability`, `/cash`
+- ✅ QC: `/qc-gates` (gate inspections)
+- ✅ HR: `/hr/employees`, `/hr/leave`, `/hr/training`, `/hr/certifications`, `/hr/payroll`
+- ✅ O&M: `/om/visits`, `/om/tickets`, `/om/amc`
+- ✅ Sales: `/leads`, `/proposals`, `/marketing`, `/marketing/campaigns`
+- ✅ Liaison: `/liaison`, `/liaison/net-metering`
+- ✅ Design: `/design` (design queue from leads), `/design/[leadId]`
+- ✅ Reference: `/price-book`
+
 ### Field friction standards (mobile screens)
 
 - 90-second rule: any mobile form completable in under 90 seconds
@@ -394,7 +406,7 @@ This is automatic — do not wait for Vivek to ask.
 | Claude API | `claude-sonnet-4-20250514`. Daily report narratives, proposal summaries. Max 500 calls/day. |
 | n8n | Webhooks from Supabase → n8n at `X-N8N-Webhook-Secret` header. Failures → `system_webhook_failures` table. |
 | Zoho Payroll | ERP is master. Monthly CSV export on 25th → Zoho imports. Format in master reference Section 12.5. |
-| HubSpot | Being replaced by this ERP. One-time data import on cutover day. |
+| HubSpot | ✅ Replaced. One-time cutover complete (Apr 3, 2026). Script: `scripts/migrate-hubspot.ts`. |
 | Sungrow / Growatt | Inverter monitoring APIs. Phase 2. Registration in progress (4–8 weeks). |
 | WATI.io | WhatsApp direct send. Phase 2. Registration in progress. |
 
@@ -411,10 +423,6 @@ This is automatic — do not wait for Vivek to ask.
 - **Offline sync pattern:** Mobile writes go to WatermelonDB first. Background sync to Supabase. `sync_status` column on affected tables: `local_only` | `syncing` | `synced` | `sync_failed`. Never lose data.
 - **Financial year boundary:** April 1. Document number sequences reset. `generate_doc_number()` DB function handles this automatically.
 - **MSME 45-day rule:** Vendor payments to MSME suppliers legally due within 45 days of delivery. `vendor_payments` table tracks per-payment dates. Alert on Day 40.
-- **Price book is source of truth for BOM pricing:** Designers can override prices but MUST provide a reason (logged to `proposal_correction_log`, immutable). Override rate >30% per proposal = flagged for founder review. "Bulk deal" reason >5× per month per person = auto-flagged. Weekly override report via n8n.
-- **Budgetary vs Detailed proposals:** `proposals.is_budgetary` boolean distinguishes auto-generated quick quotes from full designer proposals. Both generate branded PDFs. Budgetary quotes upgrade to detailed by editing the auto-generated BOM.
-- **Savings page is segment-adaptive:** Residential gets visual (charts, headlines). Commercial gets numbers-first (financial tables). Auto-selected from lead segment.
-- **PDF generation:** React-PDF server-side. Auto-triggered by n8n when proposal status → 'sent'. Manual "Generate PDF" button also available.
 
 ---
 
@@ -427,11 +435,10 @@ This is automatic — do not wait for Vivek to ask.
 | `docs/Shiroi_ERP_Design_System.md` | Building any UI component — V2.0, single source of truth |
 | `docs/Shiroi_Energy_Brand_Guide_V6.html` | Design tokens, colours, typography |
 | `docs/superpowers/specs/2026-03-30-role-dashboards-design.md` | Phase 2A design spec — all 8 role dashboards |
-| `docs/superpowers/specs/2026-04-03-proposal-engine-design.md` | Proposal engine — budgetary quotes, price discipline, branded PDFs, n8n automations |
 | `supabase/migrations/` | Understanding exact table structure before writing queries |
 | `packages/types/database.ts` | TypeScript types — always import from here |
 
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 3, 2026 — Proposal engine implemented (Steps 44/45/47/49): Quick Quote, BOM generator, React-PDF budgetary template, price override modal, PDF API route, notifications. Migration 014 applied to dev.*
+*Last updated: April 3, 2026 — HubSpot V2 complete (1,115 leads, 314 projects, 30 payments, 0 unmatched), migrations through 012, design_confirmed enum, Phase 2C in progress*

@@ -1,13 +1,13 @@
 # SHIROI ENERGY ERP — MASTER REFERENCE DOCUMENT
-**Version 3.0 | Updated March 30, 2026 | Read before every coding session**
+**Version 3.1 | Updated April 3, 2026 | Read before every coding session**
 
 > This is the single source of truth for the Shiroi Energy ERP project. Every decision made, every design rule, every business rule, every coding standard, and every constraint is captured here. Anyone joining the project — including Claude in a new chat — reads this first before writing a single line of code or SQL.
 
 ---
 
-## CURRENT STATE — READ THIS FIRST (as of April 1, 2026)
+## CURRENT STATE — READ THIS FIRST (as of April 3, 2026)
 
-**Phase 1A + Phase 2A COMPLETE. All core screens + role dashboards built. Next: deployment + data migration.**
+**Phase 1A + 2A + 2B COMPLETE. All 53 screens built. HubSpot + Google Drive migration done. Next: proposal migration + deployment.**
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -18,19 +18,24 @@
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
 | Database schema | ✅ Complete | 134 tables, 91 triggers, RLS on all tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts |
-| Migrations | ✅ Committed | supabase/migrations/ — 25 files (001 through 009) |
+| Migrations | ✅ Committed | supabase/migrations/ — 28 files (001 through 012) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware |
 | Design system | ✅ V2 Complete | packages/ui — V2 design, DM Sans headings, warm-gray neutrals, 9 shadcn components |
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned sidebar (10 roles), topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper, founder role switcher |
+| Phase 2B All Screens | ✅ Complete | 53 routes total — all sidebar links are real data-driven pages, 0 placeholders |
 | Sentry | ✅ Live | @sentry/nextjs v10, client+server+edge+onRequestError, DSN configured |
-| Migration scripts | ✅ Complete | HubSpot, actuals, commissioning — all with --dry-run |
+| Migration 010 | ✅ Applied (dev) | lead_status 'converted' + project_site_expenses + project-files bucket |
+| Migration 011 | ✅ Applied (dev) | lead_status 'design_confirmed' enum value (after proposal_sent) |
+| Migration 012 | ✅ Applied (dev) | lead_status_history.changed_by nullable for system/migration operations |
+| HubSpot migration | ✅ Complete | 1,115 leads, 314 proposals, 314 projects, 30 payments. 0 unmatched payments. |
+| Google Drive migration | ✅ Complete | 108 vendors, ~160 projects, 850 POs (2,348 items), 1,164 expenses, 916 files |
 | RLS recursion fix | ✅ Applied | get_my_role() + get_my_employee_id() — migration 008a |
-| New roles migration | ✅ Written | migration 009 — designer + purchase_officer roles + RLS (paste into SQL Editor) |
+| New roles migration | ✅ Applied (dev) | migration 009 — designer + purchase_officer roles + RLS |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
-| **Deployment** | 🔜 **NEXT** | **Begin data migration, Vercel deployment, git branching** |
+| **Proposal migration** | 🔜 **NEXT** | **1,300 proposals from Google Drive with deduplication, then DB integrity check** |
 
 **Coding workflow (locked):**
 Claude Code writes code directly in the repo → Vivek reviews every file → git commit and push.
@@ -143,7 +148,7 @@ shiroi-erp/                        ← root, pnpm workspace
 │   ├── eslint-config/             ← Shared ESLint rules
 │   └── typescript-config/         ← Shared TS config
 ├── supabase/
-│   └── migrations/                ← ✅ 23 SQL files, all committed to git
+│   └── migrations/                ← ✅ 28 SQL files (001–012), all committed to git
 │       ├── 001_foundation.sql
 │       ├── 002a_leads_core.sql
 │       ├── 002b_leads_extended.sql
@@ -614,6 +619,13 @@ For project tasks, `project_id` FK is also populated for efficient JOIN queries.
 ## 6. Business Rules by Domain
 
 ### 6.1 Leads & CRM
+
+**Lead status flow (`lead_status` enum):**
+```
+new → contacted → site_survey_scheduled → site_survey_done → proposal_sent → design_confirmed → negotiation → won / lost / on_hold / disqualified
+```
+After `won`: lead status changes to `converted` when project is created. Terminal states: `lost`, `disqualified`, `converted`.
+
 - Lead sources: referral, website, builder_tie_up, channel_partner, cold_call, exhibition, social_media, walkin
 - A lead becomes a project ONLY after: proposal accepted AND advance payment received
 - VIP contacts: founder manages personally; system drafts communications, human sends
@@ -806,33 +818,62 @@ Shiroi Brand Guide V6 as foundation. `packages/ui` holds tokens, shadcn/ui overr
 | Projects — full actual vs budgeted | ~100 | **Critical — do first** | Seeds BOM correction factors |
 | Projects — partial data | ~200 | High | Customer portal, O&M baseline |
 | Projects — commissioning data only | ~200 | Medium | Plant records, customer app |
-| HubSpot proposals (deal records) | ~1,800 | High | Historical win rate, pipeline analytics |
+| HubSpot proposals (deal records) | ✅ 1,115 leads migrated | High | Historical win rate, pipeline analytics |
 | Google Drive proposal documents | ~1,800 folders | Low | Archival reference only |
 
 ### Import sequence
 
 ```
 Before go-live:
-  1. HubSpot CSV export → leads + proposals tables
-  2. 100 projects (full actuals) → project_profitability + project_cost_variances
-     Immediately seeds bom_correction_factors with real data
-  3. 500 projects (commissioning data) → plants + customers tables
+  1. ✅ DONE — HubSpot CSV export → 1,115 leads + 314 proposals + 314 projects + 30 payments (V2: 0 unmatched)
+  2. ✅ DONE — Google Drive projects (full actuals) → 108 vendors, ~160 projects, 850 POs, 2,348 items, 1,164 expenses, 916 files
+  3. 🔜 NEXT — 1,300 proposals from Google Drive folders → proposals table + archived PDFs
+  4. 🔜 — Full Drive scan → upload all remaining files to Supabase Storage
 
 First month post-launch:
-  4. Google Drive proposals → archived PDFs in Supabase Storage
-  5. Partial project data (200) → import available columns
+  5. Partial project data reconciliation → cross-check all sources
+  6. Commissioning data → plants + customers tables
 
 Nice to have:
-  6. Full proposal content extraction from Google Drive documents
+  7. Full proposal content extraction from Google Drive documents
 ```
 
 ### Google Drive extraction with Gemini
 Gemini Advanced reads Drive natively → extracts headline data → Google Sheet → export CSV → Claude writes import scripts.
 
-### HubSpot export
-HubSpot → Deals → Actions → Export → All properties → CSV → share here → Claude writes exact mapping to `leads` and `proposals` tables.
+### HubSpot export — ✅ COMPLETE (April 3, 2026)
+Scripts: `scripts/migrate-hubspot.ts` (V1) + `scripts/fix-hubspot-v2.ts` (V2 fixes) — two-phase (deals + payments), idempotent, dry-run support.
 
-**Duplicate phone handling during migration:** The partial unique index on `leads.phone` will block imports of duplicate active leads. Migration script must deduplicate HubSpot records by phone before import.
+**Final stats (after V2 fixes):**
+- **1,115 leads**, 314 proposals, 314 projects, 30 payments
+- Project FY distribution: 2024-25: 50, 2025-26: 264
+- **0 unmatched payments** — all stages properly mapped
+- Three-tier dedup: hubspot_deal_id exact → customer_name+size → customer_name fuzzy (209 records audited, 18 flagged)
+- PV number parsing: strips HTML tags, extracts `PV###/YY-YY`, normalizes FY format (V2 fixed dash format for 329 more)
+- Won deals create full chain: lead (status:won) → proposal (status:approved) → project
+- V2 created 6 new projects (Maharajan, Subramaniam Nithya, Rakshas Enterprises, Radiance Splendour Coimbatore, GRN Rajagopal, Navins Hanging Garden)
+- V2 fixed false-positive dedup matches (RCC/Adroit/Srestha)
+- Data integrity verified: 0 orphaned proposals/projects, all FKs valid
+
+**HubSpot stage → lead_status mapping:**
+| HubSpot Stage | ERP lead_status | Notes |
+|---------------|----------------|-------|
+| To check | `new` | Default/unworked leads |
+| Appointment Scheduled | `site_survey_scheduled` | |
+| Site Visit Completed | `site_survey_done` | |
+| Proposal Sent | `proposal_sent` | |
+| Design Confirmation | `design_confirmed` | New enum value, migration 011 |
+| Negotiation / Final Negotiation | `negotiation` | Both HubSpot stages map to same status |
+| Closed Won | `won` | Creates full lead → proposal → project chain |
+| Closed Lost | `lost` | |
+
+**HubSpot payment stage mapping:**
+| HubSpot Payment Stage | ERP mapping | Notes |
+|----------------------|-------------|-------|
+| Advance | `customer_payments` with `is_advance = true` | |
+| Supply / Installation / Commissioning / Retention | `customer_payments` with `is_advance = false` | Stage name stored in payment notes |
+
+**Duplicate phone handling during migration:** The partial unique index on `leads.phone` will block imports of duplicate active leads. Migration script deduplicated by name+size before import.
 
 ---
 
@@ -1072,6 +1113,35 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 - [x] Step 29 — Cross-role testing: 142 tests passing, 0 type errors, 0 V1 colors remaining
 - [x] V2 Design System applied: DM Sans headings, warm-gray neutrals, all V1 colors purged
 
+**Phase 2B — All Screens + Data Migration — COMPLETE ✅ (April 3, 2026)**
+- [x] Step 30 — Migration 010: lead_status 'converted' enum + project_site_expenses table + project-files storage bucket
+- [x] Step 31 — Google Drive migration script (scripts/migrate-google-drive.ts) — 5-phase pipeline with caching + timeouts
+- [x] Step 32 — Phase 1: 108 vendors migrated from Google Drive project folders
+- [x] Step 33 — Phase 2: ~160 projects migrated (leads → proposals → projects chain)
+- [x] Step 34 — Phase 3: 850 purchase orders with 2,348 line items
+- [x] Step 35 — Phase 4: 1,164 project site expenses
+- [x] Step 36 — Phase 5: 916 files uploaded to Supabase Storage (15 expected failures: DWG format, oversize, transient)
+- [x] Step 37 — All 53 ERP route pages built with real Supabase queries (0 placeholders remaining)
+- [x] Step 38 — 20 type errors fixed across 12 files (wrong column names corrected against database.ts)
+- [x] Step 39 — Full build verified: 53 routes, 0 TypeScript errors
+- [x] Step 40 — Migration 011: `design_confirmed` lead_status enum value for HubSpot stage mapping
+- [x] Step 41 — Migration 012: lead_status_history.changed_by nullable for migration/admin operations
+- [x] Step 42 — HubSpot V2 migration: 1,115 leads, 314 proposals, 314 projects, 30 payments, 0 unmatched
+
+**New screens built in Phase 2B:**
+- Procurement: /procurement, /deliveries, /vendor-payments, /msme-compliance
+- Vendors: /vendors (full vendor list with search/filter)
+- Tasks: /tasks (all tasks), /my-tasks (personal)
+- Daily Reports: /daily-reports (all), /my-reports (personal)
+- Finance: /invoices, /payments, /profitability
+- QC: /qc-gates (gate inspections)
+- HR: /hr/employees, /hr/leave, /hr/training, /hr/certifications
+- O&M: /om/visits, /om/tickets, /om/amc
+- Sales: /marketing (overview), /marketing/campaigns
+- Liaison: /liaison (overview), /liaison/net-metering
+- Design: /design (design queue from leads)
+- Reference: /price-book
+
 ### Phase 2 — Field & Customer (Weeks 13–24)
 - [ ] Offline-first mobile (WatermelonDB)
 - [ ] Photo gates, GPS verification, AI narrative
@@ -1129,7 +1199,7 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 | Dev machine | Windows, Surface Pro. Git Bash inside Windows Terminal. | Mar 2026 |
 | Node version | Node 24 (installed directly, not via nvm). | Mar 2026 |
 | Error logging | Named operations, verbose try/catch, Sentry (live, @sentry/nextjs v10), system_logs table for critical functions. | Apr 2026 |
-| HubSpot | Full cutover once lead module stable. One-time data import on cutover day. | Mar 2026 |
+| HubSpot | ✅ Cutover COMPLETE. 1,115 leads, 314 proposals, 314 projects, 30 payments migrated. HubSpot no longer needed. | Apr 2026 |
 | UI/UX tooling | No Figma. Claude generates specs + components directly. v0.dev for complex visuals. | Mar 2026 |
 | Design system | Shiroi Brand Guide V6 as foundation. packages/ui holds tokens, shadcn/ui overrides, Tailwind config. | Mar 2026 |
 | WhatsApp Phase 1 | Employee-forward. n8n generates → employee forwards to customer. Zero BSP cost. | Mar 2026 |
@@ -1164,6 +1234,19 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 | @supabase/ssr cookie pattern | Uses getAll/setAll only (not deprecated get/set/remove). Server component setAll wrapped in try/catch for streaming response edge case. | Mar 2026 |
 | Admin client design | Not singleton — new instance per call. No autoRefreshToken, no persistSession. Keeps admin operations explicit and short-lived. | Mar 2026 |
 | Types package exports fix | Added explicit "./database" export to packages/types/package.json (database.ts lives at root, not in src/). Added database.ts to tsconfig include. | Mar 2026 |
+| Phase 2B complete | 53 routes, 0 type errors, 0 placeholders. All sidebar links are real data-driven pages. Google Drive migration complete (108 vendors, ~160 projects, 850 POs, 1,164 expenses, 916 files). | Apr 3, 2026 |
+| Daily file sync: Option C | n8n cron (catches Google Drive stragglers) + in-ERP upload UI (new primary path). Drive usage fades naturally. | Apr 3, 2026 |
+| HubSpot cutover: DONE (V2) | ✅ Final: 1,115 leads, 314 proposals, 314 projects, 30 payments. 0 unmatched payments. FY distribution: 2024-25: 50, 2025-26: 264. V2 fixes: matched all payments, created 6 new projects, fixed PV parser for dash format (329 more), fixed RCC/Adroit/Srestha false matches. Dedup audit: 209 records, 18 flagged. Scripts: `migrate-hubspot.ts` + `fix-hubspot-v2.ts`. | Apr 3, 2026 |
+| HubSpot stage mapping | To check→new, Appointment Scheduled→site_survey_scheduled, Site Visit Completed→site_survey_done, Proposal Sent→proposal_sent, Design Confirmation→design_confirmed (new enum, migration 011), Negotiation/Final Negotiation→negotiation, Closed Won→won, Closed Lost→lost. Payment stages: Advance (is_advance=true), Supply/Installation/Commissioning/Retention (is_advance=false, stage in notes). | Apr 3, 2026 |
+| Rakshas Enterprises | Confirmed project in 2025-26 folder. Google Drive: https://drive.google.com/drive/folders/1r22qXIGtS3Zhx4VkaUcISlEjCAHbb30q. Created as SHIROI/PROJ/2026-27/0147, 20 kWp, commissioned. | Apr 3, 2026 |
+| Proposals migration source | 1,300 proposals from multiple Google Drive folders (shared via same service account API key). Dedup by project name + system size + phone number. | Apr 3, 2026 |
+| Two-stage quoting | Budgetary quote (instant from price book, no design needed) → detailed final quote (after AutoCAD/SketchUp design + complete BOM). Both auto-generated. | Apr 3, 2026 |
+| Branded proposal PDF | Shiroi letterhead, T&C, system specs, payment schedule, warranty. Auto-generated from proposal data. Phase 2C. | Apr 3, 2026 |
+| Completion % in Phase 2C | Objective model from sub-components (structure %, electrical %, panels installed/total, inverter, net meter). Not supervisor estimate. Moved to current phase. | Apr 3, 2026 |
+| Prod DB approach | Clean schema — run all migrations 001–010 on prod SQL Editor. No pg_dump clone. Migrate only verified data. | Apr 3, 2026 |
+| Domain | erp.shiroienergy.com on GoDaddy. CNAME to Vercel at deployment. | Apr 3, 2026 |
+| Full Drive scan now | Moved from Phase 4 to Phase 2C. Scan entire Shiroi Energy drive, upload all remaining files to Supabase Storage. | Apr 3, 2026 |
+| Phase 2C roadmap | 19 steps (40–58). Full roadmap spec: docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md | Apr 3, 2026 |
 
 ---
 
@@ -1250,6 +1333,10 @@ All detailed domain design documents:
 | `supabase/migrations/007e_trigger_fixes.sql` | CEIG trigger fix, cash position fix, om_visit_corrections |
 | `supabase/migrations/007f_universal_tasks.sql` | tasks rename, entity_type+entity_id model |
 | `supabase/migrations/008a_fix_rls_recursion.sql` | get_my_role(), get_my_employee_id(), fix 200+ recursive policies |
+| `supabase/migrations/009_new_roles.sql` | designer + purchase_officer app_role values + 25 RLS policy updates |
+| `supabase/migrations/010_project_site_expenses.sql` | lead_status 'converted', project_site_expenses, project-files bucket |
+| `supabase/migrations/011_design_confirmed_status.sql` | lead_status 'design_confirmed' enum value (HubSpot stage mapping) |
+| `supabase/migrations/012_lead_status_history_allow_system.sql` | lead_status_history.changed_by nullable for migration/admin ops |
 | `docs/superpowers/specs/2026-03-30-role-dashboards-design.md` | Phase 2A design spec — all 8 role dashboards |
 | `docs/superpowers/plans/2026-03-30-phase1-complete-build.md` | Phase 1A build plan (Steps 7-18) |
 | `docs/projects dashboard.md` | PM's 10-step project lifecycle intent |
@@ -1326,15 +1413,47 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 
 ---
 
-**Document version:** 3.1
+**Document version:** 3.4
 **Table count:** 134 tables verified in shiroi-erp-dev
 **Trigger count:** 91 triggers
 **RLS status:** Enabled on all 134 tables — recursive subqueries replaced with helper functions (migration 008a)
-**Migration files:** 25 files (001 through 009) — all committed to git
+**Migration files:** 28 files (001 through 012) — all committed to git
 **TypeScript types:** Generated in packages/types/database.ts
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
-**ERP app:** 142 tests passing, 0 type errors
-**Last updated:** April 1, 2026
+**ERP app:** 53 routes, 142 tests passing, 0 type errors
+**Last updated:** April 3, 2026 (v3.4 — HubSpot V2 migration complete, lead status flow documented)
+
+**What changed in v3.4:**
+- HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments
+- Project FY distribution: 2024-25: 50, 2025-26: 264
+- 0 unmatched payments (V2 fixed all 24 previously unmatched from V1)
+- V2 created 6 new projects, fixed PV parser for dash format (329 more), fixed false-positive dedup (RCC/Adroit/Srestha)
+- Dedup audit: 209 records, 18 flagged for review
+- Migration 011 applied (dev): `design_confirmed` added to lead_status enum
+- Migration 012 applied (dev): lead_status_history.changed_by nullable for system/migration ops
+- Lead status flow documented in Section 6.1: new → contacted → site_survey_scheduled → site_survey_done → proposal_sent → design_confirmed → negotiation → won/lost/on_hold/disqualified
+- HubSpot stage mapping table added to Section 11 (To check→new, Appointment Scheduled→site_survey_scheduled, Design Confirmation→design_confirmed, etc.)
+- Payment stage mapping documented: Advance (is_advance=true), Supply/Installation/Commissioning/Retention (is_advance=false)
+- Migration file count updated: 28 files (001 through 012)
+
+**What changed in v3.3:**
+- HubSpot cutover V1: 963 leads, 144 proposals, 144 projects from 1,210-deal CSV; 15 payments from 65-record payments CSV
+- Three-tier dedup: hubspot_deal_id → customer_name+system_size → customer_name fuzzy (237 deduped)
+- PV number parsing from HTML-wrapped Quote IDs (e.g., `<p>PV321/25-26&nbsp;</p>`)
+- Won deals create full chain: lead (status:won) → proposal (status:approved) → project
+- Payments matched to projects by PV number cross-reference (15 matched, 24 unmatched warnings)
+- Migration script: scripts/migrate-hubspot.ts — two-phase (deals + payments), idempotent, dry-run support
+- Data integrity verified: 0 orphaned proposals/projects, all FKs valid
+- Phase 2C roadmap spec written: 19 steps (40–58), 12 architecture decisions logged
+
+**What changed in v3.2:**
+- Phase 2B complete: All 53 ERP screens built with real Supabase queries (0 placeholders remaining)
+- Migration 010 applied (dev): lead_status 'converted' enum + project_site_expenses table + project-files storage bucket
+- Google Drive data migration complete: 108 vendors, ~160 projects, 850 POs (2,348 items), 1,164 expenses, 916 files
+- Migration script: scripts/migrate-google-drive.ts — 5-phase pipeline with caching, timeouts, dedup
+- 20 type errors fixed across 12 files (column names corrected against database.ts)
+- New query files: vendor-queries.ts, all-tasks-queries.ts, invoice-queries.ts, payment-queries.ts, profitability-queries.ts
+- New screens: procurement, deliveries, vendor-payments, msme-compliance, daily-reports, qc-gates, my-tasks, my-reports, hr/employees, hr/leave, hr/training, hr/certifications, om/visits, om/tickets, om/amc, marketing/campaigns, liaison/net-metering, price-book, design queue, marketing overview, liaison overview
 
 **What changed in v3.1:**
 - V2 Design System applied: DM Sans headings, warm-gray neutrals (#111318 sidebar, #F8F9FB page bg), all V1 green-tinted colors purged
@@ -1342,7 +1461,7 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Phase 2A complete: Steps 19-29 built — 8 role dashboards, PM 10-step stepper, sectioned sidebar, role switcher
 - Migration 009: designer + purchase_officer roles + 25 RLS policy updates (SQL ready for SQL Editor)
 - 142 tests (up from 113), 11 test files, 0 type errors
-- 14 placeholder pages for new nav items (design, vendors, price-book, marketing, liaison, invoices, payments, profitability, leave, training, certifications, tasks, reports)
+- 14 placeholder pages for new nav items (replaced by real pages in v3.2)
 - Shared KPI card component + My Tasks widget used by all dashboards
 
 **What changed in v3.0:**
