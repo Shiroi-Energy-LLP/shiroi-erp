@@ -1,0 +1,29 @@
+{
+  "projectsFolderScanned": 179,
+  "sheetsRead": 172,
+  "sheetsReadErrors": 13,
+  "vendorsCreated": 0,
+  "projectsCreated": 0,
+  "projectsSkipped": 0,
+  "posCreated": 0,
+  "poItemsCreated": 0,
+  "expensesCreated": 0,
+  "filesUploaded": 916,
+  "errors": [
+    "Upload TERRACE FLOOR (2) (1).dwg: mime type image/vnd.dwg is not supported",
+    "Upload Advaya_Shir_solar.pdf: Bad Gateway",
+    "Upload AADHEESWAR TERRACE FLOOR PLAN.dwg: mime type image/vnd.dwg is not supported",
+    "Upload AADHEESWAR TERRACE FLOOR PLAN.dwg: mime type image/vnd.dwg is not supported",
+    "Upload legendry.dwg: mime type image/vnd.dwg is not supported",
+    "Upload RCC const.dwg: mime type image/vnd.dwg is not supported",
+    "Upload RADIANCE FLOURISH HANDOVER 31.07.25.pdf: The object exceeded the maximum allowed size",
+    "Upload MID_33~50KTL3-X2_EU GROWATT.pdf: Invalid key: projects/4638c556-525f-4814-93ba-8479fd70bb84/documents/MID_33~50KTL3-X2_EU GROWATT.pdf",
+    "Upload WhatsApp Image 2026-03-11 at 11.40.43 AM.jpeg: socket hang up",
+    "Upload WhatsApp Image 2026-02-14 at 3.59.53 PM.jpeg: Bad Gateway",
+    "Upload Kurinji homes-ORCHID- TERRCE FLOOR.dwg: mime type image/vnd.dwg is not supported",
+    "Upload SITE PLAN 2.7.22 (1).dwg: mime type image/vnd.dwg is not supported",
+    "Upload SLD-SKS 17.09.2021 (1).dwg: mime type image/vnd.dwg is not supported",
+    "Upload MAIN SCHEMATIC DIAGRAM - SKS NEIVEDHYAM CENTRAL KITCHEN (1).dwg: mime type image/vnd.dwg is not supported",
+    "Upload CEIG Approval 29-09-2025 (1).pdf: The object exceeded the maximum allowed size"
+  ]
+}
