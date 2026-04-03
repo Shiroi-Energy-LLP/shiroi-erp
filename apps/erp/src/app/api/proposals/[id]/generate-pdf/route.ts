@@ -5,6 +5,7 @@ import { createAdminClient } from '@repo/supabase/admin';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { assembleProposalPDFData } from '@/lib/pdf/proposal-pdf-data';
 import { BudgetaryQuotePDF } from '@/lib/pdf/budgetary-quote-pdf';
+import { DetailedProposalPDF } from '@/lib/pdf/detailed-proposal-pdf';
 import React from 'react';
 
 export async function POST(
@@ -44,9 +45,8 @@ export async function POST(
         React.createElement(BudgetaryQuotePDF, { data: pdfData })
       );
     } else {
-      // For now, use budgetary template for all — detailed template added in future task
       pdfBuffer = await renderToBuffer(
-        React.createElement(BudgetaryQuotePDF, { data: pdfData })
+        React.createElement(DetailedProposalPDF, { data: pdfData })
       );
     }
 
