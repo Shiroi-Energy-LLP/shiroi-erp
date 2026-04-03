@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { createClient } from '@repo/supabase/server';
 import { getProposal, getProposalRevisions } from '@/lib/proposals-queries';
 import { ProposalStatusBadge } from '@/components/proposals/proposal-status-badge';
 import { BOMTable } from '@/components/proposals/bom-table';
 import { PaymentSchedule } from '@/components/proposals/payment-schedule';
+import { ProposalFiles } from '@/components/proposals/proposal-files';
+import { GeneratePDFButton } from '@/components/proposals/generate-pdf-button';
 import { formatINR, toIST } from '@repo/ui/formatters';
 import { calcMarginPct } from '@/lib/proposal-calc';
 import {
@@ -31,6 +34,18 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
 
   const bomLines = proposal.proposal_bom_lines ?? [];
   const paymentMilestones = proposal.proposal_payment_schedule ?? [];
+
+  // Load files from Supabase Storage
+  const supabase = await createClient();
+  const { data: storedFiles } = await supabase.storage
+    .from('proposal-files')
+    .list(proposal.lead_id, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+  const proposalFiles = (storedFiles ?? []).map(f => ({
+    name: f.name,
+    id: f.id ?? f.name,
+    created_at: f.created_at ?? '',
+    metadata: { size: (f.metadata as Record<string, unknown>)?.size as number | undefined, mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined },
+  }));
 
   return (
     <div className="space-y-6">
@@ -68,6 +83,7 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
           {proposal.margin_approved_by && (
             <Badge variant="success">Margin Approved</Badge>
           )}
+          <GeneratePDFButton proposalId={proposal.id} />
           {proposal.status === 'draft' && (
             <Button variant="outline" size="sm">Send Proposal</Button>
           )}
@@ -233,6 +249,13 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
               </CardContent>
             </Card>
           )}
+
+          {/* Files */}
+          <ProposalFiles
+            leadId={proposal.lead_id}
+            proposalNumber={proposal.proposal_number}
+            initialFiles={proposalFiles}
+          />
         </div>
       </div>
     </div>

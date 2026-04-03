@@ -1,3 +1,4 @@
+npm warn exec The following package was not found and will be installed: supabase@2.84.8
 export type Json =
   | string
   | number
@@ -3260,7 +3261,7 @@ export type Database = {
       lead_status_history: {
         Row: {
           changed_at: string
-          changed_by: string
+          changed_by: string | null
           from_status: Database["public"]["Enums"]["lead_status"] | null
           id: string
           lead_id: string
@@ -3269,7 +3270,7 @@ export type Database = {
         }
         Insert: {
           changed_at?: string
-          changed_by: string
+          changed_by?: string | null
           from_status?: Database["public"]["Enums"]["lead_status"] | null
           id?: string
           lead_id: string
@@ -3278,7 +3279,7 @@ export type Database = {
         }
         Update: {
           changed_at?: string
-          changed_by?: string
+          changed_by?: string | null
           from_status?: Database["public"]["Enums"]["lead_status"] | null
           id?: string
           lead_id?: string
@@ -4280,6 +4281,53 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: true
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          is_read: boolean
+          notification_type: string
+          read_at: string | null
+          recipient_employee_id: string
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean
+          notification_type: string
+          read_at?: string | null
+          recipient_employee_id: string
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean
+          notification_type?: string
+          read_at?: string | null
+          recipient_employee_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_employee_id_fkey"
+            columns: ["recipient_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -6793,6 +6841,53 @@ export type Database = {
           },
         ]
       }
+      project_site_expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          employee_name: string | null
+          expense_date: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          updated_at: string
+          voucher_no: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          employee_name?: string | null
+          expense_date?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+          voucher_no?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          employee_name?: string | null
+          expense_date?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+          voucher_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_site_expenses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_status_history: {
         Row: {
           changed_at: string
@@ -7665,6 +7760,7 @@ export type Database = {
           simulated_at: string
           simulation_source: string
           system_capacity_kw: number
+          tariff_escalation_pct: number | null
           tariff_rate: number
           tilt_degrees: number
           year1_kwh: number | null
@@ -7693,6 +7789,7 @@ export type Database = {
           simulated_at?: string
           simulation_source: string
           system_capacity_kw: number
+          tariff_escalation_pct?: number | null
           tariff_rate: number
           tilt_degrees?: number
           year1_kwh?: number | null
@@ -7721,6 +7818,7 @@ export type Database = {
           simulated_at?: string
           simulation_source?: string
           system_capacity_kw?: number
+          tariff_escalation_pct?: number | null
           tariff_rate?: number
           tilt_degrees?: number
           year1_kwh?: number | null
@@ -7803,6 +7901,7 @@ export type Database = {
           inverter_brand: string | null
           inverter_capacity_kw: number | null
           inverter_model: string | null
+          is_budgetary: boolean
           lead_id: string
           margin_approval_required: boolean
           margin_approved_at: string | null
@@ -7853,6 +7952,7 @@ export type Database = {
           inverter_brand?: string | null
           inverter_capacity_kw?: number | null
           inverter_model?: string | null
+          is_budgetary?: boolean
           lead_id: string
           margin_approval_required?: boolean
           margin_approved_at?: string | null
@@ -7903,6 +8003,7 @@ export type Database = {
           inverter_brand?: string | null
           inverter_capacity_kw?: number | null
           inverter_model?: string | null
+          is_budgetary?: boolean
           lead_id?: string
           margin_approval_required?: boolean
           margin_approved_at?: string | null
@@ -10445,6 +10546,11 @@ export type Database = {
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
       get_financial_year: { Args: never; Returns: string }
+      get_my_employee_id: { Args: never; Returns: string }
+      get_my_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       lock_stale_reports: { Args: never; Returns: undefined }
     }
     Enums: {
@@ -10452,13 +10558,13 @@ export type Database = {
         | "founder"
         | "hr_manager"
         | "sales_engineer"
-        | "designer"
         | "project_manager"
-        | "purchase_officer"
         | "site_supervisor"
         | "om_technician"
         | "finance"
         | "customer"
+        | "designer"
+        | "purchase_officer"
       customer_segment: "residential" | "commercial" | "industrial"
       delay_responsibility:
         | "shiroi"
@@ -10484,8 +10590,10 @@ export type Database = {
         | "site_survey_scheduled"
         | "site_survey_done"
         | "proposal_sent"
+        | "design_confirmed"
         | "negotiation"
         | "won"
+        | "converted"
         | "lost"
         | "on_hold"
         | "disqualified"
@@ -10671,13 +10779,13 @@ export const Constants = {
         "founder",
         "hr_manager",
         "sales_engineer",
-        "designer",
         "project_manager",
-        "purchase_officer",
         "site_supervisor",
         "om_technician",
         "finance",
         "customer",
+        "designer",
+        "purchase_officer",
       ],
       customer_segment: ["residential", "commercial", "industrial"],
       delay_responsibility: [
@@ -10706,8 +10814,10 @@ export const Constants = {
         "site_survey_scheduled",
         "site_survey_done",
         "proposal_sent",
+        "design_confirmed",
         "negotiation",
         "won",
+        "converted",
         "lost",
         "on_hold",
         "disqualified",

@@ -14,6 +14,7 @@ import {
   Badge,
   Button,
 } from '@repo/ui';
+import { QuickQuoteButton } from '@/components/proposals/quick-quote-button';
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>;
@@ -54,7 +55,15 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
             </span>
           </div>
         </div>
-        <StatusChange leadId={lead.id} currentStatus={lead.status} />
+        <div className="flex items-center gap-2">
+          <QuickQuoteButton
+            leadId={lead.id}
+            systemType={lead.system_type}
+            sizeKwp={lead.estimated_size_kwp}
+            segment={lead.segment}
+          />
+          <StatusChange leadId={lead.id} currentStatus={lead.status} />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-6">

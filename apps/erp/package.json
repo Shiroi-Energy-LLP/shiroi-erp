@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.2",
     "@repo/supabase": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",
