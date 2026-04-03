@@ -17,7 +17,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 ---
 
-## CURRENT STATE (as of April 1, 2026)
+## CURRENT STATE (as of April 3, 2026)
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -26,24 +26,34 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Next.js ERP app | ✅ Running | apps/erp on localhost:3000 |
 | Supabase dev | ✅ Live | actqtzoxjilqnldnacqz.supabase.co |
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
-| Database schema | ✅ Complete | 134 tables, 91 triggers, RLS on ALL tables |
+| Database schema | ✅ Complete | 135 tables, 91 triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — never edit by hand |
-| Migrations | ✅ Committed | supabase/migrations/ — 25 files (001 through 009) |
+| Migrations | ✅ Committed | supabase/migrations/ — 27 files (001 through 014) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, DM Sans headings, warm-gray neutrals, 9 shadcn components |
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned role-based sidebar, topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper, 14 placeholder pages |
+| Phase 2C Data Migration | ✅ Complete | HubSpot leads, Drive proposals (1,354 folders across 4 years), file uploads to Supabase Storage |
 | Sentry | ✅ Live | @sentry/nextjs v10, client+server+edge+onRequestError, DSN in .env.local |
-| Data migration | ⏳ Scripts ready | HubSpot, actuals, commissioning scripts — DB is empty, needs CSV imports |
+| Data migration | ✅ Complete (dev) | 1,140 leads, 339 proposals, 314 projects. All Drive files in proposal-files bucket |
 | Migration 009 | ✅ Applied (dev) | designer + purchase_officer roles + RLS — prod pending |
+| Migration 013 | ✅ Applied (dev) | proposal-files storage bucket — prod pending |
+| Proposal wizard | ✅ Functional | 4-step wizard with server action, saves to proposals + BOM + payment schedule |
+| File upload UI | ✅ Complete | Upload/download files on proposal detail page via Supabase Storage |
+| Completion tracking | ✅ Complete | Weighted milestone completion %, Decimal.js calc, progress bars on projects |
+| Proposal engine spec | ✅ Designed | Budgetary quotes, price discipline, branded PDFs, n8n automations — spec approved |
+| Proposal engine code | ✅ Implemented | Quick Quote modal, BOM generator (9 tests), React-PDF budgetary template, price override modal, PDF API route, notifications CRUD |
+| Migration 014 | ✅ Applied (dev) | is_budgetary, tariff_escalation_pct, notifications table — prod pending |
 | Vercel | ⏳ Deferred | Config done, connect when ready to deploy |
 | Git branching | ⏳ Deferred | Set up when first screen ready to deploy |
 
 **Immediate next steps:**
-1. Begin data migration (HubSpot CSV export first)
-2. Vercel deployment + domain setup
-3. Git branching (main / staging / feature)
+1. Apply migrations 013 + 014 to prod
+2. Seed price book with real Shiroi pricing data (needed for Quick Quote to work)
+3. Set up employee accounts on prod
+4. Vercel deployment + domain setup
+5. Git branching (main / staging / feature)
 
 ---
 
@@ -400,6 +410,10 @@ This is automatic — do not wait for Vivek to ask.
 - **Offline sync pattern:** Mobile writes go to WatermelonDB first. Background sync to Supabase. `sync_status` column on affected tables: `local_only` | `syncing` | `synced` | `sync_failed`. Never lose data.
 - **Financial year boundary:** April 1. Document number sequences reset. `generate_doc_number()` DB function handles this automatically.
 - **MSME 45-day rule:** Vendor payments to MSME suppliers legally due within 45 days of delivery. `vendor_payments` table tracks per-payment dates. Alert on Day 40.
+- **Price book is source of truth for BOM pricing:** Designers can override prices but MUST provide a reason (logged to `proposal_correction_log`, immutable). Override rate >30% per proposal = flagged for founder review. "Bulk deal" reason >5× per month per person = auto-flagged. Weekly override report via n8n.
+- **Budgetary vs Detailed proposals:** `proposals.is_budgetary` boolean distinguishes auto-generated quick quotes from full designer proposals. Both generate branded PDFs. Budgetary quotes upgrade to detailed by editing the auto-generated BOM.
+- **Savings page is segment-adaptive:** Residential gets visual (charts, headlines). Commercial gets numbers-first (financial tables). Auto-selected from lead segment.
+- **PDF generation:** React-PDF server-side. Auto-triggered by n8n when proposal status → 'sent'. Manual "Generate PDF" button also available.
 
 ---
 
@@ -412,10 +426,11 @@ This is automatic — do not wait for Vivek to ask.
 | `docs/Shiroi_ERP_Design_System.md` | Building any UI component — V2.0, single source of truth |
 | `docs/Shiroi_Energy_Brand_Guide_V6.html` | Design tokens, colours, typography |
 | `docs/superpowers/specs/2026-03-30-role-dashboards-design.md` | Phase 2A design spec — all 8 role dashboards |
+| `docs/superpowers/specs/2026-04-03-proposal-engine-design.md` | Proposal engine — budgetary quotes, price discipline, branded PDFs, n8n automations |
 | `supabase/migrations/` | Understanding exact table structure before writing queries |
 | `packages/types/database.ts` | TypeScript types — always import from here |
 
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 2, 2026 — Sentry live, Phase 2A complete, V2 design system applied*
+*Last updated: April 3, 2026 — Proposal engine implemented (Steps 44/45/47/49): Quick Quote, BOM generator, React-PDF budgetary template, price override modal, PDF API route, notifications. Migration 014 applied to dev.*
