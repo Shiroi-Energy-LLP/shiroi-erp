@@ -15,6 +15,7 @@ const STATUS_VARIANT: Record<LeadStatus, 'info' | 'pending' | 'warning' | 'succe
   lost: 'error',
   disqualified: 'error',
   on_hold: 'neutral',
+  converted: 'neutral',
 };
 
 const STATUS_LABEL: Record<LeadStatus, string> = {
@@ -29,6 +30,7 @@ const STATUS_LABEL: Record<LeadStatus, string> = {
   lost: 'Lost',
   disqualified: 'Disqualified',
   on_hold: 'On Hold',
+  converted: 'Converted',
 };
 
 export function LeadStatusBadge({ status }: { status: LeadStatus }) {

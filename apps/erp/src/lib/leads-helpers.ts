@@ -14,6 +14,7 @@ const VALID_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
   lost: [],
   on_hold: ['new', 'contacted', 'site_survey_scheduled', 'site_survey_done', 'proposal_sent', 'design_confirmed', 'negotiation', 'disqualified'],
   disqualified: [],
+  converted: [],
 };
 
 export function isValidTransition(from: LeadStatus, to: LeadStatus): boolean {

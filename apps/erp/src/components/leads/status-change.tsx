@@ -20,6 +20,8 @@ const STATUS_LABEL: Record<LeadStatus, string> = {
   lost: 'Lost',
   disqualified: 'Disqualified',
   on_hold: 'On Hold',
+  design_confirmed: 'Design Confirmed',
+  converted: 'Converted',
 };
 
 interface StatusChangeProps {

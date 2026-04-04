@@ -40,7 +40,7 @@ export async function getProposals(filters: ProposalFilters = {}): Promise<Pagin
     );
 
   if (filters.status) query = query.eq('status', filters.status);
-  if (filters.systemType) query = query.eq('system_type', filters.systemType);
+  if (filters.systemType) query = query.eq('system_type', filters.systemType as any);
   if (filters.isBudgetary !== undefined) query = query.eq('is_budgetary', filters.isBudgetary);
   if (filters.search) {
     query = query.or(`proposal_number.ilike.%${filters.search}%,leads.customer_name.ilike.%${filters.search}%`);

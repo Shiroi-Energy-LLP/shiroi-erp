@@ -72,7 +72,7 @@ export function PMDonutChart({ data }: DonutChartProps) {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number, name: string) => [value, formatStatus(name)]}
+                  formatter={(value: unknown, name: unknown) => [String(value), formatStatus(String(name))]}
                   contentStyle={{
                     fontSize: '12px',
                     borderRadius: '8px',

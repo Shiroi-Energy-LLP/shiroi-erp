@@ -161,7 +161,7 @@ export function BulkActionBar({
         </DialogContent>
       </Dialog>
 
-      {showMerge && selectedLeads.length === 2 && (
+      {showMerge && selectedLeads.length === 2 && selectedLeads[0] && selectedLeads[1] && (
         <MergeLeadsModal
           leadA={selectedLeads[0]}
           leadB={selectedLeads[1]}
