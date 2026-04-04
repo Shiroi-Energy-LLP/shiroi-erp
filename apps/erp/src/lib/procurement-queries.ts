@@ -191,7 +191,6 @@ export async function getProjectsList(): Promise<Pick<ProjectRow, 'id' | 'projec
   const { data, error } = await supabase
     .from('projects')
     .select('id, project_number, customer_name')
-    .is('deleted_at', null)
     .order('project_number', { ascending: false });
 
   if (error) {
