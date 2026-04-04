@@ -583,6 +583,54 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          created_at: string
+          gstin: string | null
+          id: string
+          name: string
+          notes: string | null
+          pincode: string | null
+          segment: Database["public"]["Enums"]["customer_segment"]
+          state: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string
+          gstin?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          pincode?: string | null
+          segment?: Database["public"]["Enums"]["customer_segment"]
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string
+          gstin?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          pincode?: string | null
+          segment?: Database["public"]["Enums"]["customer_segment"]
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       company_cashflow_snapshots: {
         Row: {
           active_projects_count: number
@@ -631,6 +679,87 @@ export type Database = {
           total_paid_to_vendors?: number
           total_received?: number
           total_vendor_outstanding?: number
+        }
+        Relationships: []
+      }
+      contact_company_roles: {
+        Row: {
+          company_id: string
+          contact_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          is_primary: boolean
+          role_title: string
+          started_at: string | null
+        }
+        Insert: {
+          company_id: string
+          contact_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          is_primary?: boolean
+          role_title: string
+          started_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          contact_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          is_primary?: boolean
+          role_title?: string
+          started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_company_roles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_company_roles_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          created_at: string
+          designation: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          designation?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          designation?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2006,6 +2135,44 @@ export type Database = {
           },
         ]
       }
+      entity_contacts: {
+        Row: {
+          contact_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          is_primary: boolean
+          role_label: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_primary?: boolean
+          role_label?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_primary?: boolean
+          role_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finance_reports: {
         Row: {
           created_at: string
@@ -3310,6 +3477,7 @@ export type Database = {
           automation_pause_reason: string | null
           automation_paused: boolean
           city: string
+          company_id: string | null
           converted_at: string | null
           converted_to_project: boolean
           created_at: string
@@ -3341,6 +3509,7 @@ export type Database = {
           automation_pause_reason?: string | null
           automation_paused?: boolean
           city?: string
+          company_id?: string | null
           converted_at?: string | null
           converted_to_project?: boolean
           created_at?: string
@@ -3372,6 +3541,7 @@ export type Database = {
           automation_pause_reason?: string | null
           automation_paused?: boolean
           city?: string
+          company_id?: string | null
           converted_at?: string | null
           converted_to_project?: boolean
           created_at?: string
@@ -3402,6 +3572,13 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -6950,6 +7127,7 @@ export type Database = {
           ceig_cleared_at: string | null
           ceig_required: boolean
           commissioned_date: string | null
+          company_id: string | null
           completion_pct: number
           contracted_value: number
           created_at: string
@@ -7006,6 +7184,7 @@ export type Database = {
           ceig_cleared_at?: string | null
           ceig_required?: boolean
           commissioned_date?: string | null
+          company_id?: string | null
           completion_pct?: number
           contracted_value: number
           created_at?: string
@@ -7062,6 +7241,7 @@ export type Database = {
           ceig_cleared_at?: string | null
           ceig_required?: boolean
           commissioned_date?: string | null
+          company_id?: string | null
           completion_pct?: number
           contracted_value?: number
           created_at?: string
@@ -7102,6 +7282,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_customer_profile_id_fkey"
             columns: ["customer_profile_id"]

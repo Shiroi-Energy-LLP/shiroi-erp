@@ -19,7 +19,7 @@ export async function createContact(input: {
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from('contacts' as any)
+    .from('contacts')
     .insert({
       name: input.name.trim(),
       phone: input.phone?.trim() || null,
@@ -36,7 +36,7 @@ export async function createContact(input: {
   }
 
   revalidatePath('/contacts');
-  return { success: true, contactId: (data as any).id };
+  return { success: true, contactId: data.id };
 }
 
 export async function updateContact(id: string, input: {
@@ -57,7 +57,7 @@ export async function updateContact(id: string, input: {
   if (input.designation !== undefined) updates.designation = input.designation.trim() || null;
   if (input.notes !== undefined) updates.notes = input.notes.trim() || null;
 
-  const { error } = await supabase.from('contacts' as any).update(updates).eq('id', id);
+  const { error } = await supabase.from('contacts').update(updates).eq('id', id);
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return { success: false, error: error.message };
@@ -89,7 +89,7 @@ export async function createCompany(input: {
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from('companies' as any)
+    .from('companies')
     .insert({
       name: input.name.trim(),
       segment: input.segment as any,
@@ -111,7 +111,7 @@ export async function createCompany(input: {
   }
 
   revalidatePath('/companies');
-  return { success: true, companyId: (data as any).id };
+  return { success: true, companyId: data.id };
 }
 
 export async function updateCompany(id: string, input: {
@@ -142,7 +142,7 @@ export async function updateCompany(id: string, input: {
   if (input.website !== undefined) updates.website = input.website.trim() || null;
   if (input.notes !== undefined) updates.notes = input.notes.trim() || null;
 
-  const { error } = await supabase.from('companies' as any).update(updates).eq('id', id);
+  const { error } = await supabase.from('companies').update(updates).eq('id', id);
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return { success: false, error: error.message };
@@ -167,7 +167,7 @@ export async function linkContactToEntity(input: {
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from('entity_contacts' as any)
+    .from('entity_contacts')
     .insert({
       contact_id: input.contactId,
       entity_type: input.entityType,
@@ -194,7 +194,7 @@ export async function unlinkContactFromEntity(entityContactId: string): Promise<
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from('entity_contacts' as any)
+    .from('entity_contacts')
     .delete()
     .eq('id', entityContactId);
 
@@ -223,7 +223,7 @@ export async function addContactToCompany(input: {
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from('contact_company_roles' as any)
+    .from('contact_company_roles')
     .insert({
       contact_id: input.contactId,
       company_id: input.companyId,
@@ -248,7 +248,7 @@ export async function endContactCompanyRole(roleId: string): Promise<{ success: 
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from('contact_company_roles' as any)
+    .from('contact_company_roles')
     .update({ ended_at: new Date().toISOString().split('T')[0] })
     .eq('id', roleId);
 
