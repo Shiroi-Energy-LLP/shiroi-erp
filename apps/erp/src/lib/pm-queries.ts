@@ -2,16 +2,24 @@ import { createClient } from '@repo/supabase/server';
 import Decimal from 'decimal.js';
 
 export interface PMDashboardData {
-  activeProjectCount: number;
   totalSystemSizeKwp: number;
-  openTaskCount: number;
-  openServiceTicketCount: number;
+  totalClients: number;
+  totalSales: number;
+  avgProfitPct: number;
   projectsByStatus: Array<{ status: string; count: number }>;
-  overdueProjects: Array<{
+  openTaskCount: number;
+  totalTaskCount: number;
+  openServiceTicketCount: number;
+  totalServiceTicketCount: number;
+  amcCompletedThisMonth: number;
+  amcScheduledThisMonth: number;
+  priorityProjects: Array<{
     id: string;
     project_number: string;
     customer_name: string;
+    city: string;
     status: string;
+    reason: string;
   }>;
   employeeId: string | null;
 }
@@ -40,37 +48,49 @@ export async function getPMDashboardData(profileId: string): Promise<PMDashboard
   console.log(`${op} Starting for: ${profileId}`);
 
   const supabase = await createClient();
-
   const employeeId = await getEmployeeId(supabase, profileId);
+
   if (!employeeId) {
     console.warn(`${op} No active employee found for profile: ${profileId}`);
     return {
-      activeProjectCount: 0,
       totalSystemSizeKwp: 0,
-      openTaskCount: 0,
-      openServiceTicketCount: 0,
+      totalClients: 0,
+      totalSales: 0,
+      avgProfitPct: 0,
       projectsByStatus: [],
-      overdueProjects: [],
+      openTaskCount: 0,
+      totalTaskCount: 0,
+      openServiceTicketCount: 0,
+      totalServiceTicketCount: 0,
+      amcCompletedThisMonth: 0,
+      amcScheduledThisMonth: 0,
+      priorityProjects: [],
       employeeId: null,
     };
   }
 
   const excludedStatuses = ['completed', 'cancelled'];
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
   const [
     activeProjectsResult,
     openTasksResult,
-    serviceTicketsResult,
+    totalTasksResult,
+    openTicketsResult,
+    totalTicketsResult,
+    amcScheduledResult,
+    amcCompletedResult,
     overdueResult,
   ] = await Promise.all([
-    // Active projects with system size
     supabase
       .from('projects')
-      .select('id, status, system_size_kwp')
+      .select('id, status, system_size_kwp, contracted_value, customer_name, site_city')
       .eq('project_manager_id', employeeId)
       .not('status', 'in', `(${excludedStatuses.join(',')})`),
 
-    // Open task count
     supabase
       .from('tasks')
       .select('id', { count: 'exact', head: true })
@@ -78,17 +98,37 @@ export async function getPMDashboardData(profileId: string): Promise<PMDashboard
       .eq('is_completed', false)
       .is('deleted_at', null),
 
-    // Open service tickets (for PM's projects)
+    supabase
+      .from('tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('assigned_to', employeeId)
+      .is('deleted_at', null),
+
     supabase
       .from('om_service_tickets')
       .select('id', { count: 'exact', head: true })
       .not('status', 'in', '(resolved,closed)'),
 
-    // Projects with no report today (overdue reports)
-    getOverdueProjectsForPM(supabase, employeeId),
+    supabase
+      .from('om_service_tickets')
+      .select('id', { count: 'exact', head: true }),
+
+    supabase
+      .from('om_visit_schedules')
+      .select('id', { count: 'exact', head: true })
+      .gte('scheduled_date', monthStart)
+      .lte('scheduled_date', monthEnd),
+
+    supabase
+      .from('om_visit_schedules')
+      .select('id', { count: 'exact', head: true })
+      .gte('scheduled_date', monthStart)
+      .lte('scheduled_date', monthEnd)
+      .eq('status', 'completed'),
+
+    getOverdueProjectsForPM(supabase, employeeId, todayStr),
   ]);
 
-  // Handle active projects
   if (activeProjectsResult.error) {
     console.error(`${op} Active projects query failed:`, {
       code: activeProjectsResult.error.code,
@@ -97,31 +137,22 @@ export async function getPMDashboardData(profileId: string): Promise<PMDashboard
     throw new Error(`Failed to load active projects: ${activeProjectsResult.error.message}`);
   }
 
-  if (openTasksResult.error) {
-    console.error(`${op} Open tasks query failed:`, {
-      code: openTasksResult.error.code,
-      message: openTasksResult.error.message,
-    });
-    throw new Error(`Failed to load open tasks: ${openTasksResult.error.message}`);
-  }
-
-  if (serviceTicketsResult.error) {
-    console.error(`${op} Service tickets query failed:`, {
-      code: serviceTicketsResult.error.code,
-      message: serviceTicketsResult.error.message,
-    });
-    throw new Error(`Failed to load service tickets: ${serviceTicketsResult.error.message}`);
-  }
-
   const activeProjects = activeProjectsResult.data ?? [];
 
-  // Calculate total system size using decimal.js
   const totalSystemSize = activeProjects.reduce(
     (sum, p) => sum.add(new Decimal(p.system_size_kwp ?? '0')),
     new Decimal(0),
   );
 
-  // Group projects by status
+  const uniqueClients = new Set(activeProjects.map((p) => p.customer_name));
+
+  const totalSales = activeProjects.reduce(
+    (sum, p) => sum.add(new Decimal(p.contracted_value ?? '0')),
+    new Decimal(0),
+  );
+
+  const avgProfitPct = 0;
+
   const statusCounts = new Map<string, number>();
   for (const project of activeProjects) {
     const status = project.status ?? 'unknown';
@@ -131,13 +162,24 @@ export async function getPMDashboardData(profileId: string): Promise<PMDashboard
     .map(([status, count]) => ({ status, count }))
     .sort((a, b) => b.count - a.count);
 
+  const priorityProjects = overdueResult.slice(0, 5).map((p) => ({
+    ...p,
+    reason: 'Missing daily report',
+  }));
+
   return {
-    activeProjectCount: activeProjects.length,
     totalSystemSizeKwp: totalSystemSize.toNumber(),
-    openTaskCount: openTasksResult.count ?? 0,
-    openServiceTicketCount: serviceTicketsResult.count ?? 0,
+    totalClients: uniqueClients.size,
+    totalSales: totalSales.toNumber(),
+    avgProfitPct,
     projectsByStatus,
-    overdueProjects: overdueResult,
+    openTaskCount: openTasksResult.count ?? 0,
+    totalTaskCount: totalTasksResult.count ?? 0,
+    openServiceTicketCount: openTicketsResult.count ?? 0,
+    totalServiceTicketCount: totalTicketsResult.count ?? 0,
+    amcCompletedThisMonth: amcCompletedResult.count ?? 0,
+    amcScheduledThisMonth: amcScheduledResult.count ?? 0,
+    priorityProjects,
     employeeId,
   };
 }
@@ -145,15 +187,13 @@ export async function getPMDashboardData(profileId: string): Promise<PMDashboard
 async function getOverdueProjectsForPM(
   supabase: Awaited<ReturnType<typeof createClient>>,
   employeeId: string,
-): Promise<Array<{ id: string; project_number: string; customer_name: string; status: string }>> {
+  todayStr: string,
+): Promise<Array<{ id: string; project_number: string; customer_name: string; city: string; status: string }>> {
   const op = '[getOverdueProjectsForPM]';
-  // Use IST date
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
-  // Get active projects for this PM that should have daily reports
   const { data: activeProjects, error: projectError } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name, status')
+    .select('id, project_number, customer_name, site_city, status')
     .eq('project_manager_id', employeeId)
     .not('status', 'in', '("completed","cancelled","on_hold","commissioned","net_metering_pending")');
 
@@ -164,8 +204,7 @@ async function getOverdueProjectsForPM(
 
   if (!activeProjects || activeProjects.length === 0) return [];
 
-  // Get today's reports
-  const projectIds = activeProjects.map(p => p.id);
+  const projectIds = activeProjects.map((p) => p.id);
   const { data: todayReports, error: reportError } = await supabase
     .from('daily_site_reports')
     .select('project_id')
@@ -177,6 +216,8 @@ async function getOverdueProjectsForPM(
     throw new Error(`Failed to load reports: ${reportError.message}`);
   }
 
-  const reportedProjectIds = new Set((todayReports ?? []).map(r => r.project_id));
-  return activeProjects.filter(p => !reportedProjectIds.has(p.id));
+  const reportedProjectIds = new Set((todayReports ?? []).map((r) => r.project_id));
+  return activeProjects
+    .filter((p) => !reportedProjectIds.has(p.id))
+    .map((p) => ({ ...p, city: p.site_city }));
 }
