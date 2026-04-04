@@ -26,9 +26,9 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Next.js ERP app | ✅ Running | apps/erp on localhost:3000 |
 | Supabase dev | ✅ Live | actqtzoxjilqnldnacqz.supabase.co |
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
-| Database schema | ✅ Complete | 134 tables, 91 triggers, RLS on ALL tables |
+| Database schema | ✅ Complete | 135 tables, 91 triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — never edit by hand |
-| Migrations | ✅ Committed | supabase/migrations/ — 28+ files (001 through 012) |
+| Migrations | ✅ Committed | supabase/migrations/ — 28 files (001 through 015) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, DM Sans headings, warm-gray neutrals, 9 shadcn components |
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned role-based sidebar, topbar with role switcher |
@@ -37,19 +37,23 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Phase 2B All Screens | ✅ Complete | 53 routes total — all sidebar links are real data-driven pages, 0 placeholders |
 | Sentry | ✅ Live | @sentry/nextjs v10, client+server+edge+onRequestError, DSN in .env.local |
 | Migration 010 | ✅ Applied (dev) | lead_status 'converted' + project_site_expenses + project-files bucket |
-| Data migration | ✅ Complete | 108 vendors, ~160 projects, 850 POs (2,348 items), 1,164 expenses, 916 files from Google Drive |
-| HubSpot cutover | ✅ Complete (V2) | 1,115 leads, 314 projects, 314 proposals, 30 payments migrated. Correct FY project numbers (2024-25: 50, 2025-26: 264). 0 unmatched payments. 6 new projects (Maharajan, Subramaniam Nithya, Rakshas Enterprises, Radiance Splendour, GRN Rajagopal, Navins Hanging Garden). HubSpot stages mapped (Appointment Scheduled → site_survey_scheduled, Design Confirmation → design_confirmed). Payment stages: Advance, Supply, Installation, Commissioning, Retention. |
 | Migration 011 | ✅ Applied (dev) | `design_confirmed` added to `lead_status` enum after `proposal_sent` |
 | Migration 012 | ✅ Applied (dev) | `lead_status_history.changed_by` now nullable for system/migration operations |
-| Google Drive migration | 🔜 Step 41–42 | 1,200 folders with project sheets, proposals, photos — next priority |
-| Budgetary quote engine | 🔜 Step 44 | Lead → instant rough quote from price book rates |
-| Design-to-BOM + detailed quote | 🔜 Steps 45–47 | Designer BOM → detailed proposal → branded PDF template |
-| Completion % tracking | 🔜 Step 48 | Objective model from sub-components (not supervisor estimate) |
-| Daily file sync | 🔜 Step 49 | n8n cron (Drive → Storage) + in-ERP upload UI |
-| Vercel + domain | 🔜 Steps 56–57 | erp.shiroienergy.com on GoDaddy → Vercel CNAME |
-| Prod deployment | 🔜 Steps 52–58 | Clean schema on prod, employee accounts, verified data, go-live |
+| Migration 013 | ✅ Applied (dev) | proposal-files storage bucket — prod pending |
+| Migration 014 | ✅ Applied (dev) | is_budgetary, tariff_escalation_pct, notifications table — prod pending |
+| Migration 015 | ✅ Applied (dev) | Price book seeded: 35 items, 14 correction factors — prod pending |
+| Data migration | ✅ Complete | 108 vendors, ~160 projects, 850 POs (2,348 items), 1,164 expenses, 916 files from Google Drive |
+| HubSpot cutover | ✅ Complete (V2) | 1,115 leads, 314 projects, 314 proposals, 30 payments migrated. 0 unmatched payments. |
+| Proposal engine | ✅ Implemented | Quick Quote, BOM generator (9 tests), budgetary + detailed PDF (10 pages), savings page, price override modal, PDF API route, notifications CRUD |
+| Proposal files | ✅ Complete | Upload/download files on proposal detail page via Supabase Storage |
+| Leads filtering | ✅ Complete | Converted (migration placeholder) leads hidden by default, visible via filter |
+| GitHub | ✅ Pushed | All code on origin/main, 11 commits ahead of last deploy |
+| Vercel + domain | 🔜 Next | Deploy against dev Supabase for team data cleanup |
+| Employee accounts | 🔜 Next | Create accounts so team can log in and clean data |
+| Data cleanup | 🔜 Next | 255 fuzzy-match records to review, name normalization, placeholder phones |
+| Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
-**Current phase: 2C — Data Completion + Automation + Deployment (Steps 40–58)**
+**Current phase: 2C — Data Cleanup + Deployment (Steps 52–58)**
 Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
 ---
@@ -441,4 +445,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 3, 2026 — HubSpot V2 complete (1,115 leads, 314 projects, 30 payments, 0 unmatched), migrations through 012, design_confirmed enum, Phase 2C in progress*
+*Last updated: April 3, 2026 — Proposal engine complete (Quick Quote, BOM generator, 10-page PDF, price book seeded). Migrations 010–015 applied to dev. All code pushed to GitHub. Next: Vercel deployment for team data cleanup.*
