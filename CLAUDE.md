@@ -53,8 +53,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | PM Dashboard v2 | ✅ Complete | Correct KPIs (System Size, Clients, Sales, Profit %), donut chart, operations widget, dark today panel |
 | Design system | ✅ Complete | packages/ui — V2 design system, 11 components (+Checkbox, +Pagination) |
 | GitHub | ✅ Pushed | All code on origin/main, 11 commits ahead of last deploy |
-| Vercel + domain | 🔜 Next | Deploy against dev Supabase for team data cleanup |
-| Employee accounts | 🔜 Next | Create accounts so team can log in and clean data |
+| Vercel + domain | ✅ Live | erp.shiroienergy.com — deployed against DEV Supabase, auto-deploys on push |
+| Employee admin page | ✅ Complete | /hr/employees/new — create accounts (auth + profile + employee), deactivate button, temp password generation |
 | Data cleanup | 🔜 Next | 255 fuzzy-match records to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
