@@ -42,11 +42,11 @@ export async function POST(
     let pdfBuffer: Buffer;
     if (pdfData.isBudgetary) {
       pdfBuffer = await renderToBuffer(
-        React.createElement(BudgetaryQuotePDF, { data: pdfData })
+        React.createElement(BudgetaryQuotePDF, { data: pdfData }) as any
       );
     } else {
       pdfBuffer = await renderToBuffer(
-        React.createElement(DetailedProposalPDF, { data: pdfData })
+        React.createElement(DetailedProposalPDF, { data: pdfData }) as any
       );
     }
 

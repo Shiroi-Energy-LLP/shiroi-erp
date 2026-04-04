@@ -161,7 +161,7 @@ export async function createProposalAction(input: CreateProposalInput): Promise<
       .from('proposals')
       .insert({
         lead_id: input.leadId,
-        proposal_number: docNum,
+        proposal_number: docNum as string,
         prepared_by: employee.id,
         system_size_kwp: input.systemSizeKwp,
         system_type: input.systemType,
@@ -190,7 +190,7 @@ export async function createProposalAction(input: CreateProposalInput): Promise<
         valid_until: validUntil.toISOString().split('T')[0],
         status: 'draft',
         notes: input.notes || null,
-      })
+      } as any)
       .select('id')
       .single();
 
@@ -205,7 +205,7 @@ export async function createProposalAction(input: CreateProposalInput): Promise<
         proposal_id: proposal.id,
         ...line,
       }));
-      const { error: bomErr } = await supabase.from('proposal_bom_lines').insert(bomInserts);
+      const { error: bomErr } = await supabase.from('proposal_bom_lines').insert(bomInserts as any);
       if (bomErr) {
         console.error(`${op} BOM lines insert failed:`, bomErr.message);
         // Don't fail the whole operation — proposal is created, BOM can be added later
@@ -340,7 +340,7 @@ export async function createBudgetaryQuoteAction(
       .from('proposals')
       .insert({
         lead_id: input.leadId,
-        proposal_number: docNum,
+        proposal_number: docNum as string,
         prepared_by: employee.id,
         system_size_kwp: input.systemSizeKwp,
         system_type: input.systemType,
@@ -367,7 +367,7 @@ export async function createBudgetaryQuoteAction(
         status: 'draft',
         is_budgetary: true,
         notes: `Auto-generated budgetary quote. Structure: ${input.structureType}. Liaison: ${input.includeLiaison ? 'included' : 'excluded'}. Civil: ${input.includeCivil ? 'included' : 'excluded'}.`,
-      })
+      } as any)
       .select('id')
       .single();
 
@@ -397,7 +397,7 @@ export async function createBudgetaryQuoteAction(
       correction_factor: line.correction_factor,
       corrected_cost: line.corrected_cost,
     }));
-    const { error: bomErr } = await supabase.from('proposal_bom_lines').insert(bomInserts);
+    const { error: bomErr } = await supabase.from('proposal_bom_lines').insert(bomInserts as any);
     if (bomErr) {
       console.error(`${op} BOM lines insert failed:`, bomErr.message);
     }
