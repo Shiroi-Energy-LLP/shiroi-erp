@@ -17,7 +17,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 ---
 
-## CURRENT STATE (as of April 3, 2026)
+## CURRENT STATE (as of April 4, 2026)
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -26,11 +26,11 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Next.js ERP app | ✅ Running | apps/erp on localhost:3000 |
 | Supabase dev | ✅ Live | actqtzoxjilqnldnacqz.supabase.co |
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
-| Database schema | ✅ Complete | 135 tables, 91 triggers, RLS on ALL tables |
-| TypeScript types | ✅ Generated | packages/types/database.ts — never edit by hand |
-| Migrations | ✅ Committed | supabase/migrations/ — 28 files (001 through 015) |
+| Database schema | ✅ Complete | 137+ tables, 91+ triggers, RLS on ALL tables |
+| TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 4 with contacts V2 + table_views |
+| Migrations | ✅ Committed | supabase/migrations/ — 30 files (001 through 018) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
-| Design system | ✅ Complete | packages/ui — V2 design system, DM Sans headings, warm-gray neutrals, 9 shadcn components |
+| Design system | ✅ Complete | packages/ui — V2 design system, 11 components (+Checkbox, +Pagination) |
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned role-based sidebar, topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper |
@@ -42,20 +42,21 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 013 | ✅ Applied (dev) | proposal-files storage bucket — prod pending |
 | Migration 014 | ✅ Applied (dev) | is_budgetary, tariff_escalation_pct, notifications table — prod pending |
 | Migration 015 | ✅ Applied (dev) | Price book seeded: 35 items, 14 correction factors — prod pending |
+| Migration 017 | ✅ Applied (dev) | Contacts V2: first_name/last_name, lifecycle_stage, secondary_phone, source, owner_id; Companies: pan, industry, company_size, owner_id; Activities + activity_associations tables |
+| Migration 018 | ✅ Applied (dev) | table_views: saved views for HubSpot-style column/filter/sort persistence per user |
 | Data migration | ✅ Complete | 108 vendors, ~160 projects, 850 POs (2,348 items), 1,164 expenses, 916 files from Google Drive |
 | HubSpot cutover | ✅ Complete (V2) | 1,115 leads, 314 projects, 314 proposals, 30 payments migrated. 0 unmatched payments. |
+| Contacts V2 | ✅ Complete | HubSpot-style person/company separation, lifecycle stages, activity timeline, edit pages, smart backfill (~1,039 contacts, ~56 companies from leads) |
+| HubSpot-style DataTable | ✅ Complete | Reusable across leads/proposals/projects/contacts/companies. Column picker (search + drag-reorder), saved views (tabs), URL-driven sort/pagination, checkbox selection |
 | Proposal engine | ✅ Implemented | Quick Quote, BOM generator (9 tests), budgetary + detailed PDF (10 pages), savings page, price override modal, PDF API route, notifications CRUD |
 | Proposal files | ✅ Complete | Upload/download files on proposal detail page via Supabase Storage |
-| Leads filtering | ✅ Complete | Converted (migration placeholder) leads hidden by default, visible via filter |
-| Leads pagination | ✅ Complete | 50/page server-side, bulk actions (assign, status, delete, merge), segment + assignee filters, checkbox selection |
-| Proposals pagination | ✅ Complete | 50/page server-side, budgetary/detailed filter, system type filter, type badge column |
-| Projects pagination | ✅ Complete | 50/page server-side, preserves all existing filters |
+| Leads filtering | ✅ Complete | Converted leads hidden by default, visible via filter |
+| Leads page v2 | ✅ Complete | HubSpot-style DataTable with column picker, saved views, 16 configurable columns |
+| Proposals page v2 | ✅ Complete | HubSpot-style DataTable with column picker, saved views, 12 configurable columns |
 | PM Dashboard v2 | ✅ Complete | Correct KPIs (System Size, Clients, Sales, Profit %), donut chart, operations widget, dark today panel |
-| Contacts system | ✅ Code complete | /contacts, /companies pages, EntityContactsCard on lead/proposal/project detail. Migration 016 pending apply. |
-| Design system | ✅ Complete | packages/ui — V2 design system, 11 components (+Checkbox, +Pagination) |
-| GitHub | ✅ Pushed | All code on origin/main, 11 commits ahead of last deploy |
 | Vercel + domain | ✅ Live | erp.shiroienergy.com — deployed against DEV Supabase, auto-deploys on push |
 | Employee admin page | ✅ Complete | /hr/employees/new — create accounts (auth + profile + employee), deactivate button, temp password generation |
+| Contact dedup | 🔜 Next | ~possible duplicates from backfill retries, need dedup script |
 | Data cleanup | 🔜 Next | 255 fuzzy-match records to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
@@ -374,6 +375,41 @@ Format: `SHIROI/INV/2025-26/0042`
 - ✅ Design: `/design` (design queue from leads), `/design/[leadId]`
 - ✅ Reference: `/price-book`
 
+### Contacts V2 — HubSpot-style CRM (April 4, 2026)
+
+**Architecture:** Person (contacts) and Organization (companies) are separate entities. Company is optional (residential customers have no company). Linked via `contact_company_roles` junction table with role titles and active/ended status.
+
+**Key decisions:**
+- `first_name`/`last_name` split with auto-generated `name` display field
+- `lifecycle_stage`: subscriber → lead → opportunity → customer → evangelist
+- `entity_contacts` polymorphic junction: links contacts to leads, proposals, or projects with role labels
+- `activities` + `activity_associations`: HubSpot-style engagement log (note, call, email, meeting, site_visit, whatsapp, task, status_change) linked to any entity
+- Company optional for residential contacts — no forced company creation
+- Backfill script: smart name splitting, company detection via regex patterns (Pvt, Ltd, LLP, Industries, etc.)
+
+**Files:**
+- Queries: `src/lib/contacts-queries.ts`, `src/lib/contacts-actions.ts`
+- Components: `src/components/contacts/activity-timeline.tsx`, `contact-form.tsx`, `company-form.tsx`, `add-contact-dialog.tsx`, `entity-contacts-card.tsx`
+- Pages: `/contacts`, `/contacts/[id]`, `/contacts/[id]/edit`, `/contacts/new`, `/companies`, `/companies/[id]`, `/companies/[id]/edit`, `/companies/new`
+
+### HubSpot-style DataTable — Reusable (April 4, 2026)
+
+**Architecture:** Single `<DataTable>` component used by leads, proposals, and extensible to all entity types. URL-driven sort/pagination via searchParams. Server-side data fetching.
+
+**Key features:**
+- Column picker: slide-out panel with searchable checkbox list (left) + drag-to-reorder (right)
+- Saved views: `table_views` DB table persists columns, filters, sort per user. Tab bar UI with create/save/delete
+- Per-column config: `column-config.ts` defines sortable, editable, format (badge/currency/date/phone/email), frozen, defaultVisible
+- Checkbox selection with bulk action bar
+- Column definitions: LEAD_COLUMNS (16), PROPOSAL_COLUMNS (12), PROJECT_COLUMNS (11), CONTACT_COLUMNS (8), COMPANY_COLUMNS (7)
+
+**Files:**
+- `src/components/data-table/data-table.tsx` — main component
+- `src/components/data-table/column-config.ts` — all column definitions
+- `src/components/data-table/column-picker.tsx` — HubSpot-style column selector
+- `src/components/data-table/view-tabs.tsx` — saved view tabs
+- `src/lib/views-actions.ts` — server actions for view CRUD
+
 ### Field friction standards (mobile screens)
 
 - 90-second rule: any mobile form completable in under 90 seconds
@@ -451,4 +487,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 3, 2026 — Proposal engine complete (Quick Quote, BOM generator, 10-page PDF, price book seeded). Migrations 010–015 applied to dev. All code pushed to GitHub. Next: Vercel deployment for team data cleanup.*
+*Last updated: April 4, 2026 — Contacts V2 (HubSpot-style person/company separation, lifecycle stages, activity timeline) + HubSpot-style DataTable (column picker, saved views, drag-reorder) for leads/proposals. Migrations 017–018 applied to dev. Types regenerated. ~1,039 contacts backfilled from leads. Next: contact dedup, data cleanup, prod deployment.*

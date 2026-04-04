@@ -63,8 +63,14 @@ export function AddContactDialog({ entityType, entityId, open, onOpenChange }: A
     setLoading(true);
     setError(null);
 
+    // Split name into first/last for the new createContact signature
+    const nameParts = newName.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || undefined;
+
     const createResult = await createContact({
-      name: newName.trim(),
+      firstName,
+      lastName,
       phone: newPhone.trim() || undefined,
       email: newEmail.trim() || undefined,
     });

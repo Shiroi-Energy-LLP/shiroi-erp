@@ -5,24 +5,24 @@ type ProposalStatus = Database['public']['Enums']['proposal_status'];
 
 export interface ProposalFilters {
   status?: ProposalStatus;
-  search?: string;
   systemType?: string;
-  isBudgetary?: boolean;
+  isBudgetary?: string;
+  search?: string;
   page?: number;
   pageSize?: number;
   sort?: string;
   dir?: 'asc' | 'desc';
 }
 
-export interface PaginatedResult<T> {
-  data: T[];
+export interface PaginatedProposals {
+  data: any[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
 }
 
-export async function getProposals(filters: ProposalFilters = {}): Promise<PaginatedResult<any>> {
+export async function getProposals(filters: ProposalFilters = {}): Promise<PaginatedProposals> {
   const op = '[getProposals]';
   console.log(`${op} Starting`);
   const supabase = await createClient();
@@ -31,24 +31,22 @@ export async function getProposals(filters: ProposalFilters = {}): Promise<Pagin
   const pageSize = filters.pageSize ?? 50;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  const sortCol = filters.sort || 'created_at';
+  const sortDir = filters.dir === 'asc';
 
   let query = supabase
     .from('proposals')
-    .select(
-      'id, proposal_number, status, system_size_kwp, system_type, total_after_discount, gross_margin_pct, created_at, valid_until, lead_id, revision_number, margin_approval_required, margin_approved_by, is_budgetary, leads!inner(customer_name, phone)',
-      { count: 'exact' }
-    );
+    .select('id, proposal_number, proposal_type, status, system_size_kwp, system_type, total_after_discount, gross_margin_pct, created_at, valid_until, lead_id, revision_number, is_budgetary, margin_approval_required, margin_approved_by, leads!inner(customer_name, phone)', { count: 'exact' })
+    .order(sortCol, { ascending: sortDir });
 
   if (filters.status) query = query.eq('status', filters.status);
   if (filters.systemType) query = query.eq('system_type', filters.systemType as any);
-  if (filters.isBudgetary !== undefined) query = query.eq('is_budgetary', filters.isBudgetary);
+  if (filters.isBudgetary === 'true') query = query.eq('is_budgetary', true);
+  if (filters.isBudgetary === 'false') query = query.eq('is_budgetary', false);
   if (filters.search) {
-    query = query.or(`proposal_number.ilike.%${filters.search}%,leads.customer_name.ilike.%${filters.search}%`);
+    query = query.or(`proposal_number.ilike.%${filters.search}%`);
   }
 
-  const sortColumn = filters.sort ?? 'created_at';
-  const sortAsc = filters.dir === 'asc';
-  query = query.order(sortColumn, { ascending: sortAsc });
   query = query.range(from, to);
 
   const { data, error, count } = await query;
@@ -57,14 +55,16 @@ export async function getProposals(filters: ProposalFilters = {}): Promise<Pagin
     throw new Error(`Failed to load proposals: ${error.message}`);
   }
 
+  // Flatten for DataTable
+  const rows = (data ?? []).map((p: any) => ({
+    ...p,
+    customer_name: p.leads?.customer_name ?? '—',
+    total_price: p.total_after_discount,
+    margin_pct: p.gross_margin_pct,
+  }));
+
   const total = count ?? 0;
-  return {
-    data: data ?? [],
-    total,
-    page,
-    pageSize,
-    totalPages: Math.ceil(total / pageSize),
-  };
+  return { data: rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
 export async function getProposal(id: string) {

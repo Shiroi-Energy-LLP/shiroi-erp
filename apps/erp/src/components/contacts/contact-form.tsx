@@ -2,14 +2,39 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { createContact } from '@/lib/contacts-actions';
-import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label } from '@repo/ui';
+import { createContact, updateContact } from '@/lib/contacts-actions';
+import { Card, CardHeader, CardTitle, CardContent, Button, Input, Select, Label } from '@repo/ui';
 import { AlertTriangle } from 'lucide-react';
 
-export function ContactForm() {
+const LIFECYCLE_OPTIONS = [
+  { value: 'subscriber', label: 'Subscriber' },
+  { value: 'lead', label: 'Lead' },
+  { value: 'opportunity', label: 'Opportunity' },
+  { value: 'customer', label: 'Customer' },
+  { value: 'evangelist', label: 'Evangelist' },
+];
+
+interface ContactFormProps {
+  contact?: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    name: string;
+    phone: string | null;
+    secondary_phone: string | null;
+    email: string | null;
+    designation: string | null;
+    lifecycle_stage: string | null;
+    source: string | null;
+    notes: string | null;
+  };
+}
+
+export function ContactForm({ contact }: ContactFormProps) {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const isEdit = !!contact;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -17,19 +42,44 @@ export function ContactForm() {
     setError(null);
 
     const form = new FormData(e.currentTarget);
-    const res = await createContact({
-      name: form.get('name') as string,
-      phone: form.get('phone') as string,
-      email: form.get('email') as string,
-      designation: form.get('designation') as string,
-      notes: form.get('notes') as string,
-    });
 
-    setLoading(false);
-    if (res.success && res.contactId) {
-      router.push(`/contacts/${res.contactId}`);
+    if (isEdit) {
+      const res = await updateContact(contact!.id, {
+        firstName: form.get('firstName') as string,
+        lastName: form.get('lastName') as string,
+        phone: form.get('phone') as string,
+        secondaryPhone: form.get('secondaryPhone') as string,
+        email: form.get('email') as string,
+        designation: form.get('designation') as string,
+        lifecycleStage: form.get('lifecycleStage') as string,
+        source: form.get('source') as string,
+        notes: form.get('notes') as string,
+      });
+      setLoading(false);
+      if (res.success) {
+        router.push(`/contacts/${contact!.id}`);
+        router.refresh();
+      } else {
+        setError(res.error ?? 'Failed to update contact');
+      }
     } else {
-      setError(res.error ?? 'Failed to create contact');
+      const res = await createContact({
+        firstName: form.get('firstName') as string,
+        lastName: form.get('lastName') as string,
+        phone: form.get('phone') as string,
+        secondaryPhone: form.get('secondaryPhone') as string,
+        email: form.get('email') as string,
+        designation: form.get('designation') as string,
+        lifecycleStage: form.get('lifecycleStage') as string,
+        source: form.get('source') as string,
+        notes: form.get('notes') as string,
+      });
+      setLoading(false);
+      if (res.success && res.contactId) {
+        router.push(`/contacts/${res.contactId}`);
+      } else {
+        setError(res.error ?? 'Failed to create contact');
+      }
     }
   }
 
@@ -37,7 +87,7 @@ export function ContactForm() {
     <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>New Contact</CardTitle>
+          <CardTitle>{isEdit ? 'Edit Contact' : 'New Contact'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           {error && (
@@ -49,23 +99,49 @@ export function ContactForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input id="name" name="name" required placeholder="e.g., Rajesh Kumar" />
+              <Label htmlFor="firstName">First Name *</Label>
+              <Input id="firstName" name="firstName" required defaultValue={contact?.first_name ?? ''} placeholder="e.g., Rajesh" />
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input id="lastName" name="lastName" defaultValue={contact?.last_name ?? ''} placeholder="e.g., Kumar" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" name="phone" placeholder="10-digit mobile" maxLength={10} />
+              <Input id="phone" name="phone" defaultValue={contact?.phone ?? ''} placeholder="10-digit mobile" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="secondaryPhone">Secondary Phone</Label>
+              <Input id="secondaryPhone" name="secondaryPhone" defaultValue={contact?.secondary_phone ?? ''} placeholder="WhatsApp / alternate" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" placeholder="email@example.com" />
+              <Input id="email" name="email" type="email" defaultValue={contact?.email ?? ''} placeholder="email@example.com" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="designation">Designation</Label>
-              <Input id="designation" name="designation" placeholder="e.g., Purchase Head" />
+              <Input id="designation" name="designation" defaultValue={contact?.designation ?? ''} placeholder="e.g., Purchase Head" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="lifecycleStage">Lifecycle Stage</Label>
+              <Select id="lifecycleStage" name="lifecycleStage" defaultValue={contact?.lifecycle_stage ?? 'lead'}>
+                {LIFECYCLE_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="source">Source</Label>
+              <Input id="source" name="source" defaultValue={contact?.source ?? ''} placeholder="e.g., Referral, Walk-in, Website" />
             </div>
           </div>
 
@@ -75,17 +151,18 @@ export function ContactForm() {
               id="notes"
               name="notes"
               rows={3}
+              defaultValue={contact?.notes ?? ''}
               className="flex w-full rounded-md border-[1.5px] border-[#DFE2E8] bg-white px-3 py-2 text-[13px] text-[#1A1D24] focus-visible:outline-none focus-visible:border-[#00B050] focus-visible:shadow-[0_0_0_3px_rgba(0,176,80,0.1)]"
               placeholder="Any notes about this contact..."
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={() => router.push('/contacts')} disabled={loading}>
+            <Button type="button" variant="ghost" onClick={() => router.back()} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Contact'}
+              {loading ? (isEdit ? 'Saving...' : 'Creating...') : (isEdit ? 'Save Changes' : 'Create Contact')}
             </Button>
           </div>
         </CardContent>

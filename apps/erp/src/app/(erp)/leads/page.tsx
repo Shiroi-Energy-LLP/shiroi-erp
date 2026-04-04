@@ -1,60 +1,21 @@
 import Link from 'next/link';
 import { getLeads, getSalesEngineers } from '@/lib/leads-queries';
-import { LeadsTable } from '@/components/leads/leads-table';
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  Select,
-  Pagination,
-} from '@repo/ui';
-import type { Database } from '@repo/types/database';
-
-type LeadStatus = Database['public']['Enums']['lead_status'];
-type LeadSource = Database['public']['Enums']['lead_source'];
-type CustomerSegment = Database['public']['Enums']['customer_segment'];
-
-const STATUS_OPTIONS: { value: LeadStatus | 'converted'; label: string }[] = [
-  { value: 'new', label: 'New' },
-  { value: 'contacted', label: 'Contacted' },
-  { value: 'site_survey_scheduled', label: 'Survey Scheduled' },
-  { value: 'site_survey_done', label: 'Survey Done' },
-  { value: 'proposal_sent', label: 'Proposal Sent' },
-  { value: 'design_confirmed', label: 'Design Confirmed' },
-  { value: 'negotiation', label: 'Negotiation' },
-  { value: 'won', label: 'Won' },
-  { value: 'lost', label: 'Lost' },
-  { value: 'on_hold', label: 'On Hold' },
-  { value: 'disqualified', label: 'Disqualified' },
-  { value: 'converted', label: 'Converted (Projects)' },
-];
-
-const SOURCE_OPTIONS: { value: LeadSource; label: string }[] = [
-  { value: 'referral', label: 'Referral' },
-  { value: 'website', label: 'Website' },
-  { value: 'builder_tie_up', label: 'Builder Tie-up' },
-  { value: 'channel_partner', label: 'Channel Partner' },
-  { value: 'cold_call', label: 'Cold Call' },
-  { value: 'exhibition', label: 'Exhibition' },
-  { value: 'social_media', label: 'Social Media' },
-  { value: 'walkin', label: 'Walk-in' },
-];
-
-const SEGMENT_OPTIONS: { value: CustomerSegment; label: string }[] = [
-  { value: 'residential', label: 'Residential' },
-  { value: 'commercial', label: 'Commercial' },
-  { value: 'industrial', label: 'Industrial' },
-];
+import { getMyViews } from '@/lib/views-actions';
+import { LeadsTableWrapper } from '@/components/leads/leads-table-wrapper';
+import { LEAD_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
+import { Button, Card, CardContent, Input, Select } from '@repo/ui';
 
 interface LeadsPageProps {
   searchParams: Promise<{
     status?: string;
     source?: string;
     segment?: string;
-    assigned_to?: string;
     search?: string;
+    assignedTo?: string;
     page?: string;
+    sort?: string;
+    dir?: string;
+    view?: string;
   }>;
 }
 
@@ -62,31 +23,39 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   const params = await searchParams;
   const page = parseInt(params.page ?? '1', 10);
 
-  const [result, employees] = await Promise.all([
+  const [result, views] = await Promise.all([
     getLeads({
-      status: (params.status as LeadStatus) || undefined,
-      source: (params.source as LeadSource) || undefined,
-      segment: (params.segment as CustomerSegment) || undefined,
-      assignedTo: params.assigned_to || undefined,
+      status: params.status as any || undefined,
+      source: params.source as any || undefined,
+      segment: params.segment || undefined,
       search: params.search || undefined,
-      includeConverted: params.status === 'converted',
+      assignedTo: params.assignedTo || undefined,
       page,
       pageSize: 50,
+      sort: params.sort || undefined,
+      dir: (params.dir as 'asc' | 'desc') || undefined,
     }),
-    getSalesEngineers(),
+    getMyViews('leads'),
   ]);
 
-  const filterParams: Record<string, string> = {};
-  if (params.status) filterParams.status = params.status;
-  if (params.source) filterParams.source = params.source;
-  if (params.segment) filterParams.segment = params.segment;
-  if (params.assigned_to) filterParams.assigned_to = params.assigned_to;
-  if (params.search) filterParams.search = params.search;
+  // Build current filter params for view saving
+  const currentFilters: Record<string, string> = {};
+  if (params.status) currentFilters.status = params.status;
+  if (params.source) currentFilters.source = params.source;
+  if (params.segment) currentFilters.segment = params.segment;
+  if (params.search) currentFilters.search = params.search;
+  if (params.assignedTo) currentFilters.assignedTo = params.assignedTo;
 
-  const hasFilters = Object.keys(filterParams).length > 0;
+  // Active view columns (from view or defaults)
+  const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
+  const viewCols = activeView?.columns as string[] | null;
+  const visibleColumns = viewCols && viewCols.length > 0
+    ? viewCols
+    : getDefaultColumns('leads');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[#1A1D24]">Leads</h1>
         <Link href="/leads/new">
@@ -94,67 +63,72 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
         </Link>
       </div>
 
+      {/* Quick Filters */}
       <Card>
-        <CardContent className="py-4">
-          <form className="flex flex-wrap items-center gap-3">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-40">
+        <CardContent className="py-3">
+          <form className="flex items-center gap-3 flex-wrap">
+            <Select name="status" defaultValue={params.status ?? ''} className="w-40 h-9 text-sm">
               <option value="">All Statuses</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="site_survey_scheduled">Survey Scheduled</option>
+              <option value="site_survey_done">Survey Done</option>
+              <option value="proposal_sent">Proposal Sent</option>
+              <option value="design_confirmed">Design Confirmed</option>
+              <option value="negotiation">Negotiation</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+              <option value="on_hold">On Hold</option>
+              <option value="disqualified">Disqualified</option>
+              <option value="converted">Converted</option>
             </Select>
-            <Select name="source" defaultValue={params.source ?? ''} className="w-40">
+            <Select name="source" defaultValue={params.source ?? ''} className="w-36 h-9 text-sm">
               <option value="">All Sources</option>
-              {SOURCE_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
+              <option value="referral">Referral</option>
+              <option value="website">Website</option>
+              <option value="builder_tie_up">Builder Tie-up</option>
+              <option value="channel_partner">Channel Partner</option>
+              <option value="cold_call">Cold Call</option>
+              <option value="exhibition">Exhibition</option>
+              <option value="social_media">Social Media</option>
+              <option value="walkin">Walk-in</option>
             </Select>
-            <Select name="segment" defaultValue={params.segment ?? ''} className="w-40">
+            <Select name="segment" defaultValue={params.segment ?? ''} className="w-36 h-9 text-sm">
               <option value="">All Segments</option>
-              {SEGMENT_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </Select>
-            <Select name="assigned_to" defaultValue={params.assigned_to ?? ''} className="w-44">
-              <option value="">All Assignees</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
-              ))}
+              <option value="residential">Residential</option>
+              <option value="commercial">Commercial</option>
+              <option value="industrial">Industrial</option>
             </Select>
             <Input
               name="search"
               defaultValue={params.search ?? ''}
               placeholder="Search name or phone..."
-              className="w-56"
+              className="w-56 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {hasFilters && (
+            <Button type="submit" variant="outline" size="sm" className="h-9">Filter</Button>
+            {Object.keys(currentFilters).length > 0 && (
               <Link href="/leads">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
+                <Button type="button" variant="ghost" size="sm" className="h-9">Clear</Button>
               </Link>
             )}
           </form>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <LeadsTable leads={result.data} employees={employees} />
-          <Pagination
-            currentPage={result.page}
-            totalPages={result.totalPages}
-            totalRecords={result.total}
-            pageSize={result.pageSize}
-            basePath="/leads"
-            searchParams={filterParams}
-            entityName="leads"
-          />
-        </CardContent>
-      </Card>
+      {/* DataTable */}
+      <LeadsTableWrapper
+        data={result.data}
+        total={result.total}
+        page={result.page}
+        pageSize={result.pageSize}
+        totalPages={result.totalPages}
+        sortColumn={params.sort}
+        sortDirection={params.dir}
+        currentFilters={currentFilters}
+        views={views}
+        activeViewId={params.view ?? null}
+        visibleColumns={visibleColumns}
+      />
     </div>
   );
 }

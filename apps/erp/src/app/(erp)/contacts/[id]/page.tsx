@@ -1,29 +1,62 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getContact, getContactEntities } from '@/lib/contacts-queries';
+import { getContact, getContactEntities, getEntityActivities } from '@/lib/contacts-queries';
+import { ActivityTimeline } from '@/components/contacts/activity-timeline';
 import {
-  Card, CardHeader, CardTitle, CardContent, Badge,
+  Card, CardHeader, CardTitle, CardContent, Badge, Button,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
+import { Pencil } from 'lucide-react';
+
+const LIFECYCLE_COLORS: Record<string, string> = {
+  subscriber: '#7C818E',
+  lead: '#2563EB',
+  opportunity: '#EA580C',
+  customer: '#00B050',
+  evangelist: '#9333EA',
+};
 
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [contact, entities] = await Promise.all([
+  const [contact, entities, activities] = await Promise.all([
     getContact(id),
     getContactEntities(id),
+    getEntityActivities('contact', id),
   ]);
 
   if (!contact) notFound();
 
+  const stage = (contact as any).lifecycle_stage ?? 'lead';
+
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/contacts" className="text-sm text-[#00B050] hover:underline">&larr; Back to Contacts</Link>
-        <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">{contact.name}</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <Link href="/contacts" className="text-sm text-[#00B050] hover:underline">&larr; Back to Contacts</Link>
+          <div className="flex items-center gap-3 mt-1">
+            <h1 className="text-2xl font-bold text-[#1A1D24]">{contact.name}</h1>
+            <Badge
+              variant="neutral"
+              className="text-[10px] capitalize"
+              style={{
+                color: LIFECYCLE_COLORS[stage] ?? '#7C818E',
+                borderColor: `${LIFECYCLE_COLORS[stage] ?? '#7C818E'}30`,
+                backgroundColor: `${LIFECYCLE_COLORS[stage] ?? '#7C818E'}10`,
+              }}
+            >
+              {stage}
+            </Badge>
+          </div>
+        </div>
+        <Link href={`/contacts/${id}/edit`}>
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <Pencil className="h-3.5 w-3.5" /> Edit
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-3 gap-6">
-        {/* Left: Details */}
+        {/* Left: Details + Activities */}
         <div className="col-span-2 space-y-6">
           {/* Person Info */}
           <Card>
@@ -33,8 +66,20 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             <CardContent>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
+                  <span className="text-[#7C818E]">First Name</span>
+                  <p className="mt-0.5">{(contact as any).first_name ?? '—'}</p>
+                </div>
+                <div>
+                  <span className="text-[#7C818E]">Last Name</span>
+                  <p className="mt-0.5">{(contact as any).last_name ?? '—'}</p>
+                </div>
+                <div>
                   <span className="text-[#7C818E]">Phone</span>
                   <p className="font-mono mt-0.5">{contact.phone ?? '—'}</p>
+                </div>
+                <div>
+                  <span className="text-[#7C818E]">Secondary Phone</span>
+                  <p className="font-mono mt-0.5">{(contact as any).secondary_phone ?? '—'}</p>
                 </div>
                 <div>
                   <span className="text-[#7C818E]">Email</span>
@@ -44,10 +89,16 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                   <span className="text-[#7C818E]">Designation</span>
                   <p className="mt-0.5">{contact.designation ?? '—'}</p>
                 </div>
+                {(contact as any).source && (
+                  <div>
+                    <span className="text-[#7C818E]">Source</span>
+                    <p className="mt-0.5">{(contact as any).source}</p>
+                  </div>
+                )}
                 {contact.notes && (
                   <div className="col-span-2">
                     <span className="text-[#7C818E]">Notes</span>
-                    <p className="mt-0.5">{contact.notes}</p>
+                    <p className="mt-0.5 whitespace-pre-wrap">{contact.notes}</p>
                   </div>
                 )}
               </div>
@@ -93,6 +144,13 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               )}
             </CardContent>
           </Card>
+
+          {/* Activity Timeline */}
+          <ActivityTimeline
+            activities={activities}
+            entityType="contact"
+            entityId={id}
+          />
         </div>
 
         {/* Right: Companies */}

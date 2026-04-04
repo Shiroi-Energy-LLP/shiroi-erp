@@ -1,14 +1,19 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getCompany } from '@/lib/contacts-queries';
+import { getCompany, getEntityActivities } from '@/lib/contacts-queries';
+import { ActivityTimeline } from '@/components/contacts/activity-timeline';
 import {
-  Card, CardHeader, CardTitle, CardContent, Badge,
+  Card, CardHeader, CardTitle, CardContent, Badge, Button,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
+import { Pencil } from 'lucide-react';
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const company = await getCompany(id);
+  const [company, activities] = await Promise.all([
+    getCompany(id),
+    getEntityActivities('company', id),
+  ]);
   if (!company) notFound();
 
   const activeContacts = company.contact_company_roles?.filter((r: any) => !r.ended_at) ?? [];
@@ -16,9 +21,16 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/companies" className="text-sm text-[#00B050] hover:underline">&larr; Back to Companies</Link>
-        <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">{company.name}</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <Link href="/companies" className="text-sm text-[#00B050] hover:underline">&larr; Back to Companies</Link>
+          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">{company.name}</h1>
+        </div>
+        <Link href={`/companies/${id}/edit`}>
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <Pencil className="h-3.5 w-3.5" /> Edit
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-3 gap-6">
@@ -39,6 +51,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   <p className="font-mono mt-0.5">{company.gstin ?? '—'}</p>
                 </div>
                 <div>
+                  <span className="text-[#7C818E]">PAN</span>
+                  <p className="font-mono mt-0.5">{(company as any).pan ?? '—'}</p>
+                </div>
+                <div>
+                  <span className="text-[#7C818E]">Industry</span>
+                  <p className="mt-0.5">{(company as any).industry ?? '—'}</p>
+                </div>
+                <div>
                   <span className="text-[#7C818E]">City</span>
                   <p className="mt-0.5">{company.city ?? '—'}</p>
                 </div>
@@ -56,6 +76,12 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   <div>
                     <span className="text-[#7C818E]">Website</span>
                     <p className="mt-0.5 text-[#00B050]">{company.website}</p>
+                  </div>
+                )}
+                {(company as any).company_size && (
+                  <div>
+                    <span className="text-[#7C818E]">Company Size</span>
+                    <p className="mt-0.5 capitalize">{(company as any).company_size}</p>
                   </div>
                 )}
               </div>
@@ -131,9 +157,16 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
               </CardContent>
             </Card>
           )}
+
+          {/* Activity Timeline */}
+          <ActivityTimeline
+            activities={activities}
+            entityType="company"
+            entityId={id}
+          />
         </div>
 
-        {/* Right sidebar - notes */}
+        {/* Right sidebar */}
         <div>
           {company.notes && (
             <Card>
@@ -141,7 +174,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 <CardTitle className="text-base">Notes</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-[#3F424D]">{company.notes}</p>
+                <p className="text-sm text-[#3F424D] whitespace-pre-wrap">{company.notes}</p>
               </CardContent>
             </Card>
           )}

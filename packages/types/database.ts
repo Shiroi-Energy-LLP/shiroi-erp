@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: string
+          body: string | null
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          metadata: Json | null
+          occurred_at: string
+          owner_id: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_type: string
+          body?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          metadata?: Json | null
+          occurred_at?: string
+          owner_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: string
+          body?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          metadata?: Json | null
+          occurred_at?: string
+          owner_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_associations: {
+        Row: {
+          activity_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_associations_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_corrections: {
         Row: {
           approved_at: string | null
@@ -588,11 +667,15 @@ export type Database = {
           address_line1: string | null
           address_line2: string | null
           city: string | null
+          company_size: string | null
           created_at: string
           gstin: string | null
           id: string
+          industry: string | null
           name: string
           notes: string | null
+          owner_id: string | null
+          pan: string | null
           pincode: string | null
           segment: Database["public"]["Enums"]["customer_segment"]
           state: string | null
@@ -603,11 +686,15 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           city?: string | null
+          company_size?: string | null
           created_at?: string
           gstin?: string | null
           id?: string
+          industry?: string | null
           name: string
           notes?: string | null
+          owner_id?: string | null
+          pan?: string | null
           pincode?: string | null
           segment?: Database["public"]["Enums"]["customer_segment"]
           state?: string | null
@@ -618,18 +705,30 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           city?: string | null
+          company_size?: string | null
           created_at?: string
           gstin?: string | null
           id?: string
+          industry?: string | null
           name?: string
           notes?: string | null
+          owner_id?: string | null
+          pan?: string | null
           pincode?: string | null
           segment?: Database["public"]["Enums"]["customer_segment"]
           state?: string | null
           updated_at?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_cashflow_snapshots: {
         Row: {
@@ -735,33 +834,59 @@ export type Database = {
           created_at: string
           designation: string | null
           email: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
+          lifecycle_stage: string | null
           name: string
           notes: string | null
+          owner_id: string | null
           phone: string | null
+          secondary_phone: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           designation?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          lifecycle_stage?: string | null
           name: string
           notes?: string | null
+          owner_id?: string | null
           phone?: string | null
+          secondary_phone?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           designation?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          lifecycle_stage?: string | null
           name?: string
           notes?: string | null
+          owner_id?: string | null
           phone?: string | null
+          secondary_phone?: string | null
+          source?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_checkins: {
         Row: {
@@ -9660,6 +9785,68 @@ export type Database = {
           webhook_url?: string
         }
         Relationships: []
+      }
+      table_views: {
+        Row: {
+          columns: Json
+          created_at: string
+          entity_type: string
+          filters: Json
+          id: string
+          is_default: boolean
+          name: string
+          owner_id: string
+          page_size: number
+          position: number
+          quick_filters: Json
+          sort_column: string | null
+          sort_direction: string | null
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          columns?: Json
+          created_at?: string
+          entity_type: string
+          filters?: Json
+          id?: string
+          is_default?: boolean
+          name: string
+          owner_id: string
+          page_size?: number
+          position?: number
+          quick_filters?: Json
+          sort_column?: string | null
+          sort_direction?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          columns?: Json
+          created_at?: string
+          entity_type?: string
+          filters?: Json
+          id?: string
+          is_default?: boolean
+          name?: string
+          owner_id?: string
+          page_size?: number
+          position?: number
+          quick_filters?: Json
+          sort_column?: string | null
+          sort_direction?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_views_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {

@@ -12,6 +12,7 @@ export interface PaginatedResult<T> {
 
 export interface ContactFilters {
   search?: string;
+  lifecycleStage?: string;
   page?: number;
   pageSize?: number;
 }
@@ -29,13 +30,16 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
   let query = supabase
     .from('contacts')
     .select(
-      'id, name, phone, email, designation, created_at, contact_company_roles(company_id, role_title, is_primary, ended_at, companies(name))',
+      'id, name, first_name, last_name, phone, email, designation, lifecycle_stage, created_at, contact_company_roles(company_id, role_title, is_primary, ended_at, companies(name))',
       { count: 'exact' }
     )
-    .order('name', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (filters.search) {
     query = query.or(`name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+  }
+  if (filters.lifecycleStage) {
+    query = query.eq('lifecycle_stage', filters.lifecycleStage);
   }
 
   query = query.range(from, to);
@@ -57,7 +61,7 @@ export async function getContact(id: string) {
 
   const { data, error } = await supabase
     .from('contacts')
-    .select('*, contact_company_roles(*, companies(name, segment))')
+    .select('*, contact_company_roles(*, companies(id, name, segment))')
     .eq('id', id)
     .single();
 
@@ -75,7 +79,7 @@ export async function getEntityContacts(entityType: string, entityId: string) {
 
   const { data, error } = await supabase
     .from('entity_contacts')
-    .select('id, role_label, is_primary, contacts(id, name, phone, email, designation)')
+    .select('id, role_label, is_primary, contacts(id, name, first_name, last_name, phone, email, designation)')
     .eq('entity_type', entityType)
     .eq('entity_id', entityId)
     .order('is_primary', { ascending: false });
@@ -111,7 +115,7 @@ export async function searchContacts(query: string) {
 
   const { data, error } = await supabase
     .from('contacts')
-    .select('id, name, phone, email, designation')
+    .select('id, name, first_name, last_name, phone, email, designation')
     .or(`name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
     .order('name')
     .limit(20);
@@ -144,7 +148,7 @@ export async function getCompanies(filters: CompanyFilters = {}): Promise<Pagina
 
   let query = supabase
     .from('companies')
-    .select('id, name, segment, gstin, city, state, created_at', { count: 'exact' })
+    .select('id, name, segment, gstin, city, state, industry, owner_id, created_at', { count: 'exact' })
     .order('name', { ascending: true });
 
   if (filters.segment) query = query.eq('segment', filters.segment as any);
@@ -171,7 +175,7 @@ export async function getCompany(id: string) {
 
   const { data, error } = await supabase
     .from('companies')
-    .select('*, contact_company_roles(*, contacts(id, name, phone, email, designation))')
+    .select('*, contact_company_roles(*, contacts(id, name, first_name, last_name, phone, email, designation))')
     .eq('id', id)
     .single();
 
@@ -180,4 +184,39 @@ export async function getCompany(id: string) {
     throw new Error(`Failed to load company: ${error.message}`);
   }
   return data;
+}
+
+// ── Activities ──
+
+export async function getEntityActivities(entityType: string, entityId: string) {
+  const op = '[getEntityActivities]';
+  console.log(`${op} Starting for: ${entityType}/${entityId}`);
+  const supabase = await createClient();
+
+  const { data: assocs, error: assocErr } = await supabase
+    .from('activity_associations')
+    .select('activity_id')
+    .eq('entity_type', entityType)
+    .eq('entity_id', entityId);
+
+  if (assocErr) {
+    console.error(`${op} Assoc query failed:`, { code: assocErr.code, message: assocErr.message });
+    throw new Error(`Failed to load activity associations: ${assocErr.message}`);
+  }
+
+  if (!assocs || assocs.length === 0) return [];
+
+  const activityIds = assocs.map((a) => a.activity_id);
+
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*, owner:profiles!activities_owner_id_fkey(full_name)')
+    .in('id', activityIds)
+    .order('occurred_at', { ascending: false });
+
+  if (error) {
+    console.error(`${op} Activities query failed:`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load activities: ${error.message}`);
+  }
+  return data ?? [];
 }

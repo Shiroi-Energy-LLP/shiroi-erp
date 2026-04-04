@@ -1446,6 +1446,34 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Payment stage mapping documented: Advance (is_advance=true), Supply/Installation/Commissioning/Retention (is_advance=false)
 - Migration file count updated: 28 files (001 through 012)
 
+**What changed in v3.5 (April 4, 2026):**
+- Contacts V2: HubSpot-style person/company separation (inspired by HubSpot CRM data model)
+  - Person (contacts) and Organization (companies) are separate entities
+  - `first_name`/`last_name` split with auto-generated `name` display field via DB trigger
+  - `lifecycle_stage` on contacts: subscriber → lead → opportunity → customer → evangelist
+  - Company optional for residential customers (no forced company creation)
+  - `contact_company_roles` junction: contacts linked to companies with role titles, active/ended status
+  - `entity_contacts` polymorphic junction: contacts linked to leads/proposals/projects with role labels
+  - Activity timeline: `activities` + `activity_associations` tables — 8 engagement types (note, call, email, meeting, site_visit, whatsapp, task, status_change) linked to any entity
+  - Edit pages: `/contacts/[id]/edit`, `/companies/[id]/edit`
+  - Source tracking, secondary phone, owner_id on contacts; PAN, industry, company_size on companies
+- Migration 017 applied (dev): Contacts V2 schema changes — nuke bad backfill, add new columns, create activities system
+- Migration 018 applied (dev): `table_views` table for HubSpot-style saved views
+- HubSpot-style DataTable: reusable `<DataTable>` component for all entity list pages
+  - Column picker: slide-out panel with searchable checkbox list + drag-to-reorder
+  - Saved views: `table_views` table persists columns/filters/sort per user, tab bar UI
+  - URL-driven sort/pagination via searchParams, server-side data fetching
+  - Column definitions: LEAD_COLUMNS (16), PROPOSAL_COLUMNS (12), PROJECT_COLUMNS (11), CONTACT_COLUMNS (8), COMPANY_COLUMNS (7)
+  - Checkbox selection with bulk action support
+- Leads page rebuilt with DataTable (column picker, saved views, 16 configurable columns)
+- Proposals page rebuilt with DataTable (column picker, saved views, 12 configurable columns)
+- Smart contacts backfill: ~1,039 contacts + ~56 companies created from 1,118 leads
+  - Residential → contact only, no company
+  - C&I → regex detection for company names (Pvt, Ltd, LLP, Industries, etc.), create company + contact
+  - Name splitting: first/last from customer_name, lifecycle_stage from lead status
+- TypeScript types regenerated with all new tables/columns, all `as any` workarounds removed
+- Migration file count: 30 files (001 through 018)
+
 **What changed in v3.3:**
 - HubSpot cutover V1: 963 leads, 144 proposals, 144 projects from 1,210-deal CSV; 15 payments from 65-record payments CSV
 - Three-tier dedup: hubspot_deal_id → customer_name+system_size → customer_name fuzzy (237 deduped)

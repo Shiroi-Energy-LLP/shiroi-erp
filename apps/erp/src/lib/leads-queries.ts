@@ -2,15 +2,14 @@ import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
-type LeadSource = Database['public']['Enums']['lead_source'];
-type CustomerSegment = Database['public']['Enums']['customer_segment'];
 
+// Re-export pure helpers for convenience
 export { isValidTransition, normalizePhone, getValidNextStatuses } from './leads-helpers';
 
 export interface LeadFilters {
   status?: LeadStatus;
-  source?: LeadSource;
-  segment?: CustomerSegment;
+  source?: Database['public']['Enums']['lead_source'];
+  segment?: string;
   search?: string;
   assignedTo?: string;
   includeConverted?: boolean;
@@ -20,15 +19,15 @@ export interface LeadFilters {
   dir?: 'asc' | 'desc';
 }
 
-export interface PaginatedResult<T> {
-  data: T[];
+export interface PaginatedLeads {
+  data: any[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
 }
 
-export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedResult<any>> {
+export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLeads> {
   const op = '[getLeads]';
   console.log(`${op} Starting`);
   const supabase = await createClient();
@@ -37,14 +36,14 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedResu
   const pageSize = filters.pageSize ?? 50;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  const sortCol = filters.sort || 'created_at';
+  const sortDir = filters.dir === 'asc';
 
   let query = supabase
     .from('leads')
-    .select(
-      'id, customer_name, phone, email, city, segment, source, status, estimated_size_kwp, assigned_to, next_followup_date, created_at, employees!leads_assigned_to_fkey(full_name)',
-      { count: 'exact' }
-    )
-    .is('deleted_at', null);
+    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, estimated_value, system_capacity_kw, address_line1, pincode, is_qualified, next_followup_date, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name)', { count: 'exact' })
+    .is('deleted_at', null)
+    .order(sortCol, { ascending: sortDir });
 
   if (filters.status) {
     query = query.eq('status', filters.status);
@@ -52,15 +51,10 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedResu
     query = query.not('status', 'eq', 'converted');
   }
   if (filters.source) query = query.eq('source', filters.source);
-  if (filters.segment) query = query.eq('segment', filters.segment);
+  if (filters.segment) query = query.eq('segment', filters.segment as any);
   if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
-  if (filters.search) {
-    query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
-  }
+  if (filters.search) query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
 
-  const sortColumn = filters.sort ?? 'created_at';
-  const sortAsc = filters.dir === 'asc';
-  query = query.order(sortColumn, { ascending: sortAsc });
   query = query.range(from, to);
 
   const { data, error, count } = await query;
@@ -69,14 +63,14 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedResu
     throw new Error(`Failed to load leads: ${error.message}`);
   }
 
+  // Flatten employee name for DataTable
+  const rows = (data ?? []).map((lead: any) => ({
+    ...lead,
+    assigned_to_name: lead.employees?.full_name ?? '—',
+  }));
+
   const total = count ?? 0;
-  return {
-    data: data ?? [],
-    total,
-    page,
-    pageSize,
-    totalPages: Math.ceil(total / pageSize),
-  };
+  return { data: rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
 export async function getLead(id: string) {

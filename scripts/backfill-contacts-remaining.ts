@@ -144,20 +144,24 @@ async function main() {
 
     // Link to leads
     for (const leadId of info.leadIds) {
-      await admin.from('entity_contacts').insert({
-        contact_id: contact.id, entity_type: 'lead', entity_id: leadId,
-        role_label: 'Primary Contact', is_primary: true,
-      }).catch(() => {});
+      try {
+        await admin.from('entity_contacts').insert({
+          contact_id: contact.id, entity_type: 'lead', entity_id: leadId,
+          role_label: 'Primary Contact', is_primary: true,
+        });
+      } catch (_) { /* ignore duplicates */ }
       await admin.from('leads').update({ company_id: company.id }).eq('id', leadId);
       leadsLinked++;
     }
 
     // Link to projects
     for (const projectId of info.projectIds) {
-      await admin.from('entity_contacts').insert({
-        contact_id: contact.id, entity_type: 'project', entity_id: projectId,
-        role_label: 'Primary Contact', is_primary: true,
-      }).catch(() => {});
+      try {
+        await admin.from('entity_contacts').insert({
+          contact_id: contact.id, entity_type: 'project', entity_id: projectId,
+          role_label: 'Primary Contact', is_primary: true,
+        });
+      } catch (_) { /* ignore duplicates */ }
       await admin.from('projects').update({ company_id: company.id }).eq('id', projectId);
       projectsLinked++;
     }
