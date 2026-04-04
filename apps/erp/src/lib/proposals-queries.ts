@@ -6,28 +6,65 @@ type ProposalStatus = Database['public']['Enums']['proposal_status'];
 export interface ProposalFilters {
   status?: ProposalStatus;
   search?: string;
+  systemType?: string;
+  isBudgetary?: boolean;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+  dir?: 'asc' | 'desc';
 }
 
-export async function getProposals(filters: ProposalFilters = {}) {
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function getProposals(filters: ProposalFilters = {}): Promise<PaginatedResult<any>> {
   const op = '[getProposals]';
   console.log(`${op} Starting`);
   const supabase = await createClient();
+
+  const page = filters.page ?? 1;
+  const pageSize = filters.pageSize ?? 50;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   let query = supabase
     .from('proposals')
-    .select('id, proposal_number, status, system_size_kwp, system_type, total_after_discount, gross_margin_pct, created_at, valid_until, lead_id, revision_number, margin_approval_required, margin_approved_by, leads!inner(customer_name, phone)')
-    .order('created_at', { ascending: false });
+    .select(
+      'id, proposal_number, status, system_size_kwp, system_type, total_after_discount, gross_margin_pct, created_at, valid_until, lead_id, revision_number, margin_approval_required, margin_approved_by, is_budgetary, leads!inner(customer_name, phone)',
+      { count: 'exact' }
+    );
 
   if (filters.status) query = query.eq('status', filters.status);
+  if (filters.systemType) query = query.eq('system_type', filters.systemType);
+  if (filters.isBudgetary !== undefined) query = query.eq('is_budgetary', filters.isBudgetary);
   if (filters.search) {
     query = query.or(`proposal_number.ilike.%${filters.search}%,leads.customer_name.ilike.%${filters.search}%`);
   }
 
-  const { data, error } = await query;
+  const sortColumn = filters.sort ?? 'created_at';
+  const sortAsc = filters.dir === 'asc';
+  query = query.order(sortColumn, { ascending: sortAsc });
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load proposals: ${error.message}`);
   }
-  return data ?? [];
+
+  const total = count ?? 0;
+  return {
+    data: data ?? [],
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 export async function getProposal(id: string) {
