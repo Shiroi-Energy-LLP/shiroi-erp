@@ -2,44 +2,81 @@ import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
+type LeadSource = Database['public']['Enums']['lead_source'];
+type CustomerSegment = Database['public']['Enums']['customer_segment'];
 
-// Re-export pure helpers for convenience
 export { isValidTransition, normalizePhone, getValidNextStatuses } from './leads-helpers';
 
 export interface LeadFilters {
   status?: LeadStatus;
-  source?: Database['public']['Enums']['lead_source'];
+  source?: LeadSource;
+  segment?: CustomerSegment;
   search?: string;
   assignedTo?: string;
   includeConverted?: boolean;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+  dir?: 'asc' | 'desc';
 }
 
-export async function getLeads(filters: LeadFilters = {}) {
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedResult<any>> {
   const op = '[getLeads]';
   console.log(`${op} Starting`);
   const supabase = await createClient();
+
+  const page = filters.page ?? 1;
+  const pageSize = filters.pageSize ?? 50;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   let query = supabase
     .from('leads')
-    .select('id, customer_name, phone, email, city, segment, source, status, estimated_size_kwp, assigned_to, next_followup_date, created_at, employees!leads_assigned_to_fkey(full_name)')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
+    .select(
+      'id, customer_name, phone, email, city, segment, source, status, estimated_size_kwp, assigned_to, next_followup_date, created_at, employees!leads_assigned_to_fkey(full_name)',
+      { count: 'exact' }
+    )
+    .is('deleted_at', null);
 
   if (filters.status) {
     query = query.eq('status', filters.status);
   } else if (!filters.includeConverted) {
-    // By default, hide migration placeholder leads (converted = already a project)
     query = query.not('status', 'eq', 'converted');
   }
   if (filters.source) query = query.eq('source', filters.source);
+  if (filters.segment) query = query.eq('segment', filters.segment);
   if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
-  if (filters.search) query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+  if (filters.search) {
+    query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+  }
 
-  const { data, error } = await query;
+  const sortColumn = filters.sort ?? 'created_at';
+  const sortAsc = filters.dir === 'asc';
+  query = query.order(sortColumn, { ascending: sortAsc });
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load leads: ${error.message}`);
   }
-  return data ?? [];
+
+  const total = count ?? 0;
+  return {
+    data: data ?? [],
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 export async function getLead(id: string) {
