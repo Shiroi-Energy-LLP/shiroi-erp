@@ -41,7 +41,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
 
   let query = supabase
     .from('leads')
-    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, estimated_value, system_capacity_kw, address_line1, pincode, is_qualified, next_followup_date, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name)', { count: 'exact' })
+    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name)', { count: 'exact' })
     .is('deleted_at', null)
     .order(sortCol, { ascending: sortDir });
 
