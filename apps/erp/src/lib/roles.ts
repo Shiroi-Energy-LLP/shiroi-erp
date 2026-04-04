@@ -70,6 +70,8 @@ const ITEMS = {
   myTasks:        { label: 'My Tasks',          href: '/my-tasks',         icon: 'ClipboardList' },
   campaigns:      { label: 'Campaigns',         href: '/marketing/campaigns', icon: 'Megaphone' },
   netMetering:    { label: 'Net Metering',      href: '/liaison/net-metering', icon: 'Globe' },
+  contacts:       { label: 'Contacts',          href: '/contacts',           icon: 'Users' },
+  companies:      { label: 'Companies',         href: '/companies',          icon: 'Building2' },
 } as const satisfies Record<string, NavItem>;
 
 // ---------------------------------------------------------------------------
@@ -84,6 +86,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.serviceTickets] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.profitability] },
+    { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
   ],
   project_manager: [
@@ -92,6 +95,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Execution',    items: [ITEMS.dailyReports, ITEMS.qcGates] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders] },
     { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule] },
+    { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
   ],
   om_technician: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
@@ -107,6 +111,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Sales',        items: [ITEMS.leads, ITEMS.proposals] },
     { label: 'Marketing',    items: [ITEMS.campaigns] },
     { label: 'Liaison',      items: [ITEMS.netMetering] },
+    { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
   ],
   designer: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
@@ -117,6 +122,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Overview',         items: [ITEMS.dashboard] },
     { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.deliveries] },
     { label: 'Vendor Management', items: [ITEMS.vendors, ITEMS.priceBook] },
+    { label: 'Contacts',         items: [ITEMS.contacts, ITEMS.companies] },
   ],
   finance: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
@@ -124,6 +130,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Billing',      items: [ITEMS.invoices, ITEMS.payments] },
     { label: 'Vendor',       items: [ITEMS.vendorPayments, ITEMS.msmeCompliance] },
     { label: 'Analysis',     items: [ITEMS.profitability] },
+    { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
   ],
   hr_manager: [
     { label: 'Overview',            items: [ITEMS.dashboard] },

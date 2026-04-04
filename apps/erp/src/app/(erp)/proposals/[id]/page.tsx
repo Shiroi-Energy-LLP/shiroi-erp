@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@repo/supabase/server';
 import { getProposal, getProposalRevisions } from '@/lib/proposals-queries';
+import { getEntityContacts } from '@/lib/contacts-queries';
 import { ProposalStatusBadge } from '@/components/proposals/proposal-status-badge';
+import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
 import { BOMTable } from '@/components/proposals/bom-table';
 import { PaymentSchedule } from '@/components/proposals/payment-schedule';
 import { ProposalFiles } from '@/components/proposals/proposal-files';
@@ -30,7 +32,10 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
     notFound();
   }
 
-  const revisions = await getProposalRevisions(proposal.proposal_number);
+  const [revisions, entityContacts] = await Promise.all([
+    getProposalRevisions(proposal.proposal_number),
+    getEntityContacts('proposal', id),
+  ]);
 
   const bomLines = proposal.proposal_bom_lines ?? [];
   const paymentMilestones = proposal.proposal_payment_schedule ?? [];
@@ -256,6 +261,8 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
             proposalNumber={proposal.proposal_number}
             initialFiles={proposalFiles}
           />
+
+          <EntityContactsCard entityType="proposal" entityId={id} contacts={entityContacts} />
         </div>
       </div>
     </div>

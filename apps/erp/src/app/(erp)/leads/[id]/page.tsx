@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLead, getLeadActivities } from '@/lib/leads-queries';
+import { getEntityContacts } from '@/lib/contacts-queries';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
+import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
 import { ActivityFeed } from '@/components/leads/activity-feed';
 import { StatusChange } from '@/components/leads/status-change';
 import { AddActivityForm } from '@/components/leads/add-activity-form';
@@ -22,9 +24,10 @@ interface LeadDetailPageProps {
 
 export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   const { id } = await params;
-  const [lead, activities] = await Promise.all([
+  const [lead, activities, entityContacts] = await Promise.all([
     getLead(id),
     getLeadActivities(id),
+    getEntityContacts('lead', id),
   ]);
 
   if (!lead) {
@@ -138,6 +141,8 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
               </CardContent>
             </Card>
           )}
+
+          <EntityContactsCard entityType="lead" entityId={id} contacts={entityContacts} />
         </div>
       </div>
     </div>

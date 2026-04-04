@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects-queries';
+import { getEntityContacts } from '@/lib/contacts-queries';
+import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
 import { formatINR, formatDate, toIST } from '@repo/ui/formatters';
 import {
   Card,
@@ -15,7 +17,10 @@ interface ProjectOverviewPageProps {
 
 export default async function ProjectOverviewPage({ params }: ProjectOverviewPageProps) {
   const { id } = await params;
-  const project = await getProject(id);
+  const [project, entityContacts] = await Promise.all([
+    getProject(id),
+    getEntityContacts('project', id),
+  ]);
 
   if (!project) {
     notFound();
@@ -240,6 +245,8 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
             </CardContent>
           </Card>
         )}
+
+        <EntityContactsCard entityType="project" entityId={id} contacts={entityContacts} />
       </div>
     </div>
   );

@@ -27,7 +27,7 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
   const to = from + pageSize - 1;
 
   let query = supabase
-    .from('contacts')
+    .from('contacts' as any)
     .select(
       'id, name, phone, email, designation, created_at, contact_company_roles(company_id, role_title, is_primary, ended_at, companies(name))',
       { count: 'exact' }
@@ -50,13 +50,13 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
   return { data: data ?? [], total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
-export async function getContact(id: string) {
+export async function getContact(id: string): Promise<any> {
   const op = '[getContact]';
   console.log(`${op} Starting for: ${id}`);
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('contacts')
+    .from('contacts' as any)
     .select('*, contact_company_roles(*, companies(name, segment))')
     .eq('id', id)
     .single();
@@ -68,13 +68,13 @@ export async function getContact(id: string) {
   return data;
 }
 
-export async function getEntityContacts(entityType: string, entityId: string) {
+export async function getEntityContacts(entityType: string, entityId: string): Promise<any[]> {
   const op = '[getEntityContacts]';
   console.log(`${op} Starting for: ${entityType}/${entityId}`);
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('entity_contacts')
+    .from('entity_contacts' as any)
     .select('id, role_label, is_primary, contacts(id, name, phone, email, designation)')
     .eq('entity_type', entityType)
     .eq('entity_id', entityId)
@@ -87,13 +87,13 @@ export async function getEntityContacts(entityType: string, entityId: string) {
   return data ?? [];
 }
 
-export async function getContactEntities(contactId: string) {
+export async function getContactEntities(contactId: string): Promise<any[]> {
   const op = '[getContactEntities]';
   console.log(`${op} Starting for: ${contactId}`);
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('entity_contacts')
+    .from('entity_contacts' as any)
     .select('id, entity_type, entity_id, role_label, is_primary, created_at')
     .eq('contact_id', contactId)
     .order('created_at', { ascending: false });
@@ -105,12 +105,12 @@ export async function getContactEntities(contactId: string) {
   return data ?? [];
 }
 
-export async function searchContacts(query: string) {
+export async function searchContacts(query: string): Promise<any[]> {
   const op = '[searchContacts]';
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('contacts')
+    .from('contacts' as any)
     .select('id, name, phone, email, designation')
     .or(`name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
     .order('name')
@@ -143,7 +143,7 @@ export async function getCompanies(filters: CompanyFilters = {}): Promise<Pagina
   const to = from + pageSize - 1;
 
   let query = supabase
-    .from('companies')
+    .from('companies' as any)
     .select('id, name, segment, gstin, city, state, created_at', { count: 'exact' })
     .order('name', { ascending: true });
 
@@ -164,13 +164,13 @@ export async function getCompanies(filters: CompanyFilters = {}): Promise<Pagina
   return { data: data ?? [], total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
-export async function getCompany(id: string) {
+export async function getCompany(id: string): Promise<any> {
   const op = '[getCompany]';
   console.log(`${op} Starting for: ${id}`);
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('companies')
+    .from('companies' as any)
     .select('*, contact_company_roles(*, contacts(id, name, phone, email, designation))')
     .eq('id', id)
     .single();
