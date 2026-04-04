@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   Badge,
+  Button,
   Table,
   TableHeader,
   TableBody,
@@ -12,6 +13,7 @@ import {
   TableHead,
   TableCell,
 } from '@repo/ui';
+import { DeactivateEmployeeButton } from '@/components/hr/deactivate-employee-button';
 
 export default async function EmployeesPage() {
   let employees: Awaited<ReturnType<typeof getEmployees>> = [];
@@ -42,6 +44,13 @@ export default async function EmployeesPage() {
             &larr; Back to HR
           </Link>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Employees</h1>
+        </div>
+        <Link href="/hr/employees/new">
+          <Button>New Employee</Button>
+        </Link>
+      </div>
+      <div className="flex items-center justify-between">
+        <div>
           <p className="text-sm text-gray-500">
             {employees.length} employee{employees.length !== 1 ? 's' : ''} total
           </p>
@@ -61,12 +70,13 @@ export default async function EmployeesPage() {
                 <TableHead>Employment Type</TableHead>
                 <TableHead>Date of Joining</TableHead>
                 <TableHead>Active</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {employees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     No employees found.
                   </TableCell>
                 </TableRow>
@@ -94,6 +104,13 @@ export default async function EmployeesPage() {
                       <Badge variant={emp.is_active ? 'default' : 'secondary'}>
                         {emp.is_active ? 'Active' : 'Inactive'}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DeactivateEmployeeButton
+                        employeeId={emp.id}
+                        employeeName={emp.full_name}
+                        isActive={emp.is_active}
+                      />
                     </TableCell>
                   </TableRow>
                 ))
