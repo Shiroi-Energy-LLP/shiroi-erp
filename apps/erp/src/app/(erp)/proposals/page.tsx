@@ -14,6 +14,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  Pagination,
+  Badge,
 } from '@repo/ui';
 import type { Database } from '@repo/types/database';
 
@@ -30,23 +32,50 @@ const STATUS_OPTIONS: { value: ProposalStatus; label: string }[] = [
   { value: 'superseded', label: 'Superseded' },
 ];
 
+const SYSTEM_TYPE_OPTIONS = [
+  { value: 'on_grid', label: 'On Grid' },
+  { value: 'off_grid', label: 'Off Grid' },
+  { value: 'hybrid', label: 'Hybrid' },
+];
+
+const TYPE_OPTIONS = [
+  { value: 'budgetary', label: 'Budgetary' },
+  { value: 'detailed', label: 'Detailed' },
+];
+
 interface ProposalsPageProps {
   searchParams: Promise<{
     status?: string;
     search?: string;
+    system_type?: string;
+    type?: string;
+    page?: string;
   }>;
 }
 
 export default async function ProposalsPage({ searchParams }: ProposalsPageProps) {
   const params = await searchParams;
-  const proposals = await getProposals({
+  const page = parseInt(params.page ?? '1', 10);
+
+  const result = await getProposals({
     status: (params.status as ProposalStatus) || undefined,
     search: params.search || undefined,
+    systemType: params.system_type || undefined,
+    isBudgetary: params.type === 'budgetary' ? true : params.type === 'detailed' ? false : undefined,
+    page,
+    pageSize: 50,
   });
+
+  const filterParams: Record<string, string> = {};
+  if (params.status) filterParams.status = params.status;
+  if (params.search) filterParams.search = params.search;
+  if (params.system_type) filterParams.system_type = params.system_type;
+  if (params.type) filterParams.type = params.type;
+
+  const hasFilters = Object.keys(filterParams).length > 0;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[#1A1D24]">Proposals</h1>
         <Link href="/proposals/new">
@@ -54,13 +83,24 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
         </Link>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-44">
+          <form className="flex flex-wrap items-center gap-3">
+            <Select name="status" defaultValue={params.status ?? ''} className="w-40">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </Select>
+            <Select name="type" defaultValue={params.type ?? ''} className="w-36">
+              <option value="">All Types</option>
+              {TYPE_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </Select>
+            <Select name="system_type" defaultValue={params.system_type ?? ''} className="w-36">
+              <option value="">All Systems</option>
+              {SYSTEM_TYPE_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </Select>
@@ -68,12 +108,12 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
               name="search"
               defaultValue={params.search ?? ''}
               placeholder="Search proposal # or customer..."
-              className="w-72"
+              className="w-64"
             />
             <Button type="submit" variant="outline" size="sm">
               Filter
             </Button>
-            {(params.status || params.search) && (
+            {hasFilters && (
               <Link href="/proposals">
                 <Button type="button" variant="ghost" size="sm">
                   Clear
@@ -84,7 +124,6 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
         </CardContent>
       </Card>
 
-      {/* Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -92,6 +131,7 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
               <TableRow>
                 <TableHead>Proposal #</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>System</TableHead>
                 <TableHead className="text-right">Size (kWp)</TableHead>
                 <TableHead className="text-right">Total</TableHead>
@@ -102,14 +142,14 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
               </TableRow>
             </TableHeader>
             <TableBody>
-              {proposals.length === 0 ? (
+              {result.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={10} className="text-center text-[#9CA0AB] py-8">
                     No proposals found.
                   </TableCell>
                 </TableRow>
               ) : (
-                proposals.map((proposal) => {
+                result.data.map((proposal: any) => {
                   const isExpiringSoon = proposal.valid_until &&
                     new Date(proposal.valid_until) < new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) &&
                     proposal.status === 'sent';
@@ -124,12 +164,17 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
                           {proposal.proposal_number}
                         </Link>
                         {proposal.revision_number > 1 && (
-                          <span className="ml-1 text-xs text-muted-foreground">
+                          <span className="ml-1 text-xs text-[#9CA0AB]">
                             (Rev {proposal.revision_number})
                           </span>
                         )}
                       </TableCell>
                       <TableCell>{proposal.leads?.customer_name ?? '—'}</TableCell>
+                      <TableCell>
+                        <Badge variant={proposal.is_budgetary ? 'pending' : 'info'} className="text-[9px]">
+                          {proposal.is_budgetary ? 'Budgetary' : 'Detailed'}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="capitalize text-sm">
                         {proposal.system_type.replace(/_/g, ' ')}
                       </TableCell>
@@ -147,15 +192,13 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
                       <TableCell>
                         <ProposalStatusBadge status={proposal.status} />
                         {proposal.margin_approval_required && !proposal.margin_approved_by && (
-                          <span className="ml-1 text-xs text-[#9A3412]" title="Margin approval needed">
-                            !
-                          </span>
+                          <span className="ml-1 text-xs text-[#9A3412]" title="Margin approval needed">!</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-sm text-[#7C818E]">
                         {toIST(proposal.created_at)}
                       </TableCell>
-                      <TableCell className={`text-sm ${isExpiringSoon ? 'text-[#991B1B] font-medium' : 'text-muted-foreground'}`}>
+                      <TableCell className={`text-sm ${isExpiringSoon ? 'text-[#991B1B] font-medium' : 'text-[#7C818E]'}`}>
                         {formatDate(proposal.valid_until)}
                       </TableCell>
                     </TableRow>
@@ -164,6 +207,15 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
               )}
             </TableBody>
           </Table>
+          <Pagination
+            currentPage={result.page}
+            totalPages={result.totalPages}
+            totalRecords={result.total}
+            pageSize={result.pageSize}
+            basePath="/proposals"
+            searchParams={filterParams}
+            entityName="proposals"
+          />
         </CardContent>
       </Card>
     </div>
