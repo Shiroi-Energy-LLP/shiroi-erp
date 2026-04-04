@@ -28,15 +28,13 @@ const ROLE_OPTIONS: { value: string; label: string }[] = [
 ];
 
 const DEPARTMENT_OPTIONS = [
-  'Sales',
-  'Design',
-  'Projects',
-  'Procurement',
-  'Site Operations',
-  'O&M',
-  'Finance',
-  'HR',
-  'Admin',
+  { value: 'sales', label: 'Sales' },
+  { value: 'projects', label: 'Projects' },
+  { value: 'operations', label: 'Operations' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'hr', label: 'HR' },
+  { value: 'management', label: 'Management' },
+  { value: 'om', label: 'O&M' },
 ];
 
 export function CreateEmployeeForm() {
@@ -192,7 +190,7 @@ export function CreateEmployeeForm() {
               <Select id="department" name="department" required defaultValue="">
                 <option value="" disabled>Select department...</option>
                 {DEPARTMENT_OPTIONS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
+                  <option key={d.value} value={d.value}>{d.label}</option>
                 ))}
               </Select>
             </div>
