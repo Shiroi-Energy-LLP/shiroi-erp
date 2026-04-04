@@ -14,6 +14,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  Pagination,
 } from '@repo/ui';
 import type { Database } from '@repo/types/database';
 
@@ -37,15 +38,25 @@ interface ProjectsPageProps {
   searchParams: Promise<{
     status?: string;
     search?: string;
+    page?: string;
   }>;
 }
 
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   const params = await searchParams;
-  const projects = await getProjects({
+  const page = parseInt(params.page ?? '1', 10);
+  const result = await getProjects({
     status: (params.status as ProjectStatus) || undefined,
     search: params.search || undefined,
+    page,
+    pageSize: 50,
   });
+
+  const filterParams: Record<string, string> = {};
+  if (params.status) filterParams.status = params.status;
+  if (params.search) filterParams.search = params.search;
+
+  const hasFilters = Object.keys(filterParams).length > 0;
 
   return (
     <div className="space-y-6">
@@ -73,7 +84,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
             <Button type="submit" variant="outline" size="sm">
               Filter
             </Button>
-            {(params.status || params.search) && (
+            {hasFilters && (
               <Link href="/projects">
                 <Button type="button" variant="ghost" size="sm">
                   Clear
@@ -102,14 +113,14 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projects.length === 0 ? (
+              {result.data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     No projects found.
                   </TableCell>
                 </TableRow>
               ) : (
-                projects.map((project) => (
+                result.data.map((project) => (
                   <TableRow key={project.id}>
                     <TableCell>
                       <Link
@@ -151,6 +162,15 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
               )}
             </TableBody>
           </Table>
+          <Pagination
+            currentPage={result.page}
+            totalPages={result.totalPages}
+            totalRecords={result.total}
+            pageSize={result.pageSize}
+            basePath="/projects"
+            searchParams={filterParams}
+            entityName="projects"
+          />
         </CardContent>
       </Card>
     </div>

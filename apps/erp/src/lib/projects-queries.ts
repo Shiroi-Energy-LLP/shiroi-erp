@@ -6,16 +6,33 @@ type ProjectStatus = Database['public']['Enums']['project_status'];
 export interface ProjectFilters {
   status?: ProjectStatus;
   search?: string;
+  page?: number;
+  pageSize?: number;
 }
 
-export async function getProjects(filters: ProjectFilters = {}) {
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function getProjects(filters: ProjectFilters = {}): Promise<PaginatedResult<any>> {
   const op = '[getProjects]';
   console.log(`${op} Starting`);
   const supabase = await createClient();
+
+  const page = filters.page ?? 1;
+  const pageSize = filters.pageSize ?? 50;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   let query = supabase
     .from('projects')
     .select(
       'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, employees!projects_project_manager_id_fkey(full_name)',
+      { count: 'exact' },
     )
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
@@ -27,12 +44,22 @@ export async function getProjects(filters: ProjectFilters = {}) {
     );
   }
 
-  const { data, error } = await query;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load projects: ${error.message}`);
   }
-  return data ?? [];
+
+  const total = count ?? 0;
+  return {
+    data: data ?? [],
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 export async function getProject(id: string) {
