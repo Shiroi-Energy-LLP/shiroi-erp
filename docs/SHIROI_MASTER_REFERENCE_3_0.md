@@ -33,6 +33,11 @@
 | Google Drive migration | ✅ Complete | 108 vendors, ~160 projects, 850 POs (2,348 items), 1,164 expenses, 916 files |
 | RLS recursion fix | ✅ Applied | get_my_role() + get_my_employee_id() — migration 008a |
 | New roles migration | ✅ Applied (dev) | migration 009 — designer + purchase_officer roles + RLS |
+| Leads pagination + bulk actions | ✅ Complete | 50/page server-side, bulk assign/status/delete/merge, segment + assignee filters, checkbox selection |
+| Proposals pagination | ✅ Complete | 50/page server-side, budgetary/detailed filter, system type filter, type badge column |
+| Projects pagination | ✅ Complete | 50/page server-side, preserves all existing filters |
+| PM Dashboard v2 | ✅ Complete | Correct KPIs (System Size, Clients, Sales, Profit %), donut chart, operations widget, dark today panel |
+| Design system v2.1 | ✅ Complete | packages/ui — 11 components (+Checkbox, +Pagination), recharts added to ERP |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
 | **Proposal migration** | 🔜 **NEXT** | **1,300 proposals from Google Drive with deduplication, then DB integrity check** |
@@ -1247,6 +1252,11 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 | Domain | erp.shiroienergy.com on GoDaddy. CNAME to Vercel at deployment. | Apr 3, 2026 |
 | Full Drive scan now | Moved from Phase 4 to Phase 2C. Scan entire Shiroi Energy drive, upload all remaining files to Supabase Storage. | Apr 3, 2026 |
 | Phase 2C roadmap | 19 steps (40–58). Full roadmap spec: docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md | Apr 3, 2026 |
+| Leads pagination + bulk actions | Server-side pagination (50/page via Supabase `.range()` + `count: 'exact'`). Bulk assign, status change, soft-delete, merge (side-by-side modal). New filters: segment, assigned_to. Checkbox selection with `data-[state=selected]` row styling. Spec: `docs/superpowers/specs/2026-04-04-pm-leads-proposals-design.md`. | Apr 4, 2026 |
+| Proposals pagination | Same pagination pattern as leads. New filters: budgetary/detailed (is_budgetary), system_type. Added type badge column. | Apr 4, 2026 |
+| Projects pagination | Same pagination pattern. Preserves status/search filters. | Apr 4, 2026 |
+| PM Dashboard v2 | Fixed 3/4 KPIs to match PM spec (Total System Size, Total Clients, Total Sales, Avg Profit %). Added: recharts donut chart (project status), operations widget (progress bars: tasks/services/AMCs), dark #001F0D today panel (priority projects). | Apr 4, 2026 |
+| Design system: Checkbox + Pagination | Two new UI components in packages/ui. Checkbox: @radix-ui/react-checkbox, Shiroi green active state. Pagination: server-side URL-based, 5-page window, "Showing X–Y of Z" counter. | Apr 4, 2026 |
 
 ---
 
