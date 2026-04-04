@@ -47,6 +47,11 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Proposal engine | ✅ Implemented | Quick Quote, BOM generator (9 tests), budgetary + detailed PDF (10 pages), savings page, price override modal, PDF API route, notifications CRUD |
 | Proposal files | ✅ Complete | Upload/download files on proposal detail page via Supabase Storage |
 | Leads filtering | ✅ Complete | Converted (migration placeholder) leads hidden by default, visible via filter |
+| Leads pagination | ✅ Complete | 50/page server-side, bulk actions (assign, status, delete, merge), segment + assignee filters, checkbox selection |
+| Proposals pagination | ✅ Complete | 50/page server-side, budgetary/detailed filter, system type filter, type badge column |
+| Projects pagination | ✅ Complete | 50/page server-side, preserves all existing filters |
+| PM Dashboard v2 | ✅ Complete | Correct KPIs (System Size, Clients, Sales, Profit %), donut chart, operations widget, dark today panel |
+| Design system | ✅ Complete | packages/ui — V2 design system, 11 components (+Checkbox, +Pagination) |
 | GitHub | ✅ Pushed | All code on origin/main, 11 commits ahead of last deploy |
 | Vercel + domain | 🔜 Next | Deploy against dev Supabase for team data cleanup |
 | Employee accounts | 🔜 Next | Create accounts so team can log in and clean data |
