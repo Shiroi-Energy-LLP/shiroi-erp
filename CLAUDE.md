@@ -51,6 +51,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Proposals pagination | ✅ Complete | 50/page server-side, budgetary/detailed filter, system type filter, type badge column |
 | Projects pagination | ✅ Complete | 50/page server-side, preserves all existing filters |
 | PM Dashboard v2 | ✅ Complete | Correct KPIs (System Size, Clients, Sales, Profit %), donut chart, operations widget, dark today panel |
+| Contacts system | ✅ Code complete | /contacts, /companies pages, EntityContactsCard on lead/proposal/project detail. Migration 016 pending apply. |
 | Design system | ✅ Complete | packages/ui — V2 design system, 11 components (+Checkbox, +Pagination) |
 | GitHub | ✅ Pushed | All code on origin/main, 11 commits ahead of last deploy |
 | Vercel + domain | ✅ Live | erp.shiroienergy.com — deployed against DEV Supabase, auto-deploys on push |
