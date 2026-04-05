@@ -37,6 +37,7 @@ function netMeterVariant(installed: boolean): 'default' | 'outline' {
 export default async function NetMeteringPage() {
   let applications: Array<{
     id: string;
+    project_id: string;
     discom_name: string;
     discom_application_number: string | null;
     discom_application_date: string | null;
@@ -50,7 +51,7 @@ export default async function NetMeteringPage() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('net_metering_applications')
-      .select('id, discom_name, discom_application_number, discom_application_date, ceig_status, discom_status, net_meter_installed, projects!net_metering_applications_project_id_fkey(project_number, customer_name)')
+      .select('id, project_id, discom_name, discom_application_number, discom_application_date, ceig_status, discom_status, net_meter_installed, projects!net_metering_applications_project_id_fkey(project_number, customer_name)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -114,9 +115,11 @@ export default async function NetMeteringPage() {
                 applications.map((app) => (
                   <TableRow key={app.id}>
                     <TableCell className="font-medium">
-                      {app.projects
-                        ? `${app.projects.project_number} — ${app.projects.customer_name}`
-                        : '—'}
+                      {app.projects ? (
+                        <Link href={`/liaison/net-metering/${app.project_id}`} className="text-[#00B050] hover:underline">
+                          {app.projects.project_number} — {app.projects.customer_name}
+                        </Link>
+                      ) : '—'}
                     </TableCell>
                     <TableCell className="font-mono text-sm">
                       {app.discom_application_number ?? '—'}
