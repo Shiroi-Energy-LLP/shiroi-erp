@@ -1,52 +1,54 @@
 import Link from 'next/link';
 import { getProposals } from '@/lib/proposals-queries';
-import { ProposalStatusBadge } from '@/components/proposals/proposal-status-badge';
-import { formatINR, toIST, formatDate } from '@repo/ui/formatters';
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  Select,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@repo/ui';
-import type { Database } from '@repo/types/database';
-
-type ProposalStatus = Database['public']['Enums']['proposal_status'];
-
-const STATUS_OPTIONS: { value: ProposalStatus; label: string }[] = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'sent', label: 'Sent' },
-  { value: 'viewed', label: 'Viewed' },
-  { value: 'negotiating', label: 'Negotiating' },
-  { value: 'accepted', label: 'Accepted' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'expired', label: 'Expired' },
-  { value: 'superseded', label: 'Superseded' },
-];
+import { getMyViews } from '@/lib/views-actions';
+import { ProposalsTableWrapper } from '@/components/proposals/proposals-table-wrapper';
+import { getDefaultColumns } from '@/components/data-table/column-config';
+import { Button, Card, CardContent, Input, Select } from '@repo/ui';
 
 interface ProposalsPageProps {
   searchParams: Promise<{
     status?: string;
+    systemType?: string;
+    isBudgetary?: string;
     search?: string;
+    page?: string;
+    sort?: string;
+    dir?: string;
+    view?: string;
   }>;
 }
 
 export default async function ProposalsPage({ searchParams }: ProposalsPageProps) {
   const params = await searchParams;
-  const proposals = await getProposals({
-    status: (params.status as ProposalStatus) || undefined,
-    search: params.search || undefined,
-  });
+  const page = parseInt(params.page ?? '1', 10);
+
+  const [result, views] = await Promise.all([
+    getProposals({
+      status: params.status as any || undefined,
+      systemType: params.systemType || undefined,
+      isBudgetary: params.isBudgetary || undefined,
+      search: params.search || undefined,
+      page,
+      pageSize: 50,
+      sort: params.sort || undefined,
+      dir: (params.dir as 'asc' | 'desc') || undefined,
+    }),
+    getMyViews('proposals'),
+  ]);
+
+  const currentFilters: Record<string, string> = {};
+  if (params.status) currentFilters.status = params.status;
+  if (params.systemType) currentFilters.systemType = params.systemType;
+  if (params.isBudgetary) currentFilters.isBudgetary = params.isBudgetary;
+  if (params.search) currentFilters.search = params.search;
+
+  const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
+  const visibleColumns = activeView?.columns?.length > 0
+    ? activeView.columns
+    : getDefaultColumns('proposals');
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[#1A1D24]">Proposals</h1>
         <Link href="/proposals/new">
@@ -54,118 +56,58 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
         </Link>
       </div>
 
-      {/* Filters */}
       <Card>
-        <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-44">
+        <CardContent className="py-3">
+          <form className="flex items-center gap-3 flex-wrap">
+            <Select name="status" defaultValue={params.status ?? ''} className="w-36 h-9 text-sm">
               <option value="">All Statuses</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
+              <option value="draft">Draft</option>
+              <option value="sent">Sent</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+              <option value="expired">Expired</option>
+              <option value="revised">Revised</option>
+            </Select>
+            <Select name="systemType" defaultValue={params.systemType ?? ''} className="w-32 h-9 text-sm">
+              <option value="">All Systems</option>
+              <option value="on_grid">On-Grid</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="off_grid">Off-Grid</option>
+            </Select>
+            <Select name="isBudgetary" defaultValue={params.isBudgetary ?? ''} className="w-32 h-9 text-sm">
+              <option value="">All Types</option>
+              <option value="true">Budgetary</option>
+              <option value="false">Detailed</option>
             </Select>
             <Input
               name="search"
               defaultValue={params.search ?? ''}
-              placeholder="Search proposal # or customer..."
-              className="w-72"
+              placeholder="Search proposal #..."
+              className="w-48 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {(params.status || params.search) && (
+            <Button type="submit" variant="outline" size="sm" className="h-9">Filter</Button>
+            {Object.keys(currentFilters).length > 0 && (
               <Link href="/proposals">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
+                <Button type="button" variant="ghost" size="sm" className="h-9">Clear</Button>
               </Link>
             )}
           </form>
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Proposal #</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>System</TableHead>
-                <TableHead className="text-right">Size (kWp)</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Margin %</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Valid Until</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {proposals.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    No proposals found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                proposals.map((proposal) => {
-                  const isExpiringSoon = proposal.valid_until &&
-                    new Date(proposal.valid_until) < new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) &&
-                    proposal.status === 'sent';
-
-                  return (
-                    <TableRow key={proposal.id}>
-                      <TableCell>
-                        <Link
-                          href={`/proposals/${proposal.id}`}
-                          className="text-[#00B050] hover:underline font-medium font-mono text-sm"
-                        >
-                          {proposal.proposal_number}
-                        </Link>
-                        {proposal.revision_number > 1 && (
-                          <span className="ml-1 text-xs text-muted-foreground">
-                            (Rev {proposal.revision_number})
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>{proposal.leads?.customer_name ?? '—'}</TableCell>
-                      <TableCell className="capitalize text-sm">
-                        {proposal.system_type.replace(/_/g, ' ')}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {proposal.system_size_kwp}
-                      </TableCell>
-                      <TableCell className="text-right font-mono font-medium">
-                        {formatINR(proposal.total_after_discount)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        <span className={proposal.gross_margin_pct < 15 ? 'text-[#991B1B]' : 'text-[#065F46]'}>
-                          {proposal.gross_margin_pct.toFixed(1)}%
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <ProposalStatusBadge status={proposal.status} />
-                        {proposal.margin_approval_required && !proposal.margin_approved_by && (
-                          <span className="ml-1 text-xs text-[#9A3412]" title="Margin approval needed">
-                            !
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {toIST(proposal.created_at)}
-                      </TableCell>
-                      <TableCell className={`text-sm ${isExpiringSoon ? 'text-[#991B1B] font-medium' : 'text-muted-foreground'}`}>
-                        {formatDate(proposal.valid_until)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <ProposalsTableWrapper
+        data={result.data}
+        total={result.total}
+        page={result.page}
+        pageSize={result.pageSize}
+        totalPages={result.totalPages}
+        sortColumn={params.sort}
+        sortDirection={params.dir}
+        currentFilters={currentFilters}
+        views={views}
+        activeViewId={params.view ?? null}
+        visibleColumns={visibleColumns}
+      />
     </div>
   );
 }
