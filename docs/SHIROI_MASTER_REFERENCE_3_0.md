@@ -20,8 +20,8 @@
 | TypeScript types | ✅ Generated | packages/types/database.ts |
 | Migrations | ✅ Committed | supabase/migrations/ — 28 files (001 through 012) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware |
-| Design system | ✅ V2 Complete | packages/ui — V2 design, DM Sans headings, warm-gray neutrals, 9 shadcn components |
-| Auth + App Shell | ✅ Complete | Login, middleware, sectioned sidebar (10 roles), topbar with role switcher |
+| Design system | ✅ V2.2 Complete | packages/ui — 22 components (11 new in R1+R2), Radix primitives, form infra, skeleton loading, Logo/Eyebrow patterns |
+| Auth + App Shell | ✅ Complete | Login w/ Logo, collapsible sidebar (desktop toggle + mobile hamburger/Sheet), skip-to-content, topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper, founder role switcher |
 | Phase 2B All Screens | ✅ Complete | 53 routes total — all sidebar links are real data-driven pages, 0 placeholders |
@@ -38,6 +38,8 @@
 | Projects pagination | ✅ Complete | 50/page server-side, preserves all existing filters |
 | PM Dashboard v2 | ✅ Complete | Correct KPIs (System Size, Clients, Sales, Profit %), donut chart, operations widget, dark today panel |
 | Design system v2.1 | ✅ Complete | packages/ui — 11 components (+Checkbox, +Pagination), recharts added to ERP |
+| UI/UX Overhaul R1 | ✅ Complete | 15 improvements: sidebar collapse, Radix Dialog/Sheet/Tabs/Tooltip/Dropdown, Logo, Eyebrow, EmptyState, Skeleton, Breadcrumbs, Form infra, skip-to-content, accessibility, responsive fonts |
+| UI/UX Overhaul R2 | ✅ Complete | 9 items: hex→token purge (45+ files), 15 loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, semantic status tokens |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
 | **Proposal migration** | 🔜 **NEXT** | **1,300 proposals from Google Drive with deduplication, then DB integrity check** |
@@ -794,6 +796,15 @@ Default weights: delivery 15% · structure 15% · panels 25% · electrical 20% �
 ### Design system
 Shiroi Brand Guide V6 as foundation. `packages/ui` holds tokens, shadcn/ui overrides, Tailwind config.
 
+**packages/ui v2.2 — 22 components:**
+- Core: Button, Input, Label, Select, Badge, Card, Table, Checkbox, Pagination
+- Radix primitives: Dialog (focus-trap), Sheet (slide-over), Tabs, Tooltip, DropdownMenu
+- Patterns: Logo/LogoMark (SVG brand mark), Eyebrow (V2 section label), EmptyState, Skeleton/TableSkeleton/KpiCardSkeleton, Breadcrumb, SkipToContent
+- Form infra: Form/FormField/FormItem/FormLabel/FormControl/FormMessage (react-hook-form + Zod)
+- Toast: Toaster/useToast (non-destructive notifications)
+- Accessibility: skip-to-content, visited link styles, prefers-reduced-motion, responsive font scaling
+- All hex colors replaced with Tailwind tokens (shiroi-*, n-*, status-*) — zero hardcoded hex in components
+
 ### 8 priority screens — build in this order
 
 | # | Screen | Surface | Why critical |
@@ -1084,7 +1095,7 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 - [x] Full monorepo type check passes (4/4 packages, zero errors)
 
 **Phase 1A ERP build — COMPLETE ✅ (March 30, 2026)**
-- [x] Step 7 — Design system: packages/ui with 9 shadcn components, green brand tokens, formatters (8 tests)
+- [x] Step 7 — Design system: packages/ui with 22 components (v2.2), Radix primitives, Logo/Eyebrow patterns, form infra, formatters (8 tests)
 - [x] Step 8 — Auth + app shell: login, middleware, role-based sidebar, topbar (5 tests)
 - [x] Step 9 — Founder morning dashboard: cash alerts, pipeline, approvals, overdue reports (4 tests)
 - [x] Step 10 — Lead pipeline: list, detail, creation, status transitions, activity feed (13 tests)
@@ -1146,6 +1157,41 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 - Liaison: /liaison (overview), /liaison/net-metering
 - Design: /design (design queue from leads)
 - Reference: /price-book
+
+**UI/UX Overhaul — Round 1 + Round 2 — COMPLETE ✅ (April 5, 2026)**
+
+Round 1 (15 improvements):
+- [x] Sidebar collapse/expand (desktop toggle w/ localStorage, mobile hamburger via Sheet)
+- [x] Table overflow-x-auto for horizontal scroll on small screens
+- [x] Form validation infra (react-hook-form + Zod, Form components in packages/ui)
+- [x] Hardcoded hex → Tailwind design tokens (initial pass)
+- [x] EmptyState component deployed to 23 pages
+- [x] Skeleton loading screens (7 loading.tsx files: dashboard, leads, projects, contacts, procurement, cash, hr)
+- [x] Radix Dialog rewrite (focus trapping, Escape key, animations)
+- [x] Skip-to-content accessibility landmark
+- [x] Responsive font scaling (mobile: 9→10px, 10→11px, 11→12px)
+- [x] Visited link styling (shiroi-green-dark)
+- [x] Toast notifications on login + contact + company forms
+- [x] New Radix components: Sheet, Tabs, Tooltip, DropdownMenu
+- [x] Breadcrumbs on 4 detail pages (contact, company, lead, proposal)
+- [x] Column picker drag-drop visual feedback (opacity + green border)
+- [x] Logo/LogoMark SVG component deployed to sidebar + login
+- [x] Eyebrow pattern deployed to 6 pages
+- [x] prefers-reduced-motion support in globals.css
+
+Round 2 (post-audit, 9 items):
+- [x] R2-1: Hex → token purge across 45+ component files (11 UI + 34 ERP)
+- [x] R2-2: 15 new loading.tsx skeleton screens (companies through marketing/campaigns)
+- [x] R2-3: EmptyState on 15 more pages (detail sub-sections, dashboard widgets, HR error states)
+- [x] R2-4: Eyebrow pattern on 25 more pages (total: 31 pages)
+- [x] R2-5: Breadcrumbs on 4 more detail pages (design, cash, HR employee, lead)
+- [x] R2-6: Toast notifications on 5 more forms (lead, activity, employee, leave, proposals)
+- [x] R2-7: Sidebar hardcoded colors → design tokens
+- [x] R2-8: Dashboard component tokens (KPI cards, charts, tables)
+- [x] R2-9: Status badge colors use status-* semantic tokens
+- [x] R2-10: Form migration to react-hook-form+Zod — deferred for incremental migration during feature work (infra already in place)
+
+Total: 105 files changed, 0 TypeScript errors. Design system: 22 components in packages/ui.
 
 ### Phase 2 — Field & Customer (Weeks 13–24)
 - [ ] Offline-first mobile (WatermelonDB)
@@ -1258,6 +1304,10 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 | Projects pagination | Same pagination pattern. Preserves status/search filters. | Apr 4, 2026 |
 | PM Dashboard v2 | Fixed 3/4 KPIs to match PM spec (Total System Size, Total Clients, Total Sales, Avg Profit %). Added: recharts donut chart (project status), operations widget (progress bars: tasks/services/AMCs), dark #001F0D today panel (priority projects). | Apr 4, 2026 |
 | Design system: Checkbox + Pagination | Two new UI components in packages/ui. Checkbox: @radix-ui/react-checkbox, Shiroi green active state. Pagination: server-side URL-based, 5-page window, "Showing X–Y of Z" counter. | Apr 4, 2026 |
+| UI/UX Overhaul R1 | 15 improvements: sidebar collapse (localStorage), mobile Sheet nav, Radix Dialog/Sheet/Tabs/Tooltip/DropdownMenu, Logo SVG, Eyebrow pattern, EmptyState, Skeleton loading (7 pages), Breadcrumbs (4 pages), Form infra (react-hook-form+Zod), skip-to-content, responsive fonts, visited links, toast on 3 forms, drag-drop feedback, prefers-reduced-motion. 60+ files. | Apr 4, 2026 |
+| UI/UX Overhaul R2 | Post-audit cleanup: all hardcoded hex→tokens (45+ files), 15 new loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, status-* semantic tokens for badges, sidebar/dashboard token cleanup. 105 files, 0 TS errors. | Apr 5, 2026 |
+| Design system v2.2 | packages/ui now has 22 components (was 11). New: Dialog (Radix rewrite), Sheet, Tabs, Tooltip, DropdownMenu, Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Form. Zero hardcoded hex in any component. | Apr 5, 2026 |
+| Form migration strategy | react-hook-form + Zod infra shipped in packages/ui (Form components). Existing forms migrated incrementally during feature work, not bulk-converted. | Apr 5, 2026 |
 
 ---
 
@@ -1474,6 +1524,20 @@ Plus new RLS policies for both roles and updates to existing policies where thes
   - Name splitting: first/last from customer_name, lifecycle_stage from lead status
 - TypeScript types regenerated with all new tables/columns, all `as any` workarounds removed
 - Migration file count: 30 files (001 through 018)
+
+**What changed in v3.5 (UI/UX Overhaul):**
+- packages/ui upgraded to v2.2: 22 components (11 new), all built on Radix UI primitives
+- New components: Dialog (Radix rewrite), Sheet, Tabs, Tooltip, DropdownMenu, Logo/LogoMark, Eyebrow, EmptyState, Skeleton/TableSkeleton/KpiCardSkeleton, Breadcrumb, SkipToContent, Form (react-hook-form+Zod)
+- Sidebar: desktop collapse/expand (localStorage persist) + mobile hamburger (Sheet slide-over)
+- Logo SVG deployed to sidebar + login page
+- Eyebrow pattern deployed to 31 pages, EmptyState on 38+ pages
+- Skeleton loading screens: 22 loading.tsx files across all major routes
+- Breadcrumbs on 8 detail pages, toast notifications on 8 forms
+- Accessibility: skip-to-content, visited links, prefers-reduced-motion, responsive font scaling
+- All hardcoded hex colors replaced with Tailwind tokens across 45+ files
+- Status badge colors use semantic status-* tokens
+- Column picker drag-drop: state-based tracking with visual feedback
+- 0 TypeScript errors across entire monorepo
 
 **What changed in v3.3:**
 - HubSpot cutover V1: 963 leads, 144 proposals, 144 projects from 1,210-deal CSV; 15 payments from 65-record payments CSV
