@@ -1,34 +1,49 @@
 import Link from 'next/link';
 import { getCompanies } from '@/lib/contacts-queries';
-import {
-  Card, CardContent, Button, Input, Select, Pagination, Badge, EmptyState,
-  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  Eyebrow,
-} from '@repo/ui';
-import { Building2 } from 'lucide-react';
+import { getMyViews } from '@/lib/views-actions';
+import { CompaniesTableWrapper } from '@/components/contacts/companies-table-wrapper';
+import { COMPANY_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
+import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
 
 interface CompaniesPageProps {
-  searchParams: Promise<{ search?: string; segment?: string; page?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    segment?: string;
+    page?: string;
+    sort?: string;
+    dir?: string;
+    view?: string;
+  }>;
 }
 
 export default async function CompaniesPage({ searchParams }: CompaniesPageProps) {
   const params = await searchParams;
   const page = parseInt(params.page ?? '1', 10);
 
-  const result = await getCompanies({
-    search: params.search || undefined,
-    segment: params.segment || undefined,
-    page,
-    pageSize: 50,
-  });
+  const [result, views] = await Promise.all([
+    getCompanies({
+      search: params.search || undefined,
+      segment: params.segment || undefined,
+      page,
+      pageSize: 50,
+      sort: params.sort || undefined,
+      dir: (params.dir as 'asc' | 'desc') || undefined,
+    }),
+    getMyViews('companies'),
+  ]);
 
-  const filterParams: Record<string, string> = {};
-  if (params.search) filterParams.search = params.search;
-  if (params.segment) filterParams.segment = params.segment;
-  const hasFilters = Object.keys(filterParams).length > 0;
+  const currentFilters: Record<string, string> = {};
+  if (params.search) currentFilters.search = params.search;
+  if (params.segment) currentFilters.segment = params.segment;
+
+  const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
+  const viewCols = activeView?.columns as string[] | undefined;
+  const visibleColumns = viewCols && viewCols.length > 0
+    ? viewCols
+    : getDefaultColumns('companies');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">COMPANIES</Eyebrow>
@@ -40,9 +55,9 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
       </div>
 
       <Card>
-        <CardContent className="py-4">
-          <form className="flex items-center gap-3">
-            <Select name="segment" defaultValue={params.segment ?? ''} className="w-40">
+        <CardContent className="py-3">
+          <form className="flex items-center gap-3 flex-wrap">
+            <Select name="segment" defaultValue={params.segment ?? ''} className="w-40 h-9 text-sm">
               <option value="">All Segments</option>
               <option value="residential">Residential</option>
               <option value="commercial">Commercial</option>
@@ -52,71 +67,31 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
               name="search"
               defaultValue={params.search ?? ''}
               placeholder="Search by name, city, or GSTIN..."
-              className="w-72"
+              className="w-64 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">Search</Button>
-            {hasFilters && (
+            <Button type="submit" variant="outline" size="sm" className="h-9">Search</Button>
+            {Object.keys(currentFilters).length > 0 && (
               <Link href="/companies">
-                <Button type="button" variant="ghost" size="sm">Clear</Button>
+                <Button type="button" variant="ghost" size="sm" className="h-9">Clear</Button>
               </Link>
             )}
           </form>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Company Name</TableHead>
-                <TableHead>Segment</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead>GSTIN</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {result.data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4}>
-                    <EmptyState
-                      icon={<Building2 className="h-12 w-12" />}
-                      title="No companies found"
-                      description="Add a company to start tracking organizations."
-                    />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                result.data.map((company: any) => (
-                  <TableRow key={company.id}>
-                    <TableCell>
-                      <Link href={`/companies/${company.id}`} className="text-[#00B050] hover:underline font-medium">
-                        {company.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="neutral" className="capitalize">
-                        {company.segment ?? '—'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{company.city ?? '—'}</TableCell>
-                    <TableCell className="font-mono text-sm">{company.gstin ?? '—'}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-          <Pagination
-            currentPage={result.page}
-            totalPages={result.totalPages}
-            totalItems={result.total}
-            pageSize={result.pageSize}
-            basePath="/companies"
-            filterParams={filterParams}
-            entityName="companies"
-          />
-        </CardContent>
-      </Card>
+      <CompaniesTableWrapper
+        data={result.data}
+        total={result.total}
+        page={result.page}
+        pageSize={result.pageSize}
+        totalPages={result.totalPages}
+        sortColumn={params.sort}
+        sortDirection={params.dir}
+        currentFilters={currentFilters}
+        views={views}
+        activeViewId={params.view ?? null}
+        visibleColumns={visibleColumns}
+      />
     </div>
   );
 }

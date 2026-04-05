@@ -1518,10 +1518,17 @@ Plus new RLS policies for both roles and updates to existing policies where thes
   - Checkbox selection with bulk action support
 - Leads page rebuilt with DataTable (column picker, saved views, 16 configurable columns)
 - Proposals page rebuilt with DataTable (column picker, saved views, 12 configurable columns)
-- Smart contacts backfill: ~1,039 contacts + ~56 companies created from 1,118 leads
+- Projects page rebuilt with DataTable (column picker, saved views, 11 configurable columns)
+- Contacts page rebuilt with DataTable (column picker, saved views, 8 configurable columns)
+- Companies page rebuilt with DataTable (column picker, saved views, 7 configurable columns)
+- Inline editing: double-click-to-edit cells in DataTable. Supports text, number, select, date, phone, email fields. Server action (`inline-edit-actions.ts`) with field-level validation and RLS enforcement.
+- Smart contacts backfill: ~1,115 contacts + ~56 companies created from leads
   - Residential → contact only, no company
   - C&I → regex detection for company names (Pvt, Ltd, LLP, Industries, etc.), create company + contact
   - Name splitting: first/last from customer_name, lifecycle_stage from lead status
+- Contact dedup completed: 284 duplicate groups merged by phone, 0 remaining duplicates
+- Backfill retry completed: 364 leads linked to contacts, 3 junk leads excluded
+- Route fix: added missing page.tsx for /om (redirect to /om/visits) and /projects/[id]/reports/[reportId] (redirect to reports list) — fixed parallelRoutes.get TypeError on production
 - TypeScript types regenerated with all new tables/columns, all `as any` workarounds removed
 - Migration file count: 30 files (001 through 018)
 

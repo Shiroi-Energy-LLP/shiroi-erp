@@ -4,12 +4,12 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
-  Card, CardContent, Button, Badge, Checkbox,
+  Card, CardContent, Button, Badge, Checkbox, Input,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
 import {
   ChevronUp, ChevronDown, Columns3,
-  ArrowUpDown,
+  ArrowUpDown, Check, X, Loader2,
 } from 'lucide-react';
 import { ColumnPicker } from './column-picker';
 import { ViewTabs } from './view-tabs';
@@ -59,41 +59,143 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   revised: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
 };
 
+// ── Inline Edit Cell ──
+
+interface EditingCell {
+  rowId: string;
+  columnKey: string;
+}
+
+function InlineEditInput({
+  value,
+  fieldType,
+  options,
+  onSave,
+  onCancel,
+}: {
+  value: string;
+  fieldType: ColumnDef['fieldType'];
+  options?: ColumnDef['options'];
+  onSave: (val: string) => void;
+  onCancel: () => void;
+}) {
+  const [localValue, setLocalValue] = React.useState(value);
+  const [saving, setSaving] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement | HTMLSelectElement>(null);
+
+  React.useEffect(() => {
+    inputRef.current?.focus();
+    if (inputRef.current instanceof HTMLInputElement) {
+      inputRef.current.select();
+    }
+  }, []);
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      onCancel();
+    }
+  }
+
+  async function handleSave() {
+    if (localValue === value) {
+      onCancel();
+      return;
+    }
+    setSaving(true);
+    onSave(localValue);
+  }
+
+  // Select dropdown for badge/select fields
+  if ((fieldType === 'select' || fieldType === 'badge') && options) {
+    return (
+      <div className="flex items-center gap-1">
+        <select
+          ref={inputRef as React.RefObject<HTMLSelectElement>}
+          value={localValue}
+          onChange={(e) => {
+            setLocalValue(e.target.value);
+            onSave(e.target.value);
+          }}
+          onKeyDown={handleKeyDown}
+          onBlur={onCancel}
+          className="h-7 rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+          disabled={saving}
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
+      </div>
+    );
+  }
+
+  // Date input
+  if (fieldType === 'date') {
+    return (
+      <div className="flex items-center gap-1">
+        <input
+          ref={inputRef as React.RefObject<HTMLInputElement>}
+          type="date"
+          value={localValue}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={() => handleSave()}
+          className="h-7 rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+          disabled={saving}
+        />
+        {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
+      </div>
+    );
+  }
+
+  // Default text/number/phone/email input
+  const inputType = fieldType === 'number' || fieldType === 'currency' ? 'number' : 'text';
+
+  return (
+    <div className="flex items-center gap-1">
+      <input
+        ref={inputRef as React.RefObject<HTMLInputElement>}
+        type={inputType}
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={() => handleSave()}
+        className="h-7 w-full min-w-[80px] max-w-[200px] rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+        disabled={saving}
+      />
+      {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
+    </div>
+  );
+}
+
 // ── Props ──
 
 interface DataTableProps {
   entityType: string;
-  /** All available column definitions */
   allColumns: ColumnDef[];
-  /** Currently visible column keys */
   visibleColumns: string[];
-  /** The actual data rows */
   data: Record<string, unknown>[];
-  /** Pagination */
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
-  /** Current sort */
   sortColumn?: string;
   sortDirection?: string;
-  /** Current filters (from URL params) */
   currentFilters: Record<string, string>;
-  /** Saved views for this entity */
   views: any[];
   activeViewId: string | null;
-  /** Link prefix for row click (e.g., '/leads') */
   linkPrefix: string;
-  /** Which field is the link field (e.g., 'customer_name' for leads) */
   linkField: string;
-  /** ID field */
   idField?: string;
-  /** Bulk actions component */
   bulkActions?: React.ReactNode;
-  /** Callback when selection changes */
   onSelectionChange?: (ids: string[]) => void;
-  /** Selected IDs (controlled) */
   selectedIds?: string[];
+  /** Callback for inline cell editing. If not provided, inline editing is disabled. */
+  onCellEdit?: (rowId: string, field: string, value: string | number | null) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function DataTable({
@@ -116,6 +218,7 @@ export function DataTable({
   bulkActions,
   onSelectionChange,
   selectedIds = [],
+  onCellEdit,
 }: DataTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -124,6 +227,8 @@ export function DataTable({
   const [columns, setColumns] = React.useState<string[]>(initialColumns);
   const [showColumnPicker, setShowColumnPicker] = React.useState(false);
   const [activeView, setActiveView] = React.useState<string | null>(activeViewId);
+  const [editingCell, setEditingCell] = React.useState<EditingCell | null>(null);
+  const [editError, setEditError] = React.useState<string | null>(null);
 
   // Get column defs for visible columns
   const visibleColumnDefs = columns
@@ -138,7 +243,6 @@ export function DataTable({
       if (val) current.set(key, val);
       else current.delete(key);
     });
-    // Reset to page 1 when filters change
     if (!params.page) current.delete('page');
     router.push(`${pathname}?${current.toString()}`);
   }
@@ -175,11 +279,9 @@ export function DataTable({
   function handleViewChange(view: any | null) {
     setActiveView(view?.id ?? null);
     if (view) {
-      // Apply view's columns
       if (view.columns && Array.isArray(view.columns) && view.columns.length > 0) {
         setColumns(view.columns);
       }
-      // Apply view's filters and sort via URL
       const params: Record<string, string | undefined> = {};
       if (view.filters && typeof view.filters === 'object') {
         Object.entries(view.filters).forEach(([k, v]) => {
@@ -191,16 +293,71 @@ export function DataTable({
       params.view = view.id;
       updateUrl(params);
     } else {
-      // Reset to default
       router.push(pathname);
       setColumns(initialColumns);
     }
+  }
+
+  // ── Inline editing ──
+
+  function handleCellClick(rowId: string, col: ColumnDef) {
+    if (!col.editable || !onCellEdit) return;
+    // Don't edit link fields — they navigate
+    if (col.key === linkField || col.fieldType === 'link') return;
+    setEditingCell({ rowId, columnKey: col.key });
+    setEditError(null);
+  }
+
+  async function handleCellSave(rowId: string, field: string, value: string) {
+    if (!onCellEdit) return;
+
+    // Convert value based on field type
+    const col = allColumns.find((c) => c.key === field);
+    let parsedValue: string | number | null = value;
+    if (value === '' || value === null) {
+      parsedValue = null;
+    } else if (col?.fieldType === 'number' || col?.fieldType === 'currency') {
+      parsedValue = parseFloat(value);
+      if (isNaN(parsedValue)) parsedValue = null;
+    }
+
+    const result = await onCellEdit(rowId, field, parsedValue);
+    if (!result.success) {
+      setEditError(result.error ?? 'Failed to save');
+      setTimeout(() => setEditError(null), 3000);
+    }
+    setEditingCell(null);
   }
 
   // ── Cell renderer ──
 
   function renderCell(row: Record<string, unknown>, col: ColumnDef): React.ReactNode {
     const val = row[col.key];
+    const rowId = String(row[idField]);
+
+    // Check if this cell is being edited
+    if (editingCell?.rowId === rowId && editingCell?.columnKey === col.key) {
+      const rawVal = val != null ? String(val) : '';
+      return (
+        <InlineEditInput
+          value={rawVal}
+          fieldType={col.fieldType}
+          options={col.options}
+          onSave={(newVal) => handleCellSave(rowId, col.key, newVal)}
+          onCancel={() => setEditingCell(null)}
+        />
+      );
+    }
+
+    // Editable cell wrapper — shows subtle hover hint
+    const isEditable = col.editable && onCellEdit && col.key !== linkField && col.fieldType !== 'link';
+    const editableProps = isEditable
+      ? {
+          onDoubleClick: () => handleCellClick(rowId, col),
+          className: 'cursor-text hover:bg-shiroi-green/5 rounded px-1 -mx-1 transition-colors',
+          title: 'Double-click to edit',
+        }
+      : {};
 
     // Link field — always links to detail page
     if (col.key === linkField) {
@@ -220,11 +377,13 @@ export function DataTable({
       const colors = STATUS_COLORS[strVal] ?? { bg: '#F5F6F8', text: '#7C818E', border: '#DFE2E8' };
       const label = col.options?.find((o) => o.value === strVal)?.label ?? strVal.replace(/_/g, ' ');
       return (
-        <span
-          className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize border"
-          style={{ backgroundColor: colors.bg, color: colors.text, borderColor: colors.border }}
-        >
-          {label}
+        <span {...editableProps}>
+          <span
+            className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize border"
+            style={{ backgroundColor: colors.bg, color: colors.text, borderColor: colors.border }}
+          >
+            {label}
+          </span>
         </span>
       );
     }
@@ -233,23 +392,23 @@ export function DataTable({
     if (col.fieldType === 'select' && val !== null && val !== undefined) {
       const strVal = String(val);
       const label = col.options?.find((o) => o.value === strVal)?.label ?? strVal;
-      return <span className="text-sm capitalize">{label}</span>;
+      return <span {...editableProps} className={`text-sm capitalize ${editableProps.className ?? ''}`}>{label}</span>;
     }
 
     // Currency
-    if (col.format === 'currency') return <span className="text-sm font-mono">{formatCurrency(val as number)}</span>;
+    if (col.format === 'currency') return <span {...editableProps} className={`text-sm font-mono ${editableProps.className ?? ''}`}>{formatCurrency(val as number)}</span>;
 
     // Date
-    if (col.format === 'date') return <span className="text-sm">{formatDate(val as string)}</span>;
+    if (col.format === 'date') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatDate(val as string)}</span>;
 
     // Percentage
-    if (col.format === 'percentage') return <span className="text-sm">{formatPercentage(val as number)}</span>;
+    if (col.format === 'percentage') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatPercentage(val as number)}</span>;
 
     // Phone
-    if (col.fieldType === 'phone') return <span className="text-sm font-mono">{val ? String(val) : '—'}</span>;
+    if (col.fieldType === 'phone') return <span {...editableProps} className={`text-sm font-mono ${editableProps.className ?? ''}`}>{val ? String(val) : '—'}</span>;
 
     // Email
-    if (col.fieldType === 'email') return <span className="text-sm">{val ? String(val) : '—'}</span>;
+    if (col.fieldType === 'email') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{val ? String(val) : '—'}</span>;
 
     // Link (for proposal #, project #)
     if (col.fieldType === 'link') {
@@ -264,7 +423,7 @@ export function DataTable({
     }
 
     // Default text
-    return <span className="text-sm">{val != null ? String(val) : '—'}</span>;
+    return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{val != null ? String(val) : '—'}</span>;
   }
 
   return (
@@ -292,6 +451,12 @@ export function DataTable({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Inline edit error toast */}
+          {editError && (
+            <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200">
+              {editError}
+            </span>
+          )}
           <Button
             variant="ghost"
             size="sm"

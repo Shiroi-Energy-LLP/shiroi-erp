@@ -1,24 +1,9 @@
 import Link from 'next/link';
 import { getProjects } from '@/lib/projects-queries';
-import { ProjectStatusBadge, PROJECT_STATUS_LABELS } from '@/components/projects/project-status-badge';
-import { formatINR, toIST } from '@repo/ui/formatters';
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  Select,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-  Pagination,
-  Eyebrow,
-  EmptyState,
-} from '@repo/ui';
-import { HardHat } from 'lucide-react';
+import { getMyViews } from '@/lib/views-actions';
+import { ProjectsTableWrapper } from '@/components/projects/projects-table-wrapper';
+import { PROJECT_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
+import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
 import type { Database } from '@repo/types/database';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
@@ -42,28 +27,47 @@ interface ProjectsPageProps {
     status?: string;
     search?: string;
     page?: string;
+    sort?: string;
+    dir?: string;
+    view?: string;
   }>;
 }
 
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   const params = await searchParams;
   const page = parseInt(params.page ?? '1', 10);
-  const result = await getProjects({
-    status: (params.status as ProjectStatus) || undefined,
-    search: params.search || undefined,
-    page,
-    pageSize: 50,
-  });
 
-  const filterParams: Record<string, string> = {};
-  if (params.status) filterParams.status = params.status;
-  if (params.search) filterParams.search = params.search;
+  const [result, views] = await Promise.all([
+    getProjects({
+      status: (params.status as ProjectStatus) || undefined,
+      search: params.search || undefined,
+      page,
+      pageSize: 50,
+      sort: params.sort || undefined,
+      dir: (params.dir as 'asc' | 'desc') || undefined,
+    }),
+    getMyViews('projects'),
+  ]);
 
-  const hasFilters = Object.keys(filterParams).length > 0;
+  // Flatten employee relationship for DataTable
+  const flatData = result.data.map((p: any) => ({
+    ...p,
+    project_manager_name: p.employees?.full_name ?? '—',
+    site_city: p.site_city ?? '—',
+  }));
+
+  const currentFilters: Record<string, string> = {};
+  if (params.status) currentFilters.status = params.status;
+  if (params.search) currentFilters.search = params.search;
+
+  const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
+  const viewCols = activeView?.columns as string[] | undefined;
+  const visibleColumns = viewCols && viewCols.length > 0
+    ? viewCols
+    : getDefaultColumns('projects');
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">PROJECTS</Eyebrow>
@@ -71,11 +75,10 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
         </div>
       </div>
 
-      {/* Filters */}
       <Card>
-        <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-52">
+        <CardContent className="py-3">
+          <form className="flex items-center gap-3 flex-wrap">
+            <Select name="status" defaultValue={params.status ?? ''} className="w-44 h-9 text-sm">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -85,119 +88,31 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
               name="search"
               defaultValue={params.search ?? ''}
               placeholder="Search project # or customer..."
-              className="w-72"
+              className="w-64 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {hasFilters && (
+            <Button type="submit" variant="outline" size="sm" className="h-9">Filter</Button>
+            {Object.keys(currentFilters).length > 0 && (
               <Link href="/projects">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
+                <Button type="button" variant="ghost" size="sm" className="h-9">Clear</Button>
               </Link>
             )}
           </form>
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Project #</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>System</TableHead>
-                <TableHead className="text-right">Size (kWp)</TableHead>
-                <TableHead className="text-right">Contracted Value</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Completion</TableHead>
-                <TableHead>Project Manager</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {result.data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9}>
-                    <EmptyState
-                      icon={<HardHat className="h-12 w-12" />}
-                      title="No projects found"
-                      description="Projects will appear here once leads are converted."
-                    />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                result.data.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell>
-                      <Link
-                        href={`/projects/${project.id}`}
-                        className="text-[#00B050] hover:underline font-medium font-mono text-sm"
-                      >
-                        {project.project_number}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{project.customer_name}</TableCell>
-                    <TableCell className="capitalize text-sm">
-                      {project.system_type.replace(/_/g, ' ')}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {project.system_size_kwp}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-medium">
-                      {formatINR(project.contracted_value)}
-                    </TableCell>
-                    <TableCell>
-                      <ProjectStatusBadge status={project.status} />
-                      {project.ceig_required && !project.ceig_cleared && (
-                        <span className="ml-1 text-xs text-[#9A3412]" title="CEIG clearance pending">
-                          CEIG
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <CompletionBar pct={project.completion_pct} />
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {project.employees?.full_name ?? '—'}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {toIST(project.created_at)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-          <Pagination
-            currentPage={result.page}
-            totalPages={result.totalPages}
-            totalRecords={result.total}
-            pageSize={result.pageSize}
-            basePath="/projects"
-            searchParams={filterParams}
-            entityName="projects"
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function CompletionBar({ pct }: { pct: number }) {
-  const color = pct >= 100 ? 'bg-[#065F46]' : pct >= 50 ? 'bg-[#00B050]' : 'bg-[#FCA524]';
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-16 h-2 rounded-full bg-[#E5E7EB] overflow-hidden">
-        <div
-          className={`h-full rounded-full ${color}`}
-          style={{ width: `${Math.min(pct, 100)}%` }}
-        />
-      </div>
-      <span className="text-xs font-mono text-muted-foreground">{pct}%</span>
+      <ProjectsTableWrapper
+        data={flatData}
+        total={result.total}
+        page={result.page}
+        pageSize={result.pageSize}
+        totalPages={result.totalPages}
+        sortColumn={params.sort}
+        sortDirection={params.dir}
+        currentFilters={currentFilters}
+        views={views}
+        activeViewId={params.view ?? null}
+        visibleColumns={visibleColumns}
+      />
     </div>
   );
 }

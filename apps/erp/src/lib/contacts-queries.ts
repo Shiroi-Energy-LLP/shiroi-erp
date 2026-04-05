@@ -15,6 +15,8 @@ export interface ContactFilters {
   lifecycleStage?: string;
   page?: number;
   pageSize?: number;
+  sort?: string;
+  dir?: 'asc' | 'desc';
 }
 
 export async function getContacts(filters: ContactFilters = {}): Promise<PaginatedResult<any>> {
@@ -32,8 +34,12 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
     .select(
       'id, name, first_name, last_name, phone, email, designation, lifecycle_stage, created_at, contact_company_roles(company_id, role_title, is_primary, ended_at, companies(name))',
       { count: 'exact' }
-    )
-    .order('created_at', { ascending: false });
+    );
+
+  // Dynamic sort
+  const sortCol = filters.sort ?? 'created_at';
+  const sortAsc = filters.dir === 'asc';
+  query = query.order(sortCol, { ascending: sortAsc });
 
   if (filters.search) {
     query = query.or(`name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
@@ -134,6 +140,8 @@ export interface CompanyFilters {
   segment?: string;
   page?: number;
   pageSize?: number;
+  sort?: string;
+  dir?: 'asc' | 'desc';
 }
 
 export async function getCompanies(filters: CompanyFilters = {}): Promise<PaginatedResult<any>> {
@@ -148,8 +156,12 @@ export async function getCompanies(filters: CompanyFilters = {}): Promise<Pagina
 
   let query = supabase
     .from('companies')
-    .select('id, name, segment, gstin, city, state, industry, owner_id, created_at', { count: 'exact' })
-    .order('name', { ascending: true });
+    .select('id, name, segment, gstin, city, state, industry, owner_id, created_at', { count: 'exact' });
+
+  // Dynamic sort
+  const sortCol = filters.sort ?? 'name';
+  const sortAsc = filters.dir === 'asc' || (!filters.dir && sortCol === 'name');
+  query = query.order(sortCol, { ascending: sortAsc });
 
   if (filters.segment) query = query.eq('segment', filters.segment as any);
   if (filters.search) {

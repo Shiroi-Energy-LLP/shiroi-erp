@@ -2,10 +2,10 @@
 
 import * as React from 'react';
 import { DataTable } from '@/components/data-table';
-import { LEAD_COLUMNS } from '@/components/data-table/column-config';
+import { CONTACT_COLUMNS } from '@/components/data-table/column-config';
 import { updateCellValue } from '@/lib/inline-edit-actions';
 
-interface LeadsTableWrapperProps {
+interface ContactsTableWrapperProps {
   data: any[];
   total: number;
   page: number;
@@ -19,7 +19,7 @@ interface LeadsTableWrapperProps {
   visibleColumns: string[];
 }
 
-export function LeadsTableWrapper({
+export function ContactsTableWrapper({
   data,
   total,
   page,
@@ -31,17 +31,17 @@ export function LeadsTableWrapper({
   views,
   activeViewId,
   visibleColumns,
-}: LeadsTableWrapperProps) {
+}: ContactsTableWrapperProps) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   async function handleCellEdit(rowId: string, field: string, value: string | number | null) {
-    return updateCellValue({ entityType: 'leads', rowId, field, value });
+    return updateCellValue({ entityType: 'contacts', rowId, field, value });
   }
 
   return (
     <DataTable
-      entityType="leads"
-      allColumns={LEAD_COLUMNS}
+      entityType="contacts"
+      allColumns={CONTACT_COLUMNS}
       visibleColumns={visibleColumns}
       data={data}
       total={total}
@@ -53,8 +53,8 @@ export function LeadsTableWrapper({
       currentFilters={currentFilters}
       views={views}
       activeViewId={activeViewId}
-      linkPrefix="/leads"
-      linkField="customer_name"
+      linkPrefix="/contacts"
+      linkField="name"
       onSelectionChange={setSelectedIds}
       selectedIds={selectedIds}
       onCellEdit={handleCellEdit}

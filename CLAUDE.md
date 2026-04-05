@@ -46,8 +46,12 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 018 | ✅ Applied (dev) | table_views: saved views for HubSpot-style column/filter/sort persistence per user |
 | Data migration | ✅ Complete | 108 vendors, ~160 projects, 850 POs (2,348 items), 1,164 expenses, 916 files from Google Drive |
 | HubSpot cutover | ✅ Complete (V2) | 1,115 leads, 314 projects, 314 proposals, 30 payments migrated. 0 unmatched payments. |
-| Contacts V2 | ✅ Complete | HubSpot-style person/company separation, lifecycle stages, activity timeline, edit pages, smart backfill (~1,039 contacts, ~56 companies from leads) |
-| HubSpot-style DataTable | ✅ Complete | Reusable across leads/proposals/projects/contacts/companies. Column picker (search + drag-reorder), saved views (tabs), URL-driven sort/pagination, checkbox selection |
+| Contacts V2 | ✅ Complete | HubSpot-style person/company separation, lifecycle stages, activity timeline, edit pages, smart backfill (~1,115 contacts, ~56 companies from leads) |
+| Contact dedup | ✅ Complete | 284 duplicate contacts merged by phone, 0 remaining duplicates. 756→1,115 contacts after dedup+backfill |
+| Contact backfill | ✅ Complete | 367 leads without contacts backfilled — 364 created/linked, 3 junk leads excluded |
+| HubSpot-style DataTable | ✅ Complete | Reusable across leads/proposals/projects/contacts/companies. Column picker (search + drag-reorder), saved views (tabs), URL-driven sort/pagination, checkbox selection, inline editing |
+| DataTable all entities | ✅ Complete | Projects, Contacts, Companies pages converted from standard tables to HubSpot-style DataTable with column picker + saved views |
+| Inline editing | ✅ Complete | Double-click-to-edit cells in DataTable. Supports text, number, select, date, phone, email fields. Server action with RLS enforcement |
 | Proposal engine | ✅ Implemented | Quick Quote, BOM generator (9 tests), budgetary + detailed PDF (10 pages), savings page, price override modal, PDF API route, notifications CRUD |
 | Proposal files | ✅ Complete | Upload/download files on proposal detail page via Supabase Storage |
 | Leads filtering | ✅ Complete | Converted leads hidden by default, visible via filter |
@@ -64,8 +68,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Inventory cut-length tracking | ✅ Complete | Step 67: /inventory dashboard + detail, cut-length gauge, location/scrap management, low-stock alerts |
 | UI/UX Overhaul R1 | ✅ Complete | 15 improvements: Logo SVG, Eyebrow, EmptyState (23 pages), Skeleton (7 loading.tsx), Breadcrumbs (4 detail pages), Radix Dialog upgrade, Sheet/Tooltip/DropdownMenu/Tabs, sidebar collapse+mobile drawer, table overflow, toast notifications, Form component (react-hook-form+Zod), column picker drag-drop feedback, skip-to-content, visited links, responsive fonts, reduced motion |
 | UI/UX Overhaul R2 | 🔜 In Progress | Color token cleanup (339 hex→token replacements), remaining EmptyState (15), loading.tsx (~15), Eyebrow (25), Breadcrumbs (4), Toast (4), form conversions (4) |
-| Contact dedup | 🔜 Next | ~possible duplicates from backfill retries, need dedup script |
-| Data cleanup | 🔜 Next | 255 fuzzy-match records to review, name normalization, placeholder phones |
+| Route fix (deployment) | ✅ Complete | Added missing page.tsx for /om and /projects/[id]/reports/[reportId] — fixed parallelRoutes.get TypeError |
+| Data cleanup | 🔜 Next | ~3 junk leads to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
@@ -411,14 +415,18 @@ Format: `SHIROI/INV/2025-26/0042`
 - Saved views: `table_views` DB table persists columns, filters, sort per user. Tab bar UI with create/save/delete
 - Per-column config: `column-config.ts` defines sortable, editable, format (badge/currency/date/phone/email), frozen, defaultVisible
 - Checkbox selection with bulk action bar
+- **Inline editing:** Double-click any editable cell to edit in-place. Supports text, number, select/badge dropdowns, date picker, phone, email. Enter to save, Escape to cancel. Server action with field-level validation and RLS enforcement.
 - Column definitions: LEAD_COLUMNS (16), PROPOSAL_COLUMNS (12), PROJECT_COLUMNS (11), CONTACT_COLUMNS (8), COMPANY_COLUMNS (7)
+- **All entity pages** now use DataTable: leads, proposals, projects, contacts, companies
 
 **Files:**
-- `src/components/data-table/data-table.tsx` — main component
+- `src/components/data-table/data-table.tsx` — main component (with inline editing)
 - `src/components/data-table/column-config.ts` — all column definitions
 - `src/components/data-table/column-picker.tsx` — HubSpot-style column selector
 - `src/components/data-table/view-tabs.tsx` — saved view tabs
 - `src/lib/views-actions.ts` — server actions for view CRUD
+- `src/lib/inline-edit-actions.ts` — server action for inline cell editing
+- Wrapper components: `leads-table-wrapper.tsx`, `proposals-table-wrapper.tsx`, `projects-table-wrapper.tsx`, `contacts-table-wrapper.tsx`, `companies-table-wrapper.tsx`
 
 ### Field friction standards (mobile screens)
 
@@ -497,4 +505,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 5, 2026 — UI/UX Overhaul R1 complete: 22 UI components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + originals), collapsible sidebar with mobile drawer, Radix Dialog upgrade, EmptyState on 23 pages, Eyebrow on 6 pages, Breadcrumbs on 4 detail pages, 7 loading.tsx skeletons, Toast notifications, react-hook-form+Zod Form component, column picker drag-drop feedback, table overflow, visited links, responsive fonts, reduced motion. R2 in progress: color token cleanup, remaining consistency pass. Next: contact dedup, data cleanup, prod deployment.*
+*Last updated: April 5, 2026 — Contact dedup (284 merged), backfill (364 leads linked), DataTable on all entity pages (projects/contacts/companies converted), inline editing (double-click-to-edit cells), route fix (missing /om and /reports/[reportId] pages causing parallelRoutes error). Next: data cleanup, prod deployment.*
