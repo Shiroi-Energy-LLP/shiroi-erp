@@ -147,10 +147,10 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
         <Pagination
           currentPage={result.page}
           totalPages={result.totalPages}
-          totalRecords={result.total}
+          totalItems={result.total}
           pageSize={result.pageSize}
           basePath="/contacts"
-          searchParams={filterParams}
+          filterParams={filterParams}
         />
       )}
     </div>

@@ -46,21 +46,21 @@ export const LEAD_COLUMNS: ColumnDef[] = [
     ] },
   { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: true, fieldType: 'badge',
     options: [
-      { value: 'new', label: 'New' }, { value: 'contacted', label: 'Contacted' },
-      { value: 'site_survey_scheduled', label: 'Survey Scheduled' }, { value: 'site_survey_done', label: 'Survey Done' },
-      { value: 'proposal_sent', label: 'Proposal Sent' }, { value: 'design_confirmed', label: 'Design Confirmed' },
-      { value: 'negotiation', label: 'Negotiation' }, { value: 'won', label: 'Won' },
-      { value: 'converted', label: 'Converted' }, { value: 'lost', label: 'Lost' },
-      { value: 'on_hold', label: 'On Hold' }, { value: 'disqualified', label: 'Disqualified' },
+      { value: 'new', label: 'New' }, { value: 'contacted', label: 'Contacted' }, { value: 'follow_up', label: 'Follow Up' },
+      { value: 'qualified', label: 'Qualified' }, { value: 'site_visit_scheduled', label: 'Site Visit Scheduled' },
+      { value: 'site_visit_done', label: 'Site Visit Done' }, { value: 'design_confirmed', label: 'Design Confirmed' },
+      { value: 'proposal_sent', label: 'Proposal Sent' }, { value: 'converted', label: 'Converted' },
+      { value: 'disqualified', label: 'Disqualified' }, { value: 'lost', label: 'Lost' },
     ] },
   { key: 'assigned_to_name', label: 'Assigned To', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
-  { key: 'estimated_size_kwp', label: 'Est. Size (kWp)', sortKey: 'estimated_size_kwp', defaultVisible: false, sortable: true, editable: true, fieldType: 'number' },
+  { key: 'estimated_value', label: 'Est. Value', sortKey: 'estimated_value', defaultVisible: false, sortable: true, editable: true, fieldType: 'currency', format: 'currency' },
+  { key: 'system_capacity_kw', label: 'System Size (kW)', sortKey: 'system_capacity_kw', defaultVisible: false, sortable: true, editable: true, fieldType: 'number' },
   { key: 'address_line1', label: 'Address', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
   { key: 'pincode', label: 'Pincode', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
   { key: 'is_qualified', label: 'Qualified', defaultVisible: false, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }] },
-  { key: 'next_followup_date', label: 'Next Follow-up', sortKey: 'next_followup_date', defaultVisible: false, sortable: true, editable: true, fieldType: 'date', format: 'date' },
+  { key: 'next_follow_up', label: 'Next Follow-up', sortKey: 'next_follow_up', defaultVisible: false, sortable: true, editable: true, fieldType: 'date', format: 'date' },
 ];
 
 // ── Proposals columns ──
@@ -68,8 +68,8 @@ export const LEAD_COLUMNS: ColumnDef[] = [
 export const PROPOSAL_COLUMNS: ColumnDef[] = [
   { key: 'proposal_number', label: 'Proposal #', sortKey: 'proposal_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
   { key: 'customer_name', label: 'Customer', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
-  { key: 'is_budgetary', label: 'Type', sortKey: 'is_budgetary', defaultVisible: true, sortable: true, editable: false, fieldType: 'badge',
-    options: [{ value: 'true', label: 'Budgetary' }, { value: 'false', label: 'Detailed' }] },
+  { key: 'proposal_type', label: 'Type', sortKey: 'proposal_type', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
+    options: [{ value: 'detailed', label: 'Detailed' }, { value: 'budgetary', label: 'Budgetary' }] },
   { key: 'system_type', label: 'System', sortKey: 'system_type', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'on_grid', label: 'On-Grid' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'off_grid', label: 'Off-Grid' }] },
   { key: 'system_size_kwp', label: 'Size (kWp)', sortKey: 'system_size_kwp', defaultVisible: true, sortable: true, editable: false, fieldType: 'number' },
@@ -83,6 +83,8 @@ export const PROPOSAL_COLUMNS: ColumnDef[] = [
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
   { key: 'valid_until', label: 'Valid Until', sortKey: 'valid_until', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
   { key: 'revision_number', label: 'Revision', defaultVisible: false, sortable: true, editable: false, fieldType: 'number' },
+  { key: 'is_budgetary', label: 'Budgetary?', defaultVisible: false, sortable: true, editable: false, fieldType: 'select',
+    options: [{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }] },
 ];
 
 // ── Projects columns ──

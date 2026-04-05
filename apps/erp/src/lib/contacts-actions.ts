@@ -328,7 +328,7 @@ export async function createActivity(input: {
       metadata: input.metadata || {},
     } as any)
     .select('id')
-    .single() as any;
+    .single();
 
   if (actErr) {
     console.error(`${op} Insert failed:`, { code: actErr.code, message: actErr.message });

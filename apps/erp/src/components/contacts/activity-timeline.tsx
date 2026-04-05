@@ -28,7 +28,7 @@ interface Activity {
   occurred_at: string;
   duration_minutes: number | null;
   owner: { full_name: string } | null;
-  metadata: unknown;
+  metadata: Record<string, unknown>;
 }
 
 interface ActivityTimelineProps {
@@ -143,7 +143,7 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
 
             <div className="space-y-4">
               {activities.map((act) => {
-                const config = (ACTIVITY_TYPE_CONFIG[act.activity_type] ?? ACTIVITY_TYPE_CONFIG.note)!;
+                const config = ACTIVITY_TYPE_CONFIG[act.activity_type] ?? ACTIVITY_TYPE_CONFIG.note;
                 const Icon = config.icon;
 
                 return (

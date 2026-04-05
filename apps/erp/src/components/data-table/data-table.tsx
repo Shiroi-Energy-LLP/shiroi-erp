@@ -314,7 +314,8 @@ export function DataTable({
                   {onSelectionChange && (
                     <TableHead className="w-10 px-3">
                       <Checkbox
-                        checked={someSelected ? 'indeterminate' : allSelected}
+                        checked={allSelected}
+                        indeterminate={someSelected}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>

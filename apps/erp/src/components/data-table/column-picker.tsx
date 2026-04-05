@@ -51,7 +51,7 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
     if (dragItem.current === null || dragOverItem.current === null) return;
     const reordered = [...localColumns];
     const [dragged] = reordered.splice(dragItem.current, 1);
-    reordered.splice(dragOverItem.current, 0, dragged!);
+    reordered.splice(dragOverItem.current, 0, dragged);
     setLocalColumns(reordered);
     dragItem.current = null;
     dragOverItem.current = null;

@@ -39,7 +39,7 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
     query = query.or(`name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
   }
   if (filters.lifecycleStage) {
-    query = query.eq('lifecycle_stage', filters.lifecycleStage);
+    query = query.eq('lifecycle_stage' as any, filters.lifecycleStage);
   }
 
   query = query.range(from, to);
@@ -206,7 +206,7 @@ export async function getEntityActivities(entityType: string, entityId: string) 
 
   if (!assocs || assocs.length === 0) return [];
 
-  const activityIds = assocs.map((a) => a.activity_id);
+  const activityIds = assocs.map((a: any) => a.activity_id);
 
   const { data, error } = await supabase
     .from('activities')

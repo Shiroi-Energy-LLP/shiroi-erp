@@ -86,8 +86,8 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={company.segment === 'residential' ? 'info' : company.segment === 'commercial' ? 'pending' : 'warning'} className="capitalize">
-                        {company.segment}
+                      <Badge variant="neutral" className="capitalize">
+                        {company.segment ?? '—'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">{company.city ?? '—'}</TableCell>
@@ -100,10 +100,10 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
           <Pagination
             currentPage={result.page}
             totalPages={result.totalPages}
-            totalRecords={result.total}
+            totalItems={result.total}
             pageSize={result.pageSize}
             basePath="/companies"
-            searchParams={filterParams}
+            filterParams={filterParams}
             entityName="companies"
           />
         </CardContent>
