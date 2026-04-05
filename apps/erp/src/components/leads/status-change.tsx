@@ -88,7 +88,7 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
       >
         {isPending ? 'Updating...' : 'Update'}
       </Button>
-      {error && <span className="text-sm text-[#991B1B]">{error}</span>}
+      {error && <span className="text-sm text-status-error-text">{error}</span>}
     </div>
   );
 }

@@ -157,10 +157,10 @@ export function AddContactDialog({ entityType, entityId, open, onOpenChange }: A
                       type="button"
                       onClick={() => handleLink(c.id)}
                       disabled={loading}
-                      className="w-full text-left rounded-md border border-[#DFE2E8] p-2 hover:bg-[#F8F9FB] transition-colors"
+                      className="w-full text-left rounded-md border border-n-200 p-2 hover:bg-n-050 transition-colors"
                     >
-                      <p className="text-sm font-medium text-[#1A1D24]">{c.name}</p>
-                      <p className="text-xs text-[#7C818E]">
+                      <p className="text-sm font-medium text-n-900">{c.name}</p>
+                      <p className="text-xs text-n-500">
                         {[c.phone, c.email, c.designation].filter(Boolean).join(' · ')}
                       </p>
                     </button>
@@ -193,7 +193,7 @@ export function AddContactDialog({ entityType, entityId, open, onOpenChange }: A
             </div>
           )}
 
-          {error && <p className="text-sm text-[#991B1B]">{error}</p>}
+          {error && <p className="text-sm text-status-error-text">{error}</p>}
         </div>
       </DialogContent>
     </Dialog>

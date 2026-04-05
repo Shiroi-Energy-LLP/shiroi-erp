@@ -1,10 +1,13 @@
-import { Card, CardContent } from '@repo/ui';
+import { Card, CardContent, Eyebrow } from '@repo/ui';
 import { Palette } from 'lucide-react';
 
 export default function DesignPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Design Queue</h1>
+      <div>
+        <Eyebrow className="mb-1">DESIGN QUEUE</Eyebrow>
+        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Design Queue</h1>
+      </div>
       <Card>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-16 text-center">

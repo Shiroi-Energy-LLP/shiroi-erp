@@ -14,14 +14,14 @@ function ProgressRow({ label, current, total }: { label: string; current: number
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-[12px] text-[#3F424D]">{label}</span>
-        <span className="text-[12px] font-mono font-bold text-[#111318]">
+        <span className="text-[12px] text-n-700">{label}</span>
+        <span className="text-[12px] font-mono font-bold text-n-950">
           {current} / {total}
         </span>
       </div>
       <div className="h-1.5 rounded-full bg-[#E5E7EB] overflow-hidden">
         <div
-          className="h-full rounded-full bg-[#00B050] transition-all duration-300"
+          className="h-full rounded-full bg-shiroi-green transition-all duration-300"
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>

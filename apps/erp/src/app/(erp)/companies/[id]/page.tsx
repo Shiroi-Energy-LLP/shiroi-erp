@@ -5,9 +5,9 @@ import { ActivityTimeline } from '@/components/contacts/activity-timeline';
 import {
   Card, CardHeader, CardTitle, CardContent, Badge, Button,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  Breadcrumb,
+  Breadcrumb, EmptyState,
 } from '@repo/ui';
-import { Pencil } from 'lucide-react';
+import { Pencil, Users } from 'lucide-react';
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -102,7 +102,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             </CardHeader>
             <CardContent>
               {activeContacts.length === 0 ? (
-                <p className="text-sm text-[#9CA0AB] py-4 text-center">No contacts linked yet.</p>
+                <EmptyState
+                  icon={<Users className="h-12 w-12" />}
+                  title="No contacts linked"
+                  description="Link contacts to this company to see them here."
+                />
               ) : (
                 <Table>
                   <TableHeader>

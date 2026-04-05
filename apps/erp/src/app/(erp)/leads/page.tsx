@@ -48,8 +48,9 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
 
   // Active view columns (from view or defaults)
   const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
-  const visibleColumns = activeView?.columns?.length > 0
-    ? activeView.columns
+  const viewCols = activeView?.columns as string[] | undefined;
+  const visibleColumns = viewCols && viewCols.length > 0
+    ? viewCols
     : getDefaultColumns('leads');
 
   return (

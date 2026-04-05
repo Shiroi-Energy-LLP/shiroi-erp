@@ -28,11 +28,11 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
             <div className="absolute left-[9px] top-3 bottom-0 w-px bg-[#D1D5DB]" />
           )}
           {/* Timeline dot */}
-          <div className="absolute left-0 top-1 h-[18px] w-[18px] rounded-full border-2 border-[#00B050] bg-white" />
+          <div className="absolute left-0 top-1 h-[18px] w-[18px] rounded-full border-2 border-shiroi-green bg-white" />
 
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-[#1A1D24]">
+              <span className="text-sm font-semibold text-n-900">
                 {formatActivityType(activity.activity_type)}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -56,7 +56,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
               )}
             </div>
             {activity.next_action && (
-              <p className="text-xs text-[#00B050] font-medium">
+              <p className="text-xs text-shiroi-green font-medium">
                 Next: {activity.next_action}
                 {activity.next_action_date && ` (by ${activity.next_action_date})`}
               </p>

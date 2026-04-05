@@ -48,10 +48,10 @@ export function GeneratePDFButton({ proposalId }: GeneratePDFButtonProps) {
         {generating ? 'Generating...' : 'Generate PDF'}
       </Button>
       {error && (
-        <span className="text-xs text-[#991B1B]">{error}</span>
+        <span className="text-xs text-status-error-text">{error}</span>
       )}
       {success && (
-        <span className="text-xs text-[#065F46]">PDF generated!</span>
+        <span className="text-xs text-status-success-text">PDF generated!</span>
       )}
     </div>
   );

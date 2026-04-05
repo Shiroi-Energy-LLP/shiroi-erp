@@ -27,7 +27,7 @@ export async function MyTasks({ employeeId }: { employeeId: string }) {
       </CardHeader>
       <CardContent>
         {tasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-8 text-[#9CA0AB]">
+          <div className="flex flex-col items-center justify-center gap-2 py-8 text-n-400">
             <ClipboardList className="h-8 w-8" />
             <p className="text-sm">No open tasks assigned to you.</p>
           </div>
@@ -47,17 +47,17 @@ export async function MyTasks({ employeeId }: { employeeId: string }) {
                 const overdue = isTaskOverdue(task.due_date);
                 return (
                   <TableRow key={task.id}>
-                    <TableCell className="font-medium text-[#1A1D24] max-w-[240px] truncate">
+                    <TableCell className="font-medium text-n-900 max-w-[240px] truncate">
                       {task.title}
                     </TableCell>
                     <TableCell>{formatEntityType(task.entity_type)}</TableCell>
                     <TableCell>
                       {task.due_date ? (
-                        <span className={overdue ? 'text-[#991B1B] font-semibold' : ''}>
+                        <span className={overdue ? 'text-status-error-text font-semibold' : ''}>
                           {formatDate(task.due_date)}
                         </span>
                       ) : (
-                        <span className="text-[#9CA0AB]">--</span>
+                        <span className="text-n-400">--</span>
                       )}
                     </TableCell>
                     <TableCell>

@@ -1,7 +1,8 @@
 'use client';
 
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@repo/ui';
+import { Card, CardHeader, CardTitle, CardContent, Badge, EmptyState } from '@repo/ui';
 import { formatINR, toIST } from '@repo/ui/formatters';
+import { CheckCircle } from 'lucide-react';
 
 interface PendingProposal {
   id: string;
@@ -19,7 +20,11 @@ export function PendingApprovals({ proposals }: { proposals: PendingProposal[] }
           <CardTitle className="text-base">Pending Approvals</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No proposals waiting for approval.</p>
+          <EmptyState
+            icon={<CheckCircle className="h-12 w-12" />}
+            title="No pending approvals"
+            description="No proposals waiting for approval."
+          />
         </CardContent>
       </Card>
     );

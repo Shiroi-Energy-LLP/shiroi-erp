@@ -14,6 +14,7 @@ import {
   TableHead,
   TableCell,
   Badge,
+  EmptyState,
 } from '@repo/ui';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import { ShoppingCart, Shield, AlertTriangle } from 'lucide-react';
@@ -90,10 +91,11 @@ export async function PurchaseDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {data.recentPOs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-[#9CA0AB]">
-                  <ShoppingCart className="h-8 w-8 mb-2" />
-                  <p className="text-sm">No purchase orders found.</p>
-                </div>
+                <EmptyState
+                  icon={<ShoppingCart className="h-12 w-12" />}
+                  title="No purchase orders"
+                  description="Purchase orders will appear here once created."
+                />
               ) : (
                 <Table>
                   <TableHeader>

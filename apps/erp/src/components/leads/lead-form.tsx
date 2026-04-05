@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@repo/supabase/client';
-import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label, Select } from '@repo/ui';
+import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label, Select, useToast } from '@repo/ui';
 import { normalizePhone } from '@/lib/leads-helpers';
 import type { Database } from '@repo/types/database';
 
@@ -41,6 +41,7 @@ const STATES = [
 
 export function LeadForm() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,15 +113,16 @@ export function LeadForm() {
 
     if (insertError) {
       console.error(`${op} Insert failed:`, { code: insertError.code, message: insertError.message });
-      if (insertError.code === '23505' && insertError.message.includes('phone')) {
-        setError('A lead with this phone number already exists.');
-      } else {
-        setError(`Failed to create lead: ${insertError.message}`);
-      }
+      const errMsg = insertError.code === '23505' && insertError.message.includes('phone')
+        ? 'A lead with this phone number already exists.'
+        : `Failed to create lead: ${insertError.message}`;
+      setError(errMsg);
+      addToast({ variant: 'destructive', title: 'Failed to create lead', description: errMsg });
       setIsSubmitting(false);
       return;
     }
 
+    addToast({ variant: 'success', title: 'Lead created', description: `${form.customer_name} has been added.` });
     router.push(`/leads/${newId}`);
   }
 
@@ -132,7 +134,7 @@ export function LeadForm() {
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
-            <div className="rounded-md bg-[#FEF2F2] border border-[#DC2626] px-4 py-2 text-sm text-[#991B1B]">
+            <div className="rounded-md bg-status-error-bg border border-[#DC2626] px-4 py-2 text-sm text-status-error-text">
               {error}
             </div>
           )}

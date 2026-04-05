@@ -3,6 +3,7 @@ import { getCompanies } from '@/lib/contacts-queries';
 import {
   Card, CardContent, Button, Input, Select, Pagination, Badge, EmptyState,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+  Eyebrow,
 } from '@repo/ui';
 import { Building2 } from 'lucide-react';
 
@@ -29,7 +30,10 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Companies</h1>
+        <div>
+          <Eyebrow className="mb-1">COMPANIES</Eyebrow>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">Companies</h1>
+        </div>
         <Link href="/companies/new">
           <Button>New Company</Button>
         </Link>

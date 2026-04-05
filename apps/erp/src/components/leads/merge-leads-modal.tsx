@@ -48,7 +48,7 @@ export function MergeLeadsModal({ leadA, leadB, open, onOpenChange, onMergeCompl
           <DialogTitle>Merge Leads</DialogTitle>
         </DialogHeader>
 
-        <p className="text-[13px] text-[#7C818E] mb-4">
+        <p className="text-[13px] text-n-500 mb-4">
           Select the primary lead to keep. The other lead&apos;s activities and proposals will be transferred, and it will be soft-deleted.
         </p>
 
@@ -60,8 +60,8 @@ export function MergeLeadsModal({ leadA, leadB, open, onOpenChange, onMergeCompl
               onClick={() => setPrimaryId(lead.id)}
               className={`rounded-lg border-2 p-4 text-left transition-all ${
                 primaryId === lead.id
-                  ? 'border-[#00B050] bg-[#ECFDF5]'
-                  : 'border-[#DFE2E8] bg-white hover:border-[#BFC3CC]'
+                  ? 'border-shiroi-green bg-status-success-bg'
+                  : 'border-n-200 bg-white hover:border-n-300'
               }`}
             >
               {primaryId === lead.id && (
@@ -71,9 +71,9 @@ export function MergeLeadsModal({ leadA, leadB, open, onOpenChange, onMergeCompl
                 <Badge variant="error" className="mb-2">Will be merged</Badge>
               )}
               <div className="mt-1">
-                <p className="font-medium text-[#1A1D24]">{lead.customer_name}</p>
-                <p className="text-sm font-mono text-[#7C818E]">{lead.phone}</p>
-                <p className="text-xs text-[#9CA0AB] capitalize mt-1">
+                <p className="font-medium text-n-900">{lead.customer_name}</p>
+                <p className="text-sm font-mono text-n-500">{lead.phone}</p>
+                <p className="text-xs text-n-400 capitalize mt-1">
                   {lead.status.replace(/_/g, ' ')}
                 </p>
               </div>
@@ -82,7 +82,7 @@ export function MergeLeadsModal({ leadA, leadB, open, onOpenChange, onMergeCompl
         </div>
 
         {error && (
-          <p className="text-sm text-[#991B1B] mt-2">{error}</p>
+          <p className="text-sm text-status-error-text mt-2">{error}</p>
         )}
 
         <DialogFooter className="mt-4">

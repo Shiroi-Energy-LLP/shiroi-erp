@@ -68,7 +68,7 @@ export function PaymentSchedule({ milestones }: { milestones: Milestone[] }) {
               <TableRow className="bg-muted/50 font-medium">
                 <TableCell />
                 <TableCell>Total</TableCell>
-                <TableCell className={`text-right font-mono ${valid ? 'text-[#065F46]' : 'text-[#991B1B]'}`}>
+                <TableCell className={`text-right font-mono ${valid ? 'text-status-success-text' : 'text-status-error-text'}`}>
                   {sum}%
                 </TableCell>
                 <TableCell className="text-right font-mono">
@@ -82,7 +82,7 @@ export function PaymentSchedule({ milestones }: { milestones: Milestone[] }) {
       </Table>
 
       {!valid && sorted.length > 0 && (
-        <div className="rounded-md border border-[#FEF2F2] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]">
+        <div className="rounded-md border border-status-error-bg bg-status-error-bg px-4 py-3 text-sm text-status-error-text">
           Payment schedule must equal 100%. Current: {sum}%
         </div>
       )}

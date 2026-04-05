@@ -14,6 +14,7 @@ import {
   TableHead,
   TableCell,
   Badge,
+  EmptyState,
 } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 import { Palette } from 'lucide-react';
@@ -65,10 +66,11 @@ export async function DesignerDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {data.designQueue.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-[#9CA0AB]">
-                  <Palette className="h-8 w-8 mb-2" />
-                  <p className="text-sm">No leads awaiting design.</p>
-                </div>
+                <EmptyState
+                  icon={<Palette className="h-12 w-12" />}
+                  title="No leads awaiting design"
+                  description="All design tasks are up to date."
+                />
               ) : (
                 <Table>
                   <TableHeader>

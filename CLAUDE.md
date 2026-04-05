@@ -17,7 +17,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 ---
 
-## CURRENT STATE (as of April 4, 2026)
+## CURRENT STATE (as of April 5, 2026)
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -30,8 +30,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 4 with contacts V2 + table_views |
 | Migrations | ✅ Committed | supabase/migrations/ — 30 files (001 through 018) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
-| Design system | ✅ Complete | packages/ui — V2 design system, 11 components (+Checkbox, +Pagination) |
-| Auth + App Shell | ✅ Complete | Login, middleware, sectioned role-based sidebar, topbar with role switcher |
+| Design system | ✅ Complete | packages/ui — V2 design system, 22 components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + original 11) |
+| Auth + App Shell | ✅ Complete | Login (with logo), middleware, collapsible sidebar (240px/60px + mobile drawer), topbar with role switcher, skip-to-content |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper |
 | Phase 2B All Screens | ✅ Complete | 57+ routes total — all sidebar links are real data-driven pages, 0 placeholders |
@@ -62,6 +62,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Net metering + CEIG workflow | ✅ Complete | Step 64: Full CEIG/DISCOM/net-meter forms, followup tracking, objection log, CEIG gate enforcement UI |
 | Handover pack | ✅ Complete | Step 65: Auto-generate structured JSON from project data, versioned in generated_documents, warranty/checklist/system summary |
 | Inventory cut-length tracking | ✅ Complete | Step 67: /inventory dashboard + detail, cut-length gauge, location/scrap management, low-stock alerts |
+| UI/UX Overhaul R1 | ✅ Complete | 15 improvements: Logo SVG, Eyebrow, EmptyState (23 pages), Skeleton (7 loading.tsx), Breadcrumbs (4 detail pages), Radix Dialog upgrade, Sheet/Tooltip/DropdownMenu/Tabs, sidebar collapse+mobile drawer, table overflow, toast notifications, Form component (react-hook-form+Zod), column picker drag-drop feedback, skip-to-content, visited links, responsive fonts, reduced motion |
+| UI/UX Overhaul R2 | 🔜 In Progress | Color token cleanup (339 hex→token replacements), remaining EmptyState (15), loading.tsx (~15), Eyebrow (25), Breadcrumbs (4), Toast (4), form conversions (4) |
 | Contact dedup | 🔜 Next | ~possible duplicates from backfill retries, need dedup script |
 | Data cleanup | 🔜 Next | 255 fuzzy-match records to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
@@ -495,4 +497,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 4, 2026 — Contacts V2 (HubSpot-style person/company separation, lifecycle stages, activity timeline) + HubSpot-style DataTable (column picker, saved views, drag-reorder) for leads/proposals. Migrations 017–018 applied to dev. Types regenerated. ~1,039 contacts backfilled from leads. Next: contact dedup, data cleanup, prod deployment.*
+*Last updated: April 5, 2026 — UI/UX Overhaul R1 complete: 22 UI components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + originals), collapsible sidebar with mobile drawer, Radix Dialog upgrade, EmptyState on 23 pages, Eyebrow on 6 pages, Breadcrumbs on 4 detail pages, 7 loading.tsx skeletons, Toast notifications, react-hook-form+Zod Form component, column picker drag-drop feedback, table overflow, visited links, responsive fonts, reduced motion. R2 in progress: color token cleanup, remaining consistency pass. Next: contact dedup, data cleanup, prod deployment.*

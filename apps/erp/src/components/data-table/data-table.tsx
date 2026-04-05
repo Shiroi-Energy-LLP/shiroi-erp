@@ -207,7 +207,7 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
-          className="font-medium text-[#00B050] hover:underline"
+          className="font-medium text-shiroi-green hover:underline"
         >
           {String(val ?? '—')}
         </Link>
@@ -256,7 +256,7 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
-          className="font-medium text-[#00B050] hover:underline"
+          className="font-medium text-shiroi-green hover:underline"
         >
           {String(val ?? '—')}
         </Link>
@@ -283,7 +283,7 @@ export function DataTable({
       {/* Toolbar */}
       <div className="flex items-center justify-between px-1 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-[#7C818E]">
+          <span className="text-sm text-n-500">
             {total.toLocaleString('en-IN')} {entityType}
           </span>
 
@@ -296,7 +296,7 @@ export function DataTable({
             variant="ghost"
             size="sm"
             onClick={() => setShowColumnPicker(true)}
-            className="h-8 text-xs gap-1.5 text-[#7C818E]"
+            className="h-8 text-xs gap-1.5 text-n-500"
           >
             <Columns3 className="h-3.5 w-3.5" /> Columns
           </Button>
@@ -323,7 +323,7 @@ export function DataTable({
                   {visibleColumnDefs.map((col) => (
                     <TableHead
                       key={col.key}
-                      className={`text-[11px] font-semibold uppercase tracking-wider text-[#7C818E] ${col.sortable ? 'cursor-pointer select-none hover:text-[#1A1D24]' : ''}`}
+                      className={`text-[11px] font-semibold uppercase tracking-wider text-n-500 ${col.sortable ? 'cursor-pointer select-none hover:text-n-900' : ''}`}
                       onClick={() => handleSort(col)}
                       style={col.width ? { width: col.width } : undefined}
                     >
@@ -333,9 +333,9 @@ export function DataTable({
                           <span className="inline-flex flex-col">
                             {sortColumn === col.sortKey ? (
                               sortDirection === 'asc' ? (
-                                <ChevronUp className="h-3 w-3 text-[#00B050]" />
+                                <ChevronUp className="h-3 w-3 text-shiroi-green" />
                               ) : (
-                                <ChevronDown className="h-3 w-3 text-[#00B050]" />
+                                <ChevronDown className="h-3 w-3 text-shiroi-green" />
                               )
                             ) : (
                               <ArrowUpDown className="h-3 w-3 opacity-30" />
@@ -352,7 +352,7 @@ export function DataTable({
                   <TableRow>
                     <TableCell
                       colSpan={visibleColumnDefs.length + (onSelectionChange ? 1 : 0)}
-                      className="py-12 text-center text-[#9CA0AB]"
+                      className="py-12 text-center text-n-400"
                     >
                       No {entityType} found.
                     </TableCell>
@@ -365,7 +365,7 @@ export function DataTable({
                     return (
                       <TableRow
                         key={rowId}
-                        className={isSelected ? 'bg-[#00B050]/5' : 'hover:bg-[#F5F6F8]'}
+                        className={isSelected ? 'bg-shiroi-green/5' : 'hover:bg-[#F5F6F8]'}
                         data-state={isSelected ? 'selected' : undefined}
                       >
                         {onSelectionChange && (
@@ -394,7 +394,7 @@ export function DataTable({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="pt-3">
-          <div className="flex items-center justify-between text-sm text-[#7C818E]">
+          <div className="flex items-center justify-between text-sm text-n-500">
             <span>
               Showing {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, total)} of {total.toLocaleString('en-IN')}
             </span>

@@ -11,9 +11,11 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import Link from 'next/link';
+import { CheckCircle } from 'lucide-react';
 
 interface CashProject {
   project_id: string;
@@ -34,7 +36,11 @@ export function CashAlertTable({ projects }: { projects: CashProject[] }) {
           <CardTitle className="text-base">Cash-Negative Projects</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No cash-negative projects. All positions are healthy.</p>
+          <EmptyState
+            icon={<CheckCircle className="h-12 w-12" />}
+            title="All positions healthy"
+            description="No cash-negative projects. All positions are healthy."
+          />
         </CardContent>
       </Card>
     );

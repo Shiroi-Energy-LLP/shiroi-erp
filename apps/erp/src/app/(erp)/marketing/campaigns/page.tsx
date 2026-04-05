@@ -12,6 +12,7 @@ import {
   TableHead,
   TableCell,
   EmptyState,
+  Eyebrow,
 } from '@repo/ui';
 import { Megaphone } from 'lucide-react';
 
@@ -81,6 +82,7 @@ export default async function CampaignsPage() {
           <Link href="/marketing" className="text-sm text-[#00B050] hover:underline">
             &larr; Back to Marketing
           </Link>
+          <Eyebrow className="mb-1">CAMPAIGNS</Eyebrow>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Marketing Campaigns</h1>
           <p className="text-sm text-gray-500">
             {campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''}

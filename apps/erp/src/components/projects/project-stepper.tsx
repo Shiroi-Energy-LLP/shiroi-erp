@@ -51,10 +51,10 @@ export function ProjectStepper({ projectId, activeStep, completedSteps }: Projec
                     w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
                     transition-all duration-200 cursor-pointer shrink-0
                     ${isCompleted
-                      ? 'bg-[#00B050] text-white'
+                      ? 'bg-shiroi-green text-white'
                       : isActive
-                        ? 'bg-white border-2 border-[#00B050] text-[#00B050] shadow-[0_0_0_4px_rgba(0,176,80,0.15)]'
-                        : 'bg-[#DFE2E8] text-[#7C818E] hover:bg-[#BFC3CC]'
+                        ? 'bg-white border-2 border-shiroi-green text-shiroi-green shadow-[0_0_0_4px_rgba(0,176,80,0.15)]'
+                        : 'bg-n-200 text-n-500 hover:bg-n-300'
                     }
                   `}
                   aria-label={`Step ${step.number}: ${step.label}`}
@@ -70,8 +70,8 @@ export function ProjectStepper({ projectId, activeStep, completedSteps }: Projec
                   className={`
                     mt-1.5 text-center leading-tight whitespace-nowrap
                     ${isActive || isCompleted
-                      ? 'text-[#1A1D24] font-medium'
-                      : 'text-[#7C818E]'
+                      ? 'text-n-900 font-medium'
+                      : 'text-n-500'
                     }
                   `}
                   style={{ fontSize: '11px' }}
@@ -84,7 +84,7 @@ export function ProjectStepper({ projectId, activeStep, completedSteps }: Projec
               {!isLast && (
                 <div className="flex-1 flex items-center pt-4 px-1">
                   <div
-                    className={`h-0.5 w-full ${connectorGreen ? 'bg-[#00B050]' : 'bg-[#DFE2E8]'}`}
+                    className={`h-0.5 w-full ${connectorGreen ? 'bg-shiroi-green' : 'bg-n-200'}`}
                   />
                 </div>
               )}

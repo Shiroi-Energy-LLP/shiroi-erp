@@ -63,7 +63,7 @@ export async function CompensationView({ employeeId }: CompensationViewProps) {
           <div className="col-span-full border-t pt-3 mt-2">
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-gray-700">Gross Monthly</span>
-              <span className="text-base font-bold text-[#1A1D24]">
+              <span className="text-base font-bold text-n-900">
                 {formatINR(compensation.gross_monthly)}
               </span>
             </div>
@@ -93,13 +93,13 @@ export async function CompensationView({ employeeId }: CompensationViewProps) {
           <div className="col-span-full border-t pt-3 mt-2">
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-gray-700">CTC Monthly</span>
-              <span className="text-sm font-medium text-[#1A1D24]">
+              <span className="text-sm font-medium text-n-900">
                 {formatINR(compensation.ctc_monthly)}
               </span>
             </div>
             <div className="flex justify-between items-center mt-1">
               <span className="text-sm font-semibold text-gray-700">CTC Annual</span>
-              <span className="text-base font-bold text-[#1A1D24]">
+              <span className="text-base font-bold text-n-900">
                 {formatINR(compensation.ctc_annual)}
               </span>
             </div>
@@ -130,7 +130,7 @@ function CompItem({
   return (
     <div>
       <p className="text-xs text-gray-400">{label}</p>
-      <p className={`text-sm font-medium ${isDeduction ? 'text-red-600' : 'text-[#1A1D24]'}`}>
+      <p className={`text-sm font-medium ${isDeduction ? 'text-red-600' : 'text-n-900'}`}>
         {formatINR(value)}
       </p>
     </div>

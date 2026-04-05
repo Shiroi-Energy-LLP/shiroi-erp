@@ -56,7 +56,7 @@ function Pagination({
   }
 
   return (
-    <div className={cn('flex items-center justify-between text-sm text-[#7C818E] py-3 px-4', className)}>
+    <div className={cn('flex items-center justify-between text-sm text-n-500 py-3 px-4', className)}>
       <span>
         Showing {from.toLocaleString('en-IN')}–{to.toLocaleString('en-IN')} of {total.toLocaleString('en-IN')}{entityName ? ` ${entityName}` : ''}
       </span>
@@ -66,8 +66,8 @@ function Pagination({
           className={cn(
             'inline-flex items-center justify-center h-8 px-3 rounded-md border text-sm',
             currentPage <= 1
-              ? 'pointer-events-none opacity-50 border-[#DFE2E8]'
-              : 'border-[#DFE2E8] hover:bg-[#F5F6F8] cursor-pointer'
+              ? 'pointer-events-none opacity-50 border-n-200'
+              : 'border-n-200 hover:bg-[#F5F6F8] cursor-pointer'
           )}
         >
           Previous
@@ -79,8 +79,8 @@ function Pagination({
             className={cn(
               'inline-flex items-center justify-center h-8 w-8 rounded-md text-sm',
               p === currentPage
-                ? 'bg-[#00B050] text-white font-medium'
-                : 'border border-[#DFE2E8] hover:bg-[#F5F6F8]'
+                ? 'bg-shiroi-green text-white font-medium'
+                : 'border border-n-200 hover:bg-[#F5F6F8]'
             )}
           >
             {p}
@@ -91,8 +91,8 @@ function Pagination({
           className={cn(
             'inline-flex items-center justify-center h-8 px-3 rounded-md border text-sm',
             currentPage >= totalPages
-              ? 'pointer-events-none opacity-50 border-[#DFE2E8]'
-              : 'border-[#DFE2E8] hover:bg-[#F5F6F8] cursor-pointer'
+              ? 'pointer-events-none opacity-50 border-n-200'
+              : 'border-n-200 hover:bg-[#F5F6F8] cursor-pointer'
           )}
         >
           Next

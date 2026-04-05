@@ -149,7 +149,7 @@ export function ReportForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-[#FEF2F2] border border-[#991B1B] text-[#991B1B] px-4 py-3 rounded-md text-sm">
+        <div className="bg-status-error-bg border border-status-error-text text-status-error-text px-4 py-3 rounded-md text-sm">
           {error}
         </div>
       )}

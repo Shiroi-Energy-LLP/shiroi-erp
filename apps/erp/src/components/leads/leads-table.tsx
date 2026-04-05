@@ -110,7 +110,7 @@ export function LeadsTable({ leads, employees }: LeadsTableProps) {
         <TableBody>
           {leads.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center text-[#9CA0AB] py-8">
+              <TableCell colSpan={9} className="text-center text-n-400 py-8">
                 No leads found.
               </TableCell>
             </TableRow>
@@ -130,7 +130,7 @@ export function LeadsTable({ leads, employees }: LeadsTableProps) {
                 <TableCell>
                   <Link
                     href={`/leads/${lead.id}`}
-                    className="text-[#00B050] hover:underline font-medium"
+                    className="text-shiroi-green hover:underline font-medium"
                   >
                     {lead.customer_name}
                   </Link>
@@ -149,7 +149,7 @@ export function LeadsTable({ leads, employees }: LeadsTableProps) {
                 <TableCell className="text-sm">
                   {lead.employees?.full_name ?? '—'}
                 </TableCell>
-                <TableCell className="text-sm text-[#7C818E]">
+                <TableCell className="text-sm text-n-500">
                   {toIST(lead.created_at)}
                 </TableCell>
               </TableRow>

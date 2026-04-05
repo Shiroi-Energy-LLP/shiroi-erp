@@ -5,9 +5,9 @@ import { ActivityTimeline } from '@/components/contacts/activity-timeline';
 import {
   Card, CardHeader, CardTitle, CardContent, Badge, Button,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  Breadcrumb,
+  Breadcrumb, EmptyState,
 } from '@repo/ui';
-import { Pencil } from 'lucide-react';
+import { Pencil, Building2 } from 'lucide-react';
 
 const LIFECYCLE_COLORS: Record<string, string> = {
   subscriber: '#7C818E',
@@ -168,7 +168,11 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             </CardHeader>
             <CardContent>
               {(!contact.contact_company_roles || contact.contact_company_roles.length === 0) ? (
-                <p className="text-sm text-[#9CA0AB] py-4 text-center">No company affiliations.</p>
+                <EmptyState
+                  icon={<Building2 className="h-12 w-12" />}
+                  title="No company affiliations"
+                  description="This contact is not linked to any company yet."
+                />
               ) : (
                 <div className="space-y-3">
                   {contact.contact_company_roles.map((ccr: any) => (

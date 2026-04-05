@@ -14,9 +14,10 @@ import {
   TableHead,
   TableCell,
   Badge,
+  EmptyState,
 } from '@repo/ui';
 import { shortINR } from '@repo/ui/formatters';
-import { Phone } from 'lucide-react';
+import { Phone, Filter } from 'lucide-react';
 
 function formatStatus(status: string): string {
   return status
@@ -89,10 +90,11 @@ export async function SalesDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {data.followUpsToday.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-[#9CA0AB]">
-                  <Phone className="h-8 w-8 mb-2" />
-                  <p className="text-sm">No follow-ups scheduled for today.</p>
-                </div>
+                <EmptyState
+                  icon={<Phone className="h-12 w-12" />}
+                  title="No follow-ups today"
+                  description="No follow-ups scheduled for today."
+                />
               ) : (
                 <Table>
                   <TableHeader>
@@ -133,9 +135,11 @@ export async function SalesDashboard() {
             </CardHeader>
             <CardContent>
               {data.leadFunnel.length === 0 ? (
-                <p className="text-sm text-[#9CA0AB] py-4 text-center">
-                  No active leads in the pipeline.
-                </p>
+                <EmptyState
+                  icon={<Filter className="h-12 w-12" />}
+                  title="No active leads"
+                  description="No active leads in the pipeline."
+                />
               ) : (
                 <div className="space-y-2">
                   {data.leadFunnel.map(({ status, count }) => (

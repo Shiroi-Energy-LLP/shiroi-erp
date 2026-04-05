@@ -86,14 +86,14 @@ export function ViewTabs({
   }
 
   return (
-    <div className="flex items-center gap-1 border-b border-[#DFE2E8] overflow-x-auto">
+    <div className="flex items-center gap-1 border-b border-n-200 overflow-x-auto">
       {/* "All" default tab */}
       <button
         onClick={() => onViewChange(null)}
         className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
           !activeViewId
-            ? 'border-[#00B050] text-[#00B050]'
-            : 'border-transparent text-[#7C818E] hover:text-[#1A1D24] hover:border-[#DFE2E8]'
+            ? 'border-shiroi-green text-shiroi-green'
+            : 'border-transparent text-n-500 hover:text-n-900 hover:border-n-200'
         }`}
       >
         All {entityType}
@@ -106,13 +106,13 @@ export function ViewTabs({
             onClick={() => onViewChange(view)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeViewId === view.id
-                ? 'border-[#00B050] text-[#00B050]'
-                : 'border-transparent text-[#7C818E] hover:text-[#1A1D24] hover:border-[#DFE2E8]'
+                ? 'border-shiroi-green text-shiroi-green'
+                : 'border-transparent text-n-500 hover:text-n-900 hover:border-n-200'
             }`}
           >
             {view.name}
             {view.visibility === 'everyone' && (
-              <span className="text-[9px] text-[#9CA0AB] ml-1">(shared)</span>
+              <span className="text-[9px] text-n-400 ml-1">(shared)</span>
             )}
           </button>
 
@@ -120,22 +120,22 @@ export function ViewTabs({
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setMenuViewId(menuViewId === view.id ? null : view.id); }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 text-[#9CA0AB] hover:text-[#1A1D24] transition-opacity"
+              className="opacity-0 group-hover:opacity-100 p-0.5 text-n-400 hover:text-n-900 transition-opacity"
             >
               <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
 
             {menuViewId === view.id && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#DFE2E8] rounded-lg shadow-lg py-1 min-w-[140px]">
+              <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-n-200 rounded-lg shadow-lg py-1 min-w-[140px]">
                 <button
                   onClick={() => { handleUpdateView(view); setMenuViewId(null); }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-[#1A1D24] hover:bg-[#F5F6F8]"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-n-900 hover:bg-[#F5F6F8]"
                 >
                   <Save className="h-3.5 w-3.5" /> Save changes
                 </button>
                 <button
                   onClick={() => { handleDeleteView(view.id); setMenuViewId(null); }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-[#991B1B] hover:bg-[#FEF2F2]"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-status-error-text hover:bg-status-error-bg"
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Delete
                 </button>
@@ -159,14 +159,14 @@ export function ViewTabs({
           <Button size="sm" className="h-7 text-xs" onClick={handleSaveNew} disabled={saving}>
             Save
           </Button>
-          <button onClick={() => setShowNewForm(false)} className="text-[#9CA0AB] hover:text-[#1A1D24]">
+          <button onClick={() => setShowNewForm(false)} className="text-n-400 hover:text-n-900">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : (
         <button
           onClick={() => setShowNewForm(true)}
-          className="flex items-center gap-1 px-3 py-2.5 text-sm text-[#7C818E] hover:text-[#00B050] transition-colors"
+          className="flex items-center gap-1 px-3 py-2.5 text-sm text-n-500 hover:text-shiroi-green transition-colors"
         >
           <Plus className="h-3.5 w-3.5" /> Save view
         </button>

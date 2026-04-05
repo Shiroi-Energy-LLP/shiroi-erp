@@ -154,7 +154,7 @@ export function PhotoUpload({ projectId, reportDate, onPhotosChange }: PhotoUplo
   return (
     <div className="space-y-4">
       {error && (
-        <div className="bg-[#FEF2F2] border border-[#991B1B] text-[#991B1B] px-3 py-2 rounded-md text-sm">
+        <div className="bg-status-error-bg border border-status-error-text text-status-error-text px-3 py-2 rounded-md text-sm">
           {error}
         </div>
       )}
@@ -197,7 +197,7 @@ export function PhotoUpload({ projectId, reportDate, onPhotosChange }: PhotoUplo
                 <button
                   type="button"
                   onClick={() => handleRemove(index)}
-                  className="absolute top-1 right-1 w-6 h-6 bg-[#991B1B] text-white rounded-full flex items-center justify-center text-xs hover:bg-[#6A0A0A]"
+                  className="absolute top-1 right-1 w-6 h-6 bg-status-error-text text-white rounded-full flex items-center justify-center text-xs hover:bg-[#6A0A0A]"
                   aria-label={`Remove ${photo.fileName}`}
                 >
                   X

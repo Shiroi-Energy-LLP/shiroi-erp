@@ -12,6 +12,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  Eyebrow,
 } from '@repo/ui';
 import { CheckSquare } from 'lucide-react';
 
@@ -33,6 +34,7 @@ export default async function MyTasksPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
+        <Eyebrow className="mb-1">MY TASKS</Eyebrow>
         <h1 className="text-2xl font-bold text-[#1A1D24]">My Tasks</h1>
       </div>
 

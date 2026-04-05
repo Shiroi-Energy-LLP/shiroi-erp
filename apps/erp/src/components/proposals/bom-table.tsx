@@ -38,10 +38,10 @@ interface BOMLine {
 }
 
 const SCOPE_COLORS: Record<ScopeOwner, string> = {
-  shiroi: 'bg-[#ECFDF5] text-[#065F46]',
-  client: 'bg-[#EFF6FF] text-[#1E40AF]',
-  builder: 'bg-[#FFFBEB] text-[#92400E]',
-  excluded: 'bg-[#F3F4F6] text-[#6B7280]',
+  shiroi: 'bg-status-success-bg text-status-success-text',
+  client: 'bg-status-info-bg text-status-info-text',
+  builder: 'bg-status-warning-bg text-status-warning-text',
+  excluded: 'bg-status-neutral-bg text-[#6B7280]',
 };
 
 const SCOPE_LABEL: Record<ScopeOwner, string> = {

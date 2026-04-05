@@ -22,7 +22,10 @@ import {
   TableHead,
   TableCell,
   Button,
+  EmptyState,
+  Breadcrumb,
 } from '@repo/ui';
+import { Award } from 'lucide-react';
 import { CompensationView } from '@/components/hr/compensation-view';
 import { LeaveRequestForm } from '@/components/hr/leave-request-form';
 
@@ -47,12 +50,16 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
   return (
     <div className="space-y-6">
       {/* Header */}
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: 'HR', href: '/hr' },
+          { label: employee.full_name },
+        ]}
+      />
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr" className="text-sm text-[#00B050] hover:underline">
-            &larr; Back to HR
-          </Link>
-          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">
+          <h1 className="text-2xl font-bold text-[#1A1D24]">
             {employee.full_name}
           </h1>
           <p className="text-sm text-gray-500">
@@ -132,7 +139,11 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
             </CardHeader>
             <CardContent>
               {certifications.length === 0 ? (
-                <p className="text-sm text-gray-500 py-2">No certifications on file.</p>
+                <EmptyState
+                  icon={<Award className="h-12 w-12" />}
+                  title="No certifications"
+                  description="No certifications on file for this employee."
+                />
               ) : (
                 <Table>
                   <TableHeader>

@@ -13,6 +13,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  Eyebrow,
 } from '@repo/ui';
 import { Building2 } from 'lucide-react';
 
@@ -46,9 +47,12 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-[#1A1D24]">Vendors</h1>
-          <Badge variant="neutral">{vendors.length}</Badge>
+        <div>
+          <Eyebrow className="mb-1">VENDORS</Eyebrow>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-[#1A1D24]">Vendors</h1>
+            <Badge variant="neutral">{vendors.length}</Badge>
+          </div>
         </div>
       </div>
 

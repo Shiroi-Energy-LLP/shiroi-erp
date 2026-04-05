@@ -72,11 +72,11 @@ export function PriceOverrideModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
       <Card className="w-full max-w-md" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <CardContent className="p-6 space-y-4">
-          <h3 className="text-base font-bold text-[#1A1D24]">Override Price</h3>
+          <h3 className="text-base font-bold text-n-900">Override Price</h3>
           <p className="text-sm text-muted-foreground">{itemDescription}</p>
 
           {error && (
-            <div className="rounded-md bg-[#FEF2F2] border border-[#FCA5A5] px-3 py-2 text-sm text-[#991B1B]">
+            <div className="rounded-md bg-status-error-bg border border-[#FCA5A5] px-3 py-2 text-sm text-status-error-text">
               {error}
             </div>
           )}
@@ -99,7 +99,7 @@ export function PriceOverrideModal({
           </div>
 
           {Number(newPrice) !== priceBookPrice && (
-            <div className={`text-xs font-mono px-2 py-1 rounded ${priceDiff > 0 ? 'bg-[#FEF2F2] text-[#991B1B]' : 'bg-[#ECFDF5] text-[#065F46]'}`}>
+            <div className={`text-xs font-mono px-2 py-1 rounded ${priceDiff > 0 ? 'bg-status-error-bg text-status-error-text' : 'bg-status-success-bg text-status-success-text'}`}>
               {priceDiff > 0 ? '+' : ''}{formatINR(priceDiff)} ({priceDiff > 0 ? '+' : ''}{priceDiffPct}%)
             </div>
           )}

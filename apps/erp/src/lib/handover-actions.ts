@@ -56,7 +56,7 @@ export async function generateHandoverPack(
       systemSizeKwp: project.system_size_kwp,
       systemType: project.system_type,
       contractedValue: project.contracted_value,
-      commissionedDate: project.commissioned_at ?? project.updated_at,
+      commissionedDate: project.commissioned_date ?? project.updated_at,
     },
     system: {
       panelBrand: panelLine?.brand ?? 'As per BOM',
@@ -66,19 +66,29 @@ export async function generateHandoverPack(
       inverterModel: inverterLine?.item_name ?? '—',
       inverterQuantity: inverterLine?.quantity ?? 1,
     },
-    commissioning: project.commissioning_reports?.[0] ? {
-      date: project.commissioning_reports[0].commissioning_date,
-      generationConfirmed: project.commissioning_reports[0].generation_confirmed,
-      customerExplained: project.commissioning_reports[0].customer_explained,
-      appDownloadAssisted: project.commissioning_reports[0].app_download_assisted,
-    } : null,
-    netMetering: project.net_metering_applications?.[0] ? {
-      discomName: project.net_metering_applications[0].discom_name,
-      applicationNumber: project.net_metering_applications[0].discom_application_number,
-      netMeterInstalled: project.net_metering_applications[0].net_meter_installed,
-      netMeterSerial: project.net_metering_applications[0].net_meter_serial_number,
-      ceigCleared: project.net_metering_applications[0].ceig_status === 'approved',
-    } : null,
+    commissioning: (() => {
+      const reports = project.commissioning_reports as any;
+      const first = Array.isArray(reports) ? reports[0] : reports;
+      if (!first) return null;
+      return {
+        date: first.commissioning_date,
+        generationConfirmed: first.generation_confirmed,
+        customerExplained: first.customer_explained,
+        appDownloadAssisted: first.app_download_assisted,
+      };
+    })(),
+    netMetering: (() => {
+      const apps = project.net_metering_applications as any;
+      const first = Array.isArray(apps) ? apps[0] : apps;
+      if (!first) return null;
+      return {
+        discomName: first.discom_name,
+        applicationNumber: first.discom_application_number,
+        netMeterInstalled: first.net_meter_installed,
+        netMeterSerial: first.net_meter_serial_number,
+        ceigCleared: first.ceig_status === 'approved',
+      };
+    })(),
     warranty: {
       panelWarranty: '25 years performance guarantee',
       inverterWarranty: '5 years standard (extendable to 10)',
@@ -110,8 +120,7 @@ export async function generateHandoverPack(
   const { data: existing } = await supabase
     .from('generated_documents')
     .select('id, version')
-    .eq('entity_type', 'project')
-    .eq('entity_id', projectId)
+    .eq('project_id', projectId)
     .eq('document_type', 'handover_pack')
     .order('version', { ascending: false })
     .limit(1)
@@ -119,21 +128,24 @@ export async function generateHandoverPack(
 
   const nextVersion = existing ? (existing.version ?? 0) + 1 : 1;
 
+  // Upload handover JSON to storage
+  const storagePath = `handover-packs/${projectId}/v${nextVersion}.json`;
+  const jsonBlob = new Blob([JSON.stringify(handoverContent, null, 2)], { type: 'application/json' });
+  await supabase.storage.from('project-files').upload(storagePath, jsonBlob, { upsert: true });
+
   // Store in generated_documents
   const { data: doc, error: docErr } = await supabase
     .from('generated_documents')
     .insert({
-      entity_type: 'project',
-      entity_id: projectId,
+      project_id: projectId,
       document_type: 'handover_pack',
       file_name: `Handover_Pack_${project.project_number}_v${nextVersion}.json`,
-      storage_path: `handover-packs/${projectId}/v${nextVersion}.json`,
+      storage_path: storagePath,
       version: nextVersion,
       generated_by: user?.id ?? null,
       generated_at: new Date().toISOString(),
-      metadata: handoverContent,
       accessible_to_customer: true,
-    } as any)
+    })
     .select('id')
     .single();
 
@@ -157,8 +169,7 @@ export async function getHandoverPack(projectId: string) {
   const { data, error } = await supabase
     .from('generated_documents')
     .select('*')
-    .eq('entity_type', 'project')
-    .eq('entity_id', projectId)
+    .eq('project_id', projectId)
     .eq('document_type', 'handover_pack')
     .order('version', { ascending: false })
     .limit(1)
@@ -170,5 +181,22 @@ export async function getHandoverPack(projectId: string) {
     return null;
   }
 
-  return data;
+  // Download metadata JSON from storage
+  let metadata: Record<string, unknown> | null = null;
+  if (data.storage_path) {
+    const { data: fileData } = await supabase.storage
+      .from('project-files')
+      .download(data.storage_path);
+
+    if (fileData) {
+      try {
+        const text = await fileData.text();
+        metadata = JSON.parse(text);
+      } catch {
+        console.error(`${op} Failed to parse handover JSON`);
+      }
+    }
+  }
+
+  return { ...data, metadata };
 }

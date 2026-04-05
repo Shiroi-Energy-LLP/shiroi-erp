@@ -49,13 +49,13 @@ export function TodayPriorities({ projects }: TodayPrioritiesProps) {
                     <p className="text-sm font-medium text-white">
                       {project.project_number}
                     </p>
-                    <p className="text-xs text-[#9CA0AB]">{project.customer_name}</p>
+                    <p className="text-xs text-n-400">{project.customer_name}</p>
                     <div className="flex items-center gap-1 mt-1">
                       <MapPin className="h-3 w-3 text-[#6B7280]" />
                       <span className="text-[11px] text-[#6B7280]">{project.city}</span>
                     </div>
                   </div>
-                  <Badge className="bg-[#FEF3C7] text-[#92400E] text-[9px] border-0">
+                  <Badge className="bg-[#FEF3C7] text-status-warning-text text-[9px] border-0">
                     {project.reason}
                   </Badge>
                 </div>

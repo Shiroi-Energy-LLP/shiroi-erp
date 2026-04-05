@@ -14,6 +14,7 @@ import {
   TableHead,
   TableCell,
   Badge,
+  EmptyState,
 } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 import { CalendarCheck, AlertTriangle } from 'lucide-react';
@@ -126,10 +127,11 @@ export async function HRDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {data.recentLeaveRequests.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-[#9CA0AB]">
-                  <CalendarCheck className="h-8 w-8 mb-2" />
-                  <p className="text-sm">No recent leave requests.</p>
-                </div>
+                <EmptyState
+                  icon={<CalendarCheck className="h-12 w-12" />}
+                  title="No recent leave requests"
+                  description="Leave requests will appear here once submitted."
+                />
               ) : (
                 <Table>
                   <TableHeader>

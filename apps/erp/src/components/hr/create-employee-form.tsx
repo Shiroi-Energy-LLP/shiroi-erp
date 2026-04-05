@@ -12,6 +12,7 @@ import {
   Input,
   Select,
   Label,
+  useToast,
 } from '@repo/ui';
 import { Copy, CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -39,6 +40,7 @@ const DEPARTMENT_OPTIONS = [
 
 export function CreateEmployeeForm() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<{ tempPassword: string; name: string } | null>(null);
@@ -69,8 +71,11 @@ export function CreateEmployeeForm() {
         tempPassword: res.tempPassword,
         name: form.get('fullName') as string,
       });
+      addToast({ variant: 'success', title: 'Employee created', description: `Account for ${form.get('fullName')} has been created.` });
     } else {
-      setError(res.error ?? 'Unknown error');
+      const errMsg = res.error ?? 'Unknown error';
+      setError(errMsg);
+      addToast({ variant: 'destructive', title: 'Failed to create employee', description: errMsg });
     }
   }
 
@@ -88,15 +93,15 @@ export function CreateEmployeeForm() {
       <Card>
         <CardContent className="py-8">
           <div className="flex flex-col items-center gap-4 text-center">
-            <CheckCircle className="h-12 w-12 text-[#00B050]" />
-            <h2 className="text-lg font-heading font-bold text-[#1A1D24]">
+            <CheckCircle className="h-12 w-12 text-shiroi-green" />
+            <h2 className="text-lg font-heading font-bold text-n-900">
               Account Created for {result.name}
             </h2>
-            <p className="text-sm text-[#7C818E]">
+            <p className="text-sm text-n-500">
               Share the temporary password below with the employee. They should change it after their first login.
             </p>
 
-            <div className="mt-2 rounded-lg border-2 border-dashed border-[#00B050] bg-[#ECFDF5] px-6 py-4 font-mono text-lg font-bold text-[#065F46] select-all">
+            <div className="mt-2 rounded-lg border-2 border-dashed border-shiroi-green bg-status-success-bg px-6 py-4 font-mono text-lg font-bold text-status-success-text select-all">
               {result.tempPassword}
             </div>
 
@@ -131,7 +136,7 @@ export function CreateEmployeeForm() {
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
-            <div className="flex items-center gap-2 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]">
+            <div className="flex items-center gap-2 rounded-lg border border-status-error-border bg-status-error-bg px-4 py-3 text-sm text-status-error-text">
               <AlertTriangle className="h-4 w-4 flex-shrink-0" />
               {error}
             </div>
@@ -228,7 +233,7 @@ export function CreateEmployeeForm() {
           </div>
 
           {/* Info note */}
-          <p className="text-xs text-[#9CA0AB]">
+          <p className="text-xs text-n-400">
             A temporary password will be generated automatically. Share it with the employee so they can log in. Additional details (address, bank, PAN, Aadhar) can be filled in later on the employee detail page.
           </p>
 

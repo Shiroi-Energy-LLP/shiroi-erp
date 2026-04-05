@@ -3,6 +3,7 @@ import { getContacts } from '@/lib/contacts-queries';
 import {
   Card, CardContent, Button, Input, Select, Pagination, EmptyState,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge,
+  Eyebrow,
 } from '@repo/ui';
 import { Users } from 'lucide-react';
 
@@ -45,7 +46,10 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Contacts</h1>
+        <div>
+          <Eyebrow className="mb-1">CONTACTS</Eyebrow>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">Contacts</h1>
+        </div>
         <Link href="/contacts/new">
           <Button>New Contact</Button>
         </Link>

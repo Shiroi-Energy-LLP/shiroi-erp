@@ -18,6 +18,7 @@ import {
   CardContent,
   Badge,
   Button,
+  Breadcrumb,
 } from '@repo/ui';
 
 interface ProposalDetailPageProps {
@@ -55,17 +56,18 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
   return (
     <div className="space-y-6">
       {/* Header */}
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: 'Proposals', href: '/proposals' },
+          { label: proposal.proposal_number },
+        ]}
+      />
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <Link href="/proposals" className="text-sm text-muted-foreground hover:text-[#00B050]">
-              Proposals
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <h1 className="text-2xl font-bold text-[#1A1D24] font-mono">
-              {proposal.proposal_number}
-            </h1>
-          </div>
+          <h1 className="text-2xl font-bold text-[#1A1D24] font-mono">
+            {proposal.proposal_number}
+          </h1>
           <div className="flex items-center gap-3">
             <ProposalStatusBadge status={proposal.status} />
             <span className="text-sm text-muted-foreground">

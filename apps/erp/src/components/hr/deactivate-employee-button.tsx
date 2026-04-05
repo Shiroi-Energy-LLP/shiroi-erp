@@ -43,7 +43,7 @@ export function DeactivateEmployeeButton({ employeeId, employeeName, isActive }:
         variant="ghost"
         size="sm"
         onClick={() => setOpen(true)}
-        className="h-7 text-xs text-[#991B1B] hover:text-[#991B1B] hover:bg-[#FEF2F2]"
+        className="h-7 text-xs text-status-error-text hover:text-status-error-text hover:bg-status-error-bg"
       >
         <UserX className="h-3.5 w-3.5" />
       </Button>

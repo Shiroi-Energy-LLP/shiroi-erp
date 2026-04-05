@@ -12,6 +12,7 @@ import {
   TableHead,
   TableCell,
   EmptyState,
+  Eyebrow,
 } from '@repo/ui';
 import { Globe } from 'lucide-react';
 
@@ -84,6 +85,7 @@ export default async function NetMeteringPage() {
           <Link href="/liaison" className="text-sm text-[#00B050] hover:underline">
             &larr; Back to Liaison
           </Link>
+          <Eyebrow className="mb-1">NET METERING</Eyebrow>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Net Metering Applications</h1>
           <p className="text-sm text-gray-500">
             {applications.length} application{applications.length !== 1 ? 's' : ''}

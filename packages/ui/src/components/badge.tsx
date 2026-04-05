@@ -12,12 +12,12 @@ const badgeVariants = cva(
         destructive: 'border-transparent bg-destructive text-destructive-foreground',
         outline: 'text-foreground',
         // V2 status variants
-        success: 'border-transparent bg-[#ECFDF5] text-[#065F46]',
-        pending: 'border-transparent bg-[#FFFBEB] text-[#92400E]',
-        warning: 'border-transparent bg-[#FFF7ED] text-[#9A3412]',
-        error: 'border-transparent bg-[#FEF2F2] text-[#991B1B]',
-        info: 'border-transparent bg-[#EFF6FF] text-[#1E40AF]',
-        neutral: 'border-transparent bg-[#F3F4F6] text-[#4B5563]',
+        success: 'border-transparent bg-status-success-bg text-status-success-text',
+        pending: 'border-transparent bg-status-warning-bg text-status-warning-text',
+        warning: 'border-transparent bg-status-progress-bg text-status-progress-text',
+        error: 'border-transparent bg-status-error-bg text-status-error-text',
+        info: 'border-transparent bg-status-info-bg text-status-info-text',
+        neutral: 'border-transparent bg-status-neutral-bg text-status-neutral-text',
       },
     },
     defaultVariants: {

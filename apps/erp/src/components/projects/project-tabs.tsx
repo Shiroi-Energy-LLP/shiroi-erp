@@ -33,8 +33,8 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
               href={tab.href}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 isActive
-                  ? 'border-[#00B050] text-[#00B050]'
-                  : 'border-transparent text-muted-foreground hover:text-[#1A1D24] hover:border-[#BFC3CC]'
+                  ? 'border-shiroi-green text-shiroi-green'
+                  : 'border-transparent text-muted-foreground hover:text-n-900 hover:border-n-300'
               }`}
             >
               {tab.label}

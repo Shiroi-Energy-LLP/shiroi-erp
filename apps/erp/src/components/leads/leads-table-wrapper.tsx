@@ -54,7 +54,7 @@ export function LeadsTableWrapper({
       selectedIds={selectedIds}
       bulkActions={
         selectedIds.length > 0 ? (
-          <span className="text-xs text-[#00B050] font-medium ml-2">
+          <span className="text-xs text-shiroi-green font-medium ml-2">
             {selectedIds.length} selected
           </span>
         ) : null

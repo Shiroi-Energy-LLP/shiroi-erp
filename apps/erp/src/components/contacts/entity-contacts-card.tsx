@@ -41,7 +41,7 @@ export function EntityContactsCard({ entityType, entityId, contacts }: EntityCon
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Users className="h-4 w-4 text-[#7C818E]" />
+            <Users className="h-4 w-4 text-n-500" />
             Contacts
           </CardTitle>
           <Button variant="outline" size="sm" onClick={() => setShowAdd(true)} className="h-7 text-xs gap-1">
@@ -50,24 +50,24 @@ export function EntityContactsCard({ entityType, entityId, contacts }: EntityCon
         </CardHeader>
         <CardContent>
           {contacts.length === 0 ? (
-            <p className="text-sm text-[#9CA0AB] py-2 text-center">No contacts linked.</p>
+            <p className="text-sm text-n-400 py-2 text-center">No contacts linked.</p>
           ) : (
             <div className="space-y-2">
               {contacts.map((ec) => (
-                <div key={ec.id} className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2">
+                <div key={ec.id} className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2">
                   <div>
                     <Link
                       href={`/contacts/${ec.contacts?.id}`}
-                      className="text-sm font-medium text-[#00B050] hover:underline"
+                      className="text-sm font-medium text-shiroi-green hover:underline"
                     >
                       {ec.contacts?.name}
                     </Link>
                     <div className="flex items-center gap-2 mt-0.5">
                       {ec.role_label && (
-                        <span className="text-xs text-[#7C818E]">{ec.role_label}</span>
+                        <span className="text-xs text-n-500">{ec.role_label}</span>
                       )}
                       {ec.contacts?.phone && (
-                        <span className="text-xs text-[#9CA0AB] font-mono">{ec.contacts.phone}</span>
+                        <span className="text-xs text-n-400 font-mono">{ec.contacts.phone}</span>
                       )}
                       {ec.is_primary && <Badge variant="success" className="text-[8px]">Primary</Badge>}
                     </div>
@@ -75,7 +75,7 @@ export function EntityContactsCard({ entityType, entityId, contacts }: EntityCon
                   <button
                     type="button"
                     onClick={() => handleUnlink(ec.id)}
-                    className="text-[#9CA0AB] hover:text-[#991B1B] transition-colors"
+                    className="text-n-400 hover:text-status-error-text transition-colors"
                     title="Remove contact"
                   >
                     <X className="h-3.5 w-3.5" />

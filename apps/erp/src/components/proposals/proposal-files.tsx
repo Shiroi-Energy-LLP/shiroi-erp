@@ -125,7 +125,7 @@ export function ProposalFiles({ leadId, proposalNumber, initialFiles }: Proposal
                 <div className="min-w-0 flex-1">
                   <button
                     onClick={() => handleDownload(file.name)}
-                    className="text-[#00B050] hover:underline truncate block text-left"
+                    className="text-shiroi-green hover:underline truncate block text-left"
                     title={file.name}
                   >
                     {file.name}

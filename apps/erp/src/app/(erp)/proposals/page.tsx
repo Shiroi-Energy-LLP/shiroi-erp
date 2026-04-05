@@ -3,7 +3,7 @@ import { getProposals } from '@/lib/proposals-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ProposalsTableWrapper } from '@/components/proposals/proposals-table-wrapper';
 import { getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Input, Select } from '@repo/ui';
+import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
 
 interface ProposalsPageProps {
   searchParams: Promise<{
@@ -43,14 +43,18 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
   if (params.search) currentFilters.search = params.search;
 
   const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
-  const visibleColumns = activeView?.columns?.length > 0
-    ? activeView.columns
+  const viewCols = activeView?.columns as string[] | undefined;
+  const visibleColumns = viewCols && viewCols.length > 0
+    ? viewCols
     : getDefaultColumns('proposals');
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Proposals</h1>
+        <div>
+          <Eyebrow className="mb-1">PROPOSALS</Eyebrow>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">Proposals</h1>
+        </div>
         <Link href="/proposals/new">
           <Button>New Proposal</Button>
         </Link>

@@ -103,13 +103,13 @@ export function CorrectionForm({ reportId, projectId, userId, report }: Correcti
       </CardHeader>
       <CardContent>
         {error && (
-          <div className="bg-[#FEF2F2] border border-[#991B1B] text-[#991B1B] px-4 py-3 rounded-md text-sm mb-4">
+          <div className="bg-status-error-bg border border-status-error-text text-status-error-text px-4 py-3 rounded-md text-sm mb-4">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-[#E8F5E9] border border-[#065F46] text-[#065F46] px-4 py-3 rounded-md text-sm mb-4">
+          <div className="bg-[#E8F5E9] border border-status-success-text text-status-success-text px-4 py-3 rounded-md text-sm mb-4">
             Correction request submitted. A project manager will review and approve or reject it.
           </div>
         )}

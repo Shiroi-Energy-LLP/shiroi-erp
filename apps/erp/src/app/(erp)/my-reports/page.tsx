@@ -13,6 +13,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  Eyebrow,
 } from '@repo/ui';
 import { FileText } from 'lucide-react';
 
@@ -39,6 +40,7 @@ export default async function MyReportsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
+        <Eyebrow className="mb-1">MY REPORTS</Eyebrow>
         <h1 className="text-2xl font-bold text-[#1A1D24]">My Reports</h1>
       </div>
 

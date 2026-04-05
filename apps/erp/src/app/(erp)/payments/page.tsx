@@ -15,6 +15,7 @@ import {
   TableHead,
   TableCell,
   EmptyState,
+  Eyebrow,
 } from '@repo/ui';
 import { DollarSign } from 'lucide-react';
 
@@ -41,6 +42,7 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
+        <Eyebrow className="mb-1">PAYMENTS</Eyebrow>
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Payments</h1>
       </div>
 

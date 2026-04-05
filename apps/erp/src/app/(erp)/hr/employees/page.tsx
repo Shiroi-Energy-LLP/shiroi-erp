@@ -13,6 +13,7 @@ import {
   TableHead,
   TableCell,
   EmptyState,
+  Eyebrow,
 } from '@repo/ui';
 import { UserCog } from 'lucide-react';
 import { DeactivateEmployeeButton } from '@/components/hr/deactivate-employee-button';
@@ -28,9 +29,11 @@ export default async function EmployeesPage() {
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Employees</h1>
         <Card>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-sm text-[#7C818E]">No data available. Could not load employees.</p>
-            </div>
+            <EmptyState
+              icon={<UserCog className="h-12 w-12" />}
+              title="Could not load employees"
+              description="No data available. Please try again later."
+            />
           </CardContent>
         </Card>
       </div>
@@ -45,6 +48,7 @@ export default async function EmployeesPage() {
           <Link href="/hr" className="text-sm text-[#00B050] hover:underline">
             &larr; Back to HR
           </Link>
+          <Eyebrow className="mb-1">EMPLOYEES</Eyebrow>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Employees</h1>
         </div>
         <Link href="/hr/employees/new">

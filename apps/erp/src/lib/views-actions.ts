@@ -11,7 +11,7 @@ export async function getMyViews(entityType: string) {
   if (!user) return [];
 
   const { data, error } = await supabase
-    .from('saved_views')
+    .from('table_views')
     .select('*')
     .or(`owner_id.eq.${user.id},visibility.eq.everyone`)
     .eq('entity_type', entityType)
@@ -62,7 +62,7 @@ export async function saveView(input: {
   if (input.id) {
     // Update existing view
     const { error } = await supabase
-      .from('saved_views')
+      .from('table_views')
       .update(payload as any)
       .eq('id', input.id);
 
@@ -76,7 +76,7 @@ export async function saveView(input: {
   } else {
     // Create new view
     const { data, error } = await supabase
-      .from('saved_views')
+      .from('table_views')
       .insert(payload as any)
       .select('id')
       .single();
@@ -97,7 +97,7 @@ export async function deleteView(viewId: string): Promise<{ success: boolean; er
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from('saved_views')
+    .from('table_views')
     .delete()
     .eq('id', viewId);
 

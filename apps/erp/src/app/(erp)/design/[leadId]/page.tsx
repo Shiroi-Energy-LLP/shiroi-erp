@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@repo/ui';
+import { Card, CardContent, Breadcrumb } from '@repo/ui';
 import { Palette } from 'lucide-react';
 
 export default function DesignWorkspacePage({
@@ -8,6 +8,13 @@ export default function DesignWorkspacePage({
 }) {
   return (
     <div className="space-y-6">
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: 'Design', href: '/design' },
+          { label: `Lead ${params.leadId.slice(0, 8)}` },
+        ]}
+      />
       <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Design Workspace</h1>
       <div className="grid grid-cols-2 gap-6">
         <Card>

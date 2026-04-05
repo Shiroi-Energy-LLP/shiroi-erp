@@ -15,6 +15,7 @@ import {
   TableHead,
   TableCell,
   EmptyState,
+  Eyebrow,
 } from '@repo/ui';
 import { FileText } from 'lucide-react';
 
@@ -50,6 +51,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
+        <Eyebrow className="mb-1">INVOICES</Eyebrow>
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Invoices</h1>
       </div>
 

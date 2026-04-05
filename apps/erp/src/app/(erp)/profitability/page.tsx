@@ -14,6 +14,7 @@ import {
   TableHead,
   TableCell,
   EmptyState,
+  Eyebrow,
 } from '@repo/ui';
 import { BarChart3 } from 'lucide-react';
 
@@ -66,6 +67,7 @@ export default async function ProfitabilityPage({ searchParams }: ProfitabilityP
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
+        <Eyebrow className="mb-1">PROFITABILITY</Eyebrow>
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Profitability</h1>
       </div>
 

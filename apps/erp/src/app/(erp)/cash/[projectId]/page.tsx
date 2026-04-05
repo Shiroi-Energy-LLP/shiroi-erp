@@ -23,7 +23,10 @@ import {
   TableHead,
   TableCell,
   Button,
+  EmptyState,
+  Breadcrumb,
 } from '@repo/ui';
+import { FileText, DollarSign } from 'lucide-react';
 
 interface ProjectCashPageProps {
   params: Promise<{ projectId: string }>;
@@ -48,17 +51,18 @@ export default async function ProjectCashPage({ params }: ProjectCashPageProps) 
   return (
     <div className="space-y-6">
       {/* Header */}
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: 'Cash Flow', href: '/cash' },
+          { label: project?.project_number ?? 'Project' },
+        ]}
+      />
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <Link href="/cash" className="text-sm text-gray-500 hover:text-[#00B050]">
-              Cash Flow
-            </Link>
-            <span className="text-sm text-gray-400">/</span>
-            <h1 className="text-2xl font-bold text-[#1A1D24]">
-              {project?.project_number ?? 'Project'}
-            </h1>
-          </div>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">
+            {project?.project_number ?? 'Project'}
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
             {project?.customer_name ?? '—'} &middot;{' '}
             {project?.system_size_kwp ? `${project.system_size_kwp} kWp` : '—'} &middot;{' '}
@@ -155,7 +159,11 @@ export default async function ProjectCashPage({ params }: ProjectCashPageProps) 
         </CardHeader>
         <CardContent>
           {invoices.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4">No invoices raised for this project.</p>
+            <EmptyState
+              icon={<FileText className="h-12 w-12" />}
+              title="No invoices"
+              description="No invoices have been raised for this project yet."
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -236,7 +244,11 @@ export default async function ProjectCashPage({ params }: ProjectCashPageProps) 
         </CardHeader>
         <CardContent>
           {vendorPayments.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4">No vendor payments recorded for this project.</p>
+            <EmptyState
+              icon={<DollarSign className="h-12 w-12" />}
+              title="No vendor payments"
+              description="No vendor payments have been recorded for this project yet."
+            />
           ) : (
             <Table>
               <TableHeader>

@@ -60,9 +60,11 @@ export default async function LeaveRequestsPage() {
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Leave Requests</h1>
         <Card>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-sm text-[#7C818E]">No data available. Could not load leave requests.</p>
-            </div>
+            <EmptyState
+              icon={<CalendarCheck className="h-12 w-12" />}
+              title="Could not load leave requests"
+              description="No data available. Please try again later."
+            />
           </CardContent>
         </Card>
       </div>

@@ -12,6 +12,7 @@ import {
   TableHead,
   TableCell,
   EmptyState,
+  Eyebrow,
 } from '@repo/ui';
 import { Wrench } from 'lucide-react';
 
@@ -60,7 +61,10 @@ export default async function OmVisitsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">O&M Visits</h1>
+        <div>
+          <Eyebrow className="mb-1">O&M VISITS</Eyebrow>
+          <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">O&M Visits</h1>
+        </div>
       </div>
 
       {/* Table */}

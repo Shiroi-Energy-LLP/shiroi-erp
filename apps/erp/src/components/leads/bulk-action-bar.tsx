@@ -77,7 +77,7 @@ export function BulkActionBar({
 
   return (
     <>
-      <div className="flex items-center gap-3 rounded-lg border border-[#00B050] bg-[#ECFDF5] px-4 py-2.5">
+      <div className="flex items-center gap-3 rounded-lg border border-shiroi-green bg-status-success-bg px-4 py-2.5">
         <Badge variant="success" className="text-xs font-bold">
           {selectedIds.length} selected
         </Badge>

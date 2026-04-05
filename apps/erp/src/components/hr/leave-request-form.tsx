@@ -12,6 +12,7 @@ import {
   Input,
   Label,
   Select,
+  useToast,
 } from '@repo/ui';
 import type { Database } from '@repo/types/database';
 
@@ -34,6 +35,7 @@ interface LeaveRequestFormProps {
 
 export function LeaveRequestForm({ employeeId }: LeaveRequestFormProps) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -104,10 +106,12 @@ export function LeaveRequestForm({ employeeId }: LeaveRequestFormProps) {
       if (insertError) {
         console.error(`${op} Insert failed:`, { code: insertError.code, message: insertError.message });
         setError(`Failed to submit leave request: ${insertError.message}`);
+        addToast({ variant: 'destructive', title: 'Failed to submit leave request', description: insertError.message });
         return;
       }
 
       setSuccess(true);
+      addToast({ variant: 'success', title: 'Leave request submitted', description: 'Your leave request has been submitted for approval.' });
       setForm({
         leave_type: '',
         from_date: '',
@@ -123,6 +127,7 @@ export function LeaveRequestForm({ employeeId }: LeaveRequestFormProps) {
         timestamp: new Date().toISOString(),
       });
       setError('An unexpected error occurred.');
+      addToast({ variant: 'destructive', title: 'Failed to submit leave request', description: err instanceof Error ? err.message : 'An unexpected error occurred.' });
     } finally {
       setIsSubmitting(false);
     }

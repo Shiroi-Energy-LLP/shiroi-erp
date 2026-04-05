@@ -37,7 +37,7 @@ export function PMDonutChart({ data }: DonutChartProps) {
           <CardTitle className="text-base">Projects by Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-[#9CA0AB] py-8 text-center">No active projects.</p>
+          <p className="text-sm text-n-400 py-8 text-center">No active projects.</p>
         </CardContent>
       </Card>
     );
@@ -82,8 +82,8 @@ export function PMDonutChart({ data }: DonutChartProps) {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-heading text-2xl font-bold text-[#111318]">{totalProjects}</span>
-              <span className="text-[10px] text-[#7C818E] uppercase tracking-wider">Projects</span>
+              <span className="font-heading text-2xl font-bold text-n-950">{totalProjects}</span>
+              <span className="text-[10px] text-n-500 uppercase tracking-wider">Projects</span>
             </div>
           </div>
 
@@ -95,9 +95,9 @@ export function PMDonutChart({ data }: DonutChartProps) {
                     className="h-2.5 w-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: STATUS_COLORS[entry.status] ?? '#9CA3AF' }}
                   />
-                  <span className="text-[12px] text-[#3F424D]">{formatStatus(entry.status)}</span>
+                  <span className="text-[12px] text-n-700">{formatStatus(entry.status)}</span>
                 </div>
-                <span className="text-[12px] font-bold text-[#111318] font-mono">{entry.count}</span>
+                <span className="text-[12px] font-bold text-n-950 font-mono">{entry.count}</span>
               </div>
             ))}
           </div>

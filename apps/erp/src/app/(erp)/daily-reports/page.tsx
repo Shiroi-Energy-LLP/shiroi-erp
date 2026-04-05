@@ -11,6 +11,7 @@ import {
   TableHead,
   TableCell,
   EmptyState,
+  Eyebrow,
 } from '@repo/ui';
 import { ClipboardList } from 'lucide-react';
 
@@ -33,6 +34,7 @@ export default async function DailyReportsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
+        <Eyebrow className="mb-1">DAILY REPORTS</Eyebrow>
         <h1 className="text-2xl font-bold text-[#1A1D24]">Daily Site Reports</h1>
       </div>
 

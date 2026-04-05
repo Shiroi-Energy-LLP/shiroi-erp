@@ -225,18 +225,18 @@ export function ProposalWizard({ leads }: { leads: Lead[] }) {
           <div key={label} className="flex items-center gap-2">
             <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
               i === step
-                ? 'bg-[#00B050] text-white'
+                ? 'bg-shiroi-green text-white'
                 : i < step
-                  ? 'bg-[#ECFDF5] text-[#065F46]'
-                  : 'bg-[#F3F4F6] text-[#6B7280]'
+                  ? 'bg-status-success-bg text-status-success-text'
+                  : 'bg-status-neutral-bg text-[#6B7280]'
             }`}>
               {i < step ? '\u2713' : i + 1}
             </div>
-            <span className={`text-sm ${i === step ? 'font-medium text-[#1A1D24]' : 'text-muted-foreground'}`}>
+            <span className={`text-sm ${i === step ? 'font-medium text-n-900' : 'text-muted-foreground'}`}>
               {label}
             </span>
             {i < STEPS.length - 1 && (
-              <div className={`w-8 h-px ${i < step ? 'bg-[#00B050]' : 'bg-[#E5E7EB]'}`} />
+              <div className={`w-8 h-px ${i < step ? 'bg-shiroi-green' : 'bg-[#E5E7EB]'}`} />
             )}
           </div>
         ))}
@@ -552,7 +552,7 @@ function StepBOM({ lines, onAdd, onRemove, onUpdate, discount, onDiscountChange,
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">Line {idx + 1}</span>
                 {lines.length > 1 && (
-                  <Button variant="ghost" size="sm" onClick={() => onRemove(line.key)} className="text-[#991B1B] h-7 px-2 text-xs">
+                  <Button variant="ghost" size="sm" onClick={() => onRemove(line.key)} className="text-status-error-text h-7 px-2 text-xs">
                     Remove
                   </Button>
                 )}
@@ -740,7 +740,7 @@ function StepPayment({ milestones, onAdd, onRemove, onUpdate, totalAmount, valid
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">Milestone {idx + 1}</span>
                 {milestones.length > 1 && (
-                  <Button variant="ghost" size="sm" onClick={() => onRemove(m.key)} className="text-[#991B1B] h-7 px-2 text-xs">
+                  <Button variant="ghost" size="sm" onClick={() => onRemove(m.key)} className="text-status-error-text h-7 px-2 text-xs">
                     Remove
                   </Button>
                 )}
@@ -813,13 +813,13 @@ function StepPayment({ milestones, onAdd, onRemove, onUpdate, totalAmount, valid
 
           {/* Sum display */}
           <div className={`flex items-center justify-between rounded-md px-4 py-3 ${
-            validation.valid ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#FEF2F2] text-[#991B1B]'
+            validation.valid ? 'bg-status-success-bg text-status-success-text' : 'bg-status-error-bg text-status-error-text'
           }`}>
             <span className="text-sm font-medium">Total percentage</span>
             <span className="font-mono font-medium">{validation.sum}%</span>
           </div>
           {!validation.valid && milestones.length > 0 && (
-            <div className="text-sm text-[#991B1B]">
+            <div className="text-sm text-status-error-text">
               Payment schedule must equal 100%. Current: {validation.sum}%
             </div>
           )}
@@ -1016,7 +1016,7 @@ function TotalLine({ label, value, bold, muted }: {
   return (
     <div className={`flex justify-between text-sm ${bold ? 'font-bold text-base' : ''}`}>
       <span className={muted ? 'text-muted-foreground' : ''}>{label}</span>
-      <span className={`font-mono ${bold ? 'text-[#1A1D24]' : ''}`}>
+      <span className={`font-mono ${bold ? 'text-n-900' : ''}`}>
         {formatINR(value)}
       </span>
     </div>

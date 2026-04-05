@@ -28,7 +28,7 @@ interface Activity {
   occurred_at: string;
   duration_minutes: number | null;
   owner: { full_name: string } | null;
-  metadata: Record<string, unknown>;
+  metadata: unknown;
 }
 
 interface ActivityTimelineProps {
@@ -75,7 +75,7 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Clock className="h-4 w-4 text-[#7C818E]" />
+          <Clock className="h-4 w-4 text-n-500" />
           Activity Timeline
         </CardTitle>
         <Button
@@ -91,7 +91,7 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
       <CardContent>
         {/* Add Activity Form */}
         {showForm && (
-          <form onSubmit={handleAdd} className="mb-4 rounded-lg border border-[#DFE2E8] p-4 bg-[#FAFBFC] space-y-3">
+          <form onSubmit={handleAdd} className="mb-4 rounded-lg border border-n-200 p-4 bg-[#FAFBFC] space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Type</Label>
@@ -121,7 +121,7 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
               <textarea
                 name="body"
                 rows={3}
-                className="flex w-full rounded-md border-[1.5px] border-[#DFE2E8] bg-white px-3 py-2 text-[13px] text-[#1A1D24] focus-visible:outline-none focus-visible:border-[#00B050] focus-visible:shadow-[0_0_0_3px_rgba(0,176,80,0.1)]"
+                className="flex w-full rounded-md border-[1.5px] border-n-200 bg-white px-3 py-2 text-[13px] text-n-900 focus-visible:outline-none focus-visible:border-shiroi-green focus-visible:shadow-[0_0_0_3px_rgba(0,176,80,0.1)]"
                 placeholder="What happened?"
               />
             </div>
@@ -135,15 +135,16 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
 
         {/* Timeline */}
         {activities.length === 0 ? (
-          <p className="text-sm text-[#9CA0AB] py-6 text-center">No activities recorded yet.</p>
+          <p className="text-sm text-n-400 py-6 text-center">No activities recorded yet.</p>
         ) : (
           <div className="relative">
             {/* Vertical line */}
-            <div className="absolute left-[15px] top-2 bottom-2 w-px bg-[#DFE2E8]" />
+            <div className="absolute left-[15px] top-2 bottom-2 w-px bg-n-200" />
 
             <div className="space-y-4">
               {activities.map((act) => {
-                const config = ACTIVITY_TYPE_CONFIG[act.activity_type] ?? ACTIVITY_TYPE_CONFIG.note;
+                const fallback = { label: 'Note', icon: MessageSquare, color: '#7C818E' };
+                const config = ACTIVITY_TYPE_CONFIG[act.activity_type] ?? fallback;
                 const Icon = config.icon;
 
                 return (
@@ -167,19 +168,19 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
                           {config.label}
                         </Badge>
                         {act.title && (
-                          <span className="text-sm font-medium text-[#1A1D24]">{act.title}</span>
+                          <span className="text-sm font-medium text-n-900">{act.title}</span>
                         )}
                         {act.duration_minutes && (
-                          <span className="text-xs text-[#9CA0AB]">{act.duration_minutes} min</span>
+                          <span className="text-xs text-n-400">{act.duration_minutes} min</span>
                         )}
                       </div>
                       {act.body && (
-                        <p className="text-sm text-[#3F424D] mt-1 whitespace-pre-wrap">{act.body}</p>
+                        <p className="text-sm text-n-700 mt-1 whitespace-pre-wrap">{act.body}</p>
                       )}
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-xs text-[#9CA0AB]">{formatDate(act.occurred_at)}</span>
+                        <span className="text-xs text-n-400">{formatDate(act.occurred_at)}</span>
                         {act.owner && (
-                          <span className="text-xs text-[#7C818E]">by {act.owner.full_name}</span>
+                          <span className="text-xs text-n-500">by {act.owner.full_name}</span>
                         )}
                       </div>
                     </div>

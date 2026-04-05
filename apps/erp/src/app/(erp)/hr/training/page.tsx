@@ -45,9 +45,11 @@ export default async function TrainingPage() {
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Training</h1>
         <Card>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-sm text-[#7C818E]">No data available. Could not load training records.</p>
-            </div>
+            <EmptyState
+              icon={<GraduationCap className="h-12 w-12" />}
+              title="Could not load training records"
+              description="No data available. Please try again later."
+            />
           </CardContent>
         </Card>
       </div>

@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@repo/supabase/client';
-import { Button, Input, Label, Select } from '@repo/ui';
+import { Button, Input, Label, Select, useToast } from '@repo/ui';
 
 const ACTIVITY_TYPES = [
   'phone_call',
@@ -31,6 +31,7 @@ interface AddActivityFormProps {
 
 export function AddActivityForm({ leadId }: AddActivityFormProps) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -92,8 +93,11 @@ export function AddActivityForm({ leadId }: AddActivityFormProps) {
     if (insertError) {
       console.error(`${op} Insert failed:`, { code: insertError.code, message: insertError.message });
       setError(`Failed to add activity: ${insertError.message}`);
+      addToast({ variant: 'destructive', title: 'Failed to add activity', description: insertError.message });
       return;
     }
+
+    addToast({ variant: 'success', title: 'Activity added', description: `${ACTIVITY_LABELS[form.activity_type] ?? 'Activity'} logged successfully.` });
 
     // Also update last_contacted_at on the lead
     await supabase
@@ -118,7 +122,7 @@ export function AddActivityForm({ leadId }: AddActivityFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="rounded-md bg-[#FEF2F2] border border-[#DC2626] px-4 py-2 text-sm text-[#991B1B]">
+        <div className="rounded-md bg-status-error-bg border border-[#DC2626] px-4 py-2 text-sm text-status-error-text">
           {error}
         </div>
       )}
