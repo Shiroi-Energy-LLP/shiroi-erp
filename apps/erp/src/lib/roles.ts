@@ -72,6 +72,7 @@ const ITEMS = {
   netMetering:    { label: 'Net Metering',      href: '/liaison/net-metering', icon: 'Globe' },
   contacts:       { label: 'Contacts',          href: '/contacts',           icon: 'Users' },
   companies:      { label: 'Companies',         href: '/companies',          icon: 'Building2' },
+  inventory:      { label: 'Inventory',          href: '/inventory',          icon: 'Package' },
 } as const satisfies Record<string, NavItem>;
 
 // ---------------------------------------------------------------------------
@@ -83,7 +84,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Sales',        items: [ITEMS.leads, ITEMS.proposals, ITEMS.marketing, ITEMS.liaison] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
-    { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook] },
+    { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.serviceTickets] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
@@ -93,7 +94,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Overview',     items: [ITEMS.dashboard] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Execution',    items: [ITEMS.dailyReports, ITEMS.qcGates] },
-    { label: 'Procurement',  items: [ITEMS.purchaseOrders] },
+    { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.inventory] },
     { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
   ],
@@ -120,7 +121,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   ],
   purchase_officer: [
     { label: 'Overview',         items: [ITEMS.dashboard] },
-    { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.deliveries] },
+    { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.deliveries, ITEMS.inventory] },
     { label: 'Vendor Management', items: [ITEMS.vendors, ITEMS.priceBook] },
     { label: 'Contacts',         items: [ITEMS.contacts, ITEMS.companies] },
   ],

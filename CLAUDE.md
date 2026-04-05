@@ -34,7 +34,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Auth + App Shell | ✅ Complete | Login, middleware, sectioned role-based sidebar, topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper |
-| Phase 2B All Screens | ✅ Complete | 53 routes total — all sidebar links are real data-driven pages, 0 placeholders |
+| Phase 2B All Screens | ✅ Complete | 57+ routes total — all sidebar links are real data-driven pages, 0 placeholders |
 | Sentry | ✅ Live | @sentry/nextjs v10, client+server+edge+onRequestError, DSN in .env.local |
 | Migration 010 | ✅ Applied (dev) | lead_status 'converted' + project_site_expenses + project-files bucket |
 | Migration 011 | ✅ Applied (dev) | `design_confirmed` added to `lead_status` enum after `proposal_sent` |
@@ -56,11 +56,18 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | PM Dashboard v2 | ✅ Complete | Correct KPIs (System Size, Clients, Sales, Profit %), donut chart, operations widget, dark today panel |
 | Vercel + domain | ✅ Live | erp.shiroienergy.com — deployed against DEV Supabase, auto-deploys on push |
 | Employee admin page | ✅ Complete | /hr/employees/new — create accounts (auth + profile + employee), deactivate button, temp password generation |
+| Data integrity check | ✅ Complete | Step 43: FK validation, orphan detection, financial integrity, MSME compliance, status consistency |
+| Project file upload | ✅ Complete | Step 50: Drag-drop upload on project detail, 6 categories, signed URL download, Supabase Storage |
+| AI daily report narrative | ✅ Complete | Step 61: Claude API integration (claude-sonnet-4-20250514), structured prompt, generate/regenerate on report detail |
+| Net metering + CEIG workflow | ✅ Complete | Step 64: Full CEIG/DISCOM/net-meter forms, followup tracking, objection log, CEIG gate enforcement UI |
+| Handover pack | ✅ Complete | Step 65: Auto-generate structured JSON from project data, versioned in generated_documents, warranty/checklist/system summary |
+| Inventory cut-length tracking | ✅ Complete | Step 67: /inventory dashboard + detail, cut-length gauge, location/scrap management, low-stock alerts |
 | Contact dedup | 🔜 Next | ~possible duplicates from backfill retries, need dedup script |
 | Data cleanup | 🔜 Next | 255 fuzzy-match records to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
-**Current phase: 2C — Data Cleanup + Deployment (Steps 52–58)**
+**Current phase: 3 — Advanced Features + Deployment**
+Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented.
 Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
 ---
@@ -361,8 +368,9 @@ Format: `SHIROI/INV/2025-26/0042`
 
 ### All ERP screens — COMPLETE (Phase 2B, April 2 2026)
 
-53 routes total, 0 type errors, all data-driven with Supabase queries:
+57+ routes total, 0 type errors, all data-driven with Supabase queries:
 - ✅ Procurement: `/procurement` (PO list with filters), `/deliveries`, `/vendor-payments`, `/msme-compliance`
+- ✅ Inventory: `/inventory` (stock dashboard with cut-length tracking, filters, low-stock alerts), `/inventory/[id]` (detail + cut-length gauge)
 - ✅ Vendors: `/vendors` (full vendor list with search/filter)
 - ✅ Tasks: `/tasks` (all tasks across entities), `/my-tasks` (personal)
 - ✅ Daily Reports: `/daily-reports` (all), `/my-reports` (personal)

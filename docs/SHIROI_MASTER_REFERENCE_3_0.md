@@ -1149,12 +1149,13 @@ One workflow "Global Error Handler" triggers on any workflow failure. Sends What
 
 ### Phase 2 — Field & Customer (Weeks 13–24)
 - [ ] Offline-first mobile (WatermelonDB)
-- [ ] Photo gates, GPS verification, AI narrative
-- [ ] Net metering + CEIG full tracking
-- [ ] Handover pack auto-generation
+- [ ] Photo gates, GPS verification
+- [x] AI daily report narrative (Claude API, Apr 4 2026)
+- [x] Net metering + CEIG full tracking (Apr 4 2026)
+- [x] Handover pack auto-generation (Apr 4 2026)
 - [ ] Customer app (portal, documents, e-card, service tickets)
 - [ ] O&M contracts, scheduling, visit checklists
-- [ ] Inventory cut-length tracking + DC signatures
+- [x] Inventory cut-length tracking (Apr 4 2026) — DC signatures pending
 - [ ] n8n WhatsApp automations (Phase 1 employee-forward)
 - [ ] Completion percentage model (objective tracking)
 - [ ] Intermediaries table (billing-through-architect commercial arrangement)
@@ -1483,6 +1484,20 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Migration script: scripts/migrate-hubspot.ts — two-phase (deals + payments), idempotent, dry-run support
 - Data integrity verified: 0 orphaned proposals/projects, all FKs valid
 - Phase 2C roadmap spec written: 19 steps (40–58), 12 architecture decisions logged
+
+**What changed in v3.3 (Apr 4, 2026):**
+- Phase 3 items implemented: AI narrative (Step 61), Net metering + CEIG workflow (Step 64), Handover pack (Step 65), Inventory cut-length tracking (Step 67)
+- Data integrity check script: scripts/data-integrity-check.ts — FK validation, orphan detection, financial integrity, MSME compliance
+- Project file upload: Drag-drop on project detail, 6 categories (General, AutoCAD, Photos, Documents, Warranty, Invoices), Supabase Storage
+- AI daily report narrative: Claude API (claude-sonnet-4-20250514), structured prompt from report fields, generate/regenerate button
+- Net metering + CEIG: Full CEIG/DISCOM/net-meter status forms, followup tracking, CEIG gate enforcement with user-friendly error
+- Handover pack: Auto-generate structured JSON, versioned in generated_documents, warranty summary, handover checklist
+- Inventory: /inventory dashboard with summary cards, cut-length gauge bars, low-stock alerts, filter by category/location/condition
+- Inventory detail: /inventory/[id] with cut-length tracker (visual gauge, record cuts, auto-scrap below minimum), location management, scrap action
+- New nav item: Inventory added to founder, project_manager, purchase_officer sidebars
+- New files: inventory-queries.ts, inventory-actions.ts, report-ai-actions.ts, liaison-queries.ts, liaison-actions.ts, handover-actions.ts
+- New components: cut-length-tracker.tsx, ai-narrative.tsx, net-metering-detail.tsx, handover-pack.tsx, project-files.tsx
+- 57+ routes total (up from 53)
 
 **What changed in v3.2:**
 - Phase 2B complete: All 53 ERP screens built with real Supabase queries (0 placeholders remaining)
