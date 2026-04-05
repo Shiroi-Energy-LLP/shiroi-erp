@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects-queries';
 import { getEntityContacts } from '@/lib/contacts-queries';
 import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
+import { ProjectFiles } from '@/components/projects/project-files';
 import { formatINR, formatDate, toIST } from '@repo/ui/formatters';
 import {
   Card,
@@ -245,6 +246,8 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
             </CardContent>
           </Card>
         )}
+
+        <ProjectFiles projectId={id} />
 
         <EntityContactsCard entityType="project" entityId={id} contacts={entityContacts} />
       </div>
