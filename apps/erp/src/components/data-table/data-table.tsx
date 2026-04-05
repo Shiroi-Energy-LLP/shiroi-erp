@@ -40,17 +40,20 @@ function formatPercentage(val: number | null): string {
 // ── Badge colors ──
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  // Lead statuses
   new: { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
   contacted: { bg: '#F0FDF4', text: '#15803D', border: '#BBF7D0' },
-  follow_up: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
-  qualified: { bg: '#F0FDF4', text: '#00B050', border: '#BBF7D0' },
-  site_visit_scheduled: { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
-  site_visit_done: { bg: '#F0FDF4', text: '#059669', border: '#A7F3D0' },
+  site_survey_scheduled: { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
+  site_survey_done: { bg: '#F0FDF4', text: '#059669', border: '#A7F3D0' },
   design_confirmed: { bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
   proposal_sent: { bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' },
+  negotiation: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
+  won: { bg: '#F0FDF4', text: '#00B050', border: '#86EFAC' },
   converted: { bg: '#F0FDF4', text: '#00B050', border: '#86EFAC' },
-  disqualified: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   lost: { bg: '#F5F5F5', text: '#525252', border: '#D4D4D4' },
+  on_hold: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
+  disqualified: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
+  // Proposal statuses
   draft: { bg: '#F5F6F8', text: '#7C818E', border: '#DFE2E8' },
   sent: { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
   accepted: { bg: '#F0FDF4', text: '#00B050', border: '#BBF7D0' },

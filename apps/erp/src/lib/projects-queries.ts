@@ -33,7 +33,7 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   let query = supabase
     .from('projects')
     .select(
-      'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, employees!projects_project_manager_id_fkey(full_name)',
+      'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, site_city, advance_amount, customer_phone, employees!projects_project_manager_id_fkey(full_name)',
       { count: 'exact' },
     )
     .is('deleted_at', null);
