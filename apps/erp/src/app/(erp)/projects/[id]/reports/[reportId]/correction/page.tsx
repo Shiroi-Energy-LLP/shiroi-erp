@@ -11,6 +11,7 @@ import {
   Badge,
 } from '@repo/ui';
 import { CorrectionForm } from '@/components/reports/correction-form';
+import { AINarrative } from '@/components/reports/ai-narrative';
 
 interface CorrectionPageProps {
   params: Promise<{ id: string; reportId: string }>;
@@ -134,6 +135,14 @@ export default async function CorrectionPage({ params }: CorrectionPageProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* AI Narrative */}
+      <AINarrative
+        reportId={reportId}
+        projectId={projectId}
+        existingNarrative={(report as any).ai_narrative}
+        generatedAt={(report as any).ai_narrative_generated_at}
+      />
 
       {/* Existing corrections */}
       {corrections.length > 0 && (
