@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { getCompanies } from '@/lib/contacts-queries';
 import {
-  Card, CardContent, Button, Input, Select, Pagination, Badge,
+  Card, CardContent, Button, Input, Select, Pagination, Badge, EmptyState,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
+import { Building2 } from 'lucide-react';
 
 interface CompaniesPageProps {
   searchParams: Promise<{ search?: string; segment?: string; page?: string }>;
@@ -73,8 +74,12 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
             <TableBody>
               {result.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-[#9CA0AB] py-8">
-                    No companies found.
+                  <TableCell colSpan={4}>
+                    <EmptyState
+                      icon={<Building2 className="h-12 w-12" />}
+                      title="No companies found"
+                      description="Add a company to start tracking organizations."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

@@ -11,7 +11,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { GraduationCap } from 'lucide-react';
 
 export default async function TrainingPage() {
   let assessments: Array<{
@@ -86,8 +88,12 @@ export default async function TrainingPage() {
             <TableBody>
               {assessments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No training records found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<GraduationCap className="h-12 w-12" />}
+                      title="No training records found"
+                      description="Training assessments will appear here once employees complete modules."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

@@ -10,6 +10,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
 import { Truck } from 'lucide-react';
 
@@ -61,11 +62,12 @@ export default async function DeliveriesPage() {
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <Truck className="h-8 w-8 text-muted-foreground/50" />
-                      No delivery challans found.
-                    </div>
+                  <TableCell colSpan={6}>
+                    <EmptyState
+                      icon={<Truck className="h-12 w-12" />}
+                      title="No delivery challans found"
+                      description="Delivery challans will appear here once vendors dispatch materials."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

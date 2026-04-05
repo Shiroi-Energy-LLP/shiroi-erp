@@ -10,7 +10,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { CalendarCheck } from 'lucide-react';
 
 function contractStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -92,8 +94,12 @@ export default async function AmcPage() {
             <TableBody>
               {contracts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No AMC contracts found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<CalendarCheck className="h-12 w-12" />}
+                      title="No AMC contracts found"
+                      description="AMC contracts will appear here once created for commissioned projects."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

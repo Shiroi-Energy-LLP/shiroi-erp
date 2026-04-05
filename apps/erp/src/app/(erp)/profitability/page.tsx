@@ -13,7 +13,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { BarChart3 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: 'planning', label: 'Planning' },
@@ -109,8 +111,12 @@ export default async function ProfitabilityPage({ searchParams }: ProfitabilityP
             <TableBody>
               {projects.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No projects found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<BarChart3 className="h-12 w-12" />}
+                      title="No projects found"
+                      description="Profitability data will appear here once projects have financial activity."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

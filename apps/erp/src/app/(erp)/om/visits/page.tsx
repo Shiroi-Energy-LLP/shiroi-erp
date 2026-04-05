@@ -11,7 +11,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { Wrench } from 'lucide-react';
 
 export default async function OmVisitsPage() {
   let visits: Array<{
@@ -78,8 +80,12 @@ export default async function OmVisitsPage() {
             <TableBody>
               {visits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    No visit reports found.
+                  <TableCell colSpan={6}>
+                    <EmptyState
+                      icon={<Wrench className="h-12 w-12" />}
+                      title="No visit reports found"
+                      description="O&M visit reports will appear here once technicians complete site visits."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

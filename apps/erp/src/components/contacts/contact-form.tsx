@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { createContact, updateContact } from '@/lib/contacts-actions';
-import { Card, CardHeader, CardTitle, CardContent, Button, Input, Select, Label } from '@repo/ui';
+import { Card, CardHeader, CardTitle, CardContent, Button, Input, Select, Label, useToast } from '@repo/ui';
 import { AlertTriangle } from 'lucide-react';
 
 const LIFECYCLE_OPTIONS = [
@@ -32,6 +32,7 @@ interface ContactFormProps {
 
 export function ContactForm({ contact }: ContactFormProps) {
   const router = useRouter();
+  const { addToast } = useToast();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const isEdit = !!contact;
@@ -57,10 +58,13 @@ export function ContactForm({ contact }: ContactFormProps) {
       });
       setLoading(false);
       if (res.success) {
+        addToast({ variant: 'success', title: 'Contact saved', description: 'The contact has been saved successfully.' });
         router.push(`/contacts/${contact!.id}`);
         router.refresh();
       } else {
-        setError(res.error ?? 'Failed to update contact');
+        const errMsg = res.error ?? 'Failed to update contact';
+        setError(errMsg);
+        addToast({ variant: 'destructive', title: 'Failed to save contact', description: errMsg });
       }
     } else {
       const res = await createContact({
@@ -76,9 +80,12 @@ export function ContactForm({ contact }: ContactFormProps) {
       });
       setLoading(false);
       if (res.success && res.contactId) {
+        addToast({ variant: 'success', title: 'Contact saved', description: 'The contact has been saved successfully.' });
         router.push(`/contacts/${res.contactId}`);
       } else {
-        setError(res.error ?? 'Failed to create contact');
+        const errMsg = res.error ?? 'Failed to create contact';
+        setError(errMsg);
+        addToast({ variant: 'destructive', title: 'Failed to save contact', description: errMsg });
       }
     }
   }

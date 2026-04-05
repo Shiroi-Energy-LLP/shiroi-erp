@@ -3,7 +3,7 @@ import { getLeads, getSalesEngineers } from '@/lib/leads-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { LeadsTableWrapper } from '@/components/leads/leads-table-wrapper';
 import { LEAD_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Input, Select } from '@repo/ui';
+import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
 
 interface LeadsPageProps {
   searchParams: Promise<{
@@ -57,7 +57,10 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Leads</h1>
+        <div>
+          <Eyebrow className="mb-1">LEADS PIPELINE</Eyebrow>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">Leads</h1>
+        </div>
         <Link href="/leads/new">
           <Button>New Lead</Button>
         </Link>

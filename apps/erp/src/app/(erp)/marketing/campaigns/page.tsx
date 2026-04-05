@@ -11,7 +11,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { Megaphone } from 'lucide-react';
 
 function campaignStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -104,8 +106,12 @@ export default async function CampaignsPage() {
             <TableBody>
               {campaigns.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No campaigns found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<Megaphone className="h-12 w-12" />}
+                      title="No campaigns found"
+                      description="Create a marketing campaign to start tracking lead generation efforts."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

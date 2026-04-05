@@ -15,7 +15,10 @@ import {
   TableHead,
   TableCell,
   Pagination,
+  Eyebrow,
+  EmptyState,
 } from '@repo/ui';
+import { HardHat } from 'lucide-react';
 import type { Database } from '@repo/types/database';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
@@ -62,7 +65,10 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Projects</h1>
+        <div>
+          <Eyebrow className="mb-1">PROJECTS</Eyebrow>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">Projects</h1>
+        </div>
       </div>
 
       {/* Filters */}
@@ -115,8 +121,12 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
             <TableBody>
               {result.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    No projects found.
+                  <TableCell colSpan={9}>
+                    <EmptyState
+                      icon={<HardHat className="h-12 w-12" />}
+                      title="No projects found"
+                      description="Projects will appear here once leads are converted."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

@@ -9,8 +9,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
-import { IndianRupee } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 
 export default async function VendorPaymentsPage() {
   const op = '[VendorPaymentsPage]';
@@ -52,11 +53,12 @@ export default async function VendorPaymentsPage() {
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <IndianRupee className="h-8 w-8 text-muted-foreground/50" />
-                      No vendor payments found.
-                    </div>
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<DollarSign className="h-12 w-12" />}
+                      title="No vendor payments found"
+                      description="Vendor payments will appear here once recorded against purchase orders."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

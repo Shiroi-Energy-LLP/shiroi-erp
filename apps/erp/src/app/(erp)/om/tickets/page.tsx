@@ -10,7 +10,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { Wrench } from 'lucide-react';
 
 function priorityVariant(severity: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (severity) {
@@ -108,8 +110,12 @@ export default async function ServiceTicketsPage() {
             <TableBody>
               {tickets.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No service tickets found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<Wrench className="h-12 w-12" />}
+                      title="No service tickets found"
+                      description="Service tickets will appear here when issues are reported."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

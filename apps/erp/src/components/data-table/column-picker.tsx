@@ -16,8 +16,8 @@ interface ColumnPickerProps {
 export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open, onOpenChange }: ColumnPickerProps) {
   const [search, setSearch] = React.useState('');
   const [localColumns, setLocalColumns] = React.useState<string[]>(visibleColumns);
-  const dragItem = React.useRef<number | null>(null);
-  const dragOverItem = React.useRef<number | null>(null);
+  const [dragIdx, setDragIdx] = React.useState<number | null>(null);
+  const [dropIdx, setDropIdx] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     setLocalColumns(visibleColumns);
@@ -39,22 +39,37 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
     );
   }
 
-  function handleDragStart(index: number) {
-    dragItem.current = index;
+  function handleDragStart(e: React.DragEvent, index: number) {
+    e.dataTransfer.effectAllowed = 'move';
+    setDragIdx(index);
   }
 
-  function handleDragEnter(index: number) {
-    dragOverItem.current = index;
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault();
+    setDropIdx(index);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    const container = e.currentTarget.parentElement;
+    if (container && !container.contains(e.relatedTarget as Node)) {
+      setDropIdx(null);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent, index: number) {
+    e.preventDefault();
+    if (dragIdx === null) return;
+    const reordered = [...localColumns];
+    const [dragged] = reordered.splice(dragIdx, 1);
+    reordered.splice(index, 0, dragged!);
+    setLocalColumns(reordered);
+    setDragIdx(null);
+    setDropIdx(null);
   }
 
   function handleDragEnd() {
-    if (dragItem.current === null || dragOverItem.current === null) return;
-    const reordered = [...localColumns];
-    const [dragged] = reordered.splice(dragItem.current, 1);
-    reordered.splice(dragOverItem.current, 0, dragged!);
-    setLocalColumns(reordered);
-    dragItem.current = null;
-    dragOverItem.current = null;
+    setDragIdx(null);
+    setDropIdx(null);
   }
 
   function handleApply() {
@@ -122,13 +137,18 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
                 <div
                   key={col.key}
                   draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragEnter={() => handleDragEnter(index)}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  onDragOver={(e) => e.preventDefault()}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 bg-white border border-[#DFE2E8] cursor-grab active:cursor-grabbing hover:border-[#00B050] transition-colors group"
+                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 bg-white border border-[#DFE2E8] cursor-grab active:cursor-grabbing hover:border-[#00B050] transition-all duration-150 group ${
+                    dragIdx === index ? 'opacity-50' : ''
+                  } ${
+                    dropIdx === index && dragIdx !== index ? 'border-t-2 border-t-[#00B050]' : ''
+                  }`}
                 >
-                  <GripVertical className="h-3.5 w-3.5 text-[#9CA0AB] flex-shrink-0" />
+                  <GripVertical className="h-3.5 w-3.5 text-n-400 shrink-0 cursor-grab" />
                   <span className="text-[13px] text-[#1A1D24] flex-1 truncate">{col.label}</span>
                   <button
                     onClick={() => toggleColumn(col.key)}

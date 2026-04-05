@@ -12,7 +12,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { UserCog } from 'lucide-react';
 import { DeactivateEmployeeButton } from '@/components/hr/deactivate-employee-button';
 
 export default async function EmployeesPage() {
@@ -76,8 +78,12 @@ export default async function EmployeesPage() {
             <TableBody>
               {employees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                    No employees found.
+                  <TableCell colSpan={8}>
+                    <EmptyState
+                      icon={<UserCog className="h-12 w-12" />}
+                      title="No employees found"
+                      description="Add employees to start managing your team."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
