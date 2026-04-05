@@ -54,8 +54,8 @@ export async function updateCellValue(input: {
   console.log(`${op} Updating ${tableName}.${field} for ${rowId}`);
 
   const { error } = await supabase
-    .from(tableName)
-    .update({ [field]: value })
+    .from(tableName as any)
+    .update({ [field]: value } as any)
     .eq('id', rowId);
 
   if (error) {
