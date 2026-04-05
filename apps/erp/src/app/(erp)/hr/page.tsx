@@ -15,7 +15,10 @@ import {
   TableHead,
   TableCell,
   Button,
+  Eyebrow,
+  EmptyState,
 } from '@repo/ui';
+import { UserCog } from 'lucide-react';
 
 export default async function HRListPage() {
   await requireRole(['founder', 'hr_manager']);
@@ -32,7 +35,10 @@ export default async function HRListPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1A1D24]">HR Master</h1>
+        <div>
+          <Eyebrow className="mb-1">HR OVERVIEW</Eyebrow>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">HR Master</h1>
+        </div>
         <div className="flex gap-2">
           <Link href="/hr/payroll">
             <Button variant="outline">Payroll Export</Button>
@@ -78,7 +84,11 @@ export default async function HRListPage() {
         </CardHeader>
         <CardContent>
           {employees.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4">No employees found.</p>
+            <EmptyState
+              icon={<UserCog className="h-12 w-12" />}
+              title="No employees found"
+              description="Add employees to start managing your team."
+            />
           ) : (
             <Table>
               <TableHeader>

@@ -14,7 +14,10 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  Eyebrow,
+  EmptyState,
 } from '@repo/ui';
+import { ShoppingCart } from 'lucide-react';
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'draft', label: 'Draft' },
@@ -53,7 +56,10 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Purchase Orders</h1>
+        <div>
+          <Eyebrow className="mb-1">PROCUREMENT</Eyebrow>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">Purchase Orders</h1>
+        </div>
         <Link href="/procurement/new">
           <Button>New PO</Button>
         </Link>
@@ -121,8 +127,12 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
             <TableBody>
               {purchaseOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No purchase orders found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<ShoppingCart className="h-12 w-12" />}
+                      title="No purchase orders found"
+                      description="Create a purchase order to start procuring materials for projects."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

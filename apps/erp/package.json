@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@react-pdf/renderer": "^4.3.2",
     "@repo/supabase": "workspace:*",
     "@repo/types": "workspace:*",
@@ -21,7 +22,9 @@
     "next": "14.2.29",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "recharts": "^3.8.1"
+    "react-hook-form": "^7.72.1",
+    "recharts": "^3.8.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

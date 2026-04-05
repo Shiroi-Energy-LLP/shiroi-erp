@@ -14,7 +14,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { FileText } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: 'unpaid', label: 'Unpaid' },
@@ -100,8 +102,12 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
             <TableBody>
               {invoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                    No invoices found.
+                  <TableCell colSpan={8}>
+                    <EmptyState
+                      icon={<FileText className="h-12 w-12" />}
+                      title="No invoices found"
+                      description="Invoices will appear here once generated for projects."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

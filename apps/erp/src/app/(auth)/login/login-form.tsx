@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@repo/supabase/client';
-import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@repo/ui';
+import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Logo, useToast } from '@repo/ui';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -11,6 +11,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { addToast } = useToast();
   const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -25,6 +26,11 @@ export function LoginForm() {
 
     if (authError) {
       setError(authError.message);
+      addToast({
+        variant: 'destructive',
+        title: 'Sign in failed',
+        description: authError.message,
+      });
       setLoading(false);
       return;
     }
@@ -35,11 +41,16 @@ export function LoginForm() {
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-[#00B050]">
-          Shiroi Energy ERP
-        </CardTitle>
-        <CardDescription>Sign in to your account</CardDescription>
+      <CardHeader className="text-center space-y-4">
+        <div className="flex justify-center">
+          <Logo size="xl" variant="mark" />
+        </div>
+        <div>
+          <CardTitle className="text-2xl font-bold text-n-900">
+            Shiroi Energy ERP
+          </CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
+        </div>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">

@@ -11,8 +11,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
-import { ShieldAlert } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export default async function MSMECompliancePage() {
   const pos = await getMSMEAlertPOs();
@@ -87,11 +88,12 @@ export default async function MSMECompliancePage() {
             <TableBody>
               {enriched.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <ShieldAlert className="h-8 w-8 text-muted-foreground/50" />
-                      No MSME outstanding POs found. All clear.
-                    </div>
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<Shield className="h-12 w-12" />}
+                      title="No MSME outstanding POs found"
+                      description="All MSME vendor payments are up to date. All clear."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

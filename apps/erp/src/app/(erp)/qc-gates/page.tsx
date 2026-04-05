@@ -10,8 +10,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
-import { ClipboardCheck } from 'lucide-react';
+import { FileCheck } from 'lucide-react';
 
 export default async function QCGatesPage() {
   const op = '[QCGatesPage]';
@@ -61,11 +62,12 @@ export default async function QCGatesPage() {
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <ClipboardCheck className="h-8 w-8 text-muted-foreground/50" />
-                      No QC inspections found.
-                    </div>
+                  <TableCell colSpan={6}>
+                    <EmptyState
+                      icon={<FileCheck className="h-12 w-12" />}
+                      title="No QC inspections found"
+                      description="QC gate inspections will appear here as projects progress through quality checks."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

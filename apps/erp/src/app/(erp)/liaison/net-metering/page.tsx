@@ -11,7 +11,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { Globe } from 'lucide-react';
 
 function ceigVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -107,8 +109,12 @@ export default async function NetMeteringPage() {
             <TableBody>
               {applications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No net metering applications found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<Globe className="h-12 w-12" />}
+                      title="No net metering applications found"
+                      description="Net metering applications will appear here once submitted for projects."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { getContacts } from '@/lib/contacts-queries';
 import {
-  Card, CardContent, Button, Input, Select, Pagination,
+  Card, CardContent, Button, Input, Select, Pagination, EmptyState,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge,
 } from '@repo/ui';
+import { Users } from 'lucide-react';
 
 const LIFECYCLE_OPTIONS = [
   { value: '', label: 'All Stages' },
@@ -89,8 +90,12 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
             <TableBody>
               {result.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-[#9CA0AB]">
-                    No contacts found.
+                  <TableCell colSpan={5}>
+                    <EmptyState
+                      icon={<Users className="h-12 w-12" />}
+                      title="No contacts found"
+                      description="Add a contact to start building your CRM."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

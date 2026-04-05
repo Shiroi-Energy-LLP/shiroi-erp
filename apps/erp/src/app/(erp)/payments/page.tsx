@@ -14,7 +14,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { DollarSign } from 'lucide-react';
 
 const TYPE_OPTIONS = [
   { value: 'advance', label: 'Advance' },
@@ -90,8 +92,12 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
             <TableBody>
               {payments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No payments found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<DollarSign className="h-12 w-12" />}
+                      title="No payments found"
+                      description="Payments will appear here once customers make payments against invoices."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

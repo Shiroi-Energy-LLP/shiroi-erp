@@ -15,6 +15,7 @@ import {
   CardContent,
   Badge,
   Button,
+  Breadcrumb,
 } from '@repo/ui';
 import { QuickQuoteButton } from '@/components/proposals/quick-quote-button';
 
@@ -36,14 +37,17 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: 'Leads', href: '/leads' },
+          { label: lead.customer_name },
+        ]}
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <Link href="/leads" className="text-sm text-muted-foreground hover:text-[#00B050]">
-              Leads
-            </Link>
-            <span className="text-muted-foreground">/</span>
             <h1 className="text-2xl font-bold text-[#1A1D24]">{lead.customer_name}</h1>
           </div>
           <div className="flex items-center gap-3">

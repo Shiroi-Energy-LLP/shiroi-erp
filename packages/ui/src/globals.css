@@ -83,4 +83,26 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Visited link state — subtle differentiation for data-heavy ERP */
+  a:visited:not([class*="bg-"]):not([class*="btn"]):not([role="button"]) {
+    color: #007A38;
+  }
+
+  /* Responsive font scaling — ensure small text is legible on mobile */
+  @media (max-width: 767px) {
+    .text-\[9px\] { font-size: 10px; }
+    .text-\[10px\] { font-size: 11px; }
+    .text-\[11px\] { font-size: 12px; }
+  }
+
+  /* Reduced motion — disable all transitions for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

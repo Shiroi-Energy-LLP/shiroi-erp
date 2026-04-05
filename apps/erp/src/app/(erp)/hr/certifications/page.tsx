@@ -11,7 +11,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { Award } from 'lucide-react';
 
 function expiryStatus(expiryDate: string | null): { label: string; variant: 'default' | 'destructive' | 'outline' } {
   if (!expiryDate) return { label: 'No Expiry', variant: 'outline' };
@@ -107,8 +109,12 @@ export default async function CertificationsPage() {
             <TableBody>
               {certifications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    No certifications found.
+                  <TableCell colSpan={6}>
+                    <EmptyState
+                      icon={<Award className="h-12 w-12" />}
+                      title="No certifications found"
+                      description="Employee certifications will appear here once recorded."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

@@ -12,6 +12,7 @@ import {
   CardTitle,
   CardContent,
   Badge,
+  Breadcrumb,
 } from '@repo/ui';
 
 interface ProjectOverviewPageProps {
@@ -35,6 +36,14 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
   const activeMilestones = milestones.filter((m) => m.status === 'in_progress');
 
   return (
+    <div className="space-y-6">
+    <Breadcrumb
+      className="mb-4"
+      items={[
+        { label: 'Projects', href: '/projects' },
+        { label: project.project_number ?? project.customer_name },
+      ]}
+    />
     <div className="grid grid-cols-3 gap-6">
       {/* Left column: System + Timeline */}
       <div className="col-span-2 space-y-6">
@@ -256,6 +265,7 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
 
         <EntityContactsCard entityType="project" entityId={id} contacts={entityContacts} />
       </div>
+    </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { requireAuth, getUserProfile } from '@/lib/auth';
 import { Sidebar } from '@/components/sidebar';
 import { Topbar } from '@/components/topbar';
+import { SkipToContent, LogoMark } from '@repo/ui';
 
 export default async function ERPLayout({
   children,
@@ -17,7 +18,8 @@ export default async function ERPLayout({
   }
 
   return (
-    <div className="flex h-screen bg-[#F8F9FB]">
+    <div className="flex h-screen bg-n-050">
+      <SkipToContent />
       <Suspense fallback={<SidebarFallback />}>
         <Sidebar role={profile.role} />
       </Suspense>
@@ -25,7 +27,9 @@ export default async function ERPLayout({
         <Suspense fallback={<TopbarFallback />}>
           <Topbar profile={profile} />
         </Suspense>
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 lg:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );
@@ -33,11 +37,9 @@ export default async function ERPLayout({
 
 function SidebarFallback() {
   return (
-    <aside className="w-60 h-full bg-[#111318] flex flex-col border-r border-[rgba(255,255,255,0.06)]">
+    <aside className="hidden lg:flex w-60 h-full bg-n-950 flex-col border-r border-[rgba(255,255,255,0.06)]">
       <div className="h-14 flex items-center gap-2.5 px-5 shrink-0">
-        <div className="w-7 h-7 rounded-md bg-[#00B050] flex items-center justify-center">
-          <span className="text-white font-brand text-sm font-bold">S</span>
-        </div>
+        <LogoMark size={28} />
         <span className="font-brand text-sm font-bold uppercase tracking-wider text-[rgba(255,255,255,0.95)]">
           Shiroi Energy
         </span>
@@ -48,8 +50,8 @@ function SidebarFallback() {
 
 function TopbarFallback() {
   return (
-    <header className="h-14 bg-white border-b border-[#DFE2E8] shadow-xs flex items-center px-6">
-      <div className="h-4 w-24 bg-[#F2F4F7] rounded animate-pulse" />
+    <header className="h-14 bg-white border-b border-n-200 shadow-xs flex items-center px-6">
+      <div className="h-4 w-24 bg-n-100 rounded animate-pulse" />
     </header>
   );
 }

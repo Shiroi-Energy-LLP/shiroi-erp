@@ -5,6 +5,7 @@ import { ActivityTimeline } from '@/components/contacts/activity-timeline';
 import {
   Card, CardHeader, CardTitle, CardContent, Badge, Button,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+  Breadcrumb,
 } from '@repo/ui';
 import { Pencil } from 'lucide-react';
 
@@ -30,9 +31,15 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: 'Contacts', href: '/contacts' },
+          { label: contact.name ?? 'Contact' },
+        ]}
+      />
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/contacts" className="text-sm text-[#00B050] hover:underline">&larr; Back to Contacts</Link>
           <div className="flex items-center gap-3 mt-1">
             <h1 className="text-2xl font-bold text-[#1A1D24]">{contact.name}</h1>
             <Badge

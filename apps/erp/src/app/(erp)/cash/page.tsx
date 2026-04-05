@@ -22,7 +22,10 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
+  Eyebrow,
 } from '@repo/ui';
+import { TrendingUp } from 'lucide-react';
 
 export default async function CashFlowPage() {
   const [summary, positions, overdueInvoices] = await Promise.all([
@@ -35,7 +38,10 @@ export default async function CashFlowPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Cash Flow</h1>
+        <div>
+          <Eyebrow className="mb-1">CASH FLOW</Eyebrow>
+          <h1 className="text-2xl font-bold text-[#1A1D24]">Cash Flow</h1>
+        </div>
       </div>
 
       {/* KPI Summary Cards */}
@@ -82,7 +88,11 @@ export default async function CashFlowPage() {
         </CardHeader>
         <CardContent>
           {positions.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4">No project cash positions found.</p>
+            <EmptyState
+              icon={<TrendingUp className="h-12 w-12" />}
+              title="No project cash positions found"
+              description="Cash positions will appear here once projects have financial activity."
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -150,7 +160,11 @@ export default async function CashFlowPage() {
         </CardHeader>
         <CardContent>
           {overdueInvoices.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4">No overdue invoices. All clear.</p>
+            <EmptyState
+              icon={<TrendingUp className="h-12 w-12" />}
+              title="No overdue invoices"
+              description="All invoices are paid on time. All clear."
+            />
           ) : (
             <Table>
               <TableHeader>

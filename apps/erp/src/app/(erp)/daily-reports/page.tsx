@@ -10,8 +10,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
-import { FileText } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 
 export default async function DailyReportsPage() {
   const op = '[DailyReportsPage]';
@@ -52,11 +53,12 @@ export default async function DailyReportsPage() {
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <FileText className="h-8 w-8 text-muted-foreground/50" />
-                      No daily reports found.
-                    </div>
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<ClipboardList className="h-12 w-12" />}
+                      title="No daily reports found"
+                      description="Daily site reports will appear here once supervisors submit them."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

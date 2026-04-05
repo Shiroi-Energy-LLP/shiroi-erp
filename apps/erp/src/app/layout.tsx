@@ -1,5 +1,6 @@
 import './globals.css';
 import { Inter, DM_Sans, JetBrains_Mono, Rajdhani } from 'next/font/google';
+import { ToastProvider } from '@repo/ui';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,7 +41,7 @@ export default function RootLayout({
         className={`${inter.variable} ${dmSans.variable} ${jetbrainsMono.variable} ${rajdhani.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

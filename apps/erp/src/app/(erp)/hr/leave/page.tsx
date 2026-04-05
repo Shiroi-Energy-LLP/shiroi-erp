@@ -11,7 +11,9 @@ import {
   TableRow,
   TableHead,
   TableCell,
+  EmptyState,
 } from '@repo/ui';
+import { CalendarCheck } from 'lucide-react';
 
 function leaveStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -100,8 +102,12 @@ export default async function LeaveRequestsPage() {
             <TableBody>
               {leaveRequests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No leave requests found.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<CalendarCheck className="h-12 w-12" />}
+                      title="No leave requests found"
+                      description="Leave requests will appear here once employees submit them."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
