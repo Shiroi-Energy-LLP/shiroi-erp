@@ -3,6 +3,8 @@ import { getProject } from '@/lib/projects-queries';
 import { getEntityContacts } from '@/lib/contacts-queries';
 import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
 import { ProjectFiles } from '@/components/projects/project-files';
+import { HandoverPack } from '@/components/projects/handover-pack';
+import { getHandoverPack } from '@/lib/handover-actions';
 import { formatINR, formatDate, toIST } from '@repo/ui/formatters';
 import {
   Card,
@@ -18,9 +20,10 @@ interface ProjectOverviewPageProps {
 
 export default async function ProjectOverviewPage({ params }: ProjectOverviewPageProps) {
   const { id } = await params;
-  const [project, entityContacts] = await Promise.all([
+  const [project, entityContacts, handoverPack] = await Promise.all([
     getProject(id),
     getEntityContacts('project', id),
+    getHandoverPack(id),
   ]);
 
   if (!project) {
@@ -246,6 +249,8 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
             </CardContent>
           </Card>
         )}
+
+        <HandoverPack projectId={id} existingPack={handoverPack as any} />
 
         <ProjectFiles projectId={id} />
 
