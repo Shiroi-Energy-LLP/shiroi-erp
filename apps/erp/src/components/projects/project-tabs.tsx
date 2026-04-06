@@ -34,7 +34,7 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
   const currentTab = searchParams.get('tab');
 
   // Determine if we're on a sub-route (milestones, delays, etc.)
-  const isSubRoute = pathname !== base && !pathname.endsWith('/stepper');
+  const isSubRoute = pathname !== base;
 
   // If no ?tab= param and on the base route, default to 'details'
   const activeTab = currentTab ?? (pathname === base && !isSubRoute ? 'details' : null);
