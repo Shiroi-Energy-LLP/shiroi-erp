@@ -554,3 +554,157 @@ export async function updateCostVariance(input: {
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }
+
+// ── Seed BOQ from BOM: group BOM lines by category, create cost variances ──
+
+export async function seedBoqFromBom(input: {
+  projectId: string;
+}): Promise<{ success: boolean; count?: number; error?: string }> {
+  const op = '[seedBoqFromBom]';
+  console.log(`${op} Starting for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('proposal_id')
+    .eq('id', input.projectId)
+    .single();
+
+  if (!project?.proposal_id) {
+    return { success: false, error: 'No proposal linked to this project' };
+  }
+
+  const { data: bomLines, error: bomError } = await supabase
+    .from('proposal_bom_lines')
+    .select('item_category, total_price')
+    .eq('proposal_id', project.proposal_id);
+
+  if (bomError || !bomLines || bomLines.length === 0) {
+    return { success: false, error: 'No BOM lines found to seed BOQ' };
+  }
+
+  // Group by category and sum
+  const categoryTotals: Record<string, number> = {};
+  for (const line of bomLines) {
+    categoryTotals[line.item_category] = (categoryTotals[line.item_category] ?? 0) + line.total_price;
+  }
+
+  // Check if BOQ already has entries
+  const { data: existingVariances } = await supabase
+    .from('project_cost_variances')
+    .select('id')
+    .eq('project_id', input.projectId)
+    .limit(1);
+
+  if (existingVariances && existingVariances.length > 0) {
+    return { success: false, error: 'BOQ entries already exist. Use Update Actual Costs instead.' };
+  }
+
+  // Get or create profitability record
+  let profitabilityId: string | null = null;
+  const { data: profRecord } = await supabase
+    .from('project_profitability')
+    .select('id')
+    .eq('project_id', input.projectId)
+    .maybeSingle();
+
+  if (profRecord) {
+    profitabilityId = profRecord.id;
+  } else {
+    const { data: newProf, error: profError } = await supabase
+      .from('project_profitability')
+      .insert({
+        project_id: input.projectId,
+        contracted_value: 0, total_estimated_cost: 0, total_actual_cost: 0,
+        estimated_margin_pct: 0, actual_margin_pct: 0,
+      } as any)
+      .select('id')
+      .single();
+    if (profError) return { success: false, error: 'Could not create profitability record' };
+    profitabilityId = (newProf as any).id;
+  }
+
+  const entries = Object.entries(categoryTotals).map(([category, estimated]) => ({
+    project_id: input.projectId,
+    profitability_id: profitabilityId,
+    item_category: category,
+    estimated_cost: Math.round(estimated * 100) / 100,
+    actual_cost: 0,
+    variance_amount: -Math.round(estimated * 100) / 100,
+    variance_pct: -100,
+    notes: null,
+  }));
+
+  const { error: insertError } = await supabase
+    .from('project_cost_variances')
+    .insert(entries as any);
+
+  if (insertError) {
+    console.error(`${op} Insert failed:`, { code: insertError.code, message: insertError.message });
+    return { success: false, error: insertError.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, count: entries.length };
+}
+
+// ── Delivery Challan CRUD ──
+
+export async function createDeliveryChallan(input: {
+  projectId: string;
+  data: {
+    vendor_dc_number: string;
+    vendor_dc_date: string;
+    vendor_id: string | null;
+    received_date: string | null;
+    status: string;
+  };
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[createDeliveryChallan]';
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+  if (!employee) return { success: false, error: 'Employee profile not found' };
+
+  const { error } = await supabase
+    .from('vendor_delivery_challans')
+    .insert({
+      project_id: input.projectId,
+      received_by: employee.id,
+      vendor_dc_number: input.data.vendor_dc_number,
+      vendor_dc_date: input.data.vendor_dc_date,
+      vendor_id: input.data.vendor_id,
+      received_date: input.data.received_date,
+      status: input.data.status || 'pending',
+    } as any);
+
+  if (error) {
+    console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── Helper: Get vendors for delivery form ──
+
+export async function getVendorsForDropdown(): Promise<{ id: string; company_name: string }[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('vendors')
+    .select('id, company_name')
+    .is('deleted_at', null)
+    .order('company_name', { ascending: true })
+    .limit(200);
+  return data ?? [];
+}

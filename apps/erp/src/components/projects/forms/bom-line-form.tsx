@@ -2,215 +2,210 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Card, CardHeader, CardTitle, CardContent,
-  Button, Input, Label, Select,
-} from '@repo/ui';
-import { Plus, Trash2 } from 'lucide-react';
+import { Button, Input, Select } from '@repo/ui';
+import { Plus, Trash2, Save, X } from 'lucide-react';
 import { addBomLine, deleteBomLine } from '@/lib/project-step-actions';
 
 interface BomLineFormProps {
   projectId: string;
   hasProposal: boolean;
-  existingLines: { id: string; item_category: string; item_description: string }[];
 }
 
 const BOM_CATEGORIES = [
-  'Solar Panels',
-  'Inverter',
-  'Mounting Structure',
-  'Cables & Wiring',
-  'AC Distribution Box',
-  'DC Distribution Box',
-  'Earthing',
-  'Lightning Arrestor',
-  'Battery',
-  'Monitoring System',
-  'Civil Work',
-  'Labour',
-  'Transportation',
-  'Other',
+  'Solar Panels', 'Inverter', 'Mounting Structure', 'Cables & Wiring',
+  'AC Distribution Box', 'DC Distribution Box', 'Earthing', 'Lightning Arrestor',
+  'Battery', 'Monitoring System', 'Civil Work', 'Labour', 'Transportation', 'Other',
 ];
-
 const UNITS = ['nos', 'set', 'meter', 'kg', 'lot', 'sqft', 'pair'];
+const GST_RATES = ['0', '5', '12', '18', '28'];
 
-export function BomLineForm({ projectId, hasProposal, existingLines }: BomLineFormProps) {
+interface NewRow {
+  item_category: string;
+  item_description: string;
+  brand: string;
+  model: string;
+  quantity: string;
+  unit: string;
+  unit_price: string;
+  gst_rate: string;
+}
+
+const EMPTY_ROW: NewRow = {
+  item_category: '', item_description: '', brand: '', model: '',
+  quantity: '', unit: 'nos', unit_price: '', gst_rate: '18',
+};
+
+export function BomInlineAddRow({ projectId, hasProposal }: BomLineFormProps) {
   const router = useRouter();
-  const [showForm, setShowForm] = React.useState(false);
+  const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
-  const [deleting, setDeleting] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [row, setRow] = React.useState<NewRow>({ ...EMPTY_ROW });
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  if (!hasProposal) return null;
+
+  async function handleSave() {
+    if (!row.item_category || !row.item_description || !row.quantity || !row.unit_price) {
+      setError('Category, Description, Qty, and Unit Price are required');
+      return;
+    }
     setSaving(true);
     setError(null);
-
-    const fd = new FormData(e.currentTarget);
-    const getStr = (k: string) => (fd.get(k) as string) || null;
-    const getNum = (k: string) => parseFloat(fd.get(k) as string) || 0;
 
     const result = await addBomLine({
       projectId,
       data: {
-        item_category: (fd.get('item_category') as string) || '',
-        item_description: (fd.get('item_description') as string) || '',
-        brand: getStr('brand'),
-        model: getStr('model'),
-        quantity: getNum('quantity'),
-        unit: (fd.get('unit') as string) || 'nos',
-        unit_price: getNum('unit_price'),
-        gst_rate: getNum('gst_rate'),
+        item_category: row.item_category,
+        item_description: row.item_description,
+        brand: row.brand || null,
+        model: row.model || null,
+        quantity: parseFloat(row.quantity),
+        unit: row.unit,
+        unit_price: parseFloat(row.unit_price),
+        gst_rate: parseFloat(row.gst_rate),
       },
     });
 
     setSaving(false);
     if (result.success) {
-      setShowForm(false);
+      setRow({ ...EMPTY_ROW });
+      setAdding(false);
       router.refresh();
     } else {
-      setError(result.error ?? 'Failed to add BOM line');
+      setError(result.error ?? 'Failed to add line');
     }
   }
 
-  async function handleDelete(lineId: string) {
-    if (!confirm('Delete this BOM line?')) return;
-    setDeleting(lineId);
-    const result = await deleteBomLine({ projectId, lineId });
-    setDeleting(null);
-    if (result.success) {
-      router.refresh();
-    } else {
-      setError(result.error ?? 'Failed to delete');
-    }
-  }
-
-  if (!hasProposal) {
-    return null; // Can't add BOM lines without a proposal
-  }
-
-  if (!showForm) {
+  if (!adding) {
     return (
-      <div className="mb-4 flex items-center gap-3">
-        <Button size="sm" onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-1" /> Add BOM Line
-        </Button>
-        {existingLines.length > 0 && (
-          <DeleteBomButtons
-            lines={existingLines}
-            onDelete={handleDelete}
-            deleting={deleting}
-          />
-        )}
-        {error && <span className="text-xs text-red-600">{error}</span>}
-      </div>
+      <tr>
+        <td colSpan={9} className="px-4 py-2">
+          <Button size="sm" variant="ghost" className="text-p-600 hover:text-p-700" onClick={() => setAdding(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1" /> Add Row
+          </Button>
+          {error && <span className="text-xs text-red-600 ml-2">{error}</span>}
+        </td>
+      </tr>
     );
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="text-base">Add BOM Line Item</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="item_category">Category *</Label>
-              <Select id="item_category" name="item_category" required>
-                <option value="" disabled>Select category...</option>
-                {BOM_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </Select>
-            </div>
-            <div className="md:col-span-2">
-              <Label htmlFor="item_description">Description *</Label>
-              <Input id="item_description" name="item_description" required placeholder="e.g. 540W Mono PERC Half-Cut" />
-            </div>
-            <div>
-              <Label htmlFor="brand">Brand</Label>
-              <Input id="brand" name="brand" placeholder="e.g. Adani" />
-            </div>
-            <div>
-              <Label htmlFor="model">Model</Label>
-              <Input id="model" name="model" placeholder="e.g. ASM-540-HC" />
-            </div>
-            <div>
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input id="quantity" name="quantity" type="number" step="0.01" required />
-            </div>
-            <div>
-              <Label htmlFor="unit">Unit *</Label>
-              <Select id="unit" name="unit" defaultValue="nos" required>
-                {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="unit_price">Unit Price (₹) *</Label>
-              <Input id="unit_price" name="unit_price" type="number" step="0.01" required />
-            </div>
-            <div>
-              <Label htmlFor="gst_rate">GST Rate (%) *</Label>
-              <Select id="gst_rate" name="gst_rate" defaultValue="18" required>
-                <option value="0">0%</option>
-                <option value="5">5%</option>
-                <option value="12">12%</option>
-                <option value="18">18%</option>
-                <option value="28">28%</option>
-              </Select>
-            </div>
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded">{error}</p>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Adding...' : 'Add Line Item'}
+    <>
+      <tr className="bg-p-50 border-t border-p-200">
+        <td className="px-3 py-1.5">
+          <Select
+            value={row.item_category}
+            onChange={(e) => setRow({ ...row, item_category: e.target.value })}
+            className="text-xs h-8 w-[130px]"
+          >
+            <option value="">Category...</option>
+            {BOM_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </Select>
+        </td>
+        <td className="px-3 py-1.5">
+          <Input
+            value={row.item_description}
+            onChange={(e) => setRow({ ...row, item_description: e.target.value })}
+            placeholder="Description"
+            className="text-xs h-8"
+          />
+        </td>
+        <td className="px-3 py-1.5">
+          <Input
+            value={row.brand}
+            onChange={(e) => setRow({ ...row, brand: e.target.value })}
+            placeholder="Brand"
+            className="text-xs h-8 w-[80px]"
+          />
+        </td>
+        <td className="px-3 py-1.5 text-right">
+          <Input
+            value={row.quantity}
+            onChange={(e) => setRow({ ...row, quantity: e.target.value })}
+            type="number"
+            step="0.01"
+            placeholder="Qty"
+            className="text-xs h-8 w-[70px] text-right"
+          />
+        </td>
+        <td className="px-3 py-1.5">
+          <Select
+            value={row.unit}
+            onChange={(e) => setRow({ ...row, unit: e.target.value })}
+            className="text-xs h-8 w-[70px]"
+          >
+            {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+          </Select>
+        </td>
+        <td className="px-3 py-1.5 text-right">
+          <Input
+            value={row.unit_price}
+            onChange={(e) => setRow({ ...row, unit_price: e.target.value })}
+            type="number"
+            step="0.01"
+            placeholder="Rate"
+            className="text-xs h-8 w-[90px] text-right"
+          />
+        </td>
+        <td className="px-3 py-1.5 text-right">
+          <Select
+            value={row.gst_rate}
+            onChange={(e) => setRow({ ...row, gst_rate: e.target.value })}
+            className="text-xs h-8 w-[65px]"
+          >
+            {GST_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}
+          </Select>
+        </td>
+        <td className="px-3 py-1.5 text-right font-mono text-xs text-n-500">
+          {row.quantity && row.unit_price
+            ? `₹${(parseFloat(row.quantity) * parseFloat(row.unit_price) * (1 + parseFloat(row.gst_rate) / 100)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+            : '—'}
+        </td>
+        <td className="px-3 py-1.5">
+          <div className="flex gap-1">
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-600" onClick={handleSave} disabled={saving}>
+              <Save className="h-3.5 w-3.5" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-n-400" onClick={() => { setAdding(false); setRow({ ...EMPTY_ROW }); setError(null); }}>
+              <X className="h-3.5 w-3.5" />
             </Button>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        </td>
+      </tr>
+      {error && (
+        <tr>
+          <td colSpan={9} className="px-4 py-1">
+            <span className="text-xs text-red-600">{error}</span>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
-function DeleteBomButtons({
-  lines,
-  onDelete,
-  deleting,
-}: {
-  lines: { id: string; item_category: string; item_description: string }[];
-  onDelete: (id: string) => void;
-  deleting: string | null;
-}) {
-  const [showDelete, setShowDelete] = React.useState(false);
+export function BomDeleteButton({ projectId, lineId, label }: { projectId: string; lineId: string; label: string }) {
+  const router = useRouter();
+  const [deleting, setDeleting] = React.useState(false);
 
-  if (!showDelete) {
-    return (
-      <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700" onClick={() => setShowDelete(true)}>
-        <Trash2 className="h-4 w-4 mr-1" /> Remove Lines
-      </Button>
-    );
+  async function handleDelete() {
+    if (!confirm(`Delete "${label}"?`)) return;
+    setDeleting(true);
+    const result = await deleteBomLine({ projectId, lineId });
+    setDeleting(false);
+    if (result.success) {
+      router.refresh();
+    }
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-n-500">Click to remove:</span>
-      {lines.map((l) => (
-        <Button
-          key={l.id}
-          size="sm"
-          variant="ghost"
-          className="text-red-500 hover:text-red-700 text-xs"
-          onClick={() => onDelete(l.id)}
-          disabled={deleting === l.id}
-        >
-          {deleting === l.id ? '...' : `${l.item_category}: ${l.item_description.slice(0, 20)}`}
-        </Button>
-      ))}
-      <Button size="sm" variant="ghost" onClick={() => setShowDelete(false)}>Done</Button>
-    </div>
+    <Button
+      size="sm"
+      variant="ghost"
+      className="h-7 w-7 p-0 text-n-300 hover:text-red-500"
+      onClick={handleDelete}
+      disabled={deleting}
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </Button>
   );
 }

@@ -63,6 +63,8 @@ export function CommissioningForm({ projectId, defaults }: CommissioningFormProp
     setSaving(false);
     if (result.success) {
       setShowForm(false);
+      // Navigate to AMC tab to schedule free maintenance
+      router.push(`/projects/${projectId}?tab=amc`);
       router.refresh();
     } else {
       setError(result.error ?? 'Failed to create commissioning report');

@@ -1,10 +1,11 @@
 import {
-  Card, CardHeader, CardTitle, CardContent, Badge,
+  Card, CardHeader, CardTitle, CardContent, Badge, Button,
   Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
 } from '@repo/ui';
 import { getStepExecutionData } from '@/lib/project-stepper-queries';
 import { MilestoneStatusBadge } from '@/components/projects/milestone-status-badge';
 import { HardHat } from 'lucide-react';
+import Link from 'next/link';
 
 interface StepExecutionProps {
   projectId: string;
@@ -59,8 +60,13 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
 
       {/* Milestones table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Milestones</CardTitle>
+          <Link href={`/projects/${projectId}?tab=qc`}>
+            <Button size="sm" variant="ghost" className="text-xs">
+              Continue to QC →
+            </Button>
+          </Link>
         </CardHeader>
         <CardContent>
           <Table>

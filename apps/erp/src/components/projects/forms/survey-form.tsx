@@ -80,6 +80,8 @@ export function SurveyForm({ projectId, existing, onCancel }: SurveyFormProps) {
     setSaving(false);
     if (result.success) {
       setShowForm(false);
+      // Navigate to BOM tab so PM continues workflow
+      router.push(`/projects/${projectId}?tab=bom`);
       router.refresh();
     } else {
       setError(result.error ?? 'Failed to save survey');

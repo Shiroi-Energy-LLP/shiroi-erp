@@ -1,12 +1,13 @@
 import {
   Card, CardHeader, CardTitle, CardContent,
-  Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
+  Button,
 } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { getStepBomData } from '@/lib/project-stepper-queries';
 import { Package } from 'lucide-react';
-import { BomLineForm } from '@/components/projects/forms/bom-line-form';
+import { BomInlineAddRow, BomDeleteButton } from '@/components/projects/forms/bom-line-form';
 import { createClient } from '@repo/supabase/server';
+import Link from 'next/link';
 
 interface StepBomProps {
   projectId: string;
@@ -15,7 +16,7 @@ interface StepBomProps {
 export async function StepBom({ projectId }: StepBomProps) {
   const bomLines = await getStepBomData(projectId);
 
-  // Check if project has a linked proposal (needed for BOM add form)
+  // Check if project has a linked proposal
   let hasProposal = false;
   try {
     const supabase = await createClient();
@@ -29,78 +30,87 @@ export async function StepBom({ projectId }: StepBomProps) {
     // Non-blocking
   }
 
-  const existingLines = bomLines.map((l) => ({
-    id: l.id,
-    item_category: l.item_category,
-    item_description: l.item_description,
-  }));
+  const totalValue = bomLines.reduce((sum, line) => sum + line.total_price, 0);
+
+  if (bomLines.length === 0 && !hasProposal) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <Package className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
+        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Bill of Materials</h3>
+        <p className="text-[13px] text-[#7C818E]">BOM will be available once a proposal is created for this project.</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {/* Add BOM line form */}
-      <BomLineForm
-        projectId={projectId}
-        hasProposal={hasProposal}
-        existingLines={existingLines}
-      />
-
-      {bomLines.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <Package className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Bill of Materials</h3>
-          <p className="text-[13px] text-[#7C818E]">
-            {hasProposal
-              ? 'Click "Add BOM Line" above to start building the bill of materials.'
-              : 'BOM will be available once a proposal is created for this project.'}
-          </p>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">Bill of Materials</CardTitle>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-mono text-[#7C818E]">{bomLines.length} items</span>
+          {bomLines.length > 0 && (
+            <Link href={`/projects/${projectId}?tab=boq`}>
+              <Button size="sm" variant="ghost" className="text-xs">
+                Continue to BOQ →
+              </Button>
+            </Link>
+          )}
         </div>
-      ) : (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Bill of Materials</CardTitle>
-            <span className="text-sm font-mono text-[#7C818E]">{bomLines.length} items</span>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Brand / Model</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead className="text-right">Unit Rate</TableHead>
-                  <TableHead className="text-right">GST %</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bomLines.map((line) => (
-                  <TableRow key={line.id}>
-                    <TableCell className="font-medium">{line.item_category}</TableCell>
-                    <TableCell>{line.item_description}</TableCell>
-                    <TableCell className="text-[#7C818E]">
-                      {[line.brand, line.model].filter(Boolean).join(' ') || '\u2014'}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">{line.quantity}</TableCell>
-                    <TableCell>{line.unit}</TableCell>
-                    <TableCell className="text-right font-mono">{formatINR(line.unit_price)}</TableCell>
-                    <TableCell className="text-right font-mono">{line.gst_rate}%</TableCell>
-                    <TableCell className="text-right font-mono font-medium">{formatINR(line.total_price)}</TableCell>
-                  </TableRow>
-                ))}
-                {/* Total row */}
-                <TableRow>
-                  <TableCell colSpan={7} className="text-right font-bold text-[#1A1D24]">Total</TableCell>
-                  <TableCell className="text-right font-mono font-bold text-[#1A1D24]">
-                    {formatINR(bomLines.reduce((sum, line) => sum + line.total_price, 0))}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-n-200 bg-n-50">
+                <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Category</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Description</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Brand / Model</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Qty</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Unit</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Unit Rate</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-n-500">GST %</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Total</th>
+                <th className="px-3 py-2 w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {bomLines.map((line) => (
+                <tr key={line.id} className="border-b border-n-100 hover:bg-n-50 group">
+                  <td className="px-3 py-2 font-medium text-n-900">{line.item_category}</td>
+                  <td className="px-3 py-2 text-n-700">{line.item_description}</td>
+                  <td className="px-3 py-2 text-n-500">
+                    {[line.brand, line.model].filter(Boolean).join(' ') || '—'}
+                  </td>
+                  <td className="px-3 py-2 text-right font-mono text-n-700">{line.quantity}</td>
+                  <td className="px-3 py-2 text-n-500">{line.unit}</td>
+                  <td className="px-3 py-2 text-right font-mono text-n-700">{formatINR(line.unit_price)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-n-500">{line.gst_rate}%</td>
+                  <td className="px-3 py-2 text-right font-mono font-medium text-n-900">{formatINR(line.total_price)}</td>
+                  <td className="px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <BomDeleteButton
+                      projectId={projectId}
+                      lineId={line.id}
+                      label={line.item_description}
+                    />
+                  </td>
+                </tr>
+              ))}
+
+              {/* Inline add row */}
+              <BomInlineAddRow projectId={projectId} hasProposal={hasProposal} />
+
+              {/* Total row */}
+              {bomLines.length > 0 && (
+                <tr className="border-t-2 border-n-200 bg-n-50">
+                  <td colSpan={7} className="px-3 py-2 text-right font-bold text-n-900">Total</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-n-900">{formatINR(totalValue)}</td>
+                  <td></td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

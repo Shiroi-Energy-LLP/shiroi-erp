@@ -1,7 +1,8 @@
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@repo/ui';
+import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 import { getStepLiaisonData } from '@/lib/project-stepper-queries';
 import { Building2 } from 'lucide-react';
+import Link from 'next/link';
 
 interface StepLiaisonProps {
   projectId: string;
@@ -23,7 +24,15 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
   const showCeig = application.ceig_required || (project.system_size_kwp > 10 && project.system_type !== 'on_grid');
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <Link href={`/projects/${projectId}?tab=commissioning`}>
+          <Button size="sm" variant="ghost" className="text-xs">
+            Continue to Commissioning →
+          </Button>
+        </Link>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* DISCOM / TNEB Status */}
       <Card>
         <CardHeader>
@@ -105,6 +114,7 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }
