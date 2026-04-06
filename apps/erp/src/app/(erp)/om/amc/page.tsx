@@ -1,5 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 import { formatDate, formatINR } from '@repo/ui/formatters';
+import { getCommissionedProjects } from '@/lib/amc-actions';
+import { CreateAmcDialog } from '@/components/om/create-amc-dialog';
 import {
   Card,
   CardContent,
@@ -31,6 +33,8 @@ function contractStatusVariant(status: string): 'default' | 'secondary' | 'destr
 }
 
 export default async function AmcPage() {
+  const commissionedProjects = await getCommissionedProjects();
+
   let contracts: Array<{
     id: string;
     contract_number: string;
@@ -78,6 +82,7 @@ export default async function AmcPage() {
           <Eyebrow className="mb-1">AMC CONTRACTS</Eyebrow>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">AMC Contracts</h1>
         </div>
+        <CreateAmcDialog projects={commissionedProjects} />
       </div>
 
       {/* Table */}

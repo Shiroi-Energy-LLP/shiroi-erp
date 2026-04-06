@@ -1,5 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 import { toIST } from '@repo/ui/formatters';
+import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
+import { CreateTicketDialog } from '@/components/om/create-ticket-dialog';
 import {
   Card,
   CardContent,
@@ -46,6 +48,11 @@ function statusVariant(status: string): 'default' | 'secondary' | 'destructive' 
 }
 
 export default async function ServiceTicketsPage() {
+  const [employees, allProjects] = await Promise.all([
+    getActiveEmployees(),
+    getActiveProjects(),
+  ]);
+
   let tickets: Array<{
     id: string;
     ticket_number: string;
@@ -94,6 +101,7 @@ export default async function ServiceTicketsPage() {
           <Eyebrow className="mb-1">SERVICE TICKETS</Eyebrow>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Service Tickets</h1>
         </div>
+        <CreateTicketDialog employees={employees} projects={allProjects} />
       </div>
 
       {/* Table */}

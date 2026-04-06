@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { getAllTasks } from '@/lib/all-tasks-queries';
+import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { isTaskOverdue, formatEntityType } from '@/lib/tasks-helpers';
 import { formatDate } from '@repo/ui/formatters';
+import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import {
   Card,
   CardContent,
@@ -59,12 +61,16 @@ interface TasksPageProps {
 
 export default async function TasksPage({ searchParams }: TasksPageProps) {
   const params = await searchParams;
-  const tasks = await getAllTasks({
-    status: params.status || undefined,
-    priority: params.priority || undefined,
-    entity_type: params.entity_type || undefined,
-    search: params.search || undefined,
-  });
+  const [tasks, employees, projects] = await Promise.all([
+    getAllTasks({
+      status: params.status || undefined,
+      priority: params.priority || undefined,
+      entity_type: params.entity_type || undefined,
+      search: params.search || undefined,
+    }),
+    getActiveEmployees(),
+    getActiveProjects(),
+  ]);
 
   const hasFilters = params.status || params.priority || params.entity_type || params.search;
 
@@ -79,6 +85,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
             <span className="text-base font-normal text-[#7C818E]">({tasks.length})</span>
           </h1>
         </div>
+        <CreateTaskDialog employees={employees} projects={projects} />
       </div>
 
       {/* Filters */}
