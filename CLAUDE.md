@@ -28,7 +28,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
 | Database schema | ✅ Complete | 137+ tables, 91+ triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 4 with contacts V2 + table_views |
-| Migrations | ✅ Committed | supabase/migrations/ — 30 files (001 through 018) |
+| Migrations | ✅ Committed | supabase/migrations/ — 31 files (001 through 019) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, 22 components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + original 11) |
 | Auth + App Shell | ✅ Complete | Login (with logo), middleware, collapsible sidebar (240px/60px + mobile drawer), topbar with role switcher, skip-to-content |
@@ -295,6 +295,7 @@ Never log: `bank_account_number`, `aadhar_number`, `pan_number`, `gross_monthly`
 8. **Never write SQL** directly inside React components or page files
 9. **Never push** directly to main — feature branch → PR → review → merge (once branching is set up)
 10. **Never run** untested migrations on prod — dev first, verify, then prod
+11. **Never execute SQL changes** (DDL, RLS policy changes, data migrations) without creating a corresponding migration file in `supabase/migrations/`. Every SQL change must be documented as a numbered migration file immediately — this is the source of truth for the schema.
 
 ---
 
