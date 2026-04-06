@@ -73,7 +73,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | PM RLS + data fix | ✅ Complete | project_manager added to blanket read access; all 314 projects assigned to Manivel as PM |
 | Project workflow forms | ✅ Complete | Interactive forms in all 10 project tabs: Survey (create/edit), BOM (inline table with Add Row), BOQ (auto-seeded from BOM, inline actual cost edit), QC (inspection form with dynamic checklist), Commissioning (full report with electrical readings + handover), AMC (schedule 3 free visits). Status advancement button on layout. |
 | Workflow data flow | ✅ Complete | Connected all 10 tabs: Survey→BOM auto-nav, BOM inline Add Row + Continue→BOQ, BOQ "Generate from BOM" auto-seeds categories + double-click actual cost edit + Continue→Delivery, Delivery Upload DC form + Continue→Execution, Execution→QC→Liaison→Commissioning→AMC navigation chain. Commissioning pre-fills from project, auto-navs to AMC. AMC auto-pulls commissioned_date. |
-| Migration 019 | 🔜 Pending (dev) | Storage buckets: `proposal-files` + `site-photos` with RLS — paste into SQL Editor |
+| Migration 019 | ✅ Applied (dev) | `site-photos` storage bucket + RLS (proposal-files already existed from migration 013) |
 | Audit fixes | ✅ Complete | Report detail page (was redirect), report edit page (new), report photos component, broken links fixed, 4 orphaned pages deleted, survey auto-advance status |
 | Data cleanup | 🔜 Next | ~3 junk leads to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |

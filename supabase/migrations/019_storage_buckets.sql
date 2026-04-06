@@ -1,63 +1,6 @@
--- Migration 019: Create missing storage buckets (proposal-files, site-photos)
--- These buckets are referenced in code but were never created in a migration.
-
-BEGIN;
-
--- ────────────────────────────────────────────────────────────
--- 1. Proposal Files storage bucket
--- ────────────────────────────────────────────────────────────
--- Stores proposal attachments and generated PDFs.
--- Path convention: proposal-files/{proposal_id}/{filename}
-
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'proposal-files',
-  'proposal-files',
-  false,
-  52428800,  -- 50MB max file size
-  ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
-)
-ON CONFLICT (id) DO NOTHING;
-
--- Storage RLS policies for proposal-files
-CREATE POLICY "proposal_files_read"
-  ON storage.objects FOR SELECT
-  USING (
-    bucket_id = 'proposal-files'
-    AND EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('founder', 'finance', 'sales_engineer', 'project_manager', 'designer')
-    )
-  );
-
-CREATE POLICY "proposal_files_insert"
-  ON storage.objects FOR INSERT
-  WITH CHECK (
-    bucket_id = 'proposal-files'
-    AND EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-        AND p.role IN ('founder', 'sales_engineer', 'designer')
-    )
-  );
-
-CREATE POLICY "proposal_files_delete"
-  ON storage.objects FOR DELETE
-  USING (
-    bucket_id = 'proposal-files'
-    AND EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-        AND p.role = 'founder'
-    )
-  );
-
--- ────────────────────────────────────────────────────────────
--- 2. Site Photos storage bucket
--- ────────────────────────────────────────────────────────────
--- Stores daily report site photos uploaded by site supervisors.
--- Path convention: site-photos/projects/{project_id}/reports/{date}/{timestamp}_{filename}
+-- Migration 019: Create site-photos storage bucket
+-- proposal-files bucket already existed from migration 013 (applied manually).
+-- This migration only creates the site-photos bucket + RLS policies.
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
@@ -70,7 +13,7 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage RLS policies for site-photos
-CREATE POLICY "site_photos_read"
+CREATE POLICY "site_photos_storage_read"
   ON storage.objects FOR SELECT
   USING (
     bucket_id = 'site-photos'
@@ -81,7 +24,7 @@ CREATE POLICY "site_photos_read"
     )
   );
 
-CREATE POLICY "site_photos_insert"
+CREATE POLICY "site_photos_storage_insert"
   ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id = 'site-photos'
@@ -92,7 +35,7 @@ CREATE POLICY "site_photos_insert"
     )
   );
 
-CREATE POLICY "site_photos_delete"
+CREATE POLICY "site_photos_storage_delete"
   ON storage.objects FOR DELETE
   USING (
     bucket_id = 'site-photos'
@@ -102,5 +45,3 @@ CREATE POLICY "site_photos_delete"
         AND p.role = 'founder'
     )
   );
-
-COMMIT;
