@@ -5,9 +5,6 @@ import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
   CardContent,
-  Button,
-  Input,
-  Select,
   Table,
   TableHeader,
   TableBody,
@@ -16,8 +13,12 @@ import {
   TableCell,
   Eyebrow,
   EmptyState,
+  Button,
 } from '@repo/ui';
 import { ShoppingCart } from 'lucide-react';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'draft', label: 'Draft' },
@@ -50,8 +51,6 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
     getProjectsList(),
   ]);
 
-  const hasFilters = params.status || params.vendor || params.project || params.search;
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -67,44 +66,32 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-44">
+          <FilterBar basePath="/procurement" filterParams={['search', 'status', 'vendor', 'project']}>
+            <FilterSelect paramName="status" className="w-44">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
-            </Select>
-            <Select name="vendor" defaultValue={params.vendor ?? ''} className="w-48">
+            </FilterSelect>
+            <FilterSelect paramName="vendor" className="w-48">
               <option value="">All Vendors</option>
               {vendors.map((v) => (
                 <option key={v.id} value={v.id}>{v.company_name}</option>
               ))}
-            </Select>
-            <Select name="project" defaultValue={params.project ?? ''} className="w-52">
+            </FilterSelect>
+            <FilterSelect paramName="project" className="w-52">
               <option value="">All Projects</option>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.project_number} — {p.customer_name}
                 </option>
               ))}
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+            </FilterSelect>
+            <SearchInput
               placeholder="Search PO number..."
-              className="w-52"
+              className="w-52 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {hasFilters && (
-              <Link href="/procurement">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
-              </Link>
-            )}
-          </form>
+          </FilterBar>
         </CardContent>
       </Card>
 

@@ -1,12 +1,8 @@
-import Link from 'next/link';
 import { getVendors } from '@/lib/vendor-queries';
 import {
   Card,
   CardContent,
   Badge,
-  Button,
-  Input,
-  Select,
   Table,
   TableHeader,
   TableBody,
@@ -16,6 +12,9 @@ import {
   Eyebrow,
 } from '@repo/ui';
 import { Building2 } from 'lucide-react';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 const VENDOR_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: 'panel_supplier', label: 'Panel Supplier' },
@@ -59,32 +58,20 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="type" defaultValue={params.type ?? ''} className="w-48">
+          <FilterBar basePath="/vendors" filterParams={['search', 'type']}>
+            <FilterSelect paramName="type" className="w-48">
               <option value="">All Types</option>
               {VENDOR_TYPE_OPTIONS.map((t) => (
                 <option key={t.value} value={t.value}>
                   {t.label}
                 </option>
               ))}
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+            </FilterSelect>
+            <SearchInput
               placeholder="Search company or vendor code..."
-              className="w-64"
+              className="w-64 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {(params.type || params.search) && (
-              <Link href="/vendors">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
-              </Link>
-            )}
-          </form>
+          </FilterBar>
         </CardContent>
       </Card>
 

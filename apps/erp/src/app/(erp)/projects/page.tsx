@@ -1,9 +1,11 @@
-import Link from 'next/link';
 import { getProjects } from '@/lib/projects-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ProjectsTableWrapper } from '@/components/projects/projects-table-wrapper';
 import { PROJECT_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
+import { Card, CardContent, Eyebrow } from '@repo/ui';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 import type { Database } from '@repo/types/database';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
@@ -79,26 +81,18 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
       <Card>
         <CardContent className="py-3">
-          <form className="flex items-center gap-3 flex-wrap">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-44 h-9 text-sm">
+          <FilterBar basePath="/projects" filterParams={['search', 'status']}>
+            <FilterSelect paramName="status" className="w-44 h-9 text-sm">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+            </FilterSelect>
+            <SearchInput
               placeholder="Search project # or customer..."
               className="w-64 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm" className="h-9">Filter</Button>
-            {Object.keys(currentFilters).length > 0 && (
-              <Link href="/projects">
-                <Button type="button" variant="ghost" size="sm" className="h-9">Clear</Button>
-              </Link>
-            )}
-          </form>
+          </FilterBar>
         </CardContent>
       </Card>
 

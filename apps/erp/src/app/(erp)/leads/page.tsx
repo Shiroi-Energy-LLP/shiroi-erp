@@ -6,7 +6,10 @@ import { LeadsTableWrapper } from '@/components/leads/leads-table-wrapper';
 import { LeadStageNav } from '@/components/leads/lead-stage-nav';
 import { PipelineSummary } from '@/components/leads/pipeline-summary';
 import { LEAD_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
+import { Button, Card, CardContent, Eyebrow } from '@repo/ui';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 interface LeadsPageProps {
   searchParams: Promise<{
@@ -101,8 +104,8 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
       {/* Quick Filters */}
       <Card>
         <CardContent className="py-3">
-          <form className="flex items-center gap-3 flex-wrap">
-            <Select name="source" defaultValue={params.source ?? ''} className="w-36 h-9 text-sm">
+          <FilterBar basePath="/leads" filterParams={['search', 'source', 'segment', 'assignedTo']}>
+            <FilterSelect paramName="source" className="w-36 h-9 text-sm">
               <option value="">All Sources</option>
               <option value="referral">Referral</option>
               <option value="website">Website</option>
@@ -112,26 +115,18 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
               <option value="exhibition">Exhibition</option>
               <option value="social_media">Social Media</option>
               <option value="walkin">Walk-in</option>
-            </Select>
-            <Select name="segment" defaultValue={params.segment ?? ''} className="w-36 h-9 text-sm">
+            </FilterSelect>
+            <FilterSelect paramName="segment" className="w-36 h-9 text-sm">
               <option value="">All Segments</option>
               <option value="residential">Residential</option>
               <option value="commercial">Commercial</option>
               <option value="industrial">Industrial</option>
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+            </FilterSelect>
+            <SearchInput
               placeholder="Search name or phone..."
               className="w-56 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm" className="h-9">Filter</Button>
-            {Object.keys(currentFilters).length > 0 && (
-              <Link href="/leads">
-                <Button type="button" variant="ghost" size="sm" className="h-9">Clear</Button>
-              </Link>
-            )}
-          </form>
+          </FilterBar>
         </CardContent>
       </Card>
 

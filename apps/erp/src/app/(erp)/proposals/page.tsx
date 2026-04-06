@@ -3,7 +3,10 @@ import { getProposals } from '@/lib/proposals-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ProposalsTableWrapper } from '@/components/proposals/proposals-table-wrapper';
 import { getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
+import { Button, Card, CardContent, Eyebrow } from '@repo/ui';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 interface ProposalsPageProps {
   searchParams: Promise<{
@@ -62,8 +65,8 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
 
       <Card>
         <CardContent className="py-3">
-          <form className="flex items-center gap-3 flex-wrap">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-36 h-9 text-sm">
+          <FilterBar basePath="/proposals" filterParams={['search', 'status', 'systemType', 'isBudgetary']}>
+            <FilterSelect paramName="status" className="w-36 h-9 text-sm">
               <option value="">All Statuses</option>
               <option value="draft">Draft</option>
               <option value="sent">Sent</option>
@@ -71,31 +74,23 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
               <option value="rejected">Rejected</option>
               <option value="expired">Expired</option>
               <option value="revised">Revised</option>
-            </Select>
-            <Select name="systemType" defaultValue={params.systemType ?? ''} className="w-32 h-9 text-sm">
+            </FilterSelect>
+            <FilterSelect paramName="systemType" className="w-32 h-9 text-sm">
               <option value="">All Systems</option>
               <option value="on_grid">On-Grid</option>
               <option value="hybrid">Hybrid</option>
               <option value="off_grid">Off-Grid</option>
-            </Select>
-            <Select name="isBudgetary" defaultValue={params.isBudgetary ?? ''} className="w-32 h-9 text-sm">
+            </FilterSelect>
+            <FilterSelect paramName="isBudgetary" className="w-32 h-9 text-sm">
               <option value="">All Types</option>
               <option value="true">Budgetary</option>
               <option value="false">Detailed</option>
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+            </FilterSelect>
+            <SearchInput
               placeholder="Search proposal #..."
               className="w-48 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm" className="h-9">Filter</Button>
-            {Object.keys(currentFilters).length > 0 && (
-              <Link href="/proposals">
-                <Button type="button" variant="ghost" size="sm" className="h-9">Clear</Button>
-              </Link>
-            )}
-          </form>
+          </FilterBar>
         </CardContent>
       </Card>
 

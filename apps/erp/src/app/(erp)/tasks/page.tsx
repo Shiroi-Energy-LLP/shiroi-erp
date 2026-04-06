@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getAllTasks } from '@/lib/all-tasks-queries';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { isTaskOverdue, formatEntityType } from '@/lib/tasks-helpers';
@@ -8,9 +7,6 @@ import {
   Card,
   CardContent,
   Badge,
-  Button,
-  Input,
-  Select,
   Table,
   TableHeader,
   TableBody,
@@ -20,6 +16,9 @@ import {
   Eyebrow,
 } from '@repo/ui';
 import { ClipboardList } from 'lucide-react';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -91,42 +90,30 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <form className="flex items-center gap-4 flex-wrap">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-40">
+          <FilterBar basePath="/tasks" filterParams={['search', 'status', 'priority', 'entity_type']}>
+            <FilterSelect paramName="status" className="w-40">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
-            </Select>
-            <Select name="priority" defaultValue={params.priority ?? ''} className="w-40">
+            </FilterSelect>
+            <FilterSelect paramName="priority" className="w-40">
               <option value="">All Priorities</option>
               {PRIORITY_OPTIONS.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>
               ))}
-            </Select>
-            <Select name="entity_type" defaultValue={params.entity_type ?? ''} className="w-44">
+            </FilterSelect>
+            <FilterSelect paramName="entity_type" className="w-44">
               <option value="">All Entity Types</option>
               {ENTITY_TYPE_OPTIONS.map((e) => (
                 <option key={e.value} value={e.value}>{e.label}</option>
               ))}
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+            </FilterSelect>
+            <SearchInput
               placeholder="Search task title..."
-              className="w-60"
+              className="w-60 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {hasFilters && (
-              <Link href="/tasks">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
-              </Link>
-            )}
-          </form>
+          </FilterBar>
         </CardContent>
       </Card>
 

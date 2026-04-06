@@ -3,7 +3,10 @@ import { getContacts } from '@/lib/contacts-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ContactsTableWrapper } from '@/components/contacts/contacts-table-wrapper';
 import { CONTACT_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
+import { Button, Card, CardContent, Eyebrow } from '@repo/ui';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 const LIFECYCLE_OPTIONS = [
   { value: 'subscriber', label: 'Subscriber' },
@@ -75,26 +78,18 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
 
       <Card>
         <CardContent className="py-3">
-          <form className="flex items-center gap-3 flex-wrap">
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+          <FilterBar basePath="/contacts" filterParams={['search', 'stage']}>
+            <SearchInput
               placeholder="Search by name, phone, or email..."
               className="w-72 h-9 text-sm"
             />
-            <Select name="stage" defaultValue={params.stage ?? ''} className="w-40 h-9 text-sm">
+            <FilterSelect paramName="stage" className="w-40 h-9 text-sm">
               <option value="">All Stages</option>
               {LIFECYCLE_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
-            </Select>
-            <Button type="submit" variant="outline" size="sm" className="h-9">Search</Button>
-            {Object.keys(currentFilters).length > 0 && (
-              <Link href="/contacts">
-                <Button type="button" variant="ghost" size="sm" className="h-9">Clear</Button>
-              </Link>
-            )}
-          </form>
+            </FilterSelect>
+          </FilterBar>
         </CardContent>
       </Card>
 

@@ -1,12 +1,8 @@
-import Link from 'next/link';
 import { getPayments } from '@/lib/payment-queries';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
   CardContent,
-  Button,
-  Input,
-  Select,
   Badge,
   Table,
   TableHeader,
@@ -18,6 +14,9 @@ import {
   Eyebrow,
 } from '@repo/ui';
 import { DollarSign } from 'lucide-react';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 const TYPE_OPTIONS = [
   { value: 'advance', label: 'Advance' },
@@ -43,30 +42,18 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="type" defaultValue={params.type ?? ''} className="w-44">
+          <FilterBar basePath="/payments/receipts" filterParams={['search', 'type']}>
+            <FilterSelect paramName="type" className="w-44">
               <option value="">All Types</option>
               {TYPE_OPTIONS.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+            </FilterSelect>
+            <SearchInput
               placeholder="Search receipt/reference..."
-              className="w-60"
+              className="w-60 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {(params.type || params.search) && (
-              <Link href="/payments">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
-              </Link>
-            )}
-          </form>
+          </FilterBar>
         </CardContent>
       </Card>
 

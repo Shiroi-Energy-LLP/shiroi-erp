@@ -14,9 +14,11 @@ import {
   TableRow,
   TableHead,
   TableCell,
-  Input,
 } from '@repo/ui';
 import { Package, Scissors, AlertTriangle, Ruler } from 'lucide-react';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 interface InventoryPageProps {
   searchParams: Promise<{
@@ -79,7 +81,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
     getLowStockCutLengths(),
   ]);
 
-  const hasFilters = !!(sp.category || sp.location || sp.condition || sp.cut_length || sp.scrap || sp.search);
+
 
   return (
     <div className="space-y-6">
@@ -169,59 +171,34 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
       {/* Filters */}
       <Card>
         <CardContent className="pt-4">
-          <form className="flex flex-wrap gap-3 items-end">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Search</label>
-              <Input
-                name="search"
-                defaultValue={sp.search ?? ''}
-                placeholder="Description, brand, serial..."
-                className="h-9 w-64 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Category</label>
-              <select name="category" defaultValue={sp.category ?? ''} className="h-9 rounded-md border px-3 text-sm">
-                <option value="">All Categories</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Location</label>
-              <select name="location" defaultValue={sp.location ?? ''} className="h-9 rounded-md border px-3 text-sm">
-                <option value="">All Locations</option>
-                {LOCATIONS.map((l) => (
-                  <option key={l} value={l}>{l.replace(/_/g, ' ')}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Condition</label>
-              <select name="condition" defaultValue={sp.condition ?? ''} className="h-9 rounded-md border px-3 text-sm">
-                <option value="">All Conditions</option>
-                {CONDITIONS.map((c) => (
-                  <option key={c} value={c} className="capitalize">{c}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Cut-Length Only</label>
-              <select name="cut_length" defaultValue={sp.cut_length ?? ''} className="h-9 rounded-md border px-3 text-sm">
-                <option value="">All</option>
-                <option value="true">Cut-Length Only</option>
-              </select>
-            </div>
-            <button type="submit" className="h-9 rounded-md bg-[#00B050] px-4 text-sm text-white hover:bg-[#009040]">
-              Filter
-            </button>
-            {hasFilters && (
-              <Link href="/inventory" className="h-9 flex items-center text-sm text-muted-foreground hover:text-[#1A1D24]">
-                Clear
-              </Link>
-            )}
-          </form>
+          <FilterBar basePath="/inventory" filterParams={['search', 'category', 'location', 'condition', 'cut_length']}>
+            <SearchInput
+              placeholder="Description, brand, serial..."
+              className="w-64 h-9 text-sm"
+            />
+            <FilterSelect paramName="category" className="w-40 h-9 text-sm">
+              <option value="">All Categories</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect paramName="location" className="w-40 h-9 text-sm">
+              <option value="">All Locations</option>
+              {LOCATIONS.map((l) => (
+                <option key={l} value={l}>{l.replace(/_/g, ' ')}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect paramName="condition" className="w-40 h-9 text-sm">
+              <option value="">All Conditions</option>
+              {CONDITIONS.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect paramName="cut_length" className="w-36 h-9 text-sm">
+              <option value="">All</option>
+              <option value="true">Cut-Length Only</option>
+            </FilterSelect>
+          </FilterBar>
         </CardContent>
       </Card>
 

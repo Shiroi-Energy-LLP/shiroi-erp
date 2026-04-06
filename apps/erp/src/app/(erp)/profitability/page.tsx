@@ -4,8 +4,6 @@ import { formatINR } from '@repo/ui/formatters';
 import {
   Card,
   CardContent,
-  Button,
-  Select,
   Badge,
   Table,
   TableHeader,
@@ -17,6 +15,8 @@ import {
   Eyebrow,
 } from '@repo/ui';
 import { BarChart3 } from 'lucide-react';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 const STATUS_OPTIONS = [
   { value: 'planning', label: 'Planning' },
@@ -74,24 +74,14 @@ export default async function ProfitabilityPage({ searchParams }: ProfitabilityP
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-44">
+          <FilterBar basePath="/profitability" filterParams={['status']}>
+            <FilterSelect paramName="status" className="w-44">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
-            </Select>
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {params.status && (
-              <Link href="/profitability">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
-              </Link>
-            )}
-          </form>
+            </FilterSelect>
+          </FilterBar>
         </CardContent>
       </Card>
 

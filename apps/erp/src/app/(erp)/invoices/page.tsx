@@ -1,12 +1,8 @@
-import Link from 'next/link';
 import { getInvoices } from '@/lib/invoice-queries';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
   CardContent,
-  Button,
-  Input,
-  Select,
   Badge,
   Table,
   TableHeader,
@@ -18,6 +14,9 @@ import {
   Eyebrow,
 } from '@repo/ui';
 import { FileText } from 'lucide-react';
+import { SearchInput } from '@/components/search-input';
+import { FilterSelect } from '@/components/filter-select';
+import { FilterBar } from '@/components/filter-bar';
 
 const STATUS_OPTIONS = [
   { value: 'unpaid', label: 'Unpaid' },
@@ -58,30 +57,18 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-44">
+          <FilterBar basePath="/invoices" filterParams={['search', 'status']}>
+            <FilterSelect paramName="status" className="w-44">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
+            </FilterSelect>
+            <SearchInput
               placeholder="Search invoice number..."
-              className="w-60"
+              className="w-60 h-9 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {(params.status || params.search) && (
-              <Link href="/invoices">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
-              </Link>
-            )}
-          </form>
+          </FilterBar>
         </CardContent>
       </Card>
 
