@@ -28,7 +28,17 @@ export async function updateCellValue(input: {
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[updateCellValue]';
 
-  const { entityType, rowId, field, value } = input;
+  const { entityType, rowId, value } = input;
+  let { field } = input;
+
+  // Map display field names to actual DB column names
+  const FIELD_ALIAS_MAP: Record<string, Record<string, string>> = {
+    projects: { remarks: 'notes' },
+  };
+  const alias = FIELD_ALIAS_MAP[entityType]?.[field];
+  if (alias) {
+    field = alias;
+  }
 
   // Validate entity type
   const tableName = ENTITY_TABLE_MAP[entityType];

@@ -54,6 +54,8 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
     ...p,
     project_manager_name: p.employees?.full_name ?? '—',
     site_city: p.site_city ?? '—',
+    year: p.created_at ? new Date(p.created_at).getFullYear().toString() : '—',
+    remarks: p.notes ?? '',
   }));
 
   const currentFilters: Record<string, string> = {};

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects-queries';
 import { getEntityContacts } from '@/lib/contacts-queries';
@@ -5,7 +6,7 @@ import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
 import { ProjectFiles } from '@/components/projects/project-files';
 import { HandoverPack } from '@/components/projects/handover-pack';
 import { getHandoverPack } from '@/lib/handover-actions';
-import { formatINR, formatDate, toIST } from '@repo/ui/formatters';
+import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
   CardHeader,
@@ -14,13 +15,45 @@ import {
   Badge,
   Breadcrumb,
 } from '@repo/ui';
+import { StepSurvey } from '@/components/projects/stepper-steps/step-survey';
+import { StepBom } from '@/components/projects/stepper-steps/step-bom';
+import { StepBoq } from '@/components/projects/stepper-steps/step-boq';
+import { StepDelivery } from '@/components/projects/stepper-steps/step-delivery';
+import { StepExecution } from '@/components/projects/stepper-steps/step-execution';
+import { StepQc } from '@/components/projects/stepper-steps/step-qc';
+import { StepLiaison } from '@/components/projects/stepper-steps/step-liaison';
+import { StepCommissioning } from '@/components/projects/stepper-steps/step-commissioning';
+import { StepAmc } from '@/components/projects/stepper-steps/step-amc';
 
-interface ProjectOverviewPageProps {
+interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
-export default async function ProjectOverviewPage({ params }: ProjectOverviewPageProps) {
+function StepLoadingFallback() {
+  return (
+    <div className="space-y-4">
+      <div className="h-6 w-48 bg-n-150 rounded animate-pulse" />
+      <div className="h-32 bg-n-150 rounded-lg animate-pulse" />
+    </div>
+  );
+}
+
+export default async function ProjectDetailPage({ params, searchParams }: ProjectDetailPageProps) {
   const { id } = await params;
+  const { tab } = await searchParams;
+  const activeTab = tab ?? 'details';
+
+  // For non-details tabs, we only need the project ID
+  if (activeTab !== 'details') {
+    return (
+      <Suspense fallback={<StepLoadingFallback />}>
+        <TabContent projectId={id} tab={activeTab} />
+      </Suspense>
+    );
+  }
+
+  // Details tab — full overview
   const [project, entityContacts, handoverPack] = await Promise.all([
     getProject(id),
     getEntityContacts('project', id),
@@ -36,14 +69,6 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
   const activeMilestones = milestones.filter((m) => m.status === 'in_progress');
 
   return (
-    <div className="space-y-6">
-    <Breadcrumb
-      className="mb-4"
-      items={[
-        { label: 'Projects', href: '/projects' },
-        { label: project.project_number ?? project.customer_name },
-      ]}
-    />
     <div className="grid grid-cols-3 gap-6">
       {/* Left column: System + Timeline */}
       <div className="col-span-2 space-y-6">
@@ -90,12 +115,12 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
             <CardTitle className="text-base">Site Address</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1 text-sm text-[#3E3E3E]">
+            <div className="space-y-1 text-sm text-n-700">
               <p>{project.site_address_line1}</p>
               {project.site_address_line2 && <p>{project.site_address_line2}</p>}
               <p>{project.site_city}, {project.site_state} {project.site_pincode}</p>
               {project.site_latitude && project.site_longitude && (
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-n-500 mt-1">
                   {project.site_latitude}, {project.site_longitude}
                 </p>
               )}
@@ -114,15 +139,15 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
                 {project.ceig_cleared ? (
                   <>
                     <Badge variant="success">Cleared</Badge>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-n-500">
                       {project.ceig_cleared_at ? formatDate(project.ceig_cleared_at) : ''}
                     </span>
                   </>
                 ) : (
                   <>
                     <Badge variant="warning">Pending</Badge>
-                    <span className="text-sm text-[#9A3412]">
-                      Net metering submission is blocked until CEIG clearance is approved (DB trigger enforced).
+                    <span className="text-sm text-orange-700">
+                      Net metering submission is blocked until CEIG clearance is approved.
                     </span>
                   </>
                 )}
@@ -141,7 +166,7 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
               <div className="grid grid-cols-2 gap-4">
                 <InfoItem label="Builder" value={project.builder_name} />
                 <div>
-                  <div className="text-xs text-muted-foreground mb-0.5">Civil Cleared</div>
+                  <div className="text-xs text-n-500 mb-0.5">Civil Cleared</div>
                   {project.builder_civil_cleared ? (
                     <Badge variant="success">Yes</Badge>
                   ) : (
@@ -163,11 +188,11 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Contracted Value</span>
+              <span className="text-n-500">Contracted Value</span>
               <span className="font-mono font-medium">{formatINR(project.contracted_value)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Advance Received</span>
+              <span className="text-n-500">Advance Received</span>
               <span className="font-mono">{formatINR(project.advance_amount)}</span>
             </div>
           </CardContent>
@@ -180,16 +205,16 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Name</span>
+              <span className="text-n-500">Name</span>
               <span className="font-medium">{project.customer_name}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Phone</span>
+              <span className="text-n-500">Phone</span>
               <span className="font-mono">{project.customer_phone}</span>
             </div>
             {project.customer_email && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Email</span>
+                <span className="text-n-500">Email</span>
                 <span>{project.customer_email}</span>
               </div>
             )}
@@ -203,11 +228,11 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Project Manager</span>
+              <span className="text-n-500">Project Manager</span>
               <span>{project.employees?.full_name ?? '—'}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Site Supervisor</span>
+              <span className="text-n-500">Site Supervisor</span>
               <span>{project.pm_supervisor?.full_name ?? '—'}</span>
             </div>
           </CardContent>
@@ -223,7 +248,7 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
               {activeMilestones.map((m) => (
                 <div key={m.id} className="flex justify-between text-sm">
                   <span>{m.milestone_name}</span>
-                  <span className="font-mono text-muted-foreground">{m.completion_pct}%</span>
+                  <span className="font-mono text-n-500">{m.completion_pct}%</span>
                 </div>
               ))}
             </CardContent>
@@ -232,15 +257,15 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
 
         {/* Blocked Milestones Alert */}
         {blockedMilestones.length > 0 && (
-          <Card className="border-[#991B1B]">
+          <Card className="border-red-700">
             <CardHeader>
-              <CardTitle className="text-base text-[#991B1B]">Blocked Milestones</CardTitle>
+              <CardTitle className="text-base text-red-700">Blocked Milestones</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {blockedMilestones.map((m) => (
                 <div key={m.id} className="text-sm">
                   <div className="font-medium">{m.milestone_name}</div>
-                  <div className="text-[#991B1B] text-xs">{m.blocked_reason ?? 'No reason specified'}</div>
+                  <div className="text-red-700 text-xs">{m.blocked_reason ?? 'No reason specified'}</div>
                 </div>
               ))}
             </CardContent>
@@ -254,7 +279,7 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
               <CardTitle className="text-base">Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-[#3E3E3E] whitespace-pre-wrap">{project.notes}</p>
+              <p className="text-sm text-n-700 whitespace-pre-wrap">{project.notes}</p>
             </CardContent>
           </Card>
         )}
@@ -266,15 +291,43 @@ export default async function ProjectOverviewPage({ params }: ProjectOverviewPag
         <EntityContactsCard entityType="project" entityId={id} contacts={entityContacts} />
       </div>
     </div>
-    </div>
   );
 }
+
+// ── Tab content router for non-details tabs ──
+
+function TabContent({ projectId, tab }: { projectId: string; tab: string }) {
+  switch (tab) {
+    case 'survey':
+      return <StepSurvey projectId={projectId} />;
+    case 'bom':
+      return <StepBom projectId={projectId} />;
+    case 'boq':
+      return <StepBoq projectId={projectId} />;
+    case 'delivery':
+      return <StepDelivery projectId={projectId} />;
+    case 'execution':
+      return <StepExecution projectId={projectId} />;
+    case 'qc':
+      return <StepQc projectId={projectId} />;
+    case 'liaison':
+      return <StepLiaison projectId={projectId} />;
+    case 'commissioning':
+      return <StepCommissioning projectId={projectId} />;
+    case 'amc':
+      return <StepAmc projectId={projectId} />;
+    default:
+      return null;
+  }
+}
+
+// ── Helper components ──
 
 function InfoItem({ label, value, capitalize: cap }: { label: string; value: string | null | undefined; capitalize?: boolean }) {
   return (
     <div>
-      <div className="text-xs text-muted-foreground mb-0.5">{label}</div>
-      <div className={`text-sm font-medium text-[#1A1D24] ${cap ? 'capitalize' : ''}`}>
+      <div className="text-xs text-n-500 mb-0.5">{label}</div>
+      <div className={`text-sm font-medium text-n-900 ${cap ? 'capitalize' : ''}`}>
         {value || '—'}
       </div>
     </div>
