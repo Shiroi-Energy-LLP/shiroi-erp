@@ -1,5 +1,5 @@
 # SHIROI ENERGY ERP — MASTER REFERENCE DOCUMENT
-**Version 3.1 | Updated April 3, 2026 | Read before every coding session**
+**Version 3.2 | Updated April 6, 2026 | Read before every coding session**
 
 > This is the single source of truth for the Shiroi Energy ERP project. Every decision made, every design rule, every business rule, every coding standard, and every constraint is captured here. Anyone joining the project — including Claude in a new chat — reads this first before writing a single line of code or SQL.
 
@@ -7,7 +7,7 @@
 
 ## CURRENT STATE — READ THIS FIRST (as of April 3, 2026)
 
-**Phase 1A + 2A + 2B COMPLETE. All 53 screens built. HubSpot + Google Drive migration done. Next: proposal migration + deployment.**
+**Phase 1A + 2A + 2B COMPLETE. All 57+ screens built. HubSpot + Google Drive migration done. Project workflow forms + data flow complete. Next: data cleanup + deployment.**
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -40,9 +40,11 @@
 | Design system v2.1 | ✅ Complete | packages/ui — 11 components (+Checkbox, +Pagination), recharts added to ERP |
 | UI/UX Overhaul R1 | ✅ Complete | 15 improvements: sidebar collapse, Radix Dialog/Sheet/Tabs/Tooltip/Dropdown, Logo, Eyebrow, EmptyState, Skeleton, Breadcrumbs, Form infra, skip-to-content, accessibility, responsive fonts |
 | UI/UX Overhaul R2 | ✅ Complete | 9 items: hex→token purge (45+ files), 15 loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, semantic status tokens |
+| Project workflow forms | ✅ Complete | Interactive forms in all 10 PM stepper tabs, data flows between steps, inline table editing (BOM/BOQ), advance status button |
+| Workflow data flow | ✅ Complete | Survey→BOM auto-nav, BOQ seeded from BOM, Commissioning pre-filled from project, AMC from commissioned_date, Continue→ links throughout |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
-| **Proposal migration** | 🔜 **NEXT** | **1,300 proposals from Google Drive with deduplication, then DB integrity check** |
+| **Data cleanup** | 🔜 **NEXT** | **~3 junk leads to review, name normalization, placeholder phones, then prod deployment** |
 
 **Coding workflow (locked):**
 Claude Code writes code directly in the repo → Vivek reviews every file → git commit and push.
@@ -1193,6 +1195,27 @@ Round 2 (post-audit, 9 items):
 
 Total: 105 files changed, 0 TypeScript errors. Design system: 22 components in packages/ui.
 
+**Project Workflow Forms + Data Flow — COMPLETE ✅ (April 6, 2026)**
+
+Interactive forms added to all 10 PM stepper tabs with data flowing between steps:
+
+- [x] Survey form — create/edit site survey with roof, electrical, recommendation sections → auto-navigates to BOM on submit
+- [x] BOM inline table — add row as `<tr>` inside table (category, description, brand, qty, unit, rate, GST), delete button per row → "Continue to BOQ →"
+- [x] BOQ auto-seed — "Generate BOQ from BOM" button groups BOM lines by category, seeds cost_variances with estimated costs → double-click inline editing for actual costs → "Continue to Delivery →"
+- [x] Delivery challan form — upload DC (number, date, vendor dropdown, received date, status) → "Continue to Execution →"
+- [x] Execution — milestone table with "Continue to QC →"
+- [x] QC inspection form — dynamic checklist (add/remove items, pass/fail per item), milestone selector, result dropdown
+- [x] Liaison — DISCOM/CEIG status display with "Continue to Commissioning →"
+- [x] Commissioning form — pre-fills system_size_kwp + panel_count from project, electrical readings, customer handover checklist → auto-navigates to AMC
+- [x] AMC schedule form — auto-calculates 3 visit dates at 4-month intervals from commissioned_date
+- [x] Advance Status Button — two-click confirmation (click → "Are you sure?"), logs to project_status_history, status chain: advance_received → planning → ... → completed
+
+**Key files:**
+- `src/lib/project-step-actions.ts` — all workflow server actions (~700 lines)
+- `src/lib/project-status-helpers.ts` — sync status helpers (getNextStatus, getStatusLabel)
+- `src/components/projects/advance-status-button.tsx` — status progression UI
+- `src/components/projects/forms/` — survey, bom-line, boq-variance, delivery-challan, qc-inspection, commissioning, amc-schedule forms
+
 ### Phase 2 — Field & Customer (Weeks 13–24)
 - [ ] Offline-first mobile (WatermelonDB)
 - [ ] Photo gates, GPS verification
@@ -1271,6 +1294,7 @@ Total: 105 files changed, 0 TypeScript errors. Design system: 22 components in p
 | QC checklist storage | JSONB accepted for Phase 1. qc_gate_inspections.checklist_items stores array of {item, passed, notes}. Separate qc_checklist_items table deferred to Phase 2 when QC analytics are built. | Mar 2026 |
 | O&M visit corrections | om_visit_corrections table added. Tier 2 correction model (correction-by-new-record) now applies to O&M visit reports after 48h lock, same as daily site reports. | Mar 2026 |
 | Multi-agent tooling | Decided against. No CrewAI, AutoGen, LangGraph. | Mar 2026 |
+| Project workflow forms | Interactive forms in all 10 PM stepper tabs. Data flows forward: Survey→BOM (auto-nav), BOM→BOQ (seed), project→Commissioning (pre-fill), Commissioning→AMC (auto-nav). Inline table editing for BOM/BOQ. Advance status button with two-click confirmation + audit trail. | Apr 2026 |
 | Supabase client architecture | Four files in packages/supabase/src/: client.ts (browser singleton), server.ts (async, Next.js cookies), admin.ts (secret key, no session), middleware.ts (session refresh). All typed against Database. | Mar 2026 |
 | RLS recursion fix | get_my_role() and get_my_employee_id() SECURITY DEFINER functions replace all 200+ recursive subqueries in RLS policies. Migration 008a. NEVER use raw profile/employee subqueries in policies again. | Mar 30, 2026 |
 | handle_new_user trigger fix | Defaults to 'customer' role when metadata missing (previously crashed on NULL cast). | Mar 30, 2026 |
@@ -1433,7 +1457,7 @@ Each role gets a curated sidebar with grouped nav sections (not just a dashboard
 
 **Founder:** Cash-negative projects, pipeline value, pending approvals, overdue reports, payroll countdown. Add: donut chart, revenue trend, team utilization. Role switcher.
 
-**PM + O&M:** KPIs (active projects, system size, open tasks, open tickets). Donut chart by status. Operations widget. Today's priorities. 10-step stepper project detail (Project Details → Site Survey → BOM → BOQ Analysis → Delivery Notes → Execution → Quality Check → Liaison → Commissioning → Free AMC).
+**PM + O&M:** KPIs (active projects, system size, open tasks, open tickets). Donut chart by status. Operations widget. Today's priorities. 10-step stepper project detail (Project Details → Site Survey → BOM → BOQ Analysis → Delivery Notes → Execution → Quality Check → Liaison → Commissioning → Free AMC). **All 10 tabs now have interactive forms** with data flowing between steps (Survey→BOM auto-nav, BOQ seeded from BOM, inline table editing, advance status button with audit trail).
 
 **Site Supervisor:** Active project card, today's report status, my tasks (overdue first), recent reports with lock status. Can access all projects (read-only) for old client lookups. 90-second report form with pre-populated fields.
 

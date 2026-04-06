@@ -41,7 +41,7 @@ export function SurveyForm({ projectId, existing, onCancel }: SurveyFormProps) {
   const router = useRouter();
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [showForm, setShowForm] = React.useState(!!existing);
+  const [showForm, setShowForm] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

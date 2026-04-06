@@ -60,9 +60,8 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
           <Eyebrow className="mb-1">PROCUREMENT</Eyebrow>
           <h1 className="text-2xl font-bold text-[#1A1D24]">Purchase Orders</h1>
         </div>
-        <Link href="/procurement/new">
-          <Button>New PO</Button>
-        </Link>
+        {/* TODO: PO creation form — coming soon */}
+        <Button disabled title="PO creation coming soon">New PO</Button>
       </div>
 
       {/* Filters */}

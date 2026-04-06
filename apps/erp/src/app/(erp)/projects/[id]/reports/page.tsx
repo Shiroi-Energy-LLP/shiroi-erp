@@ -81,7 +81,12 @@ export default async function ReportsPage({ params }: ReportsPageProps) {
                   return (
                     <TableRow key={report.id}>
                       <TableCell className="font-mono text-sm">
-                        {formatDate(report.report_date)}
+                        <Link
+                          href={`/projects/${id}/reports/${report.id}`}
+                          className="text-[#00B050] hover:underline"
+                        >
+                          {formatDate(report.report_date)}
+                        </Link>
                       </TableCell>
                       <TableCell className="text-sm">{submitterName}</TableCell>
                       <TableCell className="text-right font-mono text-sm">
@@ -112,17 +117,23 @@ export default async function ReportsPage({ params }: ReportsPageProps) {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/projects/${id}/reports/${report.id}`}
+                            className="text-xs text-[#00B050] hover:underline"
+                          >
+                            View
+                          </Link>
                           {locked ? (
                             <Link
                               href={`/projects/${id}/reports/${report.id}/correction`}
-                              className="text-xs text-[#00B050] hover:underline"
+                              className="text-xs text-[#7C818E] hover:underline"
                             >
                               Request Correction
                             </Link>
                           ) : (
                             <Link
                               href={`/projects/${id}/reports/${report.id}/edit`}
-                              className="text-xs text-[#00B050] hover:underline"
+                              className="text-xs text-[#7C818E] hover:underline"
                             >
                               Edit
                             </Link>

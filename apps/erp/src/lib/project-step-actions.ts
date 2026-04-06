@@ -42,10 +42,10 @@ export async function createOrUpdateSurvey(input: {
 
   if (!employee) return { success: false, error: 'Employee profile not found' };
 
-  // Get lead_id from project
+  // Get lead_id + current status from project
   const { data: project, error: projectError } = await supabase
     .from('projects')
-    .select('lead_id')
+    .select('lead_id, status')
     .eq('id', input.projectId)
     .single();
 
@@ -95,6 +95,30 @@ export async function createOrUpdateSurvey(input: {
     if (error) {
       console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
       return { success: false, error: error.message };
+    }
+  }
+
+  // Auto-advance project status: advance_received → planning when survey is first created
+  if (!input.surveyId && project.status === 'advance_received') {
+    const nextStatus = getNextStatus(project.status as string);
+    if (nextStatus) {
+      console.log(`${op} Auto-advancing project status: ${project.status} → ${nextStatus}`);
+      await supabase
+        .from('projects')
+        .update({ status: nextStatus } as any)
+        .eq('id', input.projectId)
+        .eq('status', project.status as any); // optimistic lock
+
+      // Log status change in history
+      await supabase
+        .from('project_status_history')
+        .insert({
+          project_id: input.projectId,
+          old_status: project.status,
+          new_status: nextStatus,
+          changed_by: employee.id,
+          notes: 'Auto-advanced: site survey completed',
+        } as any);
     }
   }
 
