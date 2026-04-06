@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects-queries';
 import { ProjectStatusBadge } from '@/components/projects/project-status-badge';
 import { ProjectTabs } from '@/components/projects/project-tabs';
+import { AdvanceStatusButton } from '@/components/projects/advance-status-button';
 import { formatINR } from '@repo/ui/formatters';
 
 interface ProjectDetailLayoutProps {
@@ -63,6 +64,9 @@ export default async function ProjectDetailLayout({ params, children }: ProjectD
           )}
         </div>
       </div>
+
+      {/* Advance Status */}
+      <AdvanceStatusButton projectId={id} currentStatus={project.status} />
 
       {/* Tabs */}
       <ProjectTabs projectId={id} />

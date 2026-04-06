@@ -1,21 +1,37 @@
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 import { getStepCommissioningData } from '@/lib/project-stepper-queries';
+import { getProjectForCommissioning } from '@/lib/project-step-actions';
 import { Zap } from 'lucide-react';
+import { CommissioningForm } from '@/components/projects/forms/commissioning-form';
 
 interface StepCommissioningProps {
   projectId: string;
 }
 
 export async function StepCommissioning({ projectId }: StepCommissioningProps) {
-  const report = await getStepCommissioningData(projectId);
+  const [report, projectInfo] = await Promise.all([
+    getStepCommissioningData(projectId),
+    getProjectForCommissioning(projectId),
+  ]);
 
+  const defaults = {
+    system_size_kwp: projectInfo?.system_size_kwp ?? 0,
+    panel_count: projectInfo?.panel_count ?? 0,
+    inverter_brand: projectInfo?.inverter_brand ?? null,
+    inverter_model: projectInfo?.inverter_model ?? null,
+  };
+
+  // Only show creation form if no report exists
   if (!report) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <Zap className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
-        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Commissioning Report</h3>
-        <p className="text-[13px] text-[#7C818E]">The commissioning report will appear here once the system is commissioned.</p>
+      <div>
+        <CommissioningForm projectId={projectId} defaults={defaults} />
+        <div className="flex flex-col items-center justify-center py-16">
+          <Zap className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
+          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Commissioning Report</h3>
+          <p className="text-[13px] text-[#7C818E]">Click &quot;Create Commissioning Report&quot; above to record commissioning data.</p>
+        </div>
       </div>
     );
   }
@@ -56,7 +72,6 @@ export async function StepCommissioning({ projectId }: StepCommissioningProps) {
           <InfoRow label="AC Frequency" value={report.ac_frequency_hz !== null ? `${report.ac_frequency_hz} Hz` : null} />
           <InfoRow label="Earth Resistance" value={report.earth_resistance_ohm !== null ? `${report.earth_resistance_ohm} \u03A9` : null} />
 
-          {/* IR Reading with warning */}
           <div className="flex justify-between text-sm items-center">
             <span className="text-[#7C818E]">Insulation Resistance</span>
             <span className={`font-mono font-medium ${irLow ? 'text-[#991B1B]' : 'text-[#1A1D24]'}`}>

@@ -17,7 +17,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 ---
 
-## CURRENT STATE (as of April 5, 2026)
+## CURRENT STATE (as of April 6, 2026)
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -71,11 +71,12 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Route fix (deployment) | ✅ Complete | Added missing page.tsx for /om and /projects/[id]/reports/[reportId] — fixed parallelRoutes.get TypeError |
 | PM corrections | ✅ Complete | 7 items from PM feedback: project tab restructure (10 workflow tabs as primary), column defaults (Year+Remarks visible, hide Contract Value+PM), sidebar (Liaison, My Tasks, My Reports), creation forms (Tasks, Service Tickets, AMC) |
 | PM RLS + data fix | ✅ Complete | project_manager added to blanket read access; all 314 projects assigned to Manivel as PM |
+| Project workflow forms | ✅ Complete | Interactive forms in all 10 project tabs: Survey (create/edit), BOM (add/delete lines), BOQ (add/update cost variances), QC (inspection form with dynamic checklist), Commissioning (full report form with electrical readings + handover), AMC (schedule 3 free visits). Status advancement button on layout (PM can push project from one step to next). |
 | Data cleanup | 🔜 Next | ~3 junk leads to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
-Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented.
+Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Project workflow forms complete (Survey, BOM, BOQ, QC, Commissioning, AMC forms + status advancement).
 Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
 ---
@@ -430,6 +431,26 @@ Format: `SHIROI/INV/2025-26/0042`
 - `src/lib/views-actions.ts` — server actions for view CRUD
 - `src/lib/inline-edit-actions.ts` — server action for inline cell editing
 - Wrapper components: `leads-table-wrapper.tsx`, `proposals-table-wrapper.tsx`, `projects-table-wrapper.tsx`, `contacts-table-wrapper.tsx`, `companies-table-wrapper.tsx`
+
+### Project Workflow Forms — Interactive (April 6, 2026)
+
+**Architecture:** Each of the 10 project workflow tabs now has interactive create/edit forms. Server actions in `project-step-actions.ts` handle all mutations. A status advancement button on the project layout lets the PM push projects through the workflow.
+
+**Key features:**
+- Survey form: create/edit with Roof & Structure, Electrical & Load, Recommendation sections
+- BOM editor: add/delete line items (linked to proposal_bom_lines)
+- BOQ tracker: add cost entries, update actual costs vs estimates (project_cost_variances)
+- QC inspection form: dynamic checklist (add/remove items), pass/fail per item, milestone selector
+- Commissioning report form: electrical readings, customer handover checklist, auto-draft status
+- AMC scheduler: 3 free visits at 4-month intervals from commissioning date
+- Status advancement: two-click confirm to advance project through status chain (advance_received → planning → ... → completed)
+
+**Files:**
+- Server actions: `src/lib/project-step-actions.ts` — Survey CRUD, QC CRUD, Commissioning CRUD, BOM CRUD, BOQ CRUD, status advancement
+- Status helpers: `src/lib/project-status-helpers.ts` — getNextStatus(), getStatusLabel()
+- Forms: `src/components/projects/forms/survey-form.tsx`, `qc-inspection-form.tsx`, `commissioning-form.tsx`, `amc-schedule-form.tsx`, `bom-line-form.tsx`, `boq-variance-form.tsx`
+- Advance button: `src/components/projects/advance-status-button.tsx`
+- Updated stepper steps: `src/components/projects/stepper-steps/step-*.tsx` (all 10 now include forms)
 
 ### Field friction standards (mobile screens)
 
