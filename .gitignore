@@ -36,3 +36,10 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Claude Code
+.auto-claude/
+.claude/
+
+# Supabase temp
+supabase/.temp/
