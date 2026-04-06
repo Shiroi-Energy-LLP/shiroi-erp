@@ -69,6 +69,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | UI/UX Overhaul R1 | ✅ Complete | 15 improvements: Logo SVG, Eyebrow, EmptyState (23 pages), Skeleton (7 loading.tsx), Breadcrumbs (4 detail pages), Radix Dialog upgrade, Sheet/Tooltip/DropdownMenu/Tabs, sidebar collapse+mobile drawer, table overflow, toast notifications, Form component (react-hook-form+Zod), column picker drag-drop feedback, skip-to-content, visited links, responsive fonts, reduced motion |
 | UI/UX Overhaul R2 | 🔜 In Progress | Color token cleanup (339 hex→token replacements), remaining EmptyState (15), loading.tsx (~15), Eyebrow (25), Breadcrumbs (4), Toast (4), form conversions (4) |
 | Route fix (deployment) | ✅ Complete | Added missing page.tsx for /om and /projects/[id]/reports/[reportId] — fixed parallelRoutes.get TypeError |
+| PM corrections | ✅ Complete | 7 items from PM feedback: project tab restructure (10 workflow tabs as primary), column defaults (Year+Remarks visible, hide Contract Value+PM), sidebar (Liaison, My Tasks, My Reports), creation forms (Tasks, Service Tickets, AMC) |
+| PM RLS + data fix | ✅ Complete | project_manager added to blanket read access; all 314 projects assigned to Manivel as PM |
 | Data cleanup | 🔜 Next | ~3 junk leads to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
@@ -505,4 +507,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 5, 2026 — Contact dedup (284 merged), backfill (364 leads linked), DataTable on all entity pages (projects/contacts/companies converted), inline editing (double-click-to-edit cells), route fix (missing /om and /reports/[reportId] pages causing parallelRoutes error). Next: data cleanup, prod deployment.*
+*Last updated: April 5, 2026 — PM corrections complete: 10-tab project detail (Details→Survey→BOM→BOQ→Delivery→Execution→QC→Liaison→Commissioning→AMC as primary tabs), column defaults (Year+Remarks visible), PM sidebar (Liaison, My Tasks, My Reports), creation forms (Tasks, Service Tickets, AMC Schedule), PM RLS fix (blanket read access), Manivel assigned as PM on all 314 projects. Contact dedup (284 merged), backfill (364 linked), DataTable on all entities, inline editing, route fixes. Next: data cleanup, prod deployment.*

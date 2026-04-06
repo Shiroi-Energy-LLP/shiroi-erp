@@ -1529,8 +1529,15 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Contact dedup completed: 284 duplicate groups merged by phone, 0 remaining duplicates
 - Backfill retry completed: 364 leads linked to contacts, 3 junk leads excluded
 - Route fix: added missing page.tsx for /om (redirect to /om/visits) and /projects/[id]/reports/[reportId] (redirect to reports list) — fixed parallelRoutes.get TypeError on production
+- PM corrections (April 5, 2026):
+  - Project detail: 10 workflow tabs as primary tabs (Details, Survey, BOM, BOQ, Delivery, Execution, QC, Liaison, Commissioning, Free AMC); auxiliary pages in "More" dropdown
+  - Projects DataTable: Year + Remarks columns; Contract Value + PM hidden by default
+  - PM sidebar: Liaison, Net Metering, My Tasks, My Reports added
+  - Creation forms: Tasks, Service Tickets, AMC Schedule dialogs
+  - PM RLS: project_manager blanket read access; Migration 019 applied
+  - All 314 projects assigned Manivel as project_manager_id
 - TypeScript types regenerated with all new tables/columns, all `as any` workarounds removed
-- Migration file count: 30 files (001 through 018)
+- Migration file count: 31 files (001 through 019)
 
 **What changed in v3.5 (UI/UX Overhaul):**
 - packages/ui upgraded to v2.2: 22 components (11 new), all built on Radix UI primitives
