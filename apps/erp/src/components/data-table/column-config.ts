@@ -61,7 +61,10 @@ export const LEAD_COLUMNS: ColumnDef[] = [
   { key: 'pincode', label: 'Pincode', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
   { key: 'is_qualified', label: 'Qualified', defaultVisible: false, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }] },
-  { key: 'next_followup_date', label: 'Next Follow-up', sortKey: 'next_followup_date', defaultVisible: false, sortable: true, editable: true, fieldType: 'date', format: 'date' },
+  { key: 'expected_close_date', label: 'Expected Close', sortKey: 'expected_close_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'date', format: 'date' },
+  { key: 'close_probability', label: 'Probability %', sortKey: 'close_probability', defaultVisible: true, sortable: true, editable: true, fieldType: 'number', format: 'percentage' },
+  { key: 'weighted_value', label: 'Weighted Value', defaultVisible: false, sortable: false, editable: false, fieldType: 'currency', format: 'currency' },
+  { key: 'next_followup_date', label: 'Next Follow-up', sortKey: 'next_followup_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'date', format: 'date' },
 ];
 
 // ── Proposals columns ──

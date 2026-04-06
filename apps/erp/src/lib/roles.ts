@@ -80,8 +80,8 @@ const ITEMS = {
 // ---------------------------------------------------------------------------
 const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   founder: [
-    { label: 'Overview',     items: [ITEMS.dashboard] },
-    { label: 'Sales',        items: [ITEMS.leads, ITEMS.proposals, ITEMS.marketing, ITEMS.liaison] },
+    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
+    { label: 'Sales',        items: [ITEMS.leads, ITEMS.proposals, ITEMS.liaison] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
@@ -109,9 +109,8 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Projects',     items: [ITEMS.projects] },
   ],
   sales_engineer: [
-    { label: 'Overview',     items: [ITEMS.dashboard] },
+    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Sales',        items: [ITEMS.leads, ITEMS.proposals] },
-    { label: 'Marketing',    items: [ITEMS.campaigns] },
     { label: 'Liaison',      items: [ITEMS.netMetering] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
   ],

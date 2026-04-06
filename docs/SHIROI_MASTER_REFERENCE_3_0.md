@@ -1,13 +1,13 @@
 # SHIROI ENERGY ERP — MASTER REFERENCE DOCUMENT
-**Version 3.2 | Updated April 6, 2026 | Read before every coding session**
+**Version 3.4 | Updated April 6, 2026 | Read before every coding session**
 
 > This is the single source of truth for the Shiroi Energy ERP project. Every decision made, every design rule, every business rule, every coding standard, and every constraint is captured here. Anyone joining the project — including Claude in a new chat — reads this first before writing a single line of code or SQL.
 
 ---
 
-## CURRENT STATE — READ THIS FIRST (as of April 3, 2026)
+## CURRENT STATE — READ THIS FIRST (as of April 6, 2026)
 
-**Phase 1A + 2A + 2B COMPLETE. All 57+ screens built. HubSpot + Google Drive migration done. Project workflow forms + data flow complete. Next: data cleanup + deployment.**
+**Phase 1A + 2A + 2B + 2C COMPLETE. All 60+ screens built. HubSpot cutover done. Marketing redesign + Payments overview complete. Next: Marketing manager feedback + prod deployment.**
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -16,15 +16,19 @@
 | Next.js ERP app | ✅ Running | apps/erp on localhost:3000 |
 | Supabase dev | ✅ Live | actqtzoxjilqnldnacqz.supabase.co |
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
-| Database schema | ✅ Complete | 134 tables, 91 triggers, RLS on all tables |
-| TypeScript types | ✅ Generated | packages/types/database.ts |
-| Migrations | ✅ Committed | supabase/migrations/ — 28 files (001 through 012) |
+| Database schema | ✅ Complete | 137+ tables, 91+ triggers, RLS on all tables |
+| TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 6 with pipeline fields |
+| Migrations | ✅ Committed | supabase/migrations/ — 32 files (001 through 021) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware |
 | Design system | ✅ V2.2 Complete | packages/ui — 22 components (11 new in R1+R2), Radix primitives, form infra, skeleton loading, Logo/Eyebrow patterns |
 | Auth + App Shell | ✅ Complete | Login w/ Logo, collapsible sidebar (desktop toggle + mobile hamburger/Sheet), skip-to-content, topbar with role switcher |
 | Phase 1A Screens | ✅ Complete | Founder dashboard, leads, proposals, projects, procurement, cash, HR, daily reports |
 | Phase 2A Dashboards | ✅ Complete | 8 role-adaptive dashboards, PM 10-step stepper, founder role switcher |
-| Phase 2B All Screens | ✅ Complete | 53 routes total — all sidebar links are real data-driven pages, 0 placeholders |
+| Phase 2B All Screens | ✅ Complete | 60+ routes total — all sidebar links are real data-driven pages, 0 placeholders |
+| Marketing redesign | ✅ Complete | Stage-based leads pipeline, weighted KPIs, tabbed lead detail, task-centric follow-ups, mandatory follow-up dates, payment follow-up trigger |
+| Payments overview | ✅ Complete | Project payments tracker: P&L, payment stages, next milestone, expected collections, invested vs received |
+| Migration 020 | ✅ Applied (dev) | Pipeline fields: expected_close_date, close_probability, is_archived on leads |
+| Migration 021 | ✅ Applied (dev) | Payment follow-up trigger: auto-creates tasks when project hits payment milestones |
 | Sentry | ✅ Live | @sentry/nextjs v10, client+server+edge+onRequestError, DSN configured |
 | Migration 010 | ✅ Applied (dev) | lead_status 'converted' + project_site_expenses + project-files bucket |
 | Migration 011 | ✅ Applied (dev) | lead_status 'design_confirmed' enum value (after proposal_sent) |
@@ -40,12 +44,11 @@
 | Design system v2.1 | ✅ Complete | packages/ui — 11 components (+Checkbox, +Pagination), recharts added to ERP |
 | UI/UX Overhaul R1 | ✅ Complete | 15 improvements: sidebar collapse, Radix Dialog/Sheet/Tabs/Tooltip/Dropdown, Logo, Eyebrow, EmptyState, Skeleton, Breadcrumbs, Form infra, skip-to-content, accessibility, responsive fonts |
 | UI/UX Overhaul R2 | ✅ Complete | 9 items: hex→token purge (45+ files), 15 loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, semantic status tokens |
-| Project workflow forms | ✅ Complete | Interactive forms in all 10 PM stepper tabs, data flows between steps, inline table editing (BOM/BOQ), advance status button |
-| Workflow data flow | ✅ Complete | Survey→BOM auto-nav, BOQ seeded from BOM, Commissioning pre-filled from project, AMC from commissioned_date, Continue→ links throughout |
-| Audit fixes | ✅ Complete | Migration 019 (storage buckets), report detail+edit+photos pages, broken links fixed, 4 orphaned pages deleted |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
-| **Data cleanup** | 🔜 **NEXT** | **~3 junk leads to review, name normalization, placeholder phones, then prod deployment** |
+| Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
+| Data cleanup | 🔜 Next | ~3 junk leads to review, name normalization, placeholder phones |
+| Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
 **Coding workflow (locked):**
 Claude Code writes code directly in the repo → Vivek reviews every file → git commit and push.
@@ -1196,27 +1199,6 @@ Round 2 (post-audit, 9 items):
 
 Total: 105 files changed, 0 TypeScript errors. Design system: 22 components in packages/ui.
 
-**Project Workflow Forms + Data Flow — COMPLETE ✅ (April 6, 2026)**
-
-Interactive forms added to all 10 PM stepper tabs with data flowing between steps:
-
-- [x] Survey form — create/edit site survey with roof, electrical, recommendation sections → auto-navigates to BOM on submit
-- [x] BOM inline table — add row as `<tr>` inside table (category, description, brand, qty, unit, rate, GST), delete button per row → "Continue to BOQ →"
-- [x] BOQ auto-seed — "Generate BOQ from BOM" button groups BOM lines by category, seeds cost_variances with estimated costs → double-click inline editing for actual costs → "Continue to Delivery →"
-- [x] Delivery challan form — upload DC (number, date, vendor dropdown, received date, status) → "Continue to Execution →"
-- [x] Execution — milestone table with "Continue to QC →"
-- [x] QC inspection form — dynamic checklist (add/remove items, pass/fail per item), milestone selector, result dropdown
-- [x] Liaison — DISCOM/CEIG status display with "Continue to Commissioning →"
-- [x] Commissioning form — pre-fills system_size_kwp + panel_count from project, electrical readings, customer handover checklist → auto-navigates to AMC
-- [x] AMC schedule form — auto-calculates 3 visit dates at 4-month intervals from commissioned_date
-- [x] Advance Status Button — two-click confirmation (click → "Are you sure?"), logs to project_status_history, status chain: advance_received → planning → ... → completed
-
-**Key files:**
-- `src/lib/project-step-actions.ts` — all workflow server actions (~700 lines)
-- `src/lib/project-status-helpers.ts` — sync status helpers (getNextStatus, getStatusLabel)
-- `src/components/projects/advance-status-button.tsx` — status progression UI
-- `src/components/projects/forms/` — survey, bom-line, boq-variance, delivery-challan, qc-inspection, commissioning, amc-schedule forms
-
 ### Phase 2 — Field & Customer (Weeks 13–24)
 - [ ] Offline-first mobile (WatermelonDB)
 - [ ] Photo gates, GPS verification
@@ -1295,7 +1277,6 @@ Interactive forms added to all 10 PM stepper tabs with data flowing between step
 | QC checklist storage | JSONB accepted for Phase 1. qc_gate_inspections.checklist_items stores array of {item, passed, notes}. Separate qc_checklist_items table deferred to Phase 2 when QC analytics are built. | Mar 2026 |
 | O&M visit corrections | om_visit_corrections table added. Tier 2 correction model (correction-by-new-record) now applies to O&M visit reports after 48h lock, same as daily site reports. | Mar 2026 |
 | Multi-agent tooling | Decided against. No CrewAI, AutoGen, LangGraph. | Mar 2026 |
-| Project workflow forms | Interactive forms in all 10 PM stepper tabs. Data flows forward: Survey→BOM (auto-nav), BOM→BOQ (seed), project→Commissioning (pre-fill), Commissioning→AMC (auto-nav). Inline table editing for BOM/BOQ. Advance status button with two-click confirmation + audit trail. | Apr 2026 |
 | Supabase client architecture | Four files in packages/supabase/src/: client.ts (browser singleton), server.ts (async, Next.js cookies), admin.ts (secret key, no session), middleware.ts (session refresh). All typed against Database. | Mar 2026 |
 | RLS recursion fix | get_my_role() and get_my_employee_id() SECURITY DEFINER functions replace all 200+ recursive subqueries in RLS policies. Migration 008a. NEVER use raw profile/employee subqueries in policies again. | Mar 30, 2026 |
 | handle_new_user trigger fix | Defaults to 'customer' role when metadata missing (previously crashed on NULL cast). | Mar 30, 2026 |
@@ -1458,7 +1439,7 @@ Each role gets a curated sidebar with grouped nav sections (not just a dashboard
 
 **Founder:** Cash-negative projects, pipeline value, pending approvals, overdue reports, payroll countdown. Add: donut chart, revenue trend, team utilization. Role switcher.
 
-**PM + O&M:** KPIs (active projects, system size, open tasks, open tickets). Donut chart by status. Operations widget. Today's priorities. 10-step stepper project detail (Project Details → Site Survey → BOM → BOQ Analysis → Delivery Notes → Execution → Quality Check → Liaison → Commissioning → Free AMC). **All 10 tabs now have interactive forms** with data flowing between steps (Survey→BOM auto-nav, BOQ seeded from BOM, inline table editing, advance status button with audit trail).
+**PM + O&M:** KPIs (active projects, system size, open tasks, open tickets). Donut chart by status. Operations widget. Today's priorities. 10-step stepper project detail (Project Details → Site Survey → BOM → BOQ Analysis → Delivery Notes → Execution → Quality Check → Liaison → Commissioning → Free AMC).
 
 **Site Supervisor:** Active project card, today's report status, my tasks (overdue first), recent reports with lock status. Can access all projects (read-only) for old client lookups. 90-second report form with pre-populated fields.
 
@@ -1554,15 +1535,8 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Contact dedup completed: 284 duplicate groups merged by phone, 0 remaining duplicates
 - Backfill retry completed: 364 leads linked to contacts, 3 junk leads excluded
 - Route fix: added missing page.tsx for /om (redirect to /om/visits) and /projects/[id]/reports/[reportId] (redirect to reports list) — fixed parallelRoutes.get TypeError on production
-- PM corrections (April 5, 2026):
-  - Project detail: 10 workflow tabs as primary tabs (Details, Survey, BOM, BOQ, Delivery, Execution, QC, Liaison, Commissioning, Free AMC); auxiliary pages in "More" dropdown
-  - Projects DataTable: Year + Remarks columns; Contract Value + PM hidden by default
-  - PM sidebar: Liaison, Net Metering, My Tasks, My Reports added
-  - Creation forms: Tasks, Service Tickets, AMC Schedule dialogs
-  - PM RLS: project_manager blanket read access; Migration 019 applied
-  - All 314 projects assigned Manivel as project_manager_id
 - TypeScript types regenerated with all new tables/columns, all `as any` workarounds removed
-- Migration file count: 31 files (001 through 019)
+- Migration file count: 30 files (001 through 018)
 
 **What changed in v3.5 (UI/UX Overhaul):**
 - packages/ui upgraded to v2.2: 22 components (11 new), all built on Radix UI primitives
@@ -1576,6 +1550,25 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - All hardcoded hex colors replaced with Tailwind tokens across 45+ files
 - Status badge colors use semantic status-* tokens
 - Column picker drag-drop: state-based tracking with visual feedback
+- 0 TypeScript errors across entire monorepo
+
+**What changed in v3.4 (Apr 6, 2026):**
+- Marketing redesign: 20-task implementation — stage-based leads pipeline, weighted pipeline KPIs, tab-based lead detail
+- Lead detail tabs: Details, Activities, Tasks, Proposal, Files, Payments (conditional on won/converted)
+- Task-centric workflow: Quick-add tasks on lead, complete-task button, mandatory follow-up dates on status changes
+- Default close probabilities: auto-set on status change (new=5%, qualified=20%, site_visit=40%, proposal_sent=50%, negotiation=75%, won=100%)
+- Pipeline queries: getLeadStageCounts(), getLeadsClosingBetween() with weighted values using decimal.js
+- Lead archival: is_archived flag, archive/unarchive server actions, "Archived" tab in stage nav
+- Status change enforces next_followup_date for non-terminal statuses
+- Migration 020: expected_close_date, close_probability, is_archived on leads + performance indexes
+- Migration 021: create_payment_followup_tasks() trigger — auto-creates high-priority tasks when project status advances to payment milestone stages
+- Payments overview page: /payments rewritten as project payments tracker with layout + tab nav (Project Payments / Receipts)
+- Payments summary: Total Contracted, Received, Outstanding, Invested, Net Position, Expected This Week/Month
+- Payments table: project value, received, outstanding, payment stage (e.g. "2/4 Paid"), next milestone, P&L, PM
+- Old /marketing and /marketing/campaigns pages removed, sidebar updated
+- New files: leads-pipeline-queries.ts, leads-task-actions.ts, payments-overview-queries.ts, lead-stage-nav.tsx, pipeline-summary.tsx, lead-tabs.tsx, quick-add-task.tsx, complete-task-button.tsx, lead-files-list.tsx, payments-nav.tsx
+- Modified: leads-queries.ts, leads-helpers.ts, leads-actions.ts, status-change.tsx, add-activity-form.tsx, column-config.ts, roles.ts
+- Types regenerated with pipeline fields
 - 0 TypeScript errors across entire monorepo
 
 **What changed in v3.3:**

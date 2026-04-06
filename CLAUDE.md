@@ -27,8 +27,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Supabase dev | ✅ Live | actqtzoxjilqnldnacqz.supabase.co |
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
 | Database schema | ✅ Complete | 137+ tables, 91+ triggers, RLS on ALL tables |
-| TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 4 with contacts V2 + table_views |
-| Migrations | ✅ Committed | supabase/migrations/ — 31 files (001 through 019) |
+| TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 6 with pipeline fields (expected_close_date, close_probability, is_archived) |
+| Migrations | ✅ Committed | supabase/migrations/ — 32 files (001 through 021) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, 22 components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + original 11) |
 | Auth + App Shell | ✅ Complete | Login (with logo), middleware, collapsible sidebar (240px/60px + mobile drawer), topbar with role switcher, skip-to-content |
@@ -55,7 +55,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Proposal engine | ✅ Implemented | Quick Quote, BOM generator (9 tests), budgetary + detailed PDF (10 pages), savings page, price override modal, PDF API route, notifications CRUD |
 | Proposal files | ✅ Complete | Upload/download files on proposal detail page via Supabase Storage |
 | Leads filtering | ✅ Complete | Converted leads hidden by default, visible via filter |
-| Leads page v2 | ✅ Complete | HubSpot-style DataTable with column picker, saved views, 16 configurable columns |
+| Leads page v3 | ✅ Complete | Stage-based pipeline nav, weighted pipeline summary, 19 configurable columns (added expected_close_date, close_probability, weighted_value) |
 | Proposals page v2 | ✅ Complete | HubSpot-style DataTable with column picker, saved views, 12 configurable columns |
 | PM Dashboard v2 | ✅ Complete | Correct KPIs (System Size, Clients, Sales, Profit %), donut chart, operations widget, dark today panel |
 | Vercel + domain | ✅ Live | erp.shiroienergy.com — deployed against DEV Supabase, auto-deploys on push |
@@ -69,17 +69,15 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | UI/UX Overhaul R1 | ✅ Complete | 15 improvements: Logo SVG, Eyebrow, EmptyState (23 pages), Skeleton (7 loading.tsx), Breadcrumbs (4 detail pages), Radix Dialog upgrade, Sheet/Tooltip/DropdownMenu/Tabs, sidebar collapse+mobile drawer, table overflow, toast notifications, Form component (react-hook-form+Zod), column picker drag-drop feedback, skip-to-content, visited links, responsive fonts, reduced motion |
 | UI/UX Overhaul R2 | 🔜 In Progress | Color token cleanup (339 hex→token replacements), remaining EmptyState (15), loading.tsx (~15), Eyebrow (25), Breadcrumbs (4), Toast (4), form conversions (4) |
 | Route fix (deployment) | ✅ Complete | Added missing page.tsx for /om and /projects/[id]/reports/[reportId] — fixed parallelRoutes.get TypeError |
-| PM corrections | ✅ Complete | 7 items from PM feedback: project tab restructure (10 workflow tabs as primary), column defaults (Year+Remarks visible, hide Contract Value+PM), sidebar (Liaison, My Tasks, My Reports), creation forms (Tasks, Service Tickets, AMC) |
-| PM RLS + data fix | ✅ Complete | project_manager added to blanket read access; all 314 projects assigned to Manivel as PM |
-| Project workflow forms | ✅ Complete | Interactive forms in all 10 project tabs: Survey (create/edit), BOM (inline table with Add Row), BOQ (auto-seeded from BOM, inline actual cost edit), QC (inspection form with dynamic checklist), Commissioning (full report with electrical readings + handover), AMC (schedule 3 free visits). Status advancement button on layout. |
-| Workflow data flow | ✅ Complete | Connected all 10 tabs: Survey→BOM auto-nav, BOM inline Add Row + Continue→BOQ, BOQ "Generate from BOM" auto-seeds categories + double-click actual cost edit + Continue→Delivery, Delivery Upload DC form + Continue→Execution, Execution→QC→Liaison→Commissioning→AMC navigation chain. Commissioning pre-fills from project, auto-navs to AMC. AMC auto-pulls commissioned_date. |
-| Migration 019 | ✅ Applied (dev) | `site-photos` storage bucket + RLS (proposal-files already existed from migration 013) |
-| Audit fixes | ✅ Complete | Report detail page (was redirect), report edit page (new), report photos component, broken links fixed, 4 orphaned pages deleted, survey auto-advance status |
+| Marketing redesign | ✅ Complete | Stage-based leads pipeline, weighted pipeline KPIs, tab-based lead detail (Details/Activities/Tasks/Proposal/Files/Payments), task-centric follow-up workflow, mandatory follow-up dates, default close probabilities |
+| Payments overview page | ✅ Complete | Project payments tracker with P&L, payment stages, next milestone amounts, expected collections this week/month, invested vs received, filter by active/outstanding |
+| Migration 020 | ✅ Applied (dev) | Pipeline fields: expected_close_date, close_probability, is_archived on leads + indexes |
+| Migration 021 | ✅ Applied (dev) | Payment follow-up trigger: auto-creates tasks when project reaches payment milestone stages |
 | Data cleanup | 🔜 Next | ~3 junk leads to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
-Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Project workflow forms + data flow complete (all 10 tabs connected, data flows from each step to the next).
+Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign (20 tasks) complete.
 Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
 ---
@@ -299,7 +297,6 @@ Never log: `bank_account_number`, `aadhar_number`, `pan_number`, `gross_monthly`
 8. **Never write SQL** directly inside React components or page files
 9. **Never push** directly to main — feature branch → PR → review → merge (once branching is set up)
 10. **Never run** untested migrations on prod — dev first, verify, then prod
-11. **Never execute SQL changes** (DDL, RLS policy changes, data migrations) without creating a corresponding migration file in `supabase/migrations/`. Every SQL change must be documented as a numbered migration file immediately — this is the source of truth for the schema.
 
 ---
 
@@ -387,11 +384,11 @@ Format: `SHIROI/INV/2025-26/0042`
 - ✅ Vendors: `/vendors` (full vendor list with search/filter)
 - ✅ Tasks: `/tasks` (all tasks across entities), `/my-tasks` (personal)
 - ✅ Daily Reports: `/daily-reports` (all), `/my-reports` (personal)
-- ✅ Finance: `/invoices`, `/payments`, `/profitability`, `/cash`
+- ✅ Finance: `/invoices`, `/payments` (tabbed: project payments overview + receipts), `/profitability`, `/cash`
 - ✅ QC: `/qc-gates` (gate inspections)
 - ✅ HR: `/hr/employees`, `/hr/leave`, `/hr/training`, `/hr/certifications`, `/hr/payroll`
 - ✅ O&M: `/om/visits`, `/om/tickets`, `/om/amc`
-- ✅ Sales: `/leads`, `/proposals`, `/marketing`, `/marketing/campaigns`
+- ✅ Sales: `/leads` (stage-based pipeline), `/leads/[id]` (tabbed detail: details/activities/tasks/proposal/files/payments), `/proposals`
 - ✅ Liaison: `/liaison`, `/liaison/net-metering`
 - ✅ Design: `/design` (design queue from leads), `/design/[leadId]`
 - ✅ Reference: `/price-book`
@@ -434,29 +431,6 @@ Format: `SHIROI/INV/2025-26/0042`
 - `src/lib/views-actions.ts` — server actions for view CRUD
 - `src/lib/inline-edit-actions.ts` — server action for inline cell editing
 - Wrapper components: `leads-table-wrapper.tsx`, `proposals-table-wrapper.tsx`, `projects-table-wrapper.tsx`, `contacts-table-wrapper.tsx`, `companies-table-wrapper.tsx`
-
-### Project Workflow Forms + Data Flow — Interactive (April 6, 2026)
-
-**Architecture:** Each of the 10 project workflow tabs has interactive create/edit forms with data flowing from one step to the next. Server actions in `project-step-actions.ts` handle all mutations. A status advancement button on the project layout lets the PM push projects through the workflow.
-
-**Data flow chain:**
-- **Survey** → on submit, auto-navigates to BOM tab
-- **BOM** → inline table with "+ Add Row" at bottom, delete on hover, "Continue to BOQ →" link
-- **BOQ** → "Generate BOQ from BOM" button auto-seeds all BOM categories as estimated costs; only actual cost is editable (double-click inline); "Continue to Delivery →" link
-- **Delivery** → "Upload DC" form with vendor dropdown; "Continue to Execution →" link
-- **Execution** → "Continue to QC →" link
-- **QC** → inspection form with dynamic checklist, milestone selector
-- **Liaison** → "Continue to Commissioning →" link
-- **Commissioning** → pre-fills system size + panel count from project data; on submit auto-navigates to AMC tab
-- **AMC** → auto-pulls commissioned_date for 4-month interval visit scheduling
-- **Status advancement** → two-click confirm to advance project through status chain (advance_received → planning → ... → completed)
-
-**Files:**
-- Server actions: `src/lib/project-step-actions.ts` — Survey CRUD, QC CRUD, Commissioning CRUD, BOM CRUD, BOQ CRUD (seedBoqFromBom), Delivery challan CRUD, status advancement, vendor dropdown helper
-- Status helpers: `src/lib/project-status-helpers.ts` — getNextStatus(), getStatusLabel()
-- Forms: `src/components/projects/forms/survey-form.tsx`, `qc-inspection-form.tsx`, `commissioning-form.tsx`, `amc-schedule-form.tsx`, `bom-line-form.tsx` (BomInlineAddRow, BomDeleteButton), `boq-variance-form.tsx` (BoqSeedButton, BoqActualCostEdit), `delivery-challan-form.tsx`
-- Advance button: `src/components/projects/advance-status-button.tsx`
-- Updated stepper steps: `src/components/projects/stepper-steps/step-*.tsx` (all 10 with forms + navigation links)
 
 ### Field friction standards (mobile screens)
 
@@ -535,4 +509,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 5, 2026 — PM corrections complete: 10-tab project detail (Details→Survey→BOM→BOQ→Delivery→Execution→QC→Liaison→Commissioning→AMC as primary tabs), column defaults (Year+Remarks visible), PM sidebar (Liaison, My Tasks, My Reports), creation forms (Tasks, Service Tickets, AMC Schedule), PM RLS fix (blanket read access), Manivel assigned as PM on all 314 projects. Contact dedup (284 merged), backfill (364 linked), DataTable on all entities, inline editing, route fixes. Next: data cleanup, prod deployment.*
+*Last updated: April 6, 2026 — Marketing redesign (20 tasks: stage-based pipeline, tabbed lead detail, task-centric follow-ups, mandatory follow-up dates, weighted pipeline KPIs), Payments overview page (project P&L tracker, payment stages, expected collections), Migrations 020+021 applied (pipeline fields + payment follow-up trigger). Next: Marketing manager (Prem) feedback, data cleanup, prod deployment.*

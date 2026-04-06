@@ -158,3 +158,35 @@ export async function mergeLeads(
   revalidatePath('/leads');
   return { success: true };
 }
+
+export async function archiveLead(leadId: string): Promise<{ success: boolean; error?: string }> {
+  const op = '[archiveLead]';
+  console.log(`${op} Starting for: ${leadId}`);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('leads')
+    .update({ is_archived: true, updated_at: new Date().toISOString() })
+    .eq('id', leadId);
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+  revalidatePath('/leads');
+  return { success: true };
+}
+
+export async function unarchiveLead(leadId: string): Promise<{ success: boolean; error?: string }> {
+  const op = '[unarchiveLead]';
+  console.log(`${op} Starting for: ${leadId}`);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('leads')
+    .update({ is_archived: false, updated_at: new Date().toISOString() })
+    .eq('id', leadId);
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+  revalidatePath('/leads');
+  return { success: true };
+}

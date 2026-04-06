@@ -3602,6 +3602,7 @@ export type Database = {
           automation_pause_reason: string | null
           automation_paused: boolean
           city: string
+          close_probability: number | null
           company_id: string | null
           converted_at: string | null
           converted_to_project: boolean
@@ -3611,8 +3612,10 @@ export type Database = {
           disqualification_reason: string | null
           email: string | null
           estimated_size_kwp: number | null
+          expected_close_date: string | null
           hubspot_deal_id: string | null
           id: string
+          is_archived: boolean | null
           is_qualified: boolean
           last_contacted_at: string | null
           next_followup_date: string | null
@@ -3634,6 +3637,7 @@ export type Database = {
           automation_pause_reason?: string | null
           automation_paused?: boolean
           city?: string
+          close_probability?: number | null
           company_id?: string | null
           converted_at?: string | null
           converted_to_project?: boolean
@@ -3643,8 +3647,10 @@ export type Database = {
           disqualification_reason?: string | null
           email?: string | null
           estimated_size_kwp?: number | null
+          expected_close_date?: string | null
           hubspot_deal_id?: string | null
           id?: string
+          is_archived?: boolean | null
           is_qualified?: boolean
           last_contacted_at?: string | null
           next_followup_date?: string | null
@@ -3666,6 +3672,7 @@ export type Database = {
           automation_pause_reason?: string | null
           automation_paused?: boolean
           city?: string
+          close_probability?: number | null
           company_id?: string | null
           converted_at?: string | null
           converted_to_project?: boolean
@@ -3675,8 +3682,10 @@ export type Database = {
           disqualification_reason?: string | null
           email?: string | null
           estimated_size_kwp?: number | null
+          expected_close_date?: string | null
           hubspot_deal_id?: string | null
           id?: string
+          is_archived?: boolean | null
           is_qualified?: boolean
           last_contacted_at?: string | null
           next_followup_date?: string | null

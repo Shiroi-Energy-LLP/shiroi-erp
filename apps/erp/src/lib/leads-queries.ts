@@ -13,6 +13,8 @@ export interface LeadFilters {
   search?: string;
   assignedTo?: string;
   includeConverted?: boolean;
+  includeArchived?: boolean;
+  archivedOnly?: boolean;
   page?: number;
   pageSize?: number;
   sort?: string;
@@ -41,7 +43,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
 
   let query = supabase
     .from('leads')
-    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name)', { count: 'exact' })
+    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, close_probability, is_archived, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name)', { count: 'exact' })
     .is('deleted_at', null)
     .order(sortCol, { ascending: sortDir });
 
@@ -55,6 +57,13 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
   if (filters.search) query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
 
+  // Archive filtering
+  if (filters.archivedOnly) {
+    query = query.eq('is_archived', true);
+  } else if (!filters.includeArchived) {
+    query = query.eq('is_archived', false);
+  }
+
   query = query.range(from, to);
 
   const { data, error, count } = await query;
@@ -67,6 +76,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   const rows = (data ?? []).map((lead: any) => ({
     ...lead,
     assigned_to_name: lead.employees?.full_name ?? '—',
+    weighted_value: (lead.estimated_size_kwp ?? 0) * 60000 * (lead.close_probability ?? 0) / 100,
   }));
 
   const total = count ?? 0;

@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { getLeads, getSalesEngineers } from '@/lib/leads-queries';
+import { getLeadStageCounts, getLeadsClosingBetween } from '@/lib/leads-pipeline-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { LeadsTableWrapper } from '@/components/leads/leads-table-wrapper';
+import { LeadStageNav } from '@/components/leads/lead-stage-nav';
+import { PipelineSummary } from '@/components/leads/pipeline-summary';
 import { LEAD_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
 import { Button, Card, CardContent, Input, Select, Eyebrow } from '@repo/ui';
 
@@ -16,26 +19,42 @@ interface LeadsPageProps {
     sort?: string;
     dir?: string;
     view?: string;
+    archived?: string;
   }>;
 }
 
 export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   const params = await searchParams;
   const page = parseInt(params.page ?? '1', 10);
+  const isArchived = params.archived === 'true';
 
-  const [result, views] = await Promise.all([
+  // Get the start/end of this week (Monday to Sunday)
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const weekStart = monday.toISOString().split('T')[0]!;
+  const weekEnd = sunday.toISOString().split('T')[0]!;
+
+  const [result, views, stageCounts, closingThisWeek] = await Promise.all([
     getLeads({
       status: params.status as any || undefined,
       source: params.source as any || undefined,
       segment: params.segment || undefined,
       search: params.search || undefined,
       assignedTo: params.assignedTo || undefined,
+      archivedOnly: isArchived,
       page,
       pageSize: 50,
       sort: params.sort || undefined,
       dir: (params.dir as 'asc' | 'desc') || undefined,
     }),
     getMyViews('leads'),
+    getLeadStageCounts(),
+    getLeadsClosingBetween(weekStart, weekEnd),
   ]);
 
   // Build current filter params for view saving
@@ -58,33 +77,31 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Eyebrow className="mb-1">LEADS PIPELINE</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">Leads</h1>
+          <Eyebrow className="mb-1">MARKETING PIPELINE</Eyebrow>
+          <h1 className="text-2xl font-bold text-n-900">Leads</h1>
         </div>
-        <Link href="/leads/new">
-          <Button>New Lead</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/leads/new">
+            <Button>New Lead</Button>
+          </Link>
+        </div>
       </div>
+
+      {/* Pipeline Summary Cards */}
+      <PipelineSummary
+        stageCounts={stageCounts}
+        closingThisWeekCount={closingThisWeek.length}
+      />
+
+      {/* Stage Navigation (like project tabs) */}
+      <LeadStageNav
+        stageCounts={stageCounts.map(sc => ({ status: sc.status, count: sc.count }))}
+      />
 
       {/* Quick Filters */}
       <Card>
         <CardContent className="py-3">
           <form className="flex items-center gap-3 flex-wrap">
-            <Select name="status" defaultValue={params.status ?? ''} className="w-40 h-9 text-sm">
-              <option value="">All Statuses</option>
-              <option value="new">New</option>
-              <option value="contacted">Contacted</option>
-              <option value="site_survey_scheduled">Survey Scheduled</option>
-              <option value="site_survey_done">Survey Done</option>
-              <option value="proposal_sent">Proposal Sent</option>
-              <option value="design_confirmed">Design Confirmed</option>
-              <option value="negotiation">Negotiation</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
-              <option value="on_hold">On Hold</option>
-              <option value="disqualified">Disqualified</option>
-              <option value="converted">Converted</option>
-            </Select>
             <Select name="source" defaultValue={params.source ?? ''} className="w-36 h-9 text-sm">
               <option value="">All Sources</option>
               <option value="referral">Referral</option>

@@ -58,6 +58,11 @@ export function AddActivityForm({ leadId }: AddActivityFormProps) {
       return;
     }
 
+    if (!form.next_action_date) {
+      setError('Next follow-up date is required. Set the date for the next action.');
+      return;
+    }
+
     setError(null);
     const supabase = createClient();
 
@@ -99,10 +104,14 @@ export function AddActivityForm({ leadId }: AddActivityFormProps) {
 
     addToast({ variant: 'success', title: 'Activity added', description: `${ACTIVITY_LABELS[form.activity_type] ?? 'Activity'} logged successfully.` });
 
-    // Also update last_contacted_at on the lead
+    // Update lead: last contacted + next follow-up date
     await supabase
       .from('leads')
-      .update({ last_contacted_at: new Date().toISOString() })
+      .update({
+        last_contacted_at: new Date().toISOString(),
+        next_followup_date: form.next_action_date || null,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', leadId);
 
     setForm({
@@ -189,12 +198,14 @@ export function AddActivityForm({ leadId }: AddActivityFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="next_action_date">Next Action Date</Label>
+          <Label htmlFor="next_action_date">Next Follow-up Date *</Label>
           <Input
             id="next_action_date"
             type="date"
             value={form.next_action_date}
             onChange={(e) => updateField('next_action_date', e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+            required
           />
         </div>
       </div>

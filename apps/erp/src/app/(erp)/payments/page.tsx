@@ -1,12 +1,11 @@
 import Link from 'next/link';
-import { getPayments } from '@/lib/payment-queries';
-import { formatINR, formatDate } from '@repo/ui/formatters';
+import { getProjectPaymentOverview, computePaymentsSummary } from '@/lib/payments-overview-queries';
+import { formatINR, shortINR } from '@repo/ui/formatters';
 import {
   Card,
+  CardHeader,
+  CardTitle,
   CardContent,
-  Button,
-  Input,
-  Select,
   Badge,
   Table,
   TableHeader,
@@ -15,129 +14,226 @@ import {
   TableHead,
   TableCell,
   EmptyState,
-  Eyebrow,
 } from '@repo/ui';
 import { DollarSign } from 'lucide-react';
 
-const TYPE_OPTIONS = [
-  { value: 'advance', label: 'Advance' },
-  { value: 'milestone', label: 'Milestone' },
-];
-
 interface PaymentsPageProps {
   searchParams: Promise<{
-    type?: string;
-    search?: string;
+    filter?: string; // 'outstanding' | 'active' | 'all'
   }>;
 }
 
-export default async function PaymentsPage({ searchParams }: PaymentsPageProps) {
+const STATUS_LABEL: Record<string, string> = {
+  advance_received: 'Advance',
+  planning: 'Planning',
+  material_procurement: 'Procurement',
+  installation: 'Installation',
+  electrical_work: 'Electrical',
+  testing: 'Testing',
+  commissioned: 'Commissioned',
+  net_metering_pending: 'Net Metering',
+  completed: 'Completed',
+};
+
+export default async function PaymentsOverviewPage({ searchParams }: PaymentsPageProps) {
   const params = await searchParams;
-  const payments = await getPayments({
-    type: params.type || undefined,
-    search: params.search || undefined,
-  });
+  const filter = params.filter ?? 'active';
+
+  const allRows = await getProjectPaymentOverview();
+  const summary = computePaymentsSummary(allRows);
+
+  // Filter rows based on selected view
+  let filteredRows = allRows;
+  if (filter === 'outstanding') {
+    filteredRows = allRows.filter(r => r.outstanding > 0);
+  } else if (filter === 'active') {
+    filteredRows = allRows.filter(r =>
+      !['completed', 'cancelled'].includes(r.project_status) || r.outstanding > 0
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <Eyebrow className="mb-1">PAYMENTS</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Payments</h1>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Total Contracted</div>
+            <div className="text-xl font-bold font-mono text-n-900 mt-1">{shortINR(summary.total_contracted)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Total Received</div>
+            <div className="text-xl font-bold font-mono text-shiroi-green mt-1">{shortINR(summary.total_received)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Outstanding</div>
+            <div className="text-xl font-bold font-mono text-red-600 mt-1">{shortINR(summary.total_outstanding)}</div>
+            <div className="text-xs text-n-500">{summary.projects_with_outstanding} projects</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Total Invested</div>
+            <div className="text-xl font-bold font-mono text-n-900 mt-1">{shortINR(summary.total_invested)}</div>
+            <div className="text-xs text-n-500">POs + Site Expenses</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Net Position</div>
+            <div className={`text-xl font-bold font-mono mt-1 ${summary.net_position >= 0 ? 'text-shiroi-green' : 'text-red-600'}`}>
+              {summary.net_position >= 0 ? '+' : ''}{shortINR(summary.net_position)}
+            </div>
+            <div className="text-xs text-n-500">Received - Invested</div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="py-4">
-          <form className="flex items-center gap-4">
-            <Select name="type" defaultValue={params.type ?? ''} className="w-44">
-              <option value="">All Types</option>
-              {TYPE_OPTIONS.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </Select>
-            <Input
-              name="search"
-              defaultValue={params.search ?? ''}
-              placeholder="Search receipt/reference..."
-              className="w-60"
-            />
-            <Button type="submit" variant="outline" size="sm">
-              Filter
-            </Button>
-            {(params.type || params.search) && (
-              <Link href="/payments">
-                <Button type="button" variant="ghost" size="sm">
-                  Clear
-                </Button>
-              </Link>
-            )}
-          </form>
-        </CardContent>
-      </Card>
+      {/* Expected Payments Summary */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="border-l-4 border-l-amber-500">
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Expected This Week</div>
+                <div className="text-2xl font-bold font-mono text-n-900 mt-1">{shortINR(summary.expected_this_week)}</div>
+                <div className="text-xs text-n-500">Next milestone payments from top active projects</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Expected This Month</div>
+                <div className="text-2xl font-bold font-mono text-n-900 mt-1">{shortINR(summary.expected_this_month)}</div>
+                <div className="text-xs text-n-500">All active project next milestones</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Table */}
+      {/* Filter tabs */}
+      <div className="flex items-center gap-2">
+        <Link href="/payments?filter=active">
+          <Badge variant={filter === 'active' ? 'default' : 'outline'} className="cursor-pointer">
+            Active ({allRows.filter(r => !['completed', 'cancelled'].includes(r.project_status) || r.outstanding > 0).length})
+          </Badge>
+        </Link>
+        <Link href="/payments?filter=outstanding">
+          <Badge variant={filter === 'outstanding' ? 'default' : 'outline'} className="cursor-pointer">
+            Outstanding ({allRows.filter(r => r.outstanding > 0).length})
+          </Badge>
+        </Link>
+        <Link href="/payments?filter=all">
+          <Badge variant={filter === 'all' ? 'default' : 'outline'} className="cursor-pointer">
+            All ({allRows.length})
+          </Badge>
+        </Link>
+      </div>
+
+      {/* Main Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Receipt #</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Payment Date</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Mode</TableHead>
-                <TableHead>Notes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payments.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7}>
-                    <EmptyState
-                      icon={<DollarSign className="h-12 w-12" />}
-                      title="No payments found"
-                      description="Payments will appear here once customers make payments against invoices."
-                    />
-                  </TableCell>
+                  <TableHead className="whitespace-nowrap">Project</TableHead>
+                  <TableHead className="whitespace-nowrap">Stage</TableHead>
+                  <TableHead className="whitespace-nowrap text-right">Project Value</TableHead>
+                  <TableHead className="whitespace-nowrap text-right">Received</TableHead>
+                  <TableHead className="whitespace-nowrap text-right">Outstanding</TableHead>
+                  <TableHead className="whitespace-nowrap">Payment Stage</TableHead>
+                  <TableHead className="whitespace-nowrap text-right">Next Payment</TableHead>
+                  <TableHead className="whitespace-nowrap text-right">Invested</TableHead>
+                  <TableHead className="whitespace-nowrap text-right">P&L</TableHead>
+                  <TableHead className="whitespace-nowrap">PM</TableHead>
                 </TableRow>
-              ) : (
-                payments.map((pmt) => (
-                  <TableRow key={pmt.id}>
-                    <TableCell className="font-mono text-sm font-medium">
-                      {pmt.receipt_number ?? '—'}
-                    </TableCell>
-                    <TableCell>
-                      {pmt.projects ? (
-                        <span className="text-sm">
-                          <span className="font-mono text-xs text-muted-foreground">{pmt.projects.project_number}</span>
-                          {' '}{pmt.projects.customer_name}
-                        </span>
-                      ) : '—'}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {pmt.payment_date ? formatDate(pmt.payment_date) : '—'}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm">
-                      {pmt.amount != null ? formatINR(pmt.amount) : '—'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={pmt.is_advance ? 'secondary' : 'outline'}>
-                        {pmt.is_advance ? 'Advance' : 'Milestone'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm capitalize">
-                      {(pmt.payment_method ?? '—').replace(/_/g, ' ')}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                      {pmt.notes ?? '—'}
+              </TableHeader>
+              <TableBody>
+                {filteredRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={10}>
+                      <EmptyState
+                        icon={<DollarSign className="h-12 w-12" />}
+                        title="No projects found"
+                        description="No projects match this filter."
+                      />
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredRows.map((row) => {
+                    const pnlPositive = row.project_pnl >= 0;
+                    return (
+                      <TableRow key={row.project_id}>
+                        <TableCell>
+                          <Link href={`/projects/${row.project_id}`} className="hover:text-shiroi-green">
+                            <div className="text-xs font-mono text-n-500">{row.project_number}</div>
+                            <div className="text-sm font-medium text-n-900 max-w-[180px] truncate">
+                              {row.customer_name}
+                            </div>
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {STATUS_LABEL[row.project_status] ?? row.project_status.replace(/_/g, ' ')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm">
+                          {formatINR(row.contracted_value)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm text-shiroi-green font-medium">
+                          {row.total_received > 0 ? formatINR(row.total_received) : '—'}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono text-sm font-medium ${row.outstanding > 0 ? 'text-red-600' : 'text-n-500'}`}>
+                          {row.outstanding > 0 ? formatINR(row.outstanding) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-xs text-n-600">{row.payment_stage}</div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {row.next_milestone_amount ? (
+                            <div>
+                              <div className="font-mono text-sm font-medium text-n-900">
+                                {formatINR(row.next_milestone_amount)}
+                              </div>
+                              <div className="text-xs text-n-500">
+                                {row.next_milestone_name} ({row.next_milestone_pct}%)
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-n-400">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm text-n-600">
+                          {row.total_po_cost + row.total_site_expenses > 0
+                            ? formatINR(row.total_po_cost + row.total_site_expenses)
+                            : '—'}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono text-sm font-medium ${pnlPositive ? 'text-shiroi-green' : 'text-red-600'}`}>
+                          {row.total_received > 0 || row.total_po_cost > 0 ? (
+                            <>
+                              {pnlPositive ? '+' : ''}{formatINR(row.project_pnl)}
+                            </>
+                          ) : '—'}
+                        </TableCell>
+                        <TableCell className="text-sm text-n-600">
+                          {row.pm_name ?? '—'}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

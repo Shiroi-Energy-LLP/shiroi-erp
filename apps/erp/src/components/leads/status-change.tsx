@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@repo/supabase/client';
-import { Select, Button } from '@repo/ui';
-import { getValidNextStatuses } from '@/lib/leads-helpers';
+import { Select, Button, Input } from '@repo/ui';
+import { getValidNextStatuses, requiresFollowUp, DEFAULT_PROBABILITY } from '@/lib/leads-helpers';
 import type { Database } from '@repo/types/database';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
@@ -33,6 +33,7 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedStatus, setSelectedStatus] = useState<LeadStatus | ''>('');
+  const [nextFollowupDate, setNextFollowupDate] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const validStatuses = getValidNextStatuses(currentStatus);
@@ -41,18 +42,41 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
     return null;
   }
 
+  const needsFollowup = selectedStatus !== '' && requiresFollowUp(selectedStatus);
+
   async function handleUpdate() {
     const op = '[StatusChange.handleUpdate]';
     if (!selectedStatus) return;
 
+    // Enforce mandatory follow-up
+    if (requiresFollowUp(selectedStatus) && !nextFollowupDate) {
+      setError('Next follow-up date is required for this status');
+      return;
+    }
+
     setError(null);
     const supabase = createClient();
+
+    const updates: Record<string, unknown> = {
+      status: selectedStatus,
+      status_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    // Set follow-up date if provided
+    if (nextFollowupDate) {
+      updates.next_followup_date = nextFollowupDate;
+    }
+
+    // Auto-set probability based on stage
+    const defaultProb = DEFAULT_PROBABILITY[selectedStatus];
+    if (defaultProb !== undefined) {
+      updates.close_probability = defaultProb;
+    }
+
     const { error: updateError } = await supabase
       .from('leads')
-      .update({
-        status: selectedStatus,
-        status_updated_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq('id', leadId);
 
     if (updateError) {
@@ -62,16 +86,20 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
     }
 
     setSelectedStatus('');
+    setNextFollowupDate('');
     startTransition(() => {
       router.refresh();
     });
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <Select
         value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value as LeadStatus | '')}
+        onChange={(e) => {
+          setSelectedStatus(e.target.value as LeadStatus | '');
+          setError(null);
+        }}
         className="w-48"
       >
         <option value="">Move to...</option>
@@ -81,6 +109,24 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
           </option>
         ))}
       </Select>
+
+      {needsFollowup && (
+        <div className="flex items-center gap-1">
+          <label className="text-xs text-n-500 whitespace-nowrap">Follow-up:</label>
+          <Input
+            type="date"
+            value={nextFollowupDate}
+            onChange={(e) => {
+              setNextFollowupDate(e.target.value);
+              setError(null);
+            }}
+            min={new Date().toISOString().split('T')[0]}
+            className="w-36 h-8 text-sm"
+            required
+          />
+        </div>
+      )}
+
       <Button
         size="sm"
         onClick={handleUpdate}
@@ -88,7 +134,7 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
       >
         {isPending ? 'Updating...' : 'Update'}
       </Button>
-      {error && <span className="text-sm text-status-error-text">{error}</span>}
+      {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   );
 }
