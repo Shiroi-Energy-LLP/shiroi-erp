@@ -42,6 +42,7 @@
 | UI/UX Overhaul R2 | ✅ Complete | 9 items: hex→token purge (45+ files), 15 loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, semantic status tokens |
 | Project workflow forms | ✅ Complete | Interactive forms in all 10 PM stepper tabs, data flows between steps, inline table editing (BOM/BOQ), advance status button |
 | Workflow data flow | ✅ Complete | Survey→BOM auto-nav, BOQ seeded from BOM, Commissioning pre-filled from project, AMC from commissioned_date, Continue→ links throughout |
+| Audit fixes | ✅ Complete | Migration 019 (storage buckets), report detail+edit+photos pages, broken links fixed, 4 orphaned pages deleted |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
 | **Data cleanup** | 🔜 **NEXT** | **~3 junk leads to review, name normalization, placeholder phones, then prod deployment** |
