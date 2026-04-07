@@ -46,7 +46,7 @@
 | UI/UX Overhaul R2 | ✅ Complete | 9 items: hex→token purge (45+ files), 15 loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, semantic status tokens |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
-| Data quality overhaul | ✅ Complete | Full extraction pipeline. Proposals: 341→751 (410 created from docs). Financials: 52→484 (64%). Leads with size: 172→900. All 1,126 leads have assigned_to. 3,450 BOM lines. 170 photos. 685 octet-stream files fixed. 10 deleted leads restored. |
+| Data quality overhaul | ✅ Complete | Full extraction pipeline. Proposals: 341→751. Financials: 52→485 (65%). Leads with size: 172→900. All 1,126 leads assigned_to. 3,450 BOM lines. 1,290 photos (170 project + 1,120 lead). 685 octet-stream fixed. 112 PPTX parsed. 10 leads restored. Migration 026: site_photos lead_id. |
 | Migrations 022–025 | ✅ Applied (dev) | 022: data cleanup + processing_jobs. 023: BOM categories. 024: storage mime fix. 025: electricity_bill_number on leads |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |

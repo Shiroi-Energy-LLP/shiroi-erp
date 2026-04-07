@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: 'C:/Users/vivek/Projects/shiroi-erp/.env.local' });
 
 import { createClient } from '@supabase/supabase-js';
-import * as pdfParse from 'pdf-parse';
+const pdfParse = require('pdf-parse');
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -102,13 +102,27 @@ async function main() {
   }
   console.log(`${op} ${vendorByNormName.size} vendors in DB`);
 
+  // Shiroi's own GSTIN — skip when found
+  const SHIROI_GSTIN = '33AAFCA9741A1Z2';
+  const SHIROI_PAN = 'AAFCA9741A';
+
+  // Build project→vendor mapping via POs
+  const { data: pos } = await supabase.from('purchase_orders').select('id, project_id, vendor_id');
+  const vendorByProject = new Map<string, Set<string>>();
+  for (const po of pos ?? []) {
+    if (po.project_id && po.vendor_id) {
+      if (!vendorByProject.has(po.project_id)) vendorByProject.set(po.project_id, new Set());
+      vendorByProject.get(po.project_id)!.add(po.vendor_id);
+    }
+  }
+  console.log(`${op} ${vendorByProject.size} projects with PO→vendor links`);
+
   // List project-files PDFs
   const { data: folders } = await supabase.storage.from('project-files').list('projects', { limit: 500 });
   if (!folders) { console.log(`${op} No project folders`); return; }
 
   const pdfFiles: { path: string; projectId: string }[] = [];
   for (const projFolder of folders.filter(f => !f.id)) {
-    // Scan subdirectories: purchase-orders, documents, invoices
     for (const subdir of ['purchase-orders', 'documents', 'invoices', 'delivery-challans']) {
       const { data: files } = await supabase.storage.from('project-files').list(`projects/${projFolder.name}/${subdir}`, { limit: 100 });
       if (!files) continue;
@@ -137,7 +151,7 @@ async function main() {
     let text = '';
     try {
       const buffer = Buffer.from(await fileData.arrayBuffer());
-      const result = await (pdfParse as any).default(buffer);
+      const result = await pdfParse(buffer);
       text = (result.text || '').trim();
     } catch { stats.errors++; continue; }
 
@@ -145,6 +159,13 @@ async function main() {
     stats.processed++;
 
     const extracted = extractVendorData(text);
+
+    // Skip Shiroi's own GSTIN/PAN
+    if (extracted.gstin === SHIROI_GSTIN) delete extracted.gstin;
+    if (extracted.pan_number === SHIROI_PAN) delete extracted.pan_number;
+    // Skip Shiroi emails
+    if (extracted.email && (extracted.email.includes('shiroi') || extracted.email.includes('mail2@'))) delete extracted.email;
+
     if (!extracted.gstin && !extracted.pan_number && !extracted.phone && !extracted.email) continue;
 
     if (extracted.gstin) stats.gstinFound++;
@@ -152,10 +173,26 @@ async function main() {
     if (extracted.phone) stats.phoneFound++;
     if (extracted.email) stats.emailFound++;
 
-    // Try to match to a vendor
+    // Strategy 1: If project has exactly 1 vendor via POs, assign data to that vendor
+    const { projectId } = pdfFiles[i];
+    const projectVendors = vendorByProject.get(projectId);
+    if (projectVendors && projectVendors.size === 1) {
+      const vendorId = [...projectVendors][0];
+      const vendor = (vendors ?? []).find(v => v.id === vendorId);
+      if (vendor) {
+        const updates = vendorUpdates.get(vendorId) || {};
+        if (extracted.gstin && !vendor.gstin) updates.gstin = extracted.gstin;
+        if (extracted.pan_number && !vendor.pan_number) updates.pan_number = extracted.pan_number;
+        if (extracted.phone && !vendor.phone) updates.phone = extracted.phone;
+        if (extracted.email && !vendor.email) updates.email = extracted.email;
+        if (extracted.is_msme !== undefined && !vendor.is_msme) updates.is_msme = extracted.is_msme;
+        if (Object.keys(updates).length > 0) vendorUpdates.set(vendorId, updates);
+      }
+    }
+
+    // Strategy 2: Match by vendor name in text
     if (extracted.vendor_name) {
       const normName = normalizeVendorName(extracted.vendor_name);
-      // Fuzzy match
       for (const [key, vendor] of vendorByNormName.entries()) {
         if (key.includes(normName) || normName.includes(key) ||
             (key.split(' ')[0] === normName.split(' ')[0] && key.split(' ')[0].length > 3)) {
@@ -167,15 +204,6 @@ async function main() {
           if (extracted.is_msme !== undefined && !vendor.is_msme) updates.is_msme = extracted.is_msme;
           if (Object.keys(updates).length > 0) vendorUpdates.set(vendor.id, updates);
           break;
-        }
-      }
-    }
-
-    // Also try matching via GSTIN — if any vendor already partially matches
-    if (extracted.gstin) {
-      for (const [, vendor] of vendorByNormName.entries()) {
-        if (!vendor.gstin) {
-          // Can't match without name
         }
       }
     }

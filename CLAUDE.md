@@ -82,7 +82,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed → 496 leads + 114 proposals enriched |
 | Proposal creation | ✅ Complete | 410 new proposals created from extracted doc data (341→751 total proposals) |
 | Owner assignment | ✅ Complete | All 1,126 leads now have assigned_to (10 Vivek, 1,116 Prem from HubSpot deal owner + default) |
-| Photo registration | ✅ Complete | 170 site photos registered (1,120 more need schema change — project_id NOT NULL blocks lead-only photos) |
+| Photo registration | ✅ Complete | 1,290 site photos registered (170 with projects + 1,120 lead-only via migration 026) |
 | Octet-stream fix | ✅ Complete | 685 mistyped files reclassified (SketchUp, Layout, PPTX, video) |
 | HubSpot enrichment | ✅ Complete | Close dates, owner assignment, contacts/companies enrichment from CSV exports |
 | Deleted lead restore | ✅ Complete | 10 real leads restored (PV264/RWD, 50MWp, Ramakrishna, Ravi, etc.), 11 junk leads kept soft-deleted |
@@ -90,7 +90,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign (20 tasks) complete.
-Data quality overhaul complete: proposals 341→751, leads with size 172→900, leads with owner 0→1,126, proposals with financials 52→484, BOM lines 7→3,450, photos 0→170.
+Data quality overhaul complete: proposals 341→751, leads with size 172→900, leads with owner 0→1,126, proposals with financials 52→485, BOM lines 7→3,450, photos 0→1,290.
 Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
 ---
@@ -522,4 +522,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — Full data quality overhaul complete. Proposals: 341→751 (410 created from docs). Proposals with financials: 52→484 (64%). Leads with size: 172→900 (80%). All 1,126 leads have assigned_to. 3,450 BOM lines. 170 photos registered. 685 octet-stream files fixed. 10 deleted leads restored. Migrations 022–025 applied (dev). Next: Prod deployment, BOM re-extraction on new proposals, vendor GSTIN from PO PDFs, photo schema change.*
+*Last updated: April 7, 2026 — Full data quality overhaul complete. Proposals: 341→751. Financials: 52→485 (65%). Leads with size: 172→900 (80%). All 1,126 leads have assigned_to. 3,450 BOM lines. 1,290 photos (170 project + 1,120 lead-only). 685 octet-stream files fixed. 112 PPTX parsed (15 proposals updated). Migrations 022–026 applied (dev). Next: Prod deployment, vendor GSTIN manual collection, BOM re-extraction.*

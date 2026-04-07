@@ -81,20 +81,19 @@ async function main() {
 
   console.log(`${op} ${allPhotos.length} new photos to register`);
 
-  // For photos WITHOUT a project, we need a fallback project.
-  // site_photos requires project_id (NOT NULL).
-  // We'll skip photos without projects for now — they need schema change.
   const withProject = allPhotos.filter(p => p.projectId);
   const withoutProject = allPhotos.filter(p => !p.projectId);
-  console.log(`${op} ${withProject.length} with project, ${withoutProject.length} without project (skipped — need schema change)`);
+  console.log(`${op} ${withProject.length} with project, ${withoutProject.length} with lead only`);
 
   let stats = { inserted: 0, errors: 0 };
   const BATCH_SIZE = 50;
+  const allToRegister = [...withProject, ...withoutProject];
 
-  for (let i = 0; i < withProject.length; i += BATCH_SIZE) {
-    const batch = withProject.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < allToRegister.length; i += BATCH_SIZE) {
+    const batch = allToRegister.slice(i, i + BATCH_SIZE);
     const rows = batch.map(photo => ({
-      project_id: photo.projectId!,
+      project_id: photo.projectId || null,
+      lead_id: photo.projectId ? null : photo.leadId,
       storage_path: `${photo.bucket}/${photo.path}`,
       file_name: photo.filename,
       file_size_bytes: photo.size,
@@ -116,12 +115,13 @@ async function main() {
       }
     }
 
-    if (i % 200 === 0 && i > 0) console.log(`${op} Progress: ${i}/${withProject.length}`);
+    if (i % 200 === 0 && i > 0) console.log(`${op} Progress: ${i}/${allToRegister.length}`);
   }
 
   console.log(`\n${op} Results:`);
   console.log(`  Registered: ${stats.inserted}`);
-  console.log(`  Skipped (no project): ${withoutProject.length}`);
+  console.log(`  With project: ${withProject.length}`);
+  console.log(`  Lead-only: ${withoutProject.length}`);
   console.log(`  Errors: ${stats.errors}`);
 }
 
