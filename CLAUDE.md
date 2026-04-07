@@ -17,7 +17,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 ---
 
-## CURRENT STATE (as of April 6, 2026)
+## CURRENT STATE (as of April 7, 2026)
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -28,7 +28,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
 | Database schema | ✅ Complete | 137+ tables, 91+ triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 6 with pipeline fields (expected_close_date, close_probability, is_archived) |
-| Migrations | ✅ Committed | supabase/migrations/ — 32 files (001 through 021) |
+| Migrations | ✅ Committed | supabase/migrations/ — 35 files (001 through 025) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, 22 components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + original 11) |
 | Auth + App Shell | ✅ Complete | Login (with logo), middleware, collapsible sidebar (240px/60px + mobile drawer), topbar with role switcher, skip-to-content |
@@ -85,15 +85,17 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | PM Corrections Phase 6 | ✅ Complete | AMC enhancement: error handling, summary cards, overdue detection |
 | PM Corrections Phase 7 | ✅ Complete | Project PDF export: API route, react-pdf component, survey/BOQ/QC/commissioning/DC sections |
 | PM Corrections Phase 8 | ✅ Complete | Task ↔ Execution interlinking: tasks in execution tab, quick task creation from milestone context |
-| Migration 022 | ✅ Applied (dev) | Fix file delete RLS: expands DELETE policies on project-files and site-photos buckets |
-| Migration 023 | ✅ Applied (dev) | Survey form overhaul: ~25 new columns (GPS, roof details, electrical, shading, signatures) |
-| Migration 024 | ✅ Applied (dev) | BOQ items + delivery challans: project_boq_items, delivery_challans, delivery_challan_items tables |
 | PM corrections merge | ✅ Merged | Worktree branch `claude/eager-driscoll` merged to main (commit 888250d). Deployed to Vercel. |
-| Data cleanup | 🔜 Later | ~3 junk leads to review, name normalization, placeholder phones |
-| Prod deployment | 🔜 Later | After PM corrections merged + migrations applied + data cleaned on dev |
+| Data quality overhaul | ✅ Complete | Phase 0–3 of 7-phase plan: BOM extraction (3,450 lines from 183 Excel), doc extraction (707 Word/PDF → 496 leads + 114 proposals enriched), photo registration (170), octet-stream fix (685 files), HubSpot enrichment |
+| BOM extraction | ✅ Complete | 3,450 BOM lines from 183 Excel costing sheets (deterministic, no AI). Leads with size: 172→893 |
+| Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed locally — proposals with financials: 52→145 (42%) |
+| Photo registration | ✅ Complete | 170 site photos registered in site_photos table from Supabase Storage |
+| Octet-stream fix | ✅ Complete | 685 mistyped files reclassified (SketchUp, Layout, PPTX, video) |
+| HubSpot enrichment | ✅ Complete | Close dates, owner assignment, contacts/companies enrichment from CSV exports |
+| Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
 
-**Current phase: 3B — PM Corrections Build**
-Phase 0 pushed to main. Phases 1-8 complete in worktree branch `claude/eager-driscoll` — pending merge.
+**Current phase: 3B — PM Corrections + Data Quality**
+PM Corrections Phases 0-8 complete and merged. Data quality overhaul (Phases 0–3) complete.
 Full PM corrections plan: `docs/superpowers/plans/2026-04-07-pm-corrections-final.md`
 
 ### PM Feedback Decisions (April 7, 2026 — from Manivel, witnessed by Vivek)
@@ -545,4 +547,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — PM Corrections (8 phases) merged to main and deployed to Vercel. Proposals page fix (proposal_type column). Migrations 022-024 applied to dev. Types regenerated (11,693 lines). `as any` table casts removed. Next: Manivel online review, data cleanup, prod deployment.*
+*Last updated: April 7, 2026 — PM Corrections (8 phases) merged to main and deployed. Data quality overhaul complete: 3,450 BOM lines from Excel, 707 Word/PDF proposals parsed (496 leads + 114 proposals enriched), 170 photos registered, 685 octet-stream files reclassified, HubSpot enrichment, electricity_bill_number column added. Leads with size: 172→893 (80%). Proposals with financials: 52→145 (42%). Next: Prod deployment, AI photo tagging, vendor GSTIN extraction.*

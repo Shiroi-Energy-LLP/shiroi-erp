@@ -1,0 +1,502 @@
+[
+  {
+    "id": "10f29ae9-205d-4710-8842-aaecaf00936d",
+    "customer_name": "Delivery challan",
+    "phone": "88887886207146",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1Qh-X5GsEvmI98wr6FSCgACUJOxulFvNH",
+    "created_at": "2026-04-03T06:29:49.114033+00:00",
+    "proposals": [
+      {
+        "id": "8f43a272-e75d-4077-abc7-e03b9c8671f5",
+        "proposal_number": "SHIROI/PROP/2025-26/0276",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "a7d19cbb-f212-4883-87cf-1ca142a702e8",
+    "customer_name": "Prasanna Worked files",
+    "phone": "88881697766030",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1lKG4FDZQCc6diFecWDpPMgKptOulY6He",
+    "created_at": "2026-04-03T06:02:50.242776+00:00",
+    "proposals": [
+      {
+        "id": "b7f29145-51f0-43d7-9f93-5f45e765173e",
+        "proposal_number": "SHIROI/PROP/2024-25/0051",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "75213886-e3b0-4aee-a0a1-92483c901978",
+    "customer_name": "PO",
+    "phone": "88882142412258",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1_ftJpLx46wsc2p1PdLG4ffkesa4bsOtu",
+    "created_at": "2026-04-03T06:03:34.710399+00:00",
+    "proposals": [
+      {
+        "id": "a1aed521-3069-4119-99ae-1bd3784d6419",
+        "proposal_number": "SHIROI/PROP/2024-25/0057",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "00ba6743-f409-4a17-8f70-8cb109b8c6b8",
+    "customer_name": "2025  Projects Site Photos",
+    "phone": "88887431563706",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1b-_ElTJHtEA6LSdSdwVOslZB7MEbICep",
+    "created_at": "2026-04-03T06:29:03.649518+00:00",
+    "proposals": [
+      {
+        "id": "7676276c-b254-4efd-90a6-e8a74b1036af",
+        "proposal_number": "SHIROI/PROP/2025-26/0275",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "8e3a4cf8-2a29-48ed-a326-41b428ab876a",
+    "customer_name": "Miscellaneous",
+    "phone": "88883249271347",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1tHyUcqPtY893U4yalh-Y_8_2p_ILnG1e",
+    "created_at": "2026-04-03T04:58:45.322453+00:00",
+    "proposals": [
+      {
+        "id": "bd66a6bb-8ccb-4726-ab2e-4d14610e11b2",
+        "proposal_number": "SHIROI/PROP/2023-24/0003",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "277350c9-23b6-49b1-b6b4-524208af4c36",
+    "customer_name": "Templates ( Costing sheet, Proposal )",
+    "phone": "88887112113152",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1vIWA0bU4rGuTetOEw_gVjreUdvoVcExS",
+    "created_at": "2026-04-03T06:28:31.716481+00:00",
+    "proposals": [
+      {
+        "id": "d6eb5768-b791-4f88-80be-3e166702577e",
+        "proposal_number": "SHIROI/PROP/2025-26/0274",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "6092e7f3-4b73-4dd4-90e3-3d689282a9c0",
+    "customer_name": "Shiroi Format",
+    "phone": "88887904308917",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1jCZ67-I1RssZQleYpCPZQTQ6sPECfhwU",
+    "created_at": "2026-04-03T06:29:50.925273+00:00",
+    "proposals": [
+      {
+        "id": "6544b892-7350-4241-8895-3ae891c27cdb",
+        "proposal_number": "SHIROI/PROP/2025-26/0277",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "b9d68d52-7b8a-42cd-981d-c502624ce585",
+    "customer_name": "PV264/RWD",
+    "phone": "88883004521530",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "commercial",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1Z-B-spgIbcF52j9Ql4Go1JkG5ths3ZcH",
+    "created_at": "2026-04-03T04:58:20.855425+00:00",
+    "proposals": [
+      {
+        "id": "9472f9f7-dcb5-4e09-adef-1ef91df4cf0b",
+        "proposal_number": "SHIROI/PROP/2023-24/0001",
+        "system_size_kwp": 40,
+        "total_after_discount": 1679441
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "685c8dfe-4b68-47d5-b750-4fe74ef9ce05",
+    "customer_name": "PPTX",
+    "phone": "88883032377947",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/10T6Usq8AtTFvn8QirxdKwWFaY-tgiQ8t",
+    "created_at": "2026-04-03T04:58:23.633235+00:00",
+    "proposals": [
+      {
+        "id": "9a9db7ed-af76-41ab-9e46-56f30966292d",
+        "proposal_number": "SHIROI/PROP/2023-24/0002",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "03cfbc56-630d-41de-a9f9-b95450bb69c0",
+    "customer_name": "CII Madurai",
+    "phone": "88881892606479",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "commercial",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1pN3zO36DY5lINSA8FmS1WZwc70Do3MiY",
+    "created_at": "2026-04-03T06:03:09.720689+00:00",
+    "proposals": [
+      {
+        "id": "702c5b81-dbb0-47cf-82ea-778d868989f7",
+        "proposal_number": "SHIROI/PROP/2024-25/0053",
+        "system_size_kwp": 500,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "4791de7b-df45-4742-b46b-ef28df7efab5",
+    "customer_name": "DC copy",
+    "phone": "88881744692223",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/19b_BkeMRlXo6ibH9kvwOZ2J0IhRnSyz0",
+    "created_at": "2026-04-03T06:02:54.930391+00:00",
+    "proposals": [
+      {
+        "id": "7d7d66d0-a6b9-44bc-b7c1-bc9083106bf3",
+        "proposal_number": "SHIROI/PROP/2024-25/0052",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "c4c40b3f-f6ea-45a5-bb2a-c9ab124080ac",
+    "customer_name": "Prices",
+    "phone": "88883295626694",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/16wKKx9zEch4Y4uvA61X6K4iYTyidcj_8\n[Drive] https://drive.google.com/drive/folders/1_IiXeMtiUDfQEWMtUl2IlJpBBMy4sPPy",
+    "created_at": "2026-04-03T04:58:49.960626+00:00",
+    "proposals": [
+      {
+        "id": "43212bba-5b2b-4c42-808d-75e2f4d49977",
+        "proposal_number": "SHIROI/PROP/2023-24/0004",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "06d89c50-77ca-43a3-b7ab-d9ec3ea552e9",
+    "customer_name": "Tata Kit Comparison",
+    "phone": "88881900634381",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1v-5Y1UGaBe9oEMA9cWj33sUx7IDykRKw",
+    "created_at": "2026-04-03T06:03:10.545201+00:00",
+    "proposals": [
+      {
+        "id": "54c1f1d8-8f79-493e-8022-a66792c44f87",
+        "proposal_number": "SHIROI/PROP/2024-25/0054",
+        "system_size_kwp": 5.2,
+        "total_after_discount": 70402
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "b90e83c0-983c-495f-870f-da1d38365876",
+    "customer_name": "shiroi .com",
+    "phone": "88881937203685",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1b2fOS6VhbtTfrxCPpLGNsCiPPtO1nPbV",
+    "created_at": "2026-04-03T06:03:14.212584+00:00",
+    "proposals": [
+      {
+        "id": "3b1cec2c-587c-430e-9101-dcd1f7e511f9",
+        "proposal_number": "SHIROI/PROP/2024-25/0055",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "2260332c-e7a7-4bd7-81e1-a90eb0f563d1",
+    "customer_name": "catlog 2024",
+    "phone": "88881988256108",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/171u0q03jU9lrMevywW_MUTBNiXG3xVf1",
+    "created_at": "2026-04-03T06:03:19.282334+00:00",
+    "proposals": [
+      {
+        "id": "36719b73-359a-4340-aec6-0a2d3c96d0f7",
+        "proposal_number": "SHIROI/PROP/2024-25/0056",
+        "system_size_kwp": 5,
+        "total_after_discount": 314064
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "783e9908-f1ce-4f79-a3d0-ad793aea72b6",
+    "customer_name": "Additional For Metalforms",
+    "phone": "88885360249452",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "commercial",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1eA61mTO3g9StqyPiXuJWH20vO6EMPxab",
+    "created_at": "2026-04-03T04:28:56.39911+00:00",
+    "proposals": [
+      {
+        "id": "23594822-cc30-4eb4-9484-2d903e7306eb",
+        "proposal_number": "SHIROI/PROP/2022-23/0001",
+        "system_size_kwp": 330,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "6f76a5a5-540d-420e-a8c7-b61b19ec1182",
+    "customer_name": "Mr.P.Ramakrishna Padur",
+    "phone": "88886720105221",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1QUjbLLhcgUZDHQrgKAtJWA9dTVaEU-XD | PV345/25-26",
+    "created_at": "2026-04-03T06:27:52.504803+00:00",
+    "proposals": [
+      {
+        "id": "dc868e70-a5f9-4c8b-b113-e7e0de0dd2c1",
+        "proposal_number": "SHIROI/PROP/2025-26/0266",
+        "system_size_kwp": 9.6,
+        "total_after_discount": 497620
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "7b6b5d70-7f08-4d80-a6bb-e63ddbdc55da",
+    "customer_name": "Mr.Ravi Kilpauk",
+    "phone": "88886735841997",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1kiRCt8Q4wLb-gk6gCx6aGirctDzYUPSw | PV343/25-26",
+    "created_at": "2026-04-03T06:27:54.069471+00:00",
+    "proposals": [
+      {
+        "id": "537ee421-e6e9-4a96-ba7d-532e666055f7",
+        "proposal_number": "SHIROI/PROP/2025-26/0267",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "03f274b9-07c6-4bc4-a5e1-4b1487efead7",
+    "customer_name": "Mr. Chandar Seetharaman",
+    "phone": "88886739744990",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1g_ty4H0fGVIQPaIg8cD-ZtE1rAeCwFx3 | PV342/25-26",
+    "created_at": "2026-04-03T06:27:54.463591+00:00",
+    "proposals": [
+      {
+        "id": "cebf657e-82da-409d-bfa3-1c7019723f58",
+        "proposal_number": "SHIROI/PROP/2025-26/0268",
+        "system_size_kwp": 3,
+        "total_after_discount": 215000
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "875a59f9-97a0-4616-818e-c34faca8755c",
+    "customer_name": "Rhanes Private limited",
+    "phone": "88886715335810",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "commercial",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/12_cX7weXNWHKFDAxzTh1O5MWzqx71Pdv | PV346/25-26",
+    "created_at": "2026-04-03T06:27:52.051024+00:00",
+    "proposals": [
+      {
+        "id": "c969acdd-aefb-42fb-84d1-d020d0ebd5a6",
+        "proposal_number": "SHIROI/PROP/2025-26/0265",
+        "system_size_kwp": 30,
+        "total_after_discount": 1104244
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "e1815ed6-cd38-462a-b725-71521888924f",
+    "customer_name": "RCC Astrum Icon",
+    "phone": "88886749876305",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/10k_VNtliJKXFMhajC7bXAuft6WSf0ofv | PV341/25-26",
+    "created_at": "2026-04-03T06:27:55.472903+00:00",
+    "proposals": [
+      {
+        "id": "30c4d4e0-858c-4526-bfb8-902893829e2a",
+        "proposal_number": "SHIROI/PROP/2025-26/0269",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "4f5f0e07-175e-478b-ad4c-a9e28d4e52d3",
+    "customer_name": "Convention center Tanjore- Creators Engineers",
+    "phone": "88886753607364",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "commercial",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1FDSiDdOX16LtG_DcGobfkHCQhlN7yjFz | PV340/25-26",
+    "created_at": "2026-04-03T06:27:55.84721+00:00",
+    "proposals": [
+      {
+        "id": "ea4cd741-924c-477a-bcae-0519c0d5a083",
+        "proposal_number": "SHIROI/PROP/2025-26/0270",
+        "system_size_kwp": 30,
+        "total_after_discount": 1475332
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "73dceae8-2fe8-4762-9148-f1d4cf0b9d0f",
+    "customer_name": "Mr.Srinivasalu",
+    "phone": "88886757707241",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "residential",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1RCInc-5xihAB5duR6QC_Nuv_qhyg4TXX | PV337/25-26",
+    "created_at": "2026-04-03T06:27:56.258614+00:00",
+    "proposals": [
+      {
+        "id": "7be82b17-cded-443f-b2ca-34a11f1551e5",
+        "proposal_number": "SHIROI/PROP/2025-26/0271",
+        "system_size_kwp": 1,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "30d0c6eb-e99f-4c6b-bd12-0601a837b5dd",
+    "customer_name": "50 MWp And 5 MWp",
+    "phone": "88886774185951",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "commercial",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1v_4yVr59qx0wjMcJ6MakrlRBeUZnWf0k",
+    "created_at": "2026-04-03T06:27:57.903004+00:00",
+    "proposals": [
+      {
+        "id": "92cabf09-7193-455d-b572-769c6b12806b",
+        "proposal_number": "SHIROI/PROP/2025-26/0272",
+        "system_size_kwp": 50,
+        "total_after_discount": 0
+      }
+    ],
+    "projects": []
+  },
+  {
+    "id": "387d73d9-8ed9-4002-87e0-eb0cfe7c9c71",
+    "customer_name": "Budgetary Quote",
+    "phone": "88886858178774",
+    "status": "proposal_sent",
+    "source": "referral",
+    "segment": "commercial",
+    "hubspot_deal_id": null,
+    "notes": "[Drive] https://drive.google.com/drive/folders/1AgyHIBl668G9iJ9mjiMNsUMlEdYF8ri8",
+    "created_at": "2026-04-03T06:28:06.313148+00:00",
+    "proposals": [
+      {
+        "id": "68934452-04b3-4d0e-81a5-911389a65d6b",
+        "proposal_number": "SHIROI/PROP/2025-26/0273",
+        "system_size_kwp": 400,
+        "total_after_discount": 17567665
+      }
+    ],
+    "projects": []
+  }
+]
