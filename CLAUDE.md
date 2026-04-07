@@ -77,17 +77,20 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 023 | ✅ Applied (dev) | Expanded BOM item_category CHECK constraint for Excel parsing |
 | Migration 024 | ✅ Applied (dev) | Storage mime type fix function (update_storage_mime_type RPC) |
 | Migration 025 | ✅ Applied (dev) | electricity_bill_number column on leads |
-| Data quality overhaul | ✅ Complete | Phase 0–3 of 7-phase plan executed. See details below |
+| Data quality overhaul | ✅ Complete | Full 7-phase plan executed. See details below |
 | BOM extraction | ✅ Complete | 3,450 BOM lines from 183 Excel costing sheets (deterministic, no AI) |
-| Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed locally — 496 leads + 114 proposals enriched |
-| Photo registration | ✅ Complete | 170 site photos registered in site_photos table from Supabase Storage |
+| Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed → 496 leads + 114 proposals enriched |
+| Proposal creation | ✅ Complete | 410 new proposals created from extracted doc data (341→751 total proposals) |
+| Owner assignment | ✅ Complete | All 1,126 leads now have assigned_to (10 Vivek, 1,116 Prem from HubSpot deal owner + default) |
+| Photo registration | ✅ Complete | 170 site photos registered (1,120 more need schema change — project_id NOT NULL blocks lead-only photos) |
 | Octet-stream fix | ✅ Complete | 685 mistyped files reclassified (SketchUp, Layout, PPTX, video) |
 | HubSpot enrichment | ✅ Complete | Close dates, owner assignment, contacts/companies enrichment from CSV exports |
+| Deleted lead restore | ✅ Complete | 10 real leads restored (PV264/RWD, 50MWp, Ramakrishna, Ravi, etc.), 11 junk leads kept soft-deleted |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign (20 tasks) complete.
-Data quality overhaul (Phases 0–3) complete: BOM extraction (3,450 lines), doc extraction (707 proposals), photo registration (170), octet-stream fix (685), HubSpot enrichment.
+Data quality overhaul complete: proposals 341→751, leads with size 172→900, leads with owner 0→1,126, proposals with financials 52→484, BOM lines 7→3,450, photos 0→170.
 Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
 ---
@@ -519,4 +522,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — Data quality overhaul complete: 3,450 BOM lines extracted from Excel (183 proposals), 707 Word/PDF proposals parsed (496 leads + 114 proposals enriched), 170 photos registered, 685 octet-stream files reclassified, HubSpot contacts/companies enriched, electricity_bill_number column added. Leads with size: 172→893 (80%). Proposals with financials: 52→145 (42%). Migrations 022–025 applied (dev). Lead tabulation CSV exported for re-engagement analysis. Next: Prod deployment, AI photo tagging, vendor GSTIN extraction from PO PDFs.*
+*Last updated: April 7, 2026 — Full data quality overhaul complete. Proposals: 341→751 (410 created from docs). Proposals with financials: 52→484 (64%). Leads with size: 172→900 (80%). All 1,126 leads have assigned_to. 3,450 BOM lines. 170 photos registered. 685 octet-stream files fixed. 10 deleted leads restored. Migrations 022–025 applied (dev). Next: Prod deployment, BOM re-extraction on new proposals, vendor GSTIN from PO PDFs, photo schema change.*
