@@ -74,13 +74,26 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 020 | ✅ Applied (dev) | Pipeline fields: expected_close_date, close_probability, is_archived on leads + indexes |
 | Migration 021 | ✅ Applied (dev) | Payment follow-up trigger: auto-creates tasks when project reaches payment milestone stages |
 | Auto-search all pages | ✅ Complete | Debounced SearchInput + instant FilterSelect + FilterBar across 12 pages — no more submit buttons |
+| Proposals page fix | ✅ Fixed | Removed non-existent `proposal_type` column from Supabase select (caused PostgREST 400 crash). Derived from `is_budgetary` instead. |
 | PM corrections plan | ✅ Planned | 14 tasks across 8 phases: bug fixes, default views, survey overhaul, BOM→BOQ→DC flow, execution milestones + daily logs, QC/liaison/commissioning, AMC/service, PDF exports |
-| PM corrections build | 🔧 In Progress | Phase 0 (bug fixes) → Phase 7 (PDFs). ~10 migrations (022-031). Plan: `docs/superpowers/plans/2026-04-07-pm-corrections-final.md` |
+| PM Corrections Phase 0 | ✅ Complete | 5 bug fixes: advance status FK, file delete RLS, BOM gst_type, execution tab error handling, survey values |
+| PM Corrections Phase 1 | ✅ Complete | Default views per user (is_default on table_views), auto-apply on 5 entity pages |
+| PM Corrections Phase 2 | ✅ Complete | Survey form overhaul: 7-section Manivel format, GPS capture, canvas signatures, ~40 fields |
+| PM Corrections Phase 3 | ✅ Complete | BOQ item-level procurement tracker, delivery challan from BOQ, status flow (6 states), seed from BOM |
+| PM Corrections Phase 4 | ✅ Complete | Execution milestones: seed defaults (9 milestones), inline status change, date tracking |
+| PM Corrections Phase 5 | ✅ Complete | QC summary cards, liaison inline edit forms (DISCOM/CEIG/net meter), commissioning error handling |
+| PM Corrections Phase 6 | ✅ Complete | AMC enhancement: error handling, summary cards, overdue detection |
+| PM Corrections Phase 7 | ✅ Complete | Project PDF export: API route, react-pdf component, survey/BOQ/QC/commissioning/DC sections |
+| PM Corrections Phase 8 | ✅ Complete | Task ↔ Execution interlinking: tasks in execution tab, quick task creation from milestone context |
+| Migration 022 | ✅ Written | Fix file delete RLS: expands DELETE policies on project-files and site-photos buckets |
+| Migration 023 | ✅ Written | Survey form overhaul: ~25 new columns (GPS, roof details, electrical, shading, signatures) |
+| Migration 024 | ✅ Written | BOQ items + delivery challans: project_boq_items, delivery_challans, delivery_challan_items tables |
+| PM corrections merge | 🔜 Next | Worktree branch `claude/eager-driscoll` has all Phases 1-8 code. Merge to main after review. |
 | Data cleanup | 🔜 Later | ~3 junk leads to review, name normalization, placeholder phones |
-| Prod deployment | 🔜 Later | After PM corrections complete + data cleaned on dev |
+| Prod deployment | 🔜 Later | After PM corrections merged + migrations applied + data cleaned on dev |
 
 **Current phase: 3B — PM Corrections Build**
-Phase 3 items complete. Marketing redesign complete. Now: full project module overhaul per PM Manivel's detailed specs.
+Phase 0 pushed to main. Phases 1-8 complete in worktree branch `claude/eager-driscoll` — pending merge.
 Full PM corrections plan: `docs/superpowers/plans/2026-04-07-pm-corrections-final.md`
 
 ### PM Feedback Decisions (April 7, 2026 — from Manivel, witnessed by Vivek)
@@ -532,4 +545,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — PM corrections plan created (14 tasks, 8 phases, ~10 migrations). Bugs found: advance status FK error, file delete RLS, survey constraint mismatch, BOM enum error, execution tab error handling. All Manivel decisions documented. Auto-search shipped to all 12 filter bars. Next: Execute PM corrections build (Phase 0 bug fixes → Phase 7 PDFs).*
+*Last updated: April 7, 2026 — PM Corrections (8 phases) complete in worktree. Phase 0 bug fixes + proposals page fix pushed to main. Phases 1-8 in branch `claude/eager-driscoll`: default views, survey overhaul (7-section), BOQ+DC flow, execution milestones, QC/liaison/commissioning, AMC, PDF exports, task↔execution. Migrations 022-024 written. Next: Merge worktree to main, apply migrations to dev, data cleanup, prod deployment.*
