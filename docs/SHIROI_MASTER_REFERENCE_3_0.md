@@ -47,7 +47,8 @@
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
 | Data quality overhaul | ✅ Complete | Full extraction pipeline. Proposals: 341→751. Financials: 52→485 (65%). Leads with size: 172→900. All 1,126 leads assigned_to. 3,450 BOM lines. 1,290 photos (170 project + 1,120 lead). 685 octet-stream fixed. 112 PPTX parsed. 10 leads restored. Migration 026: site_photos lead_id. |
-| Migrations 022–025 | ✅ Applied (dev) | 022: data cleanup + processing_jobs. 023: BOM categories. 024: storage mime fix. 025: electricity_bill_number on leads |
+| Migrations 022a–024a | ✅ Applied (dev) | PM corrections: 022a file delete RLS, 023a survey form overhaul (~25 cols), 024a BOQ items + delivery challans |
+| Migrations 022b–026 | ✅ Applied (dev) | Data quality: 022b processing_jobs, 023b BOM categories, 024b storage mime fix, 025 electricity_bill_number, 026 site_photos lead_id (project_id nullable) |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
 
