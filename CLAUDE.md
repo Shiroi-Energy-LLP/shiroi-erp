@@ -90,10 +90,12 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Octet-stream fix | ✅ Complete | 685 mistyped files reclassified (SketchUp, Layout, PPTX, video) |
 | HubSpot enrichment | ✅ Complete | Close dates, owner assignment, contacts/companies enrichment from CSV exports |
 | Deleted lead restore | ✅ Complete | 10 real leads restored (PV264/RWD, 50MWp, Ramakrishna, Ravi, etc.), 11 junk leads kept soft-deleted |
+| PM Corrections R2 | ✅ Complete | QC/Liaison/Status constraint fixes, commissioning edit, task completion toggles, tasks page overhaul, O&M visits overhaul, PDF hardening |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign (20 tasks) complete.
+PM Corrections R2: 16 files changed — tasks page with Project Name + Assigned To + completion toggle, commissioning edit form, QC/liaison/status-history constraint fixes, O&M visits shows scheduled+completed, PDF null hardening, QuickTaskForm with engineer dropdown.
 Data quality overhaul complete: proposals 341→751, leads with size 172→900, leads with owner 0→1,126, proposals with financials 52→485, BOM lines 7→3,450, photos 0→1,290.
 Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
@@ -526,4 +528,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — Full data quality overhaul complete. Proposals: 341→751. Financials: 52→485 (65%). Leads with size: 172→900 (80%). All 1,126 leads have assigned_to. 3,450 BOM lines. 1,290 photos (170 project + 1,120 lead-only). 685 octet-stream files fixed. 112 PPTX parsed (15 proposals updated). Migrations 022–026 applied (dev). Next: Prod deployment, vendor GSTIN manual collection, BOM re-extraction.*
+*Last updated: April 7, 2026 — PM Corrections R2: 16 files, 10+ fixes. Tasks page: Project Name column, Assigned To filter, Project filter, completion toggle. My Tasks: completion toggle, project link. Commissioning: edit form + updateCommissioningReport action. Execution: engineer dropdown on QuickTaskForm, task completion toggles. QC: constraint fixes (passed/failed). Liaison: discom_status fix. O&M visits: shows scheduled + completed. PDF: null-safe rendering. AMC: revalidates O&M paths. Next: Prod deployment.*

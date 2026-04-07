@@ -1490,7 +1490,7 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 **TypeScript types:** Generated in packages/types/database.ts
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
 **ERP app:** 53 routes, 142 tests passing, 0 type errors
-**Last updated:** April 3, 2026 (v3.4 — HubSpot V2 migration complete, lead status flow documented)
+**Last updated:** April 7, 2026 (v3.5 — PM Corrections R2: tasks overhaul, commissioning edit, constraint fixes, O&M visits, PDF hardening)
 
 **What changed in v3.4:**
 - HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments
@@ -1582,6 +1582,22 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Migration script: scripts/migrate-hubspot.ts — two-phase (deals + payments), idempotent, dry-run support
 - Data integrity verified: 0 orphaned proposals/projects, all FKs valid
 - Phase 2C roadmap spec written: 19 steps (40–58), 12 architecture decisions logged
+
+**What changed in v3.5 (Apr 7, 2026):**
+- PM Corrections R2: 16 files changed addressing PM Manivel's field testing feedback
+- Tasks page overhauled: Project Name column, Assigned To filter, Project filter, inline completion toggle
+- My Tasks page: completion toggle, project link, overdue detection, shows both pending+completed
+- QuickTaskForm (execution step): Added "Assigned To" engineer dropdown with employees list
+- TaskCompletionToggle: New client component for inline task complete/uncomplete in all task views
+- Commissioning: Edit form support — updateCommissioningReport server action, CommissioningForm with existingReport prop
+- QC inspection form: Fixed constraint violations (pass→passed, fail→failed), fixed textarea id mismatch
+- Liaison: Fixed discom_status 'not_started' → 'pending' per DB CHECK constraint
+- Project status history: Fixed column names (from_status/to_status/reason instead of old_status/new_status/notes)
+- O&M visits page: Now shows both scheduled visits (from om_visit_schedules) and completed reports
+- AMC actions: Revalidates /om/visits and project path on schedule creation
+- PDF: Hardened with safeStr() for null/type safety, API route filters empty sections before rendering
+- New server actions: toggleTaskCompletion, updateCommissioningReport, getActiveEmployeesForProject
+- New component: task-completion-toggle.tsx
 
 **What changed in v3.3 (Apr 4, 2026):**
 - Phase 3 items implemented: AI narrative (Step 61), Net metering + CEIG workflow (Step 64), Handover pack (Step 65), Inventory cut-length tracking (Step 67)
