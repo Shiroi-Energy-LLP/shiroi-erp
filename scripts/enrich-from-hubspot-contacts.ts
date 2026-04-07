@@ -124,13 +124,13 @@ async function main() {
   console.log(`${op} Mode: ${dry ? 'DRY RUN' : 'LIVE'}`);
 
   // ═══ Load HubSpot Contacts CSV ═══
-  const contactsCsvPath = 'C:/Users/vivek/OneDrive/Desktop/hubspot exports/hubspot-crm-exports-all-contacts-2026-04-07.csv';
+  const contactsCsvPath = resolve(__dirname, 'data/hubspot-contacts.csv');
   const contactsCsv = readFileSync(contactsCsvPath, 'utf-8');
   const hubContacts = parseCSV(contactsCsv);
   console.log(`${op} Loaded ${hubContacts.length} HubSpot contacts`);
 
   // ═══ Load HubSpot Companies CSV ═══
-  const companiesCsvPath = 'C:/Users/vivek/OneDrive/Desktop/hubspot exports/hubspot-crm-exports-all-companies-2026-04-07.csv';
+  const companiesCsvPath = resolve(__dirname, 'data/hubspot-companies.csv');
   const companiesCsv = readFileSync(companiesCsvPath, 'utf-8');
   const hubCompanies = parseCSV(companiesCsv);
   console.log(`${op} Loaded ${hubCompanies.length} HubSpot companies`);
