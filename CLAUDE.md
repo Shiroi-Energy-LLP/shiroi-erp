@@ -73,50 +73,25 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Payments overview page | ✅ Complete | Project payments tracker with P&L, payment stages, next milestone amounts, expected collections this week/month, invested vs received, filter by active/outstanding |
 | Migration 020 | ✅ Applied (dev) | Pipeline fields: expected_close_date, close_probability, is_archived on leads + indexes |
 | Migration 021 | ✅ Applied (dev) | Payment follow-up trigger: auto-creates tasks when project reaches payment milestone stages |
-| Auto-search all pages | ✅ Complete | Debounced SearchInput + instant FilterSelect + FilterBar across 12 pages — no more submit buttons |
-| Proposals page fix | ✅ Fixed | Removed non-existent `proposal_type` column from Supabase select (caused PostgREST 400 crash). Derived from `is_budgetary` instead. |
-| PM corrections plan | ✅ Planned | 14 tasks across 8 phases: bug fixes, default views, survey overhaul, BOM→BOQ→DC flow, execution milestones + daily logs, QC/liaison/commissioning, AMC/service, PDF exports |
-| PM Corrections Phase 0 | ✅ Complete | 5 bug fixes: advance status FK, file delete RLS, BOM gst_type, execution tab error handling, survey values |
-| PM Corrections Phase 1 | ✅ Complete | Default views per user (is_default on table_views), auto-apply on 5 entity pages |
-| PM Corrections Phase 2 | ✅ Complete | Survey form overhaul: 7-section Manivel format, GPS capture, canvas signatures, ~40 fields |
-| PM Corrections Phase 3 | ✅ Complete | BOQ item-level procurement tracker, delivery challan from BOQ, status flow (6 states), seed from BOM |
-| PM Corrections Phase 4 | ✅ Complete | Execution milestones: seed defaults (9 milestones), inline status change, date tracking |
-| PM Corrections Phase 5 | ✅ Complete | QC summary cards, liaison inline edit forms (DISCOM/CEIG/net meter), commissioning error handling |
-| PM Corrections Phase 6 | ✅ Complete | AMC enhancement: error handling, summary cards, overdue detection |
-| PM Corrections Phase 7 | ✅ Complete | Project PDF export: API route, react-pdf component, survey/BOQ/QC/commissioning/DC sections |
-| PM Corrections Phase 8 | ✅ Complete | Task ↔ Execution interlinking: tasks in execution tab, quick task creation from milestone context |
-| PM corrections merge | ✅ Merged | Worktree branch `claude/eager-driscoll` merged to main (commit 888250d). Deployed to Vercel. |
-| Data quality overhaul | ✅ Complete | Phase 0–3 of 7-phase plan: BOM extraction (3,450 lines from 183 Excel), doc extraction (707 Word/PDF → 496 leads + 114 proposals enriched), photo registration (170), octet-stream fix (685 files), HubSpot enrichment |
-| BOM extraction | ✅ Complete | 3,450 BOM lines from 183 Excel costing sheets (deterministic, no AI). Leads with size: 172→893 |
-| Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed locally — proposals with financials: 52→145 (42%) |
-| Photo registration | ✅ Complete | 170 site photos registered in site_photos table from Supabase Storage |
+| Migration 022 | ✅ Applied (dev) | Data cleanup: junk lead deletion, deterministic SQL fixes, processing_jobs table |
+| Migration 023 | ✅ Applied (dev) | Expanded BOM item_category CHECK constraint for Excel parsing |
+| Migration 024 | ✅ Applied (dev) | Storage mime type fix function (update_storage_mime_type RPC) |
+| Migration 025 | ✅ Applied (dev) | electricity_bill_number column on leads |
+| Data quality overhaul | ✅ Complete | Full 7-phase plan executed. See details below |
+| BOM extraction | ✅ Complete | 3,450 BOM lines from 183 Excel costing sheets (deterministic, no AI) |
+| Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed → 496 leads + 114 proposals enriched |
+| Proposal creation | ✅ Complete | 410 new proposals created from extracted doc data (341→751 total proposals) |
+| Owner assignment | ✅ Complete | All 1,126 leads now have assigned_to (10 Vivek, 1,116 Prem from HubSpot deal owner + default) |
+| Photo registration | ✅ Complete | 170 site photos registered (1,120 more need schema change — project_id NOT NULL blocks lead-only photos) |
 | Octet-stream fix | ✅ Complete | 685 mistyped files reclassified (SketchUp, Layout, PPTX, video) |
 | HubSpot enrichment | ✅ Complete | Close dates, owner assignment, contacts/companies enrichment from CSV exports |
+| Deleted lead restore | ✅ Complete | 10 real leads restored (PV264/RWD, 50MWp, Ramakrishna, Ravi, etc.), 11 junk leads kept soft-deleted |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
 
-**Current phase: 3B — PM Corrections + Data Quality**
-PM Corrections Phases 0-8 complete and merged. Data quality overhaul (Phases 0–3) complete.
-Full PM corrections plan: `docs/superpowers/plans/2026-04-07-pm-corrections-final.md`
-
-### PM Feedback Decisions (April 7, 2026 — from Manivel, witnessed by Vivek)
-
-| Decision | Detail |
-|----------|--------|
-| Survey format | 7-section solar site survey: Project Details, Mounting & Feasibility, Client Discussion, Equipment Location (4× photo upload), Electrical Connectivity (4× photo upload), Deviations, Sign-off (canvas signatures) |
-| Signatures | Canvas-based finger drawing on tablet/browser — used for Survey, DC, Commissioning |
-| Partial dispatch | DC supports partial qty dispatch (50 of 100 panels in DC1, rest in DC2) |
-| Daily logs as tasks | Each daily activity log entry creates a Task in main tasks table, assignable to different engineers |
-| Execution milestones | Fixed 10 categories for all projects (Site Visit → Earth Pit Installation) |
-| QC gate | QC must be uploaded AND approved by PM before project moves to Liaison |
-| Commissioning lock | 24h after submission → locked. Full detailed format (11 sections). PDF required. |
-| Monitoring creds | Visible only to: site engineer (for that project), PM, founder |
-| Free AMC | 3 visits/year (every 4 months from commissioning) |
-| Paid AMC | Variable: 3, 4, or monthly (cleaning). Revenue tracking (skip invoicing for now). Multiple contracts per project. |
-| GST rates | 5%, 18%, 28% only (12% discontinued in India) |
-| BOQ lock | After "BOQ Completed" → editable only by PM |
-| Default views | Per user only (not role-wide). Auto-loads on page visit. Star indicator. |
-| DC transport | Vehicle number, driver name, transport mode fields on delivery challan |
-| Commissioning format | Full detailed 11 sections (pages 14-17 of PM doc), not simplified version |
+**Current phase: 3 — Advanced Features + Deployment**
+Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign (20 tasks) complete.
+Data quality overhaul complete: proposals 341→751, leads with size 172→900, leads with owner 0→1,126, proposals with financials 52→484, BOM lines 7→3,450, photos 0→170.
+Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
 
 ---
 
@@ -547,4 +522,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — PM Corrections (8 phases) merged to main and deployed. Data quality overhaul complete: 3,450 BOM lines from Excel, 707 Word/PDF proposals parsed (496 leads + 114 proposals enriched), 170 photos registered, 685 octet-stream files reclassified, HubSpot enrichment, electricity_bill_number column added. Leads with size: 172→893 (80%). Proposals with financials: 52→145 (42%). Next: Prod deployment, AI photo tagging, vendor GSTIN extraction.*
+*Last updated: April 7, 2026 — Full data quality overhaul complete. Proposals: 341→751 (410 created from docs). Proposals with financials: 52→484 (64%). Leads with size: 172→900 (80%). All 1,126 leads have assigned_to. 3,450 BOM lines. 170 photos registered. 685 octet-stream files fixed. 10 deleted leads restored. Migrations 022–025 applied (dev). Next: Prod deployment, BOM re-extraction on new proposals, vendor GSTIN from PO PDFs, photo schema change.*
