@@ -85,9 +85,9 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | PM Corrections Phase 6 | ✅ Complete | AMC enhancement: error handling, summary cards, overdue detection |
 | PM Corrections Phase 7 | ✅ Complete | Project PDF export: API route, react-pdf component, survey/BOQ/QC/commissioning/DC sections |
 | PM Corrections Phase 8 | ✅ Complete | Task ↔ Execution interlinking: tasks in execution tab, quick task creation from milestone context |
-| Migration 022 | ✅ Written | Fix file delete RLS: expands DELETE policies on project-files and site-photos buckets |
-| Migration 023 | ✅ Written | Survey form overhaul: ~25 new columns (GPS, roof details, electrical, shading, signatures) |
-| Migration 024 | ✅ Written | BOQ items + delivery challans: project_boq_items, delivery_challans, delivery_challan_items tables |
+| Migration 022 | ✅ Applied (dev) | Fix file delete RLS: expands DELETE policies on project-files and site-photos buckets |
+| Migration 023 | ✅ Applied (dev) | Survey form overhaul: ~25 new columns (GPS, roof details, electrical, shading, signatures) |
+| Migration 024 | ✅ Applied (dev) | BOQ items + delivery challans: project_boq_items, delivery_challans, delivery_challan_items tables |
 | PM corrections merge | ✅ Merged | Worktree branch `claude/eager-driscoll` merged to main (commit 888250d). Deployed to Vercel. |
 | Data cleanup | 🔜 Later | ~3 junk leads to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After PM corrections merged + migrations applied + data cleaned on dev |
@@ -545,4 +545,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — PM Corrections (8 phases) merged to main and deployed to Vercel. Proposals page fix (proposal_type column). Migrations 022-024 written (not yet applied to dev). Next: Apply migrations 022-024 to dev Supabase, regenerate types, remove `as any` casts, data cleanup, prod deployment.*
+*Last updated: April 7, 2026 — PM Corrections (8 phases) merged to main and deployed to Vercel. Proposals page fix (proposal_type column). Migrations 022-024 applied to dev. Types regenerated (11,693 lines). `as any` table casts removed. Next: Manivel online review, data cleanup, prod deployment.*

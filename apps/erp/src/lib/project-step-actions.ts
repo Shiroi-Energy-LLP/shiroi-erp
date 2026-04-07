@@ -721,7 +721,7 @@ export async function seedBoqFromBom(input: {
 
   // Check if BOQ items already exist
   const { count: existing } = await supabase
-    .from('project_boq_items' as any)
+    .from('project_boq_items')
     .select('id', { count: 'exact', head: true })
     .eq('project_id', input.projectId);
 
@@ -770,7 +770,7 @@ export async function seedBoqFromBom(input: {
   }));
 
   const { error: insertError } = await supabase
-    .from('project_boq_items' as any)
+    .from('project_boq_items')
     .insert(boqItems as any);
 
   if (insertError) {
@@ -794,7 +794,7 @@ export async function updateBoqItemStatus(input: {
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from('project_boq_items' as any)
+    .from('project_boq_items')
     .update({ procurement_status: input.status } as any)
     .eq('id', input.itemId)
     .eq('project_id', input.projectId);
@@ -841,7 +841,7 @@ export async function createDeliveryChallan(input: {
     : `${now.getFullYear() - 1}-${now.getFullYear().toString().slice(2)}`;
 
   const { count } = await supabase
-    .from('delivery_challans' as any)
+    .from('delivery_challans')
     .select('id', { count: 'exact', head: true })
     .eq('project_id', input.projectId);
 
@@ -849,7 +849,7 @@ export async function createDeliveryChallan(input: {
 
   // Create challan
   const { data: challanRaw, error: challanError } = await supabase
-    .from('delivery_challans' as any)
+    .from('delivery_challans')
     .insert({
       project_id: input.projectId,
       dc_number: dcNumber,
@@ -884,7 +884,7 @@ export async function createDeliveryChallan(input: {
   }));
 
   const { error: itemsError } = await supabase
-    .from('delivery_challan_items' as any)
+    .from('delivery_challan_items')
     .insert(challanItems as any);
 
   if (itemsError) {
@@ -906,7 +906,7 @@ export async function createDeliveryChallan(input: {
 
     // Manual fallback — directly update dispatched qty
     const { data: boqItemRaw } = await supabase
-      .from('project_boq_items' as any)
+      .from('project_boq_items')
       .select('dispatched_qty')
       .eq('id', item.boqItemId)
       .single();
@@ -915,7 +915,7 @@ export async function createDeliveryChallan(input: {
     if (boqItem) {
       const newQty = (Number(boqItem.dispatched_qty) || 0) + item.quantity;
       await supabase
-        .from('project_boq_items' as any)
+        .from('project_boq_items')
         .update({ dispatched_qty: newQty } as any)
         .eq('id', item.boqItemId);
     }

@@ -1,3 +1,4 @@
+npm warn exec The following package was not found and will be installed: supabase@2.87.0
 export type Json =
   | string
   | number
@@ -1391,6 +1392,132 @@ export type Database = {
             columns: ["vendor_dc_id"]
             isOneToOne: false
             referencedRelation: "vendor_delivery_challans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_challan_items: {
+        Row: {
+          boq_item_id: string
+          challan_id: string
+          created_at: string
+          id: string
+          item_description: string
+          quantity: number
+          unit: string
+        }
+        Insert: {
+          boq_item_id: string
+          challan_id: string
+          created_at?: string
+          id?: string
+          item_description: string
+          quantity: number
+          unit?: string
+        }
+        Update: {
+          boq_item_id?: string
+          challan_id?: string
+          created_at?: string
+          id?: string
+          item_description?: string
+          quantity?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_challan_items_boq_item_id_fkey"
+            columns: ["boq_item_id"]
+            isOneToOne: false
+            referencedRelation: "project_boq_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_challan_items_challan_id_fkey"
+            columns: ["challan_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_challans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_challans: {
+        Row: {
+          created_at: string
+          dc_date: string
+          dc_number: string
+          delivered_at: string | null
+          dispatch_from: string | null
+          dispatch_to: string | null
+          dispatched_at: string | null
+          dispatched_by: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          received_by_name: string | null
+          receiver_signature: string | null
+          status: string
+          transport_mode: string | null
+          updated_at: string
+          vehicle_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          dc_date?: string
+          dc_number: string
+          delivered_at?: string | null
+          dispatch_from?: string | null
+          dispatch_to?: string | null
+          dispatched_at?: string | null
+          dispatched_by?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          received_by_name?: string | null
+          receiver_signature?: string | null
+          status?: string
+          transport_mode?: string | null
+          updated_at?: string
+          vehicle_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          dc_date?: string
+          dc_number?: string
+          delivered_at?: string | null
+          dispatch_from?: string | null
+          dispatch_to?: string | null
+          dispatched_at?: string | null
+          dispatched_by?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          received_by_name?: string | null
+          receiver_signature?: string | null
+          status?: string
+          transport_mode?: string | null
+          updated_at?: string
+          vehicle_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_challans_dispatched_by_fkey"
+            columns: ["dispatched_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_challans_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -3404,80 +3531,164 @@ export type Database = {
       }
       lead_site_surveys: {
         Row: {
+          afternoon_shade: boolean | null
+          building_height_ft: number | null
+          cable_routing_notes: string | null
+          contact_person_name: string | null
+          contact_phone: string | null
           created_at: string
+          customer_signature: string | null
           discom_name: string | null
+          earthing_condition: string | null
+          earthing_type: string | null
+          electrical_panel_photo_path: string | null
+          estimated_generation_kwh_year: number | null
           existing_load_kw: number | null
+          existing_structure_condition: string | null
+          gps_lat: number | null
+          gps_lng: number | null
           id: string
+          inverter_location: string | null
           is_final: boolean
           lead_id: string
+          meter_photo_path: string | null
           meter_type: string | null
+          morning_shade: boolean | null
           net_metering_eligible: boolean | null
           notes: string | null
+          number_of_floors: number | null
+          panel_placement_notes: string | null
           recommended_size_kwp: number | null
           recommended_system_type:
             | Database["public"]["Enums"]["system_type"]
             | null
+          roof_age_years: number | null
           roof_area_sqft: number | null
+          roof_condition: string | null
+          roof_orientation: string | null
+          roof_photo_path: string | null
+          roof_tilt_degrees: number | null
           roof_type: string | null
           sanctioned_load_kw: number | null
+          shade_sources: string[] | null
           shading_assessment: string | null
           shading_notes: string | null
+          site_access_notes: string | null
+          site_overview_photo_path: string | null
           structure_by: string | null
           structure_type: string | null
+          supply_voltage: string | null
           survey_date: string
           surveyed_by: string
+          surveyor_signature: string | null
           updated_at: string
           usable_area_sqft: number | null
         }
         Insert: {
+          afternoon_shade?: boolean | null
+          building_height_ft?: number | null
+          cable_routing_notes?: string | null
+          contact_person_name?: string | null
+          contact_phone?: string | null
           created_at?: string
+          customer_signature?: string | null
           discom_name?: string | null
+          earthing_condition?: string | null
+          earthing_type?: string | null
+          electrical_panel_photo_path?: string | null
+          estimated_generation_kwh_year?: number | null
           existing_load_kw?: number | null
+          existing_structure_condition?: string | null
+          gps_lat?: number | null
+          gps_lng?: number | null
           id?: string
+          inverter_location?: string | null
           is_final?: boolean
           lead_id: string
+          meter_photo_path?: string | null
           meter_type?: string | null
+          morning_shade?: boolean | null
           net_metering_eligible?: boolean | null
           notes?: string | null
+          number_of_floors?: number | null
+          panel_placement_notes?: string | null
           recommended_size_kwp?: number | null
           recommended_system_type?:
             | Database["public"]["Enums"]["system_type"]
             | null
+          roof_age_years?: number | null
           roof_area_sqft?: number | null
+          roof_condition?: string | null
+          roof_orientation?: string | null
+          roof_photo_path?: string | null
+          roof_tilt_degrees?: number | null
           roof_type?: string | null
           sanctioned_load_kw?: number | null
+          shade_sources?: string[] | null
           shading_assessment?: string | null
           shading_notes?: string | null
+          site_access_notes?: string | null
+          site_overview_photo_path?: string | null
           structure_by?: string | null
           structure_type?: string | null
+          supply_voltage?: string | null
           survey_date: string
           surveyed_by: string
+          surveyor_signature?: string | null
           updated_at?: string
           usable_area_sqft?: number | null
         }
         Update: {
+          afternoon_shade?: boolean | null
+          building_height_ft?: number | null
+          cable_routing_notes?: string | null
+          contact_person_name?: string | null
+          contact_phone?: string | null
           created_at?: string
+          customer_signature?: string | null
           discom_name?: string | null
+          earthing_condition?: string | null
+          earthing_type?: string | null
+          electrical_panel_photo_path?: string | null
+          estimated_generation_kwh_year?: number | null
           existing_load_kw?: number | null
+          existing_structure_condition?: string | null
+          gps_lat?: number | null
+          gps_lng?: number | null
           id?: string
+          inverter_location?: string | null
           is_final?: boolean
           lead_id?: string
+          meter_photo_path?: string | null
           meter_type?: string | null
+          morning_shade?: boolean | null
           net_metering_eligible?: boolean | null
           notes?: string | null
+          number_of_floors?: number | null
+          panel_placement_notes?: string | null
           recommended_size_kwp?: number | null
           recommended_system_type?:
             | Database["public"]["Enums"]["system_type"]
             | null
+          roof_age_years?: number | null
           roof_area_sqft?: number | null
+          roof_condition?: string | null
+          roof_orientation?: string | null
+          roof_photo_path?: string | null
+          roof_tilt_degrees?: number | null
           roof_type?: string | null
           sanctioned_load_kw?: number | null
+          shade_sources?: string[] | null
           shading_assessment?: string | null
           shading_notes?: string | null
+          site_access_notes?: string | null
+          site_overview_photo_path?: string | null
           structure_by?: string | null
           structure_type?: string | null
+          supply_voltage?: string | null
           survey_date?: string
           surveyed_by?: string
+          surveyor_signature?: string | null
           updated_at?: string
           usable_area_sqft?: number | null
         }
@@ -5831,6 +6042,65 @@ export type Database = {
           },
         ]
       }
+      photo_tags: {
+        Row: {
+          ai_model: string | null
+          building_type: string | null
+          caption: string | null
+          confidence_score: number | null
+          content_type: string
+          created_at: string | null
+          estimated_panel_count: number | null
+          id: string
+          panel_orientation: string | null
+          photo_quality: string | null
+          roof_type: string | null
+          segment: string | null
+          site_photo_id: string
+          structure_type: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          building_type?: string | null
+          caption?: string | null
+          confidence_score?: number | null
+          content_type: string
+          created_at?: string | null
+          estimated_panel_count?: number | null
+          id?: string
+          panel_orientation?: string | null
+          photo_quality?: string | null
+          roof_type?: string | null
+          segment?: string | null
+          site_photo_id: string
+          structure_type?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          building_type?: string | null
+          caption?: string | null
+          confidence_score?: number | null
+          content_type?: string
+          created_at?: string | null
+          estimated_panel_count?: number | null
+          id?: string
+          panel_orientation?: string | null
+          photo_quality?: string | null
+          roof_type?: string | null
+          segment?: string | null
+          site_photo_id?: string
+          structure_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_tags_site_photo_id_fkey"
+            columns: ["site_photo_id"]
+            isOneToOne: false
+            referencedRelation: "site_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plant_daily_summaries: {
         Row: {
           co2_avoided_kg: number | null
@@ -6228,6 +6498,66 @@ export type Database = {
           },
         ]
       }
+      processing_jobs: {
+        Row: {
+          bucket_id: string
+          completed_at: string | null
+          confidence_score: number | null
+          created_at: string | null
+          detected_type: string | null
+          entity_id: string | null
+          entity_type: string | null
+          error_message: string | null
+          extracted_data: Json | null
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          parse_method: string | null
+          processing_time_ms: number | null
+          status: string
+          tokens_used: number | null
+        }
+        Insert: {
+          bucket_id: string
+          completed_at?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          detected_type?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          parse_method?: string | null
+          processing_time_ms?: number | null
+          status?: string
+          tokens_used?: number | null
+        }
+        Update: {
+          bucket_id?: string
+          completed_at?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          detected_type?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          parse_method?: string | null
+          processing_time_ms?: number | null
+          status?: string
+          tokens_used?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -6401,6 +6731,103 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_boq_items: {
+        Row: {
+          bom_line_id: string | null
+          brand: string | null
+          created_at: string
+          dispatched_qty: number
+          gst_rate: number
+          gst_type: string
+          id: string
+          item_category: string
+          item_description: string
+          line_number: number
+          model: string | null
+          notes: string | null
+          procurement_status: string
+          project_id: string
+          purchase_order_id: string | null
+          quantity: number
+          received_qty: number
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at: string
+          vendor_name: string | null
+        }
+        Insert: {
+          bom_line_id?: string | null
+          brand?: string | null
+          created_at?: string
+          dispatched_qty?: number
+          gst_rate?: number
+          gst_type?: string
+          id?: string
+          item_category: string
+          item_description: string
+          line_number?: number
+          model?: string | null
+          notes?: string | null
+          procurement_status?: string
+          project_id: string
+          purchase_order_id?: string | null
+          quantity?: number
+          received_qty?: number
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+          vendor_name?: string | null
+        }
+        Update: {
+          bom_line_id?: string | null
+          brand?: string | null
+          created_at?: string
+          dispatched_qty?: number
+          gst_rate?: number
+          gst_type?: string
+          id?: string
+          item_category?: string
+          item_description?: string
+          line_number?: number
+          model?: string | null
+          notes?: string | null
+          procurement_status?: string
+          project_id?: string
+          purchase_order_id?: string | null
+          quantity?: number
+          received_qty?: number
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_boq_items_bom_line_id_fkey"
+            columns: ["bom_line_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_bom_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_boq_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_boq_items_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
           },
         ]

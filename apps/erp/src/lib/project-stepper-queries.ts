@@ -115,7 +115,7 @@ export async function getStepBoqData(projectId: string) {
 
   // Try new BOQ items table first (migration 024)
   const { data: boqItems, error: boqError } = await supabase
-    .from('project_boq_items' as any)
+    .from('project_boq_items')
     .select('*')
     .eq('project_id', projectId)
     .order('line_number', { ascending: true });
@@ -148,7 +148,7 @@ export async function getStepDeliveryData(projectId: string) {
 
   // Try new delivery challans table first (migration 024)
   const { data: newChallans, error: newError } = await supabase
-    .from('delivery_challans' as any)
+    .from('delivery_challans')
     .select('*, delivery_challan_items(*)')
     .eq('project_id', projectId)
     .order('dc_date', { ascending: false });
