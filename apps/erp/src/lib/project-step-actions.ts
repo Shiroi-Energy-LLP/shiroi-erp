@@ -10,6 +10,7 @@ export async function createOrUpdateSurvey(input: {
   projectId: string;
   surveyId?: string; // if provided, update; otherwise create
   data: {
+    // Original fields
     roof_type: string;
     structure_type: string;
     roof_area_sqft: number | null;
@@ -25,6 +26,37 @@ export async function createOrUpdateSurvey(input: {
     recommended_system_type: string | null;
     survey_date: string;
     notes: string | null;
+    // Section 1: Site Info
+    gps_lat?: number | null;
+    gps_lng?: number | null;
+    contact_person_name?: string | null;
+    contact_phone?: string | null;
+    site_access_notes?: string | null;
+    // Section 2: Roof (additional)
+    roof_condition?: string | null;
+    roof_age_years?: number | null;
+    roof_orientation?: string | null;
+    roof_tilt_degrees?: number | null;
+    number_of_floors?: number | null;
+    building_height_ft?: number | null;
+    // Section 3: Structure
+    existing_structure_condition?: string | null;
+    // Section 4: Electrical
+    supply_voltage?: string | null;
+    earthing_type?: string | null;
+    earthing_condition?: string | null;
+    // Section 5: Shading
+    shade_sources?: string[] | null;
+    morning_shade?: boolean | null;
+    afternoon_shade?: boolean | null;
+    // Section 6: Recommendation
+    panel_placement_notes?: string | null;
+    inverter_location?: string | null;
+    cable_routing_notes?: string | null;
+    estimated_generation_kwh_year?: number | null;
+    // Section 7: Signatures
+    surveyor_signature?: string | null;
+    customer_signature?: string | null;
   };
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[createOrUpdateSurvey]';
@@ -57,6 +89,7 @@ export async function createOrUpdateSurvey(input: {
   const surveyData = {
     lead_id: project.lead_id,
     surveyed_by: employee.id,
+    // Original fields
     roof_type: input.data.roof_type,
     structure_type: input.data.structure_type,
     roof_area_sqft: input.data.roof_area_sqft,
@@ -73,6 +106,37 @@ export async function createOrUpdateSurvey(input: {
     survey_date: input.data.survey_date,
     notes: input.data.notes,
     is_final: false,
+    // Section 1: Site Info
+    gps_lat: input.data.gps_lat,
+    gps_lng: input.data.gps_lng,
+    contact_person_name: input.data.contact_person_name,
+    contact_phone: input.data.contact_phone,
+    site_access_notes: input.data.site_access_notes,
+    // Section 2: Roof (additional)
+    roof_condition: input.data.roof_condition,
+    roof_age_years: input.data.roof_age_years,
+    roof_orientation: input.data.roof_orientation,
+    roof_tilt_degrees: input.data.roof_tilt_degrees,
+    number_of_floors: input.data.number_of_floors,
+    building_height_ft: input.data.building_height_ft,
+    // Section 3: Structure
+    existing_structure_condition: input.data.existing_structure_condition,
+    // Section 4: Electrical
+    supply_voltage: input.data.supply_voltage,
+    earthing_type: input.data.earthing_type,
+    earthing_condition: input.data.earthing_condition,
+    // Section 5: Shading
+    shade_sources: input.data.shade_sources,
+    morning_shade: input.data.morning_shade,
+    afternoon_shade: input.data.afternoon_shade,
+    // Section 6: Recommendation
+    panel_placement_notes: input.data.panel_placement_notes,
+    inverter_location: input.data.inverter_location,
+    cable_routing_notes: input.data.cable_routing_notes,
+    estimated_generation_kwh_year: input.data.estimated_generation_kwh_year,
+    // Section 7: Signatures
+    surveyor_signature: input.data.surveyor_signature,
+    customer_signature: input.data.customer_signature,
   };
 
   if (input.surveyId) {
@@ -109,16 +173,22 @@ export async function createOrUpdateSurvey(input: {
         .eq('id', input.projectId)
         .eq('status', project.status as any); // optimistic lock
 
-      // Log status change in history
-      await supabase
-        .from('project_status_history')
-        .insert({
-          project_id: input.projectId,
-          old_status: project.status,
-          new_status: nextStatus,
-          changed_by: employee.id,
-          notes: 'Auto-advanced: site survey completed',
-        } as any);
+      // Log status change in history (non-blocking — survey save already succeeded)
+      try {
+        await supabase
+          .from('project_status_history')
+          .insert({
+            project_id: input.projectId,
+            old_status: project.status,
+            new_status: nextStatus,
+            changed_by: employee?.id ?? null,
+            notes: 'Auto-advanced: site survey completed',
+          } as any);
+      } catch (histErr) {
+        console.error('[createOrUpdateSurvey] History insert failed (non-blocking):', {
+          error: histErr instanceof Error ? histErr.message : String(histErr),
+        });
+      }
     }
   }
 
@@ -301,7 +371,7 @@ export async function advanceProjectStatus(input: {
       project_id: input.projectId,
       from_status: input.currentStatus,
       to_status: nextStatus,
-      changed_by: employee.id,
+      changed_by: employee?.id ?? null,
       reason: `Advanced from ${getStatusLabel(input.currentStatus)} to ${getStatusLabel(nextStatus)}`,
     } as any);
 
@@ -417,7 +487,7 @@ export async function addBomLine(input: {
       unit_price: input.data.unit_price,
       gst_rate: input.data.gst_rate,
       gst_amount: gstAmount,
-      gst_type: 'cgst_sgst' as any,
+      gst_type: 'supply' as any,
       total_price: totalPrice,
       scope_owner: 'shiroi' as any,
     } as any);
@@ -579,105 +649,11 @@ export async function updateCostVariance(input: {
   return { success: true };
 }
 
-// ── Seed BOQ from BOM: group BOM lines by category, create cost variances ──
+// ── Seed BOQ from BOM (legacy removed — now using project_boq_items in Phase 3 actions below) ──
 
-export async function seedBoqFromBom(input: {
-  projectId: string;
-}): Promise<{ success: boolean; count?: number; error?: string }> {
-  const op = '[seedBoqFromBom]';
-  console.log(`${op} Starting for project: ${input.projectId}`);
+// ── Vendor Delivery Challan CRUD (legacy — incoming from vendors) ──
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
-
-  const { data: project } = await supabase
-    .from('projects')
-    .select('proposal_id')
-    .eq('id', input.projectId)
-    .single();
-
-  if (!project?.proposal_id) {
-    return { success: false, error: 'No proposal linked to this project' };
-  }
-
-  const { data: bomLines, error: bomError } = await supabase
-    .from('proposal_bom_lines')
-    .select('item_category, total_price')
-    .eq('proposal_id', project.proposal_id);
-
-  if (bomError || !bomLines || bomLines.length === 0) {
-    return { success: false, error: 'No BOM lines found to seed BOQ' };
-  }
-
-  // Group by category and sum
-  const categoryTotals: Record<string, number> = {};
-  for (const line of bomLines) {
-    categoryTotals[line.item_category] = (categoryTotals[line.item_category] ?? 0) + line.total_price;
-  }
-
-  // Check if BOQ already has entries
-  const { data: existingVariances } = await supabase
-    .from('project_cost_variances')
-    .select('id')
-    .eq('project_id', input.projectId)
-    .limit(1);
-
-  if (existingVariances && existingVariances.length > 0) {
-    return { success: false, error: 'BOQ entries already exist. Use Update Actual Costs instead.' };
-  }
-
-  // Get or create profitability record
-  let profitabilityId: string | null = null;
-  const { data: profRecord } = await supabase
-    .from('project_profitability')
-    .select('id')
-    .eq('project_id', input.projectId)
-    .maybeSingle();
-
-  if (profRecord) {
-    profitabilityId = profRecord.id;
-  } else {
-    const { data: newProf, error: profError } = await supabase
-      .from('project_profitability')
-      .insert({
-        project_id: input.projectId,
-        contracted_value: 0, total_estimated_cost: 0, total_actual_cost: 0,
-        estimated_margin_pct: 0, actual_margin_pct: 0,
-      } as any)
-      .select('id')
-      .single();
-    if (profError) return { success: false, error: 'Could not create profitability record' };
-    profitabilityId = (newProf as any).id;
-  }
-
-  const entries = Object.entries(categoryTotals).map(([category, estimated]) => ({
-    project_id: input.projectId,
-    profitability_id: profitabilityId,
-    item_category: category,
-    estimated_cost: Math.round(estimated * 100) / 100,
-    actual_cost: 0,
-    variance_amount: -Math.round(estimated * 100) / 100,
-    variance_pct: -100,
-    notes: null,
-  }));
-
-  const { error: insertError } = await supabase
-    .from('project_cost_variances')
-    .insert(entries as any);
-
-  if (insertError) {
-    console.error(`${op} Insert failed:`, { code: insertError.code, message: insertError.message });
-    return { success: false, error: insertError.message };
-  }
-
-  revalidatePath(`/projects/${input.projectId}`);
-  return { success: true, count: entries.length };
-}
-
-// ── Delivery Challan CRUD ──
-
-export async function createDeliveryChallan(input: {
+export async function createVendorDeliveryChallan(input: {
   projectId: string;
   data: {
     vendor_dc_number: string;
@@ -687,7 +663,7 @@ export async function createDeliveryChallan(input: {
     status: string;
   };
 }): Promise<{ success: boolean; error?: string }> {
-  const op = '[createDeliveryChallan]';
+  const op = '[createVendorDeliveryChallan]';
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
@@ -731,4 +707,393 @@ export async function getVendorsForDropdown(): Promise<{ id: string; company_nam
     .order('company_name', { ascending: true })
     .limit(200);
   return data ?? [];
+}
+
+// ── BOQ Items: Seed from BOM ──
+
+export async function seedBoqFromBom(input: {
+  projectId: string;
+}): Promise<{ success: boolean; count?: number; error?: string }> {
+  const op = '[seedBoqFromBom]';
+  console.log(`${op} Starting for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+
+  // Check if BOQ items already exist
+  const { count: existing } = await supabase
+    .from('project_boq_items' as any)
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', input.projectId);
+
+  if (existing && existing > 0) {
+    return { success: false, error: 'BOQ items already exist. Delete existing items first to re-seed.' };
+  }
+
+  // Get project's proposal ID
+  const { data: project } = await supabase
+    .from('projects')
+    .select('proposal_id')
+    .eq('id', input.projectId)
+    .single();
+
+  if (!project?.proposal_id) {
+    return { success: false, error: 'No proposal linked to this project' };
+  }
+
+  // Get BOM lines
+  const { data: bomLines, error: bomError } = await supabase
+    .from('proposal_bom_lines')
+    .select('id, line_number, item_category, item_description, brand, model, quantity, unit, unit_price, gst_rate, gst_type, total_price')
+    .eq('proposal_id', project.proposal_id)
+    .order('line_number', { ascending: true });
+
+  if (bomError || !bomLines?.length) {
+    return { success: false, error: 'No BOM lines found to seed from' };
+  }
+
+  // Create BOQ items from BOM
+  const boqItems = bomLines.map((bom: any) => ({
+    project_id: input.projectId,
+    bom_line_id: bom.id,
+    line_number: bom.line_number,
+    item_category: bom.item_category,
+    item_description: bom.item_description,
+    brand: bom.brand,
+    model: bom.model,
+    quantity: bom.quantity,
+    unit: bom.unit,
+    unit_price: bom.unit_price,
+    gst_rate: bom.gst_rate,
+    gst_type: bom.gst_type || 'supply',
+    total_price: bom.total_price,
+    procurement_status: 'yet_to_finalize',
+  }));
+
+  const { error: insertError } = await supabase
+    .from('project_boq_items' as any)
+    .insert(boqItems as any);
+
+  if (insertError) {
+    console.error(`${op} Insert failed:`, { code: insertError.code, message: insertError.message });
+    return { success: false, error: insertError.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, count: bomLines.length };
+}
+
+// ── BOQ Items: Update procurement status ──
+
+export async function updateBoqItemStatus(input: {
+  projectId: string;
+  itemId: string;
+  status: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateBoqItemStatus]';
+  console.log(`${op} Updating ${input.itemId} to ${input.status}`);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('project_boq_items' as any)
+    .update({ procurement_status: input.status } as any)
+    .eq('id', input.itemId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── Delivery Challan: Create from BOQ items ──
+
+export async function createDeliveryChallan(input: {
+  projectId: string;
+  items: { boqItemId: string; quantity: number; description: string; unit: string }[];
+  vehicleNumber?: string;
+  driverName?: string;
+  driverPhone?: string;
+  transportMode?: string;
+  dispatchFrom?: string;
+  dispatchTo?: string;
+  notes?: string;
+}): Promise<{ success: boolean; challanId?: string; error?: string }> {
+  const op = '[createDeliveryChallan]';
+  console.log(`${op} Creating DC for project: ${input.projectId} with ${input.items.length} items`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
+  // Generate DC number
+  const now = new Date();
+  const fy = now.getMonth() >= 3
+    ? `${now.getFullYear()}-${(now.getFullYear() + 1).toString().slice(2)}`
+    : `${now.getFullYear() - 1}-${now.getFullYear().toString().slice(2)}`;
+
+  const { count } = await supabase
+    .from('delivery_challans' as any)
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', input.projectId);
+
+  const dcNumber = `SHIROI/DC/${fy}/${String((count ?? 0) + 1).padStart(4, '0')}`;
+
+  // Create challan
+  const { data: challanRaw, error: challanError } = await supabase
+    .from('delivery_challans' as any)
+    .insert({
+      project_id: input.projectId,
+      dc_number: dcNumber,
+      dc_date: now.toISOString().split('T')[0],
+      vehicle_number: input.vehicleNumber || null,
+      driver_name: input.driverName || null,
+      driver_phone: input.driverPhone || null,
+      transport_mode: input.transportMode || null,
+      dispatch_from: input.dispatchFrom || null,
+      dispatch_to: input.dispatchTo || null,
+      dispatched_by: employee?.id || null,
+      status: 'draft',
+      notes: input.notes || null,
+    } as any)
+    .select('id')
+    .single();
+
+  const challan = challanRaw as any;
+
+  if (challanError) {
+    console.error(`${op} Challan create failed:`, { code: challanError.code, message: challanError.message });
+    return { success: false, error: challanError.message };
+  }
+
+  // Create challan items
+  const challanItems = input.items.map((item) => ({
+    challan_id: challan.id,
+    boq_item_id: item.boqItemId,
+    quantity: item.quantity,
+    item_description: item.description,
+    unit: item.unit,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from('delivery_challan_items' as any)
+    .insert(challanItems as any);
+
+  if (itemsError) {
+    console.error(`${op} Items insert failed:`, { code: itemsError.code, message: itemsError.message });
+    return { success: false, error: itemsError.message };
+  }
+
+  // Update dispatched_qty on BOQ items
+  for (const item of input.items) {
+    await supabase.rpc('increment_boq_dispatched_qty' as any, {
+      p_item_id: item.boqItemId,
+      p_qty: item.quantity,
+    }).then(({ error: rpcError }) => {
+      if (rpcError) {
+        // Fallback: manual update
+        console.warn(`${op} RPC not available, updating manually`);
+      }
+    });
+
+    // Manual fallback — directly update dispatched qty
+    const { data: boqItemRaw } = await supabase
+      .from('project_boq_items' as any)
+      .select('dispatched_qty')
+      .eq('id', item.boqItemId)
+      .single();
+    const boqItem = boqItemRaw as any;
+
+    if (boqItem) {
+      const newQty = (Number(boqItem.dispatched_qty) || 0) + item.quantity;
+      await supabase
+        .from('project_boq_items' as any)
+        .update({ dispatched_qty: newQty } as any)
+        .eq('id', item.boqItemId);
+    }
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, challanId: challan.id };
+}
+
+// ── Milestones: Seed defaults ──
+
+const DEFAULT_MILESTONES = [
+  { milestone_name: 'advance_payment', milestone_order: 1, is_payment_gate: true, payment_gate_number: 1 },
+  { milestone_name: 'material_delivery', milestone_order: 2, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'structure_installation', milestone_order: 3, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'panel_installation', milestone_order: 4, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'electrical_work', milestone_order: 5, is_payment_gate: true, payment_gate_number: 2 },
+  { milestone_name: 'civil_work', milestone_order: 6, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'testing_commissioning', milestone_order: 7, is_payment_gate: true, payment_gate_number: 3 },
+  { milestone_name: 'net_metering', milestone_order: 8, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'handover', milestone_order: 9, is_payment_gate: false, payment_gate_number: null },
+];
+
+export async function seedProjectMilestones(input: {
+  projectId: string;
+}): Promise<{ success: boolean; count?: number; error?: string }> {
+  const op = '[seedProjectMilestones]';
+  console.log(`${op} Starting for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+
+  // Check if milestones already exist
+  const { count: existing } = await supabase
+    .from('project_milestones')
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', input.projectId);
+
+  if (existing && existing > 0) {
+    return { success: false, error: 'Milestones already exist. Cannot re-seed.' };
+  }
+
+  const milestones = DEFAULT_MILESTONES.map((m) => ({
+    project_id: input.projectId,
+    ...m,
+    status: 'pending',
+    completion_pct: 0,
+  }));
+
+  const { error: insertError } = await supabase
+    .from('project_milestones')
+    .insert(milestones as any);
+
+  if (insertError) {
+    console.error(`${op} Insert failed:`, { code: insertError.code, message: insertError.message });
+    return { success: false, error: insertError.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, count: milestones.length };
+}
+
+// ── Milestones: Update status and dates ──
+
+export async function updateMilestoneStatus(input: {
+  projectId: string;
+  milestoneId: string;
+  status?: string;
+  planned_start_date?: string | null;
+  planned_end_date?: string | null;
+  actual_start_date?: string | null;
+  actual_end_date?: string | null;
+  is_blocked?: boolean;
+  blocked_reason?: string | null;
+  notes?: string | null;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateMilestoneStatus]';
+  console.log(`${op} Updating milestone ${input.milestoneId}`);
+
+  const supabase = await createClient();
+
+  const updateData: Record<string, any> = {};
+
+  if (input.status !== undefined) {
+    updateData.status = input.status;
+    // Auto-set dates based on status transitions
+    if (input.status === 'in_progress' && !input.actual_start_date) {
+      updateData.actual_start_date = new Date().toISOString().split('T')[0];
+    }
+    if (input.status === 'completed' && !input.actual_end_date) {
+      updateData.actual_end_date = new Date().toISOString().split('T')[0];
+      updateData.completion_pct = 100;
+    }
+  }
+
+  if (input.planned_start_date !== undefined) updateData.planned_start_date = input.planned_start_date;
+  if (input.planned_end_date !== undefined) updateData.planned_end_date = input.planned_end_date;
+  if (input.actual_start_date !== undefined) updateData.actual_start_date = input.actual_start_date;
+  if (input.actual_end_date !== undefined) updateData.actual_end_date = input.actual_end_date;
+  if (input.notes !== undefined) updateData.notes = input.notes;
+
+  if (input.is_blocked !== undefined) {
+    updateData.is_blocked = input.is_blocked;
+    if (input.is_blocked) {
+      updateData.blocked_reason = input.blocked_reason ?? null;
+      updateData.blocked_since = new Date().toISOString();
+      updateData.status = 'blocked';
+    } else {
+      updateData.blocked_reason = null;
+      updateData.blocked_since = null;
+      // Revert to in_progress when unblocked
+      if (!input.status) updateData.status = 'in_progress';
+    }
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return { success: true }; // nothing to update
+  }
+
+  const { error } = await supabase
+    .from('project_milestones')
+    .update(updateData as any)
+    .eq('id', input.milestoneId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── Quick Task: Create from Execution step ──
+
+export async function createQuickTask(input: {
+  projectId: string;
+  milestoneId?: string;
+  title: string;
+  priority?: string;
+  dueDate?: string;
+}): Promise<{ success: boolean; taskId?: string; error?: string }> {
+  const op = '[createQuickTask]';
+  console.log(`${op} Creating task for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
+  if (!employee) return { success: false, error: 'Employee not found' };
+
+  const { data: task, error } = await supabase
+    .from('tasks')
+    .insert({
+      project_id: input.projectId,
+      milestone_id: input.milestoneId || null,
+      title: input.title,
+      priority: input.priority || 'medium',
+      due_date: input.dueDate || null,
+      entity_type: 'project',
+      entity_id: input.projectId,
+      created_by: employee.id,
+      assigned_to: employee.id,
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, taskId: task?.id };
 }

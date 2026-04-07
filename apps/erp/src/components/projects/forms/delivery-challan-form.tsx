@@ -7,7 +7,7 @@ import {
   Button, Input, Label, Select,
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
-import { createDeliveryChallan } from '@/lib/project-step-actions';
+import { createVendorDeliveryChallan } from '@/lib/project-step-actions';
 
 interface DeliveryChallanFormProps {
   projectId: string;
@@ -27,7 +27,7 @@ export function DeliveryChallanForm({ projectId, vendors }: DeliveryChallanFormP
 
     const fd = new FormData(e.currentTarget);
 
-    const result = await createDeliveryChallan({
+    const result = await createVendorDeliveryChallan({
       projectId,
       data: {
         vendor_dc_number: (fd.get('vendor_dc_number') as string) || '',

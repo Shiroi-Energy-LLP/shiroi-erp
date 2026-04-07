@@ -54,9 +54,11 @@ export async function getStepSurveyData(projectId: string) {
 
   if (!project?.lead_id) return null;
 
+  // Select all columns — new columns from migration 023 won't error on missing (Supabase ignores unknown cols in select)
+  // Using * to future-proof against column additions
   const { data: survey, error: surveyError } = await supabase
     .from('lead_site_surveys')
-    .select('id, roof_type, structure_type, roof_area_sqft, usable_area_sqft, shading_assessment, shading_notes, recommended_size_kwp, recommended_system_type, existing_load_kw, sanctioned_load_kw, meter_type, discom_name, net_metering_eligible, survey_date, notes')
+    .select('*')
     .eq('lead_id', project.lead_id)
     .order('survey_date', { ascending: false })
     .limit(1)
@@ -67,7 +69,7 @@ export async function getStepSurveyData(projectId: string) {
     throw new Error(`Failed to fetch site survey: ${surveyError.message}`);
   }
 
-  return survey;
+  return survey as any;
 }
 
 export async function getStepBomData(projectId: string) {
@@ -111,6 +113,18 @@ export async function getStepBoqData(projectId: string) {
 
   const supabase = await createClient();
 
+  // Try new BOQ items table first (migration 024)
+  const { data: boqItems, error: boqError } = await supabase
+    .from('project_boq_items' as any)
+    .select('*')
+    .eq('project_id', projectId)
+    .order('line_number', { ascending: true });
+
+  if (!boqError && boqItems && boqItems.length > 0) {
+    return { type: 'items' as const, items: boqItems as any[], variances: [] };
+  }
+
+  // Fallback to legacy cost variances
   const { data: variances, error } = await supabase
     .from('project_cost_variances')
     .select('id, item_category, estimated_cost, actual_cost, variance_amount, variance_pct')
@@ -119,10 +133,10 @@ export async function getStepBoqData(projectId: string) {
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message, projectId });
-    throw new Error(`Failed to fetch cost variances: ${error.message}`);
+    // Non-fatal — return empty
   }
 
-  return variances ?? [];
+  return { type: 'variances' as const, items: [], variances: variances ?? [] };
 }
 
 export async function getStepDeliveryData(projectId: string) {
@@ -132,18 +146,28 @@ export async function getStepDeliveryData(projectId: string) {
 
   const supabase = await createClient();
 
-  const { data: challans, error } = await supabase
+  // Try new delivery challans table first (migration 024)
+  const { data: newChallans, error: newError } = await supabase
+    .from('delivery_challans' as any)
+    .select('*, delivery_challan_items(*)')
+    .eq('project_id', projectId)
+    .order('dc_date', { ascending: false });
+
+  // Also get vendor delivery challans (legacy)
+  const { data: vendorChallans, error: vendorError } = await supabase
     .from('vendor_delivery_challans')
     .select('id, vendor_dc_number, vendor_dc_date, status, received_date, vendor_id, vendors!vendor_delivery_challans_vendor_id_fkey(company_name)')
     .eq('project_id', projectId)
     .order('vendor_dc_date', { ascending: false });
 
-  if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message, projectId });
-    throw new Error(`Failed to fetch delivery challans: ${error.message}`);
+  if (vendorError) {
+    console.error(`${op} Vendor DC query failed:`, { code: vendorError.code, message: vendorError.message, projectId });
   }
 
-  return challans ?? [];
+  return {
+    outgoingChallans: (newChallans ?? []) as any[],
+    vendorChallans: vendorChallans ?? [],
+  };
 }
 
 export async function getStepExecutionData(projectId: string) {
@@ -173,7 +197,19 @@ export async function getStepExecutionData(projectId: string) {
     console.error(`${op} Reports count query failed:`, { code: reportError.code, message: reportError.message, projectId });
   }
 
-  return { milestones: milestones ?? [], reportCount: reportCount ?? 0 };
+  // Fetch tasks linked to this project (open tasks only)
+  const { data: tasks, error: taskError } = await supabase
+    .from('tasks')
+    .select('id, title, milestone_id, assigned_to, priority, due_date, is_completed, employees!tasks_assigned_to_fkey(full_name)')
+    .eq('project_id', projectId)
+    .is('deleted_at', null)
+    .order('due_date', { ascending: true, nullsFirst: false });
+
+  if (taskError) {
+    console.error(`${op} Tasks query failed:`, { code: taskError.code, message: taskError.message, projectId });
+  }
+
+  return { milestones: milestones ?? [], reportCount: reportCount ?? 0, tasks: tasks ?? [] };
 }
 
 export async function getStepQcData(projectId: string) {

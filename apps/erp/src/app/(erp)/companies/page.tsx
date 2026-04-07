@@ -39,7 +39,9 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
   if (params.search) currentFilters.search = params.search;
   if (params.segment) currentFilters.segment = params.segment;
 
-  const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
+  const activeView = params.view
+    ? views.find((v: any) => v.id === params.view)
+    : views.find((v: any) => v.is_default) ?? null;
   const viewCols = activeView?.columns as string[] | undefined;
   const visibleColumns = viewCols && viewCols.length > 0
     ? viewCols
@@ -84,7 +86,7 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
         sortDirection={params.dir}
         currentFilters={currentFilters}
         views={views}
-        activeViewId={params.view ?? null}
+        activeViewId={params.view ?? activeView?.id ?? null}
         visibleColumns={visibleColumns}
       />
     </div>

@@ -4,6 +4,49 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 /**
+ * Create a net metering application for a project.
+ */
+export async function createNetMeteringApplication(input: {
+  projectId: string;
+  discomName: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[createNetMeteringApplication]';
+  console.log(`${op} Starting for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+
+  // Check if one already exists
+  const { data: existing } = await supabase
+    .from('net_metering_applications')
+    .select('id')
+    .eq('project_id', input.projectId)
+    .maybeSingle();
+
+  if (existing) {
+    return { success: false, error: 'Net metering application already exists for this project.' };
+  }
+
+  const { error } = await supabase
+    .from('net_metering_applications')
+    .insert({
+      project_id: input.projectId,
+      discom_name: input.discomName || 'TANGEDCO',
+      discom_status: 'not_started',
+      ceig_required: false,
+      followup_count: 0,
+    } as any);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/liaison/net-metering`);
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+/**
  * Update CEIG status on a net metering application.
  */
 export async function updateCeigStatus(input: {

@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { saveView, deleteView } from '@/lib/views-actions';
+import { saveView, deleteView, setViewAsDefault } from '@/lib/views-actions';
 import { Button, Input } from '@repo/ui';
-import { Plus, X, Save, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Plus, X, Save, MoreHorizontal, Trash2, Star } from 'lucide-react';
 
 interface ViewConfig {
   id: string;
@@ -79,6 +79,18 @@ export function ViewTabs({
     router.refresh();
   }
 
+  async function handleToggleDefault(view: ViewConfig) {
+    setSaving(true);
+    await setViewAsDefault({
+      viewId: view.id,
+      entityType,
+      isDefault: !view.is_default,
+    });
+    setSaving(false);
+    setMenuViewId(null);
+    router.refresh();
+  }
+
   async function handleDeleteView(viewId: string) {
     await deleteView(viewId);
     if (activeViewId === viewId) onViewChange(null);
@@ -110,6 +122,7 @@ export function ViewTabs({
                 : 'border-transparent text-n-500 hover:text-n-900 hover:border-n-200'
             }`}
           >
+            {view.is_default && <Star className="h-3 w-3 text-amber-500 fill-amber-500" />}
             {view.name}
             {view.visibility === 'everyone' && (
               <span className="text-[9px] text-n-400 ml-1">(shared)</span>
@@ -126,12 +139,19 @@ export function ViewTabs({
             </button>
 
             {menuViewId === view.id && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-n-200 rounded-lg shadow-lg py-1 min-w-[140px]">
+              <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-n-200 rounded-lg shadow-lg py-1 min-w-[160px]">
                 <button
                   onClick={() => { handleUpdateView(view); setMenuViewId(null); }}
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-n-900 hover:bg-[#F5F6F8]"
                 >
                   <Save className="h-3.5 w-3.5" /> Save changes
+                </button>
+                <button
+                  onClick={() => handleToggleDefault(view)}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-n-900 hover:bg-[#F5F6F8]"
+                >
+                  <Star className={`h-3.5 w-3.5 ${view.is_default ? 'text-amber-500 fill-amber-500' : ''}`} />
+                  {view.is_default ? 'Remove default' : 'Set as default'}
                 </button>
                 <button
                   onClick={() => { handleDeleteView(view.id); setMenuViewId(null); }}

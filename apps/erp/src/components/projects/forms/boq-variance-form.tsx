@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Input } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { RefreshCw, Save } from 'lucide-react';
-import { seedBoqFromBom, updateCostVariance } from '@/lib/project-step-actions';
+import { seedBoqFromBom, updateCostVariance, updateBoqItemStatus } from '@/lib/project-step-actions';
 
 interface BoqActionsProps {
   projectId: string;
@@ -46,7 +46,75 @@ export function BoqSeedButton({ projectId, hasBomLines, hasVariances }: BoqActio
   );
 }
 
-// Inline actual cost editor for each row
+// BOQ item status dropdown — used in step-boq.tsx
+const BOQ_STATUS_OPTIONS = [
+  { value: 'yet_to_finalize', label: 'Yet to Finalize' },
+  { value: 'yet_to_place', label: 'Yet to Place' },
+  { value: 'order_placed', label: 'Order Placed' },
+  { value: 'received', label: 'Received' },
+  { value: 'ready_to_dispatch', label: 'Ready to Dispatch' },
+  { value: 'delivered', label: 'Delivered' },
+];
+
+const STATUS_DOT_COLORS: Record<string, string> = {
+  yet_to_finalize: '#7C818E',
+  yet_to_place: '#B45309',
+  order_placed: '#2563EB',
+  received: '#059669',
+  ready_to_dispatch: '#7C3AED',
+  delivered: '#00B050',
+};
+
+interface BoqItemStatusSelectProps {
+  projectId: string;
+  itemId: string;
+  currentStatus: string;
+}
+
+export function BoqItemStatusSelect({ projectId, itemId, currentStatus }: BoqItemStatusSelectProps) {
+  const router = useRouter();
+  const [saving, setSaving] = React.useState(false);
+
+  async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newStatus = e.target.value;
+    if (newStatus === currentStatus) return;
+    setSaving(true);
+    const result = await updateBoqItemStatus({ projectId, itemId, status: newStatus });
+    setSaving(false);
+    if (result.success) {
+      router.refresh();
+    }
+  }
+
+  const dotColor = STATUS_DOT_COLORS[currentStatus] ?? '#7C818E';
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span
+        className="w-2 h-2 rounded-full flex-shrink-0"
+        style={{ backgroundColor: dotColor }}
+      />
+      <select
+        value={currentStatus}
+        onChange={handleChange}
+        disabled={saving}
+        className="text-xs bg-transparent border-0 cursor-pointer focus:ring-1 focus:ring-p-300 rounded px-1 py-0.5 -ml-1 appearance-none pr-4"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237C818E' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 2px center',
+        }}
+      >
+        {BOQ_STATUS_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+      {saving && <span className="text-[10px] text-n-400">…</span>}
+    </div>
+  );
+}
+
+// Inline actual cost editor for each row (legacy cost variance view)
 interface BoqInlineEditProps {
   projectId: string;
   varianceId: string;
