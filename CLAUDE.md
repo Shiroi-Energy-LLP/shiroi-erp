@@ -28,7 +28,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
 | Database schema | ✅ Complete | 137+ tables, 91+ triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 6 with pipeline fields (expected_close_date, close_probability, is_archived) |
-| Migrations | ✅ Committed | supabase/migrations/ — 35 files (001 through 025) |
+| Migrations | ✅ Committed | supabase/migrations/ — 36 files (001 through 026) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, 22 components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + original 11) |
 | Auth + App Shell | ✅ Complete | Login (with logo), middleware, collapsible sidebar (240px/60px + mobile drawer), topbar with role switcher, skip-to-content |
@@ -73,10 +73,14 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Payments overview page | ✅ Complete | Project payments tracker with P&L, payment stages, next milestone amounts, expected collections this week/month, invested vs received, filter by active/outstanding |
 | Migration 020 | ✅ Applied (dev) | Pipeline fields: expected_close_date, close_probability, is_archived on leads + indexes |
 | Migration 021 | ✅ Applied (dev) | Payment follow-up trigger: auto-creates tasks when project reaches payment milestone stages |
-| Migration 022 | ✅ Applied (dev) | Data cleanup: junk lead deletion, deterministic SQL fixes, processing_jobs table |
-| Migration 023 | ✅ Applied (dev) | Expanded BOM item_category CHECK constraint for Excel parsing |
-| Migration 024 | ✅ Applied (dev) | Storage mime type fix function (update_storage_mime_type RPC) |
+| Migration 022a | ✅ Applied (dev) | Fix file delete RLS: expands DELETE policies on project-files and site-photos buckets (PM corrections) |
+| Migration 022b | ✅ Applied (dev) | Data cleanup: junk lead deletion, deterministic SQL fixes, processing_jobs table (data quality) |
+| Migration 023a | ✅ Applied (dev) | Survey form overhaul: ~25 new columns (GPS, roof details, electrical, shading, signatures) (PM corrections) |
+| Migration 023b | ✅ Applied (dev) | Expanded BOM item_category CHECK constraint for Excel parsing (data quality) |
+| Migration 024a | ✅ Applied (dev) | BOQ items + delivery challans: project_boq_items, delivery_challans tables (PM corrections) |
+| Migration 024b | ✅ Applied (dev) | Storage mime type fix function (update_storage_mime_type RPC) (data quality) |
 | Migration 025 | ✅ Applied (dev) | electricity_bill_number column on leads |
+| Migration 026 | ✅ Applied (dev) | site_photos: project_id nullable, added lead_id for lead-only photos |
 | Data quality overhaul | ✅ Complete | Full 7-phase plan executed. See details below |
 | BOM extraction | ✅ Complete | 3,450 BOM lines from 183 Excel costing sheets (deterministic, no AI) |
 | Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed → 496 leads + 114 proposals enriched |
