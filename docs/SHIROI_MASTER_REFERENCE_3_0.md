@@ -46,9 +46,10 @@
 | UI/UX Overhaul R2 | ✅ Complete | 9 items: hex→token purge (45+ files), 15 loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, semantic status tokens |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
+| Data quality overhaul | ✅ Complete | Phases 0–3: BOM extraction (3,450 lines from 183 Excel), doc extraction (707 proposals → 496 leads + 114 proposals enriched), photo registration (170), octet-stream fix (685 files), HubSpot enrichment, electricity_bill_number column. Leads with size: 172→893. Proposals with financials: 52→145. |
+| Migrations 022–025 | ✅ Applied (dev) | 022: data cleanup + processing_jobs table. 023: BOM categories. 024: storage mime fix. 025: electricity_bill_number on leads |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
-| Data cleanup | 🔜 Next | ~3 junk leads to review, name normalization, placeholder phones |
-| Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
+| Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
 
 **Coding workflow (locked):**
 Claude Code writes code directly in the repo → Vivek reviews every file → git commit and push.
