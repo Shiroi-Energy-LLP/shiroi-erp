@@ -5,7 +5,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@repo/ui';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, FileDown } from 'lucide-react';
+import { ProjectPdfButton } from '@/components/projects/forms/project-pdf-button';
 
 interface Tab {
   label: string;
@@ -95,6 +96,11 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* PDF Export */}
+        <div className="ml-auto pl-3">
+          <ProjectPdfButton projectId={projectId} label="PDF" />
+        </div>
       </nav>
     </div>
   );

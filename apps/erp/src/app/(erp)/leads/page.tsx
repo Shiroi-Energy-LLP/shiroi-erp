@@ -68,8 +68,10 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   if (params.search) currentFilters.search = params.search;
   if (params.assignedTo) currentFilters.assignedTo = params.assignedTo;
 
-  // Active view columns (from view or defaults)
-  const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
+  // Active view columns (from view or default view)
+  const activeView = params.view
+    ? views.find((v: any) => v.id === params.view)
+    : views.find((v: any) => v.is_default) ?? null;
   const viewCols = activeView?.columns as string[] | undefined;
   const visibleColumns = viewCols && viewCols.length > 0
     ? viewCols
@@ -141,7 +143,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
         sortDirection={params.dir}
         currentFilters={currentFilters}
         views={views}
-        activeViewId={params.view ?? null}
+        activeViewId={params.view ?? activeView?.id ?? null}
         visibleColumns={visibleColumns}
       />
     </div>

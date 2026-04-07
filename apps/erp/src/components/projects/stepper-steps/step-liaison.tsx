@@ -3,20 +3,50 @@ import { formatDate } from '@repo/ui/formatters';
 import { getStepLiaisonData } from '@/lib/project-stepper-queries';
 import { Building2 } from 'lucide-react';
 import Link from 'next/link';
+import {
+  LiaisonCreateButton,
+  DiscomStatusForm,
+  CeigStatusForm,
+  NetMeterForm,
+  FollowupButton,
+} from '@/components/projects/forms/liaison-form';
 
 interface StepLiaisonProps {
   projectId: string;
 }
 
 export async function StepLiaison({ projectId }: StepLiaisonProps) {
-  const { project, application } = await getStepLiaisonData(projectId);
+  let liaisonData: Awaited<ReturnType<typeof getStepLiaisonData>>;
+
+  try {
+    liaisonData = await getStepLiaisonData(projectId);
+  } catch (error) {
+    console.error('[StepLiaison] Failed to load data:', {
+      projectId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <Building2 className="w-12 h-12 text-red-400 opacity-50 mb-3" />
+        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
+        <p className="text-[13px] text-[#7C818E]">Could not load liaison data. Please refresh the page.</p>
+      </div>
+    );
+  }
+
+  const { project, application } = liaisonData;
 
   if (!application) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <Building2 className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
-        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Net Metering Application</h3>
-        <p className="text-[13px] text-[#7C818E]">Net metering liaison tracking will appear here once an application is filed.</p>
+      <div>
+        <LiaisonCreateButton projectId={projectId} />
+        <div className="flex flex-col items-center justify-center py-16">
+          <Building2 className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
+          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Net Metering Application</h3>
+          <p className="text-[13px] text-[#7C818E] max-w-md text-center">
+            Click &quot;Start Net Metering Application&quot; above to begin the liaison process.
+          </p>
+        </div>
       </div>
     );
   }
@@ -35,8 +65,12 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* DISCOM / TNEB Status */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">TNEB / DISCOM Status</CardTitle>
+          <DiscomStatusForm
+            projectId={projectId}
+            currentStatus={application.discom_status}
+          />
         </CardHeader>
         <CardContent className="space-y-3">
           <InfoRow label="DISCOM" value={application.discom_name} />
@@ -48,13 +82,20 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
           <InfoRow label="Application Date" value={application.discom_application_date ? formatDate(application.discom_application_date) : null} />
           <InfoRow label="Followup Count" value={application.followup_count?.toString()} />
           <InfoRow label="Next Followup" value={application.next_followup_date ? formatDate(application.next_followup_date) : null} />
+          <div className="pt-2">
+            <FollowupButton projectId={projectId} />
+          </div>
         </CardContent>
       </Card>
 
       {/* Net Meter Installation */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Net Meter Installation</CardTitle>
+          <NetMeterForm
+            projectId={projectId}
+            installed={application.net_meter_installed}
+          />
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between text-sm items-center">
@@ -71,8 +112,12 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
       {/* CEIG (if applicable) */}
       {showCeig && (
         <Card className="md:col-span-2">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">CEIG Clearance</CardTitle>
+            <CeigStatusForm
+              projectId={projectId}
+              currentStatus={application.ceig_status}
+            />
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

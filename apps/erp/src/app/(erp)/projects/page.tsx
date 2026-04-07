@@ -64,7 +64,10 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   if (params.status) currentFilters.status = params.status;
   if (params.search) currentFilters.search = params.search;
 
-  const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
+  // If explicit view param, use that. Otherwise fall back to user's default view.
+  const activeView = params.view
+    ? views.find((v: any) => v.id === params.view)
+    : views.find((v: any) => v.is_default) ?? null;
   const viewCols = activeView?.columns as string[] | undefined;
   const visibleColumns = viewCols && viewCols.length > 0
     ? viewCols
@@ -106,7 +109,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
         sortDirection={params.dir}
         currentFilters={currentFilters}
         views={views}
-        activeViewId={params.view ?? null}
+        activeViewId={params.view ?? activeView?.id ?? null}
         visibleColumns={visibleColumns}
       />
     </div>

@@ -1,19 +1,37 @@
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@repo/ui';
+import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 import { getStepCommissioningData } from '@/lib/project-stepper-queries';
 import { getProjectForCommissioning } from '@/lib/project-step-actions';
 import { Zap } from 'lucide-react';
 import { CommissioningForm } from '@/components/projects/forms/commissioning-form';
+import Link from 'next/link';
 
 interface StepCommissioningProps {
   projectId: string;
 }
 
 export async function StepCommissioning({ projectId }: StepCommissioningProps) {
-  const [report, projectInfo] = await Promise.all([
-    getStepCommissioningData(projectId),
-    getProjectForCommissioning(projectId),
-  ]);
+  let report: Awaited<ReturnType<typeof getStepCommissioningData>> = null;
+  let projectInfo: Awaited<ReturnType<typeof getProjectForCommissioning>> = null;
+
+  try {
+    [report, projectInfo] = await Promise.all([
+      getStepCommissioningData(projectId),
+      getProjectForCommissioning(projectId),
+    ]);
+  } catch (error) {
+    console.error('[StepCommissioning] Failed to load data:', {
+      projectId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <Zap className="w-12 h-12 text-red-400 opacity-50 mb-3" />
+        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
+        <p className="text-[13px] text-[#7C818E]">Could not load commissioning data. Please refresh the page.</p>
+      </div>
+    );
+  }
 
   const defaults = {
     system_size_kwp: projectInfo?.system_size_kwp ?? 0,
@@ -39,6 +57,14 @@ export async function StepCommissioning({ projectId }: StepCommissioningProps) {
   const irLow = report.insulation_resistance_mohm !== null && report.insulation_resistance_mohm < 0.5;
 
   return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <Link href={`/projects/${projectId}?tab=amc`}>
+          <Button size="sm" variant="ghost" className="text-xs">
+            Continue to AMC →
+          </Button>
+        </Link>
+      </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Commissioning Info */}
       <Card>
@@ -113,6 +139,7 @@ export async function StepCommissioning({ projectId }: StepCommissioningProps) {
           </CardContent>
         </Card>
       )}
+    </div>
     </div>
   );
 }

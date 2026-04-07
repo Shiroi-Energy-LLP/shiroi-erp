@@ -91,6 +91,48 @@ export async function saveView(input: {
   }
 }
 
+export async function setViewAsDefault(input: {
+  viewId: string;
+  entityType: string;
+  isDefault: boolean;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[setViewAsDefault]';
+  console.log(`${op} Setting view ${input.viewId} default=${input.isDefault}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // If setting as default, first unset any existing default for this entity type
+  if (input.isDefault) {
+    const { error: unsetError } = await supabase
+      .from('table_views')
+      .update({ is_default: false } as any)
+      .eq('owner_id', user.id)
+      .eq('entity_type', input.entityType)
+      .eq('is_default', true);
+
+    if (unsetError) {
+      console.error(`${op} Unset existing default failed:`, { code: unsetError.code, message: unsetError.message });
+    }
+  }
+
+  // Now set/unset the target view
+  const { error } = await supabase
+    .from('table_views')
+    .update({ is_default: input.isDefault } as any)
+    .eq('id', input.viewId)
+    .eq('owner_id', user.id);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/${input.entityType}`);
+  return { success: true };
+}
+
 export async function deleteView(viewId: string): Promise<{ success: boolean; error?: string }> {
   const op = '[deleteView]';
   console.log(`${op} Deleting: ${viewId}`);

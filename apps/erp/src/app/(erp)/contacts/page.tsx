@@ -58,7 +58,9 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
   if (params.search) currentFilters.search = params.search;
   if (params.stage) currentFilters.stage = params.stage;
 
-  const activeView = params.view ? views.find((v: any) => v.id === params.view) : null;
+  const activeView = params.view
+    ? views.find((v: any) => v.id === params.view)
+    : views.find((v: any) => v.is_default) ?? null;
   const viewCols = activeView?.columns as string[] | undefined;
   const visibleColumns = viewCols && viewCols.length > 0
     ? viewCols
@@ -103,7 +105,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
         sortDirection={params.dir}
         currentFilters={currentFilters}
         views={views}
-        activeViewId={params.view ?? null}
+        activeViewId={params.view ?? activeView?.id ?? null}
         visibleColumns={visibleColumns}
       />
     </div>
