@@ -1,0 +1,25 @@
+{
+  "name": "whatsapp-import",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "npx tsx run.ts",
+    "test": "npx vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.0",
+    "@supabase/supabase-js": "^2.49.0",
+    "adm-zip": "^0.5.16",
+    "sharp": "^0.33.5",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "dotenv-cli": "^7.4.0"
+  }
+}
