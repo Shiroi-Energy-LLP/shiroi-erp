@@ -88,7 +88,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 022 | ✅ Written | Fix file delete RLS: expands DELETE policies on project-files and site-photos buckets |
 | Migration 023 | ✅ Written | Survey form overhaul: ~25 new columns (GPS, roof details, electrical, shading, signatures) |
 | Migration 024 | ✅ Written | BOQ items + delivery challans: project_boq_items, delivery_challans, delivery_challan_items tables |
-| PM corrections merge | 🔜 Next | Worktree branch `claude/eager-driscoll` has all Phases 1-8 code. Merge to main after review. |
+| PM corrections merge | ✅ Merged | Worktree branch `claude/eager-driscoll` merged to main (commit 888250d). Deployed to Vercel. |
 | Data cleanup | 🔜 Later | ~3 junk leads to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After PM corrections merged + migrations applied + data cleaned on dev |
 
@@ -545,4 +545,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — PM Corrections (8 phases) complete in worktree. Phase 0 bug fixes + proposals page fix pushed to main. Phases 1-8 in branch `claude/eager-driscoll`: default views, survey overhaul (7-section), BOQ+DC flow, execution milestones, QC/liaison/commissioning, AMC, PDF exports, task↔execution. Migrations 022-024 written. Next: Merge worktree to main, apply migrations to dev, data cleanup, prod deployment.*
+*Last updated: April 7, 2026 — PM Corrections (8 phases) merged to main and deployed to Vercel. Proposals page fix (proposal_type column). Migrations 022-024 written (not yet applied to dev). Next: Apply migrations 022-024 to dev Supabase, regenerate types, remove `as any` casts, data cleanup, prod deployment.*
