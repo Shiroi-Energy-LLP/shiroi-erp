@@ -73,12 +73,35 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Payments overview page | ✅ Complete | Project payments tracker with P&L, payment stages, next milestone amounts, expected collections this week/month, invested vs received, filter by active/outstanding |
 | Migration 020 | ✅ Applied (dev) | Pipeline fields: expected_close_date, close_probability, is_archived on leads + indexes |
 | Migration 021 | ✅ Applied (dev) | Payment follow-up trigger: auto-creates tasks when project reaches payment milestone stages |
-| Data cleanup | 🔜 Next | ~3 junk leads to review, name normalization, placeholder phones |
-| Prod deployment | 🔜 Later | After data is cleaned on dev, migrate to prod |
+| Auto-search all pages | ✅ Complete | Debounced SearchInput + instant FilterSelect + FilterBar across 12 pages — no more submit buttons |
+| PM corrections plan | ✅ Planned | 14 tasks across 8 phases: bug fixes, default views, survey overhaul, BOM→BOQ→DC flow, execution milestones + daily logs, QC/liaison/commissioning, AMC/service, PDF exports |
+| PM corrections build | 🔧 In Progress | Phase 0 (bug fixes) → Phase 7 (PDFs). ~10 migrations (022-031). Plan: `docs/superpowers/plans/2026-04-07-pm-corrections-final.md` |
+| Data cleanup | 🔜 Later | ~3 junk leads to review, name normalization, placeholder phones |
+| Prod deployment | 🔜 Later | After PM corrections complete + data cleaned on dev |
 
-**Current phase: 3 — Advanced Features + Deployment**
-Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign (20 tasks) complete.
-Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
+**Current phase: 3B — PM Corrections Build**
+Phase 3 items complete. Marketing redesign complete. Now: full project module overhaul per PM Manivel's detailed specs.
+Full PM corrections plan: `docs/superpowers/plans/2026-04-07-pm-corrections-final.md`
+
+### PM Feedback Decisions (April 7, 2026 — from Manivel, witnessed by Vivek)
+
+| Decision | Detail |
+|----------|--------|
+| Survey format | 7-section solar site survey: Project Details, Mounting & Feasibility, Client Discussion, Equipment Location (4× photo upload), Electrical Connectivity (4× photo upload), Deviations, Sign-off (canvas signatures) |
+| Signatures | Canvas-based finger drawing on tablet/browser — used for Survey, DC, Commissioning |
+| Partial dispatch | DC supports partial qty dispatch (50 of 100 panels in DC1, rest in DC2) |
+| Daily logs as tasks | Each daily activity log entry creates a Task in main tasks table, assignable to different engineers |
+| Execution milestones | Fixed 10 categories for all projects (Site Visit → Earth Pit Installation) |
+| QC gate | QC must be uploaded AND approved by PM before project moves to Liaison |
+| Commissioning lock | 24h after submission → locked. Full detailed format (11 sections). PDF required. |
+| Monitoring creds | Visible only to: site engineer (for that project), PM, founder |
+| Free AMC | 3 visits/year (every 4 months from commissioning) |
+| Paid AMC | Variable: 3, 4, or monthly (cleaning). Revenue tracking (skip invoicing for now). Multiple contracts per project. |
+| GST rates | 5%, 18%, 28% only (12% discontinued in India) |
+| BOQ lock | After "BOQ Completed" → editable only by PM |
+| Default views | Per user only (not role-wide). Auto-loads on page visit. Star indicator. |
+| DC transport | Vehicle number, driver name, transport mode fields on delivery challan |
+| Commissioning format | Full detailed 11 sections (pages 14-17 of PM doc), not simplified version |
 
 ---
 
@@ -509,4 +532,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 6, 2026 — Marketing redesign (20 tasks: stage-based pipeline, tabbed lead detail, task-centric follow-ups, mandatory follow-up dates, weighted pipeline KPIs), Payments overview page (project P&L tracker, payment stages, expected collections), Migrations 020+021 applied (pipeline fields + payment follow-up trigger). Next: Marketing manager (Prem) feedback, data cleanup, prod deployment.*
+*Last updated: April 7, 2026 — PM corrections plan created (14 tasks, 8 phases, ~10 migrations). Bugs found: advance status FK error, file delete RLS, survey constraint mismatch, BOM enum error, execution tab error handling. All Manivel decisions documented. Auto-search shipped to all 12 filter bars. Next: Execute PM corrections build (Phase 0 bug fixes → Phase 7 PDFs).*

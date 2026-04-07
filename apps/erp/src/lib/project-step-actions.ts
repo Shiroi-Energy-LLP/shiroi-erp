@@ -294,20 +294,28 @@ export async function advanceProjectStatus(input: {
     return { success: false, error: updateError.message };
   }
 
-  // Log status change in history
-  const { error: historyError } = await supabase
-    .from('project_status_history')
-    .insert({
-      project_id: input.projectId,
-      from_status: input.currentStatus,
-      to_status: nextStatus,
-      changed_by: employee.id,
-      reason: `Advanced from ${getStatusLabel(input.currentStatus)} to ${getStatusLabel(nextStatus)}`,
-    } as any);
+  // Log status change in history (changed_by is nullable per migration 012)
+  try {
+    const { error: historyError } = await supabase
+      .from('project_status_history')
+      .insert({
+        project_id: input.projectId,
+        from_status: input.currentStatus as any,
+        to_status: nextStatus as any,
+        changed_by: employee?.id ?? null,
+        reason: `Advanced from ${getStatusLabel(input.currentStatus)} to ${getStatusLabel(nextStatus)}`,
+      });
 
-  if (historyError) {
-    console.error(`${op} History insert failed (non-blocking):`, { code: historyError.code, message: historyError.message });
-    // Non-blocking — status update already succeeded
+    if (historyError) {
+      console.error(`${op} History insert failed (non-blocking):`, {
+        code: historyError.code,
+        message: historyError.message,
+        employeeId: employee?.id,
+        projectId: input.projectId,
+      });
+    }
+  } catch (err) {
+    console.error(`${op} History insert threw (non-blocking):`, err instanceof Error ? err.message : String(err));
   }
 
   revalidatePath(`/projects/${input.projectId}`);
@@ -417,7 +425,7 @@ export async function addBomLine(input: {
       unit_price: input.data.unit_price,
       gst_rate: input.data.gst_rate,
       gst_amount: gstAmount,
-      gst_type: 'cgst_sgst' as any,
+      gst_type: 'supply',
       total_price: totalPrice,
       scope_owner: 'shiroi' as any,
     } as any);

@@ -72,7 +72,7 @@ export const LEAD_COLUMNS: ColumnDef[] = [
 export const PROPOSAL_COLUMNS: ColumnDef[] = [
   { key: 'proposal_number', label: 'Proposal #', sortKey: 'proposal_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
   { key: 'customer_name', label: 'Customer', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
-  { key: 'proposal_type', label: 'Type', sortKey: 'proposal_type', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
+  { key: 'proposal_type', label: 'Type', sortKey: 'is_budgetary', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'detailed', label: 'Detailed' }, { value: 'budgetary', label: 'Budgetary' }] },
   { key: 'system_type', label: 'System', sortKey: 'system_type', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'on_grid', label: 'On-Grid' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'off_grid', label: 'Off-Grid' }] },

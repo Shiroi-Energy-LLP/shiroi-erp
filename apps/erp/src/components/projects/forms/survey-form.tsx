@@ -31,11 +31,38 @@ interface SurveyFormProps {
   onCancel?: () => void;
 }
 
-const ROOF_TYPES = ['RCC Flat', 'Metal Sheet', 'Tiled', 'Asbestos', 'Mixed', 'Other'];
-const STRUCTURE_TYPES = ['Elevated', 'Flush Mount', 'Ground Mount', 'Tilt Structure', 'Custom'];
-const SHADING_OPTIONS = ['No Shade', 'Minimal', 'Moderate', 'Heavy'];
-const METER_TYPES = ['Single Phase', 'Three Phase', 'HT'];
-const SYSTEM_TYPES = ['on_grid', 'hybrid', 'off_grid'];
+// value → label pairs matching DB check constraints
+const ROOF_TYPES = [
+  { value: 'flat_rcc', label: 'RCC Flat' },
+  { value: 'sloped_rcc', label: 'RCC Sloped' },
+  { value: 'tin_sheet', label: 'Metal Sheet' },
+  { value: 'mangalore_tile', label: 'Tiled' },
+  { value: 'asbestos', label: 'Asbestos' },
+  { value: 'metal_deck', label: 'Metal Deck' },
+  { value: 'other', label: 'Other' },
+];
+const STRUCTURE_TYPES = [
+  { value: 'rcc_column', label: 'RCC Column' },
+  { value: 'elevated_ms', label: 'Elevated MS' },
+  { value: 'ground_mount', label: 'Ground Mount' },
+  { value: 'carport', label: 'Carport' },
+  { value: 'other', label: 'Other' },
+];
+const SHADING_OPTIONS = [
+  { value: 'none', label: 'No Shade' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'severe', label: 'Heavy / Severe' },
+];
+const METER_TYPES = [
+  { value: 'single_phase', label: 'Single Phase' },
+  { value: 'three_phase', label: 'Three Phase' },
+];
+const SYSTEM_TYPES = [
+  { value: 'on_grid', label: 'On Grid' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'off_grid', label: 'Off Grid' },
+];
 
 export function SurveyForm({ projectId, existing, onCancel }: SurveyFormProps) {
   const router = useRouter();
@@ -113,14 +140,14 @@ export function SurveyForm({ projectId, existing, onCancel }: SurveyFormProps) {
                 <Label htmlFor="roof_type">Roof Type *</Label>
                 <Select id="roof_type" name="roof_type" defaultValue={existing?.roof_type ?? ''} required>
                   <option value="" disabled>Select roof type...</option>
-                  {ROOF_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {ROOF_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </div>
               <div>
                 <Label htmlFor="structure_type">Structure Type *</Label>
                 <Select id="structure_type" name="structure_type" defaultValue={existing?.structure_type ?? ''} required>
                   <option value="" disabled>Select structure type...</option>
-                  {STRUCTURE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {STRUCTURE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </div>
               <div>
@@ -135,7 +162,7 @@ export function SurveyForm({ projectId, existing, onCancel }: SurveyFormProps) {
                 <Label htmlFor="shading_assessment">Shading Assessment</Label>
                 <Select id="shading_assessment" name="shading_assessment" defaultValue={existing?.shading_assessment ?? ''}>
                   <option value="">Select...</option>
-                  {SHADING_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {SHADING_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </div>
               <div>
@@ -161,7 +188,7 @@ export function SurveyForm({ projectId, existing, onCancel }: SurveyFormProps) {
                 <Label htmlFor="meter_type">Meter Type</Label>
                 <Select id="meter_type" name="meter_type" defaultValue={existing?.meter_type ?? ''}>
                   <option value="">Select...</option>
-                  {METER_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {METER_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </div>
               <div>
@@ -187,7 +214,7 @@ export function SurveyForm({ projectId, existing, onCancel }: SurveyFormProps) {
                 <Label htmlFor="recommended_system_type">Recommended System Type</Label>
                 <Select id="recommended_system_type" name="recommended_system_type" defaultValue={existing?.recommended_system_type ?? ''}>
                   <option value="">Select...</option>
-                  {SYSTEM_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+                  {SYSTEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </div>
               <div>

@@ -1552,6 +1552,13 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Column picker drag-drop: state-based tracking with visual feedback
 - 0 TypeScript errors across entire monorepo
 
+**What changed in v3.5 (Apr 7, 2026):**
+- Auto-search on all 12 filter bars: debounced SearchInput + instant FilterSelect + FilterBar components. No more submit buttons.
+- PM corrections plan created: 14 tasks, 8 phases, 10 migrations (022-031). Full plan: `docs/superpowers/plans/2026-04-07-pm-corrections-final.md`
+- Bugs identified: advance status FK error (changed_by), file delete RLS (founder-only policy), survey roof_type constraint mismatch, BOM gst_type enum error, execution tab error handling
+- Manivel feedback session: 22 decisions documented (signatures=canvas, partial dispatch, daily logs as tasks, QC gate, 24h commissioning lock, 3 free AMC visits, paid AMC revenue tracking, GST 5/18/28%, BOQ PM-only lock, per-user default views)
+- PM corrections build in progress: Phase 0 (bug fixes) through Phase 7 (PDF exports)
+
 **What changed in v3.4 (Apr 6, 2026):**
 - Marketing redesign: 20-task implementation — stage-based leads pipeline, weighted pipeline KPIs, tab-based lead detail
 - Lead detail tabs: Details, Activities, Tasks, Proposal, Files, Payments (conditional on won/converted)
