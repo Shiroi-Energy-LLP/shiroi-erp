@@ -179,10 +179,10 @@ export async function createOrUpdateSurvey(input: {
           .from('project_status_history')
           .insert({
             project_id: input.projectId,
-            old_status: project.status,
-            new_status: nextStatus,
+            from_status: project.status,
+            to_status: nextStatus,
             changed_by: employee?.id ?? null,
-            notes: 'Auto-advanced: site survey completed',
+            reason: 'Auto-advanced: site survey completed',
           } as any);
       } catch (histErr) {
         console.error('[createOrUpdateSurvey] History insert failed (non-blocking):', {
@@ -364,20 +364,27 @@ export async function advanceProjectStatus(input: {
     return { success: false, error: updateError.message };
   }
 
-  // Log status change in history
-  const { error: historyError } = await supabase
-    .from('project_status_history')
-    .insert({
-      project_id: input.projectId,
-      from_status: input.currentStatus,
-      to_status: nextStatus,
-      changed_by: employee?.id ?? null,
-      reason: `Advanced from ${getStatusLabel(input.currentStatus)} to ${getStatusLabel(nextStatus)}`,
-    } as any);
+  // Log status change in history (non-blocking — status update already succeeded)
+  try {
+    const { error: historyError } = await supabase
+      .from('project_status_history')
+      .insert({
+        project_id: input.projectId,
+        from_status: input.currentStatus,
+        to_status: nextStatus,
+        changed_by: employee?.id ?? null,
+        reason: `Advanced from ${getStatusLabel(input.currentStatus)} to ${getStatusLabel(nextStatus)}`,
+      } as any);
 
-  if (historyError) {
-    console.error(`${op} History insert failed (non-blocking):`, { code: historyError.code, message: historyError.message });
-    // Non-blocking — status update already succeeded
+    if (historyError) {
+      console.error(`${op} History insert failed (non-blocking):`, {
+        code: historyError.code,
+        message: historyError.message,
+        employeeId: employee?.id,
+      });
+    }
+  } catch (err) {
+    console.error(`${op} History insert threw (non-blocking):`, err instanceof Error ? err.message : String(err));
   }
 
   revalidatePath(`/projects/${input.projectId}`);
@@ -1057,6 +1064,7 @@ export async function createQuickTask(input: {
   title: string;
   priority?: string;
   dueDate?: string;
+  assignedTo?: string;
 }): Promise<{ success: boolean; taskId?: string; error?: string }> {
   const op = '[createQuickTask]';
   console.log(`${op} Creating task for project: ${input.projectId}`);
@@ -1084,7 +1092,7 @@ export async function createQuickTask(input: {
       entity_type: 'project',
       entity_id: input.projectId,
       created_by: employee.id,
-      assigned_to: employee.id,
+      assigned_to: input.assignedTo || employee.id,
     })
     .select('id')
     .single();
@@ -1095,5 +1103,135 @@ export async function createQuickTask(input: {
   }
 
   revalidatePath(`/projects/${input.projectId}`);
+  revalidatePath('/tasks');
+  revalidatePath('/my-tasks');
   return { success: true, taskId: task?.id };
+}
+
+// ── Commissioning Report: Update existing ──
+
+export async function updateCommissioningReport(input: {
+  projectId: string;
+  reportId: string;
+  data: {
+    commissioning_date?: string;
+    system_size_kwp?: number;
+    panel_count_installed?: number;
+    inverter_serial_number?: string | null;
+    initial_reading_kwh?: number;
+    dc_voltage_v?: number | null;
+    dc_current_a?: number | null;
+    ac_voltage_v?: number | null;
+    ac_frequency_hz?: number | null;
+    earth_resistance_ohm?: number | null;
+    insulation_resistance_mohm?: number | null;
+    generation_confirmed?: boolean;
+    customer_explained?: boolean;
+    app_download_assisted?: boolean;
+    notes?: string | null;
+    status?: string;
+  };
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateCommissioningReport]';
+  console.log(`${op} Updating report ${input.reportId} for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const updatePayload: Record<string, unknown> = {};
+  const d = input.data;
+  if (d.commissioning_date !== undefined) updatePayload.commissioning_date = d.commissioning_date;
+  if (d.system_size_kwp !== undefined) updatePayload.system_size_kwp = d.system_size_kwp;
+  if (d.panel_count_installed !== undefined) updatePayload.panel_count_installed = d.panel_count_installed;
+  if (d.inverter_serial_number !== undefined) updatePayload.inverter_serial_number = d.inverter_serial_number;
+  if (d.initial_reading_kwh !== undefined) updatePayload.initial_reading_kwh = d.initial_reading_kwh;
+  if (d.dc_voltage_v !== undefined) updatePayload.dc_voltage_v = d.dc_voltage_v;
+  if (d.dc_current_a !== undefined) updatePayload.dc_current_a = d.dc_current_a;
+  if (d.ac_voltage_v !== undefined) updatePayload.ac_voltage_v = d.ac_voltage_v;
+  if (d.ac_frequency_hz !== undefined) updatePayload.ac_frequency_hz = d.ac_frequency_hz;
+  if (d.earth_resistance_ohm !== undefined) updatePayload.earth_resistance_ohm = d.earth_resistance_ohm;
+  if (d.insulation_resistance_mohm !== undefined) updatePayload.insulation_resistance_mohm = d.insulation_resistance_mohm;
+  if (d.generation_confirmed !== undefined) updatePayload.generation_confirmed = d.generation_confirmed;
+  if (d.customer_explained !== undefined) updatePayload.customer_explained = d.customer_explained;
+  if (d.app_download_assisted !== undefined) updatePayload.app_download_assisted = d.app_download_assisted;
+  if (d.notes !== undefined) updatePayload.notes = d.notes;
+  if (d.status !== undefined) updatePayload.status = d.status;
+
+  if (Object.keys(updatePayload).length === 0) {
+    return { success: true };
+  }
+
+  const { error } = await supabase
+    .from('commissioning_reports')
+    .update(updatePayload as any)
+    .eq('id', input.reportId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── Task: Toggle completion ──
+
+export async function toggleTaskCompletion(input: {
+  taskId: string;
+  isCompleted: boolean;
+  projectId?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[toggleTaskCompletion]';
+  console.log(`${op} Setting task ${input.taskId} to ${input.isCompleted ? 'completed' : 'pending'}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const updateData: Record<string, unknown> = {
+    is_completed: input.isCompleted,
+  };
+  if (input.isCompleted) {
+    updateData.completed_at = new Date().toISOString();
+  } else {
+    updateData.completed_at = null;
+  }
+
+  const { error } = await supabase
+    .from('tasks')
+    .update(updateData as any)
+    .eq('id', input.taskId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  if (input.projectId) {
+    revalidatePath(`/projects/${input.projectId}`);
+  }
+  revalidatePath('/tasks');
+  revalidatePath('/my-tasks');
+  return { success: true };
+}
+
+// ── Employees: Get active list for dropdowns ──
+
+export async function getActiveEmployeesForProject(): Promise<{ id: string; full_name: string }[]> {
+  const op = '[getActiveEmployeesForProject]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('employees')
+    .select('id, full_name')
+    .eq('is_active', true)
+    .order('full_name');
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+  return data ?? [];
 }

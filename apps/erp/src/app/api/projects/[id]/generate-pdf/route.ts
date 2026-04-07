@@ -40,9 +40,21 @@ export async function POST(
     // Assemble PDF data
     const pdfData = await assembleProjectPdfData(projectId, sections);
 
+    // Filter out sections with no data to avoid rendering errors
+    const availableSections = sections.filter((sec) => {
+      if (sec === 'survey' && !pdfData.survey) return false;
+      if (sec === 'boq' && (!pdfData.boqItems || pdfData.boqItems.length === 0)) return false;
+      if (sec === 'commissioning' && !pdfData.commissioningReport) return false;
+      if (sec === 'dc' && (!pdfData.outgoingChallans || pdfData.outgoingChallans.length === 0)) return false;
+      if (sec === 'qc' && (!pdfData.qcInspections || pdfData.qcInspections.length === 0)) return false;
+      return true;
+    });
+
+    console.log(`${op} Rendering PDF with available sections: ${availableSections.join(', ')}`);
+
     // Render PDF
     const pdfBuffer = await renderToBuffer(
-      React.createElement(ProjectReportPDF, { data: pdfData, sections }) as any
+      React.createElement(ProjectReportPDF, { data: pdfData, sections: availableSections }) as any
     );
 
     // Return as download

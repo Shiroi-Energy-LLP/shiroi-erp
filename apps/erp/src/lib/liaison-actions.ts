@@ -31,7 +31,7 @@ export async function createNetMeteringApplication(input: {
     .insert({
       project_id: input.projectId,
       discom_name: input.discomName || 'TANGEDCO',
-      discom_status: 'not_started',
+      discom_status: 'pending',
       ceig_required: false,
       followup_count: 0,
     } as any);

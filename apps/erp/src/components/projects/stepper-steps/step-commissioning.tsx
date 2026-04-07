@@ -56,8 +56,36 @@ export async function StepCommissioning({ projectId }: StepCommissioningProps) {
 
   const irLow = report.insulation_resistance_mohm !== null && report.insulation_resistance_mohm < 0.5;
 
+  // Prepare existing report data for the edit form
+  const editableReport = {
+    id: report.id,
+    commissioning_date: report.commissioning_date,
+    system_size_kwp: report.system_size_kwp,
+    panel_count_installed: report.panel_count_installed,
+    inverter_serial_number: report.inverter_serial_number,
+    initial_reading_kwh: report.initial_reading_kwh,
+    dc_voltage_v: report.dc_voltage_v,
+    dc_current_a: report.dc_current_a,
+    ac_voltage_v: report.ac_voltage_v,
+    ac_frequency_hz: report.ac_frequency_hz,
+    earth_resistance_ohm: report.earth_resistance_ohm,
+    insulation_resistance_mohm: report.insulation_resistance_mohm,
+    generation_confirmed: report.generation_confirmed,
+    customer_explained: report.customer_explained,
+    app_download_assisted: report.app_download_assisted,
+    notes: report.notes,
+    status: report.status,
+  };
+
   return (
     <div className="space-y-6">
+      {/* Edit form (collapsed by default) */}
+      <CommissioningForm
+        projectId={projectId}
+        defaults={defaults}
+        existingReport={editableReport}
+      />
+
       <div className="flex justify-end">
         <Link href={`/projects/${projectId}?tab=amc`}>
           <Button size="sm" variant="ghost" className="text-xs">

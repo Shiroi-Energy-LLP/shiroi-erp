@@ -3,9 +3,11 @@ import {
 } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 import { getStepExecutionData } from '@/lib/project-stepper-queries';
+import { getActiveEmployeesForProject } from '@/lib/project-step-actions';
 import { HardHat, Calendar, CheckCircle2, Clock, AlertTriangle, ListTodo } from 'lucide-react';
 import Link from 'next/link';
 import { MilestoneSeedButton, MilestoneStatusControl, QuickTaskForm } from '@/components/projects/forms/milestone-form';
+import { TaskCompletionToggle } from '@/components/projects/forms/task-completion-toggle';
 
 interface StepExecutionProps {
   projectId: string;
@@ -27,12 +29,17 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
   let milestones: Awaited<ReturnType<typeof getStepExecutionData>>['milestones'] = [];
   let reportCount = 0;
   let tasks: Awaited<ReturnType<typeof getStepExecutionData>>['tasks'] = [];
+  let employees: { id: string; full_name: string }[] = [];
 
   try {
-    const data = await getStepExecutionData(projectId);
+    const [data, empList] = await Promise.all([
+      getStepExecutionData(projectId),
+      getActiveEmployeesForProject(),
+    ]);
     milestones = data.milestones;
     reportCount = data.reportCount;
     tasks = data.tasks;
+    employees = empList;
   } catch (error) {
     console.error('[StepExecution] Failed to load execution data:', {
       projectId,
@@ -211,7 +218,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
             <span className="text-xs text-n-500">
               {tasks.filter((t: any) => t.is_completed).length}/{tasks.length} done
             </span>
-            <QuickTaskForm projectId={projectId} milestones={milestones} />
+            <QuickTaskForm projectId={projectId} milestones={milestones} employees={employees} />
           </div>
         </CardHeader>
         {tasks.length > 0 ? (
@@ -242,11 +249,11 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
                     return (
                       <tr key={task.id} className={`border-b border-n-100 ${task.is_completed ? 'opacity-50' : ''}`}>
                         <td className="px-3 py-2">
-                          {task.is_completed ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <div className="w-4 h-4 rounded-full border-2 border-n-300" />
-                          )}
+                          <TaskCompletionToggle
+                            taskId={task.id}
+                            isCompleted={task.is_completed}
+                            projectId={projectId}
+                          />
                         </td>
                         <td className={`px-3 py-2 ${task.is_completed ? 'line-through text-n-400' : 'text-n-900'}`}>
                           {task.title}

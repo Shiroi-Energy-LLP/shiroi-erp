@@ -142,9 +142,10 @@ export function MilestoneStatusControl({
 interface QuickTaskFormProps {
   projectId: string;
   milestones: { id: string; milestone_name: string }[];
+  employees: { id: string; full_name: string }[];
 }
 
-export function QuickTaskForm({ projectId, milestones }: QuickTaskFormProps) {
+export function QuickTaskForm({ projectId, milestones, employees }: QuickTaskFormProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -165,6 +166,7 @@ export function QuickTaskForm({ projectId, milestones }: QuickTaskFormProps) {
       title,
       priority: (fd.get('priority') as string) || 'medium',
       dueDate: (fd.get('due_date') as string) || undefined,
+      assignedTo: (fd.get('assigned_to') as string) || undefined,
     });
 
     setSaving(false);
@@ -185,7 +187,7 @@ export function QuickTaskForm({ projectId, milestones }: QuickTaskFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 bg-n-50 rounded-lg px-3 py-2">
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2 bg-n-50 rounded-lg px-3 py-2">
       <input
         name="title"
         placeholder="Task title..."
@@ -193,6 +195,14 @@ export function QuickTaskForm({ projectId, milestones }: QuickTaskFormProps) {
         autoFocus
         className="text-xs border border-n-200 rounded px-2 py-1 w-40 focus:ring-1 focus:ring-p-300 bg-white"
       />
+      <select name="assigned_to" className="text-xs border border-n-200 rounded px-2 py-1 bg-white">
+        <option value="">Assign to...</option>
+        {employees.map((emp) => (
+          <option key={emp.id} value={emp.id}>
+            {emp.full_name}
+          </option>
+        ))}
+      </select>
       <select name="milestone_id" className="text-xs border border-n-200 rounded px-2 py-1 bg-white">
         <option value="">No milestone</option>
         {milestones.map((m) => (

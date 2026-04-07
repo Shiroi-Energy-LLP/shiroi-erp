@@ -131,11 +131,19 @@ function formatINR(amount: number): string {
   }).format(amount);
 }
 
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+function safeStr(val: unknown): string {
+  if (val === null || val === undefined) return '\u2014';
+  if (typeof val === 'string') return val || '\u2014';
+  if (typeof val === 'number') return String(val);
+  if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+  return String(val);
+}
+
+function InfoRow({ label, value }: { label: string; value: unknown }) {
   return (
     <View style={s.row}>
       <Text style={s.label}>{label}</Text>
-      <Text style={s.value}>{value || '\u2014'}</Text>
+      <Text style={s.value}>{safeStr(value)}</Text>
     </View>
   );
 }

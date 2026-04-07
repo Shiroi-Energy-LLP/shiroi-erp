@@ -87,6 +87,8 @@ export async function createAmcSchedule(input: {
   }
 
   revalidatePath('/om/amc');
+  revalidatePath('/om/visits');
+  revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }
 

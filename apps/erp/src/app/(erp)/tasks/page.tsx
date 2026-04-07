@@ -3,6 +3,7 @@ import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { isTaskOverdue, formatEntityType } from '@/lib/tasks-helpers';
 import { formatDate } from '@repo/ui/formatters';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
+import { TaskCompletionToggle } from '@/components/projects/forms/task-completion-toggle';
 import {
   Card,
   CardContent,
@@ -19,6 +20,7 @@ import { ClipboardList } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
+import Link from 'next/link';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -55,6 +57,8 @@ interface TasksPageProps {
     priority?: string;
     entity_type?: string;
     search?: string;
+    project?: string;
+    assigned_to?: string;
   }>;
 }
 
@@ -66,12 +70,16 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       priority: params.priority || undefined,
       entity_type: params.entity_type || undefined,
       search: params.search || undefined,
+      project_id: params.project || undefined,
+      assigned_to: params.assigned_to || undefined,
     }),
     getActiveEmployees(),
     getActiveProjects(),
   ]);
 
-  const hasFilters = params.status || params.priority || params.entity_type || params.search;
+  const hasFilters = params.status || params.priority || params.entity_type || params.search || params.project || params.assigned_to;
+  const pendingCount = tasks.filter((t) => !t.is_completed).length;
+  const completedCount = tasks.filter((t) => t.is_completed).length;
 
   return (
     <div className="space-y-6">
@@ -81,7 +89,9 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
           <Eyebrow className="mb-1">TASKS</Eyebrow>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
             Tasks{' '}
-            <span className="text-base font-normal text-[#7C818E]">({tasks.length})</span>
+            <span className="text-base font-normal text-[#7C818E]">
+              ({pendingCount} pending, {completedCount} done)
+            </span>
           </h1>
         </div>
         <CreateTaskDialog employees={employees} projects={projects} />
@@ -90,7 +100,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <FilterBar basePath="/tasks" filterParams={['search', 'status', 'priority', 'entity_type']}>
+          <FilterBar basePath="/tasks" filterParams={['search', 'status', 'priority', 'entity_type', 'project', 'assigned_to']}>
             <FilterSelect paramName="status" className="w-40">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
@@ -107,6 +117,18 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
               <option value="">All Entity Types</option>
               {ENTITY_TYPE_OPTIONS.map((e) => (
                 <option key={e.value} value={e.value}>{e.label}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect paramName="assigned_to" className="w-44">
+              <option value="">All Engineers</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect paramName="project" className="w-48">
+              <option value="">All Projects</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>{p.project_number} — {p.customer_name}</option>
               ))}
             </FilterSelect>
             <SearchInput
@@ -134,7 +156,9 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8"></TableHead>
                   <TableHead>Title</TableHead>
+                  <TableHead>Project</TableHead>
                   <TableHead>Assigned To</TableHead>
                   <TableHead>Entity Type</TableHead>
                   <TableHead>Priority</TableHead>
@@ -145,11 +169,29 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
               <TableBody>
                 {tasks.map((task) => {
                   const overdue = isTaskOverdue(task.due_date) && !task.is_completed;
+                  const projectInfo = task.project as { project_number: string; customer_name: string } | null;
 
                   return (
-                    <TableRow key={task.id}>
-                      <TableCell className="font-medium max-w-[300px] truncate">
+                    <TableRow key={task.id} className={task.is_completed ? 'opacity-60' : ''}>
+                      <TableCell>
+                        <TaskCompletionToggle
+                          taskId={task.id}
+                          isCompleted={task.is_completed}
+                          projectId={task.project_id ?? undefined}
+                        />
+                      </TableCell>
+                      <TableCell className={`font-medium max-w-[250px] truncate ${task.is_completed ? 'line-through text-n-400' : ''}`}>
                         {task.title}
+                      </TableCell>
+                      <TableCell>
+                        {projectInfo ? (
+                          <Link href={`/projects/${task.project_id}`} className="text-p-600 hover:underline text-xs">
+                            <div className="font-medium">{projectInfo.project_number}</div>
+                            <div className="text-n-500 text-[11px]">{projectInfo.customer_name}</div>
+                          </Link>
+                        ) : (
+                          <span className="text-[#9CA0AB]">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {task.assignee?.full_name ?? <span className="text-[#9CA0AB]">Unassigned</span>}

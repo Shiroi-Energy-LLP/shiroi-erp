@@ -36,7 +36,7 @@ export function QcInspectionForm({ projectId, milestones, nextGateNumber }: QcIn
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [checklist, setChecklist] = React.useState<ChecklistItem[]>(DEFAULT_CHECKLIST);
-  const [result, setResult] = React.useState('pass');
+  const [result, setResult] = React.useState('passed');
 
   function addChecklistItem() {
     setChecklist([...checklist, { item: '', passed: false, notes: '' }]);
@@ -77,7 +77,7 @@ export function QcInspectionForm({ projectId, milestones, nextGateNumber }: QcIn
         milestone_id: milestoneId,
         inspection_date: inspDate || new Date().toISOString().split('T')[0]!,
         overall_result: result,
-        requires_reinspection: result === 'fail' || result === 'conditional_pass',
+        requires_reinspection: result === 'failed' || result === 'conditional_pass',
         checklist_items: validChecklist,
         failure_notes: failureNotes || undefined,
         conditional_notes: conditionalNotes || undefined,
@@ -128,8 +128,8 @@ export function QcInspectionForm({ projectId, milestones, nextGateNumber }: QcIn
             <div>
               <Label htmlFor="overall_result">Overall Result *</Label>
               <Select id="overall_result" name="overall_result" value={result} onChange={(e) => setResult(e.target.value)} required>
-                <option value="pass">Pass</option>
-                <option value="fail">Fail</option>
+                <option value="passed">Pass</option>
+                <option value="failed">Fail</option>
                 <option value="conditional_pass">Conditional Pass</option>
               </Select>
             </div>
@@ -174,18 +174,18 @@ export function QcInspectionForm({ projectId, milestones, nextGateNumber }: QcIn
           </div>
 
           {/* Conditional/failure notes */}
-          {(result === 'fail' || result === 'conditional_pass') && (
+          {(result === 'failed' || result === 'conditional_pass') && (
             <div>
-              <Label htmlFor={result === 'fail' ? 'failure_notes' : 'conditional_notes'}>
-                {result === 'fail' ? 'Failure Notes' : 'Conditional Notes'} *
+              <Label htmlFor={result === 'failed' ? 'failure_notes' : 'conditional_notes'}>
+                {result === 'failed' ? 'Failure Notes' : 'Conditional Notes'} *
               </Label>
               <textarea
-                id={result === 'fail' ? 'failure_notes' : 'conditional_notes'}
-                name={result === 'fail' ? 'failure_notes' : 'conditional_notes'}
+                id={result === 'failed' ? 'failure_notes' : 'conditional_notes'}
+                name={result === 'failed' ? 'failure_notes' : 'conditional_notes'}
                 rows={3}
                 className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-p-500"
                 required
-                placeholder={result === 'fail' ? 'Describe what failed and corrective action needed...' : 'Describe conditions that must be met...'}
+                placeholder={result === 'failed' ? 'Describe what failed and corrective action needed...' : 'Describe conditions that must be met...'}
               />
             </div>
           )}
