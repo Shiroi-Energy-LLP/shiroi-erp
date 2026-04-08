@@ -94,12 +94,15 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | WhatsApp import pipeline | ✅ Complete | Rule-based extraction from 3 group chats. 4,164 records in review queue. Script: `scripts/whatsapp-import/extract-local.ts` |
 | WhatsApp data extracted | ✅ Complete | Marketing: 152 records (50 payments, 30 POs, 32 contacts, 40 activities). LLP: 186 records (115 BOQ items, 27 POs, 15 payments, 4 vendor_payments). Shiroi Energy ⚡: 3,826 records (403 daily reports, 3,100 activities, 298 contacts, 25 financial). |
 | WA Import Queue UI | ✅ Complete | /whatsapp-import — stats grid, paginated review table, approve/reject/reassign actions. Sidebar link for founder/finance/purchase_officer. |
+| BOM category fix | ✅ Complete | Fixed item_category CHECK constraint violation — dropdown now sends DB-valid snake_case values instead of display labels |
+| AMC module visibility | ✅ Complete | AMC Schedule added to founder + om_technician sidebar; /om/amc page enhanced with upcoming visits table + summary cards; AMC This Month card on founder dashboard |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
 PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→3,450, photos 0→1,290.
 WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
+BOM category fix deployed. AMC module visibility fixes deployed (nav, upcoming visits, dashboard card).
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
 ---
@@ -531,4 +534,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 8, 2026 — WhatsApp Import pipeline complete. Migration 025 applied. 4,164 records extracted from 3 group chats (Marketing, LLP, Shiroi Energy ⚡) into whatsapp_import_queue. Review UI at /whatsapp-import. Rule-based extraction (no LLM). PM Corrections R2 complete. Data quality overhaul complete. Next: Vivek reviews WA queue, prod deployment.*
+*Last updated: April 8, 2026 — BOM category constraint fix deployed (dropdown sends snake_case values). AMC module: sidebar nav added for founder/om_technician, /om/amc enhanced with upcoming visits table, founder dashboard AMC card added. WhatsApp Import pipeline complete. Next: Vivek reviews WA queue + AMC with Manivel, prod deployment.*

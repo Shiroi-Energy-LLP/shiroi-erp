@@ -1616,6 +1616,13 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Data integrity verified: 0 orphaned proposals/projects, all FKs valid
 - Phase 2C roadmap spec written: 19 steps (40–58), 12 architecture decisions logged
 
+**What changed in v3.6 (Apr 8, 2026):**
+- BOM category fix: bom-line-form.tsx dropdown now sends DB-valid snake_case values (panel, inverter, structure, etc.) instead of display labels that violated proposal_bom_lines_item_category_check
+- AMC module visibility: Added amcSchedule to founder + om_technician sidebar nav in roles.ts
+- AMC page enhanced: /om/amc now shows summary cards (total contracts, active, upcoming visits, overdue) + upcoming AMC visits table with project links, visit #, scheduled date, engineer, status
+- Founder dashboard: Added "AMC This Month" card with progress bar and link to /om/amc
+- New query: getAmcMonthlySummary() in dashboard-queries.ts
+
 **What changed in v3.5 (Apr 7, 2026):**
 - PM Corrections R2: 16 files changed addressing PM Manivel's field testing feedback
 - Tasks page overhauled: Project Name column, Assigned To filter, Project filter, inline completion toggle
