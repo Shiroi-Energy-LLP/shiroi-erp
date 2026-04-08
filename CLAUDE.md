@@ -104,7 +104,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
-PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→3,450, photos 0→1,290.
+PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→23,320 (446 proposals), photos 0→1,290.
 WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
 BOM category fix deployed. AMC module visibility fixes deployed. Proposals page timeout fixed.
 Project file visibility fixed: all 3 storage buckets now accessible from project page. Image viewer lightbox added.

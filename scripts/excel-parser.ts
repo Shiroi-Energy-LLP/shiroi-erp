@@ -179,7 +179,7 @@ interface HeaderMapping {
 }
 
 function detectHeaderRow(sheet: ExcelJS.Worksheet): { row: number; mapping: HeaderMapping } | null {
-  const maxScan = Math.min(sheet.rowCount, 15);
+  const maxScan = Math.min(sheet.rowCount, 25);
 
   for (let r = 1; r <= maxScan; r++) {
     const row = sheet.getRow(r);
@@ -188,14 +188,21 @@ function detectHeaderRow(sheet: ExcelJS.Worksheet): { row: number; mapping: Head
       cells.push(cellToString(row.getCell(c)).toLowerCase());
     }
 
-    // Require at least description + quantity + some amount column
-    const descIdx = cells.findIndex((c) => /description|item\s*desc|particulars/i.test(c));
-    const qtyIdx = cells.findIndex((c) => /^qty$|^quantity$|^qtty$/i.test(c));
+    // Relaxed header matching for Indian solar costing sheets
+    // Description: "Items", "Item Description", "Description", "Particulars", "Material", "Component"
+    const descIdx = cells.findIndex((c) => /description|item|particulars|material|component/i.test(c));
+    // Quantity: "Qty", "Quantity", "Quantity (Nos)", "QTY.", "Nos"
+    const qtyIdx = cells.findIndex((c) => /qty|quantity|qtty|nos/i.test(c));
+    // Rate: "Rate", "Rate(Rs.)", "Cost", "Unit Price", "Price"
     const rateIdx = cells.findIndex((c) => /rate|cost|price.*unit|unit.*price/i.test(c));
-    const amountIdx = cells.findIndex((c) => /^amount|amount.*rs|amount.*inr/i.test(c));
+    // Amount: "Amount", "Amount(Rs.)", "Amount In Rs", "Total Amount"
+    const amountIdx = cells.findIndex((c) => /amount/i.test(c));
+    // Total: "Total Cost", "Total Cost(Rs.)", "Total Amount in Rs"
     const totalIdx = cells.findIndex((c) => /total\s*cost|total.*rs|total.*price/i.test(c));
 
-    if (descIdx >= 0 && (qtyIdx >= 0 || amountIdx >= 0)) {
+    // Require description + at least 2 of: qty, rate, amount, total — avoids false positives on title rows
+    const numericCols = [qtyIdx, rateIdx, amountIdx, totalIdx].filter(i => i >= 0 && i !== descIdx).length;
+    if (descIdx >= 0 && numericCols >= 2) {
       return {
         row: r,
         mapping: {
