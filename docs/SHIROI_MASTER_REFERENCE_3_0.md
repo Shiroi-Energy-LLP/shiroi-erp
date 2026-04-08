@@ -1627,6 +1627,18 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Lead files on project page: New LeadFiles component shows all files from proposal-files bucket (grouped by type: images, PDFs, Word, Excel, presentations, design files, videos). 7,636 files across 933 leads now accessible from project detail page.
 - WhatsApp photos on project page: ProjectFiles scans site-photos bucket at `projects/{projectId}/whatsapp/` — 196 WhatsApp photos across 54 projects surfaced.
 - Image viewer lightbox: New ImageViewer component (Radix Dialog, no external deps). Click any image in ProjectFiles or LeadFiles → full-screen modal with prev/next arrows, keyboard navigation (arrow keys), download button, image counter.
+- Performance overhaul (Apr 8, 2026): Fixed 7+ Supabase statement timeouts. Root causes: duplicate getProject() on project detail (8-join query ran 2x), payments page fetched all 751 proposals, 3 aggregations done in JS instead of SQL, 13 pages had no query limits, ProjectFiles ran 22-44 sequential storage API calls, stepper queries ran sequentially.
+- Migration 028: 6 new indexes (daily_site_reports report_date, leads pipeline composite, proposals lead+accepted, cash_positions invested, bom_lines proposal+order, projects status+created_at) + 3 RPC functions (get_lead_stage_counts, get_company_cash_summary, get_msme_due_count).
+- New getProjectHeader() function: lightweight 12-column query for layout header, replacing the expensive full getProject() with 8 nested joins.
+- Payments overview: proposals query now filtered by `.in('lead_id', projectLeadIds)` instead of fetching all 751 accepted proposals.
+- Lead stage counts: replaced JS-side Decimal grouping of 1,115 leads with SQL GROUP BY via get_lead_stage_counts RPC.
+- Cash summary: replaced JS-side iteration with get_company_cash_summary RPC (SQL SUM/COUNT).
+- MSME due count: replaced client-side PO filter with get_msme_due_count RPC (SQL JOIN + COUNT).
+- Stepper parallelization: getStepDetailsData, getStepExecutionData, getStepLiaisonData now use Promise.all() instead of sequential queries.
+- Profitability page: status filter + sort pushed to DB query (was JS-side filter on all projects).
+- ProjectFiles component: 22+ sequential storage .list() calls → all parallel via Promise.all(). WhatsApp photo scanning limited to last 6 months. ~100ms instead of ~4s.
+- 13 pages paginated with .limit(100): invoices, payments, procurement, deliveries, vendor-payments, qc-gates, tasks, my-tasks, om/visits, om/tickets, om/amc, hr/leave, hr/training.
+- Survey step: replaced SELECT * with explicit column list (future-proofed without overfetching).
 
 **What changed in v3.5 (Apr 7, 2026):**
 - PM Corrections R2: 16 files changed addressing PM Manivel's field testing feedback
