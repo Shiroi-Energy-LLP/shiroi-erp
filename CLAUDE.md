@@ -17,7 +17,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 ---
 
-## CURRENT STATE (as of April 6, 2026)
+## CURRENT STATE (as of April 8, 2026)
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -88,13 +88,17 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 022 | ✅ Applied (dev) | Fix file delete RLS: expands DELETE policies on project-files and site-photos buckets |
 | Migration 023 | ✅ Applied (dev) | Survey form overhaul: ~25 new columns (GPS, roof details, electrical, shading, signatures) |
 | Migration 024 | ✅ Applied (dev) | BOQ items + delivery challans: project_boq_items, delivery_challans, delivery_challan_items tables |
+| Migration 025 | ✅ Applied (dev) | WhatsApp import queue: whatsapp_import_queue table with RLS, 5 indexes, review workflow |
 | PM corrections merge | ✅ Merged | Worktree branch `claude/eager-driscoll` merged to main (commit 888250d). Deployed to Vercel. |
+| WhatsApp import pipeline | ✅ Complete | Rule-based extraction from 3 group chats. 4,164 records in review queue. Script: `scripts/whatsapp-import/extract-local.ts` |
+| WhatsApp data extracted | ✅ Complete | Marketing: 152 records (50 payments, 30 POs, 32 contacts, 40 activities). LLP: 186 records (115 BOQ items, 27 POs, 15 payments, 4 vendor_payments). Shiroi Energy: 3,826 records (403 daily reports, 3,100 activities, 298 contacts, 25 financial). |
+| WA Import Queue UI | ✅ Complete | /whatsapp-import — stats grid, paginated review table, approve/reject/reassign actions. Sidebar link added for founder/finance/purchase_officer. |
 | Data cleanup | 🔜 Later | ~3 junk leads to review, name normalization, placeholder phones |
 | Prod deployment | 🔜 Later | After PM corrections merged + migrations applied + data cleaned on dev |
 
-**Current phase: 3B — PM Corrections Build**
-Phase 0 pushed to main. Phases 1-8 complete in worktree branch `claude/eager-driscoll` — pending merge.
+**Current phase: WhatsApp Import complete → Manivel review + prod deployment next**
 Full PM corrections plan: `docs/superpowers/plans/2026-04-07-pm-corrections-final.md`
+WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
 ### PM Feedback Decisions (April 7, 2026 — from Manivel, witnessed by Vivek)
 
@@ -545,4 +549,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — PM Corrections (8 phases) merged to main and deployed to Vercel. Proposals page fix (proposal_type column). Migrations 022-024 applied to dev. Types regenerated (11,693 lines). `as any` table casts removed. Next: Manivel online review, data cleanup, prod deployment.*
+*Last updated: April 8, 2026 — WhatsApp Import pipeline complete. Migration 025 applied. 4,164 records extracted from 3 group chats (Marketing, LLP, Shiroi Energy ⚡) into whatsapp_import_queue. Review UI at /whatsapp-import. Rule-based extraction script at scripts/whatsapp-import/extract-local.ts (no LLM needed). Next: Manivel review of WA queue, data cleanup, prod deployment.*

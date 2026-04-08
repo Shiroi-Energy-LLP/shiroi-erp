@@ -966,6 +966,39 @@ Cost: ~₹3,000/month
 Number: Existing Shiroi company number
 ```
 
+### 12.9 WhatsApp Historical Import (Phase 1 — Complete)
+
+**Purpose:** Extract structured data from 3 WhatsApp group chat exports and stage in a review queue for ERP import.
+
+**Groups processed:**
+| Group | Chat Size | Records Extracted | Key Data Types |
+|-------|-----------|-------------------|----------------|
+| Shiroi Marketing | 7,771 lines | 152 | 50 customer_payments, 30 POs, 32 contacts, 40 activities |
+| Shiroi Energy LLP / rooftop / Purchase | ~4,800 lines | 186 | 115 BOQ items, 27 POs, 15 customer_payments, 24 activities |
+| Shiroi Energy ⚡ (main ops) | 40,621 lines | 3,826 | 403 daily_reports, 3,100 activities, 298 contacts, 25 financial |
+
+**Architecture:**
+- ZIP export parser: `scripts/whatsapp-import/parser.ts` — handles Android/iPhone format, U+202F narrow no-break space in timestamps, Unicode control chars
+- Rule-based extractor (no LLM): `scripts/whatsapp-import/extract-local.ts` — pattern-matching for payments, contacts, POs, BOQ items, daily reports, activities
+- Large ZIP support (3.3 GB): `node-stream-zip` for streaming extraction without loading into memory
+- Review queue: `whatsapp_import_queue` table (migration 025) — all records staged pending human review
+- Review UI: `/whatsapp-import` — stats grid, filter tabs, paginated table, approve/reject/reassign actions
+
+**Extraction types in queue:**
+- `customer_payment` — always goes to finance review (confidence 0.65)
+- `vendor_payment` — always goes to finance review (confidence 0.65)
+- `purchase_order` — goes to finance review (confidence 0.7)
+- `boq_item` — LLP group: panel/inverter/cable quantities (confidence 0.55)
+- `daily_report` — Shiroi Energy group: site progress updates (confidence 0.6)
+- `contact` — phone number detected with name/company context (confidence 0.75)
+- `activity` — site visits, meetings, quotation-sent events (confidence 0.5)
+
+**Dedup:** SHA-256 hash of `timestamp|sender|text[:100]` stored as UNIQUE index on `message_hash`. Re-running the script is safe.
+
+**To re-run import:** `cd scripts/whatsapp-import && npx tsx extract-local.ts`
+
+**Phase 2 (live Baileys bot):** Deferred. Scaffolded profiles in `scripts/whatsapp-import/profiles/` ready. Needs dedicated phone number + bot setup.
+
 ---
 
 ## 13. Security Model
