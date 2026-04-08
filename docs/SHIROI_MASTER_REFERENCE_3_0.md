@@ -1627,6 +1627,10 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Lead files on project page: New LeadFiles component shows all files from proposal-files bucket (grouped by type: images, PDFs, Word, Excel, presentations, design files, videos). 7,636 files across 933 leads now accessible from project detail page.
 - WhatsApp photos on project page: ProjectFiles scans site-photos bucket at `projects/{projectId}/whatsapp/` — 196 WhatsApp photos across 54 projects surfaced.
 - Image viewer lightbox: New ImageViewer component (Radix Dialog, no external deps). Click any image in ProjectFiles or LeadFiles → full-screen modal with prev/next arrows, keyboard navigation (arrow keys), download button, image counter.
+- Task module overhaul: Migration 027a adds category (10 milestone-aligned values), remarks, assigned_date columns to tasks + task_work_logs table
+- Task CRUD: updateTask, deleteTask (soft-delete), addWorkLog, getWorkLogs server actions. EditTaskDialog + DeleteTaskButton components
+- Task page enhanced: Category, Done By, Remarks columns; edit/delete buttons; category filter; project links to ?tab=execution
+- Daily work logs: task_work_logs table with RLS, expandable per-task timeline, add entry form (date, description, progress %, hours), lazy-loaded on expand
 
 **What changed in v3.5 (Apr 7, 2026):**
 - PM Corrections R2: 16 files changed addressing PM Manivel's field testing feedback

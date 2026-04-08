@@ -1,19 +1,17 @@
+import * as React from 'react';
 import { getAllTasks } from '@/lib/all-tasks-queries';
-import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
-import { isTaskOverdue, formatEntityType } from '@/lib/tasks-helpers';
+import { getActiveEmployees, getActiveProjects, TASK_CATEGORIES } from '@/lib/tasks-actions';
+import { isTaskOverdue } from '@/lib/tasks-helpers';
 import { formatDate } from '@repo/ui/formatters';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
+import { EditTaskDialog } from '@/components/tasks/edit-task-dialog';
+import { DeleteTaskButton } from '@/components/tasks/delete-task-button';
 import { TaskCompletionToggle } from '@/components/projects/forms/task-completion-toggle';
+import { TaskWorkLog } from '@/components/tasks/task-work-log';
 import {
   Card,
   CardContent,
   Badge,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
   Eyebrow,
 } from '@repo/ui';
 import { ClipboardList } from 'lucide-react';
@@ -34,14 +32,6 @@ const PRIORITY_OPTIONS = [
   { value: 'critical', label: 'Critical' },
 ];
 
-const ENTITY_TYPE_OPTIONS = [
-  { value: 'project', label: 'Project' },
-  { value: 'lead', label: 'Lead' },
-  { value: 'om_ticket', label: 'Service Ticket' },
-  { value: 'procurement', label: 'Procurement' },
-  { value: 'hr', label: 'HR' },
-];
-
 function getPriorityVariant(priority: string): 'error' | 'warning' | 'info' | 'outline' {
   switch (priority) {
     case 'critical': return 'error';
@@ -49,6 +39,12 @@ function getPriorityVariant(priority: string): 'error' | 'warning' | 'info' | 'o
     case 'medium': return 'info';
     default: return 'outline';
   }
+}
+
+function formatCategory(cat: string | null): string {
+  if (!cat) return '—';
+  const found = TASK_CATEGORIES.find((c) => c.value === cat);
+  return found?.label ?? cat.replace(/_/g, ' ');
 }
 
 interface TasksPageProps {
@@ -59,6 +55,7 @@ interface TasksPageProps {
     search?: string;
     project?: string;
     assigned_to?: string;
+    category?: string;
   }>;
 }
 
@@ -72,14 +69,15 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       search: params.search || undefined,
       project_id: params.project || undefined,
       assigned_to: params.assigned_to || undefined,
+      category: params.category || undefined,
     }),
     getActiveEmployees(),
     getActiveProjects(),
   ]);
 
-  const hasFilters = params.status || params.priority || params.entity_type || params.search || params.project || params.assigned_to;
-  const pendingCount = tasks.filter((t) => !t.is_completed).length;
-  const completedCount = tasks.filter((t) => t.is_completed).length;
+  const hasFilters = params.status || params.priority || params.entity_type || params.search || params.project || params.assigned_to || params.category;
+  const pendingCount = tasks.filter((t: any) => !t.is_completed).length;
+  const completedCount = tasks.filter((t: any) => t.is_completed).length;
 
   return (
     <div className="space-y-6">
@@ -100,23 +98,23 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <FilterBar basePath="/tasks" filterParams={['search', 'status', 'priority', 'entity_type', 'project', 'assigned_to']}>
-            <FilterSelect paramName="status" className="w-40">
+          <FilterBar basePath="/tasks" filterParams={['search', 'status', 'priority', 'entity_type', 'project', 'assigned_to', 'category']}>
+            <FilterSelect paramName="status" className="w-36">
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </FilterSelect>
-            <FilterSelect paramName="priority" className="w-40">
+            <FilterSelect paramName="priority" className="w-36">
               <option value="">All Priorities</option>
               {PRIORITY_OPTIONS.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>
               ))}
             </FilterSelect>
-            <FilterSelect paramName="entity_type" className="w-44">
-              <option value="">All Entity Types</option>
-              {ENTITY_TYPE_OPTIONS.map((e) => (
-                <option key={e.value} value={e.value}>{e.label}</option>
+            <FilterSelect paramName="category" className="w-44">
+              <option value="">All Categories</option>
+              {TASK_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </FilterSelect>
             <FilterSelect paramName="assigned_to" className="w-44">
@@ -149,80 +147,122 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
               <p className="text-sm text-[#7C818E] max-w-[320px] mt-1">
                 {hasFilters
                   ? 'No tasks match your current filters. Try adjusting or clearing the filters.'
-                  : 'No tasks have been created yet. Tasks will appear here once they are assigned across projects, leads, and other entities.'}
+                  : 'No tasks have been created yet.'}
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-8"></TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Entity Type</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => {
-                  const overdue = isTaskOverdue(task.due_date) && !task.is_completed;
-                  const projectInfo = task.project as { project_number: string; customer_name: string } | null;
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-n-200 bg-n-50 text-left">
+                    <th className="w-8 px-3 py-2.5"></th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Title</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Project</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Category</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Assigned To</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Due Date</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Priority</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Status</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Done By</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider">Remarks</th>
+                    <th className="px-3 py-2.5 text-xs font-semibold text-n-600 uppercase tracking-wider w-20">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map((task: any) => {
+                    const overdue = isTaskOverdue(task.due_date) && !task.is_completed;
+                    const projectInfo = task.project as { project_number: string; customer_name: string } | null;
+                    const completedByName = task.completed_by_employee && 'full_name' in task.completed_by_employee
+                      ? (task.completed_by_employee as { full_name: string }).full_name
+                      : null;
 
-                  return (
-                    <TableRow key={task.id} className={task.is_completed ? 'opacity-60' : ''}>
-                      <TableCell>
-                        <TaskCompletionToggle
-                          taskId={task.id}
-                          isCompleted={task.is_completed}
-                          projectId={task.project_id ?? undefined}
-                        />
-                      </TableCell>
-                      <TableCell className={`font-medium max-w-[250px] truncate ${task.is_completed ? 'line-through text-n-400' : ''}`}>
-                        {task.title}
-                      </TableCell>
-                      <TableCell>
-                        {projectInfo ? (
-                          <Link href={`/projects/${task.project_id}`} className="text-p-600 hover:underline text-xs">
-                            <div className="font-medium">{projectInfo.project_number}</div>
-                            <div className="text-n-500 text-[11px]">{projectInfo.customer_name}</div>
-                          </Link>
-                        ) : (
-                          <span className="text-[#9CA0AB]">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {task.assignee?.full_name ?? <span className="text-[#9CA0AB]">Unassigned</span>}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="neutral">{formatEntityType(task.entity_type)}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getPriorityVariant(task.priority)}>
-                          {task.priority?.charAt(0).toUpperCase() + task.priority?.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {task.due_date ? (
-                          <span className={overdue ? 'text-[#991B1B] font-medium' : ''}>
-                            {formatDate(task.due_date)}
-                          </span>
-                        ) : (
-                          <span className="text-[#9CA0AB]">No date</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={task.is_completed ? 'success' : overdue ? 'error' : 'outline'}>
-                          {task.is_completed ? 'Completed' : overdue ? 'Overdue' : 'Pending'}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                    return (
+                      <React.Fragment key={task.id}>
+                        <tr className={`border-b border-n-100 group ${task.is_completed ? 'opacity-60' : ''}`}>
+                          <td className="px-3 py-2">
+                            <TaskCompletionToggle
+                              taskId={task.id}
+                              isCompleted={task.is_completed}
+                              projectId={task.project_id ?? undefined}
+                            />
+                          </td>
+                          <td className={`px-3 py-2 font-medium max-w-[200px] truncate ${task.is_completed ? 'line-through text-n-400' : ''}`}>
+                            {task.title}
+                          </td>
+                          <td className="px-3 py-2">
+                            {projectInfo ? (
+                              <Link href={`/projects/${task.project_id}?tab=execution`} className="text-p-600 hover:underline text-xs">
+                                <div className="font-medium">{projectInfo.project_number}</div>
+                                <div className="text-n-500 text-[11px]">{projectInfo.customer_name}</div>
+                              </Link>
+                            ) : (
+                              <span className="text-n-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-xs">
+                            {formatCategory(task.category)}
+                          </td>
+                          <td className="px-3 py-2 text-xs">
+                            {task.assignee?.full_name ?? <span className="text-n-400">Unassigned</span>}
+                          </td>
+                          <td className="px-3 py-2 text-xs">
+                            {task.due_date ? (
+                              <span className={overdue ? 'text-red-700 font-medium' : ''}>
+                                {formatDate(task.due_date)}
+                              </span>
+                            ) : (
+                              <span className="text-n-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            <Badge variant={getPriorityVariant(task.priority)} className="text-[11px]">
+                              {task.priority?.charAt(0).toUpperCase() + task.priority?.slice(1)}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2">
+                            <Badge variant={task.is_completed ? 'success' : overdue ? 'error' : 'outline'} className="text-[11px]">
+                              {task.is_completed ? 'Completed' : overdue ? 'Overdue' : 'Pending'}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2 text-xs text-n-600">
+                            {completedByName ?? <span className="text-n-400">—</span>}
+                          </td>
+                          <td className="px-3 py-2 text-xs text-n-600 max-w-[120px] truncate" title={task.remarks ?? ''}>
+                            {task.remarks ?? <span className="text-n-400">—</span>}
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex gap-0.5">
+                              <EditTaskDialog
+                                task={{
+                                  id: task.id,
+                                  title: task.title,
+                                  description: task.description,
+                                  category: task.category ?? null,
+                                  priority: task.priority,
+                                  due_date: task.due_date,
+                                  assigned_to: task.assigned_to,
+                                  remarks: task.remarks ?? null,
+                                  project_id: task.project_id,
+                                  entity_type: task.entity_type,
+                                }}
+                                employees={employees}
+                                projects={projects}
+                              />
+                              <DeleteTaskButton taskId={task.id} title={task.title} />
+                            </div>
+                          </td>
+                        </tr>
+                        <tr className="border-b border-n-100">
+                          <td colSpan={11} className="p-0">
+                            <TaskWorkLog taskId={task.id} />
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>

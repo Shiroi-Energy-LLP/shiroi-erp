@@ -7,6 +7,7 @@ export async function getAllTasks(filters: {
   search?: string;
   project_id?: string;
   assigned_to?: string;
+  category?: string;
 } = {}) {
   const op = '[getAllTasks]';
   console.log(`${op} Starting`);
@@ -14,7 +15,7 @@ export async function getAllTasks(filters: {
 
   let query = supabase
     .from('tasks')
-    .select('*, assignee:employees!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name)')
+    .select('*, assignee:employees!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name), completed_by_employee:employees!tasks_completed_by_fkey(full_name)')
     .is('deleted_at', null)
     .order('due_date', { ascending: true, nullsFirst: false });
 
@@ -26,6 +27,7 @@ export async function getAllTasks(filters: {
   if (filters.search) query = query.ilike('title', `%${filters.search}%`);
   if (filters.project_id) query = query.eq('project_id', filters.project_id);
   if (filters.assigned_to) query = query.eq('assigned_to', filters.assigned_to);
+  if (filters.category) query = query.eq('category' as any, filters.category);
 
   const { data, error } = await query;
   if (error) {

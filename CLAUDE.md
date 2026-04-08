@@ -100,6 +100,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Project file visibility | ✅ Complete | Fixed 3 issues hiding 9,845 files from project page: (1) path prefix mismatch for 909 GDrive files, (2) missing categories (purchase-orders, layouts, delivery-challans, sesal), (3) 7,636 lead files in proposal-files bucket now shown via new LeadFiles component |
 | Image viewer lightbox | ✅ Complete | Click any image in ProjectFiles or LeadFiles → full-screen modal with prev/next arrows, keyboard navigation, download button. Built with Radix Dialog, no new dependencies |
 | WhatsApp photos on project page | ✅ Complete | ProjectFiles now scans site-photos bucket for `projects/{id}/whatsapp/` media. 196 WhatsApp photos across 54 projects surfaced |
+| Migration 027a | ✅ Applied (dev) | tasks: category, remarks, assigned_date columns + task_work_logs table with RLS |
+| Task module overhaul | ✅ Complete | Edit/delete tasks, category field (10 milestone-aligned categories), remarks, done-by column, daily work logs with expandable timeline, category filter |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**

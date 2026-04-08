@@ -6,15 +6,27 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
   Button, Input, Label, Select,
 } from '@repo/ui';
-import { Plus } from 'lucide-react';
-import { createTask, TASK_CATEGORIES } from '@/lib/tasks-actions';
+import { Pencil } from 'lucide-react';
+import { updateTask, TASK_CATEGORIES } from '@/lib/tasks-actions';
 
-interface CreateTaskDialogProps {
+interface EditTaskDialogProps {
+  task: {
+    id: string;
+    title: string;
+    description: string | null;
+    category: string | null;
+    priority: string;
+    due_date: string | null;
+    assigned_to: string | null;
+    remarks: string | null;
+    project_id: string | null;
+    entity_type: string | null;
+  };
   employees: { id: string; full_name: string }[];
   projects: { id: string; project_number: string; customer_name: string }[];
 }
 
-export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps) {
+export function EditTaskDialog({ task, employees, projects }: EditTaskDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -26,17 +38,16 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
     setError(null);
 
     const form = new FormData(e.currentTarget);
-    const result = await createTask({
+    const result = await updateTask({
+      taskId: task.id,
       title: form.get('title') as string,
       description: form.get('description') as string || undefined,
-      entityType: form.get('entityType') as string,
-      projectId: form.get('projectId') as string || undefined,
-      entityId: form.get('projectId') as string || undefined,
+      category: form.get('category') as string || undefined,
       priority: form.get('priority') as string,
       dueDate: form.get('dueDate') as string || undefined,
       assignedTo: form.get('assignedTo') as string || undefined,
-      category: form.get('category') as string || undefined,
       remarks: form.get('remarks') as string || undefined,
+      projectId: form.get('projectId') as string || undefined,
     });
 
     setSaving(false);
@@ -44,48 +55,48 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
       setOpen(false);
       router.refresh();
     } else {
-      setError(result.error ?? 'Failed to create task');
+      setError(result.error ?? 'Failed to update task');
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" /> New Task
+        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-n-400 hover:text-p-600">
+          <Pencil className="h-3.5 w-3.5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Task</DialogTitle>
+          <DialogTitle>Edit Task</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Title *</Label>
-            <Input id="title" name="title" required placeholder="What needs to be done?" />
+            <Label htmlFor="edit-title">Title *</Label>
+            <Input id="edit-title" name="title" required defaultValue={task.title} />
           </div>
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="edit-description">Description</Label>
             <textarea
-              id="description"
+              id="edit-description"
               name="description"
               rows={2}
               className="w-full rounded-md border border-n-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
-              placeholder="Additional details..."
+              defaultValue={task.description ?? ''}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="category">Category</Label>
-              <Select id="category" name="category" defaultValue="general">
+              <Label htmlFor="edit-category">Category</Label>
+              <Select id="edit-category" name="category" defaultValue={task.category ?? 'general'}>
                 {TASK_CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </Select>
             </div>
             <div>
-              <Label htmlFor="priority">Priority</Label>
-              <Select id="priority" name="priority" defaultValue="medium">
+              <Label htmlFor="edit-priority">Priority</Label>
+              <Select id="edit-priority" name="priority" defaultValue={task.priority}>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -94,8 +105,8 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
             </div>
           </div>
           <div>
-            <Label htmlFor="projectId">Project</Label>
-            <Select id="projectId" name="projectId" defaultValue="">
+            <Label htmlFor="edit-projectId">Project</Label>
+            <Select id="edit-projectId" name="projectId" defaultValue={task.project_id ?? ''}>
               <option value="">— None —</option>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>{p.project_number} — {p.customer_name}</option>
@@ -104,8 +115,8 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="assignedTo">Assign To</Label>
-              <Select id="assignedTo" name="assignedTo" defaultValue="">
+              <Label htmlFor="edit-assignedTo">Assign To</Label>
+              <Select id="edit-assignedTo" name="assignedTo" defaultValue={task.assigned_to ?? ''}>
                 <option value="">— Unassigned —</option>
                 {employees.map((e) => (
                   <option key={e.id} value={e.id}>{e.full_name}</option>
@@ -113,30 +124,18 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
               </Select>
             </div>
             <div>
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input id="dueDate" name="dueDate" type="date" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="entityType">Type</Label>
-              <Select id="entityType" name="entityType" defaultValue="project">
-                <option value="project">Project</option>
-                <option value="lead">Lead</option>
-                <option value="om_ticket">O&M Ticket</option>
-                <option value="procurement">Procurement</option>
-                <option value="hr">HR</option>
-              </Select>
+              <Label htmlFor="edit-dueDate">Due Date</Label>
+              <Input id="edit-dueDate" name="dueDate" type="date" defaultValue={task.due_date ?? ''} />
             </div>
           </div>
           <div>
-            <Label htmlFor="remarks">Remarks</Label>
+            <Label htmlFor="edit-remarks">Remarks</Label>
             <textarea
-              id="remarks"
+              id="edit-remarks"
               name="remarks"
               rows={2}
               className="w-full rounded-md border border-n-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
-              placeholder="Any remarks..."
+              defaultValue={task.remarks ?? ''}
             />
           </div>
           {error && (
@@ -145,7 +144,7 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Creating...' : 'Create Task'}
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>
