@@ -11,10 +11,28 @@ interface BomLineFormProps {
   hasProposal: boolean;
 }
 
-const BOM_CATEGORIES = [
-  'Solar Panels', 'Inverter', 'Mounting Structure', 'Cables & Wiring',
-  'AC Distribution Box', 'DC Distribution Box', 'Earthing', 'Lightning Arrestor',
-  'Battery', 'Monitoring System', 'Civil Work', 'Labour', 'Transportation', 'Other',
+const BOM_CATEGORIES: { value: string; label: string }[] = [
+  { value: 'panel', label: 'Solar Panels' },
+  { value: 'inverter', label: 'Inverter' },
+  { value: 'structure', label: 'Mounting Structure' },
+  { value: 'dc_cable', label: 'DC Cable' },
+  { value: 'ac_cable', label: 'AC Cable' },
+  { value: 'conduit', label: 'Conduit' },
+  { value: 'acdb', label: 'AC Distribution Box' },
+  { value: 'dcdb', label: 'DC Distribution Box' },
+  { value: 'earthing', label: 'Earthing' },
+  { value: 'lightning_arrestor', label: 'Lightning Arrestor' },
+  { value: 'battery', label: 'Battery' },
+  { value: 'monitoring', label: 'Monitoring System' },
+  { value: 'connector', label: 'Connector' },
+  { value: 'junction_box', label: 'Junction Box' },
+  { value: 'safety_equipment', label: 'Safety Equipment' },
+  { value: 'civil_work', label: 'Civil Work' },
+  { value: 'installation_labour', label: 'Labour' },
+  { value: 'transport', label: 'Transportation' },
+  { value: 'net_meter', label: 'Net Meter' },
+  { value: 'liaison', label: 'Liaison' },
+  { value: 'other', label: 'Other' },
 ];
 const UNITS = ['nos', 'set', 'meter', 'kg', 'lot', 'sqft', 'pair'];
 const GST_RATES = ['0', '5', '12', '18', '28'];
@@ -99,7 +117,7 @@ export function BomInlineAddRow({ projectId, hasProposal }: BomLineFormProps) {
             className="text-xs h-8 w-[130px]"
           >
             <option value="">Category...</option>
-            {BOM_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {BOM_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5">

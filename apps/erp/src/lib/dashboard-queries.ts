@@ -88,3 +88,37 @@ export async function getProjectsWithNoReportToday() {
   const reportedProjectIds = new Set((todayReports ?? []).map(r => r.project_id));
   return (activeProjects ?? []).filter(p => !reportedProjectIds.has(p.id));
 }
+
+export async function getAmcMonthlySummary(): Promise<{ scheduled: number; completed: number }> {
+  const op = '[getAmcMonthlySummary]';
+  const supabase = await createClient();
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]!;
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]!;
+
+  const [scheduledResult, completedResult] = await Promise.all([
+    supabase
+      .from('om_visit_schedules')
+      .select('*', { count: 'exact', head: true })
+      .gte('scheduled_date', monthStart)
+      .lte('scheduled_date', monthEnd),
+    supabase
+      .from('om_visit_schedules')
+      .select('*', { count: 'exact', head: true })
+      .gte('scheduled_date', monthStart)
+      .lte('scheduled_date', monthEnd)
+      .eq('status', 'completed'),
+  ]);
+
+  if (scheduledResult.error) {
+    console.error(`${op} Scheduled count failed:`, { code: scheduledResult.error.code, message: scheduledResult.error.message });
+  }
+  if (completedResult.error) {
+    console.error(`${op} Completed count failed:`, { code: completedResult.error.code, message: completedResult.error.message });
+  }
+
+  return {
+    scheduled: scheduledResult.count ?? 0,
+    completed: completedResult.count ?? 0,
+  };
+}

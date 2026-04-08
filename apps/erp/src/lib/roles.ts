@@ -86,7 +86,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
-    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.serviceTickets] },
+    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
@@ -103,7 +103,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   ],
   om_technician: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
-    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.serviceTickets] },
+    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets] },
   ],
   site_supervisor: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
