@@ -36,7 +36,8 @@ export async function getProposals(filters: ProposalFilters = {}): Promise<Pagin
 
   let query = supabase
     .from('proposals')
-    .select('id, proposal_number, status, system_size_kwp, system_type, total_after_discount, gross_margin_pct, created_at, valid_until, lead_id, revision_number, is_budgetary, margin_approval_required, margin_approved_by, leads!inner(customer_name, phone)', { count: 'exact' })
+    .select('id, proposal_number, status, system_size_kwp, system_type, total_after_discount, gross_margin_pct, created_at, valid_until, lead_id, revision_number, is_budgetary, margin_approval_required, margin_approved_by, leads(customer_name, phone)', { count: 'estimated' })
+    .not('lead_id', 'is', null)
     .order(sortCol, { ascending: sortDir });
 
   if (filters.status) query = query.eq('status', filters.status);
