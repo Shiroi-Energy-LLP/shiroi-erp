@@ -33,7 +33,7 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
     .from('contacts')
     .select(
       'id, name, first_name, last_name, phone, email, designation, lifecycle_stage, created_at, contact_company_roles(company_id, role_title, is_primary, ended_at, companies(name))',
-      { count: 'exact' }
+      { count: 'estimated' }
     );
 
   // Dynamic sort
@@ -156,7 +156,7 @@ export async function getCompanies(filters: CompanyFilters = {}): Promise<Pagina
 
   let query = supabase
     .from('companies')
-    .select('id, name, segment, gstin, city, state, industry, owner_id, created_at', { count: 'exact' });
+    .select('id, name, segment, gstin, city, state, industry, owner_id, created_at', { count: 'estimated' });
 
   // Dynamic sort
   const sortCol = filters.sort ?? 'name';

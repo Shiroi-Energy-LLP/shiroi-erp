@@ -35,7 +35,7 @@ export async function getQueueItems(filters: {
 
   let query = supabase
     .from('whatsapp_import_queue')
-    .select('*', { count: 'exact' })
+    .select('*', { count: 'estimated' })
     .eq('review_status', status)
     .order('message_timestamp', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);

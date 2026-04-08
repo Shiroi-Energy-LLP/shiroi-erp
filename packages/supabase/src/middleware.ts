@@ -46,9 +46,21 @@ export async function updateSession(request: NextRequest) {
 
   // Refresh the session. Do NOT use getSession() here — getUser() contacts
   // the Auth server and ensures the token is still valid.
-  const { error } = await supabase.auth.getUser();
-  if (error) {
-    console.warn(`${op} Session refresh failed:`, { code: error.status, message: error.message });
+  // Timeout after 5s to avoid MIDDLEWARE_INVOCATION_TIMEOUT on Vercel.
+  try {
+    const { error } = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Auth timeout (5s)')), 5000),
+      ),
+    ]);
+    if (error) {
+      console.warn(`${op} Session refresh failed:`, { code: error.status, message: error.message });
+    }
+  } catch (err) {
+    console.warn(`${op} Auth check skipped:`, {
+      message: err instanceof Error ? err.message : String(err),
+    });
   }
 
   return supabaseResponse;

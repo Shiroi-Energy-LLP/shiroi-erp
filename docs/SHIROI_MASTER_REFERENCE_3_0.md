@@ -1642,6 +1642,9 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Profitability page: status filter + sort pushed to DB query (was JS-side filter on all projects).
 - ProjectFiles component: 22+ sequential storage .list() calls → all parallel via Promise.all(). WhatsApp photo scanning limited to last 6 months. ~100ms instead of ~4s.
 - 13 pages paginated with .limit(100): invoices, payments, procurement, deliveries, vendor-payments, qc-gates, tasks, my-tasks, om/visits, om/tickets, om/amc, hr/leave, hr/training.
+- List page timeout fix (Apr 8, 2026): 5 paginated list pages changed from `count: 'exact'` to `count: 'estimated'` — projects, leads, contacts, companies, whatsapp-import. `count: 'exact'` forces PostgreSQL to scan every matching row; `estimated` uses table statistics. Same fix pattern as proposals timeout (commit 4bdb489).
+- Migration 029 (027_list_page_indexes.sql): 4 DESC sort-column indexes — idx_projects_created_at, idx_leads_created_at, idx_contacts_created_at, idx_whatsapp_queue_timestamp. These cover the default sort order for each paginated list page.
+- Middleware timeout fix (Apr 8, 2026): Two changes to prevent MIDDLEWARE_INVOCATION_TIMEOUT on Vercel production. (1) Excluded `/login` from middleware matcher — no point calling getUser() on the login page. (2) Added 5s Promise.race timeout to `supabase.auth.getUser()` in `packages/supabase/src/middleware.ts` — if Supabase Auth is slow/504, middleware fails fast instead of hanging for 30s. The `(erp)/layout.tsx` `requireAuth()` provides the safety net for page-level auth enforcement.
 - Survey step: replaced SELECT * with explicit column list (future-proofed without overfetching).
 
 **What changed in v3.5 (Apr 7, 2026):**

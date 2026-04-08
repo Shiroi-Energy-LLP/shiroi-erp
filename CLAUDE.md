@@ -104,6 +104,9 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Task module overhaul | ✅ Complete | Edit/delete tasks, category field (10 milestone-aligned categories), remarks, done-by column, daily work logs with expandable timeline, category filter |
 | Performance overhaul | ✅ Complete | Fixed 7+ statement timeouts: migration 028 (6 indexes + 3 RPC functions), eliminated duplicate getProject(), payments query filtered by lead_ids, 3 JS aggregations→SQL RPCs, 13 pages paginated, ProjectFiles parallel storage calls, stepper queries parallelized |
 | Migration 028 | ✅ Applied (dev) | Performance indexes (daily_site_reports, leads pipeline, proposals lead+status, cash positions, BOM lines, projects status) + RPC functions (get_lead_stage_counts, get_company_cash_summary, get_msme_due_count) |
+| List page timeout fix | ✅ Complete | 5 paginated pages changed from count:'exact' to count:'estimated' (projects, leads, contacts, companies, whatsapp-import) — prevents full table scan on every page load |
+| Migration 029 | ✅ Applied (dev) | 4 sort-column indexes: idx_projects_created_at, idx_leads_created_at, idx_contacts_created_at, idx_whatsapp_queue_timestamp (all DESC) |
+| Middleware timeout fix | ✅ Complete | Excluded /login from middleware matcher; added 5s Promise.race timeout to getUser() — prevents MIDDLEWARE_INVOCATION_TIMEOUT when Supabase Auth is slow |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
@@ -113,6 +116,8 @@ WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in re
 BOM category fix deployed. AMC module visibility fixes deployed. Proposals page timeout fixed.
 Project file visibility fixed: all 3 storage buckets now accessible from project page. Image viewer lightbox added.
 Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
+List page timeouts fixed: 5 paginated queries switched to estimated counts + 4 sort indexes added.
+Middleware timeout fixed: /login excluded from matcher, getUser() has 5s timeout to prevent MIDDLEWARE_INVOCATION_TIMEOUT.
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
 ---
