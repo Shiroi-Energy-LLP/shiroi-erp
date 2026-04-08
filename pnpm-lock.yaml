@@ -11,6 +11,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.82.0
         version: 0.82.0(zod@4.3.6)
+      '@supabase/supabase-js':
+        specifier: ^2.49.4
+        version: 2.100.1
       dotenv:
         specifier: ^17.4.0
         version: 17.4.0
