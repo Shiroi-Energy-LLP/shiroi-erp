@@ -106,6 +106,35 @@ export async function getStepBomData(projectId: string) {
   return bomLines ?? [];
 }
 
+export async function getBoiState(projectId: string) {
+  const op = '[getBoiState]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('projects')
+    .select('boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual, contracted_value, proposal_id')
+    .eq('id', projectId)
+    .single();
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, projectId });
+    return null;
+  }
+
+  // Get prepared-by employee name if BOI is locked
+  let preparedByName: string | null = null;
+  if ((data as any)?.boi_locked_by) {
+    const { data: emp } = await supabase
+      .from('employees')
+      .select('full_name')
+      .eq('id', (data as any).boi_locked_by)
+      .single();
+    preparedByName = emp?.full_name ?? null;
+  }
+
+  return { ...(data as any), preparedByName };
+}
+
 export async function getStepBoqData(projectId: string) {
   const op = '[getStepBoqData]';
   console.log(`${op} Starting for: ${projectId}`);

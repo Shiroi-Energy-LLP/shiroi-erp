@@ -1218,6 +1218,305 @@ export async function toggleTaskCompletion(input: {
   return { success: true };
 }
 
+// ── BOQ Items: Add new item directly (not from BOM seed) ──
+
+export async function addBoqItem(input: {
+  projectId: string;
+  data: {
+    item_category: string;
+    item_description: string;
+    brand: string | null;
+    model: string | null;
+    quantity: number;
+    unit: string;
+    unit_price: number;
+    gst_rate: number;
+  };
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[addBoqItem]';
+  console.log(`${op} Starting for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Get next line number
+  const { data: existing } = await supabase
+    .from('project_boq_items')
+    .select('line_number')
+    .eq('project_id', input.projectId)
+    .order('line_number', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextLine = ((existing as any)?.line_number ?? 0) + 1;
+
+  const gstAmount = input.data.quantity * input.data.unit_price * (input.data.gst_rate / 100);
+  const totalPrice = input.data.quantity * input.data.unit_price + gstAmount;
+
+  const { error } = await supabase
+    .from('project_boq_items')
+    .insert({
+      project_id: input.projectId,
+      line_number: nextLine,
+      item_category: input.data.item_category,
+      item_description: input.data.item_description,
+      brand: input.data.brand,
+      model: input.data.model,
+      quantity: input.data.quantity,
+      unit: input.data.unit,
+      unit_price: input.data.unit_price,
+      gst_rate: input.data.gst_rate,
+      gst_type: 'supply' as any,
+      total_price: totalPrice,
+      procurement_status: 'yet_to_finalize',
+    } as any);
+
+  if (error) {
+    console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── BOQ Items: Update item details (rate, GST, status, description, etc.) ──
+
+export async function updateBoqItem(input: {
+  projectId: string;
+  itemId: string;
+  data: {
+    item_description?: string;
+    brand?: string | null;
+    model?: string | null;
+    quantity?: number;
+    unit_price?: number;
+    gst_rate?: number;
+    procurement_status?: string;
+    vendor_name?: string | null;
+    notes?: string | null;
+  };
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateBoqItem]';
+  console.log(`${op} Updating item ${input.itemId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const updateData: Record<string, any> = {};
+  const d = input.data;
+
+  if (d.item_description !== undefined) updateData.item_description = d.item_description;
+  if (d.brand !== undefined) updateData.brand = d.brand;
+  if (d.model !== undefined) updateData.model = d.model;
+  if (d.quantity !== undefined) updateData.quantity = d.quantity;
+  if (d.unit_price !== undefined) updateData.unit_price = d.unit_price;
+  if (d.gst_rate !== undefined) updateData.gst_rate = d.gst_rate;
+  if (d.procurement_status !== undefined) updateData.procurement_status = d.procurement_status;
+  if (d.vendor_name !== undefined) updateData.vendor_name = d.vendor_name;
+  if (d.notes !== undefined) updateData.notes = d.notes;
+
+  // Recalculate total if rate or qty changed
+  if (d.unit_price !== undefined || d.quantity !== undefined || d.gst_rate !== undefined) {
+    // Get current values for fields not being updated
+    const { data: current } = await supabase
+      .from('project_boq_items')
+      .select('quantity, unit_price, gst_rate')
+      .eq('id', input.itemId)
+      .single();
+
+    if (current) {
+      const qty = d.quantity ?? Number(current.quantity);
+      const rate = d.unit_price ?? Number(current.unit_price);
+      const gst = d.gst_rate ?? Number(current.gst_rate);
+      const gstAmount = qty * rate * (gst / 100);
+      updateData.total_price = qty * rate + gstAmount;
+    }
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return { success: true };
+  }
+
+  const { error } = await supabase
+    .from('project_boq_items')
+    .update(updateData as any)
+    .eq('id', input.itemId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── BOQ Items: Delete ──
+
+export async function deleteBoqItem(input: {
+  projectId: string;
+  itemId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[deleteBoqItem]';
+  console.log(`${op} Deleting item ${input.itemId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('project_boq_items')
+    .delete()
+    .eq('id', input.itemId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Delete failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── BOI: Lock (submit) ──
+
+export async function lockBoi(input: {
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[lockBoi]';
+  console.log(`${op} Locking BOI for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
+  if (!employee) return { success: false, error: 'Employee profile not found' };
+
+  // Verify BOQ items exist
+  const { count } = await supabase
+    .from('project_boq_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', input.projectId);
+
+  if (!count || count === 0) {
+    return { success: false, error: 'No BOI items to submit. Add items first.' };
+  }
+
+  const { error } = await supabase
+    .from('projects')
+    .update({
+      boi_locked: true,
+      boi_locked_at: new Date().toISOString(),
+      boi_locked_by: employee.id,
+    } as any)
+    .eq('id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── BOI: Unlock (for corrections) ──
+
+export async function unlockBoi(input: {
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[unlockBoi]';
+  console.log(`${op} Unlocking BOI for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('projects')
+    .update({
+      boi_locked: false,
+      boi_locked_at: null,
+      boi_locked_by: null,
+    } as any)
+    .eq('id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── BOQ: Mark completed ──
+
+export async function completeBoq(input: {
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[completeBoq]';
+  console.log(`${op} Completing BOQ for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('projects')
+    .update({
+      boq_completed: true,
+      boq_completed_at: new Date().toISOString(),
+    } as any)
+    .eq('id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── BOQ: Update project manual cost (for margin calc) ──
+
+export async function updateProjectCostManual(input: {
+  projectId: string;
+  projectCost: number;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateProjectCostManual]';
+  console.log(`${op} Updating manual cost for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('projects')
+    .update({ project_cost_manual: input.projectCost } as any)
+    .eq('id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
 // ── Employees: Get active list for dropdowns ──
 
 export async function getActiveEmployeesForProject(): Promise<{ id: string; full_name: string }[]> {

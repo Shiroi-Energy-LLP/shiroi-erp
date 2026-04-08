@@ -18,7 +18,7 @@ interface Tab {
 const WORKFLOW_TABS: { label: string; queryTab: string }[] = [
   { label: 'Details', queryTab: 'details' },
   { label: 'Survey', queryTab: 'survey' },
-  { label: 'BOM', queryTab: 'bom' },
+  { label: 'BOI', queryTab: 'bom' },
   { label: 'BOQ', queryTab: 'boq' },
   { label: 'Delivery', queryTab: 'delivery' },
   { label: 'Execution', queryTab: 'execution' },
