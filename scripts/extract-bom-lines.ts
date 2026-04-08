@@ -174,7 +174,7 @@ async function main() {
     errors: 0,
   };
 
-  const CONCURRENCY = 5;
+  const CONCURRENCY = 2; // Reduced from 5 to avoid Supabase timeouts on free tier
 
   await processInBatches(excelFiles, CONCURRENCY, async (file, idx) => {
     stats.processed++;
