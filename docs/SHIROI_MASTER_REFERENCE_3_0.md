@@ -46,7 +46,7 @@
 | UI/UX Overhaul R2 | ✅ Complete | 9 items: hex→token purge (45+ files), 15 loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, semantic status tokens |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
-| Data quality overhaul | ✅ Complete | Full extraction pipeline. Proposals: 341→751. Financials: 52→485 (65%). Leads with size: 172→900. All 1,126 leads assigned_to. 31,972 BOM lines (508 proposals). 1,290 photos (170 project + 1,120 lead). 685 octet-stream fixed. 112 PPTX parsed. 10 leads restored. Migration 026: site_photos lead_id. |
+| Data quality overhaul | ✅ Complete | Full extraction pipeline. Proposals: 341→751. Financials: 52→647. BOM: 35,022 lines (629 proposals). 1,290 photos. 180 GDrive confirmed projects synced (BOM, dates, brands, margins, addresses). |
 | Migrations 022a–024a | ✅ Applied (dev) | PM corrections: 022a file delete RLS, 023a survey form overhaul (~25 cols), 024a BOQ items + delivery challans |
 | Migrations 022b–026 | ✅ Applied (dev) | Data quality: 022b processing_jobs, 023b BOM categories, 024b storage mime fix, 025 electricity_bill_number, 026 site_photos lead_id (project_id nullable) |
 | Migration 030 | ✅ Applied (dev) | BOI/BOQ project fields: boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual + category index |

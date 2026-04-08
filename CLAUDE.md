@@ -82,7 +82,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 025 | ✅ Applied (dev) | WhatsApp import queue: whatsapp_import_queue table with RLS, 5 indexes, review workflow |
 | Migration 026 | ✅ Applied (dev) | site_photos: project_id nullable, added lead_id for lead-only photos |
 | Data quality overhaul | ✅ Complete | Full 7-phase plan executed. See details below |
-| BOM extraction | ✅ Complete | 31,972 BOM lines across 508 proposals from Excel costing sheets (deterministic, no AI) |
+| BOM extraction | ✅ Complete | 35,022 BOM lines across 629 proposals (Excel costing sheets + Google Drive Bill of Items) |
+| Google Drive sync | ✅ Complete | 180 confirmed project folders synced: 119 BOM, 81 project dates/brands, 159 margins, 12 lead addresses |
 | Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed → 496 leads + 114 proposals enriched |
 | Proposal creation | ✅ Complete | 410 new proposals created from extracted doc data (341→751 total proposals) |
 | Owner assignment | ✅ Complete | All 1,126 leads now have assigned_to (10 Vivek, 1,116 Prem from HubSpot deal owner + default) |
@@ -115,7 +116,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
-PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→31,972 (508 proposals), photos 0→1,290.
+PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→35,022 (629 proposals), photos 0→1,290.
+Google Drive sync: 180 confirmed projects — BOM from Bill of Items, dates, panel/inverter brands, margins, addresses extracted.
 WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
 BOI/BOQ/DC overhaul complete per Manivel's spec: 14 BOI categories, submit/lock, inline BOQ editing, budget analysis with margin calculation, create DC from ready items.
 Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
