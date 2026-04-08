@@ -107,16 +107,18 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | List page timeout fix | ✅ Complete | 5 paginated pages changed from count:'exact' to count:'estimated' (projects, leads, contacts, companies, whatsapp-import) — prevents full table scan on every page load |
 | Migration 029 | ✅ Applied (dev) | 4 sort-column indexes: idx_projects_created_at, idx_leads_created_at, idx_contacts_created_at, idx_whatsapp_queue_timestamp (all DESC) |
 | Middleware timeout fix | ✅ Complete | Excluded /login from middleware matcher; added 5s Promise.race timeout to getUser() — prevents MIDDLEWARE_INVOCATION_TIMEOUT when Supabase Auth is slow |
+| Migration 030 | ✅ Applied (dev) | BOI/BOQ project fields: boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual on projects + idx_project_boq_items_category |
+| BOI module overhaul | ✅ Complete | BOM→BOI rename, Manivel's 14 categories (Solar Panels, Inverter, MMS, DC/AC Accessories, Conduits, Misc, Safety, Earthing, Gen Meter, I&C, Statutory, Transport & Civil, Others), submit/lock workflow, "Prepared By" display, inline add/delete |
+| BOQ Budget Analysis | ✅ Complete | Inline double-click rate/GST editing, add new items, delete items, category filter, grand total, Final Summary section (Project Cost / Actual Budget / Expected Margin %), "Mark BOQ Complete" checkbox |
+| Delivery Note overhaul | ✅ Complete | "Create DC" button auto-fetches Ready to Dispatch items, checkbox selection with adjustable quantities, transport details form, DC history with DC1/DC2 numbering |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
 PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→31,972 (508 proposals), photos 0→1,290.
 WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
-BOM category fix deployed. AMC module visibility fixes deployed. Proposals page timeout fixed.
-Project file visibility fixed: all 3 storage buckets now accessible from project page. Image viewer lightbox added.
+BOI/BOQ/DC overhaul complete per Manivel's spec: 14 BOI categories, submit/lock, inline BOQ editing, budget analysis with margin calculation, create DC from ready items.
 Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
-List page timeouts fixed: 5 paginated queries switched to estimated counts + 4 sort indexes added.
 Middleware timeout fixed: /login excluded from matcher, getUser() has 5s timeout to prevent MIDDLEWARE_INVOCATION_TIMEOUT.
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
@@ -549,4 +551,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 8, 2026 — Performance overhaul: fixed 7+ statement timeouts. Migration 028 adds 6 indexes + 3 RPC functions. Eliminated duplicate getProject(), payments query now filtered by lead_ids, 3 JS aggregations replaced with SQL RPCs, 13 pages paginated (.limit(100)), ProjectFiles parallelized (22 sequential→parallel storage calls), stepper queries parallelized. 24 files changed.*
+*Last updated: April 8, 2026 — BOI/BOQ/Delivery Note overhaul complete per Manivel's spec. BOI: 14 categories, submit/lock workflow, Prepared By display. BOQ Budget Analysis: inline rate/GST editing, add/delete items, category filter, Final Summary with margin %. Delivery Note: Create DC from Ready to Dispatch items with checkbox selection. Migration 030 applied (dev). Next: Vivek reviews, prod deployment.*
