@@ -28,7 +28,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
 | Database schema | ✅ Complete | 137+ tables, 91+ triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 6 with pipeline fields (expected_close_date, close_probability, is_archived) |
-| Migrations | ✅ Committed | supabase/migrations/ — 36 files (001 through 026) |
+| Migrations | ✅ Committed | supabase/migrations/ — 37 files (001 through 028) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, 22 components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + original 11) |
 | Auth + App Shell | ✅ Complete | Login (with logo), middleware, collapsible sidebar (240px/60px + mobile drawer), topbar with role switcher, skip-to-content |
@@ -102,6 +102,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | WhatsApp photos on project page | ✅ Complete | ProjectFiles now scans site-photos bucket for `projects/{id}/whatsapp/` media. 196 WhatsApp photos across 54 projects surfaced |
 | Migration 027a | ✅ Applied (dev) | tasks: category, remarks, assigned_date columns + task_work_logs table with RLS |
 | Task module overhaul | ✅ Complete | Edit/delete tasks, category field (10 milestone-aligned categories), remarks, done-by column, daily work logs with expandable timeline, category filter |
+| Performance overhaul | ✅ Complete | Fixed 7+ statement timeouts: migration 028 (6 indexes + 3 RPC functions), eliminated duplicate getProject(), payments query filtered by lead_ids, 3 JS aggregations→SQL RPCs, 13 pages paginated, ProjectFiles parallel storage calls, stepper queries parallelized |
+| Migration 028 | ✅ Applied (dev) | Performance indexes (daily_site_reports, leads pipeline, proposals lead+status, cash positions, BOM lines, projects status) + RPC functions (get_lead_stage_counts, get_company_cash_summary, get_msme_due_count) |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
@@ -110,6 +112,7 @@ PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751,
 WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
 BOM category fix deployed. AMC module visibility fixes deployed. Proposals page timeout fixed.
 Project file visibility fixed: all 3 storage buckets now accessible from project page. Image viewer lightbox added.
+Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
 ---
@@ -541,4 +544,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 8, 2026 — Project file visibility fixed: all 3 storage buckets (project-files, proposal-files, site-photos) now accessible from project page. Image viewer lightbox added. 9,845+ files surfaced. Next: Vivek reviews, prod deployment.*
+*Last updated: April 8, 2026 — Performance overhaul: fixed 7+ statement timeouts. Migration 028 adds 6 indexes + 3 RPC functions. Eliminated duplicate getProject(), payments query now filtered by lead_ids, 3 JS aggregations replaced with SQL RPCs, 13 pages paginated (.limit(100)), ProjectFiles parallelized (22 sequential→parallel storage calls), stepper queries parallelized. 24 files changed.*
