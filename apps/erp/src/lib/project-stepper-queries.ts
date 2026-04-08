@@ -7,30 +7,32 @@ export async function getStepDetailsData(projectId: string) {
 
   const supabase = await createClient();
 
-  const { data: project, error: projectError } = await supabase
-    .from('projects')
-    .select(
-      'id, project_number, customer_name, customer_phone, customer_email, status, system_size_kwp, system_type, site_address_line1, site_address_line2, site_city, site_state, site_pincode, contracted_value, panel_brand, panel_model, panel_wattage, panel_count, inverter_brand, inverter_model, inverter_capacity_kw, battery_brand, battery_model, battery_capacity_kwh, structure_type, completion_pct',
-    )
-    .eq('id', projectId)
-    .single();
+  // Parallelize the two independent queries
+  const [projectResult, cashResult] = await Promise.all([
+    supabase
+      .from('projects')
+      .select(
+        'id, project_number, customer_name, customer_phone, customer_email, status, system_size_kwp, system_type, site_address_line1, site_address_line2, site_city, site_state, site_pincode, contracted_value, panel_brand, panel_model, panel_wattage, panel_count, inverter_brand, inverter_model, inverter_capacity_kw, battery_brand, battery_model, battery_capacity_kwh, structure_type, completion_pct',
+      )
+      .eq('id', projectId)
+      .single(),
+    supabase
+      .from('project_cash_positions')
+      .select('total_contracted, total_invoiced, total_received, total_po_value, total_paid_to_vendors, net_cash_position')
+      .eq('project_id', projectId)
+      .maybeSingle(),
+  ]);
 
-  if (projectError) {
-    console.error(`${op} Project query failed:`, { code: projectError.code, message: projectError.message, projectId });
-    throw new Error(`Failed to fetch project: ${projectError.message}`);
+  if (projectResult.error) {
+    console.error(`${op} Project query failed:`, { code: projectResult.error.code, message: projectResult.error.message, projectId });
+    throw new Error(`Failed to fetch project: ${projectResult.error.message}`);
   }
 
-  const { data: cashPosition, error: cashError } = await supabase
-    .from('project_cash_positions')
-    .select('total_contracted, total_invoiced, total_received, total_po_value, total_paid_to_vendors, net_cash_position')
-    .eq('project_id', projectId)
-    .maybeSingle();
-
-  if (cashError) {
-    console.error(`${op} Cash position query failed:`, { code: cashError.code, message: cashError.message, projectId });
+  if (cashResult.error) {
+    console.error(`${op} Cash position query failed:`, { code: cashResult.error.code, message: cashResult.error.message, projectId });
   }
 
-  return { project, cashPosition };
+  return { project: projectResult.data, cashPosition: cashResult.data };
 }
 
 export async function getStepSurveyData(projectId: string) {
@@ -40,7 +42,7 @@ export async function getStepSurveyData(projectId: string) {
 
   const supabase = await createClient();
 
-  // First get the lead_id from the project
+  // Get lead_id first (needed to query surveys)
   const { data: project, error: projectError } = await supabase
     .from('projects')
     .select('lead_id')
@@ -54,11 +56,9 @@ export async function getStepSurveyData(projectId: string) {
 
   if (!project?.lead_id) return null;
 
-  // Select all columns — new columns from migration 023 won't error on missing (Supabase ignores unknown cols in select)
-  // Using * to future-proof against column additions
   const { data: survey, error: surveyError } = await supabase
     .from('lead_site_surveys')
-    .select('*')
+    .select('id, lead_id, survey_date, contact_person_name, contact_phone, gps_lat, gps_lng, site_access_notes, roof_type, roof_condition, roof_age_years, roof_orientation, roof_tilt_degrees, roof_area_sqft, usable_area_sqft, number_of_floors, building_height_ft, structure_type, existing_structure_condition, existing_load_kw, sanctioned_load_kw, meter_type, supply_voltage, discom_name, earthing_type, earthing_condition, net_metering_eligible, shading_assessment, shade_sources, morning_shade, afternoon_shade, recommended_size_kwp, recommended_system_type, estimated_generation_kwh_year, panel_placement_notes, inverter_location, cable_routing_notes, notes, created_at')
     .eq('lead_id', project.lead_id)
     .order('survey_date', { ascending: false })
     .limit(1)
@@ -177,39 +177,43 @@ export async function getStepExecutionData(projectId: string) {
 
   const supabase = await createClient();
 
-  const { data: milestones, error: milestoneError } = await supabase
-    .from('project_milestones')
-    .select('id, milestone_name, milestone_order, status, completion_pct, is_blocked, blocked_reason, planned_start_date, planned_end_date, actual_start_date, actual_end_date')
-    .eq('project_id', projectId)
-    .order('milestone_order', { ascending: true });
+  // Parallelize all three independent queries
+  const [milestonesResult, reportResult, tasksResult] = await Promise.all([
+    supabase
+      .from('project_milestones')
+      .select('id, milestone_name, milestone_order, status, completion_pct, is_blocked, blocked_reason, planned_start_date, planned_end_date, actual_start_date, actual_end_date')
+      .eq('project_id', projectId)
+      .order('milestone_order', { ascending: true }),
+    supabase
+      .from('daily_site_reports')
+      .select('id', { count: 'exact', head: true })
+      .eq('project_id', projectId),
+    supabase
+      .from('tasks')
+      .select('id, title, milestone_id, assigned_to, priority, due_date, is_completed, employees!tasks_assigned_to_fkey(full_name)')
+      .eq('project_id', projectId)
+      .is('deleted_at', null)
+      .order('due_date', { ascending: true, nullsFirst: false }),
+  ]);
 
-  if (milestoneError) {
-    console.error(`${op} Milestones query failed:`, { code: milestoneError.code, message: milestoneError.message, projectId });
-    throw new Error(`Failed to fetch milestones: ${milestoneError.message}`);
+  if (milestonesResult.error) {
+    console.error(`${op} Milestones query failed:`, { code: milestonesResult.error.code, message: milestonesResult.error.message, projectId });
+    throw new Error(`Failed to fetch milestones: ${milestonesResult.error.message}`);
   }
 
-  const { count: reportCount, error: reportError } = await supabase
-    .from('daily_site_reports')
-    .select('id', { count: 'exact', head: true })
-    .eq('project_id', projectId);
-
-  if (reportError) {
-    console.error(`${op} Reports count query failed:`, { code: reportError.code, message: reportError.message, projectId });
+  if (reportResult.error) {
+    console.error(`${op} Reports count query failed:`, { code: reportResult.error.code, message: reportResult.error.message, projectId });
   }
 
-  // Fetch tasks linked to this project (open tasks only)
-  const { data: tasks, error: taskError } = await supabase
-    .from('tasks')
-    .select('id, title, milestone_id, assigned_to, priority, due_date, is_completed, employees!tasks_assigned_to_fkey(full_name)')
-    .eq('project_id', projectId)
-    .is('deleted_at', null)
-    .order('due_date', { ascending: true, nullsFirst: false });
-
-  if (taskError) {
-    console.error(`${op} Tasks query failed:`, { code: taskError.code, message: taskError.message, projectId });
+  if (tasksResult.error) {
+    console.error(`${op} Tasks query failed:`, { code: tasksResult.error.code, message: tasksResult.error.message, projectId });
   }
 
-  return { milestones: milestones ?? [], reportCount: reportCount ?? 0, tasks: tasks ?? [] };
+  return {
+    milestones: milestonesResult.data ?? [],
+    reportCount: reportResult.count ?? 0,
+    tasks: tasksResult.data ?? [],
+  };
 }
 
 export async function getStepQcData(projectId: string) {
@@ -240,29 +244,31 @@ export async function getStepLiaisonData(projectId: string) {
 
   const supabase = await createClient();
 
-  const { data: project, error: projectError } = await supabase
-    .from('projects')
-    .select('system_size_kwp, system_type')
-    .eq('id', projectId)
-    .single();
+  // Parallelize the two independent queries
+  const [projectResult, appResult] = await Promise.all([
+    supabase
+      .from('projects')
+      .select('system_size_kwp, system_type')
+      .eq('id', projectId)
+      .single(),
+    supabase
+      .from('net_metering_applications')
+      .select('id, discom_name, discom_status, discom_application_date, discom_application_number, ceig_required, ceig_status, ceig_application_date, ceig_approval_date, ceig_inspection_date, net_meter_installed, net_meter_installed_date, net_meter_serial_number, followup_count, next_followup_date, notes')
+      .eq('project_id', projectId)
+      .maybeSingle(),
+  ]);
 
-  if (projectError) {
-    console.error(`${op} Project query failed:`, { code: projectError.code, message: projectError.message, projectId });
-    throw new Error(`Failed to fetch project: ${projectError.message}`);
+  if (projectResult.error) {
+    console.error(`${op} Project query failed:`, { code: projectResult.error.code, message: projectResult.error.message, projectId });
+    throw new Error(`Failed to fetch project: ${projectResult.error.message}`);
   }
 
-  const { data: application, error: appError } = await supabase
-    .from('net_metering_applications')
-    .select('id, discom_name, discom_status, discom_application_date, discom_application_number, ceig_required, ceig_status, ceig_application_date, ceig_approval_date, ceig_inspection_date, net_meter_installed, net_meter_installed_date, net_meter_serial_number, followup_count, next_followup_date, notes')
-    .eq('project_id', projectId)
-    .maybeSingle();
-
-  if (appError) {
-    console.error(`${op} Net metering query failed:`, { code: appError.code, message: appError.message, projectId });
-    throw new Error(`Failed to fetch net metering application: ${appError.message}`);
+  if (appResult.error) {
+    console.error(`${op} Net metering query failed:`, { code: appResult.error.code, message: appResult.error.message, projectId });
+    throw new Error(`Failed to fetch net metering application: ${appResult.error.message}`);
   }
 
-  return { project, application };
+  return { project: projectResult.data, application: appResult.data };
 }
 
 export async function getStepCommissioningData(projectId: string) {

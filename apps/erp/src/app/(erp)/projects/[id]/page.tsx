@@ -55,7 +55,8 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
     );
   }
 
-  // Details tab — full overview
+  // Details tab — full overview (all fetches in parallel)
+  const supabase = await createClient();
   const [project, entityContacts, handoverPack] = await Promise.all([
     getProject(id),
     getEntityContacts('project', id),
@@ -66,10 +67,9 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
     notFound();
   }
 
-  // Fetch lead files from proposal-files bucket (if project has a lead)
+  // Fetch lead files from proposal-files bucket in parallel (not blocking above)
   let leadFiles: { name: string; id: string; created_at: string; size?: number; mimetype?: string }[] = [];
   if (project.lead_id) {
-    const supabase = await createClient();
     const { data } = await supabase.storage
       .from('proposal-files')
       .list(project.lead_id, { limit: 500, sortBy: { column: 'created_at', order: 'desc' } });

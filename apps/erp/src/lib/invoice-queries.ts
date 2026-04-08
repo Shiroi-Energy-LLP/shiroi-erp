@@ -7,7 +7,8 @@ export async function getInvoices(filters: { status?: string; search?: string } 
   let query = supabase
     .from('invoices')
     .select('*, projects!invoices_project_id_fkey(project_number, customer_name)')
-    .order('invoice_date', { ascending: false });
+    .order('invoice_date', { ascending: false })
+    .limit(100);
   if (filters.status) query = query.eq('status', filters.status);
   if (filters.search) query = query.or(`invoice_number.ilike.%${filters.search}%`);
   const { data, error } = await query;

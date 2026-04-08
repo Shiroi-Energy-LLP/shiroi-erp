@@ -60,12 +60,8 @@ export async function getFinanceDashboardData(profileId: string): Promise<Financ
       .select('id', { count: 'exact', head: true })
       .neq('status', 'paid')
       .lt('due_date', new Date().toISOString().split('T')[0]),
-    // MSME vendor POs due this week
-    supabase
-      .from('purchase_orders')
-      .select('id, vendors!purchase_orders_vendor_id_fkey(is_msme)')
-      .gt('amount_outstanding', 0)
-      .lte('payment_due_date', weekEndStr),
+    // MSME vendor POs due this week — uses RPC to filter in SQL
+    supabase.rpc('get_msme_due_count', { p_due_before: weekEndStr }),
   ]);
 
   if (overdueResult.error) {
@@ -73,16 +69,10 @@ export async function getFinanceDashboardData(profileId: string): Promise<Financ
   }
 
   if (msmeDueResult.error) {
-    console.error(`${op} MSME due query failed:`, { code: msmeDueResult.error.code, message: msmeDueResult.error.message });
+    console.error(`${op} MSME due RPC failed:`, { code: msmeDueResult.error.code, message: msmeDueResult.error.message });
   }
 
-  // Filter MSME POs client-side (join field filtering)
-  const msmeDueCount = (msmeDueResult.data ?? []).filter(
-    (po) => {
-      const vendor = po.vendors as { is_msme: boolean } | null;
-      return vendor?.is_msme === true;
-    },
-  ).length;
+  const msmeDueCount = Number(msmeDueResult.data ?? 0);
 
   return {
     totalInvestedCapital: cashSummary.totalInvestedCapital,

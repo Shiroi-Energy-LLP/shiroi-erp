@@ -32,7 +32,8 @@ export default async function TrainingPage() {
     const { data, error } = await supabase
       .from('training_assessment_results')
       .select('id, score_pct, passed, assessment_date, attempt_number, certificate_issued, employees!training_assessment_results_employee_id_fkey(full_name), training_modules!training_assessment_results_module_id_fkey(module_name, module_type)')
-      .order('assessment_date', { ascending: false });
+      .order('assessment_date', { ascending: false })
+      .limit(100);
 
     if (error) {
       console.error('[TrainingPage] Query failed:', { code: error.code, message: error.message });

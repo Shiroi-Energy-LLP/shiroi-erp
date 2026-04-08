@@ -24,7 +24,8 @@ export default async function DeliveriesPage() {
     .select(
       '*, vendors!vendor_delivery_challans_vendor_id_fkey(company_name), purchase_orders!vendor_delivery_challans_purchase_order_id_fkey(po_number, project_id)',
     )
-    .order('vendor_dc_date', { ascending: false });
+    .order('vendor_dc_date', { ascending: false })
+    .limit(100);
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });

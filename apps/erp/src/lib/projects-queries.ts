@@ -68,6 +68,33 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   };
 }
 
+/**
+ * Lightweight project header — only fields needed for the layout header bar.
+ * Used by projects/[id]/layout.tsx to avoid the expensive full getProject() call.
+ */
+export async function getProjectHeader(id: string) {
+  const op = '[getProjectHeader]';
+  console.log(`${op} Starting for: ${id}`);
+  if (!id) throw new Error(`${op} Missing required parameter: id`);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id, project_number, customer_name, status, system_size_kwp, system_type, contracted_value, completion_pct, ceig_required, ceig_cleared, automation_paused')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, id });
+    throw new Error(`Failed to load project header: ${error.message}`);
+  }
+  if (!data) {
+    console.warn(`${op} Not found:`, { id });
+    return null;
+  }
+  return data;
+}
+
 export async function getProject(id: string) {
   const op = '[getProject]';
   console.log(`${op} Starting for: ${id}`);

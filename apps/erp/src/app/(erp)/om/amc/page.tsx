@@ -67,12 +67,14 @@ export default async function AmcPage() {
       supabase
         .from('om_contracts')
         .select('id, contract_number, contract_type, start_date, end_date, annual_value, status, visits_included, projects!om_contracts_project_id_fkey(project_number, customer_name)')
-        .order('start_date', { ascending: false }),
+        .order('start_date', { ascending: false })
+        .limit(100),
       supabase
         .from('om_visit_schedules')
         .select('id, visit_number, visit_type, scheduled_date, status, project_id, employees!om_visit_schedules_assigned_to_fkey(full_name), projects!om_visit_schedules_project_id_fkey(project_number, customer_name)')
         .not('status', 'in', '("completed","cancelled")')
-        .order('scheduled_date', { ascending: true }),
+        .order('scheduled_date', { ascending: true })
+        .limit(100),
     ]);
 
     if (contractResult.error) {

@@ -71,7 +71,8 @@ export default async function ServiceTicketsPage() {
     const { data, error } = await supabase
       .from('om_service_tickets')
       .select('id, ticket_number, title, severity, issue_type, status, created_at, sla_deadline, sla_breached, projects!om_service_tickets_project_id_fkey(project_number, customer_name)')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) {
       console.error('[ServiceTicketsPage] Query failed:', { code: error.code, message: error.message });

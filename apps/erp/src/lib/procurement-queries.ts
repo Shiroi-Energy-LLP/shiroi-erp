@@ -60,7 +60,8 @@ export async function getPurchaseOrders(filters: ProcurementFilters = {}): Promi
     .select(
       '*, vendors!purchase_orders_vendor_id_fkey(company_name, is_msme), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
     )
-    .order('po_date', { ascending: false });
+    .order('po_date', { ascending: false })
+    .limit(100);
 
   if (filters.status) {
     query = query.eq('status', filters.status);
@@ -170,7 +171,8 @@ export async function getVendorsList(): Promise<Pick<VendorRow, 'id' | 'company_
     .select('id, company_name')
     .eq('is_active', true)
     .is('deleted_at', null)
-    .order('company_name');
+    .order('company_name')
+    .limit(200);
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
@@ -191,7 +193,8 @@ export async function getProjectsList(): Promise<Pick<ProjectRow, 'id' | 'projec
   const { data, error } = await supabase
     .from('projects')
     .select('id, project_number, customer_name')
-    .order('project_number', { ascending: false });
+    .order('project_number', { ascending: false })
+    .limit(200);
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });

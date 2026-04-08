@@ -23,7 +23,8 @@ export default async function VendorPaymentsPage() {
     .select(
       '*, vendors!vendor_payments_vendor_id_fkey(company_name), purchase_orders!vendor_payments_purchase_order_id_fkey(po_number)',
     )
-    .order('payment_date', { ascending: false });
+    .order('payment_date', { ascending: false })
+    .limit(100);
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });

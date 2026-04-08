@@ -72,11 +72,12 @@ export async function getProjectPaymentOverview(): Promise<ProjectPaymentRow[]> 
       .from('project_site_expenses')
       .select('project_id, amount')
       .in('project_id', projectIds),
-    // Get payment schedules via proposals linked to leads
+    // Get payment schedules via proposals linked to these projects' leads only
     supabase
       .from('proposals')
       .select('lead_id, proposal_payment_schedule(milestone_name, milestone_order, amount, percentage)')
-      .eq('status', 'accepted'),
+      .eq('status', 'accepted')
+      .in('lead_id', projects.map((p: any) => p.lead_id).filter(Boolean)),
   ]);
 
   // Build lookup maps
