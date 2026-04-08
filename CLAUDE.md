@@ -97,13 +97,17 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | BOM category fix | ✅ Complete | Fixed item_category CHECK constraint violation — dropdown now sends DB-valid snake_case values instead of display labels |
 | AMC module visibility | ✅ Complete | AMC Schedule added to founder + om_technician sidebar; /om/amc page enhanced with upcoming visits table + summary cards; AMC This Month card on founder dashboard |
 | Proposals timeout fix | ✅ Complete | Added idx_proposals_created_at index, count:estimated, optimized join — fixes Sentry timeout on /proposals with 751 rows |
+| Project file visibility | ✅ Complete | Fixed 3 issues hiding 9,845 files from project page: (1) path prefix mismatch for 909 GDrive files, (2) missing categories (purchase-orders, layouts, delivery-challans, sesal), (3) 7,636 lead files in proposal-files bucket now shown via new LeadFiles component |
+| Image viewer lightbox | ✅ Complete | Click any image in ProjectFiles or LeadFiles → full-screen modal with prev/next arrows, keyboard navigation, download button. Built with Radix Dialog, no new dependencies |
+| WhatsApp photos on project page | ✅ Complete | ProjectFiles now scans site-photos bucket for `projects/{id}/whatsapp/` media. 196 WhatsApp photos across 54 projects surfaced |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
 PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→3,450, photos 0→1,290.
 WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
-BOM category fix deployed. AMC module visibility fixes deployed. Proposals page timeout fixed (index + query optimization).
+BOM category fix deployed. AMC module visibility fixes deployed. Proposals page timeout fixed.
+Project file visibility fixed: all 3 storage buckets now accessible from project page. Image viewer lightbox added.
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
 ---
@@ -535,4 +539,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 8, 2026 — BOM category fix, AMC module visibility (nav + visits table + dashboard card), proposals page timeout fix (created_at index + count:estimated). WhatsApp Import pipeline complete. Next: Vivek reviews WA queue + AMC with Manivel, prod deployment.*
+*Last updated: April 8, 2026 — Project file visibility fixed: all 3 storage buckets (project-files, proposal-files, site-photos) now accessible from project page. Image viewer lightbox added. 9,845+ files surfaced. Next: Vivek reviews, prod deployment.*

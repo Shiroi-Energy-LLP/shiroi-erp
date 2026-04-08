@@ -1623,6 +1623,10 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Founder dashboard: Added "AMC This Month" card with progress bar and link to /om/amc
 - New query: getAmcMonthlySummary() in dashboard-queries.ts
 - Proposals page timeout fix: Added idx_proposals_created_at DESC index, changed count:'exact' to count:'estimated', replaced !inner join with regular join + not-null filter (751 proposals after doc extraction exceeded Supabase statement timeout)
+- Project file visibility fix: ProjectFiles component now scans both `{projectId}/{category}/` and `projects/{projectId}/{category}/` paths in project-files bucket (909 GDrive-migrated files were invisible due to path prefix mismatch). Added missing categories: purchase-orders, layouts, delivery-challans, invoices (plural), sesal.
+- Lead files on project page: New LeadFiles component shows all files from proposal-files bucket (grouped by type: images, PDFs, Word, Excel, presentations, design files, videos). 7,636 files across 933 leads now accessible from project detail page.
+- WhatsApp photos on project page: ProjectFiles scans site-photos bucket at `projects/{projectId}/whatsapp/` — 196 WhatsApp photos across 54 projects surfaced.
+- Image viewer lightbox: New ImageViewer component (Radix Dialog, no external deps). Click any image in ProjectFiles or LeadFiles → full-screen modal with prev/next arrows, keyboard navigation (arrow keys), download button, image counter.
 
 **What changed in v3.5 (Apr 7, 2026):**
 - PM Corrections R2: 16 files changed addressing PM Manivel's field testing feedback
