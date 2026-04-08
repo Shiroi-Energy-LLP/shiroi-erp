@@ -7,7 +7,8 @@ import {
   Button, Input, Label, Select,
 } from '@repo/ui';
 import { Pencil } from 'lucide-react';
-import { updateTask, TASK_CATEGORIES } from '@/lib/tasks-actions';
+import { updateTask } from '@/lib/tasks-actions';
+import { TASK_CATEGORIES } from '@/lib/task-constants';
 
 interface EditTaskDialogProps {
   task: {

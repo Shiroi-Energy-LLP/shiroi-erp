@@ -1,4 +1,7 @@
 import { createClient } from '@repo/supabase/server';
+import type { Database } from '@repo/types/database';
+
+type ProjectStatus = Database['public']['Enums']['project_status'];
 
 export async function getProjectProfitability(filters: { status?: string } = {}) {
   const op = '[getProjectProfitability]';
@@ -12,7 +15,7 @@ export async function getProjectProfitability(filters: { status?: string } = {})
     .is('deleted_at', null);
 
   if (filters.status) {
-    query = query.eq('status', filters.status);
+    query = query.eq('status', filters.status as ProjectStatus);
   }
 
   const { data, error } = await query.order('project_number', { ascending: false }).limit(200);

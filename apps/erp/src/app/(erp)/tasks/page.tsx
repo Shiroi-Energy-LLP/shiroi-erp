@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { getAllTasks } from '@/lib/all-tasks-queries';
-import { getActiveEmployees, getActiveProjects, TASK_CATEGORIES } from '@/lib/tasks-actions';
+import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
+import { TASK_CATEGORIES } from '@/lib/task-constants';
 import { isTaskOverdue } from '@/lib/tasks-helpers';
 import { formatDate } from '@repo/ui/formatters';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';

@@ -44,7 +44,7 @@ export async function getFinanceDashboardData(profileId: string): Promise<Financ
   const today = new Date();
   const weekEnd = new Date(today);
   weekEnd.setDate(weekEnd.getDate() + 7);
-  const weekEndStr = weekEnd.toISOString().split('T')[0];
+  const weekEndStr = weekEnd.toISOString().split('T')[0] as string;
 
   const [
     cashSummary,

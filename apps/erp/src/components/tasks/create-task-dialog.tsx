@@ -7,7 +7,8 @@ import {
   Button, Input, Label, Select,
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
-import { createTask, TASK_CATEGORIES } from '@/lib/tasks-actions';
+import { createTask } from '@/lib/tasks-actions';
+import { TASK_CATEGORIES } from '@/lib/task-constants';
 
 interface CreateTaskDialogProps {
   employees: { id: string; full_name: string }[];
