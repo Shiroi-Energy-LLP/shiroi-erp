@@ -73,6 +73,7 @@ const ITEMS = {
   contacts:       { label: 'Contacts',          href: '/contacts',           icon: 'Users' },
   companies:      { label: 'Companies',         href: '/companies',          icon: 'Building2' },
   inventory:      { label: 'Inventory',          href: '/inventory',          icon: 'Package' },
+  waImportQueue:  { label: 'WA Import Queue',   href: '/whatsapp-import',    icon: 'MessageSquare' },
 } as const satisfies Record<string, NavItem>;
 
 // ---------------------------------------------------------------------------
@@ -89,6 +90,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
+    { label: 'Admin',        items: [ITEMS.waImportQueue] },
   ],
   project_manager: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
@@ -124,6 +126,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.deliveries, ITEMS.inventory] },
     { label: 'Vendor Management', items: [ITEMS.vendors, ITEMS.priceBook] },
     { label: 'Contacts',         items: [ITEMS.contacts, ITEMS.companies] },
+    { label: 'Admin',            items: [ITEMS.waImportQueue] },
   ],
   finance: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
@@ -132,6 +135,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Vendor',       items: [ITEMS.vendorPayments, ITEMS.msmeCompliance] },
     { label: 'Analysis',     items: [ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
+    { label: 'Admin',        items: [ITEMS.waImportQueue] },
   ],
   hr_manager: [
     { label: 'Overview',            items: [ITEMS.dashboard] },
