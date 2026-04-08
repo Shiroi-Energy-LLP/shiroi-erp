@@ -96,13 +96,14 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | WA Import Queue UI | ✅ Complete | /whatsapp-import — stats grid, paginated review table, approve/reject/reassign actions. Sidebar link for founder/finance/purchase_officer. |
 | BOM category fix | ✅ Complete | Fixed item_category CHECK constraint violation — dropdown now sends DB-valid snake_case values instead of display labels |
 | AMC module visibility | ✅ Complete | AMC Schedule added to founder + om_technician sidebar; /om/amc page enhanced with upcoming visits table + summary cards; AMC This Month card on founder dashboard |
+| Proposals timeout fix | ✅ Complete | Added idx_proposals_created_at index, count:estimated, optimized join — fixes Sentry timeout on /proposals with 751 rows |
 | Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
 PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→3,450, photos 0→1,290.
 WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
-BOM category fix deployed. AMC module visibility fixes deployed (nav, upcoming visits, dashboard card).
+BOM category fix deployed. AMC module visibility fixes deployed. Proposals page timeout fixed (index + query optimization).
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
 ---
@@ -534,4 +535,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 8, 2026 — BOM category constraint fix deployed (dropdown sends snake_case values). AMC module: sidebar nav added for founder/om_technician, /om/amc enhanced with upcoming visits table, founder dashboard AMC card added. WhatsApp Import pipeline complete. Next: Vivek reviews WA queue + AMC with Manivel, prod deployment.*
+*Last updated: April 8, 2026 — BOM category fix, AMC module visibility (nav + visits table + dashboard card), proposals page timeout fix (created_at index + count:estimated). WhatsApp Import pipeline complete. Next: Vivek reviews WA queue + AMC with Manivel, prod deployment.*

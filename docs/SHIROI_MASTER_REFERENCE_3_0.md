@@ -1622,6 +1622,7 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - AMC page enhanced: /om/amc now shows summary cards (total contracts, active, upcoming visits, overdue) + upcoming AMC visits table with project links, visit #, scheduled date, engineer, status
 - Founder dashboard: Added "AMC This Month" card with progress bar and link to /om/amc
 - New query: getAmcMonthlySummary() in dashboard-queries.ts
+- Proposals page timeout fix: Added idx_proposals_created_at DESC index, changed count:'exact' to count:'estimated', replaced !inner join with regular join + not-null filter (751 proposals after doc extraction exceeded Supabase statement timeout)
 
 **What changed in v3.5 (Apr 7, 2026):**
 - PM Corrections R2: 16 files changed addressing PM Manivel's field testing feedback

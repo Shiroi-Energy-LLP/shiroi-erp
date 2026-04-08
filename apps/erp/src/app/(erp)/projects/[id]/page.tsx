@@ -4,8 +4,10 @@ import { getProject } from '@/lib/projects-queries';
 import { getEntityContacts } from '@/lib/contacts-queries';
 import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
 import { ProjectFiles } from '@/components/projects/project-files';
+import { LeadFiles } from '@/components/projects/lead-files';
 import { HandoverPack } from '@/components/projects/handover-pack';
 import { getHandoverPack } from '@/lib/handover-actions';
+import { createClient } from '@repo/supabase/server';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
@@ -62,6 +64,24 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
 
   if (!project) {
     notFound();
+  }
+
+  // Fetch lead files from proposal-files bucket (if project has a lead)
+  let leadFiles: { name: string; id: string; created_at: string; size?: number; mimetype?: string }[] = [];
+  if (project.lead_id) {
+    const supabase = await createClient();
+    const { data } = await supabase.storage
+      .from('proposal-files')
+      .list(project.lead_id, { limit: 500, sortBy: { column: 'created_at', order: 'desc' } });
+    leadFiles = (data ?? [])
+      .filter((f) => f.name !== '.emptyFolderPlaceholder')
+      .map((f) => ({
+        name: f.name,
+        id: f.id ?? f.name,
+        created_at: f.created_at ?? '',
+        size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
+        mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
+      }));
   }
 
   const milestones = project.project_milestones ?? [];
@@ -287,6 +307,10 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
         <HandoverPack projectId={id} existingPack={handoverPack as any} />
 
         <ProjectFiles projectId={id} />
+
+        {project.lead_id && leadFiles.length > 0 && (
+          <LeadFiles leadId={project.lead_id} files={leadFiles} />
+        )}
 
         <EntityContactsCard entityType="project" entityId={id} contacts={entityContacts} />
       </div>

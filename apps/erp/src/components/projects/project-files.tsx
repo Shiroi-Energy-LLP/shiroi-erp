@@ -6,6 +6,7 @@ import {
   Card, CardHeader, CardTitle, CardContent, Button, Select, Label,
 } from '@repo/ui';
 import { Upload, Download, FileText, Image, File, Trash2 } from 'lucide-react';
+import { ImageViewer, type ViewableImage } from '@/components/ui/image-viewer';
 
 interface FileInfo {
   name: string;
@@ -15,6 +16,10 @@ interface FileInfo {
     size?: number;
     mimetype?: string;
   };
+  /** The full path prefix before the filename (e.g. "{projectId}/photos" or "projects/{projectId}/photos") */
+  pathPrefix: string;
+  /** Storage bucket (defaults to 'project-files') */
+  bucket: string;
 }
 
 interface ProjectFilesProps {
@@ -28,6 +33,11 @@ const FILE_CATEGORIES = [
   { value: 'documents', label: 'Documents / Approvals' },
   { value: 'warranty', label: 'Warranty Cards' },
   { value: 'invoice', label: 'Invoices' },
+  { value: 'invoices', label: 'Invoices' },
+  { value: 'purchase-orders', label: 'Purchase Orders' },
+  { value: 'layouts', label: 'Layouts / Designs' },
+  { value: 'delivery-challans', label: 'Delivery Challans' },
+  { value: 'sesal', label: 'SESAL' },
 ] as const;
 
 function formatFileSize(bytes?: number): string {
@@ -68,33 +78,88 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
     const supabase = createClient();
     const allFiles: Record<string, FileInfo[]> = {};
 
-    for (const cat of FILE_CATEGORIES) {
-      const { data, error } = await supabase.storage
-        .from('project-files')
-        .list(`${projectId}/${cat.value}`, {
-          limit: 100,
-          sortBy: { column: 'created_at', order: 'desc' },
-        });
+    // Scan both path patterns per category:
+    // 1. {projectId}/{category}/ — files uploaded via ERP UI
+    // 2. projects/{projectId}/{category}/ — Google Drive migrated files
+    const pathPrefixes = [
+      `${projectId}`,
+      `projects/${projectId}`,
+    ];
 
-      if (error) {
-        // Folder may not exist yet — that's fine
-        if (!error.message?.includes('not found')) {
-          console.error(`${op} List failed for ${cat.value}:`, error.message);
+    for (const cat of FILE_CATEGORIES) {
+      const merged: FileInfo[] = [];
+
+      for (const prefix of pathPrefixes) {
+        const fullPath = `${prefix}/${cat.value}`;
+        const { data, error } = await supabase.storage
+          .from('project-files')
+          .list(fullPath, {
+            limit: 200,
+            sortBy: { column: 'created_at', order: 'desc' },
+          });
+
+        if (error) {
+          if (!error.message?.includes('not found')) {
+            console.error(`${op} List failed for ${fullPath}:`, error.message);
+          }
+          continue;
         }
-        allFiles[cat.value] = [];
-      } else {
-        allFiles[cat.value] = (data ?? [])
+
+        const files = (data ?? [])
           .filter((f) => f.name !== '.emptyFolderPlaceholder')
           .map((f) => ({
             name: f.name,
-            id: f.id ?? f.name,
+            id: f.id ?? `${prefix}-${f.name}`,
             created_at: f.created_at ?? '',
             metadata: {
               size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
               mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
             },
+            pathPrefix: fullPath,
+            bucket: 'project-files',
           }));
+        merged.push(...files);
       }
+
+      allFiles[cat.value] = merged;
+    }
+
+    // Also scan site-photos bucket for WhatsApp photos linked to this project
+    // Path: projects/{projectId}/whatsapp/{year-month}/{filename}
+    const waPhotos: FileInfo[] = [];
+    const { data: waMonths } = await supabase.storage
+      .from('site-photos')
+      .list(`projects/${projectId}/whatsapp`, { limit: 100 });
+
+    if (waMonths) {
+      for (const month of waMonths.filter((m) => !m.id)) {
+        const monthPath = `projects/${projectId}/whatsapp/${month.name}`;
+        const { data: monthFiles } = await supabase.storage
+          .from('site-photos')
+          .list(monthPath, { limit: 200, sortBy: { column: 'created_at', order: 'desc' } });
+
+        if (monthFiles) {
+          waPhotos.push(
+            ...monthFiles
+              .filter((f) => f.name !== '.emptyFolderPlaceholder')
+              .map((f) => ({
+                name: f.name,
+                id: f.id ?? `wa-${month.name}-${f.name}`,
+                created_at: f.created_at ?? '',
+                metadata: {
+                  size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
+                  mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
+                },
+                pathPrefix: monthPath,
+                bucket: 'site-photos',
+              }))
+          );
+        }
+      }
+    }
+
+    if (waPhotos.length > 0) {
+      allFiles['whatsapp'] = waPhotos;
     }
 
     setFiles(allFiles);
@@ -144,11 +209,11 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
     handleUpload(e.dataTransfer.files);
   }
 
-  async function handleDownload(category: string, fileName: string) {
+  async function handleDownload(bucket: string, pathPrefix: string, fileName: string) {
     const supabase = createClient();
     const { data, error } = await supabase.storage
-      .from('project-files')
-      .createSignedUrl(`${projectId}/${category}/${fileName}`, 60);
+      .from(bucket)
+      .createSignedUrl(`${pathPrefix}/${fileName}`, 60);
 
     if (error || !data?.signedUrl) {
       console.error('[ProjectFiles.handleDownload] Failed:', error?.message);
@@ -157,13 +222,13 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
     window.open(data.signedUrl, '_blank');
   }
 
-  async function handleDelete(category: string, fileName: string) {
+  async function handleDelete(bucket: string, pathPrefix: string, fileName: string) {
     if (!confirm(`Delete "${fileName}"? This cannot be undone.`)) return;
 
     const supabase = createClient();
     const { error } = await supabase.storage
-      .from('project-files')
-      .remove([`${projectId}/${category}/${fileName}`]);
+      .from(bucket)
+      .remove([`${pathPrefix}/${fileName}`]);
 
     if (error) {
       console.error('[ProjectFiles.handleDelete] Failed:', error.message);
@@ -175,6 +240,41 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
   }
 
   const totalFiles = Object.values(files).reduce((sum, arr) => sum + arr.length, 0);
+
+  // Collect all images for the viewer
+  const allImages: ViewableImage[] = React.useMemo(() => {
+    const imgs: ViewableImage[] = [];
+    for (const catFiles of Object.values(files)) {
+      for (const f of catFiles) {
+        if (f.metadata?.mimetype?.startsWith('image/')) {
+          imgs.push({
+            id: f.id,
+            name: f.name,
+            bucket: f.bucket,
+            path: `${f.pathPrefix}/${f.name}`,
+          });
+        }
+      }
+    }
+    return imgs;
+  }, [files]);
+
+  const [viewerOpen, setViewerOpen] = React.useState(false);
+  const [viewerIndex, setViewerIndex] = React.useState(0);
+
+  function openImage(file: FileInfo) {
+    const idx = allImages.findIndex((img) => img.id === file.id);
+    if (idx >= 0) {
+      setViewerIndex(idx);
+      setViewerOpen(true);
+    }
+  }
+
+  // All display categories (FILE_CATEGORIES + dynamic whatsapp)
+  const displayCategories = [
+    ...FILE_CATEGORIES,
+    ...(files['whatsapp']?.length ? [{ value: 'whatsapp' as const, label: 'WhatsApp Photos' }] : []),
+  ];
 
   return (
     <Card>
@@ -238,7 +338,7 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
           <p className="text-sm text-[#9CA0AB] text-center py-2">No files uploaded yet.</p>
         ) : (
           <div className="space-y-3">
-            {FILE_CATEGORIES.map((cat) => {
+            {displayCategories.map((cat) => {
               const catFiles = files[cat.value] ?? [];
               if (catFiles.length === 0) return null;
 
@@ -250,6 +350,7 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
                   <div className="space-y-1">
                     {catFiles.map((file) => {
                       const Icon = getFileIcon(file.metadata?.mimetype);
+                      const isImage = file.metadata?.mimetype?.startsWith('image/');
                       return (
                         <div
                           key={file.id}
@@ -258,7 +359,7 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
                           <Icon className="h-3.5 w-3.5 text-[#9CA0AB] flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <button
-                              onClick={() => handleDownload(cat.value, file.name)}
+                              onClick={() => isImage ? openImage(file) : handleDownload(file.bucket, file.pathPrefix, file.name)}
                               className="text-[#00B050] hover:underline truncate block text-left text-[13px]"
                               title={file.name}
                             >
@@ -271,14 +372,14 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
-                              onClick={() => handleDownload(cat.value, file.name)}
+                              onClick={() => isImage ? openImage(file) : handleDownload(file.bucket, file.pathPrefix, file.name)}
                               className="p-1 text-[#7C818E] hover:text-[#00B050]"
-                              title="Download"
+                              title={isImage ? 'View' : 'Download'}
                             >
                               <Download className="h-3.5 w-3.5" />
                             </button>
                             <button
-                              onClick={() => handleDelete(cat.value, file.name)}
+                              onClick={() => handleDelete(file.bucket, file.pathPrefix, file.name)}
                               className="p-1 text-[#7C818E] hover:text-[#991B1B]"
                               title="Delete"
                             >
@@ -295,6 +396,13 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
           </div>
         )}
       </CardContent>
+
+      <ImageViewer
+        images={allImages}
+        initialIndex={viewerIndex}
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+      />
     </Card>
   );
 }
