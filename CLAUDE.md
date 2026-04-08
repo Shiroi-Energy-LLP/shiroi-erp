@@ -82,7 +82,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 025 | ✅ Applied (dev) | WhatsApp import queue: whatsapp_import_queue table with RLS, 5 indexes, review workflow |
 | Migration 026 | ✅ Applied (dev) | site_photos: project_id nullable, added lead_id for lead-only photos |
 | Data quality overhaul | ✅ Complete | Full 7-phase plan executed. See details below |
-| BOM extraction | ✅ Complete | 3,450 BOM lines from 183 Excel costing sheets (deterministic, no AI) |
+| BOM extraction | ✅ Complete | 31,972 BOM lines across 508 proposals from Excel costing sheets (deterministic, no AI) |
 | Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed → 496 leads + 114 proposals enriched |
 | Proposal creation | ✅ Complete | 410 new proposals created from extracted doc data (341→751 total proposals) |
 | Owner assignment | ✅ Complete | All 1,126 leads now have assigned_to (10 Vivek, 1,116 Prem from HubSpot deal owner + default) |
