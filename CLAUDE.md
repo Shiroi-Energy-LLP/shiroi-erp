@@ -17,7 +17,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 
 ---
 
-## CURRENT STATE (as of April 7, 2026)
+## CURRENT STATE (as of April 8, 2026)
 
 | Item | Status | Detail |
 |------|--------|--------|
@@ -79,7 +79,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Migration 023b | ✅ Applied (dev) | Expanded BOM item_category CHECK constraint for Excel parsing (data quality) |
 | Migration 024a | ✅ Applied (dev) | BOQ items + delivery challans: project_boq_items, delivery_challans tables (PM corrections) |
 | Migration 024b | ✅ Applied (dev) | Storage mime type fix function (update_storage_mime_type RPC) (data quality) |
-| Migration 025 | ✅ Applied (dev) | electricity_bill_number column on leads |
+| Migration 025 | ✅ Applied (dev) | WhatsApp import queue: whatsapp_import_queue table with RLS, 5 indexes, review workflow |
 | Migration 026 | ✅ Applied (dev) | site_photos: project_id nullable, added lead_id for lead-only photos |
 | Data quality overhaul | ✅ Complete | Full 7-phase plan executed. See details below |
 | BOM extraction | ✅ Complete | 3,450 BOM lines from 183 Excel costing sheets (deterministic, no AI) |
@@ -91,13 +91,16 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | HubSpot enrichment | ✅ Complete | Close dates, owner assignment, contacts/companies enrichment from CSV exports |
 | Deleted lead restore | ✅ Complete | 10 real leads restored (PV264/RWD, 50MWp, Ramakrishna, Ravi, etc.), 11 junk leads kept soft-deleted |
 | PM Corrections R2 | ✅ Complete | QC/Liaison/Status constraint fixes, commissioning edit, task completion toggles, tasks page overhaul, O&M visits overhaul, PDF hardening |
-| Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
+| WhatsApp import pipeline | ✅ Complete | Rule-based extraction from 3 group chats. 4,164 records in review queue. Script: `scripts/whatsapp-import/extract-local.ts` |
+| WhatsApp data extracted | ✅ Complete | Marketing: 152 records (50 payments, 30 POs, 32 contacts, 40 activities). LLP: 186 records (115 BOQ items, 27 POs, 15 payments, 4 vendor_payments). Shiroi Energy ⚡: 3,826 records (403 daily reports, 3,100 activities, 298 contacts, 25 financial). |
+| WA Import Queue UI | ✅ Complete | /whatsapp-import — stats grid, paginated review table, approve/reject/reassign actions. Sidebar link for founder/finance/purchase_officer. |
+| Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
-Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign (20 tasks) complete.
-PM Corrections R2: 16 files changed — tasks page with Project Name + Assigned To + completion toggle, commissioning edit form, QC/liaison/status-history constraint fixes, O&M visits shows scheduled+completed, PDF null hardening, QuickTaskForm with engineer dropdown.
-Data quality overhaul complete: proposals 341→751, leads with size 172→900, leads with owner 0→1,126, proposals with financials 52→485, BOM lines 7→3,450, photos 0→1,290.
-Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
+Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
+PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→3,450, photos 0→1,290.
+WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
+WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
 ---
 
@@ -528,4 +531,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 7, 2026 — PM Corrections R2: 16 files, 10+ fixes. Tasks page: Project Name column, Assigned To filter, Project filter, completion toggle. My Tasks: completion toggle, project link. Commissioning: edit form + updateCommissioningReport action. Execution: engineer dropdown on QuickTaskForm, task completion toggles. QC: constraint fixes (passed/failed). Liaison: discom_status fix. O&M visits: shows scheduled + completed. PDF: null-safe rendering. AMC: revalidates O&M paths. Next: Prod deployment.*
+*Last updated: April 8, 2026 — WhatsApp Import pipeline complete. Migration 025 applied. 4,164 records extracted from 3 group chats (Marketing, LLP, Shiroi Energy ⚡) into whatsapp_import_queue. Review UI at /whatsapp-import. Rule-based extraction (no LLM). PM Corrections R2 complete. Data quality overhaul complete. Next: Vivek reviews WA queue, prod deployment.*

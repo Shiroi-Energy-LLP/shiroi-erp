@@ -3820,6 +3820,7 @@ export type Database = {
           customer_name: string
           deleted_at: string | null
           disqualification_reason: string | null
+          electricity_bill_number: string | null
           email: string | null
           estimated_size_kwp: number | null
           expected_close_date: string | null
@@ -3855,6 +3856,7 @@ export type Database = {
           customer_name: string
           deleted_at?: string | null
           disqualification_reason?: string | null
+          electricity_bill_number?: string | null
           email?: string | null
           estimated_size_kwp?: number | null
           expected_close_date?: string | null
@@ -3890,6 +3892,7 @@ export type Database = {
           customer_name?: string
           deleted_at?: string | null
           disqualification_reason?: string | null
+          electricity_bill_number?: string | null
           email?: string | null
           estimated_size_kwp?: number | null
           expected_close_date?: string | null
@@ -9685,10 +9688,11 @@ export type Database = {
           gps_longitude: number | null
           id: string
           is_gate_photo: boolean
+          lead_id: string | null
           milestone_reference: string | null
           mime_type: string | null
           photo_type: string
-          project_id: string
+          project_id: string | null
           storage_path: string
           sync_status: string
           uploaded_by: string
@@ -9708,10 +9712,11 @@ export type Database = {
           gps_longitude?: number | null
           id?: string
           is_gate_photo?: boolean
+          lead_id?: string | null
           milestone_reference?: string | null
           mime_type?: string | null
           photo_type: string
-          project_id: string
+          project_id?: string | null
           storage_path: string
           sync_status?: string
           uploaded_by: string
@@ -9731,10 +9736,11 @@ export type Database = {
           gps_longitude?: number | null
           id?: string
           is_gate_photo?: boolean
+          lead_id?: string | null
           milestone_reference?: string | null
           mime_type?: string | null
           photo_type?: string
-          project_id?: string
+          project_id?: string | null
           storage_path?: string
           sync_status?: string
           uploaded_by?: string
@@ -9752,6 +9758,13 @@ export type Database = {
             columns: ["gate_verified_by"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_photos_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
           {
@@ -11346,6 +11359,100 @@ export type Database = {
           },
         ]
       }
+      whatsapp_import_queue: {
+        Row: {
+          chat_profile: string
+          confidence_score: number | null
+          created_at: string
+          extracted_data: Json
+          extraction_type: string
+          id: string
+          inserted_id: string | null
+          inserted_table: string | null
+          matched_lead_id: string | null
+          matched_project_id: string | null
+          matched_project_name: string | null
+          media_filenames: string[] | null
+          message_hash: string
+          message_timestamp: string
+          raw_message_text: string | null
+          requires_finance_review: boolean
+          review_notes: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_name: string
+        }
+        Insert: {
+          chat_profile: string
+          confidence_score?: number | null
+          created_at?: string
+          extracted_data?: Json
+          extraction_type: string
+          id?: string
+          inserted_id?: string | null
+          inserted_table?: string | null
+          matched_lead_id?: string | null
+          matched_project_id?: string | null
+          matched_project_name?: string | null
+          media_filenames?: string[] | null
+          message_hash: string
+          message_timestamp: string
+          raw_message_text?: string | null
+          requires_finance_review?: boolean
+          review_notes?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_name: string
+        }
+        Update: {
+          chat_profile?: string
+          confidence_score?: number | null
+          created_at?: string
+          extracted_data?: Json
+          extraction_type?: string
+          id?: string
+          inserted_id?: string | null
+          inserted_table?: string | null
+          matched_lead_id?: string | null
+          matched_project_id?: string | null
+          matched_project_name?: string | null
+          media_filenames?: string[] | null
+          message_hash?: string
+          message_timestamp?: string
+          raw_message_text?: string | null
+          requires_finance_review?: boolean
+          review_notes?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_import_queue_matched_lead_id_fkey"
+            columns: ["matched_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_import_queue_matched_project_id_fkey"
+            columns: ["matched_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_import_queue_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -11360,6 +11467,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       lock_stale_reports: { Args: never; Returns: undefined }
+      update_storage_mime_type: {
+        Args: { p_bucket: string; p_mime: string; p_path: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
