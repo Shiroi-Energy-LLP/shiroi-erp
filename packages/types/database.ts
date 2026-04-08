@@ -10296,9 +10296,62 @@ export type Database = {
           },
         ]
       }
+      task_work_logs: {
+        Row: {
+          created_at: string | null
+          description: string
+          hours_spent: number | null
+          id: string
+          log_date: string
+          logged_by: string
+          progress_pct: number | null
+          task_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          hours_spent?: number | null
+          id?: string
+          log_date?: string
+          logged_by: string
+          progress_pct?: number | null
+          task_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          hours_spent?: number | null
+          id?: string
+          log_date?: string
+          logged_by?: string
+          progress_pct?: number | null
+          task_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_work_logs_logged_by_fkey"
+            columns: ["logged_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_work_logs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
+          assigned_date: string | null
           assigned_to: string | null
+          category: string | null
           completed_at: string | null
           completed_by: string | null
           created_at: string
@@ -10313,11 +10366,14 @@ export type Database = {
           milestone_id: string | null
           priority: string
           project_id: string | null
+          remarks: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          assigned_date?: string | null
           assigned_to?: string | null
+          category?: string | null
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
@@ -10332,11 +10388,14 @@ export type Database = {
           milestone_id?: string | null
           priority?: string
           project_id?: string | null
+          remarks?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          assigned_date?: string | null
           assigned_to?: string | null
+          category?: string | null
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
@@ -10351,6 +10410,7 @@ export type Database = {
           milestone_id?: string | null
           priority?: string
           project_id?: string | null
+          remarks?: string | null
           title?: string
           updated_at?: string
         }
@@ -11460,7 +11520,27 @@ export type Database = {
     Functions: {
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
+      get_company_cash_summary: {
+        Args: never
+        Returns: {
+          active_po_value: number
+          invested_count: number
+          project_count: number
+          total_invested: number
+          total_receivables: number
+        }[]
+      }
       get_financial_year: { Args: never; Returns: string }
+      get_lead_stage_counts: {
+        Args: { p_include_archived?: boolean }
+        Returns: {
+          lead_count: number
+          status: Database["public"]["Enums"]["lead_status"]
+          total_value: number
+          weighted_value: number
+        }[]
+      }
+      get_msme_due_count: { Args: { p_due_before: string }; Returns: number }
       get_my_employee_id: { Args: never; Returns: string }
       get_my_role: {
         Args: never
