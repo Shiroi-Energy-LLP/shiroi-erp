@@ -1,6 +1,5 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
-import Decimal from 'decimal.js';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
@@ -20,45 +19,21 @@ export async function getLeadStageCounts(includeArchived = false): Promise<Stage
   console.log(`${op} Starting`);
   const supabase = await createClient();
 
-  let query = supabase
-    .from('leads')
-    .select('status, estimated_size_kwp, close_probability')
-    .is('deleted_at', null)
-    .not('status', 'eq', 'converted');
+  // Use RPC function — GROUP BY in SQL instead of fetching all 1,115 leads to JS
+  const { data, error } = await supabase.rpc('get_lead_stage_counts', {
+    p_include_archived: includeArchived,
+  });
 
-  if (!includeArchived) {
-    query = query.eq('is_archived', false);
-  }
-
-  const { data, error } = await query;
   if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
+    console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load stage counts: ${error.message}`);
   }
 
-  // Group by status and compute weighted values
-  const grouped = new Map<LeadStatus, { count: number; total_value: Decimal; weighted_value: Decimal }>();
-
-  for (const lead of data ?? []) {
-    const existing = grouped.get(lead.status) ?? {
-      count: 0,
-      total_value: new Decimal(0),
-      weighted_value: new Decimal(0),
-    };
-    existing.count++;
-    // Rough value estimate: kWp * 60000 (avg ₹60K/kWp for solar)
-    const estimatedValue = new Decimal(lead.estimated_size_kwp ?? 0).mul(60000);
-    existing.total_value = existing.total_value.add(estimatedValue);
-    const prob = new Decimal(lead.close_probability ?? 0).div(100);
-    existing.weighted_value = existing.weighted_value.add(estimatedValue.mul(prob));
-    grouped.set(lead.status, existing);
-  }
-
-  return Array.from(grouped.entries()).map(([status, vals]) => ({
-    status,
-    count: vals.count,
-    total_value: vals.total_value.toNumber(),
-    weighted_value: vals.weighted_value.toNumber(),
+  return (data ?? []).map((row: any) => ({
+    status: row.status as LeadStatus,
+    count: Number(row.lead_count),
+    total_value: Number(row.total_value),
+    weighted_value: Number(row.weighted_value),
   }));
 }
 

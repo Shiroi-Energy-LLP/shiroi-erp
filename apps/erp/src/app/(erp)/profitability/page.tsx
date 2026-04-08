@@ -48,19 +48,8 @@ interface ProfitabilityPageProps {
 
 export default async function ProfitabilityPage({ searchParams }: ProfitabilityPageProps) {
   const params = await searchParams;
-  let projects = await getProjectProfitability();
-
-  // Filter by status if provided
-  if (params.status) {
-    projects = projects.filter(p => p.status === params.status);
-  }
-
-  // Sort by margin descending (nulls last)
-  projects.sort((a, b) => {
-    if (a.margin == null && b.margin == null) return 0;
-    if (a.margin == null) return 1;
-    if (b.margin == null) return -1;
-    return b.margin - a.margin;
+  const projects = await getProjectProfitability({
+    status: params.status || undefined,
   });
 
   return (

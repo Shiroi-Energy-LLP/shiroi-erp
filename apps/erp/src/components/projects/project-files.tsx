@@ -76,86 +76,92 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
   async function loadAllFiles() {
     const op = '[ProjectFiles.loadAllFiles]';
     const supabase = createClient();
-    const allFiles: Record<string, FileInfo[]> = {};
 
-    // Scan both path patterns per category:
-    // 1. {projectId}/{category}/ — files uploaded via ERP UI
-    // 2. projects/{projectId}/{category}/ — Google Drive migrated files
+    // Scan both path patterns per category — all in PARALLEL instead of sequential
     const pathPrefixes = [
       `${projectId}`,
       `projects/${projectId}`,
     ];
 
-    for (const cat of FILE_CATEGORIES) {
-      const merged: FileInfo[] = [];
-
-      for (const prefix of pathPrefixes) {
+    // 1. Launch all category scans in parallel (22 calls at once instead of sequential)
+    const categoryPromises = FILE_CATEGORIES.flatMap((cat) =>
+      pathPrefixes.map((prefix) => {
         const fullPath = `${prefix}/${cat.value}`;
-        const { data, error } = await supabase.storage
+        return supabase.storage
           .from('project-files')
-          .list(fullPath, {
-            limit: 200,
-            sortBy: { column: 'created_at', order: 'desc' },
+          .list(fullPath, { limit: 200, sortBy: { column: 'created_at', order: 'desc' } })
+          .then(({ data, error }) => {
+            if (error && !error.message?.includes('not found')) {
+              console.error(`${op} List failed for ${fullPath}:`, error.message);
+            }
+            return {
+              category: cat.value,
+              files: (data ?? [])
+                .filter((f) => f.name !== '.emptyFolderPlaceholder')
+                .map((f) => ({
+                  name: f.name,
+                  id: f.id ?? `${prefix}-${f.name}`,
+                  created_at: f.created_at ?? '',
+                  metadata: {
+                    size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
+                    mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
+                  },
+                  pathPrefix: fullPath,
+                  bucket: 'project-files',
+                })),
+            };
           });
+      })
+    );
 
-        if (error) {
-          if (!error.message?.includes('not found')) {
-            console.error(`${op} List failed for ${fullPath}:`, error.message);
-          }
-          continue;
-        }
-
-        const files = (data ?? [])
-          .filter((f) => f.name !== '.emptyFolderPlaceholder')
-          .map((f) => ({
-            name: f.name,
-            id: f.id ?? `${prefix}-${f.name}`,
-            created_at: f.created_at ?? '',
-            metadata: {
-              size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
-              mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
-            },
-            pathPrefix: fullPath,
-            bucket: 'project-files',
-          }));
-        merged.push(...files);
-      }
-
-      allFiles[cat.value] = merged;
-    }
-
-    // Also scan site-photos bucket for WhatsApp photos linked to this project
-    // Path: projects/{projectId}/whatsapp/{year-month}/{filename}
-    const waPhotos: FileInfo[] = [];
-    const { data: waMonths } = await supabase.storage
+    // 2. Also scan WhatsApp photos — get month folders first
+    const waPromise = supabase.storage
       .from('site-photos')
-      .list(`projects/${projectId}/whatsapp`, { limit: 100 });
+      .list(`projects/${projectId}/whatsapp`, { limit: 100 })
+      .then(async ({ data: waMonths }) => {
+        if (!waMonths) return [] as FileInfo[];
+        const folders = waMonths.filter((m) => !m.id);
+        // Limit to last 6 months to avoid scanning 24+ folders
+        const recentFolders = folders.sort((a, b) => b.name.localeCompare(a.name)).slice(0, 6);
+        // Scan all month folders in parallel
+        const monthResults = await Promise.all(
+          recentFolders.map((month) => {
+            const monthPath = `projects/${projectId}/whatsapp/${month.name}`;
+            return supabase.storage
+              .from('site-photos')
+              .list(monthPath, { limit: 200, sortBy: { column: 'created_at', order: 'desc' } })
+              .then(({ data: monthFiles }) =>
+                (monthFiles ?? [])
+                  .filter((f) => f.name !== '.emptyFolderPlaceholder')
+                  .map((f) => ({
+                    name: f.name,
+                    id: f.id ?? `wa-${month.name}-${f.name}`,
+                    created_at: f.created_at ?? '',
+                    metadata: {
+                      size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
+                      mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
+                    },
+                    pathPrefix: monthPath,
+                    bucket: 'site-photos',
+                  }))
+              );
+          })
+        );
+        return monthResults.flat();
+      });
 
-    if (waMonths) {
-      for (const month of waMonths.filter((m) => !m.id)) {
-        const monthPath = `projects/${projectId}/whatsapp/${month.name}`;
-        const { data: monthFiles } = await supabase.storage
-          .from('site-photos')
-          .list(monthPath, { limit: 200, sortBy: { column: 'created_at', order: 'desc' } });
+    // 3. Wait for everything in parallel
+    const [categoryResults, waPhotos] = await Promise.all([
+      Promise.all(categoryPromises),
+      waPromise,
+    ]);
 
-        if (monthFiles) {
-          waPhotos.push(
-            ...monthFiles
-              .filter((f) => f.name !== '.emptyFolderPlaceholder')
-              .map((f) => ({
-                name: f.name,
-                id: f.id ?? `wa-${month.name}-${f.name}`,
-                created_at: f.created_at ?? '',
-                metadata: {
-                  size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
-                  mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
-                },
-                pathPrefix: monthPath,
-                bucket: 'site-photos',
-              }))
-          );
-        }
-      }
+    // 4. Merge category results
+    const allFiles: Record<string, FileInfo[]> = {};
+    for (const result of categoryResults) {
+      const existing = allFiles[result.category] ?? [];
+      existing.push(...result.files);
+      allFiles[result.category] = existing;
     }
 
     if (waPhotos.length > 0) {

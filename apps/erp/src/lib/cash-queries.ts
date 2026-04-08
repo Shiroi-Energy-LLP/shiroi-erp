@@ -29,40 +29,25 @@ export async function getCompanyCashSummary(): Promise<CompanyCashSummary> {
   console.log(`${op} Starting`);
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('project_cash_positions')
-    .select(
-      'net_cash_position, total_outstanding, total_po_value, is_invested, projects!project_cash_positions_project_id_fkey(status)',
-    );
+  // Use RPC function — SUM/COUNT in SQL instead of fetching all rows to JS
+  const { data, error } = await supabase.rpc('get_company_cash_summary');
 
   if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
+    console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load company cash summary: ${error.message}`);
   }
 
-  const positions = data ?? [];
-
-  let totalInvested = new Decimal(0);
-  let totalReceivables = new Decimal(0);
-  let activePO = new Decimal(0);
-  let investedCount = 0;
-
-  for (const pos of positions) {
-    const net = new Decimal(pos.net_cash_position);
-    if (net.lt(0)) {
-      totalInvested = totalInvested.add(net.abs());
-      investedCount++;
-    }
-    totalReceivables = totalReceivables.add(new Decimal(pos.total_outstanding));
-    activePO = activePO.add(new Decimal(pos.total_po_value));
-  }
+  const row = data?.[0] ?? {
+    total_invested: 0, total_receivables: 0, active_po_value: 0,
+    project_count: 0, invested_count: 0,
+  };
 
   return {
-    totalInvestedCapital: totalInvested.toFixed(2),
-    totalReceivables: totalReceivables.toFixed(2),
-    activePOValue: activePO.toFixed(2),
-    projectCount: positions.length,
-    investedProjectCount: investedCount,
+    totalInvestedCapital: new Decimal(row.total_invested).toFixed(2),
+    totalReceivables: new Decimal(row.total_receivables).toFixed(2),
+    activePOValue: new Decimal(row.active_po_value).toFixed(2),
+    projectCount: Number(row.project_count),
+    investedProjectCount: Number(row.invested_count),
   };
 }
 

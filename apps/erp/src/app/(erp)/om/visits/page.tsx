@@ -49,11 +49,13 @@ export default async function OmVisitsPage() {
       supabase
         .from('om_visit_reports')
         .select('id, visit_date, submitted_by, system_condition, meter_reading_kwh, issues_found, issue_summary, om_contracts!om_visit_reports_contract_id_fkey(projects!om_contracts_project_id_fkey(project_number, customer_name))')
-        .order('visit_date', { ascending: false }),
+        .order('visit_date', { ascending: false })
+        .limit(100),
       supabase
         .from('om_visit_schedules')
         .select('id, visit_number, visit_type, scheduled_date, status, project_id, employees!om_visit_schedules_assigned_to_fkey(full_name), projects!om_visit_schedules_project_id_fkey(project_number, customer_name)')
-        .order('scheduled_date', { ascending: true }),
+        .order('scheduled_date', { ascending: true })
+        .limit(100),
     ]);
 
     if (visitResult.error) {

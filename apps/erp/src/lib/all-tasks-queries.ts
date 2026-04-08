@@ -16,7 +16,8 @@ export async function getAllTasks(filters: {
     .from('tasks')
     .select('*, assignee:employees!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name)')
     .is('deleted_at', null)
-    .order('due_date', { ascending: true, nullsFirst: false });
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .limit(100);
 
   // Map status filter to is_completed boolean
   if (filters.status === 'completed') query = query.eq('is_completed', true);

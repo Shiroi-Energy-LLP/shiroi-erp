@@ -47,7 +47,8 @@ export default async function LeaveRequestsPage() {
     const { data, error } = await supabase
       .from('leave_requests')
       .select('id, leave_type, from_date, to_date, days_requested, status, reason, employees!leave_requests_employee_id_fkey(full_name)')
-      .order('from_date', { ascending: false });
+      .order('from_date', { ascending: false })
+      .limit(100);
 
     if (error) {
       console.error('[LeaveRequestsPage] Query failed:', { code: error.code, message: error.message });

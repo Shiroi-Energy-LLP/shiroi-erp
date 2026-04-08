@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getProject } from '@/lib/projects-queries';
+import { getProjectHeader } from '@/lib/projects-queries';
 import { ProjectStatusBadge } from '@/components/projects/project-status-badge';
 import { ProjectTabs } from '@/components/projects/project-tabs';
 import { AdvanceStatusButton } from '@/components/projects/advance-status-button';
@@ -13,7 +13,7 @@ interface ProjectDetailLayoutProps {
 
 export default async function ProjectDetailLayout({ params, children }: ProjectDetailLayoutProps) {
   const { id } = await params;
-  const project = await getProject(id);
+  const project = await getProjectHeader(id);
 
   if (!project) {
     notFound();

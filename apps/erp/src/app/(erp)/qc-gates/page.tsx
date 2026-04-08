@@ -24,7 +24,8 @@ export default async function QCGatesPage() {
     .select(
       '*, projects!qc_gate_inspections_project_id_fkey(project_number, customer_name), inspector:employees!qc_gate_inspections_inspected_by_fkey(full_name)',
     )
-    .order('inspection_date', { ascending: false });
+    .order('inspection_date', { ascending: false })
+    .limit(100);
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });

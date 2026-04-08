@@ -24,7 +24,8 @@ export async function getMyTasks(employeeId: string): Promise<TaskItem[]> {
     .eq('assigned_to', employeeId)
     .is('deleted_at', null)
     .order('is_completed', { ascending: true })
-    .order('due_date', { ascending: true, nullsFirst: false });
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .limit(100);
 
   if (error) {
     console.error(`${op} Query failed:`, {
