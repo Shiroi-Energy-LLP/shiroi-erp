@@ -56,8 +56,9 @@
 | Migration 031 | ✅ Applied (dev) | data_flags table, data_verified_by/at on leads/projects/proposals, get_flag_count + get_data_flag_summary RPCs |
 | Data verification system | ✅ Complete | DataFlagButton component, /data-quality dashboard (summary cards, flags table, resolve action), sidebar links for founder/purchase/finance |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
-| Inline editing expansion | 🔜 Next | Expand editable columns: projects (8), proposals (4), vendors (8), POs (3), BOM items (6), contacts (4) |
-| Placeholder pages | 🔜 Next | Wire Design Queue, Price Book, Liaison index to real data |
+| Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
+| Placeholder pages | ✅ Complete | Design Queue (leads with survey done), Price Book (35 items), Liaison index (net meter summary cards) — all data-driven |
+| BOM Review page | ✅ Complete | /bom-review — 35K lines, category filters, summary cards, inline editing, flag per row, pagination (100/page) |
 | Purchase module | 🔜 Next | PO detail page, create PO flow, vendor payment recording |
 | Finance CRUD | 🔜 Next | Create invoice, record payment receipt, record vendor payment |
 | Zoho Books import | 🔜 Next | Import vendors, POs, invoices, payments from Zoho Books CSVs — dedup against existing 108 vendors, 850 POs |
