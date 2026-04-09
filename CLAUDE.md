@@ -112,7 +112,11 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | BOI module overhaul | ✅ Complete | BOM→BOI rename, Manivel's 14 categories (Solar Panels, Inverter, MMS, DC/AC Accessories, Conduits, Misc, Safety, Earthing, Gen Meter, I&C, Statutory, Transport & Civil, Others), submit/lock workflow, "Prepared By" display, inline add/delete |
 | BOQ Budget Analysis | ✅ Complete | Inline double-click rate/GST editing, add new items, delete items, category filter, grand total, Final Summary section (Project Cost / Actual Budget / Expected Margin %), "Mark BOQ Complete" checkbox |
 | Delivery Note overhaul | ✅ Complete | "Create DC" button auto-fetches Ready to Dispatch items, checkbox selection with adjustable quantities, transport details form, DC history with DC1/DC2 numbering |
-| Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
+| Migration 031 | ✅ Applied (dev) | data_flags table (entity flagging system), data_verified_by/at columns on leads/projects/proposals, get_flag_count + get_data_flag_summary RPCs |
+| Data flag system | ✅ Complete | DataFlagButton component (reusable), data-flag-actions.ts (create/resolve/query flags, verify entity), resolve-button for dashboard |
+| Data Quality dashboard | ✅ Complete | /data-quality — summary cards (unresolved/resolved/verified), flags-by-entity breakdown, filterable flags table with resolve action, pagination |
+| Data Quality sidebar | ✅ Complete | Added to founder, purchase_officer, finance sidebar (Admin section). Flag + MessageSquare icons registered in sidebar |
+| Prod deployment | 🔜 Next | After employee testing week on dev, clone schema to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
@@ -120,6 +124,8 @@ PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751,
 Google Drive sync: 180 confirmed projects — BOM from Bill of Items, dates, panel/inverter brands, margins, addresses extracted.
 WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
 BOI/BOQ/DC overhaul complete per Manivel's spec: 14 BOI categories, submit/lock, inline BOQ editing, budget analysis with margin calculation, create DC from ready items.
+Data verification system complete: data_flags table, DataFlagButton component, /data-quality dashboard.
+Next: expand inline editing to all tables, BOM review page, file flagging, wire placeholder pages, purchase/finance module completion.
 Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
 Middleware timeout fixed: /login excluded from matcher, getUser() has 5s timeout to prevent MIDDLEWARE_INVOCATION_TIMEOUT.
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`

@@ -11,6 +11,7 @@ import {
   Palette, ClipboardList, FileCheck, Globe, Megaphone,
   DollarSign, Award, GraduationCap, BookOpen, Truck,
   BarChart3, CalendarCheck, Building2, Shield,
+  MessageSquare, Flag,
   PanelLeftClose, PanelLeftOpen, Menu,
 } from 'lucide-react';
 
@@ -20,6 +21,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Palette, ClipboardList, FileCheck, Globe, Megaphone,
   DollarSign, Award, GraduationCap, BookOpen, Truck,
   BarChart3, CalendarCheck, Building2, Shield,
+  MessageSquare, Flag,
 };
 
 const STORAGE_KEY = 'shiroi-sidebar-collapsed';
