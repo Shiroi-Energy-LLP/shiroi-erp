@@ -46,26 +46,11 @@
 | UI/UX Overhaul R2 | ✅ Complete | 9 items: hex→token purge (45+ files), 15 loading skeletons, EmptyState on 15 more pages, Eyebrow on 25 more pages, Breadcrumbs on 4 more pages, toast on 5 more forms, semantic status tokens |
 | Tests | ✅ 142 pass | 11 test files, 0 failures, 0 type errors |
 | Vercel | ⏳ Ready | Config done, connect when ready to deploy |
-| Data quality overhaul | ✅ Complete | Full extraction pipeline. Proposals: 341→751. Financials: 52→647. BOM: 35,022 lines (629 proposals). 1,290 photos. 180 GDrive confirmed projects synced (BOM, dates, brands, margins, addresses). |
-| Migrations 022a–024a | ✅ Applied (dev) | PM corrections: 022a file delete RLS, 023a survey form overhaul (~25 cols), 024a BOQ items + delivery challans |
-| Migrations 022b–026 | ✅ Applied (dev) | Data quality: 022b processing_jobs, 023b BOM categories, 024b storage mime fix, 025 electricity_bill_number, 026 site_photos lead_id (project_id nullable) |
-| Migration 030 | ✅ Applied (dev) | BOI/BOQ project fields: boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual + category index |
-| BOI module overhaul | ✅ Complete | BOM→BOI rename, 14 Manivel categories, submit/lock workflow, Prepared By display, inline add/delete items |
-| BOQ Budget Analysis | ✅ Complete | Inline rate/GST editing, add/delete items, category filter, grand total, Final Summary (Project Cost / Actual Budget / Expected Margin %), Mark BOQ Complete checkbox |
-| Delivery Note overhaul | ✅ Complete | Create DC from Ready to Dispatch items, checkbox selection with adjustable quantities, transport details, DC history with DC1/DC2 numbering |
-| Migration 031 | ✅ Applied (dev) | data_flags table, data_verified_by/at on leads/projects/proposals, get_flag_count + get_data_flag_summary RPCs |
-| Data verification system | ✅ Complete | DataFlagButton component, /data-quality dashboard (summary cards, flags table, resolve action), sidebar links for founder/purchase/finance |
+| Data quality overhaul | ✅ Complete | Full extraction pipeline. Proposals: 341→751. Financials: 52→485 (65%). Leads with size: 172→900. All 1,126 leads assigned_to. 35,022 BOM lines (629 proposals). 1,290 photos (170 project + 1,120 lead). 685 octet-stream fixed. 112 PPTX parsed. 10 leads restored. |
+| Google Drive file sync | ✅ Complete | 1,344 files from 159 confirmed projects synced to Supabase. 881 old-path files fixed. **2,151 total project files across 136 projects**, 0 orphans. |
+| Migrations 022–027 | ✅ Applied (dev) | 022: data cleanup + processing_jobs. 023: BOM categories. 024: storage mime fix. 025: electricity_bill_number. 026: site_photos lead_id. 027: expanded project-files mime types + 100MB limit |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
-| Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
-| Placeholder pages | ✅ Complete | Design Queue (leads with survey done), Price Book (35 items), Liaison index (net meter summary cards) — all data-driven |
-| BOM Review page | ✅ Complete | /bom-review — 35K lines, category filters, summary cards, inline editing, flag per row, pagination (100/page) |
-| PO Detail page | ✅ Complete | /procurement/[poId] — vendor info, line items, delivery challans, vendor payments section |
-| Finance CRUD | ✅ Complete | createInvoice (GST split, auto-number), recordPayment (updates invoice status), recordVendorPayment (MSME compliance). Dialogs on invoices + payments pages |
-| Create PO flow | ✅ Complete | CreatePODialog with project/vendor selector, dynamic line items, category/description/qty/rate/GST, auto-totals. procurement-actions.ts server action |
-| File flagging | ✅ Complete | DataFlagButton on ProjectFiles, LeadFiles, LeadFilesList — flag wrong_file/wrong_category/duplicate per file |
-| Zoho Books import | 🔜 Next | Import vendors, POs, invoices, payments from Zoho Books CSVs — dedup against existing 108 vendors, 850 POs |
-| Employee testing week | 🔜 Next | 5-6 employees review data on dev for 1 week. Data flags + inline edit + verification |
-| Prod deployment | 🔜 After testing | Schema clone + selective data migration to prod after employee testing week |
+| Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
 
 **Coding workflow (locked):**
 Claude Code writes code directly in the repo → Vivek reviews every file → git commit and push.
@@ -983,44 +968,6 @@ Cost: ~₹3,000/month
 Number: Existing Shiroi company number
 ```
 
-### 12.9 WhatsApp Historical Import (Phase 1 — Complete, Approved)
-
-**Purpose:** Extract structured data from 3 WhatsApp group chat exports, enrich, and insert into ERP target tables.
-
-**Groups processed:**
-| Group | Chat Size | Records Extracted | Key Data Types |
-|-------|-----------|-------------------|----------------|
-| Shiroi Marketing | 7,771 lines | 152 | 50 customer_payments, 30 POs, 32 contacts, 40 activities |
-| Shiroi Energy LLP / rooftop / Purchase | ~4,800 lines | 186 | 115 BOQ items, 27 POs, 15 customer_payments, 24 activities |
-| Shiroi Energy ⚡ (main ops) | 40,621 lines | 3,826 | 403 daily_reports, 3,100 activities, 298 contacts, 25 financial |
-
-**Data inserted into target tables (April 9, 2026):**
-| Table | Before | After | Added |
-|-------|--------|-------|-------|
-| activities | 0 | 3,320 | +3,320 |
-| daily_site_reports | 0 | 210 | +210 |
-| contacts | 1,115 | 1,390 | +275 |
-| project_boq_items | 116 | 251 | +135 |
-| customer_payments | 30 | 70 | +40 |
-
-All 4,164 queue records: **0 pending**, all approved. 46 duplicate contacts cleaned (phone dedup). 0 FK violations.
-
-**Architecture:**
-- ZIP export parser: `scripts/whatsapp-import/parser.ts` — handles Android/iPhone format, U+202F narrow no-break space in timestamps, Unicode control chars
-- Rule-based extractor (no LLM): `scripts/whatsapp-import/extract-local.ts` — pattern-matching for payments, contacts, POs, BOQ items, daily reports, activities
-- Enrichment + batch approve: `scripts/whatsapp-import/enrich-and-approve.ts` — fuzzy project matching, Indian amount parsing, activity type validation, bulk insert into target tables
-- Large ZIP support (3.3 GB): `node-stream-zip` for streaming extraction without loading into memory
-- Review queue: `whatsapp_import_queue` table (migration 025) — all records staged, enriched, and approved
-- Review UI: `/whatsapp-import` — stats grid, filter tabs, paginated table, approve/reject/reassign actions
-- Approval actions: `whatsapp-import-actions.ts` — customer_payment, task, activity, daily_report, contact, boq_item cases + batch approve/reject
-
-**Dedup:** SHA-256 hash of `timestamp|sender|text[:100]` stored as UNIQUE index on `message_hash`. Re-running the script is safe.
-
-**To re-run extraction:** `cd scripts/whatsapp-import && npx tsx extract-local.ts`
-**To re-run enrichment + approval:** `cd scripts/whatsapp-import && npx tsx enrich-and-approve.ts` (or `--dry-run`)
-
-**Phase 2 (live Baileys bot):** Deferred. Scaffolded profiles in `scripts/whatsapp-import/profiles/` ready. Needs dedicated phone number + bot setup.
-
 ---
 
 ## 13. Security Model
@@ -1543,7 +1490,7 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 **TypeScript types:** Generated in packages/types/database.ts
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
 **ERP app:** 53 routes, 142 tests passing, 0 type errors
-**Last updated:** April 7, 2026 (v3.5 — PM Corrections R2: tasks overhaul, commissioning edit, constraint fixes, O&M visits, PDF hardening)
+**Last updated:** April 3, 2026 (v3.4 — HubSpot V2 migration complete, lead status flow documented)
 
 **What changed in v3.4:**
 - HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments
@@ -1635,53 +1582,6 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Migration script: scripts/migrate-hubspot.ts — two-phase (deals + payments), idempotent, dry-run support
 - Data integrity verified: 0 orphaned proposals/projects, all FKs valid
 - Phase 2C roadmap spec written: 19 steps (40–58), 12 architecture decisions logged
-
-**What changed in v3.6 (Apr 8, 2026):**
-- BOM category fix: bom-line-form.tsx dropdown now sends DB-valid snake_case values (panel, inverter, structure, etc.) instead of display labels that violated proposal_bom_lines_item_category_check
-- AMC module visibility: Added amcSchedule to founder + om_technician sidebar nav in roles.ts
-- AMC page enhanced: /om/amc now shows summary cards (total contracts, active, upcoming visits, overdue) + upcoming AMC visits table with project links, visit #, scheduled date, engineer, status
-- Founder dashboard: Added "AMC This Month" card with progress bar and link to /om/amc
-- New query: getAmcMonthlySummary() in dashboard-queries.ts
-- Proposals page timeout fix: Added idx_proposals_created_at DESC index, changed count:'exact' to count:'estimated', replaced !inner join with regular join + not-null filter (751 proposals after doc extraction exceeded Supabase statement timeout)
-- Project file visibility fix: ProjectFiles component now scans both `{projectId}/{category}/` and `projects/{projectId}/{category}/` paths in project-files bucket (909 GDrive-migrated files were invisible due to path prefix mismatch). Added missing categories: purchase-orders, layouts, delivery-challans, invoices (plural), sesal.
-- Lead files on project page: New LeadFiles component shows all files from proposal-files bucket (grouped by type: images, PDFs, Word, Excel, presentations, design files, videos). 7,636 files across 933 leads now accessible from project detail page.
-- WhatsApp photos on project page: ProjectFiles scans site-photos bucket at `projects/{projectId}/whatsapp/` — 196 WhatsApp photos across 54 projects surfaced.
-- Image viewer lightbox: New ImageViewer component (Radix Dialog, no external deps). Click any image in ProjectFiles or LeadFiles → full-screen modal with prev/next arrows, keyboard navigation (arrow keys), download button, image counter.
-- Task module overhaul: Migration 027a adds category (10 milestone-aligned values), remarks, assigned_date columns to tasks + task_work_logs table
-- Task CRUD: updateTask, deleteTask (soft-delete), addWorkLog, getWorkLogs server actions. EditTaskDialog + DeleteTaskButton components
-- Task page enhanced: Category, Done By, Remarks columns; edit/delete buttons; category filter; project links to ?tab=execution
-- Daily work logs: task_work_logs table with RLS, expandable per-task timeline, add entry form (date, description, progress %, hours), lazy-loaded on expand
-- Performance overhaul (Apr 8, 2026): Fixed 7+ Supabase statement timeouts. Root causes: duplicate getProject() on project detail (8-join query ran 2x), payments page fetched all 751 proposals, 3 aggregations done in JS instead of SQL, 13 pages had no query limits, ProjectFiles ran 22-44 sequential storage API calls, stepper queries ran sequentially.
-- Migration 028: 6 new indexes (daily_site_reports report_date, leads pipeline composite, proposals lead+accepted, cash_positions invested, bom_lines proposal+order, projects status+created_at) + 3 RPC functions (get_lead_stage_counts, get_company_cash_summary, get_msme_due_count).
-- New getProjectHeader() function: lightweight 12-column query for layout header, replacing the expensive full getProject() with 8 nested joins.
-- Payments overview: proposals query now filtered by `.in('lead_id', projectLeadIds)` instead of fetching all 751 accepted proposals.
-- Lead stage counts: replaced JS-side Decimal grouping of 1,115 leads with SQL GROUP BY via get_lead_stage_counts RPC.
-- Cash summary: replaced JS-side iteration with get_company_cash_summary RPC (SQL SUM/COUNT).
-- MSME due count: replaced client-side PO filter with get_msme_due_count RPC (SQL JOIN + COUNT).
-- Stepper parallelization: getStepDetailsData, getStepExecutionData, getStepLiaisonData now use Promise.all() instead of sequential queries.
-- Profitability page: status filter + sort pushed to DB query (was JS-side filter on all projects).
-- ProjectFiles component: 22+ sequential storage .list() calls → all parallel via Promise.all(). WhatsApp photo scanning limited to last 6 months. ~100ms instead of ~4s.
-- 13 pages paginated with .limit(100): invoices, payments, procurement, deliveries, vendor-payments, qc-gates, tasks, my-tasks, om/visits, om/tickets, om/amc, hr/leave, hr/training.
-- List page timeout fix (Apr 8, 2026): 5 paginated list pages changed from `count: 'exact'` to `count: 'estimated'` — projects, leads, contacts, companies, whatsapp-import. `count: 'exact'` forces PostgreSQL to scan every matching row; `estimated` uses table statistics. Same fix pattern as proposals timeout (commit 4bdb489).
-- Migration 029 (027_list_page_indexes.sql): 4 DESC sort-column indexes — idx_projects_created_at, idx_leads_created_at, idx_contacts_created_at, idx_whatsapp_queue_timestamp. These cover the default sort order for each paginated list page.
-- Middleware timeout fix (Apr 8, 2026): Two changes to prevent MIDDLEWARE_INVOCATION_TIMEOUT on Vercel production. (1) Excluded `/login` from middleware matcher — no point calling getUser() on the login page. (2) Added 5s Promise.race timeout to `supabase.auth.getUser()` in `packages/supabase/src/middleware.ts` — if Supabase Auth is slow/504, middleware fails fast instead of hanging for 30s. The `(erp)/layout.tsx` `requireAuth()` provides the safety net for page-level auth enforcement.
-- Survey step: replaced SELECT * with explicit column list (future-proofed without overfetching).
-
-**What changed in v3.5 (Apr 7, 2026):**
-- PM Corrections R2: 16 files changed addressing PM Manivel's field testing feedback
-- Tasks page overhauled: Project Name column, Assigned To filter, Project filter, inline completion toggle
-- My Tasks page: completion toggle, project link, overdue detection, shows both pending+completed
-- QuickTaskForm (execution step): Added "Assigned To" engineer dropdown with employees list
-- TaskCompletionToggle: New client component for inline task complete/uncomplete in all task views
-- Commissioning: Edit form support — updateCommissioningReport server action, CommissioningForm with existingReport prop
-- QC inspection form: Fixed constraint violations (pass→passed, fail→failed), fixed textarea id mismatch
-- Liaison: Fixed discom_status 'not_started' → 'pending' per DB CHECK constraint
-- Project status history: Fixed column names (from_status/to_status/reason instead of old_status/new_status/notes)
-- O&M visits page: Now shows both scheduled visits (from om_visit_schedules) and completed reports
-- AMC actions: Revalidates /om/visits and project path on schedule creation
-- PDF: Hardened with safeStr() for null/type safety, API route filters empty sections before rendering
-- New server actions: toggleTaskCompletion, updateCommissioningReport, getActiveEmployeesForProject
-- New component: task-completion-toggle.tsx
 
 **What changed in v3.3 (Apr 4, 2026):**
 - Phase 3 items implemented: AI narrative (Step 61), Net metering + CEIG workflow (Step 64), Handover pack (Step 65), Inventory cut-length tracking (Step 67)
