@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Input } from '@repo/ui';
 import { Search, X } from 'lucide-react';
@@ -17,6 +17,11 @@ interface SearchInputProps {
 /**
  * Auto-search input that debounces keystrokes and updates URL searchParams.
  * Preserves all existing params (filters, sort, view). Resets page to 1 on new search.
+ *
+ * IMPORTANT: the debounce effect must only push when the user actually typed
+ * something new. If we re-push on every searchParams change (e.g. when the user
+ * clicks a pagination button), the delete('page') inside pushSearch would
+ * silently reset the pager back to page 1 ~350ms later.
  */
 export function SearchInput({
   paramName = 'search',
@@ -27,45 +32,38 @@ export function SearchInput({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState(searchParams.get(paramName) ?? '');
+  const urlValue = searchParams.get(paramName) ?? '';
+  const [value, setValue] = useState(urlValue);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const initialRender = useRef(true);
 
-  // Sync if URL changes externally (e.g. "Clear" link)
+  // Sync local state when URL changes externally (e.g. Clear link, nav)
   useEffect(() => {
-    const urlValue = searchParams.get(paramName) ?? '';
     setValue(urlValue);
-  }, [searchParams, paramName]);
+  }, [urlValue]);
 
-  const pushSearch = useCallback(
-    (term: string) => {
+  // Debounce-push only when the user actually typed a new value.
+  // Early-returning when `value === urlValue` prevents the effect from
+  // overwriting pagination/sort/view URL changes that left `search` alone.
+  useEffect(() => {
+    if (value === urlValue) return;
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
-      if (term.trim()) {
-        params.set(paramName, term.trim());
+      if (value.trim()) {
+        params.set(paramName, value.trim());
       } else {
         params.delete(paramName);
       }
       // Reset to page 1 on new search
       params.delete('page');
       router.push(`${pathname}?${params.toString()}`);
-    },
-    [router, pathname, searchParams, paramName],
-  );
-
-  useEffect(() => {
-    // Skip firing on initial render — the URL already has the right value
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
-    }
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => pushSearch(value), debounceMs);
+    }, debounceMs);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [value, debounceMs, pushSearch]);
+  }, [value, urlValue, debounceMs, pathname, paramName, router, searchParams]);
 
   return (
     <div className="relative">

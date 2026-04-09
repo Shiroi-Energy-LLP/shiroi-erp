@@ -97,7 +97,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-4">
           <FilterBar basePath="/tasks" filterParams={['search', 'status', 'priority', 'entity_type', 'project', 'assigned_to', 'category']}>
             <FilterSelect paramName="status" className="w-36">

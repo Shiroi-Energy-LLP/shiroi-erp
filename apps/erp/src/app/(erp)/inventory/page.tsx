@@ -169,7 +169,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
       )}
 
       {/* Filters */}
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="pt-4">
           <FilterBar basePath="/inventory" filterParams={['search', 'category', 'location', 'condition', 'cut_length']}>
             <SearchInput

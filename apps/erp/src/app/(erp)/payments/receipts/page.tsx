@@ -40,7 +40,7 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-4">
           <FilterBar basePath="/payments/receipts" filterParams={['search', 'type']}>
             <FilterSelect paramName="type" className="w-44">

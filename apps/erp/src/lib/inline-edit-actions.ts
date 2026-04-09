@@ -97,3 +97,78 @@ export async function updateCellValue(input: {
   revalidatePath(PATH_MAP[entityType] ?? `/${entityType}`);
   return { success: true };
 }
+
+/**
+ * Bulk-update a single field across multiple rows of the same entity.
+ * Used by the selection action bar (e.g. change status of 20 projects at once).
+ */
+export async function bulkUpdateField(input: {
+  entityType: string;
+  rowIds: string[];
+  field: string;
+  value: string | number | boolean | null;
+}): Promise<{ success: boolean; updated: number; error?: string }> {
+  const op = '[bulkUpdateField]';
+  const { entityType, rowIds, value } = input;
+  let { field } = input;
+
+  if (!rowIds || rowIds.length === 0) {
+    return { success: false, updated: 0, error: 'No rows selected' };
+  }
+
+  const FIELD_ALIAS_MAP: Record<string, Record<string, string>> = {
+    projects: { remarks: 'notes', project_manager_name: 'project_manager_id' },
+  };
+  const alias = FIELD_ALIAS_MAP[entityType]?.[field];
+  if (alias) {
+    field = alias;
+  }
+
+  const tableName = ENTITY_TABLE_MAP[entityType];
+  if (!tableName) {
+    console.error(`${op} Unknown entity type: ${entityType}`);
+    return { success: false, updated: 0, error: `Unknown entity type: ${entityType}` };
+  }
+
+  if (BLOCKED_FIELDS.has(field)) {
+    console.error(`${op} Field not editable: ${field}`);
+    return { success: false, updated: 0, error: `Field "${field}" cannot be edited` };
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, updated: 0, error: 'Not authenticated' };
+  }
+
+  console.log(`${op} Updating ${tableName}.${field} for ${rowIds.length} rows`);
+
+  const { error, count } = await supabase
+    .from(tableName as any)
+    .update({ [field]: value } as any, { count: 'exact' })
+    .in('id', rowIds);
+
+  if (error) {
+    console.error(`${op} Failed:`, {
+      code: error.code,
+      message: error.message,
+      table: tableName,
+      field,
+      rowCount: rowIds.length,
+    });
+    return { success: false, updated: 0, error: error.message };
+  }
+
+  const PATH_MAP: Record<string, string> = {
+    leads: '/leads',
+    proposals: '/proposals',
+    projects: '/projects',
+    contacts: '/contacts',
+    companies: '/companies',
+    vendors: '/vendors',
+    purchase_orders: '/procurement',
+    bom_items: '/bom-review',
+  };
+  revalidatePath(PATH_MAP[entityType] ?? `/${entityType}`);
+  return { success: true, updated: count ?? rowIds.length };
+}

@@ -59,7 +59,7 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
         </Link>
       </div>
 
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-3">
           <FilterBar basePath="/companies" filterParams={['search', 'segment']}>
             <FilterSelect paramName="segment" className="w-40 h-9 text-sm">

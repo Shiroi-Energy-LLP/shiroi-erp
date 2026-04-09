@@ -56,7 +56,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-4">
           <FilterBar basePath="/vendors" filterParams={['search', 'type']}>
             <FilterSelect paramName="type" className="w-48">

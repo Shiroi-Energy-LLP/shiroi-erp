@@ -65,7 +65,7 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
         </Link>
       </div>
 
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-3">
           <FilterBar basePath="/proposals" filterParams={['search', 'status', 'systemType', 'isBudgetary']}>
             <FilterSelect paramName="status" className="w-36 h-9 text-sm">

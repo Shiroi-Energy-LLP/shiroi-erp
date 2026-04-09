@@ -2,7 +2,7 @@ import { getProjects } from '@/lib/projects-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ProjectsTableWrapper } from '@/components/projects/projects-table-wrapper';
 import { PROJECT_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
-import { Card, CardContent, Eyebrow } from '@repo/ui';
+import { Card, CardContent } from '@repo/ui';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
@@ -72,14 +72,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">PROJECTS</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">Projects</h1>
-        </div>
-      </div>
-
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-3">
           <FilterBar basePath="/projects" filterParams={['search', 'status']}>
             <FilterSelect paramName="status" className="w-44 h-9 text-sm">

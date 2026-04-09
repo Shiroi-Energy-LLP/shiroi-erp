@@ -78,7 +78,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
         </Link>
       </div>
 
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-3">
           <FilterBar basePath="/contacts" filterParams={['search', 'stage']}>
             <SearchInput

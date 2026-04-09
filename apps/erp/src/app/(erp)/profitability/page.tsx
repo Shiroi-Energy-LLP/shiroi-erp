@@ -64,7 +64,7 @@ export default async function ProfitabilityPage({ searchParams }: ProfitabilityP
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-4">
           <FilterBar basePath="/profitability" filterParams={['status']}>
             <FilterSelect paramName="status" className="w-44">

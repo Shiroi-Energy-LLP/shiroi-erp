@@ -104,7 +104,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
       />
 
       {/* Quick Filters */}
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-3">
           <FilterBar basePath="/leads" filterParams={['search', 'source', 'segment', 'assignedTo']}>
             <FilterSelect paramName="source" className="w-36 h-9 text-sm">

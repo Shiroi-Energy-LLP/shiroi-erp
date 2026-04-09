@@ -64,7 +64,7 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-4">
           <FilterBar basePath="/procurement" filterParams={['search', 'status', 'vendor', 'project']}>
             <FilterSelect paramName="status" className="w-44">

@@ -60,7 +60,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-4">
           <FilterBar basePath="/invoices" filterParams={['search', 'status']}>
             <FilterSelect paramName="status" className="w-44">
