@@ -12,7 +12,7 @@ const ENTITY_TABLE_MAP: Record<string, string> = {
   companies: 'companies',
   vendors: 'vendors',
   purchase_orders: 'purchase_orders',
-  bom_items: 'proposal_bom_items',
+  bom_items: 'proposal_bom_lines',
 };
 
 /** Fields that are NEVER editable inline (safety guard) */
