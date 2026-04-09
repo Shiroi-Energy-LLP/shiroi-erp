@@ -576,4 +576,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 9, 2026 — Google Drive file sync complete. 2,151 project files across 136 projects (1,344 from Google Drive + 881 path-fixed). Migration 027b: expanded bucket mime types. All files visible on project pages. Previous: WhatsApp queue approval (4,164 records), BOI/BOQ/DC overhaul, performance fixes, file flagging, Create PO flow, finance CRUD. Next: Prod deployment.*
+*Last updated: April 9, 2026 — Data verification system (data_flags, /data-quality, /bom-review, DataFlagButton on files). Inline editing expanded to all tables. Placeholder pages wired (Design Queue, Price Book, Liaison). Purchase: PO detail + Create PO. Finance CRUD: invoices, payments, vendor payments. Google Drive file sync: 2,151 files across 136 projects. Next: Zoho Books import (awaiting CSVs), employee testing week, prod deployment.*
