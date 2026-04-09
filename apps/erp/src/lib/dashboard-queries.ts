@@ -69,7 +69,7 @@ export async function getProjectsWithNoReportToday() {
   const { data: activeProjects, error: projectError } = await supabase
     .from('projects')
     .select('id, project_number, customer_name, status')
-    .not('status', 'in', '("completed","cancelled","on_hold","commissioned","net_metering_pending")');
+    .not('status', 'in', '("completed","holding_shiroi","holding_client","waiting_net_metering","meter_client_scope")');
   if (projectError) {
     console.error(`${op} Projects query failed:`, { code: projectError.code, message: projectError.message });
     throw new Error(`Failed to load projects: ${projectError.message}`);

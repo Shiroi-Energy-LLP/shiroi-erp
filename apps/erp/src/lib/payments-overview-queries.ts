@@ -41,11 +41,10 @@ export async function getProjectPaymentOverview(): Promise<ProjectPaymentRow[]> 
   console.log(`${op} Starting`);
   const supabase = await createClient();
 
-  // Get all non-cancelled projects with contracted value
+  // Get all projects with contracted value (all 8 statuses are valid — show everything with money involved)
   const { data: projects, error: projError } = await supabase
     .from('projects')
     .select('id, project_number, customer_name, status, contracted_value, completion_pct, lead_id, project_manager_id, employees!projects_project_manager_id_fkey(full_name)')
-    .not('status', 'eq', 'cancelled')
     .gt('contracted_value', 0)
     .order('contracted_value', { ascending: false });
 
@@ -197,7 +196,7 @@ export function computePaymentsSummary(rows: ProjectPaymentRow[]): PaymentsSumma
 
   // Expected this week/month: sum of next_milestone_amount for active projects
   // (Projects that are in progress and have an outstanding next milestone)
-  const activeStatuses = ['advance_received', 'planning', 'material_procurement', 'installation', 'electrical_work', 'testing', 'commissioned', 'net_metering_pending'];
+  const activeStatuses = ['order_received', 'yet_to_start', 'in_progress', 'waiting_net_metering'];
   const activeRows = rows.filter(r => activeStatuses.includes(r.project_status) && r.next_milestone_amount);
   const expectedThisWeek = activeRows
     .slice(0, 10) // Top 10 active projects most likely to pay

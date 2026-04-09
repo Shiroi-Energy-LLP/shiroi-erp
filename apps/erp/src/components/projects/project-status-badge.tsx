@@ -4,31 +4,25 @@ import type { Database } from '@repo/types/database';
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
 const STATUS_VARIANT: Record<ProjectStatus, 'info' | 'pending' | 'warning' | 'success' | 'error' | 'neutral'> = {
-  advance_received: 'info',
-  planning: 'info',
-  material_procurement: 'pending',
-  installation: 'pending',
-  electrical_work: 'pending',
-  testing: 'warning',
-  commissioned: 'success',
-  net_metering_pending: 'warning',
+  order_received: 'info',
+  yet_to_start: 'neutral',
+  in_progress: 'pending',
   completed: 'success',
-  on_hold: 'error',
-  cancelled: 'error',
+  holding_shiroi: 'warning',
+  holding_client: 'error',
+  waiting_net_metering: 'warning',
+  meter_client_scope: 'info',
 };
 
 const STATUS_LABEL: Record<ProjectStatus, string> = {
-  advance_received: 'Advance Received',
-  planning: 'Planning',
-  material_procurement: 'Material Procurement',
-  installation: 'Installation',
-  electrical_work: 'Electrical Work',
-  testing: 'Testing',
-  commissioned: 'Commissioned',
-  net_metering_pending: 'Net Metering Pending',
+  order_received: 'Order Received',
+  yet_to_start: 'Yet to Start',
+  in_progress: 'In Progress',
   completed: 'Completed',
-  on_hold: 'On Hold',
-  cancelled: 'Cancelled',
+  holding_shiroi: 'Holding from Shiroi',
+  holding_client: 'Holding from Client',
+  waiting_net_metering: 'Waiting for Net Metering',
+  meter_client_scope: 'Meter - Client Scope',
 };
 
 export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {

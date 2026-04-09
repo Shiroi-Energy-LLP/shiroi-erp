@@ -19,11 +19,14 @@ import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
 
 const STATUS_OPTIONS = [
-  { value: 'planning', label: 'Planning' },
+  { value: 'order_received', label: 'Order Received' },
+  { value: 'yet_to_start', label: 'Yet to Start' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'on_hold', label: 'On Hold' },
   { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'holding_shiroi', label: 'Holding from Shiroi' },
+  { value: 'holding_client', label: 'Holding from Client' },
+  { value: 'waiting_net_metering', label: 'Waiting for Net Metering' },
+  { value: 'meter_client_scope', label: 'Meter - Client Scope' },
 ];
 
 function marginColor(margin: number | null): string {

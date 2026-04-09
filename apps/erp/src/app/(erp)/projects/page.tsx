@@ -11,17 +11,14 @@ import type { Database } from '@repo/types/database';
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
 const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
-  { value: 'advance_received', label: 'Advance Received' },
-  { value: 'planning', label: 'Planning' },
-  { value: 'material_procurement', label: 'Material Procurement' },
-  { value: 'installation', label: 'Installation' },
-  { value: 'electrical_work', label: 'Electrical Work' },
-  { value: 'testing', label: 'Testing' },
-  { value: 'commissioned', label: 'Commissioned' },
-  { value: 'net_metering_pending', label: 'Net Metering Pending' },
+  { value: 'order_received', label: 'Order Received' },
+  { value: 'yet_to_start', label: 'Yet to Start' },
+  { value: 'in_progress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' },
-  { value: 'on_hold', label: 'On Hold' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'holding_shiroi', label: 'Holding from Shiroi' },
+  { value: 'holding_client', label: 'Holding from Client' },
+  { value: 'waiting_net_metering', label: 'Waiting for Net Metering' },
+  { value: 'meter_client_scope', label: 'Meter - Client Scope' },
 ];
 
 interface ProjectsPageProps {

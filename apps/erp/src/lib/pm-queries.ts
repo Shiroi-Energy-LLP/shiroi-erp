@@ -69,7 +69,7 @@ export async function getPMDashboardData(profileId: string): Promise<PMDashboard
     };
   }
 
-  const excludedStatuses = ['completed', 'cancelled'];
+  const excludedStatuses = ['completed', 'holding_client', 'meter_client_scope'];
   const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
@@ -195,7 +195,7 @@ async function getOverdueProjectsForPM(
     .from('projects')
     .select('id, project_number, customer_name, site_city, status')
     .eq('project_manager_id', employeeId)
-    .not('status', 'in', '("completed","cancelled","on_hold","commissioned","net_metering_pending")');
+    .not('status', 'in', '("completed","holding_shiroi","holding_client","waiting_net_metering","meter_client_scope")');
 
   if (projectError) {
     console.error(`${op} Projects query failed:`, { code: projectError.code, message: projectError.message });

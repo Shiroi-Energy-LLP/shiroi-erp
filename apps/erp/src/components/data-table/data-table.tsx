@@ -7,6 +7,7 @@ import {
   Card, CardContent, Button, Badge, Checkbox, Input,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
+import { formatProjectNumber } from '@repo/ui/formatters';
 import {
   ChevronUp, ChevronDown, Columns3,
   ArrowUpDown, Check, X, Loader2,
@@ -60,6 +61,15 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   rejected: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   expired: { bg: '#F5F5F5', text: '#525252', border: '#D4D4D4' },
   revised: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
+  // Project statuses (8-stage simplified flow)
+  order_received: { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
+  yet_to_start: { bg: '#F5F6F8', text: '#525252', border: '#DFE2E8' },
+  in_progress: { bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' },
+  completed: { bg: '#F0FDF4', text: '#00B050', border: '#BBF7D0' },
+  holding_shiroi: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
+  holding_client: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
+  waiting_net_metering: { bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
+  meter_client_scope: { bg: '#F5F3FF', text: '#6D28D9', border: '#E9D5FF' },
 };
 
 // ── Inline Edit Cell ──
@@ -364,12 +374,15 @@ export function DataTable({
 
     // Link field — always links to detail page
     if (col.key === linkField) {
+      const displayVal = col.key === 'project_number'
+        ? formatProjectNumber(val as string | null)
+        : String(val ?? '—');
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
           className="font-medium text-shiroi-green hover:underline"
         >
-          {String(val ?? '—')}
+          {displayVal}
         </Link>
       );
     }
@@ -413,14 +426,17 @@ export function DataTable({
     // Email
     if (col.fieldType === 'email') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{val ? String(val) : '—'}</span>;
 
-    // Link (for proposal #, project #)
+    // Link (for proposal #, project #, customer_name on projects)
     if (col.fieldType === 'link') {
+      const displayVal = col.key === 'project_number'
+        ? formatProjectNumber(val as string | null)
+        : String(val ?? '—');
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
           className="font-medium text-shiroi-green hover:underline"
         >
-          {String(val ?? '—')}
+          {displayVal}
         </Link>
       );
     }

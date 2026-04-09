@@ -162,8 +162,8 @@ export async function createOrUpdateSurvey(input: {
     }
   }
 
-  // Auto-advance project status: advance_received → planning when survey is first created
-  if (!input.surveyId && project.status === 'advance_received') {
+  // Auto-advance project status: order_received → yet_to_start when survey is first created
+  if (!input.surveyId && project.status === 'order_received') {
     const nextStatus = getNextStatus(project.status as string);
     if (nextStatus) {
       console.log(`${op} Auto-advancing project status: ${project.status} → ${nextStatus}`);
@@ -348,8 +348,8 @@ export async function advanceProjectStatus(input: {
   // Update project status
   const updateData: Record<string, string> = { status: nextStatus };
 
-  // Set commissioned_date when moving to commissioned
-  if (nextStatus === 'commissioned') {
+  // Set commissioned_date when moving to completed
+  if (nextStatus === 'completed') {
     updateData.commissioned_date = new Date().toISOString().split('T')[0] ?? '';
   }
 

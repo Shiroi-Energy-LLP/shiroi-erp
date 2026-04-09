@@ -99,7 +99,7 @@ export async function getCommissionedProjects(): Promise<{ id: string; project_n
     .from('projects')
     .select('id, project_number, customer_name, commissioned_date')
     .is('deleted_at', null)
-    .in('status', ['commissioned', 'completed', 'net_metering_pending'])
+    .in('status', ['completed', 'waiting_net_metering'])
     .order('commissioned_date', { ascending: false })
     .limit(200);
 

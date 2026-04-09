@@ -20,8 +20,14 @@ export function AdvanceStatusButton({ projectId, currentStatus }: AdvanceStatusB
 
   const nextStatus = getNextStatus(currentStatus);
 
-  // Don't show if already at final status, on_hold, or cancelled
-  if (!nextStatus || currentStatus === 'on_hold' || currentStatus === 'cancelled' || currentStatus === 'completed') {
+  // Don't show for holding stages, client-scope, or completed — all off the critical path
+  if (
+    !nextStatus ||
+    currentStatus === 'holding_shiroi' ||
+    currentStatus === 'holding_client' ||
+    currentStatus === 'meter_client_scope' ||
+    currentStatus === 'completed'
+  ) {
     return null;
   }
 

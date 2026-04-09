@@ -26,15 +26,14 @@ interface PaymentsPageProps {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  advance_received: 'Advance',
-  planning: 'Planning',
-  material_procurement: 'Procurement',
-  installation: 'Installation',
-  electrical_work: 'Electrical',
-  testing: 'Testing',
-  commissioned: 'Commissioned',
-  net_metering_pending: 'Net Metering',
+  order_received: 'Order Received',
+  yet_to_start: 'Yet to Start',
+  in_progress: 'In Progress',
   completed: 'Completed',
+  holding_shiroi: 'Holding - Shiroi',
+  holding_client: 'Holding - Client',
+  waiting_net_metering: 'Net Metering',
+  meter_client_scope: 'Meter - Client',
 };
 
 export default async function PaymentsOverviewPage({ searchParams }: PaymentsPageProps) {
@@ -53,7 +52,7 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
     filteredRows = allRows.filter(r => r.outstanding > 0);
   } else if (filter === 'active') {
     filteredRows = allRows.filter(r =>
-      !['completed', 'cancelled'].includes(r.project_status) || r.outstanding > 0
+      !['completed', 'holding_client'].includes(r.project_status) || r.outstanding > 0
     );
   }
 
@@ -133,7 +132,7 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
       <div className="flex items-center gap-2">
         <Link href="/payments?filter=active">
           <Badge variant={filter === 'active' ? 'default' : 'outline'} className="cursor-pointer">
-            Active ({allRows.filter(r => !['completed', 'cancelled'].includes(r.project_status) || r.outstanding > 0).length})
+            Active ({allRows.filter(r => !['completed', 'holding_client'].includes(r.project_status) || r.outstanding > 0).length})
           </Badge>
         </Link>
         <Link href="/payments?filter=outstanding">

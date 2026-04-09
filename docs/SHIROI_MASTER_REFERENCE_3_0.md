@@ -51,11 +51,13 @@
 | Migrations 022a–024a | ✅ Applied (dev) | PM corrections: 022a file delete RLS, 023a survey form overhaul (~25 cols), 024a BOQ items + delivery challans |
 | Migrations 022b–026 | ✅ Applied (dev) | Data quality: 022b processing_jobs, 023b BOM categories, 024b storage mime fix, 025 electricity_bill_number, 026 site_photos lead_id (project_id nullable) |
 | Migration 027b | ✅ Applied (dev) | Expanded project-files bucket mime types (DWG, DOCX, XLSX, PPTX, video, SketchUp) + 100MB limit |
+| Migration 029 | ✅ Applied (dev) | data_flags table, data_verified_by/at on leads/projects/proposals, get_flag_count + get_data_flag_summary RPCs |
 | Migration 030 | ✅ Applied (dev) | BOI/BOQ project fields: boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual + category index |
+| Migration 031 | ✅ Applied (dev) | Project status overhaul: collapse project_status 11→8 (order_received, yet_to_start, in_progress, completed, holding_shiroi, holding_client, waiting_net_metering, meter_client_scope). FK fix on log_project_status_change trigger. Auto-create Project on proposal acceptance. |
 | BOI module overhaul | ✅ Complete | BOM→BOI rename, 14 Manivel categories, submit/lock workflow, Prepared By display, inline add/delete items |
 | BOQ Budget Analysis | ✅ Complete | Inline rate/GST editing, add/delete items, category filter, grand total, Final Summary (Project Cost / Actual Budget / Expected Margin %), Mark BOQ Complete checkbox |
 | Delivery Note overhaul | ✅ Complete | Create DC from Ready to Dispatch items, checkbox selection with adjustable quantities, transport details, DC history with DC1/DC2 numbering |
-| Migration 031 | ✅ Applied (dev) | data_flags table, data_verified_by/at on leads/projects/proposals, get_flag_count + get_data_flag_summary RPCs |
+| Projects screen overhaul | ✅ Complete | Per Manivel's spec: remarks column hidden by default, project numbers shortened (SHIROI/PROJ/ prefix stripped), customer_name clickable → project detail, 8 status options in filter dropdown, inline status edit works (FK error fixed), accepted proposals auto-create projects |
 | Data verification system | ✅ Complete | DataFlagButton component, /data-quality dashboard (summary cards, flags table, resolve action), sidebar links for founder/purchase/finance |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |

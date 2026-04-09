@@ -32,3 +32,13 @@ export function formatDate(dateString: string): string {
     year: 'numeric',
   });
 }
+
+/**
+ * Strip the "SHIROI/PROJ/" prefix from a project number so the table shows
+ * just the year + sequence (e.g. "SHIROI/PROJ/2025-26/0042" → "2025-26/0042").
+ * Safe for any other prefix — returns the input unchanged if nothing matches.
+ */
+export function formatProjectNumber(projectNumber: string | null | undefined): string {
+  if (!projectNumber) return '—';
+  return projectNumber.replace(/^SHIROI\/PROJ\//i, '');
+}

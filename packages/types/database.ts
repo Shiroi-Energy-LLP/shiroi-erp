@@ -1344,6 +1344,51 @@ export type Database = {
           },
         ]
       }
+      data_flags: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          field_name: string | null
+          flag_type: string
+          flagged_at: string
+          flagged_by: string
+          id: string
+          notes: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          field_name?: string | null
+          flag_type: string
+          flagged_at?: string
+          flagged_by: string
+          id?: string
+          notes?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          field_name?: string | null
+          flag_type?: string
+          flagged_at?: string
+          flagged_by?: string
+          id?: string
+          notes?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: []
+      }
       dc_signatures: {
         Row: {
           created_at: string
@@ -3818,6 +3863,8 @@ export type Database = {
           converted_to_project: boolean
           created_at: string
           customer_name: string
+          data_verified_at: string | null
+          data_verified_by: string | null
           deleted_at: string | null
           disqualification_reason: string | null
           electricity_bill_number: string | null
@@ -3854,6 +3901,8 @@ export type Database = {
           converted_to_project?: boolean
           created_at?: string
           customer_name: string
+          data_verified_at?: string | null
+          data_verified_by?: string | null
           deleted_at?: string | null
           disqualification_reason?: string | null
           electricity_bill_number?: string | null
@@ -3890,6 +3939,8 @@ export type Database = {
           converted_to_project?: boolean
           created_at?: string
           customer_name?: string
+          data_verified_at?: string | null
+          data_verified_by?: string | null
           deleted_at?: string | null
           disqualification_reason?: string | null
           electricity_bill_number?: string | null
@@ -7683,6 +7734,11 @@ export type Database = {
           battery_brand: string | null
           battery_capacity_kwh: number | null
           battery_model: string | null
+          boi_locked: boolean | null
+          boi_locked_at: string | null
+          boi_locked_by: string | null
+          boq_completed: boolean | null
+          boq_completed_at: string | null
           builder_civil_cleared: boolean
           builder_civil_cleared_at: string | null
           builder_name: string | null
@@ -7698,6 +7754,8 @@ export type Database = {
           customer_name: string
           customer_phone: string
           customer_profile_id: string | null
+          data_verified_at: string | null
+          data_verified_by: string | null
           deleted_at: string | null
           has_builder_scope: boolean
           id: string
@@ -7712,6 +7770,7 @@ export type Database = {
           panel_wattage: number | null
           planned_end_date: string | null
           planned_start_date: string | null
+          project_cost_manual: number | null
           project_manager_id: string | null
           project_number: string
           proposal_id: string
@@ -7740,6 +7799,11 @@ export type Database = {
           battery_brand?: string | null
           battery_capacity_kwh?: number | null
           battery_model?: string | null
+          boi_locked?: boolean | null
+          boi_locked_at?: string | null
+          boi_locked_by?: string | null
+          boq_completed?: boolean | null
+          boq_completed_at?: string | null
           builder_civil_cleared?: boolean
           builder_civil_cleared_at?: string | null
           builder_name?: string | null
@@ -7755,6 +7819,8 @@ export type Database = {
           customer_name: string
           customer_phone: string
           customer_profile_id?: string | null
+          data_verified_at?: string | null
+          data_verified_by?: string | null
           deleted_at?: string | null
           has_builder_scope?: boolean
           id?: string
@@ -7769,6 +7835,7 @@ export type Database = {
           panel_wattage?: number | null
           planned_end_date?: string | null
           planned_start_date?: string | null
+          project_cost_manual?: number | null
           project_manager_id?: string | null
           project_number: string
           proposal_id: string
@@ -7797,6 +7864,11 @@ export type Database = {
           battery_brand?: string | null
           battery_capacity_kwh?: number | null
           battery_model?: string | null
+          boi_locked?: boolean | null
+          boi_locked_at?: string | null
+          boi_locked_by?: string | null
+          boq_completed?: boolean | null
+          boq_completed_at?: string | null
           builder_civil_cleared?: boolean
           builder_civil_cleared_at?: string | null
           builder_name?: string | null
@@ -7812,6 +7884,8 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           customer_profile_id?: string | null
+          data_verified_at?: string | null
+          data_verified_by?: string | null
           deleted_at?: string | null
           has_builder_scope?: boolean
           id?: string
@@ -7826,6 +7900,7 @@ export type Database = {
           panel_wattage?: number | null
           planned_end_date?: string | null
           planned_start_date?: string | null
+          project_cost_manual?: number | null
           project_manager_id?: string | null
           project_number?: string
           proposal_id?: string
@@ -7845,6 +7920,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_boi_locked_by_fkey"
+            columns: ["boi_locked_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_company_id_fkey"
             columns: ["company_id"]
@@ -8640,6 +8722,8 @@ export type Database = {
           battery_model: string | null
           created_at: string
           current_pdf_storage_path: string | null
+          data_verified_at: string | null
+          data_verified_by: string | null
           discount_amount: number
           gross_margin_amount: number
           gross_margin_pct: number
@@ -8691,6 +8775,8 @@ export type Database = {
           battery_model?: string | null
           created_at?: string
           current_pdf_storage_path?: string | null
+          data_verified_at?: string | null
+          data_verified_by?: string | null
           discount_amount?: number
           gross_margin_amount?: number
           gross_margin_pct?: number
@@ -8742,6 +8828,8 @@ export type Database = {
           battery_model?: string | null
           created_at?: string
           current_pdf_storage_path?: string | null
+          data_verified_at?: string | null
+          data_verified_by?: string | null
           discount_amount?: number
           gross_margin_amount?: number
           gross_margin_pct?: number
@@ -11530,7 +11618,20 @@ export type Database = {
           total_receivables: number
         }[]
       }
+      get_data_flag_summary: {
+        Args: never
+        Returns: {
+          entity_type: string
+          resolved_flags: number
+          total_flags: number
+          unresolved_flags: number
+        }[]
+      }
       get_financial_year: { Args: never; Returns: string }
+      get_flag_count: {
+        Args: { p_entity_id: string; p_entity_type: string }
+        Returns: number
+      }
       get_lead_stage_counts: {
         Args: { p_include_archived?: boolean }
         Returns: {
@@ -11618,17 +11719,14 @@ export type Database = {
         | "cancelled"
         | "renewal_pending"
       project_status:
-        | "advance_received"
-        | "planning"
-        | "material_procurement"
-        | "installation"
-        | "electrical_work"
-        | "testing"
-        | "commissioned"
-        | "net_metering_pending"
+        | "order_received"
+        | "yet_to_start"
+        | "in_progress"
         | "completed"
-        | "on_hold"
-        | "cancelled"
+        | "holding_shiroi"
+        | "holding_client"
+        | "waiting_net_metering"
+        | "meter_client_scope"
       proposal_status:
         | "draft"
         | "sent"
@@ -11846,17 +11944,14 @@ export const Constants = {
         "renewal_pending",
       ],
       project_status: [
-        "advance_received",
-        "planning",
-        "material_procurement",
-        "installation",
-        "electrical_work",
-        "testing",
-        "commissioned",
-        "net_metering_pending",
+        "order_received",
+        "yet_to_start",
+        "in_progress",
         "completed",
-        "on_hold",
-        "cancelled",
+        "holding_shiroi",
+        "holding_client",
+        "waiting_net_metering",
+        "meter_client_scope",
       ],
       proposal_status: [
         "draft",

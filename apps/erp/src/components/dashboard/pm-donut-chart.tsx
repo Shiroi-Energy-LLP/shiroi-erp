@@ -4,20 +4,29 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 
 const STATUS_COLORS: Record<string, string> = {
-  advance_received: '#3B82F6',
-  planning: '#8B5CF6',
-  material_procurement: '#F59E0B',
-  installation: '#00B050',
-  electrical_work: '#06B6D4',
-  testing: '#EC4899',
-  inspection: '#A855F7',
-  commissioned: '#10B981',
-  net_metering_pending: '#F97316',
-  on_hold: '#EF4444',
+  order_received: '#1D4ED8',
+  yet_to_start: '#525252',
+  in_progress: '#EA580C',
+  completed: '#00B050',
+  holding_shiroi: '#B45309',
+  holding_client: '#991B1B',
+  waiting_net_metering: '#7C3AED',
+  meter_client_scope: '#6D28D9',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  order_received: 'Order Received',
+  yet_to_start: 'Yet to Start',
+  in_progress: 'In Progress',
+  completed: 'Completed',
+  holding_shiroi: 'Holding from Shiroi',
+  holding_client: 'Holding from Client',
+  waiting_net_metering: 'Waiting for Net Metering',
+  meter_client_scope: 'Meter - Client Scope',
 };
 
 function formatStatus(status: string): string {
-  return status
+  return STATUS_LABELS[status] ?? status
     .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
