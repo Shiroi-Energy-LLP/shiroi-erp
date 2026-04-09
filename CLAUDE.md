@@ -572,4 +572,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 8, 2026 — BOI/BOQ/Delivery Note overhaul complete per Manivel's spec. BOI: 14 categories, submit/lock workflow, Prepared By display. BOQ Budget Analysis: inline rate/GST editing, add/delete items, category filter, Final Summary with margin %. Delivery Note: Create DC from Ready to Dispatch items with checkbox selection. Migration 030 applied (dev). Next: Vivek reviews, prod deployment.*
+*Last updated: April 9, 2026 — Data verification system complete (data_flags table, DataFlagButton, /data-quality dashboard, /bom-review). Inline editing expanded to all key tables. All placeholder pages wired (Design Queue, Price Book, Liaison). Purchase module: PO detail page + Create PO flow. Finance CRUD: create invoice, record payment, vendor payment. File flagging on all file components. Next: Zoho Books import (awaiting CSV exports), employee testing week, prod deployment.*
