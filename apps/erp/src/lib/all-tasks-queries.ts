@@ -15,7 +15,7 @@ export async function getAllTasks(filters: {
 
   let query = supabase
     .from('tasks')
-    .select('*, assignee:employees!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name), completed_by_employee:employees!tasks_completed_by_fkey(full_name)')
+    .select('*, assignee:employees!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name), completed_by_employee:employees!project_tasks_completed_by_fkey(full_name)')
     .is('deleted_at', null)
     .order('due_date', { ascending: true, nullsFirst: false })
     .limit(100);
