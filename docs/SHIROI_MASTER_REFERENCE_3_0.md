@@ -972,9 +972,9 @@ Cost: ~₹3,000/month
 Number: Existing Shiroi company number
 ```
 
-### 12.9 WhatsApp Historical Import (Phase 1 — Complete)
+### 12.9 WhatsApp Historical Import (Phase 1 — Complete, Approved)
 
-**Purpose:** Extract structured data from 3 WhatsApp group chat exports and stage in a review queue for ERP import.
+**Purpose:** Extract structured data from 3 WhatsApp group chat exports, enrich, and insert into ERP target tables.
 
 **Groups processed:**
 | Group | Chat Size | Records Extracted | Key Data Types |
@@ -983,25 +983,30 @@ Number: Existing Shiroi company number
 | Shiroi Energy LLP / rooftop / Purchase | ~4,800 lines | 186 | 115 BOQ items, 27 POs, 15 customer_payments, 24 activities |
 | Shiroi Energy ⚡ (main ops) | 40,621 lines | 3,826 | 403 daily_reports, 3,100 activities, 298 contacts, 25 financial |
 
+**Data inserted into target tables (April 9, 2026):**
+| Table | Before | After | Added |
+|-------|--------|-------|-------|
+| activities | 0 | 3,320 | +3,320 |
+| daily_site_reports | 0 | 210 | +210 |
+| contacts | 1,115 | 1,390 | +275 |
+| project_boq_items | 116 | 251 | +135 |
+| customer_payments | 30 | 70 | +40 |
+
+All 4,164 queue records: **0 pending**, all approved. 46 duplicate contacts cleaned (phone dedup). 0 FK violations.
+
 **Architecture:**
 - ZIP export parser: `scripts/whatsapp-import/parser.ts` — handles Android/iPhone format, U+202F narrow no-break space in timestamps, Unicode control chars
 - Rule-based extractor (no LLM): `scripts/whatsapp-import/extract-local.ts` — pattern-matching for payments, contacts, POs, BOQ items, daily reports, activities
+- Enrichment + batch approve: `scripts/whatsapp-import/enrich-and-approve.ts` — fuzzy project matching, Indian amount parsing, activity type validation, bulk insert into target tables
 - Large ZIP support (3.3 GB): `node-stream-zip` for streaming extraction without loading into memory
-- Review queue: `whatsapp_import_queue` table (migration 025) — all records staged pending human review
+- Review queue: `whatsapp_import_queue` table (migration 025) — all records staged, enriched, and approved
 - Review UI: `/whatsapp-import` — stats grid, filter tabs, paginated table, approve/reject/reassign actions
-
-**Extraction types in queue:**
-- `customer_payment` — always goes to finance review (confidence 0.65)
-- `vendor_payment` — always goes to finance review (confidence 0.65)
-- `purchase_order` — goes to finance review (confidence 0.7)
-- `boq_item` — LLP group: panel/inverter/cable quantities (confidence 0.55)
-- `daily_report` — Shiroi Energy group: site progress updates (confidence 0.6)
-- `contact` — phone number detected with name/company context (confidence 0.75)
-- `activity` — site visits, meetings, quotation-sent events (confidence 0.5)
+- Approval actions: `whatsapp-import-actions.ts` — customer_payment, task, activity, daily_report, contact, boq_item cases + batch approve/reject
 
 **Dedup:** SHA-256 hash of `timestamp|sender|text[:100]` stored as UNIQUE index on `message_hash`. Re-running the script is safe.
 
-**To re-run import:** `cd scripts/whatsapp-import && npx tsx extract-local.ts`
+**To re-run extraction:** `cd scripts/whatsapp-import && npx tsx extract-local.ts`
+**To re-run enrichment + approval:** `cd scripts/whatsapp-import && npx tsx enrich-and-approve.ts` (or `--dry-run`)
 
 **Phase 2 (live Baileys bot):** Deferred. Scaffolded profiles in `scripts/whatsapp-import/profiles/` ready. Needs dedicated phone number + bot setup.
 

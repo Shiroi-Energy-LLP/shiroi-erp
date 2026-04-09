@@ -92,9 +92,10 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | HubSpot enrichment | ✅ Complete | Close dates, owner assignment, contacts/companies enrichment from CSV exports |
 | Deleted lead restore | ✅ Complete | 10 real leads restored (PV264/RWD, 50MWp, Ramakrishna, Ravi, etc.), 11 junk leads kept soft-deleted |
 | PM Corrections R2 | ✅ Complete | QC/Liaison/Status constraint fixes, commissioning edit, task completion toggles, tasks page overhaul, O&M visits overhaul, PDF hardening |
-| WhatsApp import pipeline | ✅ Complete | Rule-based extraction from 3 group chats. 4,164 records in review queue. Script: `scripts/whatsapp-import/extract-local.ts` |
+| WhatsApp import pipeline | ✅ Complete | Rule-based extraction from 3 group chats. 4,164 records extracted + enriched + approved. Script: `scripts/whatsapp-import/extract-local.ts` |
 | WhatsApp data extracted | ✅ Complete | Marketing: 152 records (50 payments, 30 POs, 32 contacts, 40 activities). LLP: 186 records (115 BOQ items, 27 POs, 15 payments, 4 vendor_payments). Shiroi Energy ⚡: 3,826 records (403 daily reports, 3,100 activities, 298 contacts, 25 financial). |
 | WA Import Queue UI | ✅ Complete | /whatsapp-import — stats grid, paginated review table, approve/reject/reassign actions. Sidebar link for founder/finance/purchase_officer. |
+| WA queue approval | ✅ Complete | All 4,164 queue records enriched + auto-approved into target tables. Activities: 0→3,320. Daily reports: 0→210. Contacts: +275 (1,390 total, 0 phone dupes). BOQ items: +135 (251 total). Payments: +40 (70 total). Approval action bugs fixed (FK, missing cases). Script: `scripts/whatsapp-import/enrich-and-approve.ts` |
 | BOM category fix | ✅ Complete | Fixed item_category CHECK constraint violation — dropdown now sends DB-valid snake_case values instead of display labels |
 | AMC module visibility | ✅ Complete | AMC Schedule added to founder + om_technician sidebar; /om/amc page enhanced with upcoming visits table + summary cards; AMC This Month card on founder dashboard |
 | Proposals timeout fix | ✅ Complete | Added idx_proposals_created_at index, count:estimated, optimized join — fixes Sentry timeout on /proposals with 751 rows |
@@ -118,7 +119,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
 PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→35,022 (629 proposals), photos 0→1,290.
 Google Drive sync: 180 confirmed projects — BOM from Bill of Items, dates, panel/inverter brands, margins, addresses extracted.
-WhatsApp import pipeline complete: 4,164 records from 3 group chats staged in review queue.
+WhatsApp import pipeline complete: 4,164 records from 3 group chats extracted, enriched, and approved into target tables (activities 3,320, daily reports 210, contacts +275, BOQ items +135, payments +40).
+WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 BOI/BOQ/DC overhaul complete per Manivel's spec: 14 BOI categories, submit/lock, inline BOQ editing, budget analysis with margin calculation, create DC from ready items.
 Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
 Middleware timeout fixed: /login excluded from matcher, getUser() has 5s timeout to prevent MIDDLEWARE_INVOCATION_TIMEOUT.
@@ -553,4 +555,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 8, 2026 — BOI/BOQ/Delivery Note overhaul complete per Manivel's spec. BOI: 14 categories, submit/lock workflow, Prepared By display. BOQ Budget Analysis: inline rate/GST editing, add/delete items, category filter, Final Summary with margin %. Delivery Note: Create DC from Ready to Dispatch items with checkbox selection. Migration 030 applied (dev). Next: Vivek reviews, prod deployment.*
+*Last updated: April 9, 2026 — WhatsApp queue approval complete. All 4,164 records enriched + auto-approved into target tables: activities 0→3,320, daily reports 0→210, contacts +275, BOQ items +135, payments +40. Approval action FK bug fixed, daily_report/contact/boq_item cases added, batch approve/reject actions added. Script: `scripts/whatsapp-import/enrich-and-approve.ts`. Next: Vivek reviews, prod deployment.*
