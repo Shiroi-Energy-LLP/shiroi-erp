@@ -82,7 +82,7 @@ export async function getProjectHeader(id: string) {
   // instead of throwing PGRST116 ("Cannot coerce the result to a single JSON object")
   const { data, error } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name, status, system_size_kwp, system_type, contracted_value, completion_pct, ceig_required, ceig_cleared, automation_paused')
+    .select('id, project_number, customer_name, status, system_size_kwp, system_type, contracted_value, completion_pct, ceig_required, ceig_cleared, automation_paused, boi_locked, boq_completed, commissioned_date')
     .eq('id', id)
     .maybeSingle();
 

@@ -112,7 +112,7 @@ export async function getBoiState(projectId: string) {
 
   const { data, error } = await supabase
     .from('projects')
-    .select('boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual, contracted_value, proposal_id')
+    .select('boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual, contracted_value, proposal_id, estimated_site_expenses_budget')
     .eq('id', projectId)
     .single();
 

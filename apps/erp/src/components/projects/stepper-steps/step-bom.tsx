@@ -2,13 +2,14 @@ import {
   Card, CardHeader, CardTitle, CardContent,
   Button, Badge,
 } from '@repo/ui';
-import { formatDate } from '@repo/ui/formatters';
+import { formatDate, formatINR } from '@repo/ui/formatters';
 import { getStepBoqData } from '@/lib/project-stepper-queries';
 import { getBoiState } from '@/lib/project-stepper-queries';
-import { Package, Lock, CheckCircle2 } from 'lucide-react';
+import { Package, Lock, CheckCircle2, Receipt } from 'lucide-react';
 import { BoiInlineAddRow, BoiDeleteButton, BoiLockButton } from '@/components/projects/forms/bom-line-form';
 import { BoqSeedButton } from '@/components/projects/forms/boq-variance-form';
 import { getCategoryLabel } from '@/lib/boi-constants';
+import { EditableField } from '@/components/projects/detail/editable-field';
 import Link from 'next/link';
 
 interface StepBomProps {
@@ -191,6 +192,53 @@ export async function StepBom({ projectId }: StepBomProps) {
                 {!isLocked && <BoiInlineAddRow projectId={projectId} />}
               </tbody>
             </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Estimated site expenses — PM-editable planning budget.
+          Used in BOQ budget analysis + Actuals step as the baseline
+          against which real vouchers are compared. */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-n-500" />
+              Estimated Site Expenses (General)
+            </CardTitle>
+            <span className="text-[11px] text-n-500">
+              Travel · Food · Lodging · Consumables · Labour advances
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <EditableField
+                projectId={projectId}
+                field="estimated_site_expenses_budget"
+                label="Planned Budget (₹)"
+                value={Number((boiState as any)?.estimated_site_expenses_budget ?? 0)}
+                type="number"
+                render={(v) => (
+                  <span className="text-lg font-mono font-semibold text-n-900">
+                    {formatINR(Number(v ?? 0))}
+                  </span>
+                )}
+              />
+              <p className="text-[11px] text-n-500 mt-1.5">
+                Enter a single aggregate for all general site expenses. Actual vouchers
+                flow in through the Actuals step.
+              </p>
+            </div>
+            <div className="text-xs text-n-500 space-y-1 bg-n-50 p-3 rounded-lg">
+              <div className="font-medium text-n-700 mb-1">How this is used</div>
+              <p>
+                This planned amount becomes the baseline site-expense budget on the BOQ Budget
+                Analysis page. As PMs and supervisors submit vouchers from the Actuals step,
+                the actual total is compared against this number to show overrun or savings.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

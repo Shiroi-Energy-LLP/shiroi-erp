@@ -54,10 +54,16 @@
 | Migration 029 | ✅ Applied (dev) | data_flags table, data_verified_by/at on leads/projects/proposals, get_flag_count + get_data_flag_summary RPCs |
 | Migration 030 | ✅ Applied (dev) | BOI/BOQ project fields: boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual + category index |
 | Migration 031 | ✅ Applied (dev) | Project status overhaul: collapse project_status 11→8 (order_received, yet_to_start, in_progress, completed, holding_shiroi, holding_client, waiting_net_metering, meter_client_scope). FK fix on log_project_status_change trigger. Auto-create Project on proposal acceptance. |
+| Migration 032 | ✅ Applied (dev) | Fix `create_payment_followup_tasks` trigger: `p.status IN ('approved', 'accepted')` → `p.status = 'accepted'` ('approved' is not in proposal_status enum — was blocking status transitions to in_progress/completed/waiting_net_metering). |
+| Migration 033 | ✅ Applied (dev) | Project detail fields: scope_la/scope_civil/scope_meter, cable_brand/model, billing_address, location_map_link, order_date, primary_contact_id FK→contacts. project_site_expenses voucher workflow fields (voucher_number, expense_category, status, submitted_by/at, approved_by/at, rejected_reason, receipt_file_path). Existing rows → auto_approved. Indexes on (status, submitted_at DESC) + (project_id). |
+| Migration 034 | ✅ Applied (dev) | `estimated_site_expenses_budget NUMERIC(14,2)` on projects — PM-editable planning figure (travel/food/lodging/labour advances) used as baseline in BOQ budget analysis and Actuals margin. |
 | BOI module overhaul | ✅ Complete | BOM→BOI rename, 14 Manivel categories, submit/lock workflow, Prepared By display, inline add/delete items |
 | BOQ Budget Analysis | ✅ Complete | Inline rate/GST editing, add/delete items, category filter, grand total, Final Summary (Project Cost / Actual Budget / Expected Margin %), Mark BOQ Complete checkbox |
 | Delivery Note overhaul | ✅ Complete | Create DC from Ready to Dispatch items, checkbox selection with adjustable quantities, transport details, DC history with DC1/DC2 numbering |
 | Projects screen overhaul | ✅ Complete | Per Manivel's spec: remarks column hidden by default, project numbers shortened (SHIROI/PROJ/ prefix stripped), customer_name clickable → project detail, 8 status options in filter dropdown, inline status edit works (FK error fixed), accepted proposals auto-create projects |
+| Project detail page overhaul | ✅ Complete | Per Manivel's spec. Header: editable 8-status dropdown (replaces AdvanceStatusButton). 12-stage horizontal ProjectStepper (Details → Survey → BOI → BOQ → Delivery → Execution → Actuals → QC → Liaison → Commissioning → Free AMC → Documents) with completed-stage highlights. Details tab: 4 editable boxes — FinancialBox (role-gated PM/founder/finance/sales_engineer), SystemConfigBox (size/type/mounting/panel/inverter/battery/cable/scope_la/civil/meter/remarks, all dropdowns), CustomerInfoBox (contact picker w/ 250ms debounced search → primary_contact_id, addresses, Google Maps link), TimelineTeamBox (6 date fields + PM + supervisor dropdowns, Team merged in). New Actuals step (BOQ + vouchers + margin color coding). New Documents tab (HandoverPack + ProjectFiles + LeadFiles merged). Removed: Notes card, Milestones/Delays/Change Orders/Reports tabs, side PDF link. |
+| Vouchers approval queue | ✅ Complete | New `/vouchers` page — consolidated PM/founder/finance review for site expense vouchers. KPI strip (pending count, pending total, projects with pending), grouped project rollup, Approve + Reject-with-reason Dialog. Sidebar link under new "Approvals" section for founder/project_manager/finance. `site-expenses-actions.ts` (submit/approve/reject/getPending/getProject). |
+| BOI estimated site expenses | ✅ Complete | New card at bottom of BOI stepper step — single aggregate EditableField for `projects.estimated_site_expenses_budget` (NUMERIC(14,2)). Feeds into BOQ budget analysis baseline + Actuals step margin calculation. Planning fidelity is a single number, not a per-category breakdown — real record lives in `project_site_expenses`. |
 | Data verification system | ✅ Complete | DataFlagButton component, /data-quality dashboard (summary cards, flags table, resolve action), sidebar links for founder/purchase/finance |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
@@ -1541,15 +1547,15 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 
 ---
 
-**Document version:** 3.4
+**Document version:** 3.6
 **Table count:** 134 tables verified in shiroi-erp-dev
 **Trigger count:** 91 triggers
 **RLS status:** Enabled on all 134 tables — recursive subqueries replaced with helper functions (migration 008a)
-**Migration files:** 28 files (001 through 012) — all committed to git
+**Migration files:** 34 files (001 through 034) — all committed to git
 **TypeScript types:** Generated in packages/types/database.ts
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
-**ERP app:** 53 routes, 142 tests passing, 0 type errors
-**Last updated:** April 7, 2026 (v3.5 — PM Corrections R2: tasks overhaul, commissioning edit, constraint fixes, O&M visits, PDF hardening)
+**ERP app:** 58+ routes, 0 type errors
+**Last updated:** April 9, 2026 (v3.6 — Project detail page overhaul per Manivel's spec: editable boxes, horizontal stepper, Vouchers queue, Actuals step, BOI estimated site expenses. Migrations 033+034.)
 
 **What changed in v3.4:**
 - HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments

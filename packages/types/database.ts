@@ -7634,46 +7634,87 @@ export type Database = {
       project_site_expenses: {
         Row: {
           amount: number
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           description: string | null
           employee_name: string | null
+          expense_category: string | null
           expense_date: string | null
           id: string
           notes: string | null
           project_id: string
+          receipt_file_path: string | null
+          rejected_reason: string | null
+          status: string | null
+          submitted_at: string | null
+          submitted_by: string | null
           updated_at: string
           voucher_no: string | null
+          voucher_number: string | null
         }
         Insert: {
           amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           description?: string | null
           employee_name?: string | null
+          expense_category?: string | null
           expense_date?: string | null
           id?: string
           notes?: string | null
           project_id: string
+          receipt_file_path?: string | null
+          rejected_reason?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
           updated_at?: string
           voucher_no?: string | null
+          voucher_number?: string | null
         }
         Update: {
           amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           description?: string | null
           employee_name?: string | null
+          expense_category?: string | null
           expense_date?: string | null
           id?: string
           notes?: string | null
           project_id?: string
+          receipt_file_path?: string | null
+          rejected_reason?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
           updated_at?: string
           voucher_no?: string | null
+          voucher_number?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "project_site_expenses_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_site_expenses_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_site_expenses_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -7734,6 +7775,7 @@ export type Database = {
           battery_brand: string | null
           battery_capacity_kwh: number | null
           battery_model: string | null
+          billing_address: string | null
           boi_locked: boolean | null
           boi_locked_at: string | null
           boi_locked_by: string | null
@@ -7742,6 +7784,8 @@ export type Database = {
           builder_civil_cleared: boolean
           builder_civil_cleared_at: string | null
           builder_name: string | null
+          cable_brand: string | null
+          cable_model: string | null
           ceig_cleared: boolean
           ceig_cleared_at: string | null
           ceig_required: boolean
@@ -7763,17 +7807,23 @@ export type Database = {
           inverter_capacity_kw: number | null
           inverter_model: string | null
           lead_id: string
+          location_map_link: string | null
           notes: string | null
+          order_date: string | null
           panel_brand: string | null
           panel_count: number
           panel_model: string | null
           panel_wattage: number | null
           planned_end_date: string | null
           planned_start_date: string | null
+          primary_contact_id: string | null
           project_cost_manual: number | null
           project_manager_id: string | null
           project_number: string
           proposal_id: string
+          scope_civil: string | null
+          scope_la: string | null
+          scope_meter: string | null
           site_address_line1: string
           site_address_line2: string | null
           site_city: string
@@ -7799,6 +7849,7 @@ export type Database = {
           battery_brand?: string | null
           battery_capacity_kwh?: number | null
           battery_model?: string | null
+          billing_address?: string | null
           boi_locked?: boolean | null
           boi_locked_at?: string | null
           boi_locked_by?: string | null
@@ -7807,6 +7858,8 @@ export type Database = {
           builder_civil_cleared?: boolean
           builder_civil_cleared_at?: string | null
           builder_name?: string | null
+          cable_brand?: string | null
+          cable_model?: string | null
           ceig_cleared?: boolean
           ceig_cleared_at?: string | null
           ceig_required?: boolean
@@ -7828,17 +7881,23 @@ export type Database = {
           inverter_capacity_kw?: number | null
           inverter_model?: string | null
           lead_id: string
+          location_map_link?: string | null
           notes?: string | null
+          order_date?: string | null
           panel_brand?: string | null
           panel_count: number
           panel_model?: string | null
           panel_wattage?: number | null
           planned_end_date?: string | null
           planned_start_date?: string | null
+          primary_contact_id?: string | null
           project_cost_manual?: number | null
           project_manager_id?: string | null
           project_number: string
           proposal_id: string
+          scope_civil?: string | null
+          scope_la?: string | null
+          scope_meter?: string | null
           site_address_line1: string
           site_address_line2?: string | null
           site_city: string
@@ -7864,6 +7923,7 @@ export type Database = {
           battery_brand?: string | null
           battery_capacity_kwh?: number | null
           battery_model?: string | null
+          billing_address?: string | null
           boi_locked?: boolean | null
           boi_locked_at?: string | null
           boi_locked_by?: string | null
@@ -7872,6 +7932,8 @@ export type Database = {
           builder_civil_cleared?: boolean
           builder_civil_cleared_at?: string | null
           builder_name?: string | null
+          cable_brand?: string | null
+          cable_model?: string | null
           ceig_cleared?: boolean
           ceig_cleared_at?: string | null
           ceig_required?: boolean
@@ -7893,17 +7955,23 @@ export type Database = {
           inverter_capacity_kw?: number | null
           inverter_model?: string | null
           lead_id?: string
+          location_map_link?: string | null
           notes?: string | null
+          order_date?: string | null
           panel_brand?: string | null
           panel_count?: number
           panel_model?: string | null
           panel_wattage?: number | null
           planned_end_date?: string | null
           planned_start_date?: string | null
+          primary_contact_id?: string | null
           project_cost_manual?: number | null
           project_manager_id?: string | null
           project_number?: string
           proposal_id?: string
+          scope_civil?: string | null
+          scope_la?: string | null
+          scope_meter?: string | null
           site_address_line1?: string
           site_address_line2?: string | null
           site_city?: string
@@ -7946,6 +8014,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_primary_contact_id_fkey"
+            columns: ["primary_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
           {

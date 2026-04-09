@@ -76,6 +76,7 @@ const ITEMS = {
   waImportQueue:  { label: 'WA Import Queue',   href: '/whatsapp-import',    icon: 'MessageSquare' },
   dataQuality:    { label: 'Data Quality',      href: '/data-quality',       icon: 'Flag' },
   bomReview:      { label: 'BOM Review',        href: '/bom-review',         icon: 'ListChecks' },
+  vouchers:       { label: 'Voucher Approvals', href: '/vouchers',           icon: 'Receipt' },
 } as const satisfies Record<string, NavItem>;
 
 // ---------------------------------------------------------------------------
@@ -87,6 +88,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Sales',        items: [ITEMS.leads, ITEMS.proposals, ITEMS.liaison] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
+    { label: 'Approvals',    items: [ITEMS.vouchers] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.profitability] },
@@ -97,6 +99,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   project_manager: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports] },
+    { label: 'Approvals',    items: [ITEMS.vouchers] },
     { label: 'Execution',    items: [ITEMS.qcGates] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.inventory] },
     { label: 'Liaison',      items: [ITEMS.liaison, ITEMS.netMetering] },
@@ -135,6 +138,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Cash',          items: [ITEMS.cashFlow] },
     { label: 'Billing',      items: [ITEMS.invoices, ITEMS.payments] },
     { label: 'Vendor',       items: [ITEMS.vendorPayments, ITEMS.msmeCompliance] },
+    { label: 'Approvals',    items: [ITEMS.vouchers] },
     { label: 'Analysis',     items: [ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality] },

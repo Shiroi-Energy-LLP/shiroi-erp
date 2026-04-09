@@ -1,22 +1,17 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects-queries';
-import { getEntityContacts } from '@/lib/contacts-queries';
-import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
-import { ProjectFiles } from '@/components/projects/project-files';
-import { LeadFiles } from '@/components/projects/lead-files';
-import { HandoverPack } from '@/components/projects/handover-pack';
-import { getHandoverPack } from '@/lib/handover-actions';
 import { createClient } from '@repo/supabase/server';
-import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Badge,
-  Breadcrumb,
-} from '@repo/ui';
+  getCurrentUserRoleForProject,
+  getActiveEmployeesLite,
+  getProjectFinancials,
+} from '@/lib/project-detail-actions';
+import { FinancialBox } from '@/components/projects/detail/financial-box';
+import { SystemConfigBox } from '@/components/projects/detail/system-config-box';
+import { CustomerInfoBox } from '@/components/projects/detail/customer-info-box';
+import { TimelineTeamBox } from '@/components/projects/detail/timeline-team-box';
+import { DocumentsTab } from '@/components/projects/detail/documents-tab';
 import { StepSurvey } from '@/components/projects/stepper-steps/step-survey';
 import { StepBom } from '@/components/projects/stepper-steps/step-bom';
 import { StepBoq } from '@/components/projects/stepper-steps/step-boq';
@@ -26,6 +21,7 @@ import { StepQc } from '@/components/projects/stepper-steps/step-qc';
 import { StepLiaison } from '@/components/projects/stepper-steps/step-liaison';
 import { StepCommissioning } from '@/components/projects/stepper-steps/step-commissioning';
 import { StepAmc } from '@/components/projects/stepper-steps/step-amc';
+import { StepActuals } from '@/components/projects/stepper-steps/step-actuals';
 
 interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
@@ -46,7 +42,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
   const { tab } = await searchParams;
   const activeTab = tab ?? 'details';
 
-  // For non-details tabs, we only need the project ID
+  // Non-details tabs — skip the heavy details fetch
   if (activeTab !== 'details') {
     return (
       <Suspense fallback={<StepLoadingFallback />}>
@@ -55,264 +51,107 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
     );
   }
 
-  // Details tab — full overview (all fetches in parallel)
-  const supabase = await createClient();
-  const [project, entityContacts, handoverPack] = await Promise.all([
+  // Details tab — fetch everything the new boxes need in parallel
+  const [project, viewerRole, employees, financials] = await Promise.all([
     getProject(id),
-    getEntityContacts('project', id),
-    getHandoverPack(id),
+    getCurrentUserRoleForProject(),
+    getActiveEmployeesLite(),
+    getProjectFinancials(id),
   ]);
 
   if (!project) {
     notFound();
   }
 
-  // Fetch lead files from proposal-files bucket in parallel (not blocking above)
-  let leadFiles: { name: string; id: string; created_at: string; size?: number; mimetype?: string }[] = [];
-  if (project.lead_id) {
-    const { data } = await supabase.storage
-      .from('proposal-files')
-      .list(project.lead_id, { limit: 500, sortBy: { column: 'created_at', order: 'desc' } });
-    leadFiles = (data ?? [])
-      .filter((f) => f.name !== '.emptyFolderPlaceholder')
-      .map((f) => ({
-        name: f.name,
-        id: f.id ?? f.name,
-        created_at: f.created_at ?? '',
-        size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
-        mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
-      }));
+  // Resolve the primary contact (if the project has one linked) so the
+  // Customer Information box can show "from contacts DB" details instead
+  // of the denormalized project columns.
+  type LinkedContact = { id: string; name: string; phone: string | null; email: string | null };
+  let primaryContact: LinkedContact | null = null;
+  if ((project as any).primary_contact_id) {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from('contacts')
+      .select('id, name, phone, email')
+      .eq('id', (project as any).primary_contact_id)
+      .maybeSingle();
+    if (data) primaryContact = data as LinkedContact;
   }
-
-  const milestones = project.project_milestones ?? [];
-  const blockedMilestones = milestones.filter((m) => m.is_blocked);
-  const activeMilestones = milestones.filter((m) => m.status === 'in_progress');
 
   return (
     <div className="grid grid-cols-3 gap-6">
-      {/* Left column: System + Timeline */}
+      {/* Left / middle — editable boxes */}
       <div className="col-span-2 space-y-6">
-        {/* System Configuration */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">System Configuration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              <InfoItem label="System Type" value={project.system_type.replace(/_/g, ' ')} capitalize />
-              <InfoItem label="System Size" value={`${project.system_size_kwp} kWp`} />
-              <InfoItem label="Structure" value={project.structure_type} />
-              <InfoItem label="Panel" value={panelLabel(project)} />
-              <InfoItem label="Inverter" value={inverterLabel(project)} />
-              {project.system_type !== 'on_grid' && (
-                <InfoItem label="Battery" value={batteryLabel(project)} />
-              )}
-              <InfoItem label="Panel Count" value={project.panel_count?.toString()} />
-            </div>
-          </CardContent>
-        </Card>
+        <SystemConfigBox
+          projectId={id}
+          project={{
+            system_size_kwp: (project as any).system_size_kwp ?? 0,
+            system_type: (project as any).system_type ?? 'on_grid',
+            structure_type: (project as any).structure_type ?? null,
+            panel_brand: (project as any).panel_brand ?? null,
+            panel_model: (project as any).panel_model ?? null,
+            panel_count: (project as any).panel_count ?? 0,
+            panel_wattage: (project as any).panel_wattage ?? null,
+            inverter_brand: (project as any).inverter_brand ?? null,
+            inverter_model: (project as any).inverter_model ?? null,
+            inverter_capacity_kw: (project as any).inverter_capacity_kw ?? null,
+            battery_brand: (project as any).battery_brand ?? null,
+            battery_capacity_kwh: (project as any).battery_capacity_kwh ?? null,
+            cable_brand: (project as any).cable_brand ?? null,
+            cable_model: (project as any).cable_model ?? null,
+            scope_la: (project as any).scope_la ?? null,
+            scope_civil: (project as any).scope_civil ?? null,
+            scope_meter: (project as any).scope_meter ?? null,
+            notes: (project as any).notes ?? null,
+          }}
+        />
 
-        {/* Timeline */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Timeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <InfoItem label="Planned Start" value={project.planned_start_date ? formatDate(project.planned_start_date) : null} />
-              <InfoItem label="Planned End" value={project.planned_end_date ? formatDate(project.planned_end_date) : null} />
-              <InfoItem label="Actual Start" value={project.actual_start_date ? formatDate(project.actual_start_date) : null} />
-              <InfoItem label="Actual End" value={project.actual_end_date ? formatDate(project.actual_end_date) : null} />
-              <InfoItem label="Commissioned" value={project.commissioned_date ? formatDate(project.commissioned_date) : null} />
-              <InfoItem label="Advance Received" value={formatDate(project.advance_received_at)} />
-            </div>
-          </CardContent>
-        </Card>
+        <CustomerInfoBox
+          projectId={id}
+          project={{
+            customer_name: (project as any).customer_name ?? '',
+            customer_email: (project as any).customer_email ?? null,
+            customer_phone: (project as any).customer_phone ?? '',
+            primary_contact_id: (project as any).primary_contact_id ?? null,
+            site_address_line1: (project as any).site_address_line1 ?? '',
+            site_address_line2: (project as any).site_address_line2 ?? null,
+            site_city: (project as any).site_city ?? '',
+            site_state: (project as any).site_state ?? '',
+            site_pincode: (project as any).site_pincode ?? null,
+            billing_address: (project as any).billing_address ?? null,
+            location_map_link: (project as any).location_map_link ?? null,
+          }}
+          primaryContact={primaryContact}
+        />
 
-        {/* Site Address */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Site Address</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1 text-sm text-n-700">
-              <p>{project.site_address_line1}</p>
-              {project.site_address_line2 && <p>{project.site_address_line2}</p>}
-              <p>{project.site_city}, {project.site_state} {project.site_pincode}</p>
-              {project.site_latitude && project.site_longitude && (
-                <p className="text-xs text-n-500 mt-1">
-                  {project.site_latitude}, {project.site_longitude}
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* CEIG Gate (if applicable) */}
-        {project.ceig_required && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">CEIG Clearance Gate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                {project.ceig_cleared ? (
-                  <>
-                    <Badge variant="success">Cleared</Badge>
-                    <span className="text-sm text-n-500">
-                      {project.ceig_cleared_at ? formatDate(project.ceig_cleared_at) : ''}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Badge variant="warning">Pending</Badge>
-                    <span className="text-sm text-orange-700">
-                      Net metering submission is blocked until CEIG clearance is approved.
-                    </span>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Builder Scope (if applicable) */}
-        {project.has_builder_scope && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Builder Scope</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <InfoItem label="Builder" value={project.builder_name} />
-                <div>
-                  <div className="text-xs text-n-500 mb-0.5">Civil Cleared</div>
-                  {project.builder_civil_cleared ? (
-                    <Badge variant="success">Yes</Badge>
-                  ) : (
-                    <Badge variant="warning">No</Badge>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <TimelineTeamBox
+          projectId={id}
+          project={{
+            order_date: (project as any).order_date ?? null,
+            planned_start_date: (project as any).planned_start_date ?? null,
+            planned_end_date: (project as any).planned_end_date ?? null,
+            actual_start_date: (project as any).actual_start_date ?? null,
+            actual_end_date: (project as any).actual_end_date ?? null,
+            commissioned_date: (project as any).commissioned_date ?? null,
+            project_manager_id: (project as any).project_manager_id ?? null,
+            site_supervisor_id: (project as any).site_supervisor_id ?? null,
+          }}
+          employees={employees}
+        />
       </div>
 
-      {/* Right column */}
+      {/* Right — role-gated Financial */}
       <div className="space-y-6">
-        {/* Financials */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Financials</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-n-500">Contracted Value</span>
-              <span className="font-mono font-medium">{formatINR(project.contracted_value)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-n-500">Advance Received</span>
-              <span className="font-mono">{formatINR(project.advance_amount)}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Customer */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Customer</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-n-500">Name</span>
-              <span className="font-medium">{project.customer_name}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-n-500">Phone</span>
-              <span className="font-mono">{project.customer_phone}</span>
-            </div>
-            {project.customer_email && (
-              <div className="flex justify-between text-sm">
-                <span className="text-n-500">Email</span>
-                <span>{project.customer_email}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Team */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Team</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-n-500">Project Manager</span>
-              <span>{project.employees?.full_name ?? '—'}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-n-500">Site Supervisor</span>
-              <span>{project.pm_supervisor?.full_name ?? '—'}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Active Milestones Summary */}
-        {activeMilestones.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Active Milestones</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {activeMilestones.map((m) => (
-                <div key={m.id} className="flex justify-between text-sm">
-                  <span>{m.milestone_name}</span>
-                  <span className="font-mono text-n-500">{m.completion_pct}%</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Blocked Milestones Alert */}
-        {blockedMilestones.length > 0 && (
-          <Card className="border-red-700">
-            <CardHeader>
-              <CardTitle className="text-base text-red-700">Blocked Milestones</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {blockedMilestones.map((m) => (
-                <div key={m.id} className="text-sm">
-                  <div className="font-medium">{m.milestone_name}</div>
-                  <div className="text-red-700 text-xs">{m.blocked_reason ?? 'No reason specified'}</div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Notes */}
-        {project.notes && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-n-700 whitespace-pre-wrap">{project.notes}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        <HandoverPack projectId={id} existingPack={handoverPack as any} />
-
-        <ProjectFiles projectId={id} />
-
-        {project.lead_id && leadFiles.length > 0 && (
-          <LeadFiles leadId={project.lead_id} files={leadFiles} />
-        )}
-
-        <EntityContactsCard entityType="project" entityId={id} contacts={entityContacts} />
+        <FinancialBox
+          projectId={id}
+          contractedValue={financials.contractedValue}
+          actualExpenses={financials.actualExpenses}
+          boqTotal={financials.boqTotal}
+          siteExpensesTotal={financials.siteExpensesTotal}
+          marginAmount={financials.marginAmount}
+          marginPct={financials.marginPct}
+          viewerRole={viewerRole}
+        />
       </div>
     </div>
   );
@@ -320,7 +159,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
 
 // ── Tab content router for non-details tabs ──
 
-function TabContent({ projectId, tab }: { projectId: string; tab: string }) {
+async function TabContent({ projectId, tab }: { projectId: string; tab: string }) {
   switch (tab) {
     case 'survey':
       return <StepSurvey projectId={projectId} />;
@@ -332,6 +171,8 @@ function TabContent({ projectId, tab }: { projectId: string; tab: string }) {
       return <StepDelivery projectId={projectId} />;
     case 'execution':
       return <StepExecution projectId={projectId} />;
+    case 'actuals':
+      return <StepActuals projectId={projectId} />;
     case 'qc':
       return <StepQc projectId={projectId} />;
     case 'liaison':
@@ -340,44 +181,16 @@ function TabContent({ projectId, tab }: { projectId: string; tab: string }) {
       return <StepCommissioning projectId={projectId} />;
     case 'amc':
       return <StepAmc projectId={projectId} />;
+    case 'documents': {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from('projects')
+        .select('lead_id')
+        .eq('id', projectId)
+        .maybeSingle();
+      return <DocumentsTab projectId={projectId} leadId={(data as any)?.lead_id ?? null} />;
+    }
     default:
       return null;
   }
-}
-
-// ── Helper components ──
-
-function InfoItem({ label, value, capitalize: cap }: { label: string; value: string | null | undefined; capitalize?: boolean }) {
-  return (
-    <div>
-      <div className="text-xs text-n-500 mb-0.5">{label}</div>
-      <div className={`text-sm font-medium text-n-900 ${cap ? 'capitalize' : ''}`}>
-        {value || '—'}
-      </div>
-    </div>
-  );
-}
-
-function panelLabel(p: { panel_brand: string | null; panel_model: string | null; panel_wattage: number | null }): string {
-  const parts: string[] = [];
-  if (p.panel_brand) parts.push(p.panel_brand);
-  if (p.panel_model) parts.push(p.panel_model);
-  if (p.panel_wattage) parts.push(`${p.panel_wattage}W`);
-  return parts.length > 0 ? parts.join(' ') : '—';
-}
-
-function inverterLabel(p: { inverter_brand: string | null; inverter_model: string | null; inverter_capacity_kw: number | null }): string {
-  const parts: string[] = [];
-  if (p.inverter_brand) parts.push(p.inverter_brand);
-  if (p.inverter_model) parts.push(p.inverter_model);
-  if (p.inverter_capacity_kw) parts.push(`${p.inverter_capacity_kw} kW`);
-  return parts.length > 0 ? parts.join(' ') : '—';
-}
-
-function batteryLabel(p: { battery_brand: string | null; battery_model: string | null; battery_capacity_kwh: number | null }): string {
-  const parts: string[] = [];
-  if (p.battery_brand) parts.push(p.battery_brand);
-  if (p.battery_model) parts.push(p.battery_model);
-  if (p.battery_capacity_kwh) parts.push(`${p.battery_capacity_kwh} kWh`);
-  return parts.length > 0 ? parts.join(' ') : '—';
 }
