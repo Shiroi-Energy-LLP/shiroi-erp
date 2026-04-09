@@ -28,7 +28,7 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Supabase prod | ✅ Live | kfkydkwycgijvexqiysc.supabase.co |
 | Database schema | ✅ Complete | 137+ tables, 91+ triggers, RLS on ALL tables |
 | TypeScript types | ✅ Generated | packages/types/database.ts — regenerated Apr 6 with pipeline fields (expected_close_date, close_probability, is_archived) |
-| Migrations | ✅ Committed | supabase/migrations/ — 36 files (001 through 027) |
+| Migrations | ✅ Committed | supabase/migrations/ — 38 files (001 through 028 + 027b) |
 | Supabase client | ✅ Complete | packages/supabase — browser, server, admin, middleware clients |
 | Design system | ✅ Complete | packages/ui — V2 design system, 22 components (Logo, Eyebrow, EmptyState, Skeleton, Breadcrumb, SkipToContent, Sheet, Tooltip, DropdownMenu, Tabs, Form + original 11) |
 | Auth + App Shell | ✅ Complete | Login (with logo), middleware, collapsible sidebar (240px/60px + mobile drawer), topbar with role switcher, skip-to-content |
@@ -73,17 +73,19 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Payments overview page | ✅ Complete | Project payments tracker with P&L, payment stages, next milestone amounts, expected collections this week/month, invested vs received, filter by active/outstanding |
 | Migration 020 | ✅ Applied (dev) | Pipeline fields: expected_close_date, close_probability, is_archived on leads + indexes |
 | Migration 021 | ✅ Applied (dev) | Payment follow-up trigger: auto-creates tasks when project reaches payment milestone stages |
-| Migration 022 | ✅ Applied (dev) | Data cleanup: junk lead deletion, deterministic SQL fixes, processing_jobs table |
-| Migration 023 | ✅ Applied (dev) | Expanded BOM item_category CHECK constraint for Excel parsing |
-| Migration 024 | ✅ Applied (dev) | Storage mime type fix function (update_storage_mime_type RPC) |
-| Migration 025 | ✅ Applied (dev) | electricity_bill_number column on leads |
+| Migration 022a | ✅ Applied (dev) | Fix file delete RLS: expands DELETE policies on project-files and site-photos buckets (PM corrections) |
+| Migration 022b | ✅ Applied (dev) | Data cleanup: junk lead deletion, deterministic SQL fixes, processing_jobs table (data quality) |
+| Migration 023a | ✅ Applied (dev) | Survey form overhaul: ~25 new columns (GPS, roof details, electrical, shading, signatures) (PM corrections) |
+| Migration 023b | ✅ Applied (dev) | Expanded BOM item_category CHECK constraint for Excel parsing (data quality) |
+| Migration 024a | ✅ Applied (dev) | BOQ items + delivery challans: project_boq_items, delivery_challans tables (PM corrections) |
+| Migration 024b | ✅ Applied (dev) | Storage mime type fix function (update_storage_mime_type RPC) (data quality) |
+| Migration 025 | ✅ Applied (dev) | WhatsApp import queue: whatsapp_import_queue table with RLS, 5 indexes, review workflow |
+| Migration 026 | ✅ Applied (dev) | site_photos: project_id nullable, added lead_id for lead-only photos |
 | Data quality overhaul | ✅ Complete | Full 7-phase plan executed. See details below |
-| BOM extraction | ✅ Complete | 35,022 BOM lines from 629 proposals (Excel costing sheets + Google Drive confirmed projects) |
-| Google Drive BOM | ✅ Complete | 3,044 BOM lines from 119 confirmed project spreadsheets ("Bill of items" tab) |
-| Google Drive details | ✅ Complete | 81 projects, 159 proposals, 12 leads enriched (dates, margins, panel/inverter, addresses) |
-| Google Drive file sync | ✅ Complete | 1,344 files from 159 confirmed projects → Supabase project-files bucket |
-| Project file path fix | ✅ Complete | 881 files moved from old `projects/` prefix to correct `{project_id}/` path |
-| Project files total | ✅ Complete | **2,151 files across 136 projects** in project-files bucket (0 orphans) |
+| BOM extraction | ✅ Complete | 35,022 BOM lines across 629 proposals (Excel costing sheets + Google Drive Bill of Items) |
+| Google Drive sync | ✅ Complete | 180 confirmed project folders synced: 119 BOM, 81 project dates/brands, 159 margins, 12 lead addresses |
+| Google Drive file sync | ✅ Complete | 1,344 files from 159 confirmed projects → Supabase project-files bucket. 881 old-path files fixed. **2,151 total files across 136 projects**, 0 orphans |
+| Migration 027b | ✅ Applied (dev) | Expanded project-files bucket mime types (DWG, DOCX, XLSX, PPTX, video, SketchUp) + 100MB limit |
 | Doc extraction | ✅ Complete | 707 Word/PDF proposals parsed → 496 leads + 114 proposals enriched |
 | Proposal creation | ✅ Complete | 410 new proposals created from extracted doc data (341→751 total proposals) |
 | Owner assignment | ✅ Complete | All 1,126 leads now have assigned_to (10 Vivek, 1,116 Prem from HubSpot deal owner + default) |
@@ -91,14 +93,59 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Octet-stream fix | ✅ Complete | 685 mistyped files reclassified (SketchUp, Layout, PPTX, video) |
 | HubSpot enrichment | ✅ Complete | Close dates, owner assignment, contacts/companies enrichment from CSV exports |
 | Deleted lead restore | ✅ Complete | 10 real leads restored (PV264/RWD, 50MWp, Ramakrishna, Ravi, etc.), 11 junk leads kept soft-deleted |
-| Migration 027 | ✅ Applied (dev) | Expanded project-files bucket mime types (DWG, DOCX, XLSX, PPTX, video, SketchUp) + 100MB limit |
-| Prod deployment | 🔜 Next | After Vivek reviews data quality, migrate to prod |
+| PM Corrections R2 | ✅ Complete | QC/Liaison/Status constraint fixes, commissioning edit, task completion toggles, tasks page overhaul, O&M visits overhaul, PDF hardening |
+| WhatsApp import pipeline | ✅ Complete | Rule-based extraction from 3 group chats. 4,164 records extracted + enriched + approved. Script: `scripts/whatsapp-import/extract-local.ts` |
+| WhatsApp data extracted | ✅ Complete | Marketing: 152 records (50 payments, 30 POs, 32 contacts, 40 activities). LLP: 186 records (115 BOQ items, 27 POs, 15 payments, 4 vendor_payments). Shiroi Energy ⚡: 3,826 records (403 daily reports, 3,100 activities, 298 contacts, 25 financial). |
+| WA Import Queue UI | ✅ Complete | /whatsapp-import — stats grid, paginated review table, approve/reject/reassign actions. Sidebar link for founder/finance/purchase_officer. |
+| WA queue approval | ✅ Complete | All 4,164 queue records enriched + auto-approved into target tables. Activities: 0→3,320. Daily reports: 0→210. Contacts: +275 (1,390 total, 0 phone dupes). BOQ items: +135 (251 total). Payments: +40 (70 total). Approval action bugs fixed (FK, missing cases). Script: `scripts/whatsapp-import/enrich-and-approve.ts` |
+| BOM category fix | ✅ Complete | Fixed item_category CHECK constraint violation — dropdown now sends DB-valid snake_case values instead of display labels |
+| AMC module visibility | ✅ Complete | AMC Schedule added to founder + om_technician sidebar; /om/amc page enhanced with upcoming visits table + summary cards; AMC This Month card on founder dashboard |
+| Proposals timeout fix | ✅ Complete | Added idx_proposals_created_at index, count:estimated, optimized join — fixes Sentry timeout on /proposals with 751 rows |
+| Project file visibility | ✅ Complete | Fixed 3 issues hiding 9,845 files from project page: (1) path prefix mismatch for 909 GDrive files, (2) missing categories (purchase-orders, layouts, delivery-challans, sesal), (3) 7,636 lead files in proposal-files bucket now shown via new LeadFiles component |
+| Image viewer lightbox | ✅ Complete | Click any image in ProjectFiles or LeadFiles → full-screen modal with prev/next arrows, keyboard navigation, download button. Built with Radix Dialog, no new dependencies |
+| WhatsApp photos on project page | ✅ Complete | ProjectFiles now scans site-photos bucket for `projects/{id}/whatsapp/` media. 196 WhatsApp photos across 54 projects surfaced |
+| Migration 027a | ✅ Applied (dev) | tasks: category, remarks, assigned_date columns + task_work_logs table with RLS |
+| Task module overhaul | ✅ Complete | Edit/delete tasks, category field (10 milestone-aligned categories), remarks, done-by column, daily work logs with expandable timeline, category filter |
+| Performance overhaul | ✅ Complete | Fixed 7+ statement timeouts: migration 028 (6 indexes + 3 RPC functions), eliminated duplicate getProject(), payments query filtered by lead_ids, 3 JS aggregations→SQL RPCs, 13 pages paginated, ProjectFiles parallel storage calls, stepper queries parallelized |
+| Migration 028 | ✅ Applied (dev) | Performance indexes (daily_site_reports, leads pipeline, proposals lead+status, cash positions, BOM lines, projects status) + RPC functions (get_lead_stage_counts, get_company_cash_summary, get_msme_due_count) |
+| List page timeout fix | ✅ Complete | 5 paginated pages changed from count:'exact' to count:'estimated' (projects, leads, contacts, companies, whatsapp-import) — prevents full table scan on every page load |
+| Migration 029 | ✅ Applied (dev) | 4 sort-column indexes: idx_projects_created_at, idx_leads_created_at, idx_contacts_created_at, idx_whatsapp_queue_timestamp (all DESC) |
+| Middleware timeout fix | ✅ Complete | Excluded /login from middleware matcher; added 5s Promise.race timeout to getUser() — prevents MIDDLEWARE_INVOCATION_TIMEOUT when Supabase Auth is slow |
+| Migration 030 | ✅ Applied (dev) | BOI/BOQ project fields: boi_locked, boi_locked_at, boi_locked_by, boq_completed, boq_completed_at, project_cost_manual on projects + idx_project_boq_items_category |
+| BOI module overhaul | ✅ Complete | BOM→BOI rename, Manivel's 14 categories (Solar Panels, Inverter, MMS, DC/AC Accessories, Conduits, Misc, Safety, Earthing, Gen Meter, I&C, Statutory, Transport & Civil, Others), submit/lock workflow, "Prepared By" display, inline add/delete |
+| BOQ Budget Analysis | ✅ Complete | Inline double-click rate/GST editing, add new items, delete items, category filter, grand total, Final Summary section (Project Cost / Actual Budget / Expected Margin %), "Mark BOQ Complete" checkbox |
+| Delivery Note overhaul | ✅ Complete | "Create DC" button auto-fetches Ready to Dispatch items, checkbox selection with adjustable quantities, transport details form, DC history with DC1/DC2 numbering |
+| Migration 031 | ✅ Applied (dev) | data_flags table (entity flagging system), data_verified_by/at columns on leads/projects/proposals, get_flag_count + get_data_flag_summary RPCs |
+| Data flag system | ✅ Complete | DataFlagButton component (reusable), data-flag-actions.ts (create/resolve/query flags, verify entity), resolve-button for dashboard |
+| Data Quality dashboard | ✅ Complete | /data-quality — summary cards (unresolved/resolved/verified), flags-by-entity breakdown, filterable flags table with resolve action, pagination |
+| Data Quality sidebar | ✅ Complete | Added to founder, purchase_officer, finance sidebar (Admin section). Flag + MessageSquare icons registered in sidebar |
+| Inline editing expansion | ✅ Complete | Projects: 8 new editable cols. Proposals: 4. Contacts: 3 new. New configs: Vendors (14 cols/10 editable), POs (8), BOM (9/7 editable). inline-edit-actions extended for vendors/POs/BOM |
+| BOM Review page | ✅ Complete | /bom-review — 35K BOM lines, category filters, summary cards (total/with rate/missing rate/flagged), inline editing, flag button per row, pagination |
+| Design Queue | ✅ Complete | /design wired to leads with status site_survey_done/design_confirmed, KPI cards, link to design workspace |
+| Price Book | ✅ Complete | /price-book wired to price_book_items table (35 seeded items), full data table with category/unit/rates |
+| Liaison index | ✅ Complete | /liaison wired to net_metering_applications — summary cards (total/pending CEIG/pending net meter/approved) + link to sub-page |
+| PO Detail page | ✅ Complete | /procurement/[poId] — vendor info, line items table, delivery challans, vendor payments, data flag button |
+| Finance CRUD | ✅ Complete | finance-actions.ts (createInvoice, recordPayment, recordVendorPayment), CreateInvoiceDialog + RecordPaymentDialog, wired on invoices + payments pages |
+| File flagging | ✅ Complete | DataFlagButton added to ProjectFiles, LeadFiles, and LeadFilesList — flag icon on hover per file row |
+| Create PO flow | ✅ Complete | CreatePODialog: project/vendor selector, dynamic line items (add/remove), category/description/qty/rate/GST, auto-totals. procurement-actions.ts with auto-generated PO number |
+| Prod deployment | 🔜 Next | After employee testing week on dev, clone schema to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
-Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign (20 tasks) complete.
-Data quality overhaul complete: proposals 341→751, leads with size 172→900, leads with owner 0→1,126, proposals with financials 52→485, BOM lines 7→35,022, photos 0→1,290, project files 0→2,151 (136 projects).
-Google Drive sync complete: 159 confirmed project folders matched, BOM + project details extracted, all files synced to Supabase Storage.
-Full roadmap: `docs/superpowers/specs/2026-04-03-phase2c-roadmap-design.md`
+Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
+PM Corrections R2 complete. Data quality overhaul complete: proposals 341→751, BOM lines 7→35,022 (629 proposals), photos 0→1,290.
+Google Drive sync: 180 confirmed projects — BOM from Bill of Items, dates, panel/inverter brands, margins, addresses extracted. File sync: 2,151 project files across 136 projects (1,344 from Google Drive + 881 path-fixed).
+WhatsApp import pipeline complete: 4,164 records from 3 group chats extracted, enriched, and approved into target tables (activities 3,320, daily reports 210, contacts +275, BOQ items +135, payments +40).
+WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
+BOI/BOQ/DC overhaul complete per Manivel's spec: 14 BOI categories, submit/lock, inline BOQ editing, budget analysis with margin calculation, create DC from ready items.
+Data verification system complete: data_flags table, DataFlagButton component, /data-quality dashboard, BOM review page.
+Inline editing expanded to all key tables: projects (8), proposals (4), vendors (10), POs, BOM (7 editable).
+All placeholder pages wired: Design Queue, Price Book, Liaison index now data-driven.
+PO detail page complete. Finance CRUD complete (create invoice + record payment + vendor payment).
+File flagging complete on all file components. Create PO flow complete with multi-line item form.
+Next: Zoho Books import (awaiting CSV exports from Vivek), employee testing week setup.
+Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
+Middleware timeout fixed: /login excluded from matcher, getUser() has 5s timeout to prevent MIDDLEWARE_INVOCATION_TIMEOUT.
+WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 
 ---
 
@@ -529,4 +576,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 9, 2026 — Google Drive file sync complete. 2,151 project files across 136 projects (1,344 from Google Drive + 881 path-fixed from old migration). 35,022 BOM lines across 629 proposals. Migration 027 applied (expanded bucket mime types). All files visible on project pages. Next: Prod deployment, vendor GSTIN manual collection.*
+*Last updated: April 9, 2026 — Google Drive file sync complete. 2,151 project files across 136 projects (1,344 from Google Drive + 881 path-fixed). Migration 027b: expanded bucket mime types. All files visible on project pages. Previous: WhatsApp queue approval (4,164 records), BOI/BOQ/DC overhaul, performance fixes, file flagging, Create PO flow, finance CRUD. Next: Prod deployment.*
