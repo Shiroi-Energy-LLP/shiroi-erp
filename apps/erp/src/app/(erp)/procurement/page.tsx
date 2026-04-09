@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getPurchaseOrders, getVendorsList, getProjectsList } from '@/lib/procurement-queries';
+import { CreatePODialog } from '@/components/procurement/create-po-dialog';
 import { POStatusBadge } from '@/components/procurement/po-status-badge';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
@@ -59,8 +60,7 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
           <Eyebrow className="mb-1">PROCUREMENT</Eyebrow>
           <h1 className="text-2xl font-bold text-[#1A1D24]">Purchase Orders</h1>
         </div>
-        {/* TODO: PO creation form — coming soon */}
-        <Button disabled title="PO creation coming soon">New PO</Button>
+        <CreatePODialog projects={projects} vendors={vendors} />
       </div>
 
       {/* Filters */}

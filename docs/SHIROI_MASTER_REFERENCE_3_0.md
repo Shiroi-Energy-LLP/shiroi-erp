@@ -61,7 +61,8 @@
 | BOM Review page | ✅ Complete | /bom-review — 35K lines, category filters, summary cards, inline editing, flag per row, pagination (100/page) |
 | PO Detail page | ✅ Complete | /procurement/[poId] — vendor info, line items, delivery challans, vendor payments section |
 | Finance CRUD | ✅ Complete | createInvoice (GST split, auto-number), recordPayment (updates invoice status), recordVendorPayment (MSME compliance). Dialogs on invoices + payments pages |
-| Create PO flow | 🔜 Next | Enable create PO button, form with project → BOI items |
+| Create PO flow | ✅ Complete | CreatePODialog with project/vendor selector, dynamic line items, category/description/qty/rate/GST, auto-totals. procurement-actions.ts server action |
+| File flagging | ✅ Complete | DataFlagButton on ProjectFiles, LeadFiles, LeadFilesList — flag wrong_file/wrong_category/duplicate per file |
 | Zoho Books import | 🔜 Next | Import vendors, POs, invoices, payments from Zoho Books CSVs — dedup against existing 108 vendors, 850 POs |
 | Employee testing week | 🔜 Next | 5-6 employees review data on dev for 1 week. Data flags + inline edit + verification |
 | Prod deployment | 🔜 After testing | Schema clone + selective data migration to prod after employee testing week |

@@ -5,6 +5,7 @@ import { createClient } from '@repo/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import { Download, FileText, Image, File, Table2, Ruler } from 'lucide-react';
 import { ImageViewer, type ViewableImage } from '@/components/ui/image-viewer';
+import { DataFlagButton } from '@/components/data-flag-button';
 
 interface LeadFileInfo {
   name: string;
@@ -159,13 +160,21 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
                           {file.created_at && ` · ${formatDate(file.created_at)}`}
                         </span>
                       </div>
-                      <button
-                        onClick={() => isImage ? openImage(file) : handleDownload(file.name)}
-                        className="p-1 text-[#7C818E] hover:text-[#00B050] opacity-0 group-hover:opacity-100 transition-opacity"
-                        title={isImage ? 'View' : 'Download'}
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <DataFlagButton
+                          entityType="file"
+                          entityId={file.id}
+                          fieldName={key}
+                          compact
+                        />
+                        <button
+                          onClick={() => isImage ? openImage(file) : handleDownload(file.name)}
+                          className="p-1 text-[#7C818E] hover:text-[#00B050]"
+                          title={isImage ? 'View' : 'Download'}
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
