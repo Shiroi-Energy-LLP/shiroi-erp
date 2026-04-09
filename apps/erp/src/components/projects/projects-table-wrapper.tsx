@@ -7,6 +7,8 @@ import { PROJECT_COLUMNS } from '@/components/data-table/column-config';
 import { updateCellValue, bulkUpdateField } from '@/lib/inline-edit-actions';
 
 interface ProjectsTableWrapperProps {
+  /** Filter bar JSX rendered from the server page (FilterBar + FilterSelect + SearchInput) */
+  filterBar: React.ReactNode;
   data: any[];
   total: number;
   page: number;
@@ -32,6 +34,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export function ProjectsTableWrapper({
+  filterBar,
   data,
   total,
   page,
@@ -55,7 +58,7 @@ export function ProjectsTableWrapper({
 
   async function handleBulkStatus(e: React.ChangeEvent<HTMLSelectElement>) {
     const newStatus = e.target.value;
-    e.target.value = ''; // reset the dropdown back to placeholder
+    e.target.value = ''; // reset the dropdown back to the placeholder
     if (!newStatus || selectedIds.length === 0) return;
 
     const label = STATUS_OPTIONS.find((s) => s.value === newStatus)?.label ?? newStatus;
@@ -83,52 +86,44 @@ export function ProjectsTableWrapper({
   }
 
   return (
-    <DataTable
-      entityType="projects"
-      allColumns={PROJECT_COLUMNS}
-      visibleColumns={visibleColumns}
-      data={data}
-      total={total}
-      page={page}
-      pageSize={pageSize}
-      totalPages={totalPages}
-      sortColumn={sortColumn}
-      sortDirection={sortDirection}
-      currentFilters={currentFilters}
-      views={views}
-      activeViewId={activeViewId}
-      linkPrefix="/projects"
-      linkField="project_number"
-      onSelectionChange={setSelectedIds}
-      selectedIds={selectedIds}
-      onCellEdit={handleCellEdit}
-      bulkActions={
-        selectedIds.length > 0 ? (
-          <div className="flex items-center gap-2 ml-2">
-            <span className="text-xs text-shiroi-green font-medium">
+    <>
+      {/*
+        Sticky header: filter bar + (conditional) bulk action bar.
+        `-mx-4 lg:-mx-6` extends the white background into main's p-4/p-6 padding area
+        so the sticky band visually spans the full horizontal length of the content column,
+        no gray strips on either side as rows scroll underneath.
+      */}
+      <div className="sticky top-0 z-30 -mx-4 lg:-mx-6 bg-white border-b border-n-200 shadow-sm">
+        <div className="px-4 lg:px-6 py-3">{filterBar}</div>
+        {selectedIds.length > 0 && (
+          <div className="border-t border-n-200 px-4 lg:px-6 py-2 bg-shiroi-green/5 flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-shiroi-green font-semibold">
               {selectedIds.length} selected
             </span>
-            <select
-              disabled={bulkBusy}
-              defaultValue=""
-              onChange={handleBulkStatus}
-              className="h-7 text-xs border border-n-300 rounded px-2 bg-white hover:border-shiroi-green focus:outline-none focus:ring-1 focus:ring-shiroi-green disabled:opacity-50"
-            >
-              <option value="" disabled>
-                {bulkBusy ? 'Updating…' : 'Change status to…'}
-              </option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-n-600">Change status to:</label>
+              <select
+                disabled={bulkBusy}
+                defaultValue=""
+                onChange={handleBulkStatus}
+                className="h-7 text-xs border border-n-300 rounded px-2 bg-white hover:border-shiroi-green focus:outline-none focus:ring-1 focus:ring-shiroi-green disabled:opacity-50"
+              >
+                <option value="" disabled>
+                  {bulkBusy ? 'Updating…' : 'Pick a status'}
                 </option>
-              ))}
-            </select>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               type="button"
               onClick={() => setSelectedIds([])}
-              className="text-xs text-n-500 hover:text-n-900"
+              className="text-xs text-n-500 hover:text-n-900 underline underline-offset-2"
             >
-              Clear
+              Clear selection
             </button>
             {bulkError && (
               <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200">
@@ -136,8 +131,33 @@ export function ProjectsTableWrapper({
               </span>
             )}
           </div>
-        ) : null
-      }
-    />
+        )}
+      </div>
+
+      {/* Spacing between the sticky band and the table */}
+      <div className="h-4" />
+
+      <DataTable
+        entityType="projects"
+        allColumns={PROJECT_COLUMNS}
+        visibleColumns={visibleColumns}
+        data={data}
+        total={total}
+        page={page}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+        currentFilters={currentFilters}
+        views={views}
+        activeViewId={activeViewId}
+        linkPrefix="/projects"
+        linkField="project_number"
+        onSelectionChange={setSelectedIds}
+        selectedIds={selectedIds}
+        onCellEdit={handleCellEdit}
+        bulkActions={null}
+      />
+    </>
   );
 }

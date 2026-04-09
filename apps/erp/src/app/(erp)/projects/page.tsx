@@ -1,8 +1,7 @@
 import { getProjects } from '@/lib/projects-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ProjectsTableWrapper } from '@/components/projects/projects-table-wrapper';
-import { PROJECT_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
-import { Card, CardContent } from '@repo/ui';
+import { getDefaultColumns } from '@/components/data-table/column-config';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
@@ -70,38 +69,35 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
     ? viewCols
     : getDefaultColumns('projects');
 
-  return (
-    <div className="space-y-4">
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/projects" filterParams={['search', 'status']}>
-            <FilterSelect paramName="status" className="w-44 h-9 text-sm">
-              <option value="">All Statuses</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search project # or customer..."
-              className="w-64 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
-
-      <ProjectsTableWrapper
-        data={flatData}
-        total={result.total}
-        page={result.page}
-        pageSize={result.pageSize}
-        totalPages={result.totalPages}
-        sortColumn={params.sort}
-        sortDirection={params.dir}
-        currentFilters={currentFilters}
-        views={views}
-        activeViewId={params.view ?? activeView?.id ?? null}
-        visibleColumns={visibleColumns}
+  const filterBar = (
+    <FilterBar basePath="/projects" filterParams={['search', 'status']}>
+      <FilterSelect paramName="status" className="w-44 h-9 text-sm">
+        <option value="">All Statuses</option>
+        {STATUS_OPTIONS.map((s) => (
+          <option key={s.value} value={s.value}>{s.label}</option>
+        ))}
+      </FilterSelect>
+      <SearchInput
+        placeholder="Search project # or customer..."
+        className="w-64 h-9 text-sm"
       />
-    </div>
+    </FilterBar>
+  );
+
+  return (
+    <ProjectsTableWrapper
+      filterBar={filterBar}
+      data={flatData}
+      total={result.total}
+      page={result.page}
+      pageSize={result.pageSize}
+      totalPages={result.totalPages}
+      sortColumn={params.sort}
+      sortDirection={params.dir}
+      currentFilters={currentFilters}
+      views={views}
+      activeViewId={params.view ?? activeView?.id ?? null}
+      visibleColumns={visibleColumns}
+    />
   );
 }
