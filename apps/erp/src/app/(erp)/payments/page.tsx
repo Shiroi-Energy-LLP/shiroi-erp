@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getProjectPaymentOverview, computePaymentsSummary } from '@/lib/payments-overview-queries';
+import { getProjectsList } from '@/lib/procurement-queries';
 import { formatINR, shortINR } from '@repo/ui/formatters';
 import {
   Card,
@@ -16,6 +17,7 @@ import {
   EmptyState,
 } from '@repo/ui';
 import { DollarSign } from 'lucide-react';
+import { RecordPaymentDialog } from '@/components/finance/record-payment-dialog';
 
 interface PaymentsPageProps {
   searchParams: Promise<{
@@ -39,7 +41,10 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
   const params = await searchParams;
   const filter = params.filter ?? 'active';
 
-  const allRows = await getProjectPaymentOverview();
+  const [allRows, projects] = await Promise.all([
+    getProjectPaymentOverview(),
+    getProjectsList(),
+  ]);
   const summary = computePaymentsSummary(allRows);
 
   // Filter rows based on selected view
@@ -54,6 +59,11 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
 
   return (
     <div className="space-y-6">
+      {/* Action Bar */}
+      <div className="flex justify-end">
+        <RecordPaymentDialog projects={projects} />
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-5 gap-4">
         <Card>

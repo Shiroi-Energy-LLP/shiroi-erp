@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { DataTable } from '@/components/data-table';
 import { PROPOSAL_COLUMNS } from '@/components/data-table/column-config';
+import { updateCellValue } from '@/lib/inline-edit-actions';
 
 interface ProposalsTableWrapperProps {
   data: any[];
@@ -31,6 +32,10 @@ export function ProposalsTableWrapper({
   activeViewId,
   visibleColumns,
 }: ProposalsTableWrapperProps) {
+  async function handleCellEdit(rowId: string, field: string, value: string | number | null) {
+    return updateCellValue({ entityType: 'proposals', rowId, field, value });
+  }
+
   return (
     <DataTable
       entityType="proposals"
@@ -48,6 +53,7 @@ export function ProposalsTableWrapper({
       activeViewId={activeViewId}
       linkPrefix="/proposals"
       linkField="proposal_number"
+      onCellEdit={handleCellEdit}
     />
   );
 }

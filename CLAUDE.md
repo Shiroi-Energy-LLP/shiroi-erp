@@ -113,7 +113,18 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | BOI module overhaul | ✅ Complete | BOM→BOI rename, Manivel's 14 categories (Solar Panels, Inverter, MMS, DC/AC Accessories, Conduits, Misc, Safety, Earthing, Gen Meter, I&C, Statutory, Transport & Civil, Others), submit/lock workflow, "Prepared By" display, inline add/delete |
 | BOQ Budget Analysis | ✅ Complete | Inline double-click rate/GST editing, add new items, delete items, category filter, grand total, Final Summary section (Project Cost / Actual Budget / Expected Margin %), "Mark BOQ Complete" checkbox |
 | Delivery Note overhaul | ✅ Complete | "Create DC" button auto-fetches Ready to Dispatch items, checkbox selection with adjustable quantities, transport details form, DC history with DC1/DC2 numbering |
-| Prod deployment | 🔜 Next | After Vivek reviews data quality + WA queue, migrate to prod |
+| Migration 031 | ✅ Applied (dev) | data_flags table (entity flagging system), data_verified_by/at columns on leads/projects/proposals, get_flag_count + get_data_flag_summary RPCs |
+| Data flag system | ✅ Complete | DataFlagButton component (reusable), data-flag-actions.ts (create/resolve/query flags, verify entity), resolve-button for dashboard |
+| Data Quality dashboard | ✅ Complete | /data-quality — summary cards (unresolved/resolved/verified), flags-by-entity breakdown, filterable flags table with resolve action, pagination |
+| Data Quality sidebar | ✅ Complete | Added to founder, purchase_officer, finance sidebar (Admin section). Flag + MessageSquare icons registered in sidebar |
+| Inline editing expansion | ✅ Complete | Projects: 8 new editable cols. Proposals: 4. Contacts: 3 new. New configs: Vendors (14 cols/10 editable), POs (8), BOM (9/7 editable). inline-edit-actions extended for vendors/POs/BOM |
+| BOM Review page | ✅ Complete | /bom-review — 35K BOM lines, category filters, summary cards (total/with rate/missing rate/flagged), inline editing, flag button per row, pagination |
+| Design Queue | ✅ Complete | /design wired to leads with status site_survey_done/design_confirmed, KPI cards, link to design workspace |
+| Price Book | ✅ Complete | /price-book wired to price_book_items table (35 seeded items), full data table with category/unit/rates |
+| Liaison index | ✅ Complete | /liaison wired to net_metering_applications — summary cards (total/pending CEIG/pending net meter/approved) + link to sub-page |
+| PO Detail page | ✅ Complete | /procurement/[poId] — vendor info, line items table, delivery challans, vendor payments, data flag button |
+| Finance CRUD | ✅ Complete | finance-actions.ts (createInvoice, recordPayment, recordVendorPayment), CreateInvoiceDialog + RecordPaymentDialog, wired on invoices + payments pages |
+| Prod deployment | 🔜 Next | After employee testing week on dev, clone schema to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
 Phase 2C complete. Phase 3 items (61, 64, 65, 67) implemented. Marketing redesign complete.
@@ -122,6 +133,11 @@ Google Drive sync: 180 confirmed projects — BOM from Bill of Items, dates, pan
 WhatsApp import pipeline complete: 4,164 records from 3 group chats extracted, enriched, and approved into target tables (activities 3,320, daily reports 210, contacts +275, BOQ items +135, payments +40).
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`
 BOI/BOQ/DC overhaul complete per Manivel's spec: 14 BOI categories, submit/lock, inline BOQ editing, budget analysis with margin calculation, create DC from ready items.
+Data verification system complete: data_flags table, DataFlagButton component, /data-quality dashboard, BOM review page.
+Inline editing expanded to all key tables: projects (8), proposals (4), vendors (10), POs, BOM (7 editable).
+All placeholder pages wired: Design Queue, Price Book, Liaison index now data-driven.
+PO detail page complete. Finance CRUD complete (create invoice + record payment + vendor payment).
+Next: file flagging on project/lead pages, create PO flow, Zoho Books import (awaiting CSV exports from Vivek).
 Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
 Middleware timeout fixed: /login excluded from matcher, getUser() has 5s timeout to prevent MIDDLEWARE_INVOCATION_TIMEOUT.
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`

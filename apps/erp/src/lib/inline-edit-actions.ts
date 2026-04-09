@@ -10,6 +10,9 @@ const ENTITY_TABLE_MAP: Record<string, string> = {
   projects: 'projects',
   contacts: 'contacts',
   companies: 'companies',
+  vendors: 'vendors',
+  purchase_orders: 'purchase_orders',
+  bom_items: 'proposal_bom_lines',
 };
 
 /** Fields that are NEVER editable inline (safety guard) */
@@ -33,7 +36,8 @@ export async function updateCellValue(input: {
 
   // Map display field names to actual DB column names
   const FIELD_ALIAS_MAP: Record<string, Record<string, string>> = {
-    projects: { remarks: 'notes' },
+    projects: { remarks: 'notes', project_manager_name: 'project_manager_id' },
+    vendors: { company_name: 'company_name' },
   };
   const alias = FIELD_ALIAS_MAP[entityType]?.[field];
   if (alias) {
@@ -80,6 +84,16 @@ export async function updateCellValue(input: {
   }
 
   // Revalidate the entity list page
-  revalidatePath(`/${entityType}`);
+  const PATH_MAP: Record<string, string> = {
+    leads: '/leads',
+    proposals: '/proposals',
+    projects: '/projects',
+    contacts: '/contacts',
+    companies: '/companies',
+    vendors: '/vendors',
+    purchase_orders: '/procurement',
+    bom_items: '/bom-review',
+  };
+  revalidatePath(PATH_MAP[entityType] ?? `/${entityType}`);
   return { success: true };
 }
