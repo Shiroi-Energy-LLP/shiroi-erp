@@ -128,6 +128,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Finance CRUD | ✅ Complete | finance-actions.ts (createInvoice, recordPayment, recordVendorPayment), CreateInvoiceDialog + RecordPaymentDialog, wired on invoices + payments pages |
 | File flagging | ✅ Complete | DataFlagButton added to ProjectFiles, LeadFiles, and LeadFilesList — flag icon on hover per file row |
 | Create PO flow | ✅ Complete | CreatePODialog: project/vendor selector, dynamic line items (add/remove), category/description/qty/rate/GST, auto-totals. procurement-actions.ts with auto-generated PO number |
+| BOI/BOQ/DC tab fix | ✅ Complete | Fixed crash: BOI_CATEGORIES exported from 'use client' file but used in server components — moved to shared lib/boi-constants.ts. Migration file renamed 028→030 to avoid collision |
+| Edit Task enhancements | ✅ Complete | Searchable project dropdown (type-to-filter 200+ projects), Done By employee field (auto-marks task completed with timestamp) |
 | Prod deployment | 🔜 Next | After employee testing week on dev, clone schema to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
@@ -576,4 +578,4 @@ This is automatic — do not wait for Vivek to ask.
 ---
 
 *This file is maintained by Vivek. Update it whenever a major decision is made.*
-*Last updated: April 9, 2026 — Data verification system (data_flags, /data-quality, /bom-review, DataFlagButton on files). Inline editing expanded to all tables. Placeholder pages wired (Design Queue, Price Book, Liaison). Purchase: PO detail + Create PO. Finance CRUD: invoices, payments, vendor payments. Google Drive file sync: 2,151 files across 136 projects. Next: Zoho Books import (awaiting CSVs), employee testing week, prod deployment.*
+*Last updated: April 9, 2026 — Fixed BOI/BOQ/DC tab crash (client/server boundary issue with BOI_CATEGORIES). Edit Task dialog enhanced with searchable project dropdown + Done By field. BOI/BOQ/DC overhaul, data verification system, inline editing expansion, Google Drive sync all complete. Next: employee testing week, prod deployment.*

@@ -65,6 +65,8 @@
 | Finance CRUD | ✅ Complete | createInvoice (GST split, auto-number), recordPayment (updates invoice status), recordVendorPayment (MSME compliance). Dialogs on invoices + payments pages |
 | Create PO flow | ✅ Complete | CreatePODialog with project/vendor selector, dynamic line items, category/description/qty/rate/GST, auto-totals. procurement-actions.ts server action |
 | File flagging | ✅ Complete | DataFlagButton on ProjectFiles, LeadFiles, LeadFilesList — flag wrong_file/wrong_category/duplicate per file |
+| BOI/BOQ/DC tab fix | ✅ Complete | Fixed crash: BOI_CATEGORIES from 'use client' file used in server components — moved to shared lib/boi-constants.ts |
+| Edit Task enhancements | ✅ Complete | Searchable project dropdown (type-to-filter), Done By employee field (auto-marks completed) |
 | Zoho Books import | 🔜 Next | Import vendors, POs, invoices, payments from Zoho Books CSVs — dedup against existing 108 vendors, 850 POs |
 | Employee testing week | 🔜 Next | 5-6 employees review data on dev for 1 week. Data flags + inline edit + verification |
 | Prod deployment | 🔜 After testing | Schema clone + selective data migration to prod after employee testing week |
