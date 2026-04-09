@@ -6,16 +6,13 @@ import { formatDate } from '@repo/ui/formatters';
 import { getStepBoqData } from '@/lib/project-stepper-queries';
 import { getBoiState } from '@/lib/project-stepper-queries';
 import { Package, Lock, CheckCircle2 } from 'lucide-react';
-import { BoiInlineAddRow, BoiDeleteButton, BoiLockButton, BOI_CATEGORIES } from '@/components/projects/forms/bom-line-form';
+import { BoiInlineAddRow, BoiDeleteButton, BoiLockButton } from '@/components/projects/forms/bom-line-form';
 import { BoqSeedButton } from '@/components/projects/forms/boq-variance-form';
+import { getCategoryLabel } from '@/lib/boi-constants';
 import Link from 'next/link';
 
 interface StepBomProps {
   projectId: string;
-}
-
-function getCategoryLabel(value: string): string {
-  return BOI_CATEGORIES.find((c) => c.value === value)?.label ?? value.replace(/_/g, ' ');
 }
 
 export async function StepBom({ projectId }: StepBomProps) {

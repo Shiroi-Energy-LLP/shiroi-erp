@@ -6,7 +6,7 @@ import { Button, Input, Select } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { RefreshCw, Save, Plus, X, Trash2, Check } from 'lucide-react';
 import { seedBoqFromBom, updateCostVariance, updateBoqItemStatus, updateBoqItem, addBoqItem, deleteBoqItem, completeBoq, updateProjectCostManual } from '@/lib/project-step-actions';
-import { BOI_CATEGORIES } from '@/components/projects/forms/bom-line-form';
+import { BOI_CATEGORIES } from '@/lib/boi-constants';
 
 interface BoqActionsProps {
   projectId: string;

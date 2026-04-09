@@ -14,7 +14,7 @@ import {
   BoqFinalSummary,
   BoqCompleteButton,
 } from '@/components/projects/forms/boq-variance-form';
-import { BOI_CATEGORIES } from '@/components/projects/forms/bom-line-form';
+import { getCategoryLabel } from '@/lib/boi-constants';
 import { BoqCategoryFilterWrapper } from '@/components/projects/forms/boq-category-filter-wrapper';
 import Link from 'next/link';
 
@@ -40,9 +40,6 @@ const STATUS_LABELS: Record<string, string> = {
   delivered: 'Delivered',
 };
 
-function getCategoryLabel(value: string): string {
-  return BOI_CATEGORIES.find((c) => c.value === value)?.label ?? value.replace(/_/g, ' ');
-}
 
 export async function StepBoq({ projectId }: StepBoqProps) {
   let boqData: Awaited<ReturnType<typeof getStepBoqData>>;

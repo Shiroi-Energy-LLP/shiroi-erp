@@ -245,6 +245,8 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                                   remarks: task.remarks ?? null,
                                   project_id: task.project_id,
                                   entity_type: task.entity_type,
+                                  is_completed: task.is_completed,
+                                  completed_by: (task as any).completed_by ?? null,
                                 }}
                                 employees={employees}
                                 projects={projects}

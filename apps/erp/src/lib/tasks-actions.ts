@@ -73,6 +73,7 @@ export async function updateTask(input: {
   assignedTo?: string;
   remarks?: string;
   projectId?: string;
+  completedBy?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[updateTask]';
   console.log(`${op} Starting for task: ${input.taskId}`);
@@ -90,6 +91,14 @@ export async function updateTask(input: {
   if (input.assignedTo !== undefined) updateData.assigned_to = input.assignedTo || null;
   if (input.remarks !== undefined) updateData.remarks = input.remarks || null;
   if (input.projectId !== undefined) updateData.project_id = input.projectId || null;
+  if (input.completedBy !== undefined) {
+    updateData.completed_by = input.completedBy || null;
+    // If setting completed_by, also mark as completed
+    if (input.completedBy) {
+      updateData.is_completed = true;
+      updateData.completed_at = new Date().toISOString();
+    }
+  }
 
   const { error } = await supabase
     .from('tasks' as any)

@@ -6,7 +6,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
   Button, Input, Label, Select,
 } from '@repo/ui';
-import { Pencil } from 'lucide-react';
+import { Pencil, Search } from 'lucide-react';
 import { updateTask } from '@/lib/tasks-actions';
 import { TASK_CATEGORIES } from '@/lib/task-constants';
 
@@ -22,9 +22,102 @@ interface EditTaskDialogProps {
     remarks: string | null;
     project_id: string | null;
     entity_type: string | null;
+    is_completed?: boolean;
+    completed_by?: string | null;
   };
   employees: { id: string; full_name: string }[];
   projects: { id: string; project_number: string; customer_name: string }[];
+}
+
+function SearchableProjectSelect({
+  projects,
+  value,
+  onChange,
+}: {
+  projects: { id: string; project_number: string; customer_name: string }[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [search, setSearch] = React.useState('');
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  const filtered = search
+    ? projects.filter(
+        (p) =>
+          p.project_number.toLowerCase().includes(search.toLowerCase()) ||
+          p.customer_name.toLowerCase().includes(search.toLowerCase())
+      )
+    : projects;
+
+  const selectedProject = projects.find((p) => p.id === value);
+
+  // Close on outside click
+  React.useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <div
+        className="flex items-center gap-1 w-full rounded-md border border-n-200 px-2 h-9 text-sm cursor-pointer hover:border-n-300"
+        onClick={() => setOpen(!open)}
+      >
+        <Search className="h-3.5 w-3.5 text-n-400 flex-shrink-0" />
+        {open ? (
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search projects..."
+            className="flex-1 outline-none text-sm bg-transparent"
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className={`flex-1 truncate ${selectedProject ? 'text-n-900' : 'text-n-400'}`}>
+            {selectedProject
+              ? `${selectedProject.project_number} — ${selectedProject.customer_name}`
+              : '— None —'}
+          </span>
+        )}
+      </div>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-n-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+          <div
+            className="px-3 py-1.5 text-xs text-n-500 hover:bg-n-50 cursor-pointer"
+            onClick={() => { onChange(''); setOpen(false); setSearch(''); }}
+          >
+            — None —
+          </div>
+          {filtered.length === 0 && (
+            <div className="px-3 py-2 text-xs text-n-400">No projects found</div>
+          )}
+          {filtered.slice(0, 50).map((p) => (
+            <div
+              key={p.id}
+              className={`px-3 py-1.5 text-xs cursor-pointer hover:bg-p-50 ${p.id === value ? 'bg-p-50 font-medium' : ''}`}
+              onClick={() => { onChange(p.id); setOpen(false); setSearch(''); }}
+            >
+              <span className="font-mono text-n-600">{p.project_number}</span>
+              <span className="text-n-400 mx-1">—</span>
+              <span>{p.customer_name}</span>
+            </div>
+          ))}
+          {filtered.length > 50 && (
+            <div className="px-3 py-1.5 text-[10px] text-n-400">
+              {filtered.length - 50} more — type to narrow
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function EditTaskDialog({ task, employees, projects }: EditTaskDialogProps) {
@@ -32,6 +125,8 @@ export function EditTaskDialog({ task, employees, projects }: EditTaskDialogProp
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = React.useState(task.project_id ?? '');
+  const [selectedDoneBy, setSelectedDoneBy] = React.useState(task.completed_by ?? '');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -48,7 +143,8 @@ export function EditTaskDialog({ task, employees, projects }: EditTaskDialogProp
       dueDate: form.get('dueDate') as string || undefined,
       assignedTo: form.get('assignedTo') as string || undefined,
       remarks: form.get('remarks') as string || undefined,
-      projectId: form.get('projectId') as string || undefined,
+      projectId: selectedProject || undefined,
+      completedBy: selectedDoneBy || undefined,
     });
 
     setSaving(false);
@@ -106,13 +202,12 @@ export function EditTaskDialog({ task, employees, projects }: EditTaskDialogProp
             </div>
           </div>
           <div>
-            <Label htmlFor="edit-projectId">Project</Label>
-            <Select id="edit-projectId" name="projectId" defaultValue={task.project_id ?? ''}>
-              <option value="">— None —</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.project_number} — {p.customer_name}</option>
-              ))}
-            </Select>
+            <Label>Project</Label>
+            <SearchableProjectSelect
+              projects={projects}
+              value={selectedProject}
+              onChange={setSelectedProject}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -128,6 +223,18 @@ export function EditTaskDialog({ task, employees, projects }: EditTaskDialogProp
               <Label htmlFor="edit-dueDate">Due Date</Label>
               <Input id="edit-dueDate" name="dueDate" type="date" defaultValue={task.due_date ?? ''} />
             </div>
+          </div>
+          <div>
+            <Label>Done By</Label>
+            <Select
+              value={selectedDoneBy}
+              onChange={(e) => setSelectedDoneBy(e.target.value)}
+            >
+              <option value="">— Not completed —</option>
+              {employees.map((e) => (
+                <option key={e.id} value={e.id}>{e.full_name}</option>
+              ))}
+            </Select>
           </div>
           <div>
             <Label htmlFor="edit-remarks">Remarks</Label>
