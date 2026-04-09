@@ -7,6 +7,7 @@ import {
 } from '@repo/ui';
 import { Upload, Download, FileText, Image, File, Trash2 } from 'lucide-react';
 import { ImageViewer, type ViewableImage } from '@/components/ui/image-viewer';
+import { DataFlagButton } from '@/components/data-flag-button';
 
 interface FileInfo {
   name: string;
@@ -377,6 +378,12 @@ export function ProjectFiles({ projectId }: ProjectFilesProps) {
                             </span>
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <DataFlagButton
+                              entityType="file"
+                              entityId={file.id}
+                              fieldName={cat.value}
+                              compact
+                            />
                             <button
                               onClick={() => isImage ? openImage(file) : handleDownload(file.bucket, file.pathPrefix, file.name)}
                               className="p-1 text-[#7C818E] hover:text-[#00B050]"

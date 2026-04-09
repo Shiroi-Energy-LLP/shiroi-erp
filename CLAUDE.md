@@ -123,6 +123,8 @@ Founder: Vivek. He reviews every file before commit. No autonomous pushes to pro
 | Liaison index | ✅ Complete | /liaison wired to net_metering_applications — summary cards (total/pending CEIG/pending net meter/approved) + link to sub-page |
 | PO Detail page | ✅ Complete | /procurement/[poId] — vendor info, line items table, delivery challans, vendor payments, data flag button |
 | Finance CRUD | ✅ Complete | finance-actions.ts (createInvoice, recordPayment, recordVendorPayment), CreateInvoiceDialog + RecordPaymentDialog, wired on invoices + payments pages |
+| File flagging | ✅ Complete | DataFlagButton added to ProjectFiles, LeadFiles, and LeadFilesList — flag icon on hover per file row |
+| Create PO flow | ✅ Complete | CreatePODialog: project/vendor selector, dynamic line items (add/remove), category/description/qty/rate/GST, auto-totals. procurement-actions.ts with auto-generated PO number |
 | Prod deployment | 🔜 Next | After employee testing week on dev, clone schema to prod |
 
 **Current phase: 3 — Advanced Features + Deployment**
@@ -135,7 +137,8 @@ Data verification system complete: data_flags table, DataFlagButton component, /
 Inline editing expanded to all key tables: projects (8), proposals (4), vendors (10), POs, BOM (7 editable).
 All placeholder pages wired: Design Queue, Price Book, Liaison index now data-driven.
 PO detail page complete. Finance CRUD complete (create invoice + record payment + vendor payment).
-Next: file flagging on project/lead pages, create PO flow, Zoho Books import (awaiting CSV exports from Vivek).
+File flagging complete on all file components. Create PO flow complete with multi-line item form.
+Next: Zoho Books import (awaiting CSV exports from Vivek), employee testing week setup.
 Performance overhaul complete: 7+ statement timeouts eliminated. 6 indexes, 3 RPC functions, 24 files optimized.
 Middleware timeout fixed: /login excluded from matcher, getUser() has 5s timeout to prevent MIDDLEWARE_INVOCATION_TIMEOUT.
 WhatsApp import plan: `docs/superpowers/plans/2026-04-07-whatsapp-import.md`

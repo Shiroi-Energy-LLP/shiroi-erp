@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@repo/supabase/client';
 import { Button } from '@repo/ui';
+import { DataFlagButton } from '@/components/data-flag-button';
 
 interface FileItem {
   name: string;
@@ -58,14 +59,17 @@ export function LeadFilesList({ leadId, files }: { leadId: string; files: FileIt
               )}
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDownload(file.name)}
-            disabled={downloading === file.name}
-          >
-            {downloading === file.name ? 'Loading...' : 'Download'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <DataFlagButton entityType="file" entityId={file.id} compact />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDownload(file.name)}
+              disabled={downloading === file.name}
+            >
+              {downloading === file.name ? 'Loading...' : 'Download'}
+            </Button>
+          </div>
         </div>
       ))}
     </div>
