@@ -59,8 +59,9 @@
 | Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
 | Placeholder pages | ✅ Complete | Design Queue (leads with survey done), Price Book (35 items), Liaison index (net meter summary cards) — all data-driven |
 | BOM Review page | ✅ Complete | /bom-review — 35K lines, category filters, summary cards, inline editing, flag per row, pagination (100/page) |
-| Purchase module | 🔜 Next | PO detail page, create PO flow, vendor payment recording |
-| Finance CRUD | 🔜 Next | Create invoice, record payment receipt, record vendor payment |
+| PO Detail page | ✅ Complete | /procurement/[poId] — vendor info, line items, delivery challans, vendor payments section |
+| Finance CRUD | ✅ Complete | createInvoice (GST split, auto-number), recordPayment (updates invoice status), recordVendorPayment (MSME compliance). Dialogs on invoices + payments pages |
+| Create PO flow | 🔜 Next | Enable create PO button, form with project → BOI items |
 | Zoho Books import | 🔜 Next | Import vendors, POs, invoices, payments from Zoho Books CSVs — dedup against existing 108 vendors, 850 POs |
 | Employee testing week | 🔜 Next | 5-6 employees review data on dev for 1 week. Data flags + inline edit + verification |
 | Prod deployment | 🔜 After testing | Schema clone + selective data migration to prod after employee testing week |
