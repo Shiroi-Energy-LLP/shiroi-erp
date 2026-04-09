@@ -1,4 +1,5 @@
 import { getInvoices } from '@/lib/invoice-queries';
+import { getProjectsList } from '@/lib/procurement-queries';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
@@ -17,6 +18,7 @@ import { FileText } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
+import { CreateInvoiceDialog } from '@/components/finance/create-invoice-dialog';
 
 const STATUS_OPTIONS = [
   { value: 'unpaid', label: 'Unpaid' },
@@ -41,17 +43,20 @@ interface InvoicesPageProps {
 
 export default async function InvoicesPage({ searchParams }: InvoicesPageProps) {
   const params = await searchParams;
-  const invoices = await getInvoices({
-    status: params.status || undefined,
-    search: params.search || undefined,
-  });
+  const [invoices, projects] = await Promise.all([
+    getInvoices({ status: params.status || undefined, search: params.search || undefined }),
+    getProjectsList(),
+  ]);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Eyebrow className="mb-1">INVOICES</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Invoices</h1>
+        <div>
+          <Eyebrow className="mb-1">INVOICES</Eyebrow>
+          <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Invoices</h1>
+        </div>
+        <CreateInvoiceDialog projects={projects} />
       </div>
 
       {/* Filters */}
