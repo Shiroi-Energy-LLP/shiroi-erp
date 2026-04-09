@@ -218,6 +218,7 @@ export async function recordFollowup(input: {
  */
 export async function createObjection(input: {
   projectId: string;
+  netMeteringId: string;
   objectionSource: string;
   objectionType: string;
   description: string;
@@ -228,15 +229,28 @@ export async function createObjection(input: {
 
   const supabase = await createClient();
 
+  // Get logged_by employee ID
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: emp } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
+  if (!emp) return { success: false, error: 'Employee profile not found' };
+
   const { error } = await supabase
     .from('liaison_objections')
     .insert({
       project_id: input.projectId,
+      net_metering_id: input.netMeteringId,
+      logged_by: emp.id,
       objection_source: input.objectionSource,
       objection_type: input.objectionType,
-      description: input.description,
-      raised_date: input.raisedDate,
-      status: 'open',
+      objection_description: input.description,
+      objection_date: input.raisedDate,
     } as any);
 
   if (error) {

@@ -102,13 +102,13 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
                 <div key={obj.id} className="rounded-md border border-[#DFE2E8] p-3 text-sm space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-medium capitalize">{obj.objection_source} — {obj.objection_type?.replace(/_/g, ' ')}</span>
-                    <Badge variant={obj.status === 'resolved' ? 'success' : obj.status === 'open' ? 'error' : 'warning'} className="capitalize">
-                      {obj.status}
+                    <Badge variant={obj.resolved ? 'success' : 'error'} className="capitalize">
+                      {obj.resolved ? 'Resolved' : 'Open'}
                     </Badge>
                   </div>
-                  <p className="text-[#3F424D]">{obj.description}</p>
+                  <p className="text-[#3F424D]">{obj.objection_description}</p>
                   <p className="text-xs text-[#9CA0AB]">
-                    Raised: {formatDate(obj.raised_date)}
+                    Raised: {formatDate(obj.objection_date)}
                     {obj.resolved_date && ` · Resolved: ${formatDate(obj.resolved_date)}`}
                     {obj.days_open != null && ` · ${obj.days_open} days`}
                   </p>

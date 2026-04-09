@@ -46,7 +46,7 @@ export async function getLiaisonObjections(projectId: string) {
     .from('liaison_objections')
     .select('*')
     .eq('project_id', projectId)
-    .order('raised_date', { ascending: false });
+    .order('objection_date', { ascending: false });
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
