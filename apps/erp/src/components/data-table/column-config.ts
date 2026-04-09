@@ -26,7 +26,7 @@ export interface ColumnDef {
   frozen?: boolean;
 }
 
-export type EntityType = 'leads' | 'proposals' | 'projects' | 'contacts' | 'companies';
+export type EntityType = 'leads' | 'proposals' | 'projects' | 'contacts' | 'companies' | 'vendors' | 'purchase_orders' | 'bom_items';
 
 // ── Leads columns ──
 
@@ -74,18 +74,18 @@ export const PROPOSAL_COLUMNS: ColumnDef[] = [
   { key: 'customer_name', label: 'Customer', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
   { key: 'proposal_type', label: 'Type', sortKey: 'is_budgetary', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'detailed', label: 'Detailed' }, { value: 'budgetary', label: 'Budgetary' }] },
-  { key: 'system_type', label: 'System', sortKey: 'system_type', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
+  { key: 'system_type', label: 'System', sortKey: 'system_type', defaultVisible: true, sortable: true, editable: true, fieldType: 'select',
     options: [{ value: 'on_grid', label: 'On-Grid' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'off_grid', label: 'Off-Grid' }] },
-  { key: 'system_size_kwp', label: 'Size (kWp)', sortKey: 'system_size_kwp', defaultVisible: true, sortable: true, editable: false, fieldType: 'number' },
-  { key: 'total_price', label: 'Total Price', sortKey: 'total_price', defaultVisible: true, sortable: true, editable: false, fieldType: 'currency', format: 'currency' },
+  { key: 'system_size_kwp', label: 'Size (kWp)', sortKey: 'system_size_kwp', defaultVisible: true, sortable: true, editable: true, fieldType: 'number' },
+  { key: 'total_price', label: 'Total Price', sortKey: 'total_price', defaultVisible: true, sortable: true, editable: true, fieldType: 'currency', format: 'currency' },
   { key: 'margin_pct', label: 'Margin %', sortKey: 'margin_pct', defaultVisible: true, sortable: true, editable: false, fieldType: 'number', format: 'percentage' },
-  { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: false, fieldType: 'badge',
+  { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: true, fieldType: 'badge',
     options: [
       { value: 'draft', label: 'Draft' }, { value: 'sent', label: 'Sent' }, { value: 'accepted', label: 'Accepted' },
       { value: 'rejected', label: 'Rejected' }, { value: 'expired', label: 'Expired' }, { value: 'revised', label: 'Revised' },
     ] },
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
-  { key: 'valid_until', label: 'Valid Until', sortKey: 'valid_until', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
+  { key: 'valid_until', label: 'Valid Until', sortKey: 'valid_until', defaultVisible: true, sortable: true, editable: true, fieldType: 'date', format: 'date' },
   { key: 'revision_number', label: 'Revision', defaultVisible: false, sortable: true, editable: false, fieldType: 'number' },
   { key: 'is_budgetary', label: 'Budgetary?', defaultVisible: false, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }] },
@@ -95,26 +95,37 @@ export const PROPOSAL_COLUMNS: ColumnDef[] = [
 
 export const PROJECT_COLUMNS: ColumnDef[] = [
   { key: 'project_number', label: 'Project #', sortKey: 'project_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
-  { key: 'customer_name', label: 'Customer', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
-  { key: 'site_city', label: 'Location', sortKey: 'site_city', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
-  { key: 'system_size_kwp', label: 'Size (kWp)', sortKey: 'system_size_kwp', defaultVisible: true, sortable: true, editable: false, fieldType: 'number' },
-  { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: false, fieldType: 'badge' },
+  { key: 'customer_name', label: 'Customer', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
+  { key: 'site_city', label: 'Location', sortKey: 'site_city', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
+  { key: 'system_size_kwp', label: 'Size (kWp)', sortKey: 'system_size_kwp', defaultVisible: true, sortable: true, editable: true, fieldType: 'number' },
+  { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: true, fieldType: 'badge',
+    options: [
+      { value: 'advance_received', label: 'Advance Received' }, { value: 'planning', label: 'Planning' },
+      { value: 'material_procurement', label: 'Material Procurement' }, { value: 'installation', label: 'Installation' },
+      { value: 'electrical_work', label: 'Electrical Work' }, { value: 'testing', label: 'Testing' },
+      { value: 'commissioned', label: 'Commissioned' }, { value: 'net_metering_pending', label: 'Net Metering Pending' },
+      { value: 'completed', label: 'Completed' }, { value: 'on_hold', label: 'On Hold' }, { value: 'cancelled', label: 'Cancelled' },
+    ] },
   { key: 'year', label: 'Year', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
   { key: 'remarks', label: 'Remarks', defaultVisible: true, sortable: false, editable: true, fieldType: 'text' },
-  { key: 'system_type', label: 'System Type', sortKey: 'system_type', defaultVisible: false, sortable: true, editable: false, fieldType: 'select',
+  { key: 'system_type', label: 'System Type', sortKey: 'system_type', defaultVisible: false, sortable: true, editable: true, fieldType: 'select',
     options: [{ value: 'on_grid', label: 'On-Grid' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'off_grid', label: 'Off-Grid' }] },
-  { key: 'contracted_value', label: 'Contract Value', sortKey: 'contracted_value', defaultVisible: false, sortable: true, editable: false, fieldType: 'currency', format: 'currency' },
+  { key: 'contracted_value', label: 'Contract Value', sortKey: 'contracted_value', defaultVisible: false, sortable: true, editable: true, fieldType: 'currency', format: 'currency' },
   { key: 'project_manager_name', label: 'PM', defaultVisible: false, sortable: false, editable: false, fieldType: 'text' },
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: false, sortable: true, editable: false, fieldType: 'date', format: 'date' },
-  { key: 'advance_amount', label: 'Advance', sortKey: 'advance_amount', defaultVisible: false, sortable: true, editable: false, fieldType: 'currency', format: 'currency' },
-  { key: 'customer_phone', label: 'Phone', defaultVisible: false, sortable: false, editable: false, fieldType: 'phone' },
+  { key: 'advance_amount', label: 'Advance', sortKey: 'advance_amount', defaultVisible: false, sortable: true, editable: true, fieldType: 'currency', format: 'currency' },
+  { key: 'customer_phone', label: 'Phone', defaultVisible: false, sortable: false, editable: true, fieldType: 'phone' },
+  { key: 'site_state', label: 'State', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
 ];
 
 // ── Contacts columns ──
 
 export const CONTACT_COLUMNS: ColumnDef[] = [
   { key: 'name', label: 'Name', sortKey: 'name', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
+  { key: 'first_name', label: 'First Name', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
+  { key: 'last_name', label: 'Last Name', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
   { key: 'phone', label: 'Phone', defaultVisible: true, sortable: false, editable: true, fieldType: 'phone' },
+  { key: 'secondary_phone', label: 'Secondary Phone', defaultVisible: false, sortable: false, editable: true, fieldType: 'phone' },
   { key: 'email', label: 'Email', defaultVisible: true, sortable: false, editable: true, fieldType: 'email' },
   { key: 'designation', label: 'Designation', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
   { key: 'lifecycle_stage', label: 'Stage', sortKey: 'lifecycle_stage', defaultVisible: true, sortable: true, editable: true, fieldType: 'select',
@@ -141,6 +152,73 @@ export const COMPANY_COLUMNS: ColumnDef[] = [
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: false, sortable: true, editable: false, fieldType: 'date', format: 'date' },
 ];
 
+// ── Vendors columns ──
+
+export const VENDOR_COLUMNS: ColumnDef[] = [
+  { key: 'vendor_code', label: 'Vendor Code', sortKey: 'vendor_code', defaultVisible: true, sortable: true, editable: false, fieldType: 'text', frozen: true },
+  { key: 'company_name', label: 'Company', sortKey: 'company_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
+  { key: 'contact_person', label: 'Contact', defaultVisible: true, sortable: false, editable: true, fieldType: 'text' },
+  { key: 'phone', label: 'Phone', defaultVisible: true, sortable: false, editable: true, fieldType: 'phone' },
+  { key: 'email', label: 'Email', defaultVisible: false, sortable: false, editable: true, fieldType: 'email' },
+  { key: 'city', label: 'City', sortKey: 'city', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
+  { key: 'gstin', label: 'GSTIN', defaultVisible: true, sortable: false, editable: true, fieldType: 'text' },
+  { key: 'vendor_type', label: 'Type', sortKey: 'vendor_type', defaultVisible: true, sortable: true, editable: true, fieldType: 'select',
+    options: [
+      { value: 'panel_supplier', label: 'Panel' }, { value: 'inverter_supplier', label: 'Inverter' },
+      { value: 'structure_supplier', label: 'Structure' }, { value: 'cable_supplier', label: 'Cable' },
+      { value: 'electrical_supplier', label: 'Electrical' }, { value: 'civil_contractor', label: 'Civil' },
+      { value: 'labour_contractor', label: 'Labour' }, { value: 'transport', label: 'Transport' },
+      { value: 'other', label: 'Other' },
+    ] },
+  { key: 'is_msme', label: 'MSME', defaultVisible: true, sortable: true, editable: true, fieldType: 'select',
+    options: [{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }] },
+  { key: 'is_active', label: 'Active', defaultVisible: true, sortable: true, editable: true, fieldType: 'select',
+    options: [{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }] },
+  { key: 'state', label: 'State', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
+  { key: 'payment_terms_days', label: 'Payment Terms (days)', defaultVisible: false, sortable: true, editable: true, fieldType: 'number' },
+  { key: 'notes', label: 'Notes', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
+];
+
+// ── Purchase Order columns ──
+
+export const PURCHASE_ORDER_COLUMNS: ColumnDef[] = [
+  { key: 'po_number', label: 'PO #', sortKey: 'po_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'text', frozen: true },
+  { key: 'vendor_name', label: 'Vendor', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
+  { key: 'project_number', label: 'Project', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
+  { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: true, fieldType: 'badge',
+    options: [
+      { value: 'draft', label: 'Draft' }, { value: 'approved', label: 'Approved' },
+      { value: 'partially_delivered', label: 'Partial' }, { value: 'fully_delivered', label: 'Delivered' },
+      { value: 'cancelled', label: 'Cancelled' },
+    ] },
+  { key: 'total_amount', label: 'Total', sortKey: 'total_amount', defaultVisible: true, sortable: true, editable: false, fieldType: 'currency', format: 'currency' },
+  { key: 'expected_delivery_date', label: 'Expected Delivery', sortKey: 'expected_delivery_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'date', format: 'date' },
+  { key: 'notes', label: 'Notes', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
+  { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: false, sortable: true, editable: false, fieldType: 'date', format: 'date' },
+];
+
+// ── BOM Item columns (for /bom-review) ──
+
+export const BOM_ITEM_COLUMNS: ColumnDef[] = [
+  { key: 'item_name', label: 'Item', defaultVisible: true, sortable: true, editable: true, fieldType: 'text', frozen: true },
+  { key: 'item_category', label: 'Category', sortKey: 'item_category', defaultVisible: true, sortable: true, editable: true, fieldType: 'select',
+    options: [
+      { value: 'solar_panels', label: 'Solar Panels' }, { value: 'inverter', label: 'Inverter' },
+      { value: 'mms', label: 'MMS' }, { value: 'dc_accessories', label: 'DC Accessories' },
+      { value: 'ac_accessories', label: 'AC Accessories' }, { value: 'conduits', label: 'Conduits' },
+      { value: 'miscellaneous', label: 'Misc' }, { value: 'safety', label: 'Safety' },
+      { value: 'earthing', label: 'Earthing' }, { value: 'generation_meter', label: 'Gen Meter' },
+      { value: 'installation_and_commissioning', label: 'I&C' }, { value: 'statutory', label: 'Statutory' },
+      { value: 'transport_and_civil', label: 'Transport & Civil' }, { value: 'others', label: 'Others' },
+    ] },
+  { key: 'quantity', label: 'Qty', defaultVisible: true, sortable: true, editable: true, fieldType: 'number' },
+  { key: 'unit', label: 'Unit', defaultVisible: true, sortable: false, editable: true, fieldType: 'text' },
+  { key: 'unit_rate', label: 'Rate', defaultVisible: true, sortable: true, editable: true, fieldType: 'currency', format: 'currency' },
+  { key: 'gst_percentage', label: 'GST %', defaultVisible: true, sortable: false, editable: true, fieldType: 'number', format: 'percentage' },
+  { key: 'total_amount', label: 'Total', defaultVisible: true, sortable: true, editable: false, fieldType: 'currency', format: 'currency' },
+  { key: 'proposal_number', label: 'Proposal', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
+];
+
 // ── Column registry ──
 
 export const ENTITY_COLUMNS: Record<EntityType, ColumnDef[]> = {
@@ -149,6 +227,9 @@ export const ENTITY_COLUMNS: Record<EntityType, ColumnDef[]> = {
   projects: PROJECT_COLUMNS,
   contacts: CONTACT_COLUMNS,
   companies: COMPANY_COLUMNS,
+  vendors: VENDOR_COLUMNS,
+  purchase_orders: PURCHASE_ORDER_COLUMNS,
+  bom_items: BOM_ITEM_COLUMNS,
 };
 
 /** Get default visible columns for an entity */
