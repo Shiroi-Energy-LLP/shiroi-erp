@@ -220,11 +220,11 @@ export async function StepBom({ projectId }: StepBomProps) {
                 label="Planned Budget (₹)"
                 value={Number((boiState as any)?.estimated_site_expenses_budget ?? 0)}
                 type="number"
-                render={(v) => (
+                displayValue={
                   <span className="text-lg font-mono font-semibold text-n-900">
-                    {formatINR(Number(v ?? 0))}
+                    {formatINR(Number((boiState as any)?.estimated_site_expenses_budget ?? 0))}
                   </span>
-                )}
+                }
               />
               <p className="text-[11px] text-n-500 mt-1.5">
                 Enter a single aggregate for all general site expenses. Actual vouchers
