@@ -103,20 +103,23 @@ export async function getProject(id: string) {
   if (!id) throw new Error(`${op} Missing required parameter: id`);
 
   const supabase = await createClient();
+  // Use maybeSingle() so that RLS-filtered / missing rows return null
+  // instead of throwing PGRST116 ("Cannot coerce the result to a single JSON object").
+  // The page calls notFound() when this returns null.
   const { data, error } = await supabase
     .from('projects')
     .select(
       '*, employees!projects_project_manager_id_fkey(full_name), pm_supervisor:employees!projects_site_supervisor_id_fkey(full_name), project_milestones(*, project_completion_components(*)), project_delay_log(*, employees!project_delay_log_logged_by_fkey(full_name), project_milestones!project_delay_log_milestone_id_fkey(milestone_name)), project_change_orders(*, preparer:employees!project_change_orders_prepared_by_fkey(full_name), approver:employees!project_change_orders_approved_by_internal_fkey(full_name))',
     )
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message, id });
     throw new Error(`Failed to load project: ${error.message}`);
   }
   if (!data) {
-    console.warn(`${op} Not found:`, { id });
+    console.warn(`${op} Not found or RLS-filtered:`, { id });
     return null;
   }
   return data;
