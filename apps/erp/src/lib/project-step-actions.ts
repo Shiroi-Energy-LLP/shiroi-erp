@@ -1294,10 +1294,192 @@ export async function toggleTaskCompletion(input: {
   return { success: true };
 }
 
-// ── BOQ Items: Add new item directly (not from BOM seed) ──
+// ── BOI Version Management (multi-BOI: BOI-1, BOI-2, etc.) ──
+
+export async function createBoiVersion(input: {
+  projectId: string;
+}): Promise<{ success: boolean; boiId?: string; error?: string }> {
+  const op = '[createBoiVersion]';
+  console.log(`${op} Creating new BOI for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees').select('id').eq('profile_id', user.id).single();
+  if (!employee) return { success: false, error: 'Employee profile not found' };
+
+  // Get next BOI number
+  const { data: maxBoi } = await supabase
+    .from('project_bois')
+    .select('boi_number')
+    .eq('project_id', input.projectId)
+    .order('boi_number', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextNumber = ((maxBoi as any)?.boi_number ?? 0) + 1;
+
+  const { data, error } = await supabase
+    .from('project_bois')
+    .insert({
+      project_id: input.projectId,
+      boi_number: nextNumber,
+      status: 'draft',
+      prepared_by: employee.id,
+    } as any)
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, boiId: (data as any).id };
+}
+
+export async function submitBoiVersion(input: {
+  projectId: string;
+  boiId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[submitBoiVersion]';
+  console.log(`${op} Submitting BOI ${input.boiId}`);
+
+  const supabase = await createClient();
+
+  // Verify items exist
+  const { count } = await supabase
+    .from('project_boq_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('boi_id', input.boiId);
+
+  if (!count || count === 0) {
+    return { success: false, error: 'Cannot submit empty BOI. Add items first.' };
+  }
+
+  const { error } = await supabase
+    .from('project_bois')
+    .update({ status: 'submitted', submitted_at: new Date().toISOString() } as any)
+    .eq('id', input.boiId)
+    .eq('status', 'draft' as any);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+export async function approveBoiVersion(input: {
+  projectId: string;
+  boiId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[approveBoiVersion]';
+  console.log(`${op} Approving BOI ${input.boiId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees').select('id').eq('profile_id', user.id).single();
+
+  const { error } = await supabase
+    .from('project_bois')
+    .update({
+      status: 'approved',
+      approved_by: employee?.id,
+      approved_at: new Date().toISOString(),
+    } as any)
+    .eq('id', input.boiId)
+    .eq('status', 'submitted' as any);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  // Update project-level flag for backward compat
+  await supabase
+    .from('projects')
+    .update({ boi_locked: true, boi_locked_by: employee?.id, boi_locked_at: new Date().toISOString() } as any)
+    .eq('id', input.projectId);
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+export async function lockBoiVersion(input: {
+  projectId: string;
+  boiId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[lockBoiVersion]';
+  console.log(`${op} Locking BOI ${input.boiId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees').select('id').eq('profile_id', user.id).single();
+
+  const { error } = await supabase
+    .from('project_bois')
+    .update({
+      status: 'locked',
+      locked_by: employee?.id,
+      locked_at: new Date().toISOString(),
+    } as any)
+    .eq('id', input.boiId)
+    .eq('status', 'approved' as any);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+export async function unlockBoiVersion(input: {
+  projectId: string;
+  boiId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[unlockBoiVersion]';
+  console.log(`${op} Unlocking BOI ${input.boiId}`);
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('project_bois')
+    .update({
+      status: 'approved',
+      locked_by: null,
+      locked_at: null,
+    } as any)
+    .eq('id', input.boiId)
+    .eq('status', 'locked' as any);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── BOQ Items: Add new item directly (with optional boiId) ──
 
 export async function addBoqItem(input: {
   projectId: string;
+  boiId?: string;
   data: {
     item_category: string;
     item_description: string;
@@ -1330,23 +1512,26 @@ export async function addBoqItem(input: {
   const gstAmount = input.data.quantity * input.data.unit_price * (input.data.gst_rate / 100);
   const totalPrice = input.data.quantity * input.data.unit_price + gstAmount;
 
+  const insertData: Record<string, unknown> = {
+    project_id: input.projectId,
+    line_number: nextLine,
+    item_category: input.data.item_category,
+    item_description: input.data.item_description,
+    brand: input.data.brand,
+    model: input.data.model,
+    quantity: input.data.quantity,
+    unit: input.data.unit,
+    unit_price: input.data.unit_price,
+    gst_rate: input.data.gst_rate,
+    gst_type: 'supply',
+    total_price: totalPrice,
+    procurement_status: 'yet_to_finalize',
+  };
+  if (input.boiId) insertData.boi_id = input.boiId;
+
   const { error } = await supabase
     .from('project_boq_items')
-    .insert({
-      project_id: input.projectId,
-      line_number: nextLine,
-      item_category: input.data.item_category,
-      item_description: input.data.item_description,
-      brand: input.data.brand,
-      model: input.data.model,
-      quantity: input.data.quantity,
-      unit: input.data.unit,
-      unit_price: input.data.unit_price,
-      gst_rate: input.data.gst_rate,
-      gst_type: 'supply' as any,
-      total_price: totalPrice,
-      procurement_status: 'yet_to_finalize',
-    } as any);
+    .insert(insertData as any);
 
   if (error) {
     console.error(`${op} Insert failed:`, { code: error.code, message: error.message });

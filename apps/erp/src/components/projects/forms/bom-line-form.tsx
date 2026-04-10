@@ -4,8 +4,8 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Select } from '@repo/ui';
 import { Plus, Trash2, Save, X } from 'lucide-react';
-import { addBomLine, deleteBomLine, lockBoi, unlockBoi, addBoqItem, deleteBoqItem } from '@/lib/project-step-actions';
-import { Lock, Unlock } from 'lucide-react';
+import { addBomLine, deleteBomLine, lockBoi, unlockBoi, addBoqItem, deleteBoqItem, submitBoiVersion, approveBoiVersion, lockBoiVersion, unlockBoiVersion, createBoiVersion } from '@/lib/project-step-actions';
+import { Lock, Unlock, Send, CheckCircle, PlusCircle } from 'lucide-react';
 import { BOI_CATEGORIES } from '@/lib/boi-constants';
 
 interface BomLineFormProps {
@@ -37,7 +37,7 @@ const BOM_CATEGORIES: { value: string; label: string }[] = [
   { value: 'liaison', label: 'Liaison' },
   { value: 'other', label: 'Other' },
 ];
-const UNITS = ['nos', 'set', 'meter', 'kg', 'lot', 'sqft', 'pair'];
+const UNITS = ['Nos', 'No', 'Meter', 'Set', 'Lot', 'Pair', 'kWp', 'kW', 'Lumpsum', 'nos', 'set', 'meter', 'kg', 'sqft'];
 const GST_RATES = ['0', '5', '12', '18', '28'];
 
 interface NewRow {
@@ -276,7 +276,7 @@ export function BoiLockButton({ projectId, isLocked }: { projectId: string; isLo
 
 // ── BOI Inline Add Row (using Manivel's 14 categories, writes to project_boq_items) ──
 
-export function BoiInlineAddRow({ projectId, disabled }: { projectId: string; disabled?: boolean }) {
+export function BoiInlineAddRow({ projectId, boiId, disabled }: { projectId: string; boiId?: string; disabled?: boolean }) {
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -298,6 +298,7 @@ export function BoiInlineAddRow({ projectId, disabled }: { projectId: string; di
 
     const result = await addBoqItem({
       projectId,
+      boiId,
       data: {
         item_category: row.item_category,
         item_description: row.item_description,
@@ -427,5 +428,120 @@ export function BoiDeleteButton({ projectId, itemId, label }: { projectId: strin
     >
       <Trash2 className="h-3.5 w-3.5" />
     </Button>
+  );
+}
+
+// ── BOI Version Workflow Buttons ──
+
+export function BoiSubmitButton({ projectId, boiId }: { projectId: string; boiId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (!confirm('Submit this BOI for PM review? Items will not be editable until approved.')) return;
+    setLoading(true);
+    setError(null);
+    const result = await submitBoiVersion({ projectId, boiId });
+    setLoading(false);
+    if (result.success) router.refresh();
+    else setError(result.error ?? 'Failed to submit');
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" onClick={handleSubmit} disabled={loading}>
+        <Send className="h-3.5 w-3.5 mr-1.5" />
+        {loading ? 'Submitting...' : 'Submit BOI'}
+      </Button>
+      {error && <span className="text-xs text-red-600">{error}</span>}
+    </div>
+  );
+}
+
+export function BoiApproveButton({ projectId, boiId }: { projectId: string; boiId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleApprove() {
+    if (!confirm('Approve this BOI? It will become available in the BOQ module.')) return;
+    setLoading(true);
+    setError(null);
+    const result = await approveBoiVersion({ projectId, boiId });
+    setLoading(false);
+    if (result.success) router.refresh();
+    else setError(result.error ?? 'Failed to approve');
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="default" onClick={handleApprove} disabled={loading} className="bg-green-600 hover:bg-green-700">
+        <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+        {loading ? 'Approving...' : 'Approve BOI'}
+      </Button>
+      {error && <span className="text-xs text-red-600">{error}</span>}
+    </div>
+  );
+}
+
+export function BoiLockVersionButton({ projectId, boiId, isLocked }: { projectId: string; boiId: string; isLocked: boolean }) {
+  const router = useRouter();
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleToggle() {
+    if (isLocked) {
+      if (!confirm('Unlock this BOI for corrections? It will revert to approved status.')) return;
+      setLoading(true);
+      setError(null);
+      const result = await unlockBoiVersion({ projectId, boiId });
+      setLoading(false);
+      if (result.success) router.refresh();
+      else setError(result.error ?? 'Failed to unlock');
+    } else {
+      if (!confirm('Lock this BOI? No further edits will be allowed.')) return;
+      setLoading(true);
+      setError(null);
+      const result = await lockBoiVersion({ projectId, boiId });
+      setLoading(false);
+      if (result.success) router.refresh();
+      else setError(result.error ?? 'Failed to lock');
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant={isLocked ? 'outline' : 'default'} onClick={handleToggle} disabled={loading}>
+        {isLocked ? <Unlock className="h-3.5 w-3.5 mr-1.5" /> : <Lock className="h-3.5 w-3.5 mr-1.5" />}
+        {loading ? 'Processing...' : isLocked ? 'Unlock BOI' : 'Lock BOI'}
+      </Button>
+      {error && <span className="text-xs text-red-600">{error}</span>}
+    </div>
+  );
+}
+
+export function CreateNewBoiButton({ projectId }: { projectId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleCreate() {
+    setLoading(true);
+    setError(null);
+    const result = await createBoiVersion({ projectId });
+    setLoading(false);
+    if (result.success) router.refresh();
+    else setError(result.error ?? 'Failed to create BOI');
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="outline" onClick={handleCreate} disabled={loading}>
+        <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+        {loading ? 'Creating...' : 'Create New BOI'}
+      </Button>
+      {error && <span className="text-xs text-red-600">{error}</span>}
+    </div>
   );
 }

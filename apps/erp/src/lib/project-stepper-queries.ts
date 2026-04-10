@@ -135,6 +135,68 @@ export async function getBoiState(projectId: string) {
   return { ...(data as any), preparedByName };
 }
 
+/** Fetch all BOI versions for a project with employee names */
+export async function getBoisForProject(projectId: string) {
+  const op = '[getBoisForProject]';
+  const supabase = await createClient();
+
+  const { data: bois, error } = await supabase
+    .from('project_bois')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('boi_number', { ascending: true });
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, projectId });
+    return [];
+  }
+
+  if (!bois || bois.length === 0) return [];
+
+  // Collect unique employee IDs for name lookup
+  const empIds = new Set<string>();
+  for (const b of bois) {
+    if ((b as any).prepared_by) empIds.add((b as any).prepared_by);
+    if ((b as any).approved_by) empIds.add((b as any).approved_by);
+    if ((b as any).locked_by) empIds.add((b as any).locked_by);
+  }
+
+  let empMap: Record<string, string> = {};
+  if (empIds.size > 0) {
+    const { data: emps } = await supabase
+      .from('employees')
+      .select('id, full_name')
+      .in('id', Array.from(empIds));
+    empMap = Object.fromEntries((emps ?? []).map(e => [e.id, e.full_name]));
+  }
+
+  return bois.map(b => ({
+    ...(b as any),
+    prepared_by_name: (b as any).prepared_by ? empMap[(b as any).prepared_by] ?? null : null,
+    approved_by_name: (b as any).approved_by ? empMap[(b as any).approved_by] ?? null : null,
+    locked_by_name: (b as any).locked_by ? empMap[(b as any).locked_by] ?? null : null,
+  }));
+}
+
+/** Fetch BOQ items for a specific BOI version */
+export async function getBoiItems(boiId: string) {
+  const op = '[getBoiItems]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('project_boq_items')
+    .select('id, boi_id, line_number, item_category, item_description, brand, model, quantity, unit, unit_price, gst_rate, total_price, procurement_status, notes, created_at')
+    .eq('boi_id', boiId)
+    .order('line_number', { ascending: true });
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, boiId });
+    return [];
+  }
+
+  return data ?? [];
+}
+
 export async function getStepBoqData(projectId: string) {
   const op = '[getStepBoqData]';
   console.log(`${op} Starting for: ${projectId}`);

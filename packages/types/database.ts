@@ -3575,32 +3575,53 @@ export type Database = {
       }
       lead_site_surveys: {
         Row: {
+          ac_routing_finalized: boolean | null
+          ac_routing_photo_path: string | null
+          additional_inverter_remarks: string | null
+          additional_inverter_required: boolean | null
+          additional_panels_remarks: string | null
+          additional_panels_required: boolean | null
           afternoon_shade: boolean | null
           building_height_ft: number | null
           cable_routing_notes: string | null
+          cable_size_changes: string | null
           contact_person_name: string | null
           contact_phone: string | null
           created_at: string
           customer_signature: string | null
+          dc_routing_finalized: boolean | null
+          dc_routing_photo_path: string | null
+          dg_eb_checked: boolean | null
+          dg_eb_photo_path: string | null
           discom_name: string | null
           earthing_condition: string | null
+          earthing_pit_finalized: boolean | null
+          earthing_pit_photo_path: string | null
           earthing_type: string | null
           electrical_panel_photo_path: string | null
           estimated_generation_kwh_year: number | null
           existing_load_kw: number | null
           existing_structure_condition: string | null
+          fixing_arrangement_discussed: boolean | null
           gps_lat: number | null
           gps_lng: number | null
           id: string
           inverter_location: string | null
+          inverter_location_finalized: boolean | null
+          inverter_location_photo_path: string | null
           is_final: boolean
+          la_location_finalized: boolean | null
+          la_location_photo_path: string | null
           lead_id: string
           meter_photo_path: string | null
           meter_type: string | null
           morning_shade: boolean | null
+          mounting_feasibility_checked: boolean | null
+          mounting_procedure_explained: boolean | null
           net_metering_eligible: boolean | null
           notes: string | null
           number_of_floors: number | null
+          other_special_requests: string | null
           panel_placement_notes: string | null
           recommended_size_kwp: number | null
           recommended_system_type:
@@ -3609,52 +3630,84 @@ export type Database = {
           roof_age_years: number | null
           roof_area_sqft: number | null
           roof_condition: string | null
+          roof_condition_photo_path: string | null
           roof_orientation: string | null
           roof_photo_path: string | null
           roof_tilt_degrees: number | null
           roof_type: string | null
+          routing_changes: string | null
           sanctioned_load_kw: number | null
           shade_sources: string[] | null
           shading_assessment: string | null
           shading_notes: string | null
+          shadow_analysis_done: boolean | null
+          shadow_area_photo_path: string | null
           site_access_notes: string | null
           site_overview_photo_path: string | null
+          spare_feeder_available: boolean | null
+          spare_feeder_photo_path: string | null
+          spare_feeder_rating: string | null
+          spare_feeder_rating_photo_path: string | null
           structure_by: string | null
           structure_type: string | null
           supply_voltage: string | null
           survey_date: string
+          survey_status: string | null
           surveyed_by: string
           surveyor_signature: string | null
+          termination_point_finalized: boolean | null
+          termination_point_photo_path: string | null
           updated_at: string
           usable_area_sqft: number | null
         }
         Insert: {
+          ac_routing_finalized?: boolean | null
+          ac_routing_photo_path?: string | null
+          additional_inverter_remarks?: string | null
+          additional_inverter_required?: boolean | null
+          additional_panels_remarks?: string | null
+          additional_panels_required?: boolean | null
           afternoon_shade?: boolean | null
           building_height_ft?: number | null
           cable_routing_notes?: string | null
+          cable_size_changes?: string | null
           contact_person_name?: string | null
           contact_phone?: string | null
           created_at?: string
           customer_signature?: string | null
+          dc_routing_finalized?: boolean | null
+          dc_routing_photo_path?: string | null
+          dg_eb_checked?: boolean | null
+          dg_eb_photo_path?: string | null
           discom_name?: string | null
           earthing_condition?: string | null
+          earthing_pit_finalized?: boolean | null
+          earthing_pit_photo_path?: string | null
           earthing_type?: string | null
           electrical_panel_photo_path?: string | null
           estimated_generation_kwh_year?: number | null
           existing_load_kw?: number | null
           existing_structure_condition?: string | null
+          fixing_arrangement_discussed?: boolean | null
           gps_lat?: number | null
           gps_lng?: number | null
           id?: string
           inverter_location?: string | null
+          inverter_location_finalized?: boolean | null
+          inverter_location_photo_path?: string | null
           is_final?: boolean
+          la_location_finalized?: boolean | null
+          la_location_photo_path?: string | null
           lead_id: string
           meter_photo_path?: string | null
           meter_type?: string | null
           morning_shade?: boolean | null
+          mounting_feasibility_checked?: boolean | null
+          mounting_procedure_explained?: boolean | null
           net_metering_eligible?: boolean | null
           notes?: string | null
           number_of_floors?: number | null
+          other_special_requests?: string | null
           panel_placement_notes?: string | null
           recommended_size_kwp?: number | null
           recommended_system_type?:
@@ -3663,52 +3716,84 @@ export type Database = {
           roof_age_years?: number | null
           roof_area_sqft?: number | null
           roof_condition?: string | null
+          roof_condition_photo_path?: string | null
           roof_orientation?: string | null
           roof_photo_path?: string | null
           roof_tilt_degrees?: number | null
           roof_type?: string | null
+          routing_changes?: string | null
           sanctioned_load_kw?: number | null
           shade_sources?: string[] | null
           shading_assessment?: string | null
           shading_notes?: string | null
+          shadow_analysis_done?: boolean | null
+          shadow_area_photo_path?: string | null
           site_access_notes?: string | null
           site_overview_photo_path?: string | null
+          spare_feeder_available?: boolean | null
+          spare_feeder_photo_path?: string | null
+          spare_feeder_rating?: string | null
+          spare_feeder_rating_photo_path?: string | null
           structure_by?: string | null
           structure_type?: string | null
           supply_voltage?: string | null
           survey_date: string
+          survey_status?: string | null
           surveyed_by: string
           surveyor_signature?: string | null
+          termination_point_finalized?: boolean | null
+          termination_point_photo_path?: string | null
           updated_at?: string
           usable_area_sqft?: number | null
         }
         Update: {
+          ac_routing_finalized?: boolean | null
+          ac_routing_photo_path?: string | null
+          additional_inverter_remarks?: string | null
+          additional_inverter_required?: boolean | null
+          additional_panels_remarks?: string | null
+          additional_panels_required?: boolean | null
           afternoon_shade?: boolean | null
           building_height_ft?: number | null
           cable_routing_notes?: string | null
+          cable_size_changes?: string | null
           contact_person_name?: string | null
           contact_phone?: string | null
           created_at?: string
           customer_signature?: string | null
+          dc_routing_finalized?: boolean | null
+          dc_routing_photo_path?: string | null
+          dg_eb_checked?: boolean | null
+          dg_eb_photo_path?: string | null
           discom_name?: string | null
           earthing_condition?: string | null
+          earthing_pit_finalized?: boolean | null
+          earthing_pit_photo_path?: string | null
           earthing_type?: string | null
           electrical_panel_photo_path?: string | null
           estimated_generation_kwh_year?: number | null
           existing_load_kw?: number | null
           existing_structure_condition?: string | null
+          fixing_arrangement_discussed?: boolean | null
           gps_lat?: number | null
           gps_lng?: number | null
           id?: string
           inverter_location?: string | null
+          inverter_location_finalized?: boolean | null
+          inverter_location_photo_path?: string | null
           is_final?: boolean
+          la_location_finalized?: boolean | null
+          la_location_photo_path?: string | null
           lead_id?: string
           meter_photo_path?: string | null
           meter_type?: string | null
           morning_shade?: boolean | null
+          mounting_feasibility_checked?: boolean | null
+          mounting_procedure_explained?: boolean | null
           net_metering_eligible?: boolean | null
           notes?: string | null
           number_of_floors?: number | null
+          other_special_requests?: string | null
           panel_placement_notes?: string | null
           recommended_size_kwp?: number | null
           recommended_system_type?:
@@ -3717,22 +3802,33 @@ export type Database = {
           roof_age_years?: number | null
           roof_area_sqft?: number | null
           roof_condition?: string | null
+          roof_condition_photo_path?: string | null
           roof_orientation?: string | null
           roof_photo_path?: string | null
           roof_tilt_degrees?: number | null
           roof_type?: string | null
+          routing_changes?: string | null
           sanctioned_load_kw?: number | null
           shade_sources?: string[] | null
           shading_assessment?: string | null
           shading_notes?: string | null
+          shadow_analysis_done?: boolean | null
+          shadow_area_photo_path?: string | null
           site_access_notes?: string | null
           site_overview_photo_path?: string | null
+          spare_feeder_available?: boolean | null
+          spare_feeder_photo_path?: string | null
+          spare_feeder_rating?: string | null
+          spare_feeder_rating_photo_path?: string | null
           structure_by?: string | null
           structure_type?: string | null
           supply_voltage?: string | null
           survey_date?: string
+          survey_status?: string | null
           surveyed_by?: string
           surveyor_signature?: string | null
+          termination_point_finalized?: boolean | null
+          termination_point_photo_path?: string | null
           updated_at?: string
           usable_area_sqft?: number | null
         }
@@ -6788,8 +6884,86 @@ export type Database = {
           },
         ]
       }
+      project_bois: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          boi_number: number
+          created_at: string | null
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          notes: string | null
+          prepared_by: string | null
+          project_id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          boi_number?: number
+          created_at?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          notes?: string | null
+          prepared_by?: string | null
+          project_id: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          boi_number?: number
+          created_at?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          notes?: string | null
+          prepared_by?: string | null
+          project_id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_bois_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_bois_locked_by_fkey"
+            columns: ["locked_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_bois_prepared_by_fkey"
+            columns: ["prepared_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_bois_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_boq_items: {
         Row: {
+          boi_id: string | null
           bom_line_id: string | null
           brand: string | null
           created_at: string
@@ -6814,6 +6988,7 @@ export type Database = {
           vendor_name: string | null
         }
         Insert: {
+          boi_id?: string | null
           bom_line_id?: string | null
           brand?: string | null
           created_at?: string
@@ -6838,6 +7013,7 @@ export type Database = {
           vendor_name?: string | null
         }
         Update: {
+          boi_id?: string | null
           bom_line_id?: string | null
           brand?: string | null
           created_at?: string
@@ -6862,6 +7038,13 @@ export type Database = {
           vendor_name?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "project_boq_items_boi_id_fkey"
+            columns: ["boi_id"]
+            isOneToOne: false
+            referencedRelation: "project_bois"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_boq_items_bom_line_id_fkey"
             columns: ["bom_line_id"]
@@ -7801,6 +7984,7 @@ export type Database = {
           data_verified_at: string | null
           data_verified_by: string | null
           deleted_at: string | null
+          estimated_site_expenses_budget: number
           has_builder_scope: boolean
           id: string
           inverter_brand: string | null
@@ -7875,6 +8059,7 @@ export type Database = {
           data_verified_at?: string | null
           data_verified_by?: string | null
           deleted_at?: string | null
+          estimated_site_expenses_budget?: number
           has_builder_scope?: boolean
           id?: string
           inverter_brand?: string | null
@@ -7949,6 +8134,7 @@ export type Database = {
           data_verified_at?: string | null
           data_verified_by?: string | null
           deleted_at?: string | null
+          estimated_site_expenses_budget?: number
           has_builder_scope?: boolean
           id?: string
           inverter_brand?: string | null
