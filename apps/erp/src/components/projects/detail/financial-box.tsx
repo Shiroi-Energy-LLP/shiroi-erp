@@ -76,11 +76,11 @@ export function FinancialBox({
                 value={contractedValue}
                 type="number"
                 valueClassName="text-lg font-mono font-semibold text-n-900"
-                render={(v) => (
+                displayValue={
                   <span className="text-lg font-mono font-semibold text-n-900">
-                    {formatINR(Number(v ?? 0))}
+                    {formatINR(contractedValue)}
                   </span>
-                )}
+                }
               />
             ) : (
               <div className="text-lg font-mono font-semibold text-n-900">
