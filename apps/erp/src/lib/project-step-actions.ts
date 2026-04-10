@@ -1778,6 +1778,132 @@ export async function updateProjectCostManual(input: {
   return { success: true };
 }
 
+// ── BOQ: Send to Purchase Team (mark items as yet_to_place) ──
+
+export async function sendBoqToPurchase(input: {
+  projectId: string;
+}): Promise<{ success: boolean; count?: number; error?: string }> {
+  const op = '[sendBoqToPurchase]';
+  console.log(`${op} Sending BOQ to purchase for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Update all "yet_to_finalize" items to "yet_to_place"
+  const { data, error } = await supabase
+    .from('project_boq_items')
+    .update({ procurement_status: 'yet_to_place' } as any)
+    .eq('project_id', input.projectId)
+    .eq('procurement_status', 'yet_to_finalize')
+    .select('id');
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, count: data?.length ?? 0 };
+}
+
+// ── BOQ: Apply Price Book rates to items without pricing ──
+
+export async function applyPriceBookRates(input: {
+  projectId: string;
+}): Promise<{ success: boolean; updatedCount?: number; error?: string }> {
+  const op = '[applyPriceBookRates]';
+  console.log(`${op} Applying price book rates for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Get all BOQ items with zero or null unit_price
+  const { data: items, error: itemsError } = await supabase
+    .from('project_boq_items')
+    .select('id, item_category, item_description, quantity, unit_price')
+    .eq('project_id', input.projectId);
+
+  if (itemsError || !items) {
+    return { success: false, error: itemsError?.message ?? 'Failed to fetch items' };
+  }
+
+  // Get price book entries
+  const { data: priceBook } = await supabase
+    .from('price_book')
+    .select('item_category, item_description, base_price, gst_rate')
+    .eq('is_active', true);
+
+  if (!priceBook || priceBook.length === 0) {
+    return { success: true, updatedCount: 0 };
+  }
+
+  // Build lookup map by category+description (lowercase)
+  const pbMap: Record<string, { base_price: number; gst_rate: number }> = {};
+  for (const pb of priceBook) {
+    pbMap[`${pb.item_category}::${pb.item_description}`.toLowerCase()] = {
+      base_price: Number(pb.base_price),
+      gst_rate: Number(pb.gst_rate),
+    };
+  }
+
+  // Update items with zero price that match price book entries
+  let updatedCount = 0;
+  for (const item of items) {
+    if (Number(item.unit_price) > 0) continue; // Already has pricing
+
+    const key = `${item.item_category}::${item.item_description}`.toLowerCase();
+    const match = pbMap[key];
+    if (!match) continue;
+
+    const qty = Number(item.quantity);
+    const gstAmount = qty * match.base_price * (match.gst_rate / 100);
+    const totalPrice = qty * match.base_price + gstAmount;
+
+    const { error: updateError } = await supabase
+      .from('project_boq_items')
+      .update({
+        unit_price: match.base_price,
+        gst_rate: match.gst_rate,
+        total_price: totalPrice,
+      } as any)
+      .eq('id', item.id);
+
+    if (!updateError) updatedCount++;
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, updatedCount };
+}
+
+// ── BOQ: Update estimated site expenses budget ──
+
+export async function updateEstimatedSiteExpenses(input: {
+  projectId: string;
+  budget: number;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateEstimatedSiteExpenses]';
+  console.log(`${op} Updating estimated site expenses for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('projects')
+    .update({ estimated_site_expenses_budget: input.budget } as any)
+    .eq('id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
 // ── Employees: Get active list for dropdowns ──
 
 export async function getActiveEmployeesForProject(): Promise<{ id: string; full_name: string }[]> {

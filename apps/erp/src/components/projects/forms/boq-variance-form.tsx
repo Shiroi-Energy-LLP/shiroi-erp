@@ -4,8 +4,8 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Select } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
-import { RefreshCw, Save, Plus, X, Trash2, Check } from 'lucide-react';
-import { seedBoqFromBom, updateCostVariance, updateBoqItemStatus, updateBoqItem, addBoqItem, deleteBoqItem, completeBoq, updateProjectCostManual } from '@/lib/project-step-actions';
+import { RefreshCw, Save, Plus, X, Trash2, Check, Send } from 'lucide-react';
+import { seedBoqFromBom, updateCostVariance, updateBoqItemStatus, updateBoqItem, addBoqItem, deleteBoqItem, completeBoq, updateProjectCostManual, sendBoqToPurchase, applyPriceBookRates, updateEstimatedSiteExpenses } from '@/lib/project-step-actions';
 import { BOI_CATEGORIES } from '@/lib/boi-constants';
 
 interface BoqActionsProps {
@@ -386,30 +386,39 @@ export function BoqCompleteButton({ projectId, isCompleted }: { projectId: strin
   );
 }
 
-// ── BOQ Final Summary with margin calculation ──
+// ── BOQ Final Summary with margin calculation (includes site expenses) ──
 
 export function BoqFinalSummary({
   projectId,
   contractedValue,
   projectCostManual,
   boqTotal,
+  siteExpensesApproved,
+  estimatedSiteExpensesBudget,
   isCompleted,
 }: {
   projectId: string;
   contractedValue: number;
   projectCostManual: number | null;
   boqTotal: number;
+  siteExpensesApproved: number;
+  estimatedSiteExpensesBudget: number;
   isCompleted: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = React.useState(false);
   const [costValue, setCostValue] = React.useState((projectCostManual ?? contractedValue).toString());
   const [saving, setSaving] = React.useState(false);
+  const [editingBudget, setEditingBudget] = React.useState(false);
+  const [budgetValue, setBudgetValue] = React.useState(estimatedSiteExpensesBudget.toString());
+  const [savingBudget, setSavingBudget] = React.useState(false);
 
   const projectCost = projectCostManual ?? contractedValue;
-  const actualBudget = boqTotal;
+  const siteExpenses = siteExpensesApproved > 0 ? siteExpensesApproved : estimatedSiteExpensesBudget;
+  const actualBudget = boqTotal + siteExpenses;
   const margin = projectCost > 0 ? ((projectCost - actualBudget) / projectCost) * 100 : 0;
   const marginColor = margin >= 15 ? 'text-green-700' : margin >= 5 ? 'text-amber-700' : 'text-red-700';
+  const marginBg = margin >= 15 ? 'bg-green-50 border-green-200' : margin >= 5 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
 
   async function handleSaveCost() {
     const numValue = parseFloat(costValue);
@@ -423,11 +432,23 @@ export function BoqFinalSummary({
     }
   }
 
+  async function handleSaveBudget() {
+    const numValue = parseFloat(budgetValue);
+    if (isNaN(numValue)) return;
+    setSavingBudget(true);
+    const result = await updateEstimatedSiteExpenses({ projectId, budget: numValue });
+    setSavingBudget(false);
+    if (result.success) {
+      setEditingBudget(false);
+      router.refresh();
+    }
+  }
+
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
       {/* Project Cost */}
       <div className="px-4 py-3 bg-white border border-n-200 rounded-lg">
-        <div className="text-xs text-n-500 mb-1">Project Cost</div>
+        <div className="text-[10px] text-n-500 mb-1 uppercase tracking-wide">Project Cost</div>
         {editing ? (
           <div className="flex items-center gap-1">
             <Input
@@ -455,23 +476,63 @@ export function BoqFinalSummary({
             {formatINR(projectCost)}
           </div>
         )}
-        {projectCostManual ? (
-          <div className="text-[10px] text-n-400 mt-0.5">Manual entry</div>
-        ) : (
-          <div className="text-[10px] text-n-400 mt-0.5">From contracted value</div>
-        )}
+        <div className="text-[10px] text-n-400 mt-0.5">
+          {projectCostManual ? 'Manual entry' : 'From contracted value'}
+        </div>
       </div>
 
-      {/* Actual Budget (BOQ Total) */}
+      {/* BOQ Material Budget */}
       <div className="px-4 py-3 bg-white border border-n-200 rounded-lg">
-        <div className="text-xs text-n-500 mb-1">Actual Budget (BOQ Total)</div>
+        <div className="text-[10px] text-n-500 mb-1 uppercase tracking-wide">Material Budget</div>
+        <div className="text-lg font-bold font-mono text-n-900">{formatINR(boqTotal)}</div>
+        <div className="text-[10px] text-n-400 mt-0.5">Sum of BOQ items</div>
+      </div>
+
+      {/* Site Expenses */}
+      <div className="px-4 py-3 bg-white border border-n-200 rounded-lg">
+        <div className="text-[10px] text-n-500 mb-1 uppercase tracking-wide">Site Expenses</div>
+        {editingBudget ? (
+          <div className="flex items-center gap-1">
+            <Input
+              value={budgetValue}
+              onChange={(e) => setBudgetValue(e.target.value)}
+              type="number"
+              step="0.01"
+              className="text-sm h-8 w-[120px] font-mono"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveBudget();
+                if (e.key === 'Escape') setEditingBudget(false);
+              }}
+            />
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-600" onClick={handleSaveBudget} disabled={savingBudget}>
+              <Save className="h-3 w-3" />
+            </Button>
+          </div>
+        ) : (
+          <div
+            className="text-lg font-bold font-mono text-n-900 cursor-pointer hover:text-p-600"
+            onDoubleClick={() => setEditingBudget(true)}
+            title="Double-click to edit budget"
+          >
+            {formatINR(siteExpenses)}
+          </div>
+        )}
+        <div className="text-[10px] text-n-400 mt-0.5">
+          {siteExpensesApproved > 0 ? `Approved: ${formatINR(siteExpensesApproved)}` : 'Estimated budget'}
+        </div>
+      </div>
+
+      {/* Total Outflow */}
+      <div className="px-4 py-3 bg-white border border-n-200 rounded-lg">
+        <div className="text-[10px] text-n-500 mb-1 uppercase tracking-wide">Total Outflow</div>
         <div className="text-lg font-bold font-mono text-n-900">{formatINR(actualBudget)}</div>
-        <div className="text-[10px] text-n-400 mt-0.5">Sum of all BOQ items</div>
+        <div className="text-[10px] text-n-400 mt-0.5">Material + Site Expenses</div>
       </div>
 
       {/* Expected Margin */}
-      <div className="px-4 py-3 bg-white border border-n-200 rounded-lg">
-        <div className="text-xs text-n-500 mb-1">Final Expected Margin</div>
+      <div className={`px-4 py-3 border rounded-lg ${marginBg}`}>
+        <div className="text-[10px] text-n-500 mb-1 uppercase tracking-wide">Final Margin</div>
         <div className={`text-lg font-bold font-mono ${marginColor}`}>
           {margin.toFixed(1)}%
         </div>
@@ -479,6 +540,70 @@ export function BoqFinalSummary({
           {formatINR(projectCost - actualBudget)} profit
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Send to Purchase Team Button ──
+
+export function SendToPurchaseButton({ projectId, yetToFinalizeCount }: { projectId: string; yetToFinalizeCount: number }) {
+  const router = useRouter();
+  const [loading, setLoading] = React.useState(false);
+  const [result, setResult] = React.useState<{ count: number } | null>(null);
+
+  if (yetToFinalizeCount === 0) return null;
+
+  async function handleSend() {
+    if (!confirm(`Send ${yetToFinalizeCount} item(s) to purchase team? Their status will change to "Yet to Place".`)) return;
+    setLoading(true);
+    const res = await sendBoqToPurchase({ projectId });
+    setLoading(false);
+    if (res.success) {
+      setResult({ count: res.count ?? 0 });
+      router.refresh();
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" onClick={handleSend} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Send className="h-3.5 w-3.5 mr-1.5" />
+        {loading ? 'Sending...' : `Send to Purchase (${yetToFinalizeCount})`}
+      </Button>
+      {result && <span className="text-xs text-green-600">{result.count} items sent</span>}
+    </div>
+  );
+}
+
+// ── Apply Price Book Rates Button ──
+
+export function ApplyPriceBookButton({ projectId, zeroPriceCount }: { projectId: string; zeroPriceCount: number }) {
+  const router = useRouter();
+  const [loading, setLoading] = React.useState(false);
+  const [result, setResult] = React.useState<string | null>(null);
+
+  if (zeroPriceCount === 0) return null;
+
+  async function handleApply() {
+    if (!confirm(`Apply Price Book rates to ${zeroPriceCount} item(s) without pricing?`)) return;
+    setLoading(true);
+    const res = await applyPriceBookRates({ projectId });
+    setLoading(false);
+    if (res.success) {
+      setResult(`${res.updatedCount ?? 0} items updated`);
+      router.refresh();
+    } else {
+      setResult(res.error ?? 'Failed');
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="outline" onClick={handleApply} disabled={loading}>
+        <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
+        {loading ? 'Applying...' : `Auto-Price (${zeroPriceCount})`}
+      </Button>
+      {result && <span className="text-xs text-green-600">{result}</span>}
     </div>
   );
 }

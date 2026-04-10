@@ -230,6 +230,49 @@ export async function getStepBoqData(projectId: string) {
   return { type: 'variances' as const, items: [], variances: variances ?? [] };
 }
 
+/** Fetch approved site expenses total for a project */
+export async function getApprovedSiteExpenses(projectId: string): Promise<number> {
+  const op = '[getApprovedSiteExpenses]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('project_site_expenses')
+    .select('amount')
+    .eq('project_id', projectId)
+    .eq('status', 'approved');
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, projectId });
+    return 0;
+  }
+
+  return (data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+}
+
+/** Fetch price book entries for auto-pricing BOQ items */
+export async function getPriceBookMap(): Promise<Record<string, { base_price: number; gst_rate: number }>> {
+  const op = '[getPriceBookMap]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('price_book')
+    .select('item_category, item_description, base_price, gst_rate')
+    .eq('is_active', true);
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
+    return {};
+  }
+
+  // Build a map keyed by lowercase category+description for fuzzy matching
+  const map: Record<string, { base_price: number; gst_rate: number }> = {};
+  for (const item of data ?? []) {
+    const key = `${item.item_category}::${item.item_description}`.toLowerCase();
+    map[key] = { base_price: Number(item.base_price), gst_rate: Number(item.gst_rate) };
+  }
+  return map;
+}
+
 export async function getStepDeliveryData(projectId: string) {
   const op = '[getStepDeliveryData]';
   console.log(`${op} Starting for: ${projectId}`);

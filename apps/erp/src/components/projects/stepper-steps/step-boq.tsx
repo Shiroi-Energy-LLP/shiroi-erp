@@ -3,8 +3,8 @@ import {
   Button, Badge,
 } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
-import { getStepBoqData, getStepBomData, getBoiState } from '@/lib/project-stepper-queries';
-import { Calculator, CheckCircle2 } from 'lucide-react';
+import { getStepBoqData, getStepBomData, getBoiState, getApprovedSiteExpenses } from '@/lib/project-stepper-queries';
+import { Calculator, CheckCircle2, Package } from 'lucide-react';
 import {
   BoqSeedButton,
   BoqItemStatusSelect,
@@ -13,8 +13,10 @@ import {
   BoqDeleteButton,
   BoqFinalSummary,
   BoqCompleteButton,
+  SendToPurchaseButton,
+  ApplyPriceBookButton,
 } from '@/components/projects/forms/boq-variance-form';
-import { getCategoryLabel } from '@/lib/boi-constants';
+import { getCategoryLabel, BOI_CATEGORIES } from '@/lib/boi-constants';
 import { BoqCategoryFilterWrapper } from '@/components/projects/forms/boq-category-filter-wrapper';
 import Link from 'next/link';
 
@@ -45,12 +47,14 @@ export async function StepBoq({ projectId }: StepBoqProps) {
   let boqData: Awaited<ReturnType<typeof getStepBoqData>>;
   let bomLines: any[] = [];
   let boiState: any = null;
+  let approvedSiteExpenses = 0;
 
   try {
-    [boqData, bomLines, boiState] = await Promise.all([
+    [boqData, bomLines, boiState, approvedSiteExpenses] = await Promise.all([
       getStepBoqData(projectId),
       getStepBomData(projectId),
       getBoiState(projectId),
+      getApprovedSiteExpenses(projectId),
     ]);
   } catch (error) {
     console.error('[StepBoq] Failed to load data:', error);
@@ -68,6 +72,7 @@ export async function StepBoq({ projectId }: StepBoqProps) {
   const isBoqCompleted = !!boiState?.boq_completed;
   const contractedValue = Number(boiState?.contracted_value ?? 0);
   const projectCostManual = boiState?.project_cost_manual ? Number(boiState.project_cost_manual) : null;
+  const estimatedSiteExpensesBudget = Number(boiState?.estimated_site_expenses_budget ?? 0);
 
   // Show seed button only when BOM exists but BOQ hasn't been generated
   if (!hasBoqItems) {
@@ -99,6 +104,11 @@ export async function StepBoq({ projectId }: StepBoqProps) {
   // Item-level BOQ view
   const items = boqData.items;
   const totalValue = items.reduce((sum: number, item: any) => sum + Number(item.total_price || 0), 0);
+  const totalWithoutGst = items.reduce((sum: number, item: any) => {
+    const qty = Number(item.quantity || 0);
+    const rate = Number(item.unit_price || 0);
+    return sum + qty * rate;
+  }, 0);
 
   // Status summary
   const statusCounts = items.reduce((acc: Record<string, number>, item: any) => {
@@ -108,6 +118,22 @@ export async function StepBoq({ projectId }: StepBoqProps) {
 
   // Unique categories for filter
   const uniqueCategories = [...new Set(items.map((item: any) => item.item_category as string))].sort();
+
+  // Category-wise subtotals
+  const categoryTotals: Record<string, { count: number; totalWithGst: number; totalWithoutGst: number }> = {};
+  for (const item of items) {
+    const cat = item.item_category as string;
+    if (!categoryTotals[cat]) {
+      categoryTotals[cat] = { count: 0, totalWithGst: 0, totalWithoutGst: 0 };
+    }
+    categoryTotals[cat].count++;
+    categoryTotals[cat].totalWithGst += Number(item.total_price || 0);
+    categoryTotals[cat].totalWithoutGst += Number(item.quantity || 0) * Number(item.unit_price || 0);
+  }
+
+  // Count items with zero pricing (for auto-price button)
+  const zeroPriceCount = items.filter((item: any) => !Number(item.unit_price)).length;
+  const yetToFinalizeCount = statusCounts['yet_to_finalize'] ?? 0;
 
   return (
     <div className="space-y-4">
@@ -119,12 +145,14 @@ export async function StepBoq({ projectId }: StepBoqProps) {
         </div>
       )}
 
-      {/* Final Summary (always visible) */}
+      {/* Final Summary (5-card layout: Project Cost, Material, Site Expenses, Total, Margin) */}
       <BoqFinalSummary
         projectId={projectId}
         contractedValue={contractedValue}
         projectCostManual={projectCostManual}
         boqTotal={totalValue}
+        siteExpensesApproved={approvedSiteExpenses}
+        estimatedSiteExpensesBudget={estimatedSiteExpensesBudget}
         isCompleted={isBoqCompleted}
       />
 
@@ -147,59 +175,112 @@ export async function StepBoq({ projectId }: StepBoqProps) {
         })}
       </div>
 
+      {/* Category-wise Breakdown */}
+      {uniqueCategories.length > 1 && (
+        <Card>
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-xs font-semibold text-[#7C818E] uppercase tracking-wide">Category Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr className="border-b border-n-200 bg-[#F8F9FA]">
+                    <th className="px-3 py-1.5 text-left font-medium text-[#7C818E]">Category</th>
+                    <th className="px-3 py-1.5 text-right font-medium text-[#7C818E]">Items</th>
+                    <th className="px-3 py-1.5 text-right font-medium text-[#7C818E]">Subtotal (excl. GST)</th>
+                    <th className="px-3 py-1.5 text-right font-medium text-[#7C818E]">Subtotal (incl. GST)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {uniqueCategories.map((cat) => {
+                    const totals = categoryTotals[cat];
+                    if (!totals) return null;
+                    return (
+                      <tr key={cat} className="border-b border-n-100 hover:bg-[#F8F9FA]">
+                        <td className="px-3 py-1.5 font-medium text-[#1A1D24]">{getCategoryLabel(cat)}</td>
+                        <td className="px-3 py-1.5 text-right font-mono text-[#7C818E]">{totals.count}</td>
+                        <td className="px-3 py-1.5 text-right font-mono text-[#3F424D]">{formatINR(totals.totalWithoutGst)}</td>
+                        <td className="px-3 py-1.5 text-right font-mono font-medium text-[#1A1D24]">{formatINR(totals.totalWithGst)}</td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="border-t-2 border-n-200 bg-[#F8F9FA]">
+                    <td className="px-3 py-1.5 font-bold text-[#1A1D24]">Total</td>
+                    <td className="px-3 py-1.5 text-right font-mono font-bold">{items.length}</td>
+                    <td className="px-3 py-1.5 text-right font-mono font-bold">{formatINR(totalWithoutGst)}</td>
+                    <td className="px-3 py-1.5 text-right font-mono font-bold">{formatINR(totalValue)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Items table */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">BOQ — Budget Analysis</CardTitle>
-          <div className="flex items-center gap-3">
+          <CardTitle className="text-base">BOQ &mdash; Budget Analysis</CardTitle>
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Category filter */}
             <BoqCategoryFilterWrapper categories={uniqueCategories} />
+
+            {/* Action buttons */}
+            <ApplyPriceBookButton projectId={projectId} zeroPriceCount={zeroPriceCount} />
+            <SendToPurchaseButton projectId={projectId} yetToFinalizeCount={yetToFinalizeCount} />
+
             <span className="text-sm font-mono text-[#7C818E]">{items.length} items &middot; {formatINR(totalValue)}</span>
             {!isBoqCompleted && <BoqCompleteButton projectId={projectId} isCompleted={false} />}
             <Link href={`/projects/${projectId}?tab=delivery`}>
               <Button size="sm" variant="ghost" className="text-xs">
-                Continue to Delivery →
+                Continue to Delivery &rarr;
               </Button>
             </Link>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" id="boq-table">
+            <table className="w-full text-[12px]" id="boq-table">
               <thead>
                 <tr className="border-b border-n-200 bg-n-50">
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">#</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Category</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Description</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Brand / Model</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Qty</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Rate (₹)</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-n-500">GST %</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Total (₹)</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Status</th>
-                  <th className="px-3 py-2 w-10"></th>
+                  <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[30px]">#</th>
+                  <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[140px]">Category</th>
+                  <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Description</th>
+                  <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[80px]">Brand</th>
+                  <th className="px-2 py-1.5 text-right text-[10px] font-medium text-n-500 w-[60px]">Qty</th>
+                  <th className="px-2 py-1.5 text-right text-[10px] font-medium text-n-500 w-[80px]">Rate</th>
+                  <th className="px-2 py-1.5 text-right text-[10px] font-medium text-n-500 w-[50px]">GST%</th>
+                  <th className="px-2 py-1.5 text-right text-[10px] font-medium text-n-500 w-[90px]">Amt (excl.)</th>
+                  <th className="px-2 py-1.5 text-right text-[10px] font-medium text-n-500 w-[90px]">Total (incl.)</th>
+                  <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[110px]">Status</th>
+                  <th className="px-2 py-1.5 w-8"></th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item: any) => {
+                  const qty = Number(item.quantity || 0);
+                  const rate = Number(item.unit_price || 0);
+                  const amtWithoutGst = qty * rate;
+
                   return (
                     <tr key={item.id} className="border-b border-n-100 hover:bg-n-50 group boq-row" data-category={item.item_category}>
-                      <td className="px-3 py-2 font-mono text-n-400">{item.line_number}</td>
-                      <td className="px-3 py-2 font-medium text-n-900">{getCategoryLabel(item.item_category)}</td>
-                      <td className="px-3 py-2 text-n-700">{item.item_description}</td>
-                      <td className="px-3 py-2 text-n-500">
-                        {[item.brand, item.model].filter(Boolean).join(' ') || '—'}
+                      <td className="px-2 py-1.5 font-mono text-n-400">{item.line_number}</td>
+                      <td className="px-2 py-1.5 font-medium text-n-900">{getCategoryLabel(item.item_category)}</td>
+                      <td className="px-2 py-1.5 text-n-700">{item.item_description}</td>
+                      <td className="px-2 py-1.5 text-n-500">
+                        {[item.brand, item.model].filter(Boolean).join(' ') || '\u2014'}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">{item.quantity} {item.unit}</td>
-                      <td className="px-3 py-2 text-right">
+                      <td className="px-2 py-1.5 text-right font-mono">{item.quantity} {item.unit}</td>
+                      <td className="px-2 py-1.5 text-right">
                         <BoqInlineEdit
                           projectId={projectId}
                           itemId={item.id}
                           field="unit_price"
-                          currentValue={Number(item.unit_price)}
+                          currentValue={rate}
                         />
                       </td>
-                      <td className="px-3 py-2 text-right">
+                      <td className="px-2 py-1.5 text-right">
                         <BoqInlineEdit
                           projectId={projectId}
                           itemId={item.id}
@@ -207,15 +288,18 @@ export async function StepBoq({ projectId }: StepBoqProps) {
                           currentValue={Number(item.gst_rate)}
                         />
                       </td>
-                      <td className="px-3 py-2 text-right font-mono font-medium">{formatINR(Number(item.total_price))}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-1.5 text-right font-mono text-n-500">
+                        {formatINR(amtWithoutGst)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-mono font-medium">{formatINR(Number(item.total_price))}</td>
+                      <td className="px-2 py-1.5">
                         <BoqItemStatusSelect
                           projectId={projectId}
                           itemId={item.id}
                           currentStatus={item.procurement_status}
                         />
                       </td>
-                      <td className="px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <td className="px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <BoqDeleteButton
                           projectId={projectId}
                           itemId={item.id}
@@ -231,8 +315,9 @@ export async function StepBoq({ projectId }: StepBoqProps) {
 
                 {/* Grand Total row */}
                 <tr className="border-t-2 border-n-200 bg-n-50">
-                  <td colSpan={7} className="px-3 py-3 text-right font-bold text-n-900 text-sm">Grand Total Budget</td>
-                  <td className="px-3 py-3 text-right font-mono font-bold text-n-900 text-base">{formatINR(totalValue)}</td>
+                  <td colSpan={7} className="px-2 py-2.5 text-right font-bold text-n-900 text-[12px]">Grand Total</td>
+                  <td className="px-2 py-2.5 text-right font-mono font-bold text-n-700">{formatINR(totalWithoutGst)}</td>
+                  <td className="px-2 py-2.5 text-right font-mono font-bold text-n-900 text-sm">{formatINR(totalValue)}</td>
                   <td colSpan={2}></td>
                 </tr>
               </tbody>
@@ -240,6 +325,20 @@ export async function StepBoq({ projectId }: StepBoqProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Site Expenses Info Banner */}
+      {(approvedSiteExpenses > 0 || estimatedSiteExpensesBudget > 0) && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-[12px] text-amber-800">
+          <Package className="h-4 w-4 shrink-0" />
+          <span>
+            Site Expenses ({approvedSiteExpenses > 0 ? 'approved' : 'estimated'}): <strong>{formatINR(approvedSiteExpenses > 0 ? approvedSiteExpenses : estimatedSiteExpensesBudget)}</strong>
+            {' '}&mdash; included in margin calculation above.
+            {approvedSiteExpenses === 0 && estimatedSiteExpensesBudget > 0 && (
+              <span className="text-[11px] text-amber-600"> Double-click the Site Expenses card to edit the estimate.</span>
+            )}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
