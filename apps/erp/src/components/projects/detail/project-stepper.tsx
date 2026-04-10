@@ -96,40 +96,7 @@ export function ProjectStepper({ projectId, completedStages }: ProjectStepperPro
   );
 }
 
-/**
- * Derive which stages should render as "completed" from the current
- * project record. Kept as a pure function so it can be called on the
- * server and passed to the stepper as props.
- */
-export function deriveCompletedStages(project: {
-  status: string;
-  boi_locked?: boolean | null;
-  boq_completed?: boolean | null;
-  completion_pct?: number | null;
-  commissioned_date?: string | null;
-  ceig_cleared?: boolean | null;
-  ceig_required?: boolean | null;
-}): Record<string, boolean> {
-  const status = project.status;
-  const isInstalling =
-    status === 'in_progress' ||
-    status === 'waiting_net_metering' ||
-    status === 'completed';
-  const isCompleted = status === 'completed';
-  const isStarted = status !== 'order_received';
-
-  return {
-    details: true, // details is always "done" once the project exists
-    survey: isStarted || !!project.boi_locked,
-    bom: !!project.boi_locked,
-    boq: !!project.boq_completed,
-    delivery: isInstalling,
-    execution: (project.completion_pct ?? 0) >= 50 || isCompleted,
-    actuals: isCompleted,
-    qc: isCompleted || (project.completion_pct ?? 0) >= 80,
-    liaison: project.ceig_required ? !!project.ceig_cleared : isInstalling,
-    commissioning: !!project.commissioned_date || isCompleted,
-    amc: isCompleted,
-    documents: isCompleted,
-  };
-}
+// Note: deriveCompletedStages lives in @/lib/project-stages because it's
+// called from the projects/[id] server layout. Exporting a pure function
+// from a 'use client' file turns it into a client reference and crashes
+// server components with "m is not a function" in production builds.

@@ -1,10 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getProjectHeader } from '@/lib/projects-queries';
+import { deriveCompletedStages } from '@/lib/project-stages';
 import { ProjectHeader } from '@/components/projects/detail/project-header';
-import {
-  ProjectStepper,
-  deriveCompletedStages,
-} from '@/components/projects/detail/project-stepper';
+import { ProjectStepper } from '@/components/projects/detail/project-stepper';
 
 interface ProjectDetailLayoutProps {
   params: Promise<{ id: string }>;
