@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@repo/ui';
 import { Truck, Plus, Minus } from 'lucide-react';
-import { createDeliveryChallan } from '@/lib/project-step-actions';
+import { createDeliveryChallan, getProjectSiteAddress } from '@/lib/project-step-actions';
 
 interface ReadyItem {
   id: string;
@@ -18,9 +18,10 @@ interface ReadyItem {
 interface CreateDcDialogProps {
   projectId: string;
   readyItems: ReadyItem[];
+  siteAddress?: string;
 }
 
-export function CreateDcDialog({ projectId, readyItems }: CreateDcDialogProps) {
+export function CreateDcDialog({ projectId, readyItems, siteAddress }: CreateDcDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -37,7 +38,7 @@ export function CreateDcDialog({ projectId, readyItems }: CreateDcDialogProps) {
   const [dispatchTo, setDispatchTo] = React.useState('');
   const [notes, setNotes] = React.useState('');
 
-  // Auto-select all ready items on open
+  // Auto-select all ready items + auto-fill site address on open
   React.useEffect(() => {
     if (open) {
       const defaults: Record<string, number> = {};
@@ -48,8 +49,13 @@ export function CreateDcDialog({ projectId, readyItems }: CreateDcDialogProps) {
         }
       });
       setSelectedItems(defaults);
+
+      // Auto-fill dispatch-to from project site address
+      if (siteAddress && !dispatchTo) {
+        setDispatchTo(siteAddress);
+      }
     }
-  }, [open, readyItems]);
+  }, [open, readyItems, siteAddress]);
 
   function toggleItem(itemId: string, maxQty: number) {
     setSelectedItems((prev) => {
@@ -104,7 +110,7 @@ export function CreateDcDialog({ projectId, readyItems }: CreateDcDialogProps) {
       setVehicleNumber('');
       setDriverName('');
       setDriverPhone('');
-      setDispatchTo('');
+      setDispatchTo(siteAddress || '');
       setNotes('');
       router.refresh();
     } else {
@@ -184,7 +190,7 @@ export function CreateDcDialog({ projectId, readyItems }: CreateDcDialogProps) {
                           </button>
                         </div>
                       ) : (
-                        <span className="text-n-400">—</span>
+                        <span className="text-n-400">{'\u2014'}</span>
                       )}
                     </td>
                   </tr>
@@ -210,8 +216,8 @@ export function CreateDcDialog({ projectId, readyItems }: CreateDcDialogProps) {
           <Input value={dispatchFrom} onChange={(e) => setDispatchFrom(e.target.value)} className="text-xs h-8" />
         </div>
         <div>
-          <label className="text-xs font-medium text-n-600 block mb-1">Dispatch To (Site)</label>
-          <Input value={dispatchTo} onChange={(e) => setDispatchTo(e.target.value)} className="text-xs h-8" placeholder="Customer site address" />
+          <label className="text-xs font-medium text-n-600 block mb-1">Ship To (Site Address)</label>
+          <Input value={dispatchTo} onChange={(e) => setDispatchTo(e.target.value)} className="text-xs h-8" placeholder="Auto-filled from project" />
         </div>
       </div>
 

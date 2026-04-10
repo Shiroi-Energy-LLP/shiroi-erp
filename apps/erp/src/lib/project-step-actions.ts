@@ -1008,6 +1008,62 @@ export async function createDeliveryChallan(input: {
   return { success: true, challanId: challan.id };
 }
 
+// ── DC: Submit (finalize) a delivery challan ──
+
+export async function submitDeliveryChallan(input: {
+  projectId: string;
+  challanId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[submitDeliveryChallan]';
+  console.log(`${op} Submitting DC ${input.challanId} for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('delivery_challans')
+    .update({
+      status: 'dispatched',
+      dispatched_at: new Date().toISOString(),
+    } as any)
+    .eq('id', input.challanId)
+    .eq('project_id', input.projectId)
+    .eq('status', 'draft');
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── DC: Get project site address for auto-fill ──
+
+export async function getProjectSiteAddress(input: {
+  projectId: string;
+}): Promise<string> {
+  const op = '[getProjectSiteAddress]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('projects')
+    .select('site_address_line1, site_address_line2, site_city, site_state, site_pincode')
+    .eq('id', input.projectId)
+    .single();
+
+  if (error || !data) {
+    console.error(`${op} Query failed:`, { error: error?.message, projectId: input.projectId });
+    return '';
+  }
+
+  return [data.site_address_line1, data.site_address_line2, data.site_city, data.site_state, data.site_pincode]
+    .filter(Boolean)
+    .join(', ');
+}
+
 // ── Milestones: Seed defaults ──
 
 const DEFAULT_MILESTONES = [
