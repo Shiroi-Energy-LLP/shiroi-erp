@@ -57,6 +57,44 @@ export async function createOrUpdateSurvey(input: {
     // Section 7: Signatures
     surveyor_signature?: string | null;
     customer_signature?: string | null;
+    // Section 2: Mounting extensions
+    mounting_feasibility_checked?: boolean;
+    shadow_analysis_done?: boolean;
+    roof_condition_photo_path?: string | null;
+    shadow_area_photo_path?: string | null;
+    // Section 3: Client Discussion
+    mounting_procedure_explained?: boolean;
+    fixing_arrangement_discussed?: boolean;
+    // Section 4: Equipment Location Finalization
+    inverter_location_finalized?: boolean;
+    inverter_location_photo_path?: string | null;
+    dc_routing_finalized?: boolean;
+    dc_routing_photo_path?: string | null;
+    earthing_pit_finalized?: boolean;
+    earthing_pit_photo_path?: string | null;
+    la_location_finalized?: boolean;
+    la_location_photo_path?: string | null;
+    termination_point_finalized?: boolean;
+    termination_point_photo_path?: string | null;
+    spare_feeder_available?: boolean;
+    spare_feeder_photo_path?: string | null;
+    dg_eb_checked?: boolean;
+    dg_eb_photo_path?: string | null;
+    spare_feeder_rating?: string | null;
+    spare_feeder_rating_photo_path?: string | null;
+    // Section 5: AC Cable Routing
+    ac_routing_finalized?: boolean;
+    ac_routing_photo_path?: string | null;
+    // Section 6: Deviations
+    additional_panels_required?: boolean;
+    additional_panels_remarks?: string | null;
+    additional_inverter_required?: boolean;
+    additional_inverter_remarks?: string | null;
+    routing_changes?: string | null;
+    cable_size_changes?: string | null;
+    other_special_requests?: string | null;
+    // Status
+    survey_status?: string;
   };
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[createOrUpdateSurvey]';
@@ -137,6 +175,44 @@ export async function createOrUpdateSurvey(input: {
     // Section 7: Signatures
     surveyor_signature: input.data.surveyor_signature,
     customer_signature: input.data.customer_signature,
+    // Section 2: Mounting extensions
+    mounting_feasibility_checked: input.data.mounting_feasibility_checked ?? false,
+    shadow_analysis_done: input.data.shadow_analysis_done ?? false,
+    roof_condition_photo_path: input.data.roof_condition_photo_path,
+    shadow_area_photo_path: input.data.shadow_area_photo_path,
+    // Section 3: Client Discussion
+    mounting_procedure_explained: input.data.mounting_procedure_explained ?? false,
+    fixing_arrangement_discussed: input.data.fixing_arrangement_discussed ?? false,
+    // Section 4: Equipment Location
+    inverter_location_finalized: input.data.inverter_location_finalized ?? false,
+    inverter_location_photo_path: input.data.inverter_location_photo_path,
+    dc_routing_finalized: input.data.dc_routing_finalized ?? false,
+    dc_routing_photo_path: input.data.dc_routing_photo_path,
+    earthing_pit_finalized: input.data.earthing_pit_finalized ?? false,
+    earthing_pit_photo_path: input.data.earthing_pit_photo_path,
+    la_location_finalized: input.data.la_location_finalized ?? false,
+    la_location_photo_path: input.data.la_location_photo_path,
+    termination_point_finalized: input.data.termination_point_finalized ?? false,
+    termination_point_photo_path: input.data.termination_point_photo_path,
+    spare_feeder_available: input.data.spare_feeder_available ?? false,
+    spare_feeder_photo_path: input.data.spare_feeder_photo_path,
+    dg_eb_checked: input.data.dg_eb_checked ?? false,
+    dg_eb_photo_path: input.data.dg_eb_photo_path,
+    spare_feeder_rating: input.data.spare_feeder_rating,
+    spare_feeder_rating_photo_path: input.data.spare_feeder_rating_photo_path,
+    // Section 5: AC Cable
+    ac_routing_finalized: input.data.ac_routing_finalized ?? false,
+    ac_routing_photo_path: input.data.ac_routing_photo_path,
+    // Section 6: Deviations
+    additional_panels_required: input.data.additional_panels_required ?? false,
+    additional_panels_remarks: input.data.additional_panels_remarks,
+    additional_inverter_required: input.data.additional_inverter_required ?? false,
+    additional_inverter_remarks: input.data.additional_inverter_remarks,
+    routing_changes: input.data.routing_changes,
+    cable_size_changes: input.data.cable_size_changes,
+    other_special_requests: input.data.other_special_requests,
+    // Status
+    survey_status: input.data.survey_status ?? 'draft',
   };
 
   if (input.surveyId) {
