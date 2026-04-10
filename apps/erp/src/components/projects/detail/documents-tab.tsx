@@ -1,7 +1,5 @@
 import { createClient } from '@repo/supabase/server';
 import { ProjectFiles } from '@/components/projects/project-files';
-import { LeadFiles } from '@/components/projects/lead-files';
-import { HandoverPack } from '@/components/projects/handover-pack';
 import { getHandoverPack } from '@/lib/handover-actions';
 
 interface DocumentsTabProps {
@@ -37,10 +35,11 @@ export async function DocumentsTab({ projectId, leadId }: DocumentsTabProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <HandoverPack projectId={projectId} existingPack={handoverPack as any} />
-      <ProjectFiles projectId={projectId} />
-      {leadId && leadFiles.length > 0 && <LeadFiles leadId={leadId} files={leadFiles} />}
-    </div>
+    <ProjectFiles
+      projectId={projectId}
+      leadId={leadId}
+      leadFiles={leadFiles}
+      handoverPack={handoverPack as any}
+    />
   );
 }

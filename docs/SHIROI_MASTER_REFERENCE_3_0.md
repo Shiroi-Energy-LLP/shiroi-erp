@@ -1,5 +1,5 @@
 # SHIROI ENERGY ERP — MASTER REFERENCE DOCUMENT
-**Version 3.4 | Updated April 6, 2026 | Read before every coding session**
+**Version 3.5 | Updated April 10, 2026 | Read before every coding session**
 
 > This is the single source of truth for the Shiroi Energy ERP project. Every decision made, every design rule, every business rule, every coding standard, and every constraint is captured here. Anyone joining the project — including Claude in a new chat — reads this first before writing a single line of code or SQL.
 
@@ -75,6 +75,7 @@
 | File flagging | ✅ Complete | DataFlagButton on ProjectFiles, LeadFiles, LeadFilesList — flag wrong_file/wrong_category/duplicate per file |
 | BOI/BOQ/DC tab fix | ✅ Complete | Fixed crash: BOI_CATEGORIES from 'use client' file used in server components — moved to shared lib/boi-constants.ts |
 | Edit Task enhancements | ✅ Complete | Searchable project dropdown (type-to-filter), Done By employee field (auto-marks completed) |
+| Documents tab overhaul | ✅ Complete | Project detail Documents tab rewritten: separate Card boxes per file category (12 categories + WhatsApp), compact Handover box, Customer Documents box with lead files, Site Photos slideshow, drag-and-drop recategorization between boxes, upload dropdown matches new category list |
 | Zoho Books import | 🔜 Next | Import vendors, POs, invoices, payments from Zoho Books CSVs — dedup against existing 108 vendors, 850 POs |
 | Employee testing week | 🔜 Next | 5-6 employees review data on dev for 1 week. Data flags + inline edit + verification |
 | Prod deployment | 🔜 After testing | Schema clone + selective data migration to prod after employee testing week |
