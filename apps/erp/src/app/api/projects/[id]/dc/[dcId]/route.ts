@@ -36,7 +36,7 @@ export async function GET(
       return NextResponse.json({ error: 'Delivery Challan not found' }, { status: 404 });
     }
 
-    // Fetch project for address + number
+    // Fetch project for address + name
     const { data: project, error: projErr } = await supabase
       .from('projects')
       .select('project_number, customer_name, site_address_line1, site_address_line2, site_city, site_state, site_pincode')
@@ -58,7 +58,7 @@ export async function GET(
       dispatchedByName = emp?.full_name ?? null;
     }
 
-    // Determine sequential DC number (DC1, DC2, etc.)
+    // Determine sequential DC number (DC-001, DC-002, etc.)
     const { data: allDcs } = await supabase
       .from('delivery_challans')
       .select('id')
@@ -67,7 +67,7 @@ export async function GET(
       .order('created_at', { ascending: true });
 
     const dcIndex = (allDcs ?? []).findIndex((d: any) => d.id === dcId);
-    const dcSequential = `DC${dcIndex + 1}`;
+    const challanNumber = `DC-${String(dcIndex + 1).padStart(3, '0')}`;
 
     // Build site address
     const siteAddress = [
@@ -78,8 +78,8 @@ export async function GET(
       project.site_pincode,
     ].filter(Boolean).join(', ');
 
-    // Format date for display
-    const dcDate = dc.dc_date
+    // Format date for display (dd-MMM-yyyy)
+    const challanDate = dc.dc_date
       ? new Date(dc.dc_date).toLocaleDateString('en-IN', {
           day: '2-digit', month: 'short', year: 'numeric',
         })
@@ -88,24 +88,17 @@ export async function GET(
     // Build PDF data
     const items = ((dc as any).delivery_challan_items ?? []);
     const pdfData: DeliveryChallanPdfData = {
-      dcSequential,
-      dcNumber: dc.dc_number,
-      dcDate,
-      status: dc.status,
-      projectNumber: project.project_number,
+      challanNumber,
+      challanDate,
+      placeOfSupply: dc.dispatch_to || siteAddress || '',
+      deliverTo: dc.dispatch_to || siteAddress || '',
+      projectName: project.customer_name + ' — ' + project.project_number,
       customerName: project.customer_name,
-      siteAddress,
-      dispatchFrom: dc.dispatch_from,
-      dispatchTo: dc.dispatch_to,
-      vehicleNumber: dc.vehicle_number,
-      driverName: dc.driver_name,
-      driverPhone: dc.driver_phone,
-      notes: dc.notes,
       dispatchedByName,
       items: items.map((item: any, idx: number) => ({
         slNo: idx + 1,
         description: item.item_description,
-        category: item.item_category ?? 'others',
+        hsnCode: item.hsn_code ?? null,
         quantity: Number(item.quantity),
         unit: item.unit,
       })),
@@ -117,7 +110,7 @@ export async function GET(
       React.createElement(DeliveryChallanPDF, { data: pdfData }) as any
     );
 
-    const fileName = `${dc.dc_number.replace(/\//g, '-')}_${dcSequential}.pdf`;
+    const fileName = `${challanNumber}.pdf`;
     return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
@@ -129,6 +122,7 @@ export async function GET(
       projectId,
       dcId,
       error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
     });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'PDF generation failed' },

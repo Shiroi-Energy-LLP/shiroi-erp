@@ -1,5 +1,5 @@
 // apps/erp/src/lib/pdf/delivery-challan-pdf.tsx
-// Standalone Delivery Challan PDF — Shiroi Energy LLP format
+// Delivery Challan PDF — Shiroi Energy LLP format per Manivel's spec
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { BRAND } from './pdf-styles';
@@ -10,7 +10,7 @@ const s = StyleSheet.create({
     fontSize: 9,
     color: BRAND.black,
     paddingTop: 30,
-    paddingBottom: 80,
+    paddingBottom: 90,
     paddingLeft: 40,
     paddingRight: 40,
   },
@@ -23,20 +23,27 @@ const s = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   companyName: {
     fontSize: 16,
     fontFamily: 'Helvetica-Bold',
     color: BRAND.green,
   },
-  companyTagline: {
-    fontSize: 8,
+  companyAddress: {
+    fontSize: 7.5,
     color: BRAND.gray500,
+    marginTop: 1,
+    lineHeight: 1.4,
+  },
+  gstLine: {
+    fontSize: 7.5,
+    fontFamily: 'Helvetica-Bold',
+    color: BRAND.gray700,
     marginTop: 2,
   },
-  companyAddress: {
-    fontSize: 7,
+  contactLine: {
+    fontSize: 7.5,
     color: BRAND.gray500,
     marginTop: 1,
   },
@@ -45,21 +52,16 @@ const s = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     color: BRAND.black,
     textAlign: 'center' as any,
-    marginTop: 10,
+    marginTop: 8,
     marginBottom: 10,
-  },
-  dcSequential: {
-    fontSize: 12,
-    fontFamily: 'Helvetica-Bold',
-    color: BRAND.green,
-    textAlign: 'center' as any,
-    marginBottom: 4,
+    textTransform: 'uppercase' as any,
+    letterSpacing: 1,
   },
 
   // ── Info grid (2 columns) ──
   infoGrid: {
     flexDirection: 'row',
-    gap: 20,
+    gap: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: BRAND.gray300,
@@ -94,6 +96,11 @@ const s = StyleSheet.create({
     textTransform: 'uppercase' as any,
     letterSpacing: 0.5,
     marginBottom: 6,
+  },
+  divider: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: BRAND.gray300,
+    marginVertical: 4,
   },
 
   // ── Items table ──
@@ -133,8 +140,8 @@ const s = StyleSheet.create({
     color: BRAND.black,
   },
 
-  // ── Transport section ──
-  transportBox: {
+  // ── T&C section ──
+  tcBox: {
     borderWidth: 1,
     borderColor: BRAND.gray300,
     borderRadius: 4,
@@ -142,25 +149,11 @@ const s = StyleSheet.create({
     marginTop: 12,
     marginBottom: 12,
   },
-  transportRow: {
-    flexDirection: 'row',
-    gap: 20,
-    marginBottom: 4,
-  },
-  transportItem: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 4,
-  },
-
-  // ── Notes ──
-  notesBox: {
-    borderWidth: 1,
-    borderColor: BRAND.gray300,
-    borderRadius: 4,
-    padding: 10,
-    marginBottom: 12,
-    minHeight: 30,
+  tcText: {
+    fontSize: 7.5,
+    color: BRAND.gray700,
+    lineHeight: 1.5,
+    fontStyle: 'italic',
   },
 
   // ── Signatures ──
@@ -219,31 +212,26 @@ const s = StyleSheet.create({
 });
 
 export interface DeliveryChallanPdfData {
-  dcSequential: string; // DC1, DC2, etc.
-  dcNumber: string; // SHIROI/DC/2025-26/0001
-  dcDate: string;
-  status: string;
-  projectNumber: string;
+  challanNumber: string; // DC-001, DC-002, etc.
+  challanDate: string;
+  placeOfSupply: string;
+  deliverTo: string;
+  projectName: string;
   customerName: string;
-  siteAddress: string;
-  dispatchFrom: string | null;
-  dispatchTo: string | null;
-  vehicleNumber: string | null;
-  driverName: string | null;
-  driverPhone: string | null;
-  notes: string | null;
-  dispatchedByName: string | null;
   items: {
     slNo: number;
     description: string;
-    category: string;
+    hsnCode: string | null;
     quantity: number;
     unit: string;
   }[];
+  dispatchedByName: string | null;
   generatedAt: string;
 }
 
 export function DeliveryChallanPDF({ data }: { data: DeliveryChallanPdfData }) {
+  const totalQty = data.items.reduce((sum, i) => sum + i.quantity, 0);
+
   return (
     <Document>
       <Page size="A4" style={s.page}>
@@ -252,130 +240,106 @@ export function DeliveryChallanPDF({ data }: { data: DeliveryChallanPdfData }) {
 
         {/* Company Header */}
         <View style={s.headerRow}>
-          <View>
-            <Text style={s.companyName}>SHIROI ENERGY LLP</Text>
-            <Text style={s.companyTagline}>Solar EPC Solutions</Text>
-            <Text style={s.companyAddress}>Chennai, Tamil Nadu, India</Text>
-            <Text style={s.companyAddress}>GST: 33AAFFS4721L1ZQ</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end' as any }}>
-            <Text style={{ fontSize: 8, color: BRAND.gray500 }}>www.shiroienergy.com</Text>
-            <Text style={{ fontSize: 8, color: BRAND.gray500 }}>info@shiroienergy.com</Text>
-            <Text style={{ fontSize: 8, color: BRAND.gray500 }}>+91 72001 57787</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={s.companyName}>Shiroi Energy LLP</Text>
+            <Text style={s.companyAddress}>
+              No. 75/34, Third Main Road{'\n'}
+              Kasturbai Nagar, Adyar{'\n'}
+              Chennai, Tamil Nadu – 600020, India
+            </Text>
+            <Text style={s.gstLine}>GSTIN: 33ACPFS4398J1ZE</Text>
+            <Text style={s.contactLine}>Contact: 9486801859</Text>
           </View>
         </View>
 
         {/* DC Title */}
+        <View style={s.divider} />
         <Text style={s.dcTitle}>DELIVERY CHALLAN</Text>
-        <Text style={s.dcSequential}>{data.dcSequential}</Text>
+        <View style={s.divider} />
 
-        {/* DC Info Grid: From / To */}
+        {/* DC Info Grid */}
         <View style={s.infoGrid}>
-          {/* Left: DC Details */}
+          {/* Left column */}
           <View style={s.infoColumn}>
-            <Text style={s.sectionHeading}>Dispatch Details</Text>
+            <Text style={s.infoLabel}>Challan Number</Text>
+            <Text style={s.infoValueBold}>{data.challanNumber}</Text>
 
-            <Text style={s.infoLabel}>DC Number</Text>
-            <Text style={s.infoValueBold}>{data.dcNumber}</Text>
+            <Text style={s.infoLabel}>Challan Date</Text>
+            <Text style={s.infoValue}>{data.challanDate}</Text>
 
-            <Text style={s.infoLabel}>DC Date</Text>
-            <Text style={s.infoValue}>{data.dcDate}</Text>
-
-            <Text style={s.infoLabel}>Project</Text>
-            <Text style={s.infoValue}>{data.projectNumber}</Text>
-
-            <Text style={s.infoLabel}>Dispatch From</Text>
-            <Text style={s.infoValue}>{data.dispatchFrom || 'Shiroi Energy Warehouse'}</Text>
+            <Text style={s.infoLabel}>Place of Supply</Text>
+            <Text style={s.infoValue}>{data.placeOfSupply || '\u2014'}</Text>
           </View>
 
-          {/* Right: Ship-To */}
+          {/* Right column */}
           <View style={s.infoColumn}>
-            <Text style={s.sectionHeading}>Ship To</Text>
+            <Text style={s.infoLabel}>Deliver To</Text>
+            <Text style={s.infoValue}>{data.deliverTo || '\u2014'}</Text>
 
-            <Text style={s.infoLabel}>Customer</Text>
-            <Text style={s.infoValueBold}>{data.customerName}</Text>
+            <Text style={s.infoLabel}>Project Name</Text>
+            <Text style={s.infoValueBold}>{data.projectName}</Text>
 
-            <Text style={s.infoLabel}>Site Address</Text>
-            <Text style={s.infoValue}>{data.dispatchTo || data.siteAddress || '\u2014'}</Text>
-
-            <Text style={s.infoLabel}>Status</Text>
-            <Text style={s.infoValue}>{(data.status || 'draft').replace(/_/g, ' ').toUpperCase()}</Text>
+            <Text style={s.infoLabel}>Client Name</Text>
+            <Text style={s.infoValue}>{data.customerName}</Text>
           </View>
         </View>
 
         {/* Items Table */}
         <View>
-          <Text style={[s.sectionHeading, { marginBottom: 4 }]}>Items ({data.items.length})</Text>
+          <Text style={[s.sectionHeading, { marginBottom: 4 }]}>Item Details</Text>
 
           <View style={s.tableHeader}>
             <Text style={[s.tableHeaderText, { width: '8%' }]}>S.No</Text>
-            <Text style={[s.tableHeaderText, { width: '22%' }]}>Category</Text>
-            <Text style={[s.tableHeaderText, { width: '42%' }]}>Description</Text>
-            <Text style={[s.tableHeaderText, { width: '14%', textAlign: 'right' as any }]}>Qty</Text>
-            <Text style={[s.tableHeaderText, { width: '14%', textAlign: 'right' as any }]}>Unit</Text>
+            <Text style={[s.tableHeaderText, { width: '50%' }]}>Item Description</Text>
+            <Text style={[s.tableHeaderText, { width: '22%' }]}>HSN Code</Text>
+            <Text style={[s.tableHeaderText, { width: '20%', textAlign: 'right' as any }]}>Quantity</Text>
           </View>
 
           {data.items.map((item, idx) => (
             <View key={idx} style={idx % 2 === 0 ? s.tableRow : s.tableRowAlt}>
               <Text style={[s.tableCellBold, { width: '8%' }]}>{item.slNo}</Text>
-              <Text style={[s.tableCell, { width: '22%' }]}>{item.category.replace(/_/g, ' ')}</Text>
-              <Text style={[s.tableCell, { width: '42%' }]}>{item.description}</Text>
-              <Text style={[s.tableCellBold, { width: '14%', textAlign: 'right' as any }]}>{item.quantity}</Text>
-              <Text style={[s.tableCell, { width: '14%', textAlign: 'right' as any }]}>{item.unit}</Text>
+              <Text style={[s.tableCell, { width: '50%' }]}>{item.description}</Text>
+              <Text style={[s.tableCell, { width: '22%' }]}>{item.hsnCode || '\u2014'}</Text>
+              <Text style={[s.tableCellBold, { width: '20%', textAlign: 'right' as any }]}>
+                {item.quantity} {item.unit}
+              </Text>
             </View>
           ))}
 
           {/* Total row */}
           <View style={[s.tableRow, { backgroundColor: BRAND.gray100, borderTopWidth: 1, borderTopColor: BRAND.gray300 }]}>
-            <Text style={[s.tableCellBold, { width: '72%' }]}>Total Items: {data.items.length}</Text>
-            <Text style={[s.tableCellBold, { width: '14%', textAlign: 'right' as any }]}>
-              {data.items.reduce((sum, i) => sum + i.quantity, 0)}
+            <Text style={[s.tableCellBold, { width: '80%' }]}>
+              Total Items: {data.items.length}
             </Text>
-            <Text style={[s.tableCell, { width: '14%' }]} />
+            <Text style={[s.tableCellBold, { width: '20%', textAlign: 'right' as any }]}>
+              {totalQty} Nos
+            </Text>
           </View>
         </View>
 
-        {/* Transport Details */}
-        {(data.vehicleNumber || data.driverName) && (
-          <View style={s.transportBox}>
-            <Text style={s.sectionHeading}>Transport Details</Text>
-            <View style={s.transportRow}>
-              <View style={s.transportItem}>
-                <Text style={s.infoLabel}>Vehicle</Text>
-                <Text style={s.infoValue}>{data.vehicleNumber || '\u2014'}</Text>
-              </View>
-              <View style={s.transportItem}>
-                <Text style={s.infoLabel}>Driver</Text>
-                <Text style={s.infoValue}>{data.driverName || '\u2014'}</Text>
-              </View>
-              <View style={s.transportItem}>
-                <Text style={s.infoLabel}>Phone</Text>
-                <Text style={s.infoValue}>{data.driverPhone || '\u2014'}</Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Notes */}
-        {data.notes && (
-          <View style={s.notesBox}>
-            <Text style={s.sectionHeading}>Notes / Special Instructions</Text>
-            <Text style={s.infoValue}>{data.notes}</Text>
-          </View>
-        )}
+        {/* Terms & Conditions */}
+        <View style={s.tcBox}>
+          <Text style={s.sectionHeading}>Terms & Conditions</Text>
+          <Text style={s.tcText}>
+            Received the above goods in good condition. The consignee takes responsibility for the
+            safety and security of the materials at the site until installation is carried out by
+            Shiroi Energy LLP.
+          </Text>
+        </View>
 
         {/* Signature Section */}
         <View style={s.signatureRow}>
           <View style={s.signatureBlock}>
             <View style={s.signatureLine} />
-            <Text style={s.signatureLabel}>Engineer Signature</Text>
+            <Text style={s.signatureLabel}>Authorized Signature</Text>
             {data.dispatchedByName && (
               <Text style={s.signatureName}>{data.dispatchedByName}</Text>
             )}
+            <Text style={s.signatureName}>Shiroi Energy LLP</Text>
           </View>
           <View style={s.signatureBlock}>
             <View style={s.signatureLine} />
-            <Text style={s.signatureLabel}>Client Signature</Text>
+            <Text style={s.signatureLabel}>Client / Receiver Acknowledgment</Text>
             <Text style={s.signatureName}>{data.customerName}</Text>
           </View>
         </View>
@@ -383,7 +347,7 @@ export function DeliveryChallanPDF({ data }: { data: DeliveryChallanPdfData }) {
         {/* Footer */}
         <View style={s.footer} fixed>
           <Text style={s.footerBrand}>Shiroi Energy LLP</Text>
-          <Text style={s.footerText}>{data.dcNumber} | {data.dcDate}</Text>
+          <Text style={s.footerText}>{data.challanNumber} | {data.challanDate}</Text>
           <Text style={s.footerText} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
         </View>
       </Page>

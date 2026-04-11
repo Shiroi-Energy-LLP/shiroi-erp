@@ -895,7 +895,7 @@ export async function updateBoqItemStatus(input: {
 
 export async function createDeliveryChallan(input: {
   projectId: string;
-  items: { boqItemId: string; quantity: number; description: string; unit: string }[];
+  items: { boqItemId: string; quantity: number; description: string; unit: string; hsnCode?: string | null; itemCategory?: string | null }[];
   vehicleNumber?: string;
   driverName?: string;
   driverPhone?: string;
@@ -917,20 +917,16 @@ export async function createDeliveryChallan(input: {
     .eq('profile_id', user.id)
     .single();
 
-  // Generate DC number
-  const now = new Date();
-  const fy = now.getMonth() >= 3
-    ? `${now.getFullYear()}-${(now.getFullYear() + 1).toString().slice(2)}`
-    : `${now.getFullYear() - 1}-${now.getFullYear().toString().slice(2)}`;
-
+  // Generate DC number — sequential per project (DC-001, DC-002, etc.)
   const { count } = await supabase
     .from('delivery_challans')
     .select('id', { count: 'exact', head: true })
     .eq('project_id', input.projectId);
 
-  const dcNumber = `SHIROI/DC/${fy}/${String((count ?? 0) + 1).padStart(4, '0')}`;
+  const dcNumber = `DC-${String((count ?? 0) + 1).padStart(3, '0')}`;
 
   // Create challan
+  const now = new Date();
   const { data: challanRaw, error: challanError } = await supabase
     .from('delivery_challans')
     .insert({
@@ -957,13 +953,15 @@ export async function createDeliveryChallan(input: {
     return { success: false, error: challanError.message };
   }
 
-  // Create challan items
+  // Create challan items (with hsn_code + item_category)
   const challanItems = input.items.map((item) => ({
     challan_id: challan.id,
     boq_item_id: item.boqItemId,
     quantity: item.quantity,
     item_description: item.description,
     unit: item.unit,
+    hsn_code: item.hsnCode || null,
+    item_category: item.itemCategory || null,
   }));
 
   const { error: itemsError } = await supabase

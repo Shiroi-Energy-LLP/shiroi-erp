@@ -4,12 +4,13 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@repo/ui';
 import { Truck, Plus, Minus } from 'lucide-react';
-import { createDeliveryChallan, getProjectSiteAddress } from '@/lib/project-step-actions';
+import { createDeliveryChallan } from '@/lib/project-step-actions';
 
 interface ReadyItem {
   id: string;
   item_description: string;
   item_category: string;
+  hsn_code?: string | null;
   quantity: number;
   dispatched_qty: number;
   unit: string;
@@ -34,7 +35,7 @@ export function CreateDcDialog({ projectId, readyItems, siteAddress }: CreateDcD
   const [vehicleNumber, setVehicleNumber] = React.useState('');
   const [driverName, setDriverName] = React.useState('');
   const [driverPhone, setDriverPhone] = React.useState('');
-  const [dispatchFrom, setDispatchFrom] = React.useState('Shiroi Energy Warehouse');
+  const [dispatchFrom, setDispatchFrom] = React.useState('Shiroi Energy LLP, Kasturbai Nagar, Adyar, Chennai – 600020');
   const [dispatchTo, setDispatchTo] = React.useState('');
   const [notes, setNotes] = React.useState('');
 
@@ -82,6 +83,8 @@ export function CreateDcDialog({ projectId, readyItems, siteAddress }: CreateDcD
           quantity: qty,
           description: item.item_description,
           unit: item.unit,
+          hsnCode: item.hsn_code || null,
+          itemCategory: item.item_category || null,
         };
       });
 
@@ -142,8 +145,8 @@ export function CreateDcDialog({ projectId, readyItems, siteAddress }: CreateDcD
             <thead>
               <tr className="bg-n-50 border-b border-n-200">
                 <th className="px-3 py-2 text-left w-8"></th>
-                <th className="px-3 py-2 text-left">Item</th>
-                <th className="px-3 py-2 text-left">Category</th>
+                <th className="px-3 py-2 text-left">Item Description</th>
+                <th className="px-3 py-2 text-left">HSN Code</th>
                 <th className="px-3 py-2 text-right">Available</th>
                 <th className="px-3 py-2 text-right">Dispatch Qty</th>
               </tr>
@@ -163,7 +166,7 @@ export function CreateDcDialog({ projectId, readyItems, siteAddress }: CreateDcD
                       />
                     </td>
                     <td className="px-3 py-2 font-medium">{item.item_description}</td>
-                    <td className="px-3 py-2 text-n-500">{item.item_category.replace(/_/g, ' ')}</td>
+                    <td className="px-3 py-2 font-mono text-n-500 text-[11px]">{item.hsn_code || '\u2014'}</td>
                     <td className="px-3 py-2 text-right font-mono">{remaining} {item.unit}</td>
                     <td className="px-3 py-2 text-right">
                       {isSelected ? (
@@ -216,7 +219,7 @@ export function CreateDcDialog({ projectId, readyItems, siteAddress }: CreateDcD
           <Input value={dispatchFrom} onChange={(e) => setDispatchFrom(e.target.value)} className="text-xs h-8" />
         </div>
         <div>
-          <label className="text-xs font-medium text-n-600 block mb-1">Ship To (Site Address)</label>
+          <label className="text-xs font-medium text-n-600 block mb-1">Deliver To (Site Address)</label>
           <Input value={dispatchTo} onChange={(e) => setDispatchTo(e.target.value)} className="text-xs h-8" placeholder="Auto-filled from project" />
         </div>
       </div>

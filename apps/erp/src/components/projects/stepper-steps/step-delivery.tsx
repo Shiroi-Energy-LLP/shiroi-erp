@@ -44,13 +44,14 @@ export async function StepDelivery({ projectId }: StepDeliveryProps) {
   const hasOutgoing = outgoingChallans.length > 0;
   const hasVendor = vendorChallans.length > 0;
 
-  // Get "Ready to Dispatch" items from BOQ
+  // Get "Ready to Dispatch" items from BOQ — include hsn_code
   const readyItems = boqData.type === 'items'
     ? boqData.items.filter((item: any) => item.procurement_status === 'ready_to_dispatch')
         .map((item: any) => ({
           id: item.id,
           item_description: item.item_description,
           item_category: item.item_category,
+          hsn_code: item.hsn_code ?? null,
           quantity: Number(item.quantity),
           dispatched_qty: Number(item.dispatched_qty || 0),
           unit: item.unit,
@@ -113,10 +114,9 @@ export async function StepDelivery({ projectId }: StepDeliveryProps) {
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
                     <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500 w-[60px]">DC #</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500">DC Number</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500">Challan No.</th>
                     <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500">Date</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500">From &rarr; To</th>
-                    <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500">Vehicle</th>
+                    <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500">Deliver To</th>
                     <th className="px-2 py-2 text-center text-[10px] font-medium text-n-500 w-[50px]">Items</th>
                     <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500 w-[80px]">Status</th>
                     <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500 w-[100px]">Actions</th>
@@ -190,7 +190,7 @@ export async function StepDelivery({ projectId }: StepDeliveryProps) {
           <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Delivery Challans</h3>
           <p className="text-[13px] text-[#7C818E] max-w-md text-center">
             Create a DC above when items are &quot;Ready to Dispatch&quot; in the BOQ tab.
-            DCs are auto-numbered (DC1, DC2, etc.) and can be downloaded as PDF.
+            DCs are auto-numbered (DC-001, DC-002, etc.) and can be downloaded as PDF.
           </p>
           <Link href={`/projects/${projectId}?tab=boq`} className="mt-3">
             <Button size="sm" variant="ghost">&larr; Go to BOQ</Button>

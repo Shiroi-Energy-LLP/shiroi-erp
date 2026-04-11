@@ -3,9 +3,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Badge } from '@repo/ui';
-import { Download, Send, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { submitDeliveryChallan } from '@/lib/project-step-actions';
-import { getCategoryLabel } from '@/lib/boi-constants';
 
 // ── PDF Download Button ──
 
@@ -112,7 +111,8 @@ interface DcDetailProps {
     delivery_challan_items: {
       id: string;
       item_description: string;
-      item_category?: string;
+      item_category?: string | null;
+      hsn_code?: string | null;
       quantity: number;
       unit: string;
     }[];
@@ -124,6 +124,7 @@ interface DcDetailProps {
 export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
   const [expanded, setExpanded] = React.useState(false);
   const items = dc.delivery_challan_items ?? [];
+  const totalQty = items.reduce((sum, i) => sum + Number(i.quantity), 0);
 
   return (
     <>
@@ -138,14 +139,13 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
             {dcLabel}
           </div>
         </td>
-        <td className="px-2 py-2 font-mono text-[11px] text-n-500">{dc.dc_number}</td>
+        <td className="px-2 py-2 font-mono text-[11px] text-n-700">{dc.dc_number}</td>
         <td className="px-2 py-2 text-[12px] text-n-700">
           {dc.dc_date ? new Date(dc.dc_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '\u2014'}
         </td>
         <td className="px-2 py-2 text-[11px] text-n-600 max-w-[200px] truncate">
-          {dc.dispatch_from || '\u2014'} &rarr; {dc.dispatch_to || '\u2014'}
+          {dc.dispatch_to || '\u2014'}
         </td>
-        <td className="px-2 py-2 text-[11px] text-n-500">{dc.vehicle_number || '\u2014'}</td>
         <td className="px-2 py-2 text-center font-mono text-[12px]">{items.length}</td>
         <td className="px-2 py-2">
           <Badge
@@ -168,18 +168,18 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
       {/* Expanded detail */}
       {expanded && (
         <tr className="border-b border-n-200 bg-[#F8F9FA]">
-          <td colSpan={8} className="px-4 py-3">
+          <td colSpan={7} className="px-4 py-3">
             <div className="space-y-3">
-              {/* Items table */}
+              {/* Items table with HSN Code */}
               <div>
-                <p className="text-[10px] font-bold text-[#7C818E] uppercase tracking-wide mb-2">Items</p>
+                <p className="text-[10px] font-bold text-[#7C818E] uppercase tracking-wide mb-2">Item Details</p>
                 <table className="w-full text-[11px]">
                   <thead>
                     <tr className="border-b border-n-200">
-                      <th className="px-2 py-1 text-left font-medium text-[#7C818E] w-[30px]">#</th>
-                      <th className="px-2 py-1 text-left font-medium text-[#7C818E]">Description</th>
-                      <th className="px-2 py-1 text-right font-medium text-[#7C818E] w-[60px]">Qty</th>
-                      <th className="px-2 py-1 text-left font-medium text-[#7C818E] w-[60px]">Unit</th>
+                      <th className="px-2 py-1 text-left font-medium text-[#7C818E] w-[30px]">S.No</th>
+                      <th className="px-2 py-1 text-left font-medium text-[#7C818E]">Item Description</th>
+                      <th className="px-2 py-1 text-left font-medium text-[#7C818E] w-[100px]">HSN Code</th>
+                      <th className="px-2 py-1 text-right font-medium text-[#7C818E] w-[80px]">Quantity</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -187,11 +187,17 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
                       <tr key={item.id} className="border-b border-n-100">
                         <td className="px-2 py-1 font-mono text-n-400">{idx + 1}</td>
                         <td className="px-2 py-1 text-[#1A1D24]">{item.item_description}</td>
-                        <td className="px-2 py-1 text-right font-mono">{item.quantity}</td>
-                        <td className="px-2 py-1 text-n-500">{item.unit}</td>
+                        <td className="px-2 py-1 font-mono text-n-500">{item.hsn_code || '\u2014'}</td>
+                        <td className="px-2 py-1 text-right font-mono">{item.quantity} {item.unit}</td>
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot>
+                    <tr className="border-t border-n-300 bg-n-50">
+                      <td colSpan={3} className="px-2 py-1 font-bold text-[#1A1D24]">Total Items: {items.length}</td>
+                      <td className="px-2 py-1 text-right font-mono font-bold">{totalQty} Nos</td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
 
@@ -199,6 +205,9 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
               <div className="flex gap-6 text-[11px]">
                 {dc.driver_name && (
                   <span><strong>Driver:</strong> {dc.driver_name} {dc.driver_phone ? `(${dc.driver_phone})` : ''}</span>
+                )}
+                {dc.vehicle_number && (
+                  <span><strong>Vehicle:</strong> {dc.vehicle_number}</span>
                 )}
                 {dc.notes && (
                   <span><strong>Notes:</strong> {dc.notes}</span>

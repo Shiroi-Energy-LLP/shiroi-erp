@@ -1445,7 +1445,9 @@ export type Database = {
           boq_item_id: string
           challan_id: string
           created_at: string
+          hsn_code: string | null
           id: string
+          item_category: string | null
           item_description: string
           quantity: number
           unit: string
@@ -1454,7 +1456,9 @@ export type Database = {
           boq_item_id: string
           challan_id: string
           created_at?: string
+          hsn_code?: string | null
           id?: string
+          item_category?: string | null
           item_description: string
           quantity: number
           unit?: string
@@ -1463,7 +1467,9 @@ export type Database = {
           boq_item_id?: string
           challan_id?: string
           created_at?: string
+          hsn_code?: string | null
           id?: string
+          item_category?: string | null
           item_description?: string
           quantity?: number
           unit?: string
@@ -6970,6 +6976,7 @@ export type Database = {
           dispatched_qty: number
           gst_rate: number
           gst_type: string
+          hsn_code: string | null
           id: string
           item_category: string
           item_description: string
@@ -6995,6 +7002,7 @@ export type Database = {
           dispatched_qty?: number
           gst_rate?: number
           gst_type?: string
+          hsn_code?: string | null
           id?: string
           item_category: string
           item_description: string
@@ -7020,6 +7028,7 @@ export type Database = {
           dispatched_qty?: number
           gst_rate?: number
           gst_type?: string
+          hsn_code?: string | null
           id?: string
           item_category?: string
           item_description?: string
