@@ -1,6 +1,11 @@
 import { createClient } from '@repo/supabase/server';
 import { ProjectFiles } from '@/components/projects/project-files';
 import { getHandoverPack } from '@/lib/handover-actions';
+import {
+  getStepDeliveryData,
+  getStepQcData,
+  getStepSurveyData,
+} from '@/lib/project-stepper-queries';
 
 interface DocumentsTabProps {
   projectId: string;
@@ -8,7 +13,13 @@ interface DocumentsTabProps {
 }
 
 export async function DocumentsTab({ projectId, leadId }: DocumentsTabProps) {
-  const handoverPack = await getHandoverPack(projectId);
+  // Parallel fetch: handover pack + DC + QC + survey
+  const [handoverPack, dcData, qcInspections, surveyData] = await Promise.all([
+    getHandoverPack(projectId),
+    getStepDeliveryData(projectId).catch(() => ({ outgoingChallans: [] as any[], vendorChallans: [] })),
+    getStepQcData(projectId).catch(() => [] as any[]),
+    getStepSurveyData(projectId).catch(() => null),
+  ]);
 
   // Fetch lead-era files from the proposal-files bucket
   let leadFiles: {
@@ -40,6 +51,9 @@ export async function DocumentsTab({ projectId, leadId }: DocumentsTabProps) {
       leadId={leadId}
       leadFiles={leadFiles}
       handoverPack={handoverPack as any}
+      deliveryChallans={dcData.outgoingChallans}
+      qcInspections={qcInspections}
+      surveyData={surveyData}
     />
   );
 }

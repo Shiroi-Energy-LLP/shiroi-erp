@@ -10,7 +10,7 @@ import {
   Upload, Download, FileText, Image, File, Trash2, Camera, PenTool,
   LayoutGrid, ShoppingCart, Receipt, Truck, Shield, Table2, FileCheck,
   Folder, GripVertical, Package, RefreshCw, FileCheck2, ChevronLeft,
-  ChevronRight, Users, Clock,
+  ChevronRight, Users, Clock, ClipboardCheck, FileDown, MapPin,
 } from 'lucide-react';
 import { ImageViewer, type ViewableImage } from '@/components/ui/image-viewer';
 import { DataFlagButton } from '@/components/data-flag-button';
@@ -44,11 +44,40 @@ interface HandoverPackData {
   metadata: any;
 }
 
+interface DeliveryChallanInfo {
+  id: string;
+  dc_number?: string;
+  dc_date?: string;
+  status: string;
+  delivery_challan_items?: any[];
+  created_at?: string;
+}
+
+interface QcInspectionInfo {
+  id: string;
+  gate_number?: number;
+  inspection_date?: string;
+  overall_result?: string | null;
+  approval_status?: string | null;
+  employees?: { full_name: string } | null;
+}
+
+interface SurveyInfo {
+  id: string;
+  survey_date?: string;
+  survey_status?: string;
+  recommended_size_kwp?: number;
+  contact_person_name?: string;
+}
+
 export interface ProjectFilesProps {
   projectId: string;
   leadId: string | null;
   leadFiles: LeadFileInfo[];
   handoverPack: HandoverPackData | null;
+  deliveryChallans?: DeliveryChallanInfo[];
+  qcInspections?: QcInspectionInfo[];
+  surveyData?: SurveyInfo | null;
 }
 
 interface DragData {
@@ -230,39 +259,88 @@ function FileRow({
 
   return (
     <div
-      draggable
+      draggable={true}
       onDragStart={(e) => onDragStart(e, file, category)}
       className="flex items-center gap-1.5 rounded px-1.5 py-1 hover:bg-[#F5F6F8] group text-xs cursor-grab active:cursor-grabbing"
     >
-      <GripVertical className="h-3 w-3 text-[#C8CBD0] flex-shrink-0 opacity-0 group-hover:opacity-100" />
-      <Icon className="h-3 w-3 text-[#9CA0AB] flex-shrink-0" />
-      <button
+      <GripVertical className="h-3 w-3 text-[#C8CBD0] flex-shrink-0 opacity-0 group-hover:opacity-100 pointer-events-none" />
+      <Icon className="h-3 w-3 text-[#9CA0AB] flex-shrink-0 pointer-events-none" />
+      <span
+        role="button"
+        tabIndex={0}
         onClick={() => (isImage ? onOpenImage(file) : onDownload(file))}
-        className="text-[#00B050] hover:underline truncate text-left flex-1 text-[12px]"
+        onKeyDown={(e) => { if (e.key === 'Enter') isImage ? onOpenImage(file) : onDownload(file); }}
+        className="text-[#00B050] hover:underline truncate text-left flex-1 text-[12px] cursor-pointer select-none"
         title={file.name}
+        draggable={false}
       >
         {file.name.replace(/^\d+_/, '')}
-      </button>
-      <span className="text-[10px] text-[#C8CBD0] hidden sm:inline flex-shrink-0">
+      </span>
+      <span className="text-[10px] text-[#C8CBD0] hidden sm:inline flex-shrink-0 pointer-events-none">
         {formatFileSize(file.metadata?.size)}
       </span>
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0">
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0" draggable={false}>
         <DataFlagButton entityType="file" entityId={file.id} fieldName={category} compact />
         <button
-          onClick={() => (isImage ? onOpenImage(file) : onDownload(file))}
+          draggable={false}
+          onClick={(e) => { e.stopPropagation(); isImage ? onOpenImage(file) : onDownload(file); }}
           className="p-0.5 text-[#7C818E] hover:text-[#00B050]"
           title={isImage ? 'View' : 'Download'}
         >
           <Download className="h-3 w-3" />
         </button>
         <button
-          onClick={() => onDelete(file)}
+          draggable={false}
+          onClick={(e) => { e.stopPropagation(); onDelete(file); }}
           className="p-0.5 text-[#7C818E] hover:text-[#991B1B]"
           title="Delete"
         >
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
+    </div>
+  );
+}
+
+/** Auto-generated document row (non-draggable, with download link). */
+function GeneratedDocRow({
+  icon: DocIcon,
+  label,
+  sublabel,
+  badgeText,
+  badgeVariant,
+  downloadUrl,
+}: {
+  icon: React.ElementType;
+  label: string;
+  sublabel?: string;
+  badgeText?: string;
+  badgeVariant?: 'info' | 'success' | 'warning' | 'error' | 'neutral' | 'outline';
+  downloadUrl?: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 rounded px-1.5 py-1 hover:bg-[#F5F6F8] group text-xs">
+      <DocIcon className="h-3 w-3 text-[#5A8DEE] flex-shrink-0" />
+      <span className="text-[12px] text-[#3A3D44] truncate flex-1 font-medium">{label}</span>
+      {sublabel && (
+        <span className="text-[10px] text-[#9CA0AB] flex-shrink-0 hidden sm:inline">{sublabel}</span>
+      )}
+      {badgeText && (
+        <Badge variant={badgeVariant ?? 'info'} className="text-[9px] px-1 py-0 flex-shrink-0">
+          {badgeText}
+        </Badge>
+      )}
+      {downloadUrl && (
+        <a
+          href={downloadUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-0.5 text-[#7C818E] hover:text-[#00B050] opacity-0 group-hover:opacity-100 flex-shrink-0"
+          title="Download PDF"
+        >
+          <FileDown className="h-3 w-3" />
+        </a>
+      )}
     </div>
   );
 }
@@ -428,6 +506,7 @@ function CategoryBox({
   onDragStart,
   onOpenImage,
   onOpenLeadImage,
+  generatedDocs,
 }: {
   category: { value: string; label: string; icon: React.ElementType };
   files: FileInfo[];
@@ -442,6 +521,7 @@ function CategoryBox({
   onDragStart: (e: React.DragEvent, f: FileInfo, cat: string) => void;
   onOpenImage: (f: FileInfo) => void;
   onOpenLeadImage?: (idx: number) => void;
+  generatedDocs?: React.ReactNode;
 }) {
   const Icon = category.icon;
   const totalCount = files.length + (leadFiles?.length ?? 0);
@@ -463,7 +543,13 @@ function CategoryBox({
         </CardTitle>
       </CardHeader>
       <CardContent className="px-3 pb-3 min-h-[60px]">
-        {totalCount === 0 ? (
+        {/* Auto-generated documents */}
+        {generatedDocs && (
+          <div className="space-y-0.5 mb-1.5 pb-1.5 border-b border-dashed border-[#DFE2E8]">
+            {generatedDocs}
+          </div>
+        )}
+        {totalCount === 0 && !generatedDocs ? (
           <p className="text-[11px] text-[#C8CBD0] text-center py-3">
             {isDropTarget ? 'Drop here' : 'Drag files here'}
           </p>
@@ -499,7 +585,7 @@ function CategoryBox({
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function ProjectFiles({ projectId, leadId, leadFiles, handoverPack }: ProjectFilesProps) {
+export function ProjectFiles({ projectId, leadId, leadFiles, handoverPack, deliveryChallans, qcInspections, surveyData }: ProjectFilesProps) {
   const [files, setFiles] = React.useState<Record<string, FileInfo[]>>({});
   const [loading, setLoading] = React.useState(true);
   const [uploading, setUploading] = React.useState(false);
@@ -777,6 +863,83 @@ export function ProjectFiles({ projectId, leadId, leadFiles, handoverPack }: Pro
   const gridCategories = DOCUMENT_CATEGORIES.filter((c) => c.value !== 'photos');
   const hasWhatsapp = (files['whatsapp']?.length ?? 0) > 0;
 
+  /* ---- Auto-generated documents per category ---- */
+
+  // Survey → "Customer Documents" box
+  const surveyGenerated = surveyData ? (
+    <GeneratedDocRow
+      icon={MapPin}
+      label={`Site Survey Report`}
+      sublabel={surveyData.survey_date
+        ? new Date(surveyData.survey_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
+        : undefined}
+      badgeText={surveyData.survey_status === 'completed' ? 'Completed' : surveyData.survey_status ?? 'Survey'}
+      badgeVariant={surveyData.survey_status === 'completed' ? 'success' : 'info'}
+    />
+  ) : null;
+
+  // DCs → "Delivery Challans" box
+  const dcGenerated = (deliveryChallans && deliveryChallans.length > 0) ? (
+    <>
+      {deliveryChallans.map((dc, idx) => {
+        const dcLabel = dc.dc_number || `DC-${String(idx + 1).padStart(3, '0')}`;
+        const dcDate = dc.dc_date
+          ? new Date(dc.dc_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
+          : undefined;
+        const itemCount = dc.delivery_challan_items?.length ?? 0;
+        const statusMap: Record<string, { text: string; variant: 'info' | 'success' | 'warning' | 'neutral' }> = {
+          draft: { text: 'Draft', variant: 'neutral' },
+          dispatched: { text: 'Dispatched', variant: 'info' },
+          delivered: { text: 'Delivered', variant: 'success' },
+          partial_delivery: { text: 'Partial', variant: 'warning' },
+        };
+        const st = statusMap[dc.status] ?? { text: dc.status, variant: 'neutral' as const };
+        return (
+          <GeneratedDocRow
+            key={dc.id}
+            icon={Truck}
+            label={`${dcLabel} (${itemCount} items)`}
+            sublabel={dcDate}
+            badgeText={st.text}
+            badgeVariant={st.variant}
+            downloadUrl={`/api/projects/${projectId}/dc/${dc.id}`}
+          />
+        );
+      })}
+    </>
+  ) : null;
+
+  // QC → "Documents / Approvals" box
+  const qcGenerated = (qcInspections && qcInspections.length > 0) ? (
+    <>
+      {qcInspections.map((qc) => {
+        const qcDate = qc.inspection_date
+          ? new Date(qc.inspection_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
+          : undefined;
+        const inspectorName = (qc.employees as any)?.full_name;
+        const statusMap: Record<string, { text: string; variant: 'info' | 'success' | 'warning' | 'error' | 'neutral' }> = {
+          draft: { text: 'Draft', variant: 'neutral' },
+          submitted: { text: 'Submitted', variant: 'info' },
+          approved: { text: 'Approved', variant: 'success' },
+          rework_required: { text: 'Rework', variant: 'warning' },
+        };
+        const st = statusMap[qc.approval_status ?? ''] ?? { text: qc.approval_status ?? 'Draft', variant: 'neutral' as const };
+        const canDownload = qc.approval_status === 'approved' || qc.approval_status === 'submitted';
+        return (
+          <GeneratedDocRow
+            key={qc.id}
+            icon={ClipboardCheck}
+            label={`QC Report${inspectorName ? ` — ${inspectorName}` : ''}`}
+            sublabel={qcDate}
+            badgeText={st.text}
+            badgeVariant={st.variant}
+            downloadUrl={canDownload ? `/api/projects/${projectId}/qc/${qc.id}` : undefined}
+          />
+        );
+      })}
+    </>
+  ) : null;
+
   /* ---- Render ---- */
 
   if (loading) {
@@ -844,6 +1007,7 @@ export function ProjectFiles({ projectId, leadId, leadFiles, handoverPack }: Pro
             onDragStart={handleDragStart}
             onOpenImage={openImage}
             onOpenLeadImage={() => {}}
+            generatedDocs={surveyGenerated}
           />
         </div>
       </div>
@@ -909,21 +1073,28 @@ export function ProjectFiles({ projectId, leadId, leadFiles, handoverPack }: Pro
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {gridCategories
           .filter((c) => c.value !== 'customer-documents') // already rendered above
-          .map((cat) => (
-            <CategoryBox
-              key={cat.value}
-              category={cat}
-              files={files[cat.value] ?? []}
-              isDropTarget={dragOverCategory === cat.value}
-              onDragOver={() => setDragOverCategory(cat.value)}
-              onDragLeave={() => setDragOverCategory(null)}
-              onDrop={(e) => handleDrop(e, cat.value)}
-              onDownload={handleDownload}
-              onDelete={handleDelete}
-              onDragStart={handleDragStart}
-              onOpenImage={openImage}
-            />
-          ))}
+          .map((cat) => {
+            // Inject auto-generated docs into the matching category
+            let genDocs: React.ReactNode = undefined;
+            if (cat.value === 'delivery-challans') genDocs = dcGenerated;
+            if (cat.value === 'documents') genDocs = qcGenerated;
+            return (
+              <CategoryBox
+                key={cat.value}
+                category={cat}
+                files={files[cat.value] ?? []}
+                isDropTarget={dragOverCategory === cat.value}
+                onDragOver={() => setDragOverCategory(cat.value)}
+                onDragLeave={() => setDragOverCategory(null)}
+                onDrop={(e) => handleDrop(e, cat.value)}
+                onDownload={handleDownload}
+                onDelete={handleDelete}
+                onDragStart={handleDragStart}
+                onOpenImage={openImage}
+                generatedDocs={genDocs}
+              />
+            );
+          })}
         {/* WhatsApp Photos box (only if files exist and not already shown in photos) */}
         {hasWhatsapp && (
           <CategoryBox
