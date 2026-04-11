@@ -36,6 +36,28 @@ export interface PODetail extends PurchaseOrderRow {
 }
 
 // ---------------------------------------------------------------------------
+// Purchase Request (project-level procurement view)
+// ---------------------------------------------------------------------------
+
+export interface PurchaseRequestItem {
+  project_id: string;
+  project_number: string;
+  customer_name: string;
+  boq_sent_to_purchase_at: string | null;
+  procurement_status: string | null;
+  procurement_priority: string | null;
+  procurement_received_date: string | null;
+  total_amount: number;
+  total_with_tax: number;
+  item_count: number;
+  po_count: number;
+  items_yet_to_place: number;
+  items_order_placed: number;
+  items_received: number;
+  items_ready: number;
+}
+
+// ---------------------------------------------------------------------------
 // Filters
 // ---------------------------------------------------------------------------
 
@@ -44,10 +66,205 @@ export interface ProcurementFilters {
   projectId?: string;
   vendorId?: string;
   search?: string;
+  priority?: string;
+  page?: number;
+  per_page?: number;
 }
 
 // ---------------------------------------------------------------------------
-// Queries
+// Purchase Requests — project-centric procurement view
+// ---------------------------------------------------------------------------
+
+export async function getPurchaseRequests(filters: ProcurementFilters = {}): Promise<{
+  items: PurchaseRequestItem[];
+  total: number;
+}> {
+  const op = '[getPurchaseRequests]';
+  console.log(`${op} Starting`);
+
+  const supabase = await createClient();
+  const page = filters.page || 1;
+  const perPage = filters.per_page || 50;
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  // Get projects that have been sent to purchase
+  let query = supabase
+    .from('projects')
+    .select(
+      'id, project_number, customer_name, boq_sent_to_purchase_at, procurement_status, procurement_priority, procurement_received_date',
+      { count: 'estimated' },
+    )
+    .not('procurement_status', 'is', null)
+    .order('boq_sent_to_purchase_at', { ascending: false, nullsFirst: false })
+    .range(from, to);
+
+  if (filters.status) query = query.eq('procurement_status', filters.status);
+  if (filters.priority) query = query.eq('procurement_priority', filters.priority);
+  if (filters.projectId) query = query.eq('id', filters.projectId);
+  if (filters.search)
+    query = query.or(
+      `project_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`,
+    );
+
+  const { data: projects, error, count } = await query;
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load purchase requests: ${error.message}`);
+  }
+
+  if (!projects || projects.length === 0) {
+    return { items: [], total: 0 };
+  }
+
+  const projectIds = projects.map((p) => p.id);
+
+  // Fetch BOQ item aggregates per project
+  const { data: boqAggs } = await supabase
+    .from('project_boq_items')
+    .select('project_id, procurement_status, quantity, unit_price, gst_rate, total_price')
+    .in('project_id', projectIds)
+    .neq('procurement_status', 'yet_to_finalize');
+
+  // Fetch PO count per project
+  const { data: poRows } = await supabase
+    .from('purchase_orders')
+    .select('project_id')
+    .in('project_id', projectIds)
+    .neq('status', 'cancelled');
+
+  // Build aggregates
+  const boqByProject: Record<string, {
+    totalAmount: number;
+    totalWithTax: number;
+    count: number;
+    yetToPlace: number;
+    orderPlaced: number;
+    received: number;
+    ready: number;
+  }> = {};
+
+  for (const item of boqAggs ?? []) {
+    const pid = item.project_id;
+    if (!boqByProject[pid]) {
+      boqByProject[pid] = { totalAmount: 0, totalWithTax: 0, count: 0, yetToPlace: 0, orderPlaced: 0, received: 0, ready: 0 };
+    }
+    const qty = Number(item.quantity || 0);
+    const rate = Number(item.unit_price || 0);
+    const amt = qty * rate;
+    boqByProject[pid].totalAmount += amt;
+    boqByProject[pid].totalWithTax += Number(item.total_price || 0);
+    boqByProject[pid].count++;
+    if (item.procurement_status === 'yet_to_place') boqByProject[pid].yetToPlace++;
+    if (item.procurement_status === 'order_placed') boqByProject[pid].orderPlaced++;
+    if (item.procurement_status === 'received') boqByProject[pid].received++;
+    if (item.procurement_status === 'ready_to_dispatch' || item.procurement_status === 'delivered')
+      boqByProject[pid].ready++;
+  }
+
+  const poCountByProject: Record<string, number> = {};
+  for (const po of poRows ?? []) {
+    poCountByProject[po.project_id] = (poCountByProject[po.project_id] || 0) + 1;
+  }
+
+  const items: PurchaseRequestItem[] = projects.map((p) => {
+    const agg = boqByProject[p.id] || { totalAmount: 0, totalWithTax: 0, count: 0, yetToPlace: 0, orderPlaced: 0, received: 0, ready: 0 };
+    return {
+      project_id: p.id,
+      project_number: p.project_number ?? '',
+      customer_name: p.customer_name ?? '',
+      boq_sent_to_purchase_at: p.boq_sent_to_purchase_at,
+      procurement_status: p.procurement_status,
+      procurement_priority: p.procurement_priority,
+      procurement_received_date: p.procurement_received_date,
+      total_amount: agg.totalAmount,
+      total_with_tax: agg.totalWithTax,
+      item_count: agg.count,
+      po_count: poCountByProject[p.id] || 0,
+      items_yet_to_place: agg.yetToPlace,
+      items_order_placed: agg.orderPlaced,
+      items_received: agg.received,
+      items_ready: agg.ready,
+    };
+  });
+
+  return { items, total: count ?? 0 };
+}
+
+// ---------------------------------------------------------------------------
+// Purchase Request Detail — BOQ items for a project + POs
+// ---------------------------------------------------------------------------
+
+export interface PurchaseDetailItem {
+  id: string;
+  line_number: number;
+  item_category: string;
+  item_description: string;
+  brand: string | null;
+  model: string | null;
+  hsn_code: string | null;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  gst_rate: number;
+  total_price: number;
+  procurement_status: string;
+  vendor_id: string | null;
+  vendor_name: string | null;
+  purchase_order_id: string | null;
+}
+
+export async function getPurchaseDetail(projectId: string): Promise<{
+  project: { id: string; project_number: string; customer_name: string; procurement_status: string | null; procurement_priority: string | null };
+  items: PurchaseDetailItem[];
+  purchaseOrders: POListItem[];
+  vendors: { id: string; company_name: string }[];
+}> {
+  const op = '[getPurchaseDetail]';
+  console.log(`${op} Starting for: ${projectId}`);
+
+  const supabase = await createClient();
+
+  const [projectRes, itemsRes, posRes, vendorsRes] = await Promise.all([
+    supabase
+      .from('projects')
+      .select('id, project_number, customer_name, procurement_status, procurement_priority')
+      .eq('id', projectId)
+      .single(),
+    supabase
+      .from('project_boq_items')
+      .select('id, line_number, item_category, item_description, brand, model, hsn_code, quantity, unit, unit_price, gst_rate, total_price, procurement_status, vendor_id, vendor_name, purchase_order_id')
+      .eq('project_id', projectId)
+      .neq('procurement_status', 'yet_to_finalize')
+      .order('line_number'),
+    supabase
+      .from('purchase_orders')
+      .select('*, vendors!purchase_orders_vendor_id_fkey(company_name, is_msme), projects!purchase_orders_project_id_fkey(project_number, customer_name)')
+      .eq('project_id', projectId)
+      .neq('status', 'cancelled')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('vendors')
+      .select('id, company_name')
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('company_name')
+      .limit(200),
+  ]);
+
+  if (projectRes.error) throw new Error(`Failed to load project: ${projectRes.error.message}`);
+  if (!projectRes.data) throw new Error(`Project not found: ${projectId}`);
+
+  return {
+    project: projectRes.data as any,
+    items: (itemsRes.data ?? []) as unknown as PurchaseDetailItem[],
+    purchaseOrders: (posRes.data ?? []) as unknown as POListItem[],
+    vendors: vendorsRes.data ?? [],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Existing PO Queries (preserved for PO detail page)
 // ---------------------------------------------------------------------------
 
 export async function getPurchaseOrders(filters: ProcurementFilters = {}): Promise<POListItem[]> {
@@ -129,10 +346,6 @@ export async function getPurchaseOrder(id: string): Promise<PODetail | null> {
   return data as unknown as PODetail;
 }
 
-/**
- * Fetches all MSME-vendor POs that have outstanding amounts and a delivery date,
- * used for the MSME alert banner.
- */
 export async function getMSMEAlertPOs(): Promise<POListItem[]> {
   const op = '[getMSMEAlertPOs]';
   console.log(`${op} Starting`);
@@ -153,14 +366,10 @@ export async function getMSMEAlertPOs(): Promise<POListItem[]> {
     throw new Error(`Failed to load MSME alert POs: ${error.message}`);
   }
 
-  // Filter to MSME vendors client-side (Supabase doesn't support filtering on joined fields easily)
   const allPOs = (data ?? []) as unknown as POListItem[];
   return allPOs.filter((po) => po.vendors?.is_msme === true);
 }
 
-/**
- * Fetches distinct vendors for filter dropdown.
- */
 export async function getVendorsList(): Promise<Pick<VendorRow, 'id' | 'company_name'>[]> {
   const op = '[getVendorsList]';
   console.log(`${op} Starting`);
@@ -182,9 +391,6 @@ export async function getVendorsList(): Promise<Pick<VendorRow, 'id' | 'company_
   return data ?? [];
 }
 
-/**
- * Fetches distinct projects for filter dropdown.
- */
 export async function getProjectsList(): Promise<Pick<ProjectRow, 'id' | 'project_number' | 'customer_name'>[]> {
   const op = '[getProjectsList]';
   console.log(`${op} Starting`);

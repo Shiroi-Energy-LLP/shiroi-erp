@@ -1,5 +1,5 @@
 # SHIROI ENERGY ERP — MASTER REFERENCE DOCUMENT
-**Version 3.6 | Updated April 11, 2026 | Read before every coding session**
+**Version 3.8 | Updated April 11, 2026 | Read before every coding session**
 
 > This is the single source of truth for the Shiroi Energy ERP project. Every decision made, every design rule, every business rule, every coding standard, and every constraint is captured here. Anyone joining the project — including Claude in a new chat — reads this first before writing a single line of code or SQL.
 
@@ -74,6 +74,9 @@
 | Actuals Module V2 | ✅ Complete | Per Manivel's spec: BOQ qty editable by PM (click-to-edit EditableQtyCell). Lock/unlock mechanism (actuals_locked on projects, ActualsLockButton). Lock makes BOI/BOQ/Actuals read-only. Pending voucher warning. KPI strip with margin color coding (green ≥15%, amber ≥5%, red <5%). |
 | QC Module V2 | ✅ Complete | Per Manivel's spec: Complete replacement with structured "Solar System Quality Check Form". 7 inspection sections (Panel Installation 4 items, Structure & Mounting 4, Electrical Wiring 4, Inverter 4, Earthing & Protection 3, Battery if applicable 4, Safety 3 = 26 total). Yes/No buttons per item + Remarks. Final Approval radio (Approved/Rework Required). Approval workflow: Submit → Pending Approval → Approved (PDF generated) / Rework Required. QC PDF via @react-pdf/renderer. API route GET `/api/projects/[id]/qc/[inspectionId]`. Constants in `qc-constants.ts`. |
 | Commissioning Report V2 | ✅ Complete | Per Manivel's spec: Multi-string electrical test table (Add+ for Inverter No/String No/Vmp/Isc/Polarity Check, stored as JSONB). Monitoring details (portal link/login/password). Performance ratio % field. Save Draft / Submit / Finalize workflow. Commissioning PDF via @react-pdf/renderer. API route GET `/api/projects/[id]/commissioning`. String-level + system-level readings display. Customer handover checklist. |
+| Migration 041 | ✅ Applied (dev) | Purchase module overhaul: vendor_id FK on project_boq_items, boq_item_id on purchase_order_items, project-level procurement tracking (boq_sent_to_purchase_at/by, procurement_priority, procurement_status, procurement_received_date). PO status constraint fixed. Indexes + backfill. |
+| Task Module V2 | ✅ Complete | Per Manivel's spec: 12-column table (Project Name, Task Name, Milestone, Assigned To, Assigned Date, Status Open/Closed, Priority, Due Date, Notes, Done By, Activity Log, Actions). Milestone join in getAllTasks query. Searchable project dropdown in CreateTaskDialog with auto-loading milestones. Pagination (50/page). Compact 11px layout. Bidirectional sync with project execution tasks. |
+| Purchase Module Overhaul | ✅ Complete | Per Manivel's spec: Project-centric /procurement page (purchase requests). Per-item vendor assignment. Vendor-wise PO auto-generation. Material receipt → Ready to Dispatch flow. Priority (High/Medium). Status flow: BOQ → Send to Purchase → Vendor Assignment → Create POs → Received → Ready to Dispatch → DC. /procurement/orders for PO list. 7 new server actions. |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
 | Placeholder pages | ✅ Complete | Design Queue (leads with survey done), Price Book (35 items), Liaison index (net meter summary cards) — all data-driven |
@@ -1564,8 +1567,9 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 **Migration files:** 40 files (001 through 040) — all committed to git
 **TypeScript types:** Generated in packages/types/database.ts
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
-**ERP app:** 60+ routes, 0 type errors
-**Last updated:** April 11, 2026 (v3.7 — PM Stepper Modules Overhaul per Manivel's 5-module spec. DC Corrections V2 (HSN code, company details, T&C). Execution Module V2 (10 milestones, 11-col task table, activity logs, milestone tracking). Actuals Module V2 (qty editing, lock/unlock). QC Module V2 (7-section structured checklist, approval workflow, PDF). Commissioning Report V2 (multi-string tests, monitoring details, performance ratio, PDF). Migrations 037-040.)
+**ERP app:** 63+ routes, 0 type errors
+**Migrations:** 41 files (001 through 041)
+**Last updated:** April 11, 2026 (v3.8 — Tasks V2 + Purchase Module Overhaul. Tasks: 12-column table per Manivel spec, milestone join, searchable project+milestone in CreateTaskDialog, pagination. Purchase: project-centric /procurement, per-item vendor assignment, vendor-wise PO generation, receipt tracking, /procurement/project/[id] detail page, /procurement/orders PO list. Migration 041.)
 
 **What changed in v3.4:**
 - HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments

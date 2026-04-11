@@ -2084,6 +2084,13 @@ export async function sendBoqToPurchase(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
+  // Get employee ID for tracking
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
   // Update all "yet_to_finalize" items to "yet_to_place"
   const { data, error } = await supabase
     .from('project_boq_items')
@@ -2097,7 +2104,20 @@ export async function sendBoqToPurchase(input: {
     return { success: false, error: error.message };
   }
 
+  // Set project-level procurement tracking
+  if (data && data.length > 0) {
+    await supabase
+      .from('projects')
+      .update({
+        procurement_status: 'yet_to_place',
+        boq_sent_to_purchase_at: new Date().toISOString(),
+        boq_sent_to_purchase_by: employee?.id ?? null,
+      } as any)
+      .eq('id', input.projectId);
+  }
+
   revalidatePath(`/projects/${input.projectId}`);
+  revalidatePath('/procurement');
   return { success: true, count: data?.length ?? 0 };
 }
 

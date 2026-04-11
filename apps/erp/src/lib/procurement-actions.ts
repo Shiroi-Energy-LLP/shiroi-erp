@@ -3,6 +3,10 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
 interface POLineItem {
   itemCategory: string;
   itemDescription: string;
@@ -11,7 +15,13 @@ interface POLineItem {
   unitPrice: number;
   gstRate: number;
   brand?: string;
+  hsnCode?: string;
+  boqItemId?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Create PO (manual — from /procurement)
+// ---------------------------------------------------------------------------
 
 export async function createPurchaseOrder(input: {
   projectId: string;
@@ -29,7 +39,6 @@ export async function createPurchaseOrder(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
-  // Get employee ID
   const { data: employee } = await supabase
     .from('employees')
     .select('id')
@@ -90,13 +99,15 @@ export async function createPurchaseOrder(input: {
       item_category: item.itemCategory,
       item_description: item.itemDescription,
       brand: item.brand || null,
+      hsn_code: item.hsnCode || null,
       unit: item.unit,
       quantity_ordered: item.quantity,
       quantity_pending: item.quantity,
       unit_price: item.unitPrice,
-      total_price: lineTotal,
+      total_price: lineTotal + lineGst,
       gst_rate: item.gstRate,
       gst_amount: lineGst,
+      boq_item_id: item.boqItemId || null,
     };
   });
 
@@ -106,10 +117,366 @@ export async function createPurchaseOrder(input: {
 
   if (itemsError) {
     console.error(`${op} Line items insert failed:`, { code: itemsError.code, message: itemsError.message });
-    // PO created but items failed — still return success with warning
     return { success: true, poId: po.id, error: `PO created but line items failed: ${itemsError.message}` };
   }
 
+  // Update BOQ items to link to PO and set status
+  const boqItemIds = input.lineItems.filter((i) => i.boqItemId).map((i) => i.boqItemId!);
+  if (boqItemIds.length > 0) {
+    await supabase
+      .from('project_boq_items')
+      .update({ purchase_order_id: po.id, procurement_status: 'order_placed' } as any)
+      .in('id', boqItemIds);
+  }
+
   revalidatePath('/procurement');
+  revalidatePath(`/procurement/project/${input.projectId}`);
   return { success: true, poId: po.id };
+}
+
+// ---------------------------------------------------------------------------
+// Assign Vendor to BOQ Item
+// ---------------------------------------------------------------------------
+
+export async function assignVendorToBoqItem(input: {
+  boqItemId: string;
+  vendorId: string | null;
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[assignVendorToBoqItem]';
+  console.log(`${op} Starting: item=${input.boqItemId}, vendor=${input.vendorId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Get vendor name for display
+  let vendorName: string | null = null;
+  if (input.vendorId) {
+    const { data: vendor } = await supabase
+      .from('vendors')
+      .select('company_name')
+      .eq('id', input.vendorId)
+      .single();
+    vendorName = vendor?.company_name ?? null;
+  }
+
+  const { error } = await supabase
+    .from('project_boq_items')
+    .update({
+      vendor_id: input.vendorId,
+      vendor_name: vendorName,
+    } as any)
+    .eq('id', input.boqItemId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/procurement/project/${input.projectId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// Bulk Assign Vendor to multiple BOQ Items
+// ---------------------------------------------------------------------------
+
+export async function bulkAssignVendor(input: {
+  boqItemIds: string[];
+  vendorId: string;
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[bulkAssignVendor]';
+  console.log(`${op} Starting: ${input.boqItemIds.length} items, vendor=${input.vendorId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: vendor } = await supabase
+    .from('vendors')
+    .select('company_name')
+    .eq('id', input.vendorId)
+    .single();
+
+  const { error } = await supabase
+    .from('project_boq_items')
+    .update({
+      vendor_id: input.vendorId,
+      vendor_name: vendor?.company_name ?? null,
+    } as any)
+    .in('id', input.boqItemIds);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/procurement/project/${input.projectId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// Create POs from Vendor-Assigned BOQ Items (auto-group by vendor)
+// ---------------------------------------------------------------------------
+
+export async function createPOsFromAssignedItems(input: {
+  projectId: string;
+  boqItemIds: string[];
+}): Promise<{ success: boolean; error?: string; poCount?: number }> {
+  const op = '[createPOsFromAssignedItems]';
+  console.log(`${op} Starting for project: ${input.projectId}, items: ${input.boqItemIds.length}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
+  if (!employee) return { success: false, error: 'Employee profile not found' };
+
+  // Fetch the selected BOQ items with vendor assignments
+  const { data: boqItems, error: fetchError } = await supabase
+    .from('project_boq_items')
+    .select('id, item_category, item_description, brand, model, hsn_code, quantity, unit, unit_price, gst_rate, total_price, vendor_id, vendor_name')
+    .in('id', input.boqItemIds)
+    .not('vendor_id', 'is', null);
+
+  if (fetchError) {
+    console.error(`${op} Fetch failed:`, { code: fetchError.code, message: fetchError.message });
+    return { success: false, error: fetchError.message };
+  }
+
+  if (!boqItems || boqItems.length === 0) {
+    return { success: false, error: 'No items with vendor assignments found' };
+  }
+
+  // Group by vendor
+  const vendorGroups: Record<string, typeof boqItems> = {};
+  for (const item of boqItems) {
+    const vid = (item as any).vendor_id as string;
+    if (!vendorGroups[vid]) vendorGroups[vid] = [];
+    vendorGroups[vid].push(item);
+  }
+
+  let poCount = 0;
+
+  // Create one PO per vendor
+  for (const [vendorId, items] of Object.entries(vendorGroups)) {
+    // Generate PO number
+    const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'PO' });
+    const poNumber = docNum || `SHIROI/PO/${new Date().getFullYear()}/TEMP`;
+
+    // Calculate totals
+    let subtotal = 0;
+    let gstTotal = 0;
+    for (const item of items) {
+      const qty = Number(item.quantity || 0);
+      const rate = Number(item.unit_price || 0);
+      const gstRate = Number(item.gst_rate || 18);
+      const lineTotal = qty * rate;
+      const lineGst = lineTotal * (gstRate / 100);
+      subtotal += lineTotal;
+      gstTotal += lineGst;
+    }
+    const totalAmount = subtotal + gstTotal;
+
+    // Insert PO
+    const { data: po, error: poError } = await supabase
+      .from('purchase_orders')
+      .insert({
+        project_id: input.projectId,
+        vendor_id: vendorId,
+        prepared_by: employee.id,
+        po_number: poNumber,
+        status: 'draft',
+        po_date: new Date().toISOString().slice(0, 10),
+        subtotal,
+        gst_amount: gstTotal,
+        total_amount: totalAmount,
+        amount_paid: 0,
+        amount_outstanding: totalAmount,
+      })
+      .select('id')
+      .single();
+
+    if (poError) {
+      console.error(`${op} PO insert failed for vendor ${vendorId}:`, poError.message);
+      continue;
+    }
+
+    // Insert PO line items
+    const lineItemRows = items.map((item, idx) => {
+      const qty = Number(item.quantity || 0);
+      const rate = Number(item.unit_price || 0);
+      const gstRate = Number(item.gst_rate || 18);
+      const lineTotal = qty * rate;
+      const lineGst = lineTotal * (gstRate / 100);
+      return {
+        purchase_order_id: po.id,
+        line_number: idx + 1,
+        item_category: item.item_category,
+        item_description: item.item_description,
+        brand: item.brand || null,
+        hsn_code: (item as any).hsn_code || null,
+        unit: item.unit,
+        quantity_ordered: qty,
+        quantity_pending: qty,
+        unit_price: rate,
+        total_price: lineTotal + lineGst,
+        gst_rate: gstRate,
+        gst_amount: lineGst,
+        boq_item_id: item.id,
+      };
+    });
+
+    await supabase.from('purchase_order_items').insert(lineItemRows);
+
+    // Link BOQ items to the PO and update status
+    const boqIds = items.map((i) => i.id);
+    await supabase
+      .from('project_boq_items')
+      .update({ purchase_order_id: po.id, procurement_status: 'order_placed' } as any)
+      .in('id', boqIds);
+
+    poCount++;
+  }
+
+  // Update project procurement status
+  if (poCount > 0) {
+    // Check if all items now have POs
+    const { data: remainingItems } = await supabase
+      .from('project_boq_items')
+      .select('id')
+      .eq('project_id', input.projectId)
+      .eq('procurement_status', 'yet_to_place')
+      .limit(1);
+
+    const allOrdered = !remainingItems || remainingItems.length === 0;
+    await supabase
+      .from('projects')
+      .update({
+        procurement_status: allOrdered ? 'order_placed' : 'yet_to_place',
+      } as any)
+      .eq('id', input.projectId);
+  }
+
+  revalidatePath('/procurement');
+  revalidatePath(`/procurement/project/${input.projectId}`);
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true, poCount };
+}
+
+// ---------------------------------------------------------------------------
+// Update Procurement Priority
+// ---------------------------------------------------------------------------
+
+export async function updateProcurementPriority(input: {
+  projectId: string;
+  priority: 'high' | 'medium';
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateProcurementPriority]';
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('projects')
+    .update({ procurement_priority: input.priority } as any)
+    .eq('id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/procurement');
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// Mark Items as Received
+// ---------------------------------------------------------------------------
+
+export async function markItemsReceived(input: {
+  boqItemIds: string[];
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[markItemsReceived]';
+  console.log(`${op} Starting: ${input.boqItemIds.length} items`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('project_boq_items')
+    .update({ procurement_status: 'received' } as any)
+    .in('id', input.boqItemIds);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  // Check if ALL ordered items for this project are received
+  const { data: pendingItems } = await supabase
+    .from('project_boq_items')
+    .select('id')
+    .eq('project_id', input.projectId)
+    .in('procurement_status', ['yet_to_place', 'order_placed'])
+    .limit(1);
+
+  const allReceived = !pendingItems || pendingItems.length === 0;
+
+  if (allReceived) {
+    await supabase
+      .from('projects')
+      .update({
+        procurement_status: 'received',
+        procurement_received_date: new Date().toISOString().slice(0, 10),
+      } as any)
+      .eq('id', input.projectId);
+  } else {
+    await supabase
+      .from('projects')
+      .update({ procurement_status: 'partially_received' } as any)
+      .eq('id', input.projectId);
+  }
+
+  revalidatePath('/procurement');
+  revalidatePath(`/procurement/project/${input.projectId}`);
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// Mark Items Ready to Dispatch (after receipt verification)
+// ---------------------------------------------------------------------------
+
+export async function markItemsReadyToDispatch(input: {
+  boqItemIds: string[];
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[markItemsReadyToDispatch]';
+  console.log(`${op} Starting: ${input.boqItemIds.length} items`);
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('project_boq_items')
+    .update({ procurement_status: 'ready_to_dispatch' } as any)
+    .in('id', input.boqItemIds);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/procurement/project/${input.projectId}`);
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
 }

@@ -16,6 +16,7 @@ export async function createTask(input: {
   assignedTo?: string;
   category?: string;
   remarks?: string;
+  milestoneId?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[createTask]';
   console.log(`${op} Starting: ${input.title}`);
@@ -49,6 +50,7 @@ export async function createTask(input: {
       category: input.category || null,
       remarks: input.remarks || null,
       assigned_date: today,
+      milestone_id: input.milestoneId || null,
     } as any);
 
   if (error) {
@@ -231,6 +233,26 @@ export async function getActiveProjects(): Promise<{ id: string; project_number:
     .not('status', 'in', '("completed")')
     .order('project_number', { ascending: false })
     .limit(200);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+  return data ?? [];
+}
+
+// ── Get Milestones for Project (for task creation) ──
+
+export async function getMilestonesForProject(
+  projectId: string,
+): Promise<{ id: string; milestone_name: string }[]> {
+  const op = '[getMilestonesForProject]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('project_milestones')
+    .select('id, milestone_name')
+    .eq('project_id', projectId)
+    .order('milestone_name');
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });

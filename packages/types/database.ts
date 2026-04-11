@@ -7007,6 +7007,7 @@ export type Database = {
           unit: string
           unit_price: number
           updated_at: string
+          vendor_id: string | null
           vendor_name: string | null
         }
         Insert: {
@@ -7033,6 +7034,7 @@ export type Database = {
           unit?: string
           unit_price?: number
           updated_at?: string
+          vendor_id?: string | null
           vendor_name?: string | null
         }
         Update: {
@@ -7059,6 +7061,7 @@ export type Database = {
           unit?: string
           unit_price?: number
           updated_at?: string
+          vendor_id?: string | null
           vendor_name?: string | null
         }
         Relationships: [
@@ -7088,6 +7091,13 @@ export type Database = {
             columns: ["purchase_order_id"]
             isOneToOne: false
             referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_boq_items_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -7991,6 +8001,8 @@ export type Database = {
           boi_locked_by: string | null
           boq_completed: boolean | null
           boq_completed_at: string | null
+          boq_sent_to_purchase_at: string | null
+          boq_sent_to_purchase_by: string | null
           builder_civil_cleared: boolean
           builder_civil_cleared_at: string | null
           builder_name: string | null
@@ -8028,6 +8040,9 @@ export type Database = {
           planned_end_date: string | null
           planned_start_date: string | null
           primary_contact_id: string | null
+          procurement_priority: string | null
+          procurement_received_date: string | null
+          procurement_status: string | null
           project_cost_manual: number | null
           project_manager_id: string | null
           project_number: string
@@ -8069,6 +8084,8 @@ export type Database = {
           boi_locked_by?: string | null
           boq_completed?: boolean | null
           boq_completed_at?: string | null
+          boq_sent_to_purchase_at?: string | null
+          boq_sent_to_purchase_by?: string | null
           builder_civil_cleared?: boolean
           builder_civil_cleared_at?: string | null
           builder_name?: string | null
@@ -8106,6 +8123,9 @@ export type Database = {
           planned_end_date?: string | null
           planned_start_date?: string | null
           primary_contact_id?: string | null
+          procurement_priority?: string | null
+          procurement_received_date?: string | null
+          procurement_status?: string | null
           project_cost_manual?: number | null
           project_manager_id?: string | null
           project_number: string
@@ -8147,6 +8167,8 @@ export type Database = {
           boi_locked_by?: string | null
           boq_completed?: boolean | null
           boq_completed_at?: string | null
+          boq_sent_to_purchase_at?: string | null
+          boq_sent_to_purchase_by?: string | null
           builder_civil_cleared?: boolean
           builder_civil_cleared_at?: string | null
           builder_name?: string | null
@@ -8184,6 +8206,9 @@ export type Database = {
           planned_end_date?: string | null
           planned_start_date?: string | null
           primary_contact_id?: string | null
+          procurement_priority?: string | null
+          procurement_received_date?: string | null
+          procurement_status?: string | null
           project_cost_manual?: number | null
           project_manager_id?: string | null
           project_number?: string
@@ -8217,6 +8242,13 @@ export type Database = {
           {
             foreignKeyName: "projects_boi_locked_by_fkey"
             columns: ["boi_locked_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_boq_sent_to_purchase_by_fkey"
+            columns: ["boq_sent_to_purchase_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
@@ -9257,6 +9289,7 @@ export type Database = {
       }
       purchase_order_items: {
         Row: {
+          boq_item_id: string | null
           brand: string | null
           created_at: string
           gst_amount: number
@@ -9280,6 +9313,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          boq_item_id?: string | null
           brand?: string | null
           created_at?: string
           gst_amount: number
@@ -9303,6 +9337,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          boq_item_id?: string | null
           brand?: string | null
           created_at?: string
           gst_amount?: number
@@ -9326,6 +9361,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_boq_item_id_fkey"
+            columns: ["boq_item_id"]
+            isOneToOne: false
+            referencedRelation: "project_boq_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_order_items_price_book_id_fkey"
             columns: ["price_book_id"]
