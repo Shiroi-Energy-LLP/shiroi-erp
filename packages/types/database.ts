@@ -7960,6 +7960,9 @@ export type Database = {
         Row: {
           actual_end_date: string | null
           actual_start_date: string | null
+          actuals_locked: boolean | null
+          actuals_locked_at: string | null
+          actuals_locked_by: string | null
           advance_amount: number
           advance_received_at: string
           automation_pause_reason: string | null
@@ -8035,6 +8038,9 @@ export type Database = {
         Insert: {
           actual_end_date?: string | null
           actual_start_date?: string | null
+          actuals_locked?: boolean | null
+          actuals_locked_at?: string | null
+          actuals_locked_by?: string | null
           advance_amount: number
           advance_received_at: string
           automation_pause_reason?: string | null
@@ -8110,6 +8116,9 @@ export type Database = {
         Update: {
           actual_end_date?: string | null
           actual_start_date?: string | null
+          actuals_locked?: boolean | null
+          actuals_locked_at?: string | null
+          actuals_locked_by?: string | null
           advance_amount?: number
           advance_received_at?: string
           automation_pause_reason?: string | null
@@ -8183,6 +8192,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_actuals_locked_by_fkey"
+            columns: ["actuals_locked_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_boi_locked_by_fkey"
             columns: ["boi_locked_by"]

@@ -3,7 +3,8 @@ import { formatINR, formatDate } from '@repo/ui/formatters';
 import { createClient } from '@repo/supabase/server';
 import { getProjectSiteExpenses } from '@/lib/site-expenses-actions';
 import { SiteExpenseForm } from '@/components/projects/forms/site-expense-form';
-import { FileText, Receipt, TrendingUp } from 'lucide-react';
+import { ActualsLockButton, EditableQtyCell } from '@/components/projects/forms/actuals-controls';
+import { FileText, Receipt, TrendingUp, Lock, AlertTriangle } from 'lucide-react';
 
 interface StepActualsProps {
   projectId: string;
@@ -41,20 +42,33 @@ export async function StepActuals({ projectId }: StepActualsProps) {
     supabase
       .from('project_boq_items')
       .select(
-        'id, item_category, item_description, brand, model, quantity, unit, unit_price, total_price, procurement_status, received_qty, dispatched_qty',
+        'id, item_category, item_description, brand, model, quantity, unit, unit_price, total_price, gst_rate, procurement_status, received_qty, dispatched_qty',
       )
       .eq('project_id', projectId)
       .order('line_number', { ascending: true }),
     supabase
       .from('projects')
-      .select('contracted_value, project_number, customer_name')
+      .select('contracted_value, project_number, customer_name, actuals_locked, actuals_locked_at, actuals_locked_by')
       .eq('id', projectId)
       .maybeSingle(),
     getProjectSiteExpenses(projectId),
   ]);
 
   const items = (boqItems as any[]) ?? [];
-  const contractedValue = Number((project as any)?.contracted_value ?? 0);
+  const projectData = project as any;
+  const contractedValue = Number(projectData?.contracted_value ?? 0);
+  const isLocked = !!projectData?.actuals_locked;
+
+  // Get locked-by employee name if locked
+  let lockedByName: string | null = null;
+  if (isLocked && projectData?.actuals_locked_by) {
+    const { data: emp } = await supabase
+      .from('employees')
+      .select('full_name')
+      .eq('id', projectData.actuals_locked_by)
+      .single();
+    lockedByName = (emp as any)?.full_name ?? null;
+  }
 
   const boqTotal = items.reduce((sum, item: any) => {
     const lineTotal =
@@ -78,6 +92,32 @@ export async function StepActuals({ projectId }: StepActualsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Lock status banner */}
+      {isLocked && (
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+          <Lock className="h-4 w-4 text-green-600" />
+          <span className="text-xs text-green-800 font-medium">
+            Project Actuals are LOCKED — BOI, BOQ, and Actuals are read-only.
+          </span>
+        </div>
+      )}
+
+      {/* Lock / Unlock control */}
+      <div className="flex items-center justify-between">
+        <ActualsLockButton
+          projectId={projectId}
+          isLocked={isLocked}
+          lockedByName={lockedByName}
+          lockedAt={projectData?.actuals_locked_at}
+        />
+        {pendingExpenses.length > 0 && !isLocked && (
+          <div className="flex items-center gap-1.5 text-amber-700">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span className="text-xs">{pendingExpenses.length} pending vouchers — review before locking</span>
+          </div>
+        )}
+      </div>
+
       {/* KPI strip */}
       <div className="grid grid-cols-4 gap-4">
         <KpiCard
@@ -112,10 +152,17 @@ export async function StepActuals({ projectId }: StepActualsProps) {
         />
       </div>
 
-      {/* BOQ items */}
+      {/* BOQ items with editable quantities */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">BOQ Items (auto-populated)</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">
+              BOQ Items {isLocked ? '(Locked)' : '(Qty editable by PM)'}
+            </CardTitle>
+            {!isLocked && (
+              <span className="text-[10px] text-n-400">Click any quantity to edit (e.g., for returned materials)</span>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {items.length === 0 ? (
@@ -124,40 +171,40 @@ export async function StepActuals({ projectId }: StepActualsProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-[11px]">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">
-                      Category
-                    </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">
-                      Description
-                    </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">
-                      Brand / Model
-                    </th>
-                    <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Qty</th>
-                    <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Rate</th>
-                    <th className="px-3 py-2 text-right text-xs font-medium text-n-500">Total</th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Category</th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Description</th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Brand / Model</th>
+                    <th className="px-3 py-1.5 text-right text-[10px] font-medium text-n-500">Qty</th>
+                    <th className="px-3 py-1.5 text-right text-[10px] font-medium text-n-500">Rate</th>
+                    <th className="px-3 py-1.5 text-right text-[10px] font-medium text-n-500">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item: any) => (
                     <tr key={item.id} className="border-b border-n-100 last:border-b-0">
-                      <td className="px-3 py-2 text-xs text-n-500 capitalize">
+                      <td className="px-3 py-1.5 text-n-500 capitalize">
                         {(item.item_category ?? '').replace(/_/g, ' ')}
                       </td>
-                      <td className="px-3 py-2 text-n-900">{item.item_description}</td>
-                      <td className="px-3 py-2 text-xs text-n-500">
+                      <td className="px-3 py-1.5 text-n-900">{item.item_description}</td>
+                      <td className="px-3 py-1.5 text-n-500">
                         {[item.brand, item.model].filter(Boolean).join(' · ') || '—'}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">
-                        {Number(item.quantity ?? 0)} {item.unit ?? ''}
+                      <td className="px-3 py-1.5 text-right">
+                        <EditableQtyCell
+                          projectId={projectId}
+                          itemId={item.id}
+                          quantity={Number(item.quantity ?? 0)}
+                          unit={item.unit ?? ''}
+                          isLocked={isLocked}
+                        />
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">
+                      <td className="px-3 py-1.5 text-right font-mono">
                         {formatINR(Number(item.unit_price ?? 0))}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono font-medium">
+                      <td className="px-3 py-1.5 text-right font-mono font-medium">
                         {formatINR(Number(item.total_price ?? 0))}
                       </td>
                     </tr>
@@ -165,10 +212,10 @@ export async function StepActuals({ projectId }: StepActualsProps) {
                 </tbody>
                 <tfoot>
                   <tr className="bg-n-50 border-t border-n-300">
-                    <td colSpan={5} className="px-3 py-2 text-right text-xs font-medium text-n-700">
+                    <td colSpan={5} className="px-3 py-1.5 text-right text-[10px] font-medium text-n-700">
                       BOQ Total
                     </td>
-                    <td className="px-3 py-2 text-right font-mono font-semibold text-n-900">
+                    <td className="px-3 py-1.5 text-right font-mono font-semibold text-n-900">
                       {formatINR(boqTotal)}
                     </td>
                   </tr>
@@ -179,14 +226,16 @@ export async function StepActuals({ projectId }: StepActualsProps) {
         </CardContent>
       </Card>
 
-      {/* Voucher entry form */}
-      <SiteExpenseForm projectId={projectId} />
+      {/* Voucher entry form (only when not locked) */}
+      {!isLocked && <SiteExpenseForm projectId={projectId} />}
 
       {/* Voucher history */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Site Expense Vouchers</CardTitle>
+            <CardTitle className="text-base">
+              Site Expense Vouchers {isLocked ? '(Locked)' : ''}
+            </CardTitle>
             {pendingExpenses.length > 0 && (
               <span className="text-xs text-amber-700">
                 {pendingExpenses.length} pending · {formatINR(pendingExpensesTotal)}
@@ -196,46 +245,36 @@ export async function StepActuals({ projectId }: StepActualsProps) {
         </CardHeader>
         <CardContent className="p-0">
           {siteExpenses.length === 0 ? (
-            <div className="px-6 py-10 text-sm text-n-500 text-center">
+            <div className="px-6 py-10 text-[11px] text-n-500 text-center">
               No vouchers submitted yet. Use the form above to add travel, food, lodging, and
               other site expenses.
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-[11px]">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Date</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">
-                      Category
-                    </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">
-                      Description
-                    </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">
-                      Submitted By
-                    </th>
-                    <th className="px-3 py-2 text-right text-xs font-medium text-n-500">
-                      Amount
-                    </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Status</th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Date</th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Category</th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Description</th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Submitted By</th>
+                    <th className="px-3 py-1.5 text-right text-[10px] font-medium text-n-500">Amount</th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {siteExpenses.map((e) => (
                     <tr key={e.id} className="border-b border-n-100 last:border-b-0">
-                      <td className="px-3 py-2 text-xs text-n-500">
+                      <td className="px-3 py-1.5 text-n-500">
                         {e.expense_date ? formatDate(e.expense_date) : '—'}
                       </td>
-                      <td className="px-3 py-2 text-xs text-n-500">
+                      <td className="px-3 py-1.5 text-n-500">
                         {CATEGORY_LABELS[e.expense_category ?? ''] ?? e.expense_category ?? '—'}
                       </td>
-                      <td className="px-3 py-2 text-n-900">{e.description ?? '—'}</td>
-                      <td className="px-3 py-2 text-xs text-n-500">
-                        {e.submitted_by_name ?? '—'}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono">{formatINR(e.amount)}</td>
-                      <td className="px-3 py-2">{statusBadge(e.status)}</td>
+                      <td className="px-3 py-1.5 text-n-900">{e.description ?? '—'}</td>
+                      <td className="px-3 py-1.5 text-n-500">{e.submitted_by_name ?? '—'}</td>
+                      <td className="px-3 py-1.5 text-right font-mono">{formatINR(e.amount)}</td>
+                      <td className="px-3 py-1.5">{statusBadge(e.status)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -265,13 +304,13 @@ function KpiCard({
     <Card>
       <CardContent className="pt-5">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-xs text-n-500">{label}</div>
+          <div className="text-[10px] text-n-500">{label}</div>
           {icon}
         </div>
         <div className={`text-xl font-mono font-semibold ${highlight ?? 'text-n-900'}`}>
           {value}
         </div>
-        {sub && <div className="text-[11px] text-n-500 mt-0.5">{sub}</div>}
+        {sub && <div className="text-[10px] text-n-500 mt-0.5">{sub}</div>}
       </CardContent>
     </Card>
   );

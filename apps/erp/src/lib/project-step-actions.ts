@@ -1062,6 +1062,124 @@ export async function getProjectSiteAddress(input: {
     .join(', ');
 }
 
+// ── Actuals: Update BOQ item quantity (for returned materials) ──
+
+export async function updateBoqItemQuantity(input: {
+  projectId: string;
+  itemId: string;
+  newQuantity: number;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateBoqItemQuantity]';
+  console.log(`${op} Updating BOQ item ${input.itemId} qty to ${input.newQuantity}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Check project is not locked
+  const { data: proj } = await supabase
+    .from('projects')
+    .select('actuals_locked')
+    .eq('id', input.projectId)
+    .single();
+
+  if ((proj as any)?.actuals_locked) {
+    return { success: false, error: 'Project actuals are locked. Unlock first to make changes.' };
+  }
+
+  // Update quantity and recalculate total_price
+  const { data: item } = await supabase
+    .from('project_boq_items')
+    .select('unit_price, gst_rate')
+    .eq('id', input.itemId)
+    .single();
+
+  const unitPrice = Number((item as any)?.unit_price ?? 0);
+  const gstRate = Number((item as any)?.gst_rate ?? 0);
+  const newTotal = input.newQuantity * unitPrice * (1 + gstRate / 100);
+
+  const { error } = await supabase
+    .from('project_boq_items')
+    .update({
+      quantity: input.newQuantity,
+      total_price: newTotal,
+    } as any)
+    .eq('id', input.itemId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── Actuals: Lock project (make BOI/BOQ/Actuals read-only) ──
+
+export async function lockProjectActuals(input: {
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[lockProjectActuals]';
+  console.log(`${op} Locking actuals for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
+  const { error } = await supabase
+    .from('projects')
+    .update({
+      actuals_locked: true,
+      actuals_locked_at: new Date().toISOString(),
+      actuals_locked_by: employee?.id || null,
+    } as any)
+    .eq('id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Lock failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── Actuals: Unlock project (PM only) ──
+
+export async function unlockProjectActuals(input: {
+  projectId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[unlockProjectActuals]';
+  console.log(`${op} Unlocking actuals for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('projects')
+    .update({
+      actuals_locked: false,
+      actuals_locked_at: null,
+      actuals_locked_by: null,
+    } as any)
+    .eq('id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Unlock failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
 // ── Milestones: Seed defaults ──
 
 const DEFAULT_MILESTONES = [
