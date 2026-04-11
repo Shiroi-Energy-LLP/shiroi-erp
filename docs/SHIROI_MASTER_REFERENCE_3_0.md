@@ -1,5 +1,5 @@
 # SHIROI ENERGY ERP — MASTER REFERENCE DOCUMENT
-**Version 3.5 | Updated April 10, 2026 | Read before every coding session**
+**Version 3.6 | Updated April 11, 2026 | Read before every coding session**
 
 > This is the single source of truth for the Shiroi Energy ERP project. Every decision made, every design rule, every business rule, every coding standard, and every constraint is captured here. Anyone joining the project — including Claude in a new chat — reads this first before writing a single line of code or SQL.
 
@@ -65,6 +65,15 @@
 | Vouchers approval queue | ✅ Complete | New `/vouchers` page — consolidated PM/founder/finance review for site expense vouchers. KPI strip (pending count, pending total, projects with pending), grouped project rollup, Approve + Reject-with-reason Dialog. Sidebar link under new "Approvals" section for founder/project_manager/finance. `site-expenses-actions.ts` (submit/approve/reject/getPending/getProject). |
 | BOI estimated site expenses | ✅ Complete | New card at bottom of BOI stepper step — single aggregate EditableField for `projects.estimated_site_expenses_budget` (NUMERIC(14,2)). Feeds into BOQ budget analysis baseline + Actuals step margin calculation. Planning fidelity is a single number, not a per-category breakdown — real record lives in `project_site_expenses`. |
 | Data verification system | ✅ Complete | DataFlagButton component, /data-quality dashboard (summary cards, flags table, resolve action), sidebar links for founder/purchase/finance |
+| Migration 037 | ✅ Applied (dev) | hsn_code TEXT on delivery_challan_items + project_boq_items, item_category on delivery_challan_items. Backfill from proposal_bom_lines via FK chain. |
+| Migration 038 | ✅ Applied (dev) | actuals_locked BOOLEAN, actuals_locked_at TIMESTAMPTZ, actuals_locked_by UUID on projects — lock/unlock mechanism for Actuals module. |
+| Migration 039 | ✅ Applied (dev) | QC module overhaul: approval_status/approved_by/approved_at/remarks on qc_gate_inspections. Relaxed gate_number (was 1-3, now ≥1). milestone_id nullable. Expanded overall_result CHECK to include approved/rework_required. Backward compat: existing passed → approved. |
+| Migration 040 | ✅ Applied (dev) | Commissioning enhancements: string_test_data JSONB, monitoring_portal_link/login/password TEXT, performance_ratio_pct NUMERIC(5,2). Status CHECK expanded to include 'finalized'. |
+| DC Corrections V2 | ✅ Complete | Per Manivel's spec: PDF company "SHIROI ENERGY LLP" (No. 75/34, Kasturbai Nagar, Adyar, Chennai 600020, GSTIN 33ACPFS4398J1ZE, Contact 9486801859). DC numbering DC-001/DC-002. Items: S.No/Item Description/HSN Code/Quantity. T&C "Received the above goods in good condition". Authorized Signature + Client Acknowledgment. |
+| Execution Module V2 | ✅ Complete | Per Manivel's spec: 10 milestones (Material Delivery, Structure Installation, Panel Installation, Electrical Work, Earthing Work, Civil Work, Testing & Commissioning, Net Metering, Handover, Follow-ups). 11-column task table (Task Name, Milestone, Assigned To, Assigned Date, Status Open/Closed, Priority, Due Date, Notes, Done By, Activity Log, Actions). Milestone tracking with editable Planned/Actual dates + Info. Auto-calculated milestone % from task completion ratio. Overall progress dashboard. |
+| Actuals Module V2 | ✅ Complete | Per Manivel's spec: BOQ qty editable by PM (click-to-edit EditableQtyCell). Lock/unlock mechanism (actuals_locked on projects, ActualsLockButton). Lock makes BOI/BOQ/Actuals read-only. Pending voucher warning. KPI strip with margin color coding (green ≥15%, amber ≥5%, red <5%). |
+| QC Module V2 | ✅ Complete | Per Manivel's spec: Complete replacement with structured "Solar System Quality Check Form". 7 inspection sections (Panel Installation 4 items, Structure & Mounting 4, Electrical Wiring 4, Inverter 4, Earthing & Protection 3, Battery if applicable 4, Safety 3 = 26 total). Yes/No buttons per item + Remarks. Final Approval radio (Approved/Rework Required). Approval workflow: Submit → Pending Approval → Approved (PDF generated) / Rework Required. QC PDF via @react-pdf/renderer. API route GET `/api/projects/[id]/qc/[inspectionId]`. Constants in `qc-constants.ts`. |
+| Commissioning Report V2 | ✅ Complete | Per Manivel's spec: Multi-string electrical test table (Add+ for Inverter No/String No/Vmp/Isc/Polarity Check, stored as JSONB). Monitoring details (portal link/login/password). Performance ratio % field. Save Draft / Submit / Finalize workflow. Commissioning PDF via @react-pdf/renderer. API route GET `/api/projects/[id]/commissioning`. String-level + system-level readings display. Customer handover checklist. |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
 | Placeholder pages | ✅ Complete | Design Queue (leads with survey done), Price Book (35 items), Liaison index (net meter summary cards) — all data-driven |
@@ -1507,7 +1516,7 @@ Each role gets a curated sidebar with grouped nav sections (not just a dashboard
 
 **Founder:** Cash-negative projects, pipeline value, pending approvals, overdue reports, payroll countdown. Add: donut chart, revenue trend, team utilization. Role switcher.
 
-**PM + O&M:** KPIs (active projects, system size, open tasks, open tickets). Donut chart by status. Operations widget. Today's priorities. 10-step stepper project detail (Project Details → Site Survey → BOM → BOQ Analysis → Delivery Notes → Execution → Quality Check → Liaison → Commissioning → Free AMC).
+**PM + O&M:** KPIs (active projects, system size, open tasks, open tickets). Donut chart by status. Operations widget. Today's priorities. 12-step stepper project detail (Details → Survey → BOI → BOQ → Delivery → Execution → Actuals → QC → Liaison → Commissioning → Free AMC → Documents). Execution: 10 milestones, task table with activity logs, auto % calc. Actuals: editable BOQ qty, lock/unlock. QC: 7-section structured checklist with approval workflow + PDF. Commissioning: multi-string tests, monitoring details, performance ratio, PDF generation.
 
 **Site Supervisor:** Active project card, today's report status, my tasks (overdue first), recent reports with lock status. Can access all projects (read-only) for old client lookups. 90-second report form with pre-populated fields.
 
@@ -1548,15 +1557,15 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 
 ---
 
-**Document version:** 3.6
+**Document version:** 3.7
 **Table count:** 134 tables verified in shiroi-erp-dev
 **Trigger count:** 91 triggers
 **RLS status:** Enabled on all 134 tables — recursive subqueries replaced with helper functions (migration 008a)
-**Migration files:** 34 files (001 through 034) — all committed to git
+**Migration files:** 40 files (001 through 040) — all committed to git
 **TypeScript types:** Generated in packages/types/database.ts
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
-**ERP app:** 58+ routes, 0 type errors
-**Last updated:** April 9, 2026 (v3.6 — Project detail page overhaul per Manivel's spec: editable boxes, horizontal stepper, Vouchers queue, Actuals step, BOI estimated site expenses. Migrations 033+034.)
+**ERP app:** 60+ routes, 0 type errors
+**Last updated:** April 11, 2026 (v3.7 — PM Stepper Modules Overhaul per Manivel's 5-module spec. DC Corrections V2 (HSN code, company details, T&C). Execution Module V2 (10 milestones, 11-col task table, activity logs, milestone tracking). Actuals Module V2 (qty editing, lock/unlock). QC Module V2 (7-section structured checklist, approval workflow, PDF). Commissioning Report V2 (multi-string tests, monitoring details, performance ratio, PDF). Migrations 037-040.)
 
 **What changed in v3.4:**
 - HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments
@@ -1679,6 +1688,17 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 - Migration 029 (027_list_page_indexes.sql): 4 DESC sort-column indexes — idx_projects_created_at, idx_leads_created_at, idx_contacts_created_at, idx_whatsapp_queue_timestamp. These cover the default sort order for each paginated list page.
 - Middleware timeout fix (Apr 8, 2026): Two changes to prevent MIDDLEWARE_INVOCATION_TIMEOUT on Vercel production. (1) Excluded `/login` from middleware matcher — no point calling getUser() on the login page. (2) Added 5s Promise.race timeout to `supabase.auth.getUser()` in `packages/supabase/src/middleware.ts` — if Supabase Auth is slow/504, middleware fails fast instead of hanging for 30s. The `(erp)/layout.tsx` `requireAuth()` provides the safety net for page-level auth enforcement.
 - Survey step: replaced SELECT * with explicit column list (future-proofed without overfetching).
+
+**What changed in v3.7 (Apr 11, 2026):**
+- PM Stepper Modules Overhaul: 5 modules implemented per Manivel's spec, 20+ files changed, 4 migrations applied
+- DC Corrections V2: Migration 037 (hsn_code on delivery_challan_items + project_boq_items with backfill). PDF rewritten — "SHIROI ENERGY LLP", GSTIN 33ACPFS4398J1ZE, DC-001 numbering, S.No/Item Description/HSN Code/Qty columns, T&C section, Authorized Signature
+- Execution Module V2: 10 milestones (earthing_work + follow_ups added). 11-column task table with inline Activity Log (expandable work logs via getWorkLogs). Auto-calculated milestone % from task completion ratio. Milestone tracking table with MilestoneEditableField (editable Planned Date/Actual Date/Info). Overall progress dashboard (tasks completed/open/blocked)
+- Actuals Module V2: Migration 038 (actuals_locked/at/by on projects). EditableQtyCell — click-to-edit BOQ quantity with recalculation. ActualsLockButton — lock/unlock with confirmation dialogs, shows locked-by name + date. Lock makes BOI/BOQ/Actuals read-only. Pending voucher warning before locking
+- QC Module V2: Migration 039 (approval_status, approved_by, approved_at, remarks on qc_gate_inspections; relaxed gate_number; expanded overall_result CHECK; milestone_id nullable). Structured 7-section Solar System Quality Check Form: Panel Installation (4 items), Structure & Mounting (4), Electrical Wiring (4), Inverter (4), Earthing & Protection (3), Battery if applicable (4), Safety (3) = 26 items. Yes/No buttons per item + Remarks. Final Approval (Approved/Rework Required). Approval workflow: Submit → Pending → Approved (PDF) / Rework. QC PDF via @react-pdf/renderer at /api/projects/[id]/qc/[inspectionId]. Constants in qc-constants.ts (shared between form + PDF). New components: qc-approval-controls.tsx (QcApprovalControls, QcPdfDownloadButton)
+- Commissioning Report V2: Migration 040 (string_test_data JSONB, monitoring_portal_link/login/password, performance_ratio_pct, status 'finalized'). Multi-string electrical test table (Add+ for Inverter No/String No/Vmp/Isc/Polarity). Monitoring details section (portal link/login/password). Performance ratio field. Save Draft / Submit / Finalize workflow. Commissioning PDF via @react-pdf/renderer at /api/projects/[id]/commissioning. New components: commissioning-controls.tsx (CommissioningPdfButton, FinalizeButton). Updated createCommissioningReport + updateCommissioningReport with V2 fields
+- New server actions: approveQcInspection, requestQcRework, finalizeCommissioningReport
+- Updated queries: getStepQcData (approval_status, approved_by, approved_at, remarks), getStepCommissioningData (string_test_data, monitoring fields, performance_ratio_pct, prepared_by)
+- Types regenerated with all 4 new migrations
 
 **What changed in v3.5 (Apr 7, 2026):**
 - PM Corrections R2: 16 files changed addressing PM Manivel's field testing feedback
