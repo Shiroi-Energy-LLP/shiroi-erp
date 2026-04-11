@@ -73,6 +73,7 @@ export async function updateTask(input: {
   assignedTo?: string;
   remarks?: string;
   projectId?: string;
+  milestoneId?: string;
   completedBy?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[updateTask]';
@@ -91,6 +92,7 @@ export async function updateTask(input: {
   if (input.assignedTo !== undefined) updateData.assigned_to = input.assignedTo || null;
   if (input.remarks !== undefined) updateData.remarks = input.remarks || null;
   if (input.projectId !== undefined) updateData.project_id = input.projectId || null;
+  if (input.milestoneId !== undefined) updateData.milestone_id = input.milestoneId || null;
   if (input.completedBy !== undefined) {
     updateData.completed_by = input.completedBy || null;
     // If setting completed_by, also mark as completed

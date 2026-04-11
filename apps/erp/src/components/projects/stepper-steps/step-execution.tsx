@@ -1,13 +1,18 @@
 import {
   Card, CardHeader, CardTitle, CardContent, Badge, Button,
 } from '@repo/ui';
-import { formatDate } from '@repo/ui/formatters';
 import { getStepExecutionData } from '@/lib/project-stepper-queries';
 import { getActiveEmployeesForProject } from '@/lib/project-step-actions';
-import { HardHat, Calendar, CheckCircle2, Clock, AlertTriangle, ListTodo } from 'lucide-react';
+import { HardHat, ListTodo } from 'lucide-react';
 import Link from 'next/link';
 import { MilestoneSeedButton, MilestoneStatusControl, QuickTaskForm } from '@/components/projects/forms/milestone-form';
-import { TaskCompletionToggle } from '@/components/projects/forms/task-completion-toggle';
+import {
+  TaskStatusDropdown,
+  ActivityLogCell,
+  EditTaskButton,
+  DeleteTaskButton,
+  MilestoneEditableField,
+} from '@/components/projects/forms/execution-task-row';
 
 interface StepExecutionProps {
   projectId: string;
@@ -19,10 +24,12 @@ const MILESTONE_LABELS: Record<string, string> = {
   structure_installation: 'Structure Installation',
   panel_installation: 'Panel Installation',
   electrical_work: 'Electrical Work',
+  earthing_work: 'Earthing Work',
   civil_work: 'Civil Work',
   testing_commissioning: 'Testing & Commissioning',
   net_metering: 'Net Metering',
   handover: 'Handover',
+  follow_ups: 'Follow-ups',
 };
 
 export async function StepExecution({ projectId }: StepExecutionProps) {
@@ -49,7 +56,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
       <div className="flex flex-col items-center justify-center py-16">
         <HardHat className="w-12 h-12 text-red-400 opacity-50 mb-3" />
         <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
-        <p className="text-[13px] text-[#7C818E]">Could not load execution data. Please refresh the page or try again later.</p>
+        <p className="text-[13px] text-[#7C818E]">Could not load execution data. Please refresh the page.</p>
       </div>
     );
   }
@@ -64,29 +71,39 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
           <HardHat className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
           <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Milestones</h3>
           <p className="text-[13px] text-[#7C818E] max-w-md text-center">
-            Click &quot;Seed Default Milestones&quot; above to create the standard 9 milestones for this project.
+            Click &quot;Seed Default Milestones&quot; above to create the default execution milestones.
           </p>
         </div>
       </div>
     );
   }
 
-  // Compute summary stats
-  const completed = milestones.filter((m) => m.status === 'completed').length;
-  const inProgress = milestones.filter((m) => m.status === 'in_progress').length;
-  const blocked = milestones.filter((m) => m.status === 'blocked' || m.is_blocked).length;
+  // Task-based counts
+  const tasksCompleted = tasks.filter((t: any) => t.is_completed).length;
+  const tasksOpen = tasks.filter((t: any) => !t.is_completed).length;
+  const milestoneBlocked = milestones.filter((m) => m.status === 'blocked' || m.is_blocked).length;
+
+  // Auto-calculate milestone completion % from tasks
+  const milestoneTaskCounts = milestones.map((m) => {
+    const mTasks = tasks.filter((t: any) => t.milestone_id === m.id);
+    const mDone = mTasks.filter((t: any) => t.is_completed).length;
+    const pct = mTasks.length > 0 ? Math.round((mDone / mTasks.length) * 100) : Number(m.completion_pct || 0);
+    return { milestoneId: m.id, total: mTasks.length, done: mDone, pct };
+  });
+
+  // Overall % from milestone averages (task-based where tasks exist, status-based otherwise)
   const overallPct = milestones.length > 0
-    ? Math.round(milestones.reduce((sum, m) => sum + Number(m.completion_pct || 0), 0) / milestones.length)
+    ? Math.round(milestoneTaskCounts.reduce((sum, mc) => sum + mc.pct, 0) / milestones.length)
     : 0;
 
   return (
     <div className="space-y-6">
-      {/* Summary bar */}
+      {/* ── Overall Progress Dashboard ── */}
       <div className="flex gap-3 flex-wrap">
         <SummaryCard label="Overall" value={`${overallPct}%`} color="#1A1D24" />
-        <SummaryCard label="Completed" value={completed.toString()} color="#065F46" />
-        <SummaryCard label="In Progress" value={inProgress.toString()} color="#1E40AF" />
-        <SummaryCard label="Blocked" value={blocked.toString()} color={blocked > 0 ? '#991B1B' : '#7C818E'} />
+        <SummaryCard label="Tasks Completed" value={tasksCompleted.toString()} color="#065F46" />
+        <SummaryCard label="Tasks Open" value={tasksOpen.toString()} color="#1E40AF" />
+        <SummaryCard label="Blocked" value={milestoneBlocked.toString()} color={milestoneBlocked > 0 ? '#991B1B' : '#7C818E'} />
         <SummaryCard label="Daily Reports" value={reportCount.toString()} color="#1A1D24" />
       </div>
 
@@ -101,45 +118,46 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
         />
       </div>
 
-      {/* Milestones timeline */}
+      {/* ── Milestone Tracking Table ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Execution Milestones</CardTitle>
+          <CardTitle className="text-base">Milestone Tracking</CardTitle>
           <div className="flex items-center gap-3">
-            <Link href={`/projects/${projectId}/milestones`}>
-              <Button size="sm" variant="ghost" className="text-xs">View Full Timeline</Button>
-            </Link>
             <Link href={`/projects/${projectId}?tab=qc`}>
               <Button size="sm" variant="ghost" className="text-xs">
-                Continue to QC →
+                Continue to QC &rarr;
               </Button>
             </Link>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-[11px]">
               <thead>
                 <tr className="border-b border-n-200 bg-n-50">
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500 w-8">#</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Milestone</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Status</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-n-500">%</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Planned</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Actual</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Info</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Milestone</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Status</th>
+                  <th className="px-3 py-2 text-right text-[10px] font-medium text-n-500 w-[50px]">%</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Planned Date</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Actual Date</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Info</th>
                 </tr>
               </thead>
               <tbody>
                 {milestones.map((m) => {
                   const label = MILESTONE_LABELS[m.milestone_name] ?? m.milestone_name.replace(/_/g, ' ');
+                  const mc = milestoneTaskCounts.find((tc) => tc.milestoneId === m.id);
+                  const pct = mc?.pct ?? 0;
+
                   return (
                     <tr key={m.id} className="border-b border-n-100 hover:bg-n-50">
-                      <td className="px-3 py-2 font-mono text-n-400">{m.milestone_order}</td>
-                      <td className="px-3 py-2">
-                        <div className="font-medium text-n-900">{label}</div>
+                      <td className="px-3 py-1.5">
+                        <span className="font-medium text-n-900">{label}</span>
+                        {mc && mc.total > 0 && (
+                          <span className="text-[9px] text-n-400 ml-1.5">({mc.done}/{mc.total} tasks)</span>
+                        )}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-1.5">
                         <MilestoneStatusControl
                           projectId={projectId}
                           milestoneId={m.id}
@@ -148,54 +166,45 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
                           blockedReason={m.blocked_reason}
                         />
                       </td>
-                      <td className="px-3 py-2 text-right">
-                        <span className={`font-mono text-xs ${
-                          Number(m.completion_pct) === 100 ? 'text-green-600 font-bold' :
-                          Number(m.completion_pct) > 0 ? 'text-blue-600' : 'text-n-400'
+                      <td className="px-3 py-1.5 text-right">
+                        <span className={`font-mono text-[11px] ${
+                          pct === 100 ? 'text-green-600 font-bold' :
+                          pct > 0 ? 'text-blue-600' : 'text-n-400'
                         }`}>
-                          {m.completion_pct}%
+                          {pct}%
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-xs text-n-500">
-                        {m.planned_start_date || m.planned_end_date ? (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>
-                              {m.planned_start_date ? formatDate(m.planned_start_date) : '—'}
-                              {' → '}
-                              {m.planned_end_date ? formatDate(m.planned_end_date) : '—'}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-n-300">Not set</span>
-                        )}
+                      <td className="px-3 py-1.5">
+                        <MilestoneEditableField
+                          projectId={projectId}
+                          milestoneId={m.id}
+                          field="planned_end_date"
+                          value={m.planned_end_date}
+                          type="date"
+                        />
                       </td>
-                      <td className="px-3 py-2 text-xs text-n-500">
-                        {m.actual_start_date || m.actual_end_date ? (
-                          <div className="flex items-center gap-1">
-                            {m.actual_end_date ? (
-                              <CheckCircle2 className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Clock className="h-3 w-3 text-blue-500" />
-                            )}
-                            <span>
-                              {m.actual_start_date ? formatDate(m.actual_start_date) : '—'}
-                              {' → '}
-                              {m.actual_end_date ? formatDate(m.actual_end_date) : '—'}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-n-300">—</span>
-                        )}
+                      <td className="px-3 py-1.5">
+                        <MilestoneEditableField
+                          projectId={projectId}
+                          milestoneId={m.id}
+                          field="actual_end_date"
+                          value={m.actual_end_date}
+                          type="date"
+                        />
                       </td>
-                      <td className="px-3 py-2">
-                        {m.is_blocked && (
-                          <div className="flex items-center gap-1">
-                            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
-                            <span className="text-xs text-red-600 max-w-[120px] truncate" title={m.blocked_reason ?? undefined}>
-                              {m.blocked_reason || 'Blocked'}
-                            </span>
-                          </div>
+                      <td className="px-3 py-1.5 max-w-[150px]">
+                        {m.is_blocked ? (
+                          <span className="text-[10px] text-red-600 truncate" title={m.blocked_reason ?? undefined}>
+                            {m.blocked_reason || 'Blocked'}
+                          </span>
+                        ) : (
+                          <MilestoneEditableField
+                            projectId={projectId}
+                            milestoneId={m.id}
+                            field="notes"
+                            value={(m as any).notes ?? null}
+                            type="text"
+                          />
                         )}
                       </td>
                     </tr>
@@ -207,7 +216,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
         </CardContent>
       </Card>
 
-      {/* Tasks linked to milestones */}
+      {/* ── Execution Tasks Table ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
@@ -216,7 +225,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-n-500">
-              {tasks.filter((t: any) => t.is_completed).length}/{tasks.length} done
+              {tasksCompleted}/{tasks.length} done
             </span>
             <QuickTaskForm projectId={projectId} milestones={milestones} employees={employees} />
           </div>
@@ -224,47 +233,84 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
         {tasks.length > 0 ? (
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-[11px]">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500 w-6"></th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Task</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Milestone</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Assigned</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Priority</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-n-500">Due</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Task Name</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Milestone</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Assigned To</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Assigned Date</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Status</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Priority</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Due Date</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Notes</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Done By</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Activity Log</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[60px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tasks.map((task: any) => {
                     const milestone = milestones.find((m) => m.id === task.milestone_id);
                     const milestoneLabel = milestone
-                      ? MILESTONE_LABELS[milestone.milestone_name] ?? milestone.milestone_name
+                      ? MILESTONE_LABELS[milestone.milestone_name] ?? milestone.milestone_name.replace(/_/g, ' ')
                       : '—';
                     const assigneeName = task.employees && 'full_name' in task.employees
                       ? (task.employees as { full_name: string }).full_name
                       : '—';
+                    const doneByName = task.completedByEmployee && 'full_name' in task.completedByEmployee
+                      ? (task.completedByEmployee as { full_name: string }).full_name
+                      : null;
                     const isOverdue = task.due_date && !task.is_completed && new Date(task.due_date) < new Date();
 
                     return (
-                      <tr key={task.id} className={`border-b border-n-100 ${task.is_completed ? 'opacity-50' : ''}`}>
-                        <td className="px-3 py-2">
-                          <TaskCompletionToggle
+                      <tr key={task.id} className={`border-b border-n-100 ${task.is_completed ? 'opacity-60' : ''}`}>
+                        <td className={`px-2 py-1.5 max-w-[160px] ${task.is_completed ? 'line-through text-n-400' : 'text-n-900 font-medium'}`}>
+                          <span className="truncate block" title={task.title}>{task.title}</span>
+                        </td>
+                        <td className="px-2 py-1.5 text-n-500">{milestoneLabel}</td>
+                        <td className="px-2 py-1.5 text-n-600">{assigneeName}</td>
+                        <td className="px-2 py-1.5 text-n-500">
+                          {task.assigned_date
+                            ? new Date(task.assigned_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+                            : '—'}
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <TaskStatusDropdown
                             taskId={task.id}
                             isCompleted={task.is_completed}
                             projectId={projectId}
                           />
                         </td>
-                        <td className={`px-3 py-2 ${task.is_completed ? 'line-through text-n-400' : 'text-n-900'}`}>
-                          {task.title}
-                        </td>
-                        <td className="px-3 py-2 text-xs text-n-500">{milestoneLabel}</td>
-                        <td className="px-3 py-2 text-xs text-n-500">{assigneeName}</td>
-                        <td className="px-3 py-2">
+                        <td className="px-2 py-1.5">
                           <PriorityBadge priority={task.priority} />
                         </td>
-                        <td className={`px-3 py-2 text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-n-500'}`}>
-                          {task.due_date ? formatDate(task.due_date) : '—'}
+                        <td className={`px-2 py-1.5 ${isOverdue ? 'text-red-600 font-medium' : 'text-n-500'}`}>
+                          {task.due_date
+                            ? new Date(task.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+                            : '—'}
+                        </td>
+                        <td className="px-2 py-1.5 text-n-500 max-w-[100px]">
+                          <span className="truncate block" title={task.remarks ?? undefined}>
+                            {task.remarks || '—'}
+                          </span>
+                        </td>
+                        <td className="px-2 py-1.5 text-n-600">
+                          {doneByName || '—'}
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <ActivityLogCell taskId={task.id} />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <EditTaskButton
+                              task={task}
+                              milestones={milestones}
+                              employees={employees}
+                              projectId={projectId}
+                            />
+                            <DeleteTaskButton taskId={task.id} projectId={projectId} />
+                          </div>
                         </td>
                       </tr>
                     );
@@ -275,7 +321,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
           </CardContent>
         ) : (
           <CardContent>
-            <p className="text-sm text-n-400 text-center py-4">No execution tasks yet. Use &quot;+ Task&quot; to create one.</p>
+            <p className="text-[11px] text-n-400 text-center py-4">No execution tasks yet. Use &quot;+ Task&quot; to create one.</p>
           </CardContent>
         )}
       </Card>
@@ -284,17 +330,12 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
       <div className="flex gap-3">
         <Link href={`/daily-reports?project=${projectId}`}>
           <Button size="sm" variant="outline" className="text-xs">
-            📋 {reportCount} Daily Reports
-          </Button>
-        </Link>
-        <Link href={`/projects/${projectId}/milestones`}>
-          <Button size="sm" variant="outline" className="text-xs">
-            📊 Detailed Milestones
+            {reportCount} Daily Reports
           </Button>
         </Link>
         <Link href={`/tasks?project=${projectId}`}>
           <Button size="sm" variant="outline" className="text-xs">
-            ✅ All Project Tasks
+            All Project Tasks
           </Button>
         </Link>
       </div>
@@ -305,7 +346,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
 function SummaryCard({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="px-4 py-3 bg-white border border-n-200 rounded-lg min-w-[100px]">
-      <div className="text-xs text-n-500 mb-0.5">{label}</div>
+      <div className="text-[10px] text-n-500 mb-0.5">{label}</div>
       <div className="text-xl font-bold" style={{ color }}>{value}</div>
     </div>
   );

@@ -1065,15 +1065,16 @@ export async function getProjectSiteAddress(input: {
 // ── Milestones: Seed defaults ──
 
 const DEFAULT_MILESTONES = [
-  { milestone_name: 'advance_payment', milestone_order: 1, is_payment_gate: true, payment_gate_number: 1 },
-  { milestone_name: 'material_delivery', milestone_order: 2, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'structure_installation', milestone_order: 3, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'panel_installation', milestone_order: 4, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'electrical_work', milestone_order: 5, is_payment_gate: true, payment_gate_number: 2 },
+  { milestone_name: 'material_delivery', milestone_order: 1, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'structure_installation', milestone_order: 2, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'panel_installation', milestone_order: 3, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'electrical_work', milestone_order: 4, is_payment_gate: true, payment_gate_number: 1 },
+  { milestone_name: 'earthing_work', milestone_order: 5, is_payment_gate: false, payment_gate_number: null },
   { milestone_name: 'civil_work', milestone_order: 6, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'testing_commissioning', milestone_order: 7, is_payment_gate: true, payment_gate_number: 3 },
+  { milestone_name: 'testing_commissioning', milestone_order: 7, is_payment_gate: true, payment_gate_number: 2 },
   { milestone_name: 'net_metering', milestone_order: 8, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'handover', milestone_order: 9, is_payment_gate: false, payment_gate_number: null },
+  { milestone_name: 'handover', milestone_order: 9, is_payment_gate: true, payment_gate_number: 3 },
+  { milestone_name: 'follow_ups', milestone_order: 10, is_payment_gate: false, payment_gate_number: null },
 ];
 
 export async function seedProjectMilestones(input: {
