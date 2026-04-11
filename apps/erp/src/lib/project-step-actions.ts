@@ -272,19 +272,14 @@ export async function createOrUpdateSurvey(input: {
   return { success: true };
 }
 
-// ── QC Inspection CRUD ──
+// ── QC Inspection CRUD (V2 — structured 7-section form) ──
 
 export async function createQcInspection(input: {
   projectId: string;
   data: {
-    gate_number: number;
-    milestone_id: string;
-    inspection_date: string;
-    overall_result: string;
-    requires_reinspection: boolean;
-    checklist_items: Array<{ item: string; passed: boolean; notes?: string }>;
-    failure_notes?: string;
-    conditional_notes?: string;
+    checklist_data: Record<string, unknown>; // QcChecklistData stored as JSONB
+    overall_result: string; // 'approved' | 'rework_required'
+    remarks?: string;
   };
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[createQcInspection]';
@@ -302,23 +297,100 @@ export async function createQcInspection(input: {
 
   if (!employee) return { success: false, error: 'Employee profile not found' };
 
+  // Auto-calculate gate number
+  const { count } = await supabase
+    .from('qc_gate_inspections')
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', input.projectId);
+
+  const gateNumber = (count ?? 0) + 1;
+
   const { error } = await supabase
     .from('qc_gate_inspections')
     .insert({
       project_id: input.projectId,
       inspected_by: employee.id,
-      gate_number: input.data.gate_number,
-      milestone_id: input.data.milestone_id,
-      inspection_date: input.data.inspection_date,
+      gate_number: gateNumber,
+      milestone_id: null,
+      inspection_date: new Date().toISOString().split('T')[0],
       overall_result: input.data.overall_result,
-      requires_reinspection: input.data.requires_reinspection,
-      checklist_items: input.data.checklist_items as any,
-      failure_notes: input.data.failure_notes ?? null,
-      conditional_notes: input.data.conditional_notes ?? null,
+      approval_status: 'submitted',
+      requires_reinspection: input.data.overall_result === 'rework_required',
+      checklist_items: input.data.checklist_data as any,
+      remarks: input.data.remarks ?? null,
     } as any);
 
   if (error) {
     console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+export async function approveQcInspection(input: {
+  projectId: string;
+  inspectionId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[approveQcInspection]';
+  console.log(`${op} Approving QC for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
+  if (!employee) return { success: false, error: 'Employee profile not found' };
+
+  const { error } = await supabase
+    .from('qc_gate_inspections')
+    .update({
+      approval_status: 'approved',
+      overall_result: 'approved',
+      approved_by: employee.id,
+      approved_at: new Date().toISOString(),
+    } as any)
+    .eq('id', input.inspectionId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Approve failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+export async function requestQcRework(input: {
+  projectId: string;
+  inspectionId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[requestQcRework]';
+  console.log(`${op} Requesting rework for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('qc_gate_inspections')
+    .update({
+      approval_status: 'rework_required',
+      overall_result: 'rework_required',
+      requires_reinspection: true,
+    } as any)
+    .eq('id', input.inspectionId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Rework request failed:`, { code: error.code, message: error.message });
     return { success: false, error: error.message };
   }
 
@@ -346,6 +418,13 @@ export async function createCommissioningReport(input: {
     customer_explained: boolean;
     app_download_assisted: boolean;
     notes: string | null;
+    // V2 fields
+    string_test_data?: unknown[];
+    monitoring_portal_link?: string | null;
+    monitoring_login?: string | null;
+    monitoring_password?: string | null;
+    performance_ratio_pct?: number | null;
+    status?: string;
   };
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[createCommissioningReport]';
@@ -383,7 +462,12 @@ export async function createCommissioningReport(input: {
       customer_explained: input.data.customer_explained,
       app_download_assisted: input.data.app_download_assisted,
       notes: input.data.notes,
-      status: 'draft',
+      string_test_data: input.data.string_test_data ?? [],
+      monitoring_portal_link: input.data.monitoring_portal_link ?? null,
+      monitoring_login: input.data.monitoring_login ?? null,
+      monitoring_password: input.data.monitoring_password ?? null,
+      performance_ratio_pct: input.data.performance_ratio_pct ?? null,
+      status: input.data.status ?? 'draft',
     } as any);
 
   if (error) {
@@ -1379,6 +1463,12 @@ export async function updateCommissioningReport(input: {
     app_download_assisted?: boolean;
     notes?: string | null;
     status?: string;
+    // V2 fields
+    string_test_data?: unknown[];
+    monitoring_portal_link?: string | null;
+    monitoring_login?: string | null;
+    monitoring_password?: string | null;
+    performance_ratio_pct?: number | null;
   };
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[updateCommissioningReport]';
@@ -1406,6 +1496,11 @@ export async function updateCommissioningReport(input: {
   if (d.app_download_assisted !== undefined) updatePayload.app_download_assisted = d.app_download_assisted;
   if (d.notes !== undefined) updatePayload.notes = d.notes;
   if (d.status !== undefined) updatePayload.status = d.status;
+  if (d.string_test_data !== undefined) updatePayload.string_test_data = d.string_test_data;
+  if (d.monitoring_portal_link !== undefined) updatePayload.monitoring_portal_link = d.monitoring_portal_link;
+  if (d.monitoring_login !== undefined) updatePayload.monitoring_login = d.monitoring_login;
+  if (d.monitoring_password !== undefined) updatePayload.monitoring_password = d.monitoring_password;
+  if (d.performance_ratio_pct !== undefined) updatePayload.performance_ratio_pct = d.performance_ratio_pct;
 
   if (Object.keys(updatePayload).length === 0) {
     return { success: true };
@@ -1419,6 +1514,32 @@ export async function updateCommissioningReport(input: {
 
   if (error) {
     console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+export async function finalizeCommissioningReport(input: {
+  projectId: string;
+  reportId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[finalizeCommissioningReport]';
+  console.log(`${op} Finalizing report for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('commissioning_reports')
+    .update({ status: 'finalized' } as any)
+    .eq('id', input.reportId)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Finalize failed:`, { code: error.code, message: error.message });
     return { success: false, error: error.message };
   }
 

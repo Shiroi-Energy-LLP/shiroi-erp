@@ -555,8 +555,12 @@ export type Database = {
           initial_reading_kwh: number
           insulation_resistance_mohm: number | null
           inverter_serial_number: string | null
+          monitoring_login: string | null
+          monitoring_password: string | null
+          monitoring_portal_link: string | null
           notes: string | null
           panel_count_installed: number
+          performance_ratio_pct: number | null
           prepared_by: string
           project_id: string
           qc_gate3_inspection_id: string | null
@@ -564,6 +568,7 @@ export type Database = {
           signature_storage_path: string | null
           signed_pdf_path: string | null
           status: string
+          string_test_data: Json | null
           system_size_kwp: number
           unsigned_pdf_path: string | null
           updated_at: string
@@ -586,8 +591,12 @@ export type Database = {
           initial_reading_kwh?: number
           insulation_resistance_mohm?: number | null
           inverter_serial_number?: string | null
+          monitoring_login?: string | null
+          monitoring_password?: string | null
+          monitoring_portal_link?: string | null
           notes?: string | null
           panel_count_installed: number
+          performance_ratio_pct?: number | null
           prepared_by: string
           project_id: string
           qc_gate3_inspection_id?: string | null
@@ -595,6 +604,7 @@ export type Database = {
           signature_storage_path?: string | null
           signed_pdf_path?: string | null
           status?: string
+          string_test_data?: Json | null
           system_size_kwp: number
           unsigned_pdf_path?: string | null
           updated_at?: string
@@ -617,8 +627,12 @@ export type Database = {
           initial_reading_kwh?: number
           insulation_resistance_mohm?: number | null
           inverter_serial_number?: string | null
+          monitoring_login?: string | null
+          monitoring_password?: string | null
+          monitoring_portal_link?: string | null
           notes?: string | null
           panel_count_installed?: number
+          performance_ratio_pct?: number | null
           prepared_by?: string
           project_id?: string
           qc_gate3_inspection_id?: string | null
@@ -626,6 +640,7 @@ export type Database = {
           signature_storage_path?: string | null
           signed_pdf_path?: string | null
           status?: string
+          string_test_data?: Json | null
           system_size_kwp?: number
           unsigned_pdf_path?: string | null
           updated_at?: string
@@ -9455,6 +9470,9 @@ export type Database = {
       }
       qc_gate_inspections: {
         Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           checklist_items: Json
           conditional_notes: string | null
           created_at: string
@@ -9463,7 +9481,7 @@ export type Database = {
           id: string
           inspected_by: string
           inspection_date: string
-          milestone_id: string
+          milestone_id: string | null
           overall_result: string
           payment_gate_unlocked: boolean
           payment_gate_unlocked_at: string | null
@@ -9471,9 +9489,13 @@ export type Database = {
           photos_storage_path: string[] | null
           project_id: string
           reinspection_of_id: string | null
+          remarks: string | null
           requires_reinspection: boolean
         }
         Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           checklist_items?: Json
           conditional_notes?: string | null
           created_at?: string
@@ -9482,7 +9504,7 @@ export type Database = {
           id?: string
           inspected_by: string
           inspection_date: string
-          milestone_id: string
+          milestone_id?: string | null
           overall_result: string
           payment_gate_unlocked?: boolean
           payment_gate_unlocked_at?: string | null
@@ -9490,9 +9512,13 @@ export type Database = {
           photos_storage_path?: string[] | null
           project_id: string
           reinspection_of_id?: string | null
+          remarks?: string | null
           requires_reinspection?: boolean
         }
         Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           checklist_items?: Json
           conditional_notes?: string | null
           created_at?: string
@@ -9501,7 +9527,7 @@ export type Database = {
           id?: string
           inspected_by?: string
           inspection_date?: string
-          milestone_id?: string
+          milestone_id?: string | null
           overall_result?: string
           payment_gate_unlocked?: boolean
           payment_gate_unlocked_at?: string | null
@@ -9509,9 +9535,17 @@ export type Database = {
           photos_storage_path?: string[] | null
           project_id?: string
           reinspection_of_id?: string | null
+          remarks?: string | null
           requires_reinspection?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "qc_gate_inspections_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "qc_gate_inspections_inspected_by_fkey"
             columns: ["inspected_by"]

@@ -2,202 +2,256 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Card, CardHeader, CardTitle, CardContent,
-  Button, Input, Label, Select, Checkbox,
-} from '@repo/ui';
-import { Plus, Trash2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, Button, Label } from '@repo/ui';
+import { ShieldCheck, Check, X } from 'lucide-react';
 import { createQcInspection } from '@/lib/project-step-actions';
+import {
+  QC_SECTIONS,
+  buildInitialChecklist,
+  type QcChecklistData,
+} from '@/lib/qc-constants';
 
 interface QcInspectionFormProps {
   projectId: string;
-  milestones: { id: string; milestone_name: string; milestone_order: number }[];
-  nextGateNumber: number;
+  systemType?: string;
+  existingData?: QcChecklistData;
 }
 
-interface ChecklistItem {
-  item: string;
-  passed: boolean;
-  notes: string;
-}
-
-const DEFAULT_CHECKLIST: ChecklistItem[] = [
-  { item: 'Panel alignment and mounting torque verified', passed: false, notes: '' },
-  { item: 'Wiring connections secure and labelled', passed: false, notes: '' },
-  { item: 'Earthing system continuity tested', passed: false, notes: '' },
-  { item: 'Inverter configuration verified', passed: false, notes: '' },
-  { item: 'Safety signage in place', passed: false, notes: '' },
-  { item: 'Walkway clearances adequate', passed: false, notes: '' },
-];
-
-export function QcInspectionForm({ projectId, milestones, nextGateNumber }: QcInspectionFormProps) {
+export function QcInspectionForm({ projectId, systemType, existingData }: QcInspectionFormProps) {
   const router = useRouter();
-  const [showForm, setShowForm] = React.useState(false);
+  const [showForm, setShowForm] = React.useState(!!existingData);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [checklist, setChecklist] = React.useState<ChecklistItem[]>(DEFAULT_CHECKLIST);
-  const [result, setResult] = React.useState('passed');
 
-  function addChecklistItem() {
-    setChecklist([...checklist, { item: '', passed: false, notes: '' }]);
+  const isBatterySystem = systemType === 'hybrid' || systemType === 'off_grid';
+  const [batteryApplicable, setBatteryApplicable] = React.useState(
+    existingData?.battery_applicable ?? isBatterySystem,
+  );
+
+  const [checklist, setChecklist] = React.useState<QcChecklistData>(
+    existingData ?? buildInitialChecklist(isBatterySystem),
+  );
+  const [finalApproval, setFinalApproval] = React.useState<'approved' | 'rework_required'>('approved');
+
+  // Rebuild sections when battery toggle changes (only if no existing data)
+  React.useEffect(() => {
+    if (!existingData) {
+      setChecklist(buildInitialChecklist(batteryApplicable));
+    }
+  }, [batteryApplicable, existingData]);
+
+  function updateItem(
+    sectionIdx: number,
+    itemIdx: number,
+    field: 'passed' | 'remarks',
+    value: boolean | null | string,
+  ) {
+    setChecklist((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s, si) => {
+        if (si !== sectionIdx) return s;
+        return {
+          ...s,
+          items: s.items.map((item, ii) => {
+            if (ii !== itemIdx) return item;
+            return { ...item, [field]: value };
+          }),
+        };
+      }),
+    }));
   }
 
-  function removeChecklistItem(idx: number) {
-    setChecklist(checklist.filter((_, i) => i !== idx));
-  }
-
-  function updateChecklistItem(idx: number, field: keyof ChecklistItem, value: string | boolean) {
-    setChecklist(checklist.map((item, i) => i === idx ? { ...item, [field]: value } : item));
-  }
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    setError(null);
 
-    const fd = new FormData(e.currentTarget);
-    const milestoneId = fd.get('milestone_id') as string;
-    const inspDate = fd.get('inspection_date') as string;
-    const failureNotes = fd.get('failure_notes') as string;
-    const conditionalNotes = fd.get('conditional_notes') as string;
-
-    if (!milestoneId) {
-      setError('Please select a milestone');
-      setSaving(false);
-      return;
+    // Validate: all items must have Yes or No
+    for (const section of checklist.sections) {
+      for (const item of section.items) {
+        if (item.passed === null) {
+          setError(`Please mark all items. "${item.item}" in "${section.name}" is not checked.`);
+          return;
+        }
+      }
     }
 
-    // Filter out empty checklist items
-    const validChecklist = checklist.filter((c) => c.item.trim() !== '');
+    setSaving(true);
+    setError(null);
 
     const res = await createQcInspection({
       projectId,
       data: {
-        gate_number: nextGateNumber,
-        milestone_id: milestoneId,
-        inspection_date: inspDate || new Date().toISOString().split('T')[0]!,
-        overall_result: result,
-        requires_reinspection: result === 'failed' || result === 'conditional_pass',
-        checklist_items: validChecklist,
-        failure_notes: failureNotes || undefined,
-        conditional_notes: conditionalNotes || undefined,
+        checklist_data: { ...checklist, remarks: checklist.remarks },
+        overall_result: finalApproval,
+        remarks: checklist.remarks,
       },
     });
 
     setSaving(false);
     if (res.success) {
       setShowForm(false);
-      setChecklist(DEFAULT_CHECKLIST);
       router.refresh();
     } else {
-      setError(res.error ?? 'Failed to create QC inspection');
+      setError(res.error ?? 'Failed to submit QC inspection');
     }
   }
 
   if (!showForm) {
     return (
       <div className="mb-4">
-        <Button size="sm" onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-1" /> New QC Inspection
+        <Button
+          size="sm"
+          onClick={() => {
+            setChecklist(existingData ?? buildInitialChecklist(isBatterySystem));
+            setShowForm(true);
+          }}
+        >
+          <ShieldCheck className="h-4 w-4 mr-1" />
+          {existingData ? 'Redo QC Inspection' : 'Start QC Inspection'}
         </Button>
       </div>
     );
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="text-base">New QC Gate Inspection — Gate #{nextGateNumber}</CardTitle>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Solar System Quality Check Form</CardTitle>
+          <label className="flex items-center gap-2 text-xs text-n-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={batteryApplicable}
+              onChange={(e) => setBatteryApplicable(e.target.checked)}
+              className="rounded border-n-300"
+            />
+            Battery system
+          </label>
+        </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="milestone_id">Milestone *</Label>
-              <Select id="milestone_id" name="milestone_id" required>
-                <option value="" disabled>Select milestone...</option>
-                {milestones.map((m) => (
-                  <option key={m.id} value={m.id}>#{m.milestone_order} — {m.milestone_name}</option>
-                ))}
-              </Select>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {checklist.sections.map((section, sIdx) => (
+            <div key={section.id} className="border border-n-200 rounded-lg overflow-hidden">
+              <div className="bg-n-50 px-3 py-2 border-b border-n-200">
+                <h4 className="text-xs font-semibold text-n-700">
+                  {sIdx + 1}. {section.name}
+                </h4>
+              </div>
+              <table className="w-full text-[11px]">
+                <thead>
+                  <tr className="border-b border-n-100">
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500 w-[50%]">
+                      Check Item
+                    </th>
+                    <th className="px-3 py-1.5 text-center text-[10px] font-medium text-n-500 w-[15%]">
+                      Yes / No
+                    </th>
+                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500 w-[35%]">
+                      Remarks
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {section.items.map((item, iIdx) => (
+                    <tr key={iIdx} className="border-b border-n-50 last:border-b-0">
+                      <td className="px-3 py-1.5 text-n-800">{item.item}</td>
+                      <td className="px-3 py-1.5 text-center">
+                        <div className="inline-flex gap-1">
+                          <button
+                            type="button"
+                            className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors ${
+                              item.passed === true
+                                ? 'bg-green-100 border-green-300 text-green-700'
+                                : 'bg-white border-n-200 text-n-400 hover:border-green-300'
+                            }`}
+                            onClick={() => updateItem(sIdx, iIdx, 'passed', true)}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            type="button"
+                            className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors ${
+                              item.passed === false
+                                ? 'bg-red-100 border-red-300 text-red-700'
+                                : 'bg-white border-n-200 text-n-400 hover:border-red-300'
+                            }`}
+                            onClick={() => updateItem(sIdx, iIdx, 'passed', false)}
+                          >
+                            No
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-3 py-1.5">
+                        <input
+                          type="text"
+                          value={item.remarks}
+                          onChange={(e) => updateItem(sIdx, iIdx, 'remarks', e.target.value)}
+                          placeholder="—"
+                          className="w-full bg-transparent border-0 border-b border-transparent hover:border-n-200 focus:border-p-400 text-[11px] px-0 py-0.5 outline-none"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div>
-              <Label htmlFor="inspection_date">Inspection Date *</Label>
-              <Input id="inspection_date" name="inspection_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
-            </div>
-            <div>
-              <Label htmlFor="overall_result">Overall Result *</Label>
-              <Select id="overall_result" name="overall_result" value={result} onChange={(e) => setResult(e.target.value)} required>
-                <option value="passed">Pass</option>
-                <option value="failed">Fail</option>
-                <option value="conditional_pass">Conditional Pass</option>
-              </Select>
-            </div>
-          </div>
+          ))}
 
-          {/* Checklist Section */}
+          {/* Overall Remarks */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-n-700">QC Checklist</h4>
-              <Button type="button" variant="ghost" size="sm" onClick={addChecklistItem}>
-                <Plus className="h-3 w-3 mr-1" /> Add Item
-              </Button>
-            </div>
-            <div className="space-y-3">
-              {checklist.map((item, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 bg-n-50 rounded-md">
-                  <Checkbox
-                    checked={item.passed}
-                    onCheckedChange={(checked) => updateChecklistItem(idx, 'passed', !!checked)}
-                    className="mt-1"
-                  />
-                  <div className="flex-1 space-y-2">
-                    <Input
-                      value={item.item}
-                      onChange={(e) => updateChecklistItem(idx, 'item', e.target.value)}
-                      placeholder="Checklist item description..."
-                      className="text-sm"
-                    />
-                    <Input
-                      value={item.notes}
-                      onChange={(e) => updateChecklistItem(idx, 'notes', e.target.value)}
-                      placeholder="Notes (optional)"
-                      className="text-xs"
-                    />
-                  </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => removeChecklistItem(idx)} className="text-red-500 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <Label className="text-xs font-semibold text-n-700 mb-1">Remarks</Label>
+            <textarea
+              value={checklist.remarks}
+              onChange={(e) => setChecklist((prev) => ({ ...prev, remarks: e.target.value }))}
+              rows={3}
+              className="w-full rounded-md border border-n-300 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-p-500"
+              placeholder="Overall observations and notes..."
+            />
           </div>
 
-          {/* Conditional/failure notes */}
-          {(result === 'failed' || result === 'conditional_pass') && (
-            <div>
-              <Label htmlFor={result === 'failed' ? 'failure_notes' : 'conditional_notes'}>
-                {result === 'failed' ? 'Failure Notes' : 'Conditional Notes'} *
-              </Label>
-              <textarea
-                id={result === 'failed' ? 'failure_notes' : 'conditional_notes'}
-                name={result === 'failed' ? 'failure_notes' : 'conditional_notes'}
-                rows={3}
-                className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-p-500"
-                required
-                placeholder={result === 'failed' ? 'Describe what failed and corrective action needed...' : 'Describe conditions that must be met...'}
+          {/* Final Approval */}
+          <div className="flex items-center gap-6 p-3 bg-n-50 rounded-lg">
+            <span className="text-xs font-semibold text-n-700">Final Approval:</span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="final_approval"
+                value="approved"
+                checked={finalApproval === 'approved'}
+                onChange={() => setFinalApproval('approved')}
+                className="text-green-600"
               />
-            </div>
-          )}
+              <span
+                className={`text-xs font-medium ${finalApproval === 'approved' ? 'text-green-700' : 'text-n-500'}`}
+              >
+                <Check className="h-3 w-3 inline mr-0.5" /> Approved
+              </span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="final_approval"
+                value="rework_required"
+                checked={finalApproval === 'rework_required'}
+                onChange={() => setFinalApproval('rework_required')}
+                className="text-red-600"
+              />
+              <span
+                className={`text-xs font-medium ${finalApproval === 'rework_required' ? 'text-red-700' : 'text-n-500'}`}
+              >
+                <X className="h-3 w-3 inline mr-0.5" /> Rework Required
+              </span>
+            </label>
+          </div>
 
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded">{error}</p>}
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Saving...' : 'Submit QC Inspection'}
+            <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving ? 'Submitting...' : 'Submit QC Inspection'}
             </Button>
           </div>
         </form>

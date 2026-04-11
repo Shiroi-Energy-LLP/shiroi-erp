@@ -1,215 +1,238 @@
-import {
-  Card, CardHeader, CardTitle, CardContent, Badge, Button,
-  Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
-} from '@repo/ui';
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
+import { createClient } from '@repo/supabase/server';
 import { getStepQcData } from '@/lib/project-stepper-queries';
-import { getProjectMilestones } from '@/lib/project-step-actions';
-import { ShieldCheck } from 'lucide-react';
-import type { Json } from '@repo/types/database';
+import { ShieldCheck, Check, X, Clock, AlertTriangle } from 'lucide-react';
 import { QcInspectionForm } from '@/components/projects/forms/qc-inspection-form';
-import Link from 'next/link';
+import { QcApprovalControls, QcPdfDownloadButton } from '@/components/projects/forms/qc-approval-controls';
+import type { QcChecklistData, QcSectionResult } from '@/lib/qc-constants';
 
 interface StepQcProps {
   projectId: string;
 }
 
-interface ChecklistItem {
-  item: string;
-  passed: boolean;
-  notes?: string;
-}
-
 export async function StepQc({ projectId }: StepQcProps) {
-  let inspections: Awaited<ReturnType<typeof getStepQcData>> = [];
-  let milestones: Awaited<ReturnType<typeof getProjectMilestones>> = [];
+  const supabase = await createClient();
 
-  try {
-    [inspections, milestones] = await Promise.all([
-      getStepQcData(projectId),
-      getProjectMilestones(projectId),
-    ]);
-  } catch (error) {
-    console.error('[StepQc] Failed to load QC data:', {
-      projectId,
-      error: error instanceof Error ? error.message : String(error),
-    });
+  // Fetch QC inspections + project system type in parallel
+  const [inspections, projectResult] = await Promise.all([
+    getStepQcData(projectId),
+    supabase
+      .from('projects')
+      .select('system_type')
+      .eq('id', projectId)
+      .maybeSingle(),
+  ]);
+
+  const systemType = (projectResult.data as any)?.system_type ?? 'on_grid';
+  const latestInspection = inspections.length > 0 ? inspections[inspections.length - 1] : null;
+  const approvalStatus = (latestInspection as any)?.approval_status ?? null;
+  const isApproved = approvalStatus === 'approved';
+  const isSubmitted = approvalStatus === 'submitted';
+  const isReworkRequired = approvalStatus === 'rework_required';
+
+  // Parse checklist data from latest inspection
+  const checklistData = latestInspection?.checklist_items as unknown as QcChecklistData | null;
+
+  // Get inspector and approver names
+  const inspectorName =
+    latestInspection?.employees && typeof latestInspection.employees === 'object' && 'full_name' in latestInspection.employees
+      ? (latestInspection.employees as { full_name: string }).full_name
+      : null;
+
+  let approverName: string | null = null;
+  if (isApproved && (latestInspection as any)?.approved_by) {
+    const { data: approver } = await supabase
+      .from('employees')
+      .select('full_name')
+      .eq('id', (latestInspection as any).approved_by)
+      .single();
+    approverName = (approver as any)?.full_name ?? null;
+  }
+
+  // ── Approved: show completed status ──
+  if (isApproved && latestInspection) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <ShieldCheck className="w-12 h-12 text-red-400 opacity-50 mb-3" />
-        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
-        <p className="text-[13px] text-[#7C818E]">Could not load QC data. Please refresh the page.</p>
+      <div className="space-y-6">
+        {/* Completed banner */}
+        <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
+            <Check className="h-5 w-5 text-green-600" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-green-800">QC Inspection Completed</div>
+            <div className="text-xs text-green-700">
+              {(latestInspection as any)?.approved_at
+                ? `Approved on ${formatDate((latestInspection as any).approved_at)}`
+                : `Inspected on ${formatDate(latestInspection.inspection_date)}`}
+              {approverName ? ` by ${approverName}` : ''}
+            </div>
+          </div>
+          <div className="ml-auto">
+            <QcPdfDownloadButton projectId={projectId} inspectionId={latestInspection.id} />
+          </div>
+        </div>
+
+        {/* Read-only checklist */}
+        {checklistData && <ReadOnlyChecklist data={checklistData} />}
       </div>
     );
   }
 
-  const nextGateNumber = inspections.length > 0
-    ? Math.max(...inspections.map((i) => i.gate_number)) + 1
-    : 1;
+  // ── Submitted: pending approval ──
+  if (isSubmitted && latestInspection) {
+    return (
+      <div className="space-y-6">
+        {/* Pending banner */}
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+          <Clock className="h-5 w-5 text-amber-600" />
+          <div>
+            <div className="text-sm font-semibold text-amber-800">QC Inspection — Pending Approval</div>
+            <div className="text-xs text-amber-700">
+              Submitted on {formatDate(latestInspection.inspection_date)}
+              {inspectorName ? ` by ${inspectorName}` : ''}
+            </div>
+          </div>
+          <div className="ml-auto">
+            <QcApprovalControls projectId={projectId} inspectionId={latestInspection.id} />
+          </div>
+        </div>
 
-  // Summary counts
-  const passCount = inspections.filter((i) => i.overall_result === 'pass').length;
-  const failCount = inspections.filter((i) => i.overall_result === 'fail').length;
-  const conditionalCount = inspections.filter((i) => i.overall_result === 'conditional_pass').length;
-  const reinspectionCount = inspections.filter((i) => i.requires_reinspection).length;
+        {/* Read-only checklist */}
+        {checklistData && <ReadOnlyChecklist data={checklistData} />}
+      </div>
+    );
+  }
 
+  // ── Rework required: show warning + form ──
+  if (isReworkRequired && latestInspection) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          <AlertTriangle className="h-5 w-5 text-red-600" />
+          <div>
+            <div className="text-sm font-semibold text-red-800">Rework Required</div>
+            <div className="text-xs text-red-700">
+              Previous QC inspection was rejected. Please redo the inspection.
+              {(latestInspection as any)?.remarks && (
+                <span className="block mt-0.5">
+                  Notes: {(latestInspection as any).remarks}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <QcInspectionForm
+          projectId={projectId}
+          systemType={systemType}
+          existingData={checklistData ?? undefined}
+        />
+      </div>
+    );
+  }
+
+  // ── No inspection yet: show form ──
   return (
     <div className="space-y-6">
-      {/* Create form */}
-      <QcInspectionForm
-        projectId={projectId}
-        milestones={milestones}
-        nextGateNumber={nextGateNumber}
-      />
-
-      {/* QC Summary */}
-      {inspections.length > 0 && (
-        <div className="flex gap-3 flex-wrap">
-          <div className="px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-center min-w-[80px]">
-            <div className="text-lg font-bold text-green-700">{passCount}</div>
-            <div className="text-[10px] font-medium text-green-600">Passed</div>
-          </div>
-          <div className="px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-center min-w-[80px]">
-            <div className="text-lg font-bold text-red-700">{failCount}</div>
-            <div className="text-[10px] font-medium text-red-600">Failed</div>
-          </div>
-          <div className="px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-center min-w-[80px]">
-            <div className="text-lg font-bold text-amber-700">{conditionalCount}</div>
-            <div className="text-[10px] font-medium text-amber-600">Conditional</div>
-          </div>
-          {reinspectionCount > 0 && (
-            <div className="px-3 py-2 rounded-lg border border-orange-200 bg-orange-50 text-center min-w-[80px]">
-              <div className="text-lg font-bold text-orange-700">{reinspectionCount}</div>
-              <div className="text-[10px] font-medium text-orange-600">Re-inspect</div>
-            </div>
-          )}
-        </div>
-      )}
-
       {inspections.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <ShieldCheck className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No QC Inspections</h3>
-          <p className="text-[13px] text-[#7C818E]">Click &quot;New QC Inspection&quot; above to record the first quality check.</p>
+        <div className="flex flex-col items-center justify-center py-12">
+          <ShieldCheck className="w-12 h-12 text-n-300 mb-3" />
+          <h3 className="text-sm font-semibold text-n-700 mb-1">No QC Inspection Yet</h3>
+          <p className="text-xs text-n-500 mb-4">
+            Use the structured checklist below to perform the Solar System Quality Check.
+          </p>
         </div>
-      ) : (
-        <>
-          {/* Inspections table */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">QC Gate Inspections</CardTitle>
-              <Link href={`/projects/${projectId}?tab=liaison`}>
-                <Button size="sm" variant="ghost" className="text-xs">
-                  Continue to Liaison →
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Gate #</TableHead>
-                    <TableHead>Inspector</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Result</TableHead>
-                    <TableHead>Re-inspect?</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {inspections.map((insp) => {
-                    const inspectorName = insp.employees && 'full_name' in insp.employees
-                      ? (insp.employees as { full_name: string }).full_name
-                      : '\u2014';
-
-                    return (
-                      <TableRow key={insp.id}>
-                        <TableCell className="font-mono">{insp.gate_number}</TableCell>
-                        <TableCell>{inspectorName}</TableCell>
-                        <TableCell>{formatDate(insp.inspection_date)}</TableCell>
-                        <TableCell>
-                          <ResultBadge result={insp.overall_result} />
-                        </TableCell>
-                        <TableCell>
-                          {insp.requires_reinspection ? (
-                            <Badge variant="warning">Yes</Badge>
-                          ) : (
-                            <span className="text-[#7C818E]">\u2014</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          {/* Checklist details per inspection */}
-          {inspections.map((insp) => {
-            const items = parseChecklist(insp.checklist_items);
-            if (items.length === 0) return null;
-
-            return (
-              <Card key={`checklist-${insp.id}`}>
-                <CardHeader>
-                  <CardTitle className="text-base">Gate {insp.gate_number} &mdash; Checklist</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {items.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-sm">
-                        <span className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${item.passed ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#FEF2F2] text-[#991B1B]'}`}>
-                          {item.passed ? '\u2713' : '\u2717'}
-                        </span>
-                        <div>
-                          <span className="text-[#1A1D24]">{item.item}</span>
-                          {item.notes && (
-                            <span className="text-[#7C818E] ml-2">&mdash; {item.notes}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </>
-      )}
+      ) : null}
+      <QcInspectionForm projectId={projectId} systemType={systemType} />
     </div>
   );
 }
 
-function ResultBadge({ result }: { result: string }) {
-  const variant = result === 'pass' ? 'success'
-    : result === 'fail' ? 'error'
-    : result === 'conditional_pass' ? 'warning'
-    : 'neutral';
+// ── Read-only checklist display (used for submitted/approved states) ──
+
+function ReadOnlyChecklist({ data }: { data: QcChecklistData }) {
+  const sections = data.sections ?? [];
+  const totalItems = sections.reduce((acc, s) => acc + s.items.length, 0);
+  const passedItems = sections.reduce(
+    (acc, s) => acc + s.items.filter((i) => i.passed === true).length,
+    0,
+  );
+  const failedItems = totalItems - passedItems;
 
   return (
-    <Badge variant={variant} className="capitalize">
-      {result.replace(/_/g, ' ')}
-    </Badge>
-  );
-}
+    <div className="space-y-4">
+      {/* Summary */}
+      <div className="flex gap-3">
+        <div className="px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-center min-w-[80px]">
+          <div className="text-lg font-bold text-green-700">{passedItems}</div>
+          <div className="text-[10px] font-medium text-green-600">Passed</div>
+        </div>
+        <div className="px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-center min-w-[80px]">
+          <div className="text-lg font-bold text-red-700">{failedItems}</div>
+          <div className="text-[10px] font-medium text-red-600">Failed</div>
+        </div>
+        <div className="px-3 py-2 rounded-lg border border-n-200 bg-n-50 text-center min-w-[80px]">
+          <div className="text-lg font-bold text-n-700">{totalItems}</div>
+          <div className="text-[10px] font-medium text-n-500">Total Items</div>
+        </div>
+      </div>
 
-function parseChecklist(raw: Json): ChecklistItem[] {
-  if (!raw || !Array.isArray(raw)) return [];
-  const result: ChecklistItem[] = [];
-  for (const entry of raw) {
-    if (
-      typeof entry === 'object' &&
-      entry !== null &&
-      'item' in entry &&
-      'passed' in entry
-    ) {
-      const obj = entry as Record<string, Json | undefined>;
-      result.push({
-        item: String(obj.item ?? ''),
-        passed: Boolean(obj.passed),
-        notes: obj.notes ? String(obj.notes) : undefined,
-      });
-    }
-  }
-  return result;
+      {/* Sections */}
+      {sections.map((section, sIdx) => (
+        <Card key={section.id}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-semibold">
+              {sIdx + 1}. {section.name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="border-b border-n-200 bg-n-50">
+                  <th className="px-3 py-1 text-left text-[10px] font-medium text-n-500 w-[50%]">
+                    Check Item
+                  </th>
+                  <th className="px-3 py-1 text-center text-[10px] font-medium text-n-500 w-[15%]">
+                    Result
+                  </th>
+                  <th className="px-3 py-1 text-left text-[10px] font-medium text-n-500 w-[35%]">
+                    Remarks
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {section.items.map((item, iIdx) => (
+                  <tr key={iIdx} className="border-b border-n-50 last:border-b-0">
+                    <td className="px-3 py-1.5 text-n-800">{item.item}</td>
+                    <td className="px-3 py-1.5 text-center">
+                      {item.passed === true ? (
+                        <span className="inline-flex items-center gap-0.5 text-green-700 font-semibold">
+                          <Check className="h-3 w-3" /> Yes
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-0.5 text-red-700 font-semibold">
+                          <X className="h-3 w-3" /> No
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-1.5 text-n-500">{item.remarks || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* Overall remarks */}
+      {data.remarks && (
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xs font-semibold text-n-700 mb-1">Remarks</div>
+            <p className="text-xs text-n-600">{data.remarks}</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }
