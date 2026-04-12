@@ -82,6 +82,10 @@
 | Execution Module V3 | ✅ Complete | Fixed milestone constraint error. Master table (execution_milestones_master) replaces CHECK constraint. seedProjectMilestones reads from DB dynamically. "Create Execution Task" button. Proper milestone labels in dropdowns. TASK_CATEGORIES aligned with 10 milestones. All V2 features intact (task table, activity logs, milestone tracking, progress dashboard). |
 | Actuals & QC V3 | ✅ Complete | Actuals: VoucherTable client component with category filter + inline edit for pending vouchers. updateSiteExpense server action. QC: Project Details section (auto-populated + editable metadata). Photo upload per checklist section (site-photos bucket). QcSectionPhotos read-only display. QcChecklistData extended with photos/project_info/inspection metadata. |
 | Liaison Module V2 | ✅ Complete | Visual workflow bar (6 stages). Click-to-edit fields (LiaisonFieldEditor). Proper follow-up form. Document upload (10 types). Activity log. 4 new server actions. Expanded getStepLiaisonData. |
+| Task Module V3 | ✅ Complete | Inline status toggle (TaskStatusToggle — click badge to toggle Open/Closed). Searchable project filter (type-to-search 200+ projects). Removed truncate/max-width on task name, milestone, notes columns. 3 files changed. |
+| Migration 043 | ✅ Applied (dev) | Service tickets: service_amount NUMERIC(14,2), closed_at TIMESTAMPTZ, indexes on severity + issue_type. |
+| Service Tickets V2 | ✅ Complete | 12-column compact table. TicketStatusToggle (6 statuses, auto-sets resolved_at/closed_at). EditTicketDialog (title, description, issue type, severity, assignee, service amount, resolution notes). DeleteTicketButton. Filter bar (status, severity, issue type, engineer, project, search). Pagination (50/page). 3 new server actions. |
+| AMC Module V2 | ✅ Complete | 6 summary cards (Total Contracts free/paid, Active, This Week, Upcoming, Completed, Overdue). Filter bar (contract status, visit status, project). Visits table 9 cols with inline VisitStatusToggle + RescheduleVisitDialog. Contracts table 8 cols with Free/Paid badge. 4 new server actions (updateVisitStatus, rescheduleVisit, assignVisitEngineer, getAllAmcData). |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
 | Placeholder pages | ✅ Complete | Design Queue (leads with survey done), Price Book (35 items), Liaison index (net meter summary cards) — all data-driven |
@@ -1574,7 +1578,7 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
 **ERP app:** 63+ routes, 0 type errors
 **Migrations:** 41 files (001 through 041)
-**Last updated:** April 11, 2026 (v3.12 — Liaison Module V2. Visual step-by-step workflow bar (6 stages). Click-to-edit fields. Follow-up form replaces prompt(). Document upload with 10 types. Activity log. 4 new server actions. 4 files changed, 0 type errors.)
+**Last updated:** April 11, 2026 (v3.15 — AMC Module V2. Complete rewrite of /om/amc: 6 summary cards, filter bar, visits table with inline VisitStatusToggle + RescheduleVisitDialog, contracts table with Free/Paid badges. Also: Service Tickets V2 (12-col table, inline status, edit/delete, service amount), Task Module V3 (inline status toggle, searchable project filter). All 6 Manivel modules complete.)
 
 **What changed in v3.4:**
 - HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments
