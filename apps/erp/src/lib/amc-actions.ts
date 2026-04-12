@@ -92,6 +92,179 @@ export async function createAmcSchedule(input: {
   return { success: true };
 }
 
+// ── Update Visit Status ──
+
+export async function updateVisitStatus(
+  visitId: string,
+  newStatus: string,
+): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateVisitStatus]';
+  console.log(`${op} Updating visit ${visitId} to ${newStatus}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const updateData: Record<string, any> = { status: newStatus };
+
+  if (newStatus === 'completed') {
+    updateData.completed_at = new Date().toISOString();
+  }
+  if (newStatus === 'scheduled' || newStatus === 'confirmed') {
+    // Reopening — clear completed
+    updateData.completed_at = null;
+  }
+
+  const { error } = await supabase
+    .from('om_visit_schedules' as any)
+    .update(updateData as any)
+    .eq('id', visitId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/om/amc');
+  revalidatePath('/om/visits');
+  return { success: true };
+}
+
+// ── Reschedule Visit ──
+
+export async function rescheduleVisit(input: {
+  visitId: string;
+  newDate: string;
+  reason?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[rescheduleVisit]';
+  console.log(`${op} Rescheduling visit ${input.visitId} to ${input.newDate}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Get current date first for rescheduled_from
+  const { data: currentVisit } = await supabase
+    .from('om_visit_schedules' as any)
+    .select('scheduled_date, reschedule_count')
+    .eq('id', input.visitId)
+    .single();
+
+  const { error } = await supabase
+    .from('om_visit_schedules' as any)
+    .update({
+      scheduled_date: input.newDate,
+      status: 'rescheduled',
+      rescheduled_from: (currentVisit as any)?.scheduled_date || null,
+      reschedule_reason: input.reason || null,
+      reschedule_count: ((currentVisit as any)?.reschedule_count || 0) + 1,
+    } as any)
+    .eq('id', input.visitId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/om/amc');
+  revalidatePath('/om/visits');
+  return { success: true };
+}
+
+// ── Assign Engineer to Visit ──
+
+export async function assignVisitEngineer(
+  visitId: string,
+  employeeId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const op = '[assignVisitEngineer]';
+  console.log(`${op} Assigning engineer ${employeeId} to visit ${visitId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('om_visit_schedules' as any)
+    .update({ assigned_to: employeeId || null } as any)
+    .eq('id', visitId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/om/amc');
+  revalidatePath('/om/visits');
+  return { success: true };
+}
+
+// ── Get All AMC Data (paginated) ──
+
+export async function getAllAmcData(filters: {
+  contract_status?: string;
+  visit_status?: string;
+  project_id?: string;
+  search?: string;
+}): Promise<{
+  contracts: any[];
+  visits: any[];
+  totalContracts: number;
+  totalVisits: number;
+}> {
+  const op = '[getAllAmcData]';
+  const supabase = await createClient();
+
+  // Contracts query
+  let contractQuery = supabase
+    .from('om_contracts' as any)
+    .select(
+      'id, contract_number, contract_type, start_date, end_date, annual_value, status, visits_included, project_id, projects!om_contracts_project_id_fkey(project_number, customer_name)' as any,
+      { count: 'estimated' as any },
+    )
+    .order('start_date', { ascending: false })
+    .limit(200);
+
+  if (filters.contract_status) contractQuery = contractQuery.eq('status', filters.contract_status);
+  if (filters.project_id) contractQuery = contractQuery.eq('project_id', filters.project_id);
+
+  // Visits query
+  let visitQuery = supabase
+    .from('om_visit_schedules' as any)
+    .select(
+      'id, visit_number, visit_type, scheduled_date, status, completed_at, project_id, contract_id, assigned_to, rescheduled_from, reschedule_count, employees!om_visit_schedules_assigned_to_fkey(full_name), projects!om_visit_schedules_project_id_fkey(project_number, customer_name)' as any,
+      { count: 'estimated' as any },
+    )
+    .order('scheduled_date', { ascending: true })
+    .limit(200);
+
+  if (filters.visit_status) {
+    if (filters.visit_status === 'active') {
+      visitQuery = visitQuery.not('status', 'in', '("completed","cancelled")');
+    } else {
+      visitQuery = visitQuery.eq('status', filters.visit_status);
+    }
+  }
+  if (filters.project_id) visitQuery = visitQuery.eq('project_id', filters.project_id);
+
+  const [contractResult, visitResult] = await Promise.all([contractQuery, visitQuery]);
+
+  if (contractResult.error) {
+    console.error(`${op} Contracts query failed:`, { code: contractResult.error.code, message: contractResult.error.message });
+  }
+  if (visitResult.error) {
+    console.error(`${op} Visits query failed:`, { code: visitResult.error.code, message: visitResult.error.message });
+  }
+
+  return {
+    contracts: (contractResult.data ?? []) as any[],
+    visits: (visitResult.data ?? []) as any[],
+    totalContracts: contractResult.count ?? 0,
+    totalVisits: visitResult.count ?? 0,
+  };
+}
+
 export async function getCommissionedProjects(): Promise<{ id: string; project_number: string; customer_name: string; commissioned_date: string | null }[]> {
   const op = '[getCommissionedProjects]';
   const supabase = await createClient();
