@@ -7,6 +7,8 @@ import { formatDate } from '@repo/ui/formatters';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import { EditTaskDialog } from '@/components/tasks/edit-task-dialog';
 import { DeleteTaskButton } from '@/components/tasks/delete-task-button';
+import { TaskStatusToggle } from '@/components/tasks/task-status-toggle';
+import { SearchableProjectFilter } from '@/components/tasks/searchable-project-filter';
 import { ActivityLogCell } from '@/components/projects/forms/execution-task-row';
 import {
   Card,
@@ -136,12 +138,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                 <option key={emp.id} value={emp.id}>{emp.full_name}</option>
               ))}
             </FilterSelect>
-            <FilterSelect paramName="project" className="w-44 text-xs h-8">
-              <option value="">All Projects</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.project_number} — {p.customer_name}</option>
-              ))}
-            </FilterSelect>
+            <SearchableProjectFilter projects={projects} />
             <SearchInput
               placeholder="Search task..."
               className="w-48 h-8 text-xs"
@@ -211,12 +208,12 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                         </td>
 
                         {/* Task Name */}
-                        <td className={`px-2 py-1.5 text-[11px] font-medium max-w-[180px] ${task.is_completed ? 'line-through text-n-400' : 'text-n-900'}`}>
-                          <span className="truncate block" title={task.title}>{task.title}</span>
+                        <td className={`px-2 py-1.5 text-[11px] font-medium ${task.is_completed ? 'line-through text-n-400' : 'text-n-900'}`}>
+                          <span title={task.title}>{task.title}</span>
                         </td>
 
                         {/* Milestone */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-600 max-w-[100px] truncate" title={milestoneName ?? ''}>
+                        <td className="px-2 py-1.5 text-[10px] text-n-600" title={milestoneName ?? ''}>
                           {milestoneName
                             ? milestoneName.replace(/_/g, ' ')
                             : <span className="text-n-300">—</span>}
@@ -232,14 +229,13 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                           {task.assigned_date ? formatDate(task.assigned_date) : <span className="text-n-300">—</span>}
                         </td>
 
-                        {/* Status (Open/Closed) */}
+                        {/* Status (Open/Closed) — clickable toggle */}
                         <td className="px-2 py-1.5">
-                          <Badge
-                            variant={task.is_completed ? 'success' : overdue ? 'error' : 'outline'}
-                            className="text-[10px] px-1.5 py-0"
-                          >
-                            {task.is_completed ? 'Closed' : overdue ? 'Overdue' : 'Open'}
-                          </Badge>
+                          <TaskStatusToggle
+                            taskId={task.id}
+                            isCompleted={task.is_completed}
+                            isOverdue={overdue}
+                          />
                         </td>
 
                         {/* Priority */}
@@ -261,7 +257,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                         </td>
 
                         {/* Notes/Remarks */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-600 max-w-[100px] truncate" title={task.remarks ?? ''}>
+                        <td className="px-2 py-1.5 text-[10px] text-n-600" title={task.remarks ?? ''}>
                           {task.remarks ?? <span className="text-n-300">—</span>}
                         </td>
 

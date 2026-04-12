@@ -119,6 +119,52 @@ export async function updateTask(input: {
   return { success: true };
 }
 
+// ── Toggle Task Status (Open/Closed) ──
+
+export async function toggleTaskStatus(
+  taskId: string,
+  isCompleted: boolean,
+): Promise<{ success: boolean; error?: string }> {
+  const op = '[toggleTaskStatus]';
+  console.log(`${op} Toggling task ${taskId} to ${isCompleted ? 'closed' : 'open'}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const updateData: Record<string, any> = {
+    is_completed: isCompleted,
+  };
+
+  if (isCompleted) {
+    updateData.completed_at = new Date().toISOString();
+    // Look up employee for completed_by
+    const { data: emp } = await supabase
+      .from('employees')
+      .select('id')
+      .eq('profile_id', user.id)
+      .maybeSingle();
+    if (emp) updateData.completed_by = emp.id;
+  } else {
+    updateData.completed_at = null;
+    updateData.completed_by = null;
+  }
+
+  const { error } = await supabase
+    .from('tasks' as any)
+    .update(updateData as any)
+    .eq('id', taskId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/tasks');
+  revalidatePath('/my-tasks');
+  return { success: true };
+}
+
 // ── Delete Task (soft-delete) ──
 
 export async function deleteTask(taskId: string): Promise<{ success: boolean; error?: string }> {
