@@ -1264,20 +1264,43 @@ export async function unlockProjectActuals(input: {
   return { success: true };
 }
 
-// ── Milestones: Seed defaults ──
+// ── Milestones: Seed defaults from master table ──
 
-const DEFAULT_MILESTONES = [
-  { milestone_name: 'material_delivery', milestone_order: 1, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'structure_installation', milestone_order: 2, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'panel_installation', milestone_order: 3, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'electrical_work', milestone_order: 4, is_payment_gate: true, payment_gate_number: 1 },
-  { milestone_name: 'earthing_work', milestone_order: 5, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'civil_work', milestone_order: 6, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'testing_commissioning', milestone_order: 7, is_payment_gate: true, payment_gate_number: 2 },
-  { milestone_name: 'net_metering', milestone_order: 8, is_payment_gate: false, payment_gate_number: null },
-  { milestone_name: 'handover', milestone_order: 9, is_payment_gate: true, payment_gate_number: 3 },
-  { milestone_name: 'follow_ups', milestone_order: 10, is_payment_gate: false, payment_gate_number: null },
+// Fallback if master table is empty (should not happen after migration 042)
+const FALLBACK_MILESTONES = [
+  { milestone_name: 'material_delivery', milestone_order: 1, is_payment_gate: false },
+  { milestone_name: 'structure_installation', milestone_order: 2, is_payment_gate: false },
+  { milestone_name: 'panel_installation', milestone_order: 3, is_payment_gate: false },
+  { milestone_name: 'electrical_work', milestone_order: 4, is_payment_gate: true },
+  { milestone_name: 'earthing_work', milestone_order: 5, is_payment_gate: false },
+  { milestone_name: 'civil_work', milestone_order: 6, is_payment_gate: false },
+  { milestone_name: 'testing_commissioning', milestone_order: 7, is_payment_gate: true },
+  { milestone_name: 'net_metering', milestone_order: 8, is_payment_gate: false },
+  { milestone_name: 'handover', milestone_order: 9, is_payment_gate: true },
+  { milestone_name: 'follow_ups', milestone_order: 10, is_payment_gate: false },
 ];
+
+/** Fetch milestone definitions from master table. */
+export async function getExecutionMilestonesMaster(): Promise<
+  { milestone_name: string; milestone_label: string; milestone_order: number; is_payment_gate: boolean }[]
+> {
+  const op = '[getExecutionMilestonesMaster]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('execution_milestones_master')
+    .select('milestone_name, milestone_label, milestone_order, is_payment_gate')
+    .eq('is_active', true)
+    .order('milestone_order', { ascending: true });
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
+    return FALLBACK_MILESTONES.map((m) => ({
+      ...m,
+      milestone_label: m.milestone_name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    }));
+  }
+  return data ?? [];
+}
 
 export async function seedProjectMilestones(input: {
   projectId: string;
@@ -1297,9 +1320,22 @@ export async function seedProjectMilestones(input: {
     return { success: false, error: 'Milestones already exist. Cannot re-seed.' };
   }
 
-  const milestones = DEFAULT_MILESTONES.map((m) => ({
+  // Read from master table (dynamic, not hardcoded)
+  const masterMilestones = await getExecutionMilestonesMaster();
+
+  // Map payment gates: electrical_work=1, testing_commissioning=2, handover=3
+  const paymentGateMap: Record<string, number> = {
+    electrical_work: 1,
+    testing_commissioning: 2,
+    handover: 3,
+  };
+
+  const milestones = masterMilestones.map((m) => ({
     project_id: input.projectId,
-    ...m,
+    milestone_name: m.milestone_name,
+    milestone_order: m.milestone_order,
+    is_payment_gate: m.is_payment_gate,
+    payment_gate_number: paymentGateMap[m.milestone_name] ?? null,
     status: 'pending',
     completion_pct: 0,
   }));

@@ -2490,6 +2490,36 @@ export type Database = {
           },
         ]
       }
+      execution_milestones_master: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_payment_gate: boolean
+          milestone_label: string
+          milestone_name: string
+          milestone_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_payment_gate?: boolean
+          milestone_label: string
+          milestone_name: string
+          milestone_order: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_payment_gate?: boolean
+          milestone_label?: string
+          milestone_name?: string
+          milestone_order?: number
+        }
+        Relationships: []
+      }
       finance_reports: {
         Row: {
           created_at: string

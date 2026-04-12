@@ -6,6 +6,19 @@ import { Button } from '@repo/ui';
 import { RefreshCw, Plus } from 'lucide-react';
 import { seedProjectMilestones, updateMilestoneStatus, createQuickTask } from '@/lib/project-step-actions';
 
+const MILESTONE_DISPLAY_LABELS: Record<string, string> = {
+  material_delivery: 'Material Delivery',
+  structure_installation: 'Structure Installation',
+  panel_installation: 'Panel Installation',
+  electrical_work: 'Electrical Work',
+  earthing_work: 'Earthing Work',
+  civil_work: 'Civil Work',
+  testing_commissioning: 'Testing & Commissioning',
+  net_metering: 'Net Metering',
+  handover: 'Handover',
+  follow_ups: 'Follow-ups',
+};
+
 // ── Seed Button ──
 
 interface MilestoneSeedButtonProps {
@@ -36,7 +49,7 @@ export function MilestoneSeedButton({ projectId }: MilestoneSeedButtonProps) {
         {seeding ? 'Creating...' : 'Seed Default Milestones'}
       </Button>
       <span className="text-xs text-n-500">
-        Creates the standard 9 project milestones (Advance Payment → Handover).
+        Creates the standard 10 execution milestones (Material Delivery → Follow-ups).
       </span>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
@@ -180,8 +193,8 @@ export function QuickTaskForm({ projectId, milestones, employees }: QuickTaskFor
 
   if (!open) {
     return (
-      <Button size="sm" variant="ghost" onClick={() => setOpen(true)} className="text-xs">
-        <Plus className="h-3.5 w-3.5 mr-1" /> Task
+      <Button size="sm" onClick={() => setOpen(true)} className="text-xs">
+        <Plus className="h-3.5 w-3.5 mr-1" /> Create Execution Task
       </Button>
     );
   }
@@ -204,10 +217,10 @@ export function QuickTaskForm({ projectId, milestones, employees }: QuickTaskFor
         ))}
       </select>
       <select name="milestone_id" className="text-xs border border-n-200 rounded px-2 py-1 bg-white">
-        <option value="">No milestone</option>
+        <option value="">Select Milestone</option>
         {milestones.map((m) => (
           <option key={m.id} value={m.id}>
-            {m.milestone_name.replace(/_/g, ' ')}
+            {MILESTONE_DISPLAY_LABELS[m.milestone_name] ?? m.milestone_name.replace(/_/g, ' ')}
           </option>
         ))}
       </select>

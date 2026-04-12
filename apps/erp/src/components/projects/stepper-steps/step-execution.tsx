@@ -18,8 +18,8 @@ interface StepExecutionProps {
   projectId: string;
 }
 
+/** Milestone display labels — aligned with execution_milestones_master table. */
 const MILESTONE_LABELS: Record<string, string> = {
-  advance_payment: 'Advance Payment',
   material_delivery: 'Material Delivery',
   structure_installation: 'Structure Installation',
   panel_installation: 'Panel Installation',

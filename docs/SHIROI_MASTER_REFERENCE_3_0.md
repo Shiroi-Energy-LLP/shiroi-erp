@@ -1,5 +1,5 @@
 # SHIROI ENERGY ERP — MASTER REFERENCE DOCUMENT
-**Version 3.9 | Updated April 11, 2026 | Read before every coding session**
+**Version 3.10 | Updated April 11, 2026 | Read before every coding session**
 
 > This is the single source of truth for the Shiroi Energy ERP project. Every decision made, every design rule, every business rule, every coding standard, and every constraint is captured here. Anyone joining the project — including Claude in a new chat — reads this first before writing a single line of code or SQL.
 
@@ -78,6 +78,8 @@
 | Task Module V2 | ✅ Complete | Per Manivel's spec: 12-column table (Project Name, Task Name, Milestone, Assigned To, Assigned Date, Status Open/Closed, Priority, Due Date, Notes, Done By, Activity Log, Actions). Milestone join in getAllTasks query. Searchable project dropdown in CreateTaskDialog with auto-loading milestones. Pagination (50/page). Compact 11px layout. Bidirectional sync with project execution tasks. |
 | Purchase Module Overhaul | ✅ Complete | Per Manivel's spec: Project-centric /procurement page (purchase requests). Per-item vendor assignment. Vendor-wise PO auto-generation. Material receipt → Ready to Dispatch flow. Priority (High/Medium). Status flow: BOQ → Send to Purchase → Vendor Assignment → Create POs → Received → Ready to Dispatch → DC. /procurement/orders for PO list. 7 new server actions. |
 | Documents tab fix | ✅ Complete | (1) Drag-and-drop fix: filename `<button>` → `<span>` (buttons intercept mousedown preventing drag), `draggable={false}` on children, `pointer-events-none` on icons. (2) Auto-populated docs: DocumentsTab fetches DC/QC/Survey in parallel → Survey in Customer Docs box, DC PDFs in Delivery Challans box, QC Reports in Documents/Approvals box. GeneratedDocRow component with status badges + PDF download links. |
+| Migration 042 | ✅ Applied (dev) | Execution milestones master: dropped milestone_name CHECK constraint, created execution_milestones_master table (10 milestones), RLS, seeded data. |
+| Execution Module V3 | ✅ Complete | Fixed milestone constraint error. Master table (execution_milestones_master) replaces CHECK constraint. seedProjectMilestones reads from DB dynamically. "Create Execution Task" button. Proper milestone labels in dropdowns. TASK_CATEGORIES aligned with 10 milestones. All V2 features intact (task table, activity logs, milestone tracking, progress dashboard). |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
 | Placeholder pages | ✅ Complete | Design Queue (leads with survey done), Price Book (35 items), Liaison index (net meter summary cards) — all data-driven |
@@ -1570,7 +1572,7 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
 **ERP app:** 63+ routes, 0 type errors
 **Migrations:** 41 files (001 through 041)
-**Last updated:** April 11, 2026 (v3.9 — Documents tab fix. Drag-and-drop: filename button→span, draggable={false} on children, pointer-events-none on icons. Auto-populated docs: Survey/DC/QC fetched in parallel, shown in respective category boxes with status badges + PDF download links.)
+**Last updated:** April 11, 2026 (v3.10 — Execution Module V3. Fixed milestone constraint error. Migration 042: execution_milestones_master table replaces CHECK constraint. 10 milestones seeded. seedProjectMilestones reads from master table. "Create Execution Task" button. TASK_CATEGORIES aligned.)
 
 **What changed in v3.4:**
 - HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments
