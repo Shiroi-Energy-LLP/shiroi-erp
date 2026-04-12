@@ -2,10 +2,11 @@ import { Card, CardHeader, CardTitle, CardContent, Badge } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 import { createClient } from '@repo/supabase/server';
 import { getStepQcData } from '@/lib/project-stepper-queries';
-import { ShieldCheck, Check, X, Clock, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Check, X, Clock, AlertTriangle, Camera } from 'lucide-react';
 import { QcInspectionForm } from '@/components/projects/forms/qc-inspection-form';
 import { QcApprovalControls, QcPdfDownloadButton } from '@/components/projects/forms/qc-approval-controls';
-import type { QcChecklistData, QcSectionResult } from '@/lib/qc-constants';
+import { QcSectionPhotos } from '@/components/projects/forms/qc-photo-display';
+import type { QcChecklistData, QcSectionResult, QcProjectInfo } from '@/lib/qc-constants';
 
 interface StepQcProps {
   projectId: string;
@@ -14,17 +15,28 @@ interface StepQcProps {
 export async function StepQc({ projectId }: StepQcProps) {
   const supabase = await createClient();
 
-  // Fetch QC inspections + project system type in parallel
+  // Fetch QC inspections + project info in parallel
   const [inspections, projectResult] = await Promise.all([
     getStepQcData(projectId),
     supabase
       .from('projects')
-      .select('system_type')
+      .select('project_number, customer_name, system_type, system_size_kwp, site_address_line1, site_address_line2, site_city, site_state, site_pincode')
       .eq('id', projectId)
       .maybeSingle(),
   ]);
 
-  const systemType = (projectResult.data as any)?.system_type ?? 'on_grid';
+  const proj = projectResult.data as any;
+  const systemType = proj?.system_type ?? 'on_grid';
+
+  // Build site address string
+  const addrParts = [proj?.site_address_line1, proj?.site_address_line2, proj?.site_city, proj?.site_state, proj?.site_pincode].filter(Boolean);
+  const projectInfo: QcProjectInfo = {
+    project_number: proj?.project_number ?? null,
+    customer_name: proj?.customer_name ?? null,
+    site_address: addrParts.length > 0 ? addrParts.join(', ') : null,
+    system_size_kwp: proj?.system_size_kwp ? Number(proj.system_size_kwp) : null,
+    system_type: systemType,
+  };
   const latestInspection = inspections.length > 0 ? inspections[inspections.length - 1] : null;
   const approvalStatus = (latestInspection as any)?.approval_status ?? null;
   const isApproved = approvalStatus === 'approved';
@@ -54,6 +66,9 @@ export async function StepQc({ projectId }: StepQcProps) {
   if (isApproved && latestInspection) {
     return (
       <div className="space-y-6">
+        {/* Project details (auto-populated) */}
+        <QcProjectDetailsCard projectInfo={projectInfo} checklistData={checklistData} inspectorName={inspectorName} />
+
         {/* Completed banner */}
         <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
@@ -83,6 +98,9 @@ export async function StepQc({ projectId }: StepQcProps) {
   if (isSubmitted && latestInspection) {
     return (
       <div className="space-y-6">
+        {/* Project details */}
+        <QcProjectDetailsCard projectInfo={projectInfo} checklistData={checklistData} inspectorName={inspectorName} />
+
         {/* Pending banner */}
         <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
           <Clock className="h-5 w-5 text-amber-600" />
@@ -125,6 +143,7 @@ export async function StepQc({ projectId }: StepQcProps) {
         <QcInspectionForm
           projectId={projectId}
           systemType={systemType}
+          projectInfo={projectInfo}
           existingData={checklistData ?? undefined}
         />
       </div>
@@ -143,8 +162,70 @@ export async function StepQc({ projectId }: StepQcProps) {
           </p>
         </div>
       ) : null}
-      <QcInspectionForm projectId={projectId} systemType={systemType} />
+      <QcInspectionForm projectId={projectId} systemType={systemType} projectInfo={projectInfo} />
     </div>
+  );
+}
+
+// ── Project details card (shown at top of QC step in all states) ──
+
+const SYSTEM_TYPE_LABELS: Record<string, string> = {
+  on_grid: 'On-Grid',
+  off_grid: 'Off-Grid',
+  hybrid: 'Hybrid',
+};
+
+function QcProjectDetailsCard({
+  projectInfo,
+  checklistData,
+  inspectorName,
+}: {
+  projectInfo: QcProjectInfo;
+  checklistData: QcChecklistData | null;
+  inspectorName: string | null;
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xs font-semibold text-n-700">Project Details</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-3 gap-x-6 gap-y-2 text-[11px]">
+          <div>
+            <span className="text-n-500 block">Project Name</span>
+            <span className="text-n-900 font-medium">
+              {projectInfo.project_number ?? '—'}
+              {projectInfo.customer_name ? ` · ${projectInfo.customer_name}` : ''}
+            </span>
+          </div>
+          <div>
+            <span className="text-n-500 block">Location</span>
+            <span className="text-n-900">{projectInfo.site_address ?? '—'}</span>
+          </div>
+          <div>
+            <span className="text-n-500 block">Client Name</span>
+            <span className="text-n-900">{projectInfo.customer_name ?? '—'}</span>
+          </div>
+          <div>
+            <span className="text-n-500 block">System</span>
+            <span className="text-n-900">
+              {projectInfo.system_size_kwp ? `${projectInfo.system_size_kwp} kWp` : '—'}
+              {projectInfo.system_type ? ` · ${SYSTEM_TYPE_LABELS[projectInfo.system_type] ?? projectInfo.system_type}` : ''}
+            </span>
+          </div>
+          <div>
+            <span className="text-n-500 block">Checked By</span>
+            <span className="text-n-900">{checklistData?.checked_by ?? inspectorName ?? '—'}</span>
+          </div>
+          <div>
+            <span className="text-n-500 block">Date of Inspection</span>
+            <span className="text-n-900">
+              {checklistData?.inspection_date ? formatDate(checklistData.inspection_date) : '—'}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -181,9 +262,16 @@ function ReadOnlyChecklist({ data }: { data: QcChecklistData }) {
       {sections.map((section, sIdx) => (
         <Card key={section.id}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold">
-              {sIdx + 1}. {section.name}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-semibold">
+                {sIdx + 1}. {section.name}
+              </CardTitle>
+              {section.photos && section.photos.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] text-n-500">
+                  <Camera className="h-3 w-3" /> {section.photos.length} photo{section.photos.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <table className="w-full text-[11px]">
@@ -220,6 +308,12 @@ function ReadOnlyChecklist({ data }: { data: QcChecklistData }) {
                 ))}
               </tbody>
             </table>
+            {/* Section photos (read-only) */}
+            {section.photos && section.photos.length > 0 && (
+              <div className="px-3 py-2 border-t border-n-100">
+                <QcSectionPhotos photoPaths={section.photos} />
+              </div>
+            )}
           </CardContent>
         </Card>
       ))}

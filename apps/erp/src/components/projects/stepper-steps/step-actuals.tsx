@@ -1,38 +1,14 @@
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@repo/ui';
-import { formatINR, formatDate } from '@repo/ui/formatters';
+import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
+import { formatINR } from '@repo/ui/formatters';
 import { createClient } from '@repo/supabase/server';
 import { getProjectSiteExpenses } from '@/lib/site-expenses-actions';
 import { SiteExpenseForm } from '@/components/projects/forms/site-expense-form';
 import { ActualsLockButton, EditableQtyCell } from '@/components/projects/forms/actuals-controls';
+import { VoucherTable } from '@/components/projects/forms/voucher-table-controls';
 import { FileText, Receipt, TrendingUp, Lock, AlertTriangle } from 'lucide-react';
 
 interface StepActualsProps {
   projectId: string;
-}
-
-const CATEGORY_LABELS: Record<string, string> = {
-  travel: 'Travel',
-  food: 'Food',
-  lodging: 'Lodging',
-  site_material: 'Site Material',
-  tools: 'Tools',
-  consumables: 'Consumables',
-  labour_advance: 'Labour Advance',
-  miscellaneous: 'Miscellaneous',
-};
-
-function statusBadge(status: string | null) {
-  switch (status) {
-    case 'approved':
-    case 'auto_approved':
-      return <Badge variant="success">Approved</Badge>;
-    case 'pending':
-      return <Badge variant="warning">Pending</Badge>;
-    case 'rejected':
-      return <Badge variant="destructive">Rejected</Badge>;
-    default:
-      return <Badge>{status ?? '—'}</Badge>;
-  }
 }
 
 export async function StepActuals({ projectId }: StepActualsProps) {
@@ -229,7 +205,7 @@ export async function StepActuals({ projectId }: StepActualsProps) {
       {/* Voucher entry form (only when not locked) */}
       {!isLocked && <SiteExpenseForm projectId={projectId} />}
 
-      {/* Voucher history */}
+      {/* Voucher history — with category filter + inline edit */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -250,36 +226,11 @@ export async function StepActuals({ projectId }: StepActualsProps) {
               other site expenses.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-[11px]">
-                <thead>
-                  <tr className="border-b border-n-200 bg-n-50">
-                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Date</th>
-                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Category</th>
-                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Description</th>
-                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Submitted By</th>
-                    <th className="px-3 py-1.5 text-right text-[10px] font-medium text-n-500">Amount</th>
-                    <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {siteExpenses.map((e) => (
-                    <tr key={e.id} className="border-b border-n-100 last:border-b-0">
-                      <td className="px-3 py-1.5 text-n-500">
-                        {e.expense_date ? formatDate(e.expense_date) : '—'}
-                      </td>
-                      <td className="px-3 py-1.5 text-n-500">
-                        {CATEGORY_LABELS[e.expense_category ?? ''] ?? e.expense_category ?? '—'}
-                      </td>
-                      <td className="px-3 py-1.5 text-n-900">{e.description ?? '—'}</td>
-                      <td className="px-3 py-1.5 text-n-500">{e.submitted_by_name ?? '—'}</td>
-                      <td className="px-3 py-1.5 text-right font-mono">{formatINR(e.amount)}</td>
-                      <td className="px-3 py-1.5">{statusBadge(e.status)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <VoucherTable
+              vouchers={siteExpenses}
+              projectId={projectId}
+              isLocked={isLocked}
+            />
           )}
         </CardContent>
       </Card>

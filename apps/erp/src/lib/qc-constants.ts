@@ -90,12 +90,27 @@ export type QcSectionResult = {
   id: string;
   name: string;
   items: QcItemResult[];
+  /** Storage paths for section photos (uploaded to site-photos bucket) */
+  photos?: string[];
+};
+
+export type QcProjectInfo = {
+  project_number: string | null;
+  customer_name: string | null;
+  site_address: string | null;
+  system_size_kwp: number | null;
+  system_type: string | null;
 };
 
 export type QcChecklistData = {
   sections: QcSectionResult[];
   remarks: string;
   battery_applicable: boolean;
+  /** Auto-populated project details + editable inspection metadata */
+  project_info?: QcProjectInfo;
+  installation_date?: string | null;
+  checked_by?: string | null;
+  inspection_date?: string | null;
 };
 
 export function buildInitialChecklist(batteryApplicable: boolean = false): QcChecklistData {

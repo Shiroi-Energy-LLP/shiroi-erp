@@ -234,6 +234,58 @@ export async function getPendingSiteExpenses(): Promise<
  * Fetch all site expenses for a specific project (used on the Actuals
  * step page).
  */
+/** Update a site expense voucher (only pending ones can be edited). */
+export async function updateSiteExpense(input: {
+  expenseId: string;
+  projectId: string;
+  amount?: number;
+  description?: string;
+  expenseCategory?: string;
+  expenseDate?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateSiteExpense]';
+  console.log(`${op} Starting for expense: ${input.expenseId}`);
+  const supabase = await createClient();
+
+  // Verify it exists and is still pending
+  const { data: existing, error: fetchErr } = await supabase
+    .from('project_site_expenses')
+    .select('id, status')
+    .eq('id', input.expenseId)
+    .single();
+
+  if (fetchErr || !existing) {
+    return { success: false, error: 'Expense not found' };
+  }
+  if (existing.status !== 'pending') {
+    return { success: false, error: `Cannot edit ${existing.status} voucher — only pending vouchers can be modified` };
+  }
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (input.amount !== undefined) updates.amount = input.amount;
+  if (input.description !== undefined) updates.description = input.description;
+  if (input.expenseCategory !== undefined) {
+    if (!ALLOWED_CATEGORIES.includes(input.expenseCategory as any)) {
+      return { success: false, error: `Invalid category: ${input.expenseCategory}` };
+    }
+    updates.expense_category = input.expenseCategory;
+  }
+  if (input.expenseDate !== undefined) updates.expense_date = input.expenseDate;
+
+  const { error } = await supabase
+    .from('project_site_expenses')
+    .update(updates)
+    .eq('id', input.expenseId);
+
+  if (error) {
+    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
 export async function getProjectSiteExpenses(projectId: string): Promise<
   {
     id: string;

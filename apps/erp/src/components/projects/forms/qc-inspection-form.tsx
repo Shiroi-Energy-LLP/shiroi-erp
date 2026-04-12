@@ -3,21 +3,30 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, Button, Label } from '@repo/ui';
-import { ShieldCheck, Check, X } from 'lucide-react';
+import { ShieldCheck, Check, X, Camera, Upload, Trash2 } from 'lucide-react';
+import { createClient } from '@repo/supabase/client';
 import { createQcInspection } from '@/lib/project-step-actions';
 import {
   QC_SECTIONS,
   buildInitialChecklist,
   type QcChecklistData,
+  type QcProjectInfo,
 } from '@/lib/qc-constants';
 
 interface QcInspectionFormProps {
   projectId: string;
   systemType?: string;
+  projectInfo?: QcProjectInfo;
   existingData?: QcChecklistData;
 }
 
-export function QcInspectionForm({ projectId, systemType, existingData }: QcInspectionFormProps) {
+const SYSTEM_TYPE_LABELS: Record<string, string> = {
+  on_grid: 'On-Grid',
+  off_grid: 'Off-Grid',
+  hybrid: 'Hybrid',
+};
+
+export function QcInspectionForm({ projectId, systemType, projectInfo, existingData }: QcInspectionFormProps) {
   const router = useRouter();
   const [showForm, setShowForm] = React.useState(!!existingData);
   const [saving, setSaving] = React.useState(false);
@@ -32,6 +41,13 @@ export function QcInspectionForm({ projectId, systemType, existingData }: QcInsp
     existingData ?? buildInitialChecklist(isBatterySystem),
   );
   const [finalApproval, setFinalApproval] = React.useState<'approved' | 'rework_required'>('approved');
+
+  // Editable inspection metadata fields
+  const [installationDate, setInstallationDate] = React.useState(existingData?.installation_date ?? '');
+  const [checkedBy, setCheckedBy] = React.useState(existingData?.checked_by ?? '');
+  const [inspectionDate, setInspectionDate] = React.useState(
+    existingData?.inspection_date ?? new Date().toISOString().split('T')[0] ?? '',
+  );
 
   // Rebuild sections when battery toggle changes (only if no existing data)
   React.useEffect(() => {
@@ -61,6 +77,41 @@ export function QcInspectionForm({ projectId, systemType, existingData }: QcInsp
     }));
   }
 
+  // Photo upload per section
+  async function handleSectionPhotoUpload(sectionIdx: number, file: File) {
+    const sectionId = checklist.sections[sectionIdx]?.id;
+    if (!sectionId) return;
+    const ext = file.name.split('.').pop() ?? 'jpg';
+    const path = `projects/${projectId}/qc/${sectionId}_${Date.now()}.${ext}`;
+    const supabase = createClient();
+    const { error: uploadErr } = await supabase.storage
+      .from('site-photos')
+      .upload(path, file, { upsert: true });
+    if (uploadErr) {
+      console.error('[QcPhotoUpload] Failed:', uploadErr.message);
+      return;
+    }
+    setChecklist((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s, si) => {
+        if (si !== sectionIdx) return s;
+        return { ...s, photos: [...(s.photos ?? []), path] };
+      }),
+    }));
+  }
+
+  function removeSectionPhoto(sectionIdx: number, photoIdx: number) {
+    setChecklist((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s, si) => {
+        if (si !== sectionIdx) return s;
+        const photos = [...(s.photos ?? [])];
+        photos.splice(photoIdx, 1);
+        return { ...s, photos };
+      }),
+    }));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -77,10 +128,20 @@ export function QcInspectionForm({ projectId, systemType, existingData }: QcInsp
     setSaving(true);
     setError(null);
 
+    // Include metadata fields in the checklist data
+    const fullChecklistData = {
+      ...checklist,
+      remarks: checklist.remarks,
+      project_info: projectInfo ?? undefined,
+      installation_date: installationDate || null,
+      checked_by: checkedBy || null,
+      inspection_date: inspectionDate || null,
+    };
+
     const res = await createQcInspection({
       projectId,
       data: {
-        checklist_data: { ...checklist, remarks: checklist.remarks },
+        checklist_data: fullChecklistData,
         overall_result: finalApproval,
         remarks: checklist.remarks,
       },
@@ -130,12 +191,79 @@ export function QcInspectionForm({ projectId, systemType, existingData }: QcInsp
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Project details section — auto-populated + editable metadata */}
+          <div className="border border-n-200 rounded-lg overflow-hidden">
+            <div className="bg-n-50 px-3 py-2 border-b border-n-200">
+              <h4 className="text-xs font-semibold text-n-700">Project Details</h4>
+            </div>
+            <div className="p-3 grid grid-cols-3 gap-x-4 gap-y-3 text-[11px]">
+              {/* Auto-populated (read-only) */}
+              <div>
+                <span className="text-n-500 block mb-0.5">Project Name</span>
+                <span className="text-n-900 font-medium">
+                  {projectInfo?.project_number ?? '—'}
+                  {projectInfo?.customer_name ? ` · ${projectInfo.customer_name}` : ''}
+                </span>
+              </div>
+              <div>
+                <span className="text-n-500 block mb-0.5">Location</span>
+                <span className="text-n-900">{projectInfo?.site_address ?? '—'}</span>
+              </div>
+              <div>
+                <span className="text-n-500 block mb-0.5">Client Name</span>
+                <span className="text-n-900">{projectInfo?.customer_name ?? '—'}</span>
+              </div>
+              <div>
+                <span className="text-n-500 block mb-0.5">System</span>
+                <span className="text-n-900">
+                  {projectInfo?.system_size_kwp ? `${projectInfo.system_size_kwp} kWp` : '—'}
+                  {projectInfo?.system_type ? ` · ${SYSTEM_TYPE_LABELS[projectInfo.system_type] ?? projectInfo.system_type}` : ''}
+                </span>
+              </div>
+              {/* Editable fields */}
+              <div>
+                <Label className="text-[10px] text-n-500 mb-0.5">Installation Date</Label>
+                <input
+                  type="date"
+                  value={installationDate}
+                  onChange={(e) => setInstallationDate(e.target.value)}
+                  className="w-full text-[11px] border border-n-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-p-400"
+                />
+              </div>
+              <div>
+                <Label className="text-[10px] text-n-500 mb-0.5">Checked By</Label>
+                <input
+                  type="text"
+                  value={checkedBy}
+                  onChange={(e) => setCheckedBy(e.target.value)}
+                  placeholder="Inspector name"
+                  className="w-full text-[11px] border border-n-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-p-400"
+                />
+              </div>
+              <div>
+                <Label className="text-[10px] text-n-500 mb-0.5">Date of Inspection</Label>
+                <input
+                  type="date"
+                  value={inspectionDate}
+                  onChange={(e) => setInspectionDate(e.target.value)}
+                  className="w-full text-[11px] border border-n-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-p-400"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Checklist sections */}
           {checklist.sections.map((section, sIdx) => (
             <div key={section.id} className="border border-n-200 rounded-lg overflow-hidden">
-              <div className="bg-n-50 px-3 py-2 border-b border-n-200">
+              <div className="bg-n-50 px-3 py-2 border-b border-n-200 flex items-center justify-between">
                 <h4 className="text-xs font-semibold text-n-700">
                   {sIdx + 1}. {section.name}
                 </h4>
+                {section.photos && section.photos.length > 0 && (
+                  <span className="text-[10px] text-n-500 flex items-center gap-1">
+                    <Camera className="h-3 w-3" /> {section.photos.length}
+                  </span>
+                )}
               </div>
               <table className="w-full text-[11px]">
                 <thead>
@@ -194,6 +322,14 @@ export function QcInspectionForm({ projectId, systemType, existingData }: QcInsp
                   ))}
                 </tbody>
               </table>
+              {/* Section photo upload */}
+              <SectionPhotoUpload
+                sectionIdx={sIdx}
+                photos={section.photos ?? []}
+                projectId={projectId}
+                onUpload={handleSectionPhotoUpload}
+                onRemove={removeSectionPhoto}
+              />
             </div>
           ))}
 
@@ -257,5 +393,87 @@ export function QcInspectionForm({ projectId, systemType, existingData }: QcInsp
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Inline photo upload per QC section                                 */
+/* ------------------------------------------------------------------ */
+
+function SectionPhotoUpload({
+  sectionIdx,
+  photos,
+  projectId,
+  onUpload,
+  onRemove,
+}: {
+  sectionIdx: number;
+  photos: string[];
+  projectId: string;
+  onUpload: (sectionIdx: number, file: File) => Promise<void>;
+  onRemove: (sectionIdx: number, photoIdx: number) => void;
+}) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = React.useState(false);
+  const [previewUrls, setPreviewUrls] = React.useState<string[]>([]);
+
+  // Load signed URLs for existing photos
+  React.useEffect(() => {
+    if (photos.length === 0) { setPreviewUrls([]); return; }
+    const supabase = createClient();
+    Promise.all(
+      photos.map((p) =>
+        supabase.storage.from('site-photos').createSignedUrl(p, 600)
+          .then(({ data }) => data?.signedUrl ?? ''),
+      ),
+    ).then((urls) => setPreviewUrls(urls.filter(Boolean)));
+  }, [photos]);
+
+  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    await onUpload(sectionIdx, file);
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = '';
+  }
+
+  return (
+    <div className="px-3 py-2 border-t border-n-100 bg-n-50/40 flex items-center gap-2 flex-wrap">
+      {previewUrls.map((url, i) => (
+        <div key={i} className="relative group">
+          <img
+            src={url}
+            alt={`Photo ${i + 1}`}
+            className="h-12 w-18 object-cover rounded border border-n-200"
+          />
+          <button
+            type="button"
+            onClick={() => onRemove(sectionIdx, i)}
+            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Remove"
+          >
+            <Trash2 className="h-2.5 w-2.5" />
+          </button>
+        </div>
+      ))}
+      <label className="inline-flex items-center gap-1 px-2 py-1 rounded border border-dashed border-n-300 text-[10px] text-n-500 hover:border-p-400 hover:text-p-600 cursor-pointer transition-colors">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleChange}
+          disabled={uploading}
+        />
+        {uploading ? (
+          <span className="animate-pulse">Uploading...</span>
+        ) : (
+          <>
+            <Camera className="h-3 w-3" /> Add Photo
+          </>
+        )}
+      </label>
+    </div>
   );
 }
