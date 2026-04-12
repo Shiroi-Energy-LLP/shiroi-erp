@@ -378,18 +378,24 @@ export async function getStepLiaisonData(projectId: string) {
 
   const supabase = await createClient();
 
-  // Parallelize the two independent queries
-  const [projectResult, appResult] = await Promise.all([
+  // Parallelize three independent queries
+  const [projectResult, appResult, docsResult] = await Promise.all([
     supabase
       .from('projects')
-      .select('system_size_kwp, system_type')
+      .select('system_size_kwp, system_type, project_number, customer_name')
       .eq('id', projectId)
       .single(),
     supabase
       .from('net_metering_applications')
-      .select('id, discom_name, discom_status, discom_application_date, discom_application_number, ceig_required, ceig_status, ceig_application_date, ceig_approval_date, ceig_inspection_date, net_meter_installed, net_meter_installed_date, net_meter_serial_number, followup_count, next_followup_date, notes')
+      .select('id, discom_name, discom_status, discom_application_date, discom_application_number, ceig_required, ceig_status, ceig_application_date, ceig_approval_date, ceig_inspection_date, ceig_certificate_number, net_meter_installed, net_meter_installed_date, net_meter_serial_number, followup_count, last_followup_date, next_followup_date, notes, managed_by')
       .eq('project_id', projectId)
       .maybeSingle(),
+    supabase
+      .from('liaison_documents')
+      .select('id, document_type, document_name, storage_path, status, submitted_date, created_at')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+      .limit(50),
   ]);
 
   if (projectResult.error) {
@@ -402,7 +408,19 @@ export async function getStepLiaisonData(projectId: string) {
     throw new Error(`Failed to fetch net metering application: ${appResult.error.message}`);
   }
 
-  return { project: projectResult.data, application: appResult.data };
+  return {
+    project: projectResult.data,
+    application: appResult.data,
+    documents: (docsResult.data ?? []) as {
+      id: string;
+      document_type: string;
+      document_name: string;
+      storage_path: string;
+      status: string;
+      submitted_date: string | null;
+      created_at: string;
+    }[],
+  };
 }
 
 export async function getStepCommissioningData(projectId: string) {

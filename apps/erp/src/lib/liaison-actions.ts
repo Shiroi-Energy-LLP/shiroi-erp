@@ -214,6 +214,126 @@ export async function recordFollowup(input: {
 }
 
 /**
+ * Upload a liaison document (registers in liaison_documents table).
+ */
+export async function uploadLiaisonDocument(input: {
+  projectId: string;
+  netMeteringId: string;
+  documentType: string;
+  documentName: string;
+  storagePath: string;
+  fileSizeBytes?: number;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[uploadLiaisonDocument]';
+  console.log(`${op} Starting for project: ${input.projectId}, type: ${input.documentType}`);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: emp } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single();
+
+  const { error } = await supabase
+    .from('liaison_documents')
+    .insert({
+      project_id: input.projectId,
+      net_metering_id: input.netMeteringId,
+      uploaded_by: emp?.id ?? null,
+      document_type: input.documentType,
+      document_name: input.documentName,
+      storage_path: input.storagePath,
+      file_size_bytes: input.fileSizeBytes ?? null,
+      status: 'draft',
+    } as any);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/liaison/net-metering`);
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+/**
+ * Add a liaison activity note (inline log entry).
+ * Uses the activities + activity_associations tables.
+ */
+export async function addLiaisonActivity(input: {
+  projectId: string;
+  description: string;
+  activityType?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[addLiaisonActivity]';
+  console.log(`${op} Starting for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Insert into activities table (owner_id is profile_id, body stores the note)
+  const activityId = crypto.randomUUID();
+  const { error } = await supabase.from('activities').insert({
+    id: activityId,
+    activity_type: input.activityType ?? 'note',
+    owner_id: user.id,
+    title: 'Liaison Note',
+    body: input.description,
+    occurred_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error(`${op} Activities insert failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  // Link to the project via activity_associations
+  await supabase.from('activity_associations').insert({
+    activity_id: activityId,
+    entity_type: 'project',
+    entity_id: input.projectId,
+  });
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+/**
+ * Update liaison application fields (dates, application numbers, notes).
+ */
+export async function updateLiaisonFields(input: {
+  projectId: string;
+  fields: Record<string, unknown>;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateLiaisonFields]';
+  console.log(`${op} Starting for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('net_metering_applications')
+    .update(input.fields as any)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/liaison/net-metering`);
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+/**
  * Record an objection on a net metering application.
  */
 export async function createObjection(input: {
