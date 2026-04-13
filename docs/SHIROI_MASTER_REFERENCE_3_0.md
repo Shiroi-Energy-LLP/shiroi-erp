@@ -1,5 +1,5 @@
 # SHIROI ENERGY ERP — MASTER REFERENCE DOCUMENT
-**Version 3.10 | Updated April 11, 2026 | Read before every coding session**
+**Version 3.17 | Updated April 12, 2026 | Read before every coding session**
 
 > This is the single source of truth for the Shiroi Energy ERP project. Every decision made, every design rule, every business rule, every coding standard, and every constraint is captured here. Anyone joining the project — including Claude in a new chat — reads this first before writing a single line of code or SQL.
 
@@ -88,6 +88,8 @@
 | AMC Module V2 | ✅ Complete | (Superseded by V3) |
 | Migration 044 | ✅ Applied (dev) | AMC V3: amc_category, amc_duration_months, updated_by on om_contracts. Visit fields: work_done, issues_identified, resolution_details, customer_feedback, completed_by, report_file_paths. |
 | AMC Module V3 | ✅ Complete | Manivel's spec: flat contract-centric table. Create AMC with Free/Paid category. Free auto-creates 3 visits. Paid prompts duration/visits/amount. AmcVisitTracker expandable sub-table with inline status, edit panel, report upload. AmcStatusToggle Open/Closed. Summary cards + filters. 8 server actions. |
+| Task Module V4 | ✅ Complete | Manivel's 6-fix spec: (1) Project Name shows customer_name only as clickable link, (2) Activity Log icon-only with full-width expandable row below, (3+4) Compact 2-col forms max-w-560px matching table columns, (5) Status Open=red/Closed=green only, (6) Milestone removed from table/forms. New TasksTable client component. 7 files changed. |
+| Search filter speed | ✅ Complete | SearchInput debounce reduced 350ms→200ms across all 14 paginated pages. Safe with indexed queries + count:estimated. |
 | Marketing mgr feedback | 🔜 **NEXT** | Get Prem's feedback on marketing redesign (same cycle as PM feedback) |
 | Inline editing expansion | ✅ Complete | Projects (8 new editable), proposals (4), vendors (10), POs (3), BOM (7), contacts (3 new). Column configs + inline-edit-actions extended |
 | Placeholder pages | ✅ Complete | Design Queue (leads with survey done), Price Book (35 items), Liaison index (net meter summary cards) — all data-driven |
@@ -1580,7 +1582,7 @@ Plus new RLS policies for both roles and updates to existing policies where thes
 **Supabase client:** 4 files in packages/supabase/src/ — browser, server, admin, middleware
 **ERP app:** 63+ routes, 0 type errors
 **Migrations:** 41 files (001 through 041)
-**Last updated:** April 13, 2026 (v3.16 — AMC Module V3 per Manivel's spec. Flat contract-centric table, Free/Paid category, expandable visit tracker, inline status/edit/report upload, migration 044.)
+**Last updated:** April 12, 2026 (v3.17 — Task Module V4 per Manivel's 6-fix spec. Project Name customer_name only, Activity Log icon-only with expandable row, compact 2-col forms, Open/Closed status badges, Milestone removed from tasks UI. SearchInput debounce 350ms→200ms across 14 pages.)
 
 **What changed in v3.4:**
 - HubSpot migration V2 complete: final counts — 1,115 leads, 314 proposals, 314 projects, 30 payments

@@ -10,7 +10,7 @@ interface SearchInputProps {
   paramName?: string;
   placeholder?: string;
   className?: string;
-  /** Debounce delay in ms (default: 350) */
+  /** Debounce delay in ms (default: 200) */
   debounceMs?: number;
 }
 
@@ -27,7 +27,7 @@ export function SearchInput({
   paramName = 'search',
   placeholder = 'Search...',
   className = 'w-64 h-9 text-sm',
-  debounceMs = 350,
+  debounceMs = 200,
 }: SearchInputProps) {
   const router = useRouter();
   const pathname = usePathname();

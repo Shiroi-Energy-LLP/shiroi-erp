@@ -7,15 +7,14 @@ import {
   Button, Input, Label, Select,
 } from '@repo/ui';
 import { Plus, Search } from 'lucide-react';
-import { createTask, getMilestonesForProject } from '@/lib/tasks-actions';
-import { TASK_CATEGORIES } from '@/lib/task-constants';
+import { createTask } from '@/lib/tasks-actions';
 
 interface CreateTaskDialogProps {
   employees: { id: string; full_name: string }[];
   projects: { id: string; project_number: string; customer_name: string }[];
 }
 
-// ── Searchable Project Dropdown ──
+// ── Searchable Project Dropdown (customer_name display) ──
 
 function SearchableProjectSelect({
   projects,
@@ -33,8 +32,8 @@ function SearchableProjectSelect({
   const filtered = search
     ? projects.filter(
         (p) =>
-          p.project_number.toLowerCase().includes(search.toLowerCase()) ||
-          p.customer_name.toLowerCase().includes(search.toLowerCase()),
+          p.customer_name.toLowerCase().includes(search.toLowerCase()) ||
+          p.project_number.toLowerCase().includes(search.toLowerCase()),
       )
     : projects;
 
@@ -51,7 +50,7 @@ function SearchableProjectSelect({
   return (
     <div ref={ref} className="relative">
       <div
-        className="flex items-center gap-1 w-full rounded-md border border-n-200 px-2 h-8 text-xs cursor-pointer hover:border-n-300"
+        className="flex items-center gap-1 w-full rounded-md border border-n-200 px-2 h-9 text-xs cursor-pointer hover:border-n-300"
         onClick={() => setOpen(!open)}
       >
         <Search className="h-3 w-3 text-n-400 flex-shrink-0" />
@@ -66,9 +65,7 @@ function SearchableProjectSelect({
           />
         ) : (
           <span className={`flex-1 truncate ${selectedProject ? 'text-n-900' : 'text-n-400'}`}>
-            {selectedProject
-              ? `${selectedProject.project_number} — ${selectedProject.customer_name}`
-              : '— Select Project —'}
+            {selectedProject ? selectedProject.customer_name : '— Select Project —'}
           </span>
         )}
       </div>
@@ -88,11 +85,11 @@ function SearchableProjectSelect({
               className={`w-full text-left px-2 py-1.5 text-xs hover:bg-n-50 ${p.id === value ? 'bg-p-50 text-p-700 font-medium' : 'text-n-700'}`}
               onClick={() => { onChange(p.id); setOpen(false); setSearch(''); }}
             >
-              {p.project_number} — {p.customer_name}
+              {p.customer_name}
             </button>
           ))}
           {filtered.length > 50 && (
-            <div className="px-2 py-1 text-[10px] text-n-400">+{filtered.length - 50} more — refine your search</div>
+            <div className="px-2 py-1 text-[10px] text-n-400">+{filtered.length - 50} more — refine search</div>
           )}
           {filtered.length === 0 && (
             <div className="px-2 py-2 text-[10px] text-n-400 text-center">No projects found</div>
@@ -109,21 +106,6 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [selectedProject, setSelectedProject] = React.useState('');
-  const [milestones, setMilestones] = React.useState<{ id: string; milestone_name: string }[]>([]);
-  const [loadingMilestones, setLoadingMilestones] = React.useState(false);
-
-  // Load milestones when project changes
-  React.useEffect(() => {
-    if (!selectedProject) {
-      setMilestones([]);
-      return;
-    }
-    setLoadingMilestones(true);
-    getMilestonesForProject(selectedProject).then((ms) => {
-      setMilestones(ms);
-      setLoadingMilestones(false);
-    });
-  }, [selectedProject]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -133,23 +115,19 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
     const form = new FormData(e.currentTarget);
     const result = await createTask({
       title: form.get('title') as string,
-      description: form.get('description') as string || undefined,
-      entityType: selectedProject ? 'project' : (form.get('entityType') as string),
+      entityType: 'project',
       projectId: selectedProject || undefined,
       entityId: selectedProject || undefined,
       priority: form.get('priority') as string,
       dueDate: form.get('dueDate') as string || undefined,
       assignedTo: form.get('assignedTo') as string || undefined,
-      category: form.get('category') as string || undefined,
       remarks: form.get('remarks') as string || undefined,
-      milestoneId: form.get('milestoneId') as string || undefined,
     });
 
     setSaving(false);
     if (result.success) {
       setOpen(false);
       setSelectedProject('');
-      setMilestones([]);
       router.refresh();
     } else {
       setError(result.error ?? 'Failed to create task');
@@ -157,64 +135,33 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setSelectedProject(''); setMilestones([]); } }}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setSelectedProject(''); }}>
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5 h-8 text-xs">
           <Plus className="h-3.5 w-3.5" /> New Task
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[560px]">
         <DialogHeader>
-          <DialogTitle className="text-sm">Create Task</DialogTitle>
+          <DialogTitle className="text-sm">New Task</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <Label htmlFor="title" className="text-xs">Title *</Label>
-            <Input id="title" name="title" required placeholder="What needs to be done?" className="h-8 text-xs" />
-          </div>
-          <div>
-            <Label className="text-xs">Project</Label>
+            <Label className="text-xs">Project Name</Label>
             <SearchableProjectSelect
               projects={projects}
               value={selectedProject}
               onChange={setSelectedProject}
             />
           </div>
-          {milestones.length > 0 && (
-            <div>
-              <Label htmlFor="milestoneId" className="text-xs">Milestone</Label>
-              <Select id="milestoneId" name="milestoneId" defaultValue="" className="h-8 text-xs">
-                <option value="">— None —</option>
-                {milestones.map((m) => (
-                  <option key={m.id} value={m.id}>{m.milestone_name.replace(/_/g, ' ')}</option>
-                ))}
-              </Select>
-            </div>
-          )}
-          {loadingMilestones && <p className="text-[10px] text-n-400">Loading milestones...</p>}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="category" className="text-xs">Category</Label>
-              <Select id="category" name="category" defaultValue="general" className="h-8 text-xs">
-                {TASK_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="priority" className="text-xs">Priority</Label>
-              <Select id="priority" name="priority" defaultValue="medium" className="h-8 text-xs">
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="title" className="text-xs">Task Name *</Label>
+            <Input id="title" name="title" required placeholder="What needs to be done?" className="h-9 text-xs" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="assignedTo" className="text-xs">Assign To</Label>
-              <Select id="assignedTo" name="assignedTo" defaultValue="" className="h-8 text-xs">
+              <Label htmlFor="assignedTo" className="text-xs">Assigned To</Label>
+              <Select id="assignedTo" name="assignedTo" defaultValue="" className="h-9 text-xs">
                 <option value="">— Unassigned —</option>
                 {employees.map((e) => (
                   <option key={e.id} value={e.id}>{e.full_name}</option>
@@ -223,31 +170,29 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
             </div>
             <div>
               <Label htmlFor="dueDate" className="text-xs">Due Date</Label>
-              <Input id="dueDate" name="dueDate" type="date" className="h-8 text-xs" />
+              <Input id="dueDate" name="dueDate" type="date" className="h-9 text-xs" />
             </div>
           </div>
-          {!selectedProject && (
-            <div>
-              <Label htmlFor="entityType" className="text-xs">Type</Label>
-              <Select id="entityType" name="entityType" defaultValue="project" className="h-8 text-xs">
-                <option value="project">Project</option>
-                <option value="lead">Lead</option>
-                <option value="om_ticket">O&M Ticket</option>
-                <option value="procurement">Procurement</option>
-                <option value="hr">HR</option>
-              </Select>
-            </div>
-          )}
+          <div className="w-1/2 pr-1.5">
+            <Label htmlFor="priority" className="text-xs">Priority</Label>
+            <Select id="priority" name="priority" defaultValue="medium" className="h-9 text-xs">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </Select>
+          </div>
           <div>
-            <Label htmlFor="remarks" className="text-xs">Notes / Remarks</Label>
+            <Label htmlFor="remarks" className="text-xs">Notes</Label>
             <textarea
               id="remarks"
               name="remarks"
               rows={2}
-              className="w-full rounded-md border border-n-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
-              placeholder="Any remarks..."
+              className="w-full rounded-md border border-n-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-p-400"
+              placeholder="Any notes..."
             />
           </div>
+
           {error && (
             <p className="text-xs text-red-600 bg-red-50 px-2 py-1.5 rounded">{error}</p>
           )}
