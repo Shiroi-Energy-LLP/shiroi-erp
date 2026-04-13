@@ -38,8 +38,8 @@ export function AmcScheduleForm({ projectId, commissionedDate }: AmcScheduleForm
 
     const result = await createAmcSchedule({
       projectId,
+      category: 'free_amc',
       commissioningDate: baseDate,
-      visitDates: [visit1, visit2, visit3],
     });
 
     setSaving(false);

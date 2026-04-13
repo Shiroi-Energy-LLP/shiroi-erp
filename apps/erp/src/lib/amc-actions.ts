@@ -3,19 +3,27 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+// ── Create AMC Schedule (Free or Paid) ──
+
 export async function createAmcSchedule(input: {
   projectId: string;
-  commissioningDate: string;
-  visitDates: string[];
+  category: 'free_amc' | 'paid_amc';
+  assignedTo?: string;
+  // Free AMC fields
+  commissioningDate?: string;
+  // Paid AMC fields
+  startDate?: string;
+  durationMonths?: number;
+  visitCount?: number;
+  amcAmount?: number;
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[createAmcSchedule]';
-  console.log(`${op} Starting for project: ${input.projectId}`);
+  console.log(`${op} Starting ${input.category} for project: ${input.projectId}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
-  // Get employee ID
   const { data: employee } = await supabase
     .from('employees')
     .select('id')
@@ -35,12 +43,34 @@ export async function createAmcSchedule(input: {
   const nextNum = lastContract
     ? parseInt((lastContract as any).contract_number?.split('-').pop() ?? '0', 10) + 1
     : 1;
-  const contractNumber = `AMC-FREE-${String(nextNum).padStart(4, '0')}`;
 
-  // Calculate end date as 1 year from commissioning
-  const startDate = new Date(input.commissioningDate);
-  const endDate = new Date(startDate);
-  endDate.setFullYear(endDate.getFullYear() + 1);
+  const isFree = input.category === 'free_amc';
+  const prefix = isFree ? 'AMC-FREE' : 'AMC-PAID';
+  const contractNumber = `${prefix}-${String(nextNum).padStart(4, '0')}`;
+
+  // Calculate dates
+  let startDate: string;
+  let endDate: string;
+  let visitCount: number;
+  let annualValue: number;
+  let durationMonths: number | null = null;
+
+  if (isFree) {
+    startDate = input.commissioningDate || new Date().toISOString().split('T')[0]!;
+    const end = new Date(startDate);
+    end.setFullYear(end.getFullYear() + 1);
+    endDate = end.toISOString().split('T')[0]!;
+    visitCount = 3;
+    annualValue = 0;
+  } else {
+    startDate = input.startDate || new Date().toISOString().split('T')[0]!;
+    durationMonths = input.durationMonths || 12;
+    const end = new Date(startDate);
+    end.setMonth(end.getMonth() + durationMonths);
+    endDate = end.toISOString().split('T')[0]!;
+    visitCount = input.visitCount || 4;
+    annualValue = input.amcAmount || 0;
+  }
 
   // Create contract
   const { data: contract, error: contractError } = await supabase
@@ -49,12 +79,14 @@ export async function createAmcSchedule(input: {
       project_id: input.projectId,
       created_by: employee.id,
       contract_number: contractNumber,
-      contract_type: 'warranty_period',
+      contract_type: isFree ? 'warranty_period' : 'amc_basic',
+      amc_category: input.category,
+      amc_duration_months: durationMonths,
       status: 'active',
-      start_date: input.commissioningDate,
-      end_date: endDate.toISOString().split('T')[0],
-      annual_value: 0, // Free AMC
-      visits_included: input.visitDates.length,
+      start_date: startDate,
+      end_date: endDate,
+      annual_value: annualValue,
+      visits_included: visitCount,
       emergency_callouts_included: 0,
     } as any)
     .select('id')
@@ -65,17 +97,26 @@ export async function createAmcSchedule(input: {
     return { success: false, error: contractError.message };
   }
 
-  // Create visit schedules
-  const visits = input.visitDates.map((date, i) => ({
-    contract_id: (contract as any).id,
-    project_id: input.projectId,
-    assigned_to: employee.id,
-    visit_number: i + 1,
-    visit_type: 'scheduled_quarterly',
-    scheduled_date: date,
-    scheduled_time_slot: 'morning',
-    status: 'scheduled',
-  }));
+  // Auto-generate visit schedules spread evenly across the duration
+  const visits = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const totalMs = end.getTime() - start.getTime();
+  const intervalMs = totalMs / (visitCount + 1); // +1 so visits don't land on start/end
+
+  for (let i = 0; i < visitCount; i++) {
+    const visitDate = new Date(start.getTime() + intervalMs * (i + 1));
+    visits.push({
+      contract_id: (contract as any).id,
+      project_id: input.projectId,
+      assigned_to: input.assignedTo || employee.id,
+      visit_number: i + 1,
+      visit_type: 'scheduled_quarterly',
+      scheduled_date: visitDate.toISOString().split('T')[0],
+      scheduled_time_slot: 'morning',
+      status: 'scheduled',
+    });
+  }
 
   const { error: visitsError } = await supabase
     .from('om_visit_schedules' as any)
@@ -89,6 +130,33 @@ export async function createAmcSchedule(input: {
   revalidatePath('/om/amc');
   revalidatePath('/om/visits');
   revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// ── Update AMC Status (Open/Closed) ──
+
+export async function updateAmcStatus(
+  contractId: string,
+  newStatus: 'active' | 'expired',
+): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateAmcStatus]';
+  console.log(`${op} Setting contract ${contractId} to ${newStatus}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('om_contracts' as any)
+    .update({ status: newStatus, updated_by: user.id } as any)
+    .eq('id', contractId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/om/amc');
   return { success: true };
 }
 
@@ -109,10 +177,17 @@ export async function updateVisitStatus(
 
   if (newStatus === 'completed') {
     updateData.completed_at = new Date().toISOString();
+    // Set completed_by
+    const { data: emp } = await supabase
+      .from('employees')
+      .select('id')
+      .eq('profile_id', user.id)
+      .maybeSingle();
+    if (emp) updateData.completed_by = emp.id;
   }
   if (newStatus === 'scheduled' || newStatus === 'confirmed') {
-    // Reopening — clear completed
     updateData.completed_at = null;
+    updateData.completed_by = null;
   }
 
   const { error } = await supabase
@@ -130,6 +205,44 @@ export async function updateVisitStatus(
   return { success: true };
 }
 
+// ── Update Visit Details (work done, issues, resolution, feedback, notes) ──
+
+export async function updateVisitDetails(input: {
+  visitId: string;
+  work_done?: string;
+  issues_identified?: string;
+  resolution_details?: string;
+  customer_feedback?: string;
+  notes?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateVisitDetails]';
+  console.log(`${op} Updating details for visit ${input.visitId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const updateData: Record<string, any> = {};
+  if (input.work_done !== undefined) updateData.work_done = input.work_done || null;
+  if (input.issues_identified !== undefined) updateData.issues_identified = input.issues_identified || null;
+  if (input.resolution_details !== undefined) updateData.resolution_details = input.resolution_details || null;
+  if (input.customer_feedback !== undefined) updateData.customer_feedback = input.customer_feedback || null;
+  if (input.notes !== undefined) updateData.notes = input.notes || null;
+
+  const { error } = await supabase
+    .from('om_visit_schedules' as any)
+    .update(updateData as any)
+    .eq('id', input.visitId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/om/amc');
+  return { success: true };
+}
+
 // ── Reschedule Visit ──
 
 export async function rescheduleVisit(input: {
@@ -144,7 +257,6 @@ export async function rescheduleVisit(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
-  // Get current date first for rescheduled_from
   const { data: currentVisit } = await supabase
     .from('om_visit_schedules' as any)
     .select('scheduled_date, reschedule_count')
@@ -200,70 +312,134 @@ export async function assignVisitEngineer(
   return { success: true };
 }
 
-// ── Get All AMC Data (paginated) ──
+// ── Delete (soft-close) AMC ──
+
+export async function deleteAmc(contractId: string): Promise<{ success: boolean; error?: string }> {
+  const op = '[deleteAmc]';
+  console.log(`${op} Archiving contract: ${contractId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('om_contracts' as any)
+    .update({ status: 'cancelled', updated_by: user.id } as any)
+    .eq('id', contractId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/om/amc');
+  return { success: true };
+}
+
+// ── Add Report File to Visit ──
+
+export async function addVisitReportFile(
+  visitId: string,
+  filePath: string,
+): Promise<{ success: boolean; error?: string }> {
+  const op = '[addVisitReportFile]';
+  console.log(`${op} Adding report file to visit ${visitId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Get current paths
+  const { data: visit } = await supabase
+    .from('om_visit_schedules' as any)
+    .select('report_file_paths')
+    .eq('id', visitId)
+    .single();
+
+  const currentPaths: string[] = (visit as any)?.report_file_paths ?? [];
+  const newPaths = [...currentPaths, filePath];
+
+  const { error } = await supabase
+    .from('om_visit_schedules' as any)
+    .update({ report_file_paths: newPaths } as any)
+    .eq('id', visitId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/om/amc');
+  return { success: true };
+}
+
+// ── Get All AMC Data (flat contract-centric table) ──
 
 export async function getAllAmcData(filters: {
-  contract_status?: string;
-  visit_status?: string;
+  status?: string;
+  category?: string;
   project_id?: string;
-  search?: string;
 }): Promise<{
   contracts: any[];
-  visits: any[];
-  totalContracts: number;
-  totalVisits: number;
+  total: number;
 }> {
   const op = '[getAllAmcData]';
   const supabase = await createClient();
 
-  // Contracts query
-  let contractQuery = supabase
+  let query = supabase
     .from('om_contracts' as any)
     .select(
-      'id, contract_number, contract_type, start_date, end_date, annual_value, status, visits_included, project_id, projects!om_contracts_project_id_fkey(project_number, customer_name)' as any,
+      'id, contract_number, contract_type, amc_category, amc_duration_months, start_date, end_date, annual_value, status, visits_included, project_id, notes, created_at, updated_at, projects!om_contracts_project_id_fkey(project_number, customer_name), employees!om_contracts_created_by_fkey(full_name)' as any,
       { count: 'estimated' as any },
     )
-    .order('start_date', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(200);
 
-  if (filters.contract_status) contractQuery = contractQuery.eq('status', filters.contract_status);
-  if (filters.project_id) contractQuery = contractQuery.eq('project_id', filters.project_id);
-
-  // Visits query
-  let visitQuery = supabase
-    .from('om_visit_schedules' as any)
-    .select(
-      'id, visit_number, visit_type, scheduled_date, status, completed_at, project_id, contract_id, assigned_to, rescheduled_from, reschedule_count, employees!om_visit_schedules_assigned_to_fkey(full_name), projects!om_visit_schedules_project_id_fkey(project_number, customer_name)' as any,
-      { count: 'estimated' as any },
-    )
-    .order('scheduled_date', { ascending: true })
-    .limit(200);
-
-  if (filters.visit_status) {
-    if (filters.visit_status === 'active') {
-      visitQuery = visitQuery.not('status', 'in', '("completed","cancelled")');
+  if (filters.status) {
+    if (filters.status === 'open') {
+      query = query.eq('status', 'active');
+    } else if (filters.status === 'closed') {
+      query = query.in('status', ['expired', 'cancelled']);
     } else {
-      visitQuery = visitQuery.eq('status', filters.visit_status);
+      query = query.eq('status', filters.status);
     }
   }
-  if (filters.project_id) visitQuery = visitQuery.eq('project_id', filters.project_id);
+  if (filters.category) query = query.eq('amc_category', filters.category);
+  if (filters.project_id) query = query.eq('project_id', filters.project_id);
 
-  const [contractResult, visitResult] = await Promise.all([contractQuery, visitQuery]);
+  const { data, error, count } = await query;
 
-  if (contractResult.error) {
-    console.error(`${op} Contracts query failed:`, { code: contractResult.error.code, message: contractResult.error.message });
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { contracts: [], total: 0 };
   }
-  if (visitResult.error) {
-    console.error(`${op} Visits query failed:`, { code: visitResult.error.code, message: visitResult.error.message });
-  }
 
-  return {
-    contracts: (contractResult.data ?? []) as any[],
-    visits: (visitResult.data ?? []) as any[],
-    totalContracts: contractResult.count ?? 0,
-    totalVisits: visitResult.count ?? 0,
-  };
+  return { contracts: (data ?? []) as any[], total: count ?? 0 };
 }
+
+// ── Get Visits for a Contract ──
+
+export async function getVisitsForContract(contractId: string): Promise<any[]> {
+  const op = '[getVisitsForContract]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('om_visit_schedules' as any)
+    .select(
+      'id, visit_number, visit_type, scheduled_date, status, completed_at, completed_by, assigned_to, work_done, issues_identified, resolution_details, customer_feedback, notes, report_file_paths, reschedule_count, employees!om_visit_schedules_assigned_to_fkey(full_name), done_by:employees!om_visit_schedules_completed_by_fkey(full_name)' as any,
+    )
+    .eq('contract_id', contractId)
+    .order('visit_number', { ascending: true });
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+
+  return (data ?? []) as any[];
+}
+
+// ── Get Commissioned Projects (for Create AMC dialog) ──
 
 export async function getCommissionedProjects(): Promise<{ id: string; project_number: string; customer_name: string; commissioned_date: string | null }[]> {
   const op = '[getCommissionedProjects]';
@@ -275,6 +451,25 @@ export async function getCommissionedProjects(): Promise<{ id: string; project_n
     .in('status', ['completed', 'waiting_net_metering'])
     .order('commissioned_date', { ascending: false })
     .limit(200);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+  return data ?? [];
+}
+
+// ── Get All Projects (for Create Paid AMC — any active project) ──
+
+export async function getAllProjectsForAmc(): Promise<{ id: string; project_number: string; customer_name: string }[]> {
+  const op = '[getAllProjectsForAmc]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id, project_number, customer_name')
+    .is('deleted_at', null)
+    .order('project_number', { ascending: true })
+    .limit(500);
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
