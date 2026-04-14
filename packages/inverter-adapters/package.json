@@ -1,0 +1,22 @@
+{
+  "name": "@repo/inverter-adapters",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./base": "./src/base.ts",
+    "./sungrow": "./src/sungrow.ts",
+    "./growatt": "./src/growatt.ts",
+    "./sma": "./src/sma.ts",
+    "./huawei": "./src/huawei.ts",
+    "./factory": "./src/factory.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "typescript": "5.9.2"
+  }
+}
