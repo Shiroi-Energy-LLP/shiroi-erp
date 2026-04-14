@@ -7,6 +7,8 @@ import {
 } from '@repo/ui';
 import { DataFlagButton } from '@/components/data-flag-button';
 import { PoRateInlineEdit } from '@/components/procurement/po-rate-inline-edit';
+import { PoDownloadButton } from '@/components/procurement/po-download-button';
+import { PoDeleteButton } from '@/components/procurement/po-delete-button';
 
 function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -58,6 +60,12 @@ export default async function PODetailPage({ params }: PageProps) {
           <DataFlagButton entityType="po" entityId={poId} />
         </div>
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">{po.po_number}</h1>
+        <div className="flex items-center gap-2 mt-2">
+          <PoDownloadButton poId={poId} poNumber={po.po_number ?? ''} />
+          {(po.status === 'draft' || po.status === 'sent') && (
+            <PoDeleteButton poId={poId} />
+          )}
+        </div>
       </div>
 
       {/* PO Header Info */}
