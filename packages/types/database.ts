@@ -12075,6 +12075,13 @@ export type Database = {
     Functions: {
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
+      get_amc_monthly_summary: {
+        Args: never
+        Returns: {
+          completed_count: number
+          scheduled_count: number
+        }[]
+      }
       get_company_cash_summary: {
         Args: never
         Returns: {
@@ -12113,6 +12120,22 @@ export type Database = {
       get_my_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_pipeline_summary: {
+        Args: never
+        Returns: {
+          proposal_count: number
+          total_value: number
+        }[]
+      }
+      get_projects_without_today_report: {
+        Args: never
+        Returns: {
+          customer_name: string
+          project_id: string
+          project_number: string
+          status: Database["public"]["Enums"]["project_status"]
+        }[]
       }
       lock_stale_reports: { Args: never; Returns: undefined }
       update_storage_mime_type: {
