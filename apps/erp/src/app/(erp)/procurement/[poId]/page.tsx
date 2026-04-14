@@ -6,6 +6,7 @@ import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
 import { DataFlagButton } from '@/components/data-flag-button';
+import { PoRateInlineEdit } from '@/components/procurement/po-rate-inline-edit';
 
 function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -136,20 +137,34 @@ export default async function PODetailPage({ params }: PageProps) {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  items.map((item: any, idx: number) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="text-xs text-gray-400">{idx + 1}</TableCell>
-                      <TableCell className="text-sm">{item.item_description ?? item.item_name ?? '—'}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">{item.item_category?.replace(/_/g, ' ')}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">{item.quantity}</TableCell>
-                      <TableCell className="text-xs text-gray-500">{item.unit ?? '—'}</TableCell>
-                      <TableCell className="text-sm font-mono">{formatINR(item.unit_rate ?? item.unit_price)}</TableCell>
-                      <TableCell className="text-sm">{item.gst_percentage ?? item.gst_rate ?? '—'}%</TableCell>
-                      <TableCell className="text-sm font-mono font-medium">{formatINR(item.total_amount ?? item.total_price)}</TableCell>
-                    </TableRow>
-                  ))
+                  items.map((item: any, idx: number) => {
+                    const canEditRate = po.status === 'draft' || po.status === 'sent';
+                    const unitRate = item.unit_price ?? item.unit_rate ?? 0;
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell className="text-xs text-gray-400">{idx + 1}</TableCell>
+                        <TableCell className="text-sm">{item.item_description ?? item.item_name ?? '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">{item.item_category?.replace(/_/g, ' ')}</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">{item.quantity_ordered ?? item.quantity ?? '—'}</TableCell>
+                        <TableCell className="text-xs text-gray-500">{item.unit ?? '—'}</TableCell>
+                        <TableCell className="text-sm font-mono">
+                          {canEditRate ? (
+                            <PoRateInlineEdit
+                              poId={poId}
+                              itemId={item.id}
+                              currentRate={unitRate}
+                            />
+                          ) : (
+                            <span className="font-mono">{formatINR(unitRate)}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">{item.gst_rate ?? item.gst_percentage ?? '—'}%</TableCell>
+                        <TableCell className="text-sm font-mono font-medium">{formatINR(item.total_price ?? item.total_amount ?? 0)}</TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
