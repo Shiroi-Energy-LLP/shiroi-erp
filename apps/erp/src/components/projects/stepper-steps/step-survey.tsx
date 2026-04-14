@@ -3,6 +3,7 @@ import { formatDate } from '@repo/ui/formatters';
 import { getStepSurveyData } from '@/lib/project-stepper-queries';
 import { ClipboardList, Camera, MapPin, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
 import { SurveyForm } from '@/components/projects/forms/survey-form';
+import { SurveyDownloadButton } from '@/components/projects/forms/survey-download-button';
 
 interface StepSurveyProps {
   projectId: string;
@@ -18,6 +19,12 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
 
       {/* Read-only display (shown when survey exists) */}
       {survey ? (
+        <div>
+          {(survey.survey_status === 'submitted' || survey.survey_status === 'approved') && (
+            <div className="flex justify-end mb-3">
+              <SurveyDownloadButton projectId={projectId} />
+            </div>
+          )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
 
           {/* ── Section 1: Project Details ── */}
@@ -199,6 +206,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
             </CardContent>
           </Card>
 
+        </div>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16">
