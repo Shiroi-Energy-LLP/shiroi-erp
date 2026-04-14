@@ -123,7 +123,17 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
     );
   }
 
-  const showCeig = application.ceig_required || ((project as any).system_size_kwp > 10 && (project as any).system_type !== 'on_grid');
+  // CEIG (Chief Electrical Inspectorate General) clearance is mandatory in Tamil Nadu
+  // for any grid-connected solar ≥10 kWp. It's the gate for TNEB net metering.
+  // Rule: show CEIG for any project ≥10 kWp unless it's purely off-grid.
+  // (Previous code had `system_type !== 'on_grid'` which was backwards — it HID CEIG
+  // for the exact systems that need it, which is why Manivel saw 0 CEIG workflows on
+  // projects over 10 kW. Also bumped the threshold from `> 10` to `>= 10` to match
+  // TN's regulatory cutoff.)
+  const sizeKwp = Number((project as any).system_size_kwp ?? 0);
+  const systemType = (project as any).system_type;
+  const showCeig =
+    application.ceig_required || (sizeKwp >= 10 && systemType !== 'off_grid');
   const stages = deriveWorkflowStages(application, showCeig);
 
   return (
