@@ -276,9 +276,7 @@ export async function getActiveProjects(): Promise<{ id: string; project_number:
     .from('projects')
     .select('id, project_number, customer_name')
     .is('deleted_at', null)
-    .not('status', 'in', '("completed")')
-    .order('project_number', { ascending: false })
-    .limit(200);
+    .order('customer_name', { ascending: true });
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });

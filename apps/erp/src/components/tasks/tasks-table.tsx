@@ -65,7 +65,7 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
 
         return (
           <React.Fragment key={task.id}>
-            <tr className={`border-b border-n-100 hover:bg-n-50 ${task.is_completed ? 'opacity-50' : ''}`}>
+            <tr className="border-b border-n-100 hover:bg-n-50">
               {/* Project Name — clickable, customer_name only */}
               <td className="px-2 py-1.5 text-[11px]">
                 {projectInfo ? (
@@ -78,7 +78,7 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
               </td>
 
               {/* Task Name */}
-              <td className={`px-2 py-1.5 text-[11px] font-medium ${task.is_completed ? 'line-through text-n-400' : 'text-n-900'}`}>
+              <td className="px-2 py-1.5 text-[11px] font-medium text-n-900">
                 <span title={task.title}>{task.title}</span>
               </td>
 
