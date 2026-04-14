@@ -271,7 +271,15 @@ export async function StepBoq({ projectId }: StepBoqProps) {
                       <td className="px-2 py-1.5 text-n-500">
                         {[item.brand, item.model].filter(Boolean).join(' ') || '\u2014'}
                       </td>
-                      <td className="px-2 py-1.5 text-right font-mono">{item.quantity} {item.unit}</td>
+                      <td className="px-2 py-1.5 text-right font-mono">
+                        <BoqInlineEdit
+                          projectId={projectId}
+                          itemId={item.id}
+                          field="quantity"
+                          currentValue={qty}
+                        />
+                        <span className="text-[10px] text-n-400 ml-0.5">{item.unit}</span>
+                      </td>
                       <td className="px-2 py-1.5 text-right">
                         <BoqInlineEdit
                           projectId={projectId}

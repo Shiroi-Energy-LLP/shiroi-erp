@@ -120,7 +120,7 @@ export function BoqItemStatusSelect({ projectId, itemId, currentStatus }: BoqIte
 interface BoqInlineEditProps {
   projectId: string;
   itemId: string;
-  field: 'unit_price' | 'gst_rate';
+  field: 'unit_price' | 'gst_rate' | 'quantity';
   currentValue: number;
 }
 
@@ -156,7 +156,7 @@ export function BoqInlineEdit({ projectId, itemId, field, currentValue }: BoqInl
         onDoubleClick={() => setEditing(true)}
         title="Double-click to edit"
       >
-        {field === 'unit_price' ? formatINR(currentValue) : `${currentValue}%`}
+        {field === 'unit_price' ? formatINR(currentValue) : field === 'quantity' ? String(currentValue) : `${currentValue}%`}
       </span>
     );
   }
@@ -167,7 +167,7 @@ export function BoqInlineEdit({ projectId, itemId, field, currentValue }: BoqInl
         value={value}
         onChange={(e) => setValue(e.target.value)}
         type="number"
-        step={field === 'gst_rate' ? '1' : '0.01'}
+        step={field === 'gst_rate' ? '1' : field === 'quantity' ? '1' : '0.01'}
         className="text-xs h-7 w-[80px] text-right font-mono"
         autoFocus
         onKeyDown={(e) => {
