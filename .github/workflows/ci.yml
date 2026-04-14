@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel in-progress runs when a new commit lands on the same PR
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Type check + Lint + Forbidden-pattern check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check (tsc --noEmit across all packages)
+        run: pnpm check-types
+
+      - name: Lint (eslint --max-warnings 0)
+        run: pnpm lint
+
+      - name: Forbidden-pattern check (CLAUDE.md rules 11, 13, 15)
+        run: bash scripts/ci/check-forbidden-patterns.sh

@@ -1,0 +1,99 @@
+R11|apps/erp/src/lib/amc-actions.ts:122:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:150:    .from('om_contracts' as any)
+R11|apps/erp/src/lib/amc-actions.ts:194:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:233:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:261:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:267:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:301:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:326:    .from('om_contracts' as any)
+R11|apps/erp/src/lib/amc-actions.ts:354:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:363:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:37:    .from('om_contracts' as any)
+R11|apps/erp/src/lib/amc-actions.ts:397:    .from('om_contracts' as any)
+R11|apps/erp/src/lib/amc-actions.ts:433:      .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:434:      .select('id, contract_id, scheduled_date, status, completed_at' as any)
+R11|apps/erp/src/lib/amc-actions.ts:478:    .from('om_visit_schedules' as any)
+R11|apps/erp/src/lib/amc-actions.ts:541:    .from('om_contracts' as any)
+R11|apps/erp/src/lib/amc-actions.ts:542:    .select('project_id, projects!om_contracts_project_id_fkey(id, project_number, customer_name)' as any)
+R11|apps/erp/src/lib/amc-actions.ts:77:    .from('om_contracts' as any)
+R11|apps/erp/src/lib/data-flag-actions.ts:121:    .from('data_flags' as any)
+R11|apps/erp/src/lib/data-flag-actions.ts:143:    .from('data_flags' as any)
+R11|apps/erp/src/lib/data-flag-actions.ts:165:    .from('data_flags' as any)
+R11|apps/erp/src/lib/data-flag-actions.ts:210:    .from('data_flags' as any)
+R11|apps/erp/src/lib/data-flag-actions.ts:214:    .from('data_flags' as any)
+R11|apps/erp/src/lib/data-flag-actions.ts:222:    .from('data_flags' as any)
+R11|apps/erp/src/lib/data-flag-actions.ts:62:    .from('data_flags' as any)
+R11|apps/erp/src/lib/data-flag-actions.ts:94:    .from('data_flags' as any)
+R11|apps/erp/src/lib/service-ticket-actions.ts:154:    .from('om_service_tickets' as any)
+R11|apps/erp/src/lib/service-ticket-actions.ts:178:    .from('om_service_tickets' as any)
+R11|apps/erp/src/lib/service-ticket-actions.ts:211:    .from('om_service_tickets' as any)
+R11|apps/erp/src/lib/service-ticket-actions.ts:32:    .from('om_service_tickets' as any)
+R11|apps/erp/src/lib/service-ticket-actions.ts:44:    .from('om_service_tickets' as any)
+R11|apps/erp/src/lib/service-ticket-actions.ts:99:    .from('om_service_tickets' as any)
+R11|apps/erp/src/lib/tasks-actions.ts:108:    .from('tasks' as any)
+R11|apps/erp/src/lib/tasks-actions.ts:154:    .from('tasks' as any)
+R11|apps/erp/src/lib/tasks-actions.ts:179:    .from('tasks' as any)
+R11|apps/erp/src/lib/tasks-actions.ts:218:    .from('task_work_logs' as any)
+R11|apps/erp/src/lib/tasks-actions.ts:242:    .from('task_work_logs' as any)
+R11|apps/erp/src/lib/tasks-actions.ts:243:    .select('id, task_id, log_date, description, progress_pct, hours_spent, created_at, logged_by, employees!task_work_logs_logged_by_fkey(full_name)' as any)
+R11|apps/erp/src/lib/tasks-actions.ts:39:    .from('tasks' as any)
+R11|apps/erp/src/lib/ticket-queries.ts:10:    .from('om_service_tickets' as any)
+R13|apps/erp/src/lib/dashboard-queries.ts:102:      .select('*', { count: 'exact', head: true })
+R13|apps/erp/src/lib/dashboard-queries.ts:107:      .select('*', { count: 'exact', head: true })
+R13|apps/erp/src/lib/finance-queries.ts:60:      .select('id', { count: 'exact', head: true })
+R13|apps/erp/src/lib/pm-queries.ts:103:      .select('id', { count: 'exact', head: true })
+R13|apps/erp/src/lib/pm-queries.ts:109:      .select('id', { count: 'exact', head: true })
+R13|apps/erp/src/lib/pm-queries.ts:114:      .select('id', { count: 'exact', head: true }),
+R13|apps/erp/src/lib/pm-queries.ts:118:      .select('id', { count: 'exact', head: true })
+R13|apps/erp/src/lib/pm-queries.ts:124:      .select('id', { count: 'exact', head: true })
+R13|apps/erp/src/lib/pm-queries.ts:96:      .select('id', { count: 'exact', head: true })
+R15|apps/erp/src/app/(auth)/login/login-form.tsx:5:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/app/(erp)/bom-review/page.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/daily-reports/page.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/data-quality/page.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/deliveries/page.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/design/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/hr/certifications/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/hr/leave/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/hr/training/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/leads/[id]/files/page.tsx:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/leads/[id]/payments/page.tsx:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/leads/[id]/proposal/page.tsx:4:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/leads/[id]/tasks/page.tsx:6:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/liaison/net-metering/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/liaison/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/my-reports/page.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/om/visits/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/projects/[id]/page.tsx:4:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/proposals/[id]/page.tsx:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/qc-gates/page.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/vendor-payments/page.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/api/procurement/[poId]/pdf/route.ts:4:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/api/projects/[id]/commissioning/route.ts:4:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/api/projects/[id]/dc/[dcId]/route.ts:4:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/api/projects/[id]/generate-pdf/route.ts:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/api/projects/[id]/qc/[inspectionId]/route.ts:4:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/api/projects/[id]/survey/route.ts:4:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/api/proposals/[id]/generate-pdf/route.ts:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/components/hr/leave-request-form.tsx:5:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/leads/add-activity-form.tsx:5:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/leads/lead-files-list.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/leads/lead-form.tsx:5:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/leads/status-change.tsx:5:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/om/amc-visit-tracker.tsx:7:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/projects/detail/documents-tab.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/components/projects/forms/liaison-form.tsx:7:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/projects/forms/qc-inspection-form.tsx:7:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/projects/forms/qc-photo-display.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/projects/forms/survey-form.tsx:9:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/projects/lead-files.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/projects/project-files.tsx:5:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/projects/stepper-steps/step-actuals.tsx:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/components/projects/stepper-steps/step-amc.tsx:9:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/components/projects/stepper-steps/step-commissioning.tsx:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/components/projects/stepper-steps/step-qc.tsx:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/components/proposals/proposal-files.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/reports/photo-upload.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/reports/report-photos.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/topbar.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/ui/image-viewer.tsx:4:import { createClient } from '@repo/supabase/client';

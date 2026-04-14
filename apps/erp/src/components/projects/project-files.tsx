@@ -269,7 +269,7 @@ function FileRow({
         role="button"
         tabIndex={0}
         onClick={() => (isImage ? onOpenImage(file) : onDownload(file))}
-        onKeyDown={(e) => { if (e.key === 'Enter') isImage ? onOpenImage(file) : onDownload(file); }}
+        onKeyDown={(e) => { if (e.key === 'Enter') { if (isImage) onOpenImage(file); else onDownload(file); } }}
         className="text-[#00B050] hover:underline truncate text-left flex-1 text-[12px] cursor-pointer select-none"
         title={file.name}
         draggable={false}
@@ -283,7 +283,7 @@ function FileRow({
         <DataFlagButton entityType="file" entityId={file.id} fieldName={category} compact />
         <button
           draggable={false}
-          onClick={(e) => { e.stopPropagation(); isImage ? onOpenImage(file) : onDownload(file); }}
+          onClick={(e) => { e.stopPropagation(); if (isImage) onOpenImage(file); else onDownload(file); }}
           className="p-0.5 text-[#7C818E] hover:text-[#00B050]"
           title={isImage ? 'View' : 'Download'}
         >

@@ -1,6 +1,24 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "NODE_ENV",
+    "NEXT_RUNTIME",
+    "ANTHROPIC_API_KEY",
+    "PVWATTS_API_KEY",
+    "PVLIB_MICROSERVICE_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_SECRET_KEY",
+    "PROD_SUPABASE_URL",
+    "PROD_SUPABASE_PUBLISHABLE_KEY",
+    "PROD_SUPABASE_SECRET_KEY",
+    "NEXT_PUBLIC_SENTRY_DSN",
+    "SENTRY_DSN",
+    "SENTRY_ORG",
+    "SENTRY_PROJECT",
+    "N8N_WEBHOOK_SECRET"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

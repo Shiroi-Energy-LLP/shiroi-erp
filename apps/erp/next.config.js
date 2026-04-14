@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- next.config.js is CommonJS; Sentry wrapper requires `require`
 const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */

@@ -426,7 +426,7 @@ export async function getAllAmcData(filters: {
   // Fetch visit stats for all contracts in one query
   const contractIds = contracts.map((c) => c.id as string).filter(Boolean);
 
-  let visitStats: Record<string, AmcVisitStats> = {};
+  const visitStats: Record<string, AmcVisitStats> = {};
 
   if (contractIds.length > 0) {
     const { data: allVisits } = await supabase

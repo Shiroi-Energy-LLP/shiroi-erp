@@ -61,7 +61,8 @@ function formatDate(iso: string): string {
 }
 
 export function LeadFiles({ leadId, files }: LeadFilesProps) {
-  if (files.length === 0) return null;
+  // Hooks must be called unconditionally — early return below runs AFTER them
+  // to satisfy react-hooks/rules-of-hooks.
 
   // Group files by type
   const grouped = React.useMemo(() => {
@@ -88,6 +89,8 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
 
   const [viewerOpen, setViewerOpen] = React.useState(false);
   const [viewerIndex, setViewerIndex] = React.useState(0);
+
+  if (files.length === 0) return null;
 
   function openImage(file: LeadFileInfo) {
     const idx = allImages.findIndex((img) => img.id === file.id);
