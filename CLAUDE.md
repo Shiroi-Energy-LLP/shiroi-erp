@@ -408,6 +408,123 @@ export async function middleware(request: NextRequest) {
 }
 ```
 
+### Row types for Supabase queries — no casting
+
+Every query declares row types explicitly from the generated `database.ts`. Never reach for `as any`.
+
+```typescript
+import type { Database } from '@repo/types';
+
+type Project = Database['public']['Tables']['projects']['Row'];
+type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
+type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
+
+const { data, error } = await supabase
+  .from('projects')
+  .select('id, project_number, customer_name, status, site_address')
+  .eq('status', 'in_progress')
+  .returns<Pick<Project, 'id' | 'project_number' | 'customer_name' | 'status' | 'site_address'>[]>();
+```
+
+If you find yourself writing `as any` because a type is wrong, the fix is to regenerate `database.ts`, not to cast. See NEVER-DO rule #11.
+
+### Server action return shape — `ActionResult<T>`
+
+All server actions return `ActionResult<T>` from `apps/erp/src/lib/types/actions`. No throws from actions.
+
+```typescript
+'use server';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { createClient } from '@repo/supabase/server';
+import type { Database } from '@repo/types';
+
+type Project = Database['public']['Tables']['projects']['Row'];
+type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
+
+export async function updateProject(
+  id: string,
+  patch: ProjectUpdate,
+): Promise<ActionResult<Project>> {
+  const op = '[updateProject]';
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('projects')
+      .update(patch)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error(`${op} failed`, { id, error });
+      return err(error.message, error.code);
+    }
+    return ok(data);
+  } catch (e) {
+    console.error(`${op} threw`, { id, e });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+```
+
+Call site:
+
+```typescript
+const result = await updateProject(id, patch);
+if (!result.success) {
+  toast.error(result.error);
+  return;
+}
+// result.data is typed Project
+```
+
+### Query files vs. component files — strict separation
+
+- `apps/erp/src/lib/*-queries.ts` — pure read functions. Return typed rows. No React imports. Testable in isolation.
+- `apps/erp/src/lib/*-actions.ts` — server actions. `'use server'` at top. Return `ActionResult<T>`. No React imports.
+- `apps/erp/src/components/` and `apps/erp/src/app/` — consume the above. **No direct Supabase client usage.**
+
+If a page or component imports `createClient` from `@repo/supabase`, the code is wrong — extract the call into a `*-queries.ts` or `*-actions.ts` file.
+
+### Financial aggregation — SQL, never JavaScript
+
+If a dashboard or summary needs `SUM`/`AVG`/`COUNT` over monetary rows, create a Postgres RPC function and call it. Never `.reduce()` over rows in JS. Template from migration 028 (`get_lead_stage_counts`, `get_company_cash_summary`):
+
+```sql
+CREATE OR REPLACE FUNCTION get_pipeline_summary()
+RETURNS TABLE (
+  status TEXT,
+  lead_count BIGINT,
+  total_value NUMERIC,
+  weighted_value NUMERIC
+)
+LANGUAGE sql STABLE SECURITY INVOKER AS $$
+  SELECT
+    status::TEXT,
+    COUNT(*)::BIGINT,
+    COALESCE(SUM(proposed_value), 0)::NUMERIC,
+    COALESCE(SUM(proposed_value * close_probability / 100.0), 0)::NUMERIC
+  FROM leads
+  WHERE deleted_at IS NULL AND is_archived = false
+  GROUP BY status;
+$$;
+```
+
+```typescript
+// query file
+const { data, error } = await supabase.rpc('get_pipeline_summary');
+// data is typed as the function's RETURNS TABLE — no .reduce() needed.
+```
+
+`SECURITY INVOKER` keeps RLS applied; `STABLE` lets the planner cache within a statement.
+
+### Time-series data — declarative partitioning
+
+Any table that will receive >1,000 writes/day sustained (inverter telemetry, IoT sensors, append-only audit streams) must be declaratively partitioned from its first migration. Use `PARTITION BY RANGE (<time_col>)` with monthly partitions. Automate partition creation via `pg_cron`. Raw rows are NEVER queried by the frontend — every page query must hit a pre-computed rollup table (`_hourly`, `_daily`). See the forthcoming migration 050 for the reference template.
+
+### When in doubt, add an index
+
+Postgres indexes are cheap to create and cheap to maintain. The single most common fix for a slow query is adding the right index. If you add a new filterable/sortable column to a non-trivial table, add the index in the same migration. Do not "wait and see" — the production slowdown always catches you at the worst moment.
+
 ### Sensitive fields — never in logs
 
 Never log: `bank_account_number`, `aadhar_number`, `pan_number`, `gross_monthly`,
@@ -427,6 +544,16 @@ Never log: `bank_account_number`, `aadhar_number`, `pan_number`, `gross_monthly`
 8. **Never write SQL** directly inside React components or page files
 9. **Never push** directly to main — feature branch → PR → review → merge (once branching is set up)
 10. **Never run** untested migrations on prod — dev first, verify, then prod
+11. **Never use `as any` or `: any` in a Supabase query or its result type.** Always import the row type: `import type { Database } from '@repo/types'; type Project = Database['public']['Tables']['projects']['Row']`. If the generated type is wrong, **regenerate `database.ts` — don't cast around it.** Reason: 576 type violations identified in the April 14 audit all started with "just one cast". Every cast compounds silent schema-drift risk.
+12. **Never aggregate money in JavaScript.** If you need `SUM`, `AVG`, `COUNT`, or weighted totals over monetary columns, create a SQL RPC function and call it. `.reduce()` over proposals/projects/invoices/BOM lines to compute a dashboard number is banned. Reason: at 10x scale the founder dashboard would push 375k rows through the JS heap per minute.
+13. **Never use `count: 'exact'` on tables with more than 1,000 rows.** Use `count: 'estimated'`. If an exact count is business-critical (invoice numbering, compliance counters), maintain it via a trigger-backed counter row, not a `COUNT(*)` query. Migration 028/029 fixed most list pages; dashboard summaries are the remaining offenders.
+14. **Never write a form component larger than 500 LOC.** Split into sub-section components that each own their own state slice. If the form maps to ≥40 fields, the underlying schema probably needs normalization. Current offenders: `survey-form.tsx` (1,191), `project-files.tsx` (1,124), `proposal-wizard.tsx` (1,024).
+15. **Never make an inline Supabase call from a `page.tsx` or a React component.** Every read lives in a named function in `apps/erp/src/lib/*-queries.ts`. Every mutation lives in a named server action in `apps/erp/src/lib/*-actions.ts`. No exceptions — not even "just for now".
+16. **Never store time-series data (inverter readings, IoT telemetry, audit events at >1k/day) in a regular Postgres table.** Use declarative partitioning (`PARTITION BY RANGE (<time_col>)`) from day 1. Automate partition creation via pg_cron. See the forthcoming migration 050 for the reference template. Raw telemetry is NEVER queried by the frontend — queries hit pre-computed rollup tables.
+17. **Never add a filterable, sortable, or frequently-joined column without also adding an index in the same migration.** Every `WHERE`, `ORDER BY`, or `JOIN` on a new column requires a corresponding `CREATE INDEX` in the same SQL file. The migration is not done until the index is there.
+18. **Never queue background work (longer than 5s, polling, retries, webhooks) inside a Next.js server action.** Use Supabase Edge Functions for CPU work, `pg_cron` for scheduled work, and BullMQ + Redis (to be added) when fan-out + retries are needed. Server actions are for short, user-initiated mutations only.
+19. **Never throw from a server action; return `ActionResult<T>`.** Exceptions cross the RSC boundary badly and produce opaque errors for users. Errors are returned as typed objects; logs still go through the `const op` pattern in parallel. See §4.11 of the master reference for the canonical pattern.
+20. **Never ship schema changes without regenerating types in the same commit.** After every migration, run `npx supabase gen types typescript --project-id <id> --schema public > packages/types/database.ts` and commit the diff alongside the migration. A commit that changes schema but not types is incomplete.
 
 ---
 

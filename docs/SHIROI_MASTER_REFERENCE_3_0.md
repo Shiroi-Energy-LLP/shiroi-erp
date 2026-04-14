@@ -518,6 +518,72 @@ export async function middleware(request: NextRequest) {
 }
 ```
 
+### 4.11 Engineering Rules — April 2026 audit
+
+These are the ten rules that emerged from the April 14, 2026 full-codebase audit. They live in `CLAUDE.md`'s NEVER-DO list (items 11–20); this section mirrors them here for architectural discussion. **CLAUDE.md is authoritative** — if the two drift, CLAUDE.md wins.
+
+The rules exist because the audit found 576 `any`/`as any` violations, 9 query files reducing monetary columns in JavaScript, 3 form components >1,000 LOC, and no plan for inverter telemetry. Every one of the rules below is calibrated to prevent a specific, observed failure mode.
+
+1. **No `as any` / `: any` in Supabase queries or result types.** Import row types from `@repo/types`. Regenerate `database.ts` rather than casting around it. Every cast compounds schema-drift risk.
+2. **No JavaScript aggregation over money.** `SUM` / `AVG` / `COUNT` / weighted totals over proposals, projects, invoices, BOM lines, or vouchers must be SQL RPC functions, never JS `.reduce()`. At 10x scale, the reduce-in-JS pattern pushes ~375k rows through the JS heap per minute on the founder dashboard alone.
+3. **No `count: 'exact'` on tables >1,000 rows.** Use `'estimated'`. If an exact count is business-critical (invoice numbering, compliance counters), maintain it via a trigger-backed counter row, not a `COUNT(*)` query.
+4. **No form component >500 LOC.** Split into sub-section components each owning their own state slice. If a form has ≥40 fields, the schema probably needs normalization. Current offenders to split: `survey-form.tsx` (1,191), `project-files.tsx` (1,124), `proposal-wizard.tsx` (1,024).
+5. **No inline Supabase calls from `page.tsx` or React components.** Reads live in `lib/*-queries.ts`. Mutations live in `lib/*-actions.ts`. No exceptions — not even "just for now".
+6. **No time-series data in regular Postgres tables.** Inverter telemetry, IoT sensors, append-only audit streams at >1k/day — all use declarative partitioning from day 1. `PARTITION BY RANGE (<time_col>)` with monthly partitions, automated via pg_cron. Raw rows never touch the frontend; queries hit pre-computed rollup tables.
+7. **No filterable/sortable column without an index in the same migration.** Every `WHERE`, `ORDER BY`, or `JOIN` on a new column requires a `CREATE INDEX` in the same SQL file. The migration is not done until the index is there.
+8. **No background work >5s inside a Next.js server action.** Use Supabase Edge Functions for CPU work, pg_cron for scheduled work, BullMQ + Redis when fan-out + retries are needed. Server actions are for short, user-initiated mutations only.
+9. **No throws from server actions — return `ActionResult<T>`.** Errors return as typed objects; logs still go through the `const op` pattern in parallel. Exceptions across the RSC boundary produce opaque failures for users.
+
+   ```typescript
+   // apps/erp/src/lib/types/actions.ts
+   export type ActionResult<T = void> =
+     | { success: true; data: T }
+     | { success: false; error: string; code?: string };
+   export const ok = <T>(data: T): ActionResult<T> => ({ success: true, data });
+   export const err = (error: string, code?: string): ActionResult<never> =>
+     ({ success: false, error, code });
+   ```
+
+10. **No schema changes without regenerating types in the same commit.** After every migration, run `npx supabase gen types typescript --project-id <id> --schema public > packages/types/database.ts` and commit the diff alongside the migration. A commit that changes schema but not types is incomplete.
+
+**Enforcement:** GitHub Actions CI runs `tsc --noEmit` + `pnpm lint` on every PR. A PR introducing `as any` in a Supabase query, a `count: 'exact'` on a large table, or missing type regeneration should fail at the CI layer.
+
+**Template — the canonical refactor of an action file** (use `amc-actions.ts` as the guinea pig):
+
+```typescript
+'use server';
+import type { Database } from '@repo/types';
+import { createClient } from '@repo/supabase/server';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
+
+type OmContract = Database['public']['Tables']['om_contracts']['Row'];
+type OmContractInsert = Database['public']['Tables']['om_contracts']['Insert'];
+
+export async function createOmContract(
+  input: OmContractInsert,
+): Promise<ActionResult<OmContract>> {
+  const op = '[createOmContract]';
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('om_contracts')  // no `as any`
+      .insert(input)
+      .select()
+      .single();
+    if (error) {
+      console.error(`${op} failed`, { error });
+      return err(error.message, error.code);
+    }
+    return ok(data);
+  } catch (e) {
+    console.error(`${op} threw`, { e });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+```
+
+Compare with the current `apps/erp/src/lib/amc-actions.ts:37, 77, 91, 110, 122` which uses `from('om_contracts' as any)` + `.insert({ ... } as any)` and loses all schema validation.
+
 ---
 
 ## 5. Database Schema — 134 Tables
