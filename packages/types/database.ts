@@ -6613,6 +6613,8 @@ export type Database = {
           brand: string | null
           created_at: string
           created_by: string | null
+          default_qty: number | null
+          deleted_at: string | null
           effective_from: string
           effective_until: string | null
           gst_rate: number
@@ -6627,16 +6629,21 @@ export type Database = {
           model: string | null
           price_variance_pct: number | null
           purchases_above_threshold: number
+          rate_updated_at: string | null
+          rate_updated_by: string | null
           specification: string | null
           unit: string
           update_recommended: boolean
           updated_at: string
+          vendor_name: string | null
         }
         Insert: {
           base_price: number
           brand?: string | null
           created_at?: string
           created_by?: string | null
+          default_qty?: number | null
+          deleted_at?: string | null
           effective_from?: string
           effective_until?: string | null
           gst_rate: number
@@ -6651,16 +6658,21 @@ export type Database = {
           model?: string | null
           price_variance_pct?: number | null
           purchases_above_threshold?: number
+          rate_updated_at?: string | null
+          rate_updated_by?: string | null
           specification?: string | null
           unit: string
           update_recommended?: boolean
           updated_at?: string
+          vendor_name?: string | null
         }
         Update: {
           base_price?: number
           brand?: string | null
           created_at?: string
           created_by?: string | null
+          default_qty?: number | null
+          deleted_at?: string | null
           effective_from?: string
           effective_until?: string | null
           gst_rate?: number
@@ -6675,10 +6687,13 @@ export type Database = {
           model?: string | null
           price_variance_pct?: number | null
           purchases_above_threshold?: number
+          rate_updated_at?: string | null
+          rate_updated_by?: string | null
           specification?: string | null
           unit?: string
           update_recommended?: boolean
           updated_at?: string
+          vendor_name?: string | null
         }
         Relationships: [
           {
@@ -6686,6 +6701,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_book_rate_updated_by_fkey"
+            columns: ["rate_updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
