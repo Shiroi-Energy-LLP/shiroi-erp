@@ -334,6 +334,37 @@ export async function updateLiaisonFields(input: {
 }
 
 /**
+ * Set CEIG scope — whether Shiroi or Client handles the CEIG clearance process.
+ */
+export async function updateCeigScope(input: {
+  applicationId: string;
+  scope: 'shiroi' | 'client';
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateCeigScope]';
+  console.log(`${op} Setting CEIG scope to ${input.scope} for application: ${input.applicationId}`);
+
+  const supabase = await createClient();
+
+  const updateData: Record<string, unknown> = {
+    ceig_scope: input.scope,
+    ceig_required: input.scope === 'shiroi',
+  };
+
+  const { error } = await supabase
+    .from('net_metering_applications')
+    .update(updateData as any)
+    .eq('id', input.applicationId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/projects');
+  return { success: true };
+}
+
+/**
  * Record an objection on a net metering application.
  */
 export async function createObjection(input: {

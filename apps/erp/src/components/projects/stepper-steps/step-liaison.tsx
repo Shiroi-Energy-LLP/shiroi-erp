@@ -6,6 +6,7 @@ import {
   LiaisonCreateButton,
   DiscomStatusForm,
   CeigStatusForm,
+  CeigScopeToggle,
   NetMeterForm,
   FollowupForm,
   LiaisonFieldEditor,
@@ -243,48 +244,68 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">CEIG Clearance</CardTitle>
-                <CeigStatusForm projectId={projectId} currentStatus={application.ceig_status} />
+                <div className="flex items-center gap-3">
+                  <CeigScopeToggle
+                    applicationId={application.id}
+                    currentScope={(application as any).ceig_scope ?? null}
+                  />
+                  {(application as any).ceig_scope !== 'client' && (
+                    <CeigStatusForm projectId={projectId} currentStatus={application.ceig_status} />
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-[11px]">
-                <div>
-                  <span className="text-n-500 block mb-0.5">Status</span>
-                  <CeigStatusBadge status={application.ceig_status} />
+              {(application as any).ceig_scope === 'client' ? (
+                <div className="flex items-center gap-2 py-3 text-sm text-blue-600">
+                  <Building2 className="w-4 h-4 flex-shrink-0" />
+                  <div>
+                    <span className="font-medium">CEIG managed by Client</span>
+                    <p className="text-xs text-n-500 mt-0.5">
+                      Client is handling the CEIG clearance process for this project.
+                    </p>
+                  </div>
                 </div>
-                <EditableFieldRow
-                  label="Application Date"
-                  field="ceig_application_date"
-                  value={application.ceig_application_date}
-                  projectId={projectId}
-                  type="date"
-                  inline
-                />
-                <EditableFieldRow
-                  label="Inspection Date"
-                  field="ceig_inspection_date"
-                  value={application.ceig_inspection_date}
-                  projectId={projectId}
-                  type="date"
-                  inline
-                />
-                <EditableFieldRow
-                  label="Approval Date"
-                  field="ceig_approval_date"
-                  value={application.ceig_approval_date}
-                  projectId={projectId}
-                  type="date"
-                  inline
-                />
-                <EditableFieldRow
-                  label="Certificate No."
-                  field="ceig_certificate_number"
-                  value={application.ceig_certificate_number}
-                  projectId={projectId}
-                  mono
-                  inline
-                />
-              </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-[11px]">
+                  <div>
+                    <span className="text-n-500 block mb-0.5">Status</span>
+                    <CeigStatusBadge status={application.ceig_status} />
+                  </div>
+                  <EditableFieldRow
+                    label="Application Date"
+                    field="ceig_application_date"
+                    value={application.ceig_application_date}
+                    projectId={projectId}
+                    type="date"
+                    inline
+                  />
+                  <EditableFieldRow
+                    label="Inspection Date"
+                    field="ceig_inspection_date"
+                    value={application.ceig_inspection_date}
+                    projectId={projectId}
+                    type="date"
+                    inline
+                  />
+                  <EditableFieldRow
+                    label="Approval Date"
+                    field="ceig_approval_date"
+                    value={application.ceig_approval_date}
+                    projectId={projectId}
+                    type="date"
+                    inline
+                  />
+                  <EditableFieldRow
+                    label="Certificate No."
+                    field="ceig_certificate_number"
+                    value={application.ceig_certificate_number}
+                    projectId={projectId}
+                    mono
+                    inline
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

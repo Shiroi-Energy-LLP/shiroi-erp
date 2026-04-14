@@ -387,7 +387,7 @@ export async function getStepLiaisonData(projectId: string) {
       .single(),
     supabase
       .from('net_metering_applications')
-      .select('id, discom_name, discom_status, discom_application_date, discom_application_number, ceig_required, ceig_status, ceig_application_date, ceig_approval_date, ceig_inspection_date, ceig_certificate_number, net_meter_installed, net_meter_installed_date, net_meter_serial_number, followup_count, last_followup_date, next_followup_date, notes, managed_by')
+      .select('id, discom_name, discom_status, discom_application_date, discom_application_number, ceig_required, ceig_status, ceig_application_date, ceig_approval_date, ceig_inspection_date, ceig_certificate_number, ceig_scope, net_meter_installed, net_meter_installed_date, net_meter_serial_number, followup_count, last_followup_date, next_followup_date, notes, managed_by')
       .eq('project_id', projectId)
       .maybeSingle(),
     supabase
