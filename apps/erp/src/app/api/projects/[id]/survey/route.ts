@@ -28,7 +28,7 @@ const PHOTO_FIELDS = [
 function dataUrlToBuffer(dataUrl: string | null): Buffer | null {
   if (!dataUrl) return null;
   const parts = dataUrl.split(',');
-  if (parts.length !== 2) return null;
+  if (parts.length !== 2 || !parts[1]) return null;
   return Buffer.from(parts[1], 'base64');
 }
 
