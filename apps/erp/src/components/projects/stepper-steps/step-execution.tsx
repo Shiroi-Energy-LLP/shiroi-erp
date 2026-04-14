@@ -91,9 +91,17 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
     return { milestoneId: m.id, total: mTasks.length, done: mDone, pct };
   });
 
-  // Overall % from milestone averages (task-based where tasks exist, status-based otherwise)
-  const overallPct = milestones.length > 0
-    ? Math.round(milestoneTaskCounts.reduce((sum, mc) => sum + mc.pct, 0) / milestones.length)
+  // Other tasks (no milestone assigned)
+  const otherTasks = tasks.filter((t: any) => !t.milestone_id);
+  const otherTasksCompleted = otherTasks.filter((t: any) => t.is_completed).length;
+  const otherPct = otherTasks.length > 0 ? Math.round((otherTasksCompleted / otherTasks.length) * 100) : 0;
+
+  // Overall % from milestone averages + other tasks bucket
+  // Each milestone counts as one "bucket"; other tasks (if any) count as one additional bucket.
+  const buckets = milestoneTaskCounts.map((mc) => mc.pct);
+  if (otherTasks.length > 0) buckets.push(otherPct);
+  const overallPct = buckets.length > 0
+    ? Math.round(buckets.reduce((sum, pct) => sum + pct, 0) / buckets.length)
     : 0;
 
   return (
@@ -325,6 +333,103 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
           </CardContent>
         )}
       </Card>
+
+      {/* ── Other Tasks (no milestone assigned) ── */}
+      {otherTasks.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ListTodo className="h-4 w-4 text-n-400" />
+              <CardTitle className="text-base">Other Tasks (No Milestone)</CardTitle>
+            </div>
+            <Badge variant={otherPct === 100 ? 'default' : 'outline'}>
+              {otherTasksCompleted}/{otherTasks.length} ({otherPct}%)
+            </Badge>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-[11px]">
+                <thead>
+                  <tr className="border-b border-n-200 bg-n-50">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Task Name</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Assigned To</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Assigned Date</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Status</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Priority</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Due Date</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Notes</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Done By</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Activity Log</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[60px]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {otherTasks.map((task: any) => {
+                    const assigneeName = task.employees && 'full_name' in task.employees
+                      ? (task.employees as { full_name: string }).full_name
+                      : '—';
+                    const doneByName = task.completedByEmployee && 'full_name' in task.completedByEmployee
+                      ? (task.completedByEmployee as { full_name: string }).full_name
+                      : null;
+                    const isOverdue = task.due_date && !task.is_completed && new Date(task.due_date) < new Date();
+
+                    return (
+                      <tr key={task.id} className={`border-b border-n-100 ${task.is_completed ? 'opacity-60' : ''}`}>
+                        <td className={`px-2 py-1.5 max-w-[160px] ${task.is_completed ? 'line-through text-n-400' : 'text-n-900 font-medium'}`}>
+                          <span className="truncate block" title={task.title}>{task.title}</span>
+                        </td>
+                        <td className="px-2 py-1.5 text-n-600">{assigneeName}</td>
+                        <td className="px-2 py-1.5 text-n-500">
+                          {task.assigned_date
+                            ? new Date(task.assigned_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+                            : '—'}
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <TaskStatusDropdown
+                            taskId={task.id}
+                            isCompleted={task.is_completed}
+                            projectId={projectId}
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <PriorityBadge priority={task.priority} />
+                        </td>
+                        <td className={`px-2 py-1.5 ${isOverdue ? 'text-red-600 font-medium' : 'text-n-500'}`}>
+                          {task.due_date
+                            ? new Date(task.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+                            : '—'}
+                        </td>
+                        <td className="px-2 py-1.5 text-n-500 max-w-[100px]">
+                          <span className="truncate block" title={task.remarks ?? undefined}>
+                            {task.remarks || '—'}
+                          </span>
+                        </td>
+                        <td className="px-2 py-1.5 text-n-600">
+                          {doneByName || '—'}
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <ActivityLogCell taskId={task.id} />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <EditTaskButton
+                              task={task}
+                              milestones={milestones}
+                              employees={employees}
+                              projectId={projectId}
+                            />
+                            <DeleteTaskButton taskId={task.id} projectId={projectId} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick links */}
       <div className="flex gap-3">
