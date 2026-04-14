@@ -1,12 +1,14 @@
 import {
   getCashNegativeProjects,
-  getPipelineSummary,
   getProposalsPendingApproval,
-  getProjectsWithNoReportToday,
-  getAmcMonthlySummary,
   daysUntilPayroll,
 } from '@/lib/dashboard-queries';
-import { getCompanyCashSummary } from '@/lib/cash-queries';
+import {
+  getCachedPipelineSummary,
+  getCachedCompanyCashSummary,
+  getCachedAmcMonthlySummary,
+  getCachedProjectsWithoutTodayReport,
+} from '@/lib/cached-dashboard-queries';
 import { getUserProfile } from '@/lib/auth';
 import { shortINR } from '@repo/ui/formatters';
 import { Eyebrow } from '@repo/ui';
@@ -20,14 +22,26 @@ import { PendingApprovals } from './pending-approvals';
 import { OverdueReports } from './overdue-reports';
 
 export async function FounderDashboard() {
-  const [cashProjects, pipeline, pendingApprovals, overdueReports, profile, cashSummary, amcSummary] = await Promise.all([
+  // All five "company aggregate" queries below are cached via
+  // unstable_cache (see cached-dashboard-queries.ts) and served from
+  // Next.js's data cache within the TTL window. User-specific queries
+  // (cashProjects, pendingApprovals, profile) still run per request.
+  const [
+    cashProjects,
+    pipeline,
+    pendingApprovals,
+    overdueReports,
+    profile,
+    cashSummary,
+    amcSummary,
+  ] = await Promise.all([
     getCashNegativeProjects(),
-    getPipelineSummary(),
+    getCachedPipelineSummary(),
     getProposalsPendingApproval(),
-    getProjectsWithNoReportToday(),
+    getCachedProjectsWithoutTodayReport(),
     getUserProfile(),
-    getCompanyCashSummary(),
-    getAmcMonthlySummary(),
+    getCachedCompanyCashSummary(),
+    getCachedAmcMonthlySummary(),
   ]);
   const payrollDays = daysUntilPayroll();
   const firstName = profile?.full_name?.split(' ')[0] ?? 'there';

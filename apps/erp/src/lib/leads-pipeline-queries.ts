@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { getCachedLeadStageCounts } from './cached-dashboard-queries';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
@@ -13,27 +14,17 @@ export interface StageCounts {
 /**
  * Get lead counts + weighted pipeline value grouped by status.
  * Excludes deleted and converted leads.
+ *
+ * Delegates to getCachedLeadStageCounts which wraps the RPC in
+ * unstable_cache (TTL 300s). See cached-dashboard-queries.ts.
  */
 export async function getLeadStageCounts(includeArchived = false): Promise<StageCounts[]> {
-  const op = '[getLeadStageCounts]';
-  console.log(`${op} Starting`);
-  const supabase = await createClient();
-
-  // Use RPC function — GROUP BY in SQL instead of fetching all 1,115 leads to JS
-  const { data, error } = await supabase.rpc('get_lead_stage_counts', {
-    p_include_archived: includeArchived,
-  });
-
-  if (error) {
-    console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
-    throw new Error(`Failed to load stage counts: ${error.message}`);
-  }
-
-  return (data ?? []).map((row: any) => ({
+  const rows = await getCachedLeadStageCounts(includeArchived);
+  return rows.map((row) => ({
     status: row.status as LeadStatus,
-    count: Number(row.lead_count),
-    total_value: Number(row.total_value),
-    weighted_value: Number(row.weighted_value),
+    count: row.lead_count,
+    total_value: row.total_value,
+    weighted_value: row.weighted_value,
   }));
 }
 
