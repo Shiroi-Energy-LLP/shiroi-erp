@@ -1,3 +1,4 @@
+npm warn exec The following package was not found and will be installed: supabase@2.90.0
 export type Json =
   | string
   | number
@@ -550,6 +551,7 @@ export type Database = {
           dc_current_a: number | null
           dc_voltage_v: number | null
           earth_resistance_ohm: number | null
+          engineer_signature_path: string | null
           generation_confirmed: boolean
           id: string
           initial_reading_kwh: number
@@ -586,6 +588,7 @@ export type Database = {
           dc_current_a?: number | null
           dc_voltage_v?: number | null
           earth_resistance_ohm?: number | null
+          engineer_signature_path?: string | null
           generation_confirmed?: boolean
           id?: string
           initial_reading_kwh?: number
@@ -622,6 +625,7 @@ export type Database = {
           dc_current_a?: number | null
           dc_voltage_v?: number | null
           earth_resistance_ohm?: number | null
+          engineer_signature_path?: string | null
           generation_confirmed?: boolean
           id?: string
           initial_reading_kwh?: number
@@ -4916,6 +4920,7 @@ export type Database = {
           ceig_inspection_date: string | null
           ceig_rejection_reason: string | null
           ceig_required: boolean
+          ceig_scope: string | null
           ceig_status: string
           created_at: string
           discom_application_date: string | null
@@ -4943,6 +4948,7 @@ export type Database = {
           ceig_inspection_date?: string | null
           ceig_rejection_reason?: string | null
           ceig_required?: boolean
+          ceig_scope?: string | null
           ceig_status?: string
           created_at?: string
           discom_application_date?: string | null
@@ -4970,6 +4976,7 @@ export type Database = {
           ceig_inspection_date?: string | null
           ceig_rejection_reason?: string | null
           ceig_required?: boolean
+          ceig_scope?: string | null
           ceig_status?: string
           created_at?: string
           discom_application_date?: string | null
@@ -5055,6 +5062,8 @@ export type Database = {
       }
       om_contracts: {
         Row: {
+          amc_category: string | null
+          amc_duration_months: number | null
           annual_value: number
           auto_renewal: boolean
           contract_number: string
@@ -5075,9 +5084,12 @@ export type Database = {
           start_date: string
           status: Database["public"]["Enums"]["om_contract_status"]
           updated_at: string
+          updated_by: string | null
           visits_included: number
         }
         Insert: {
+          amc_category?: string | null
+          amc_duration_months?: number | null
           annual_value?: number
           auto_renewal?: boolean
           contract_number: string
@@ -5098,9 +5110,12 @@ export type Database = {
           start_date: string
           status?: Database["public"]["Enums"]["om_contract_status"]
           updated_at?: string
+          updated_by?: string | null
           visits_included?: number
         }
         Update: {
+          amc_category?: string | null
+          amc_duration_months?: number | null
           annual_value?: number
           auto_renewal?: boolean
           contract_number?: string
@@ -5121,6 +5136,7 @@ export type Database = {
           start_date?: string
           status?: Database["public"]["Enums"]["om_contract_status"]
           updated_at?: string
+          updated_by?: string | null
           visits_included?: number
         }
         Relationships: [
@@ -5143,6 +5159,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "om_contracts_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5267,6 +5290,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           auto_created_ir_test: boolean
+          closed_at: string | null
           closes_automation_pause: boolean
           contract_id: string | null
           created_at: string
@@ -5285,6 +5309,7 @@ export type Database = {
           resolution_visit_id: string | null
           resolved_at: string | null
           resolved_by: string | null
+          service_amount: number | null
           severity: string
           sla_breached: boolean
           sla_breached_at: string | null
@@ -5300,6 +5325,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           auto_created_ir_test?: boolean
+          closed_at?: string | null
           closes_automation_pause?: boolean
           contract_id?: string | null
           created_at?: string
@@ -5318,6 +5344,7 @@ export type Database = {
           resolution_visit_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          service_amount?: number | null
           severity?: string
           sla_breached?: boolean
           sla_breached_at?: string | null
@@ -5333,6 +5360,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           auto_created_ir_test?: boolean
+          closed_at?: string | null
           closes_automation_pause?: boolean
           contract_id?: string | null
           created_at?: string
@@ -5351,6 +5379,7 @@ export type Database = {
           resolution_visit_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          service_amount?: number | null
           severity?: string
           sla_breached?: boolean
           sla_breached_at?: string | null
@@ -5716,14 +5745,19 @@ export type Database = {
           assigned_to: string | null
           backup_technician_id: string | null
           completed_at: string | null
+          completed_by: string | null
           contract_id: string
           created_at: string
+          customer_feedback: string | null
           id: string
+          issues_identified: string | null
           notes: string | null
           project_id: string
+          report_file_paths: string[] | null
           reschedule_count: number
           reschedule_reason: string | null
           rescheduled_from: string | null
+          resolution_details: string | null
           scheduled_date: string
           scheduled_time_slot: string | null
           status: string
@@ -5731,19 +5765,25 @@ export type Database = {
           visit_number: number
           visit_report_id: string | null
           visit_type: string
+          work_done: string | null
         }
         Insert: {
           assigned_to?: string | null
           backup_technician_id?: string | null
           completed_at?: string | null
+          completed_by?: string | null
           contract_id: string
           created_at?: string
+          customer_feedback?: string | null
           id?: string
+          issues_identified?: string | null
           notes?: string | null
           project_id: string
+          report_file_paths?: string[] | null
           reschedule_count?: number
           reschedule_reason?: string | null
           rescheduled_from?: string | null
+          resolution_details?: string | null
           scheduled_date: string
           scheduled_time_slot?: string | null
           status?: string
@@ -5751,19 +5791,25 @@ export type Database = {
           visit_number: number
           visit_report_id?: string | null
           visit_type: string
+          work_done?: string | null
         }
         Update: {
           assigned_to?: string | null
           backup_technician_id?: string | null
           completed_at?: string | null
+          completed_by?: string | null
           contract_id?: string
           created_at?: string
+          customer_feedback?: string | null
           id?: string
+          issues_identified?: string | null
           notes?: string | null
           project_id?: string
+          report_file_paths?: string[] | null
           reschedule_count?: number
           reschedule_reason?: string | null
           rescheduled_from?: string | null
+          resolution_details?: string | null
           scheduled_date?: string
           scheduled_time_slot?: string | null
           status?: string
@@ -5771,6 +5817,7 @@ export type Database = {
           visit_number?: number
           visit_report_id?: string | null
           visit_type?: string
+          work_done?: string | null
         }
         Relationships: [
           {
@@ -5790,6 +5837,13 @@ export type Database = {
           {
             foreignKeyName: "om_visit_schedules_backup_technician_id_fkey"
             columns: ["backup_technician_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "om_visit_schedules_completed_by_fkey"
+            columns: ["completed_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
