@@ -3035,6 +3035,547 @@ export type Database = {
           },
         ]
       }
+      inverter_monitoring_credentials: {
+        Row: {
+          brand: string
+          config: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          vault_secret_ref: string
+        }
+        Insert: {
+          brand: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          vault_secret_ref: string
+        }
+        Update: {
+          brand?: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          vault_secret_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inverter_monitoring_credentials_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inverter_poll_failures: {
+        Row: {
+          attempted_at: string
+          error_message: string
+          http_status: number | null
+          id: string
+          inverter_id: string
+          payload_excerpt: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          error_message: string
+          http_status?: number | null
+          id?: string
+          inverter_id: string
+          payload_excerpt?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          error_message?: string
+          http_status?: number | null
+          id?: string
+          inverter_id?: string
+          payload_excerpt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inverter_poll_failures_inverter_id_fkey"
+            columns: ["inverter_id"]
+            isOneToOne: false
+            referencedRelation: "inverters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inverter_readings: {
+        Row: {
+          ac_current_a: number | null
+          ac_frequency_hz: number | null
+          ac_power_kw: number | null
+          ac_voltage_v: number | null
+          dc_power_kw: number | null
+          energy_today_kwh: number | null
+          energy_total_kwh: number | null
+          error_code: string | null
+          inverter_id: string
+          raw_payload: Json | null
+          recorded_at: string
+          status: string | null
+          temperature_c: number | null
+        }
+        Insert: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id: string
+          raw_payload?: Json | null
+          recorded_at: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Update: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id?: string
+          raw_payload?: Json | null
+          recorded_at?: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inverter_readings_inverter_id_fkey"
+            columns: ["inverter_id"]
+            isOneToOne: false
+            referencedRelation: "inverters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inverter_readings_2026_04: {
+        Row: {
+          ac_current_a: number | null
+          ac_frequency_hz: number | null
+          ac_power_kw: number | null
+          ac_voltage_v: number | null
+          dc_power_kw: number | null
+          energy_today_kwh: number | null
+          energy_total_kwh: number | null
+          error_code: string | null
+          inverter_id: string
+          raw_payload: Json | null
+          recorded_at: string
+          status: string | null
+          temperature_c: number | null
+        }
+        Insert: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id: string
+          raw_payload?: Json | null
+          recorded_at: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Update: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id?: string
+          raw_payload?: Json | null
+          recorded_at?: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Relationships: []
+      }
+      inverter_readings_2026_05: {
+        Row: {
+          ac_current_a: number | null
+          ac_frequency_hz: number | null
+          ac_power_kw: number | null
+          ac_voltage_v: number | null
+          dc_power_kw: number | null
+          energy_today_kwh: number | null
+          energy_total_kwh: number | null
+          error_code: string | null
+          inverter_id: string
+          raw_payload: Json | null
+          recorded_at: string
+          status: string | null
+          temperature_c: number | null
+        }
+        Insert: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id: string
+          raw_payload?: Json | null
+          recorded_at: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Update: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id?: string
+          raw_payload?: Json | null
+          recorded_at?: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Relationships: []
+      }
+      inverter_readings_2026_06: {
+        Row: {
+          ac_current_a: number | null
+          ac_frequency_hz: number | null
+          ac_power_kw: number | null
+          ac_voltage_v: number | null
+          dc_power_kw: number | null
+          energy_today_kwh: number | null
+          energy_total_kwh: number | null
+          error_code: string | null
+          inverter_id: string
+          raw_payload: Json | null
+          recorded_at: string
+          status: string | null
+          temperature_c: number | null
+        }
+        Insert: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id: string
+          raw_payload?: Json | null
+          recorded_at: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Update: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id?: string
+          raw_payload?: Json | null
+          recorded_at?: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Relationships: []
+      }
+      inverter_readings_daily: {
+        Row: {
+          day: string
+          energy_generated_kwh: number | null
+          expected_kwh: number | null
+          fault_minutes: number
+          inverter_id: string
+          offline_minutes: number
+          peak_ac_power_kw: number | null
+          performance_ratio: number | null
+          sample_count: number
+        }
+        Insert: {
+          day: string
+          energy_generated_kwh?: number | null
+          expected_kwh?: number | null
+          fault_minutes?: number
+          inverter_id: string
+          offline_minutes?: number
+          peak_ac_power_kw?: number | null
+          performance_ratio?: number | null
+          sample_count?: number
+        }
+        Update: {
+          day?: string
+          energy_generated_kwh?: number | null
+          expected_kwh?: number | null
+          fault_minutes?: number
+          inverter_id?: string
+          offline_minutes?: number
+          peak_ac_power_kw?: number | null
+          performance_ratio?: number | null
+          sample_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inverter_readings_daily_inverter_id_fkey"
+            columns: ["inverter_id"]
+            isOneToOne: false
+            referencedRelation: "inverters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inverter_readings_hourly: {
+        Row: {
+          avg_ac_power_kw: number | null
+          avg_temperature_c: number | null
+          bucket_start: string
+          energy_generated_kwh: number | null
+          inverter_id: string
+          peak_ac_power_kw: number | null
+          sample_count: number
+        }
+        Insert: {
+          avg_ac_power_kw?: number | null
+          avg_temperature_c?: number | null
+          bucket_start: string
+          energy_generated_kwh?: number | null
+          inverter_id: string
+          peak_ac_power_kw?: number | null
+          sample_count: number
+        }
+        Update: {
+          avg_ac_power_kw?: number | null
+          avg_temperature_c?: number | null
+          bucket_start?: string
+          energy_generated_kwh?: number | null
+          inverter_id?: string
+          peak_ac_power_kw?: number | null
+          sample_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inverter_readings_hourly_inverter_id_fkey"
+            columns: ["inverter_id"]
+            isOneToOne: false
+            referencedRelation: "inverters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inverter_string_readings: {
+        Row: {
+          current_a: number | null
+          inverter_id: string
+          power_kw: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v: number | null
+        }
+        Insert: {
+          current_a?: number | null
+          inverter_id: string
+          power_kw?: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v?: number | null
+        }
+        Update: {
+          current_a?: number | null
+          inverter_id?: string
+          power_kw?: number | null
+          recorded_at?: string
+          string_number?: number
+          voltage_v?: number | null
+        }
+        Relationships: []
+      }
+      inverter_string_readings_2026_04: {
+        Row: {
+          current_a: number | null
+          inverter_id: string
+          power_kw: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v: number | null
+        }
+        Insert: {
+          current_a?: number | null
+          inverter_id: string
+          power_kw?: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v?: number | null
+        }
+        Update: {
+          current_a?: number | null
+          inverter_id?: string
+          power_kw?: number | null
+          recorded_at?: string
+          string_number?: number
+          voltage_v?: number | null
+        }
+        Relationships: []
+      }
+      inverter_string_readings_2026_05: {
+        Row: {
+          current_a: number | null
+          inverter_id: string
+          power_kw: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v: number | null
+        }
+        Insert: {
+          current_a?: number | null
+          inverter_id: string
+          power_kw?: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v?: number | null
+        }
+        Update: {
+          current_a?: number | null
+          inverter_id?: string
+          power_kw?: number | null
+          recorded_at?: string
+          string_number?: number
+          voltage_v?: number | null
+        }
+        Relationships: []
+      }
+      inverter_string_readings_2026_06: {
+        Row: {
+          current_a: number | null
+          inverter_id: string
+          power_kw: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v: number | null
+        }
+        Insert: {
+          current_a?: number | null
+          inverter_id: string
+          power_kw?: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v?: number | null
+        }
+        Update: {
+          current_a?: number | null
+          inverter_id?: string
+          power_kw?: number | null
+          recorded_at?: string
+          string_number?: number
+          voltage_v?: number | null
+        }
+        Relationships: []
+      }
+      inverters: {
+        Row: {
+          brand: string
+          commissioned_at: string | null
+          created_at: string
+          current_status: string
+          id: string
+          last_poll_at: string | null
+          last_reading_at: string | null
+          model: string | null
+          monitoring_credentials_id: string | null
+          monitoring_device_id: string | null
+          monitoring_site_id: string | null
+          polling_enabled: boolean
+          polling_interval_minutes: number
+          project_id: string
+          rated_capacity_kw: number
+          serial_number: string
+          string_count: number
+          updated_at: string
+        }
+        Insert: {
+          brand: string
+          commissioned_at?: string | null
+          created_at?: string
+          current_status?: string
+          id?: string
+          last_poll_at?: string | null
+          last_reading_at?: string | null
+          model?: string | null
+          monitoring_credentials_id?: string | null
+          monitoring_device_id?: string | null
+          monitoring_site_id?: string | null
+          polling_enabled?: boolean
+          polling_interval_minutes?: number
+          project_id: string
+          rated_capacity_kw: number
+          serial_number: string
+          string_count?: number
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          commissioned_at?: string | null
+          created_at?: string
+          current_status?: string
+          id?: string
+          last_poll_at?: string | null
+          last_reading_at?: string | null
+          model?: string | null
+          monitoring_credentials_id?: string | null
+          monitoring_device_id?: string | null
+          monitoring_site_id?: string | null
+          polling_enabled?: boolean
+          polling_interval_minutes?: number
+          project_id?: string
+          rated_capacity_kw?: number
+          serial_number?: string
+          string_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inverters_monitoring_credentials_id_fkey"
+            columns: ["monitoring_credentials_id"]
+            isOneToOne: false
+            referencedRelation: "inverter_monitoring_credentials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inverters_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_credit_notes: {
         Row: {
           created_at: string
@@ -12073,6 +12614,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_inverter_partition_for_month: {
+        Args: { target_month: string }
+        Returns: undefined
+      }
+      create_service_tickets_from_inverter_alerts: {
+        Args: never
+        Returns: number
+      }
+      drop_old_inverter_partitions: { Args: never; Returns: undefined }
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
       get_amc_monthly_summary: {
@@ -12106,6 +12656,20 @@ export type Database = {
         Args: { p_entity_id: string; p_entity_type: string }
         Returns: number
       }
+      get_inverters_due_for_poll: {
+        Args: { batch_limit?: number }
+        Returns: {
+          brand: string
+          id: string
+          last_reading_at: string
+          model: string
+          monitoring_credentials_id: string
+          monitoring_device_id: string
+          monitoring_site_id: string
+          polling_interval_minutes: number
+          serial_number: string
+        }[]
+      }
       get_lead_stage_counts: {
         Args: { p_include_archived?: boolean }
         Returns: {
@@ -12138,6 +12702,8 @@ export type Database = {
         }[]
       }
       lock_stale_reports: { Args: never; Returns: undefined }
+      rollup_inverter_readings_daily: { Args: never; Returns: undefined }
+      rollup_inverter_readings_hourly: { Args: never; Returns: undefined }
       update_storage_mime_type: {
         Args: { p_bucket: string; p_mime: string; p_path: string }
         Returns: undefined
