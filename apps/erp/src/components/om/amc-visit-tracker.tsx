@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { Badge, Button, Input, Label, Select } from '@repo/ui';
 import { ChevronDown, ChevronRight, Upload, FileText, X } from 'lucide-react';
 import { formatDate } from '@repo/ui/formatters';
@@ -24,13 +23,18 @@ interface AmcVisitTrackerProps {
   contractId: string;
   visitsIncluded: number;
   employees: { id: string; full_name: string }[];
+  /** Pre-computed from server query — shown before visits are loaded */
+  completedCount?: number;
+  /** Pre-computed total visit count from server query */
+  totalCount?: number;
 }
 
 /**
- * Shows "2 / 3 completed" badge and expands to show full visit table.
+ * Shows "X / Y completed" badge and expands to show full visit table.
+ * Props `completedCount` and `totalCount` are server-computed for instant display;
+ * after expansion, live counts from the loaded visits are used instead.
  */
-export function AmcVisitTracker({ contractId, visitsIncluded, employees }: AmcVisitTrackerProps) {
-  const router = useRouter();
+export function AmcVisitTracker({ contractId, visitsIncluded, employees, completedCount: initialCompleted, totalCount: initialTotal }: AmcVisitTrackerProps) {
   const [expanded, setExpanded] = React.useState(false);
   const [visits, setVisits] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -50,11 +54,17 @@ export function AmcVisitTracker({ contractId, visitsIncluded, employees }: AmcVi
     setExpanded(!expanded);
   }
 
-  const completedCount = visits.filter((v) => v.status === 'completed').length;
+  // After visits are loaded, derive counts from live data; before load, use server-computed values
+  const completedCount = expanded && visits.length > 0
+    ? visits.filter((v) => v.status === 'completed').length
+    : (initialCompleted ?? 0);
+  const totalVisits = expanded && visits.length > 0
+    ? visits.length
+    : (initialTotal ?? visitsIncluded);
 
   return (
     <div>
-      {/* Summary badge — clickable */}
+      {/* Summary badge — clickable, shows "X / Y" */}
       <button
         onClick={handleToggle}
         className="flex items-center gap-1 text-[11px] text-p-600 hover:text-p-700 transition-colors"
@@ -63,7 +73,7 @@ export function AmcVisitTracker({ contractId, visitsIncluded, employees }: AmcVi
           ? <ChevronDown className="h-3 w-3" />
           : <ChevronRight className="h-3 w-3" />}
         <span className="font-medium">
-          {expanded ? `${completedCount} / ${visits.length}` : `${visitsIncluded} visits`}
+          {completedCount} / {totalVisits}
         </span>
       </button>
 

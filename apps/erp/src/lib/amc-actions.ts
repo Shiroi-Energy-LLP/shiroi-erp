@@ -375,12 +375,19 @@ export async function addVisitReportFile(
 
 // ── Get All AMC Data (flat contract-centric table) ──
 
+export interface AmcVisitStats {
+  completed_visit_count: number;
+  total_visit_count: number;
+  next_visit_date: string | null;
+  last_completed_date: string | null;
+}
+
 export async function getAllAmcData(filters: {
   status?: string;
   category?: string;
   project_id?: string;
 }): Promise<{
-  contracts: any[];
+  contracts: (any & AmcVisitStats)[];
   total: number;
 }> {
   const op = '[getAllAmcData]';
@@ -414,7 +421,51 @@ export async function getAllAmcData(filters: {
     return { contracts: [], total: 0 };
   }
 
-  return { contracts: (data ?? []) as any[], total: count ?? 0 };
+  const contracts = (data ?? []) as any[];
+
+  // Fetch visit stats for all contracts in one query
+  const contractIds = contracts.map((c) => c.id as string).filter(Boolean);
+
+  let visitStats: Record<string, AmcVisitStats> = {};
+
+  if (contractIds.length > 0) {
+    const { data: allVisits } = await supabase
+      .from('om_visit_schedules' as any)
+      .select('id, contract_id, scheduled_date, status, completed_at' as any)
+      .in('contract_id', contractIds)
+      .order('scheduled_date', { ascending: true });
+
+    for (const v of (allVisits ?? []) as any[]) {
+      const cid = v.contract_id as string;
+      if (!visitStats[cid]) {
+        visitStats[cid] = { completed: 0, total: 0, nextDate: null, lastCompleted: null } as any;
+      }
+      const s = visitStats[cid] as any;
+      s.total++;
+      if (v.status === 'completed') {
+        s.completed++;
+        if (!s.lastCompleted || (v.completed_at && v.completed_at > s.lastCompleted)) {
+          s.lastCompleted = v.completed_at as string;
+        }
+      } else if (v.status !== 'cancelled' && !s.nextDate) {
+        s.nextDate = v.scheduled_date as string;
+      }
+    }
+  }
+
+  // Merge visit stats into each contract
+  const enriched = contracts.map((c) => {
+    const s = visitStats[c.id as string] as any;
+    return {
+      ...c,
+      completed_visit_count: s?.completed ?? 0,
+      total_visit_count: s?.total ?? 0,
+      next_visit_date: s?.nextDate ?? null,
+      last_completed_date: s?.lastCompleted ?? null,
+    } as any & AmcVisitStats;
+  });
+
+  return { contracts: enriched, total: count ?? 0 };
 }
 
 // ── Get Visits for a Contract ──
@@ -476,4 +527,36 @@ export async function getAllProjectsForAmc(): Promise<{ id: string; project_numb
     return [];
   }
   return data ?? [];
+}
+
+// ── Get Projects that have at least one AMC contract (for filter dropdown) ──
+
+export async function getProjectsWithAmc(): Promise<{ id: string; project_number: string; customer_name: string }[]> {
+  const op = '[getProjectsWithAmc]';
+  console.log(`${op} Starting`);
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('om_contracts' as any)
+    .select('project_id, projects!om_contracts_project_id_fkey(id, project_number, customer_name)' as any)
+    .not('project_id', 'is', null)
+    .limit(500);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+
+  // Deduplicate by project_id
+  const seen = new Set<string>();
+  const result: { id: string; project_number: string; customer_name: string }[] = [];
+  for (const row of (data ?? []) as any[]) {
+    const p = row.projects as { id: string; project_number: string; customer_name: string } | null;
+    if (p && !seen.has(p.id)) {
+      seen.add(p.id);
+      result.push({ id: p.id, project_number: p.project_number ?? '', customer_name: p.customer_name ?? '' });
+    }
+  }
+  return result.sort((a, b) => (a.customer_name ?? '').localeCompare(b.customer_name ?? ''));
 }

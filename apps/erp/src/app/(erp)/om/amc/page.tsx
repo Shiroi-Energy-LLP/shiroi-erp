@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getAllAmcData, getCommissionedProjects, getAllProjectsForAmc } from '@/lib/amc-actions';
+import { getAllAmcData, getCommissionedProjects, getAllProjectsForAmc, getProjectsWithAmc } from '@/lib/amc-actions';
 import { getActiveEmployees } from '@/lib/tasks-actions';
 import { formatDate } from '@repo/ui/formatters';
 import { CreateAmcDialog } from '@/components/om/create-amc-dialog';
@@ -10,7 +10,7 @@ import {
   CardContent,
   Badge,
 } from '@repo/ui';
-import { CalendarCheck, AlertTriangle } from 'lucide-react';
+import { CalendarCheck } from 'lucide-react';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
 import Link from 'next/link';
@@ -26,7 +26,7 @@ interface AmcPageProps {
 export default async function AmcPage({ searchParams }: AmcPageProps) {
   const params = await searchParams;
 
-  const [{ contracts, total }, commissionedProjects, allProjects, employees] = await Promise.all([
+  const [{ contracts, total }, commissionedProjects, allProjects, employees, filterProjects] = await Promise.all([
     getAllAmcData({
       status: params.status || undefined,
       category: params.category || undefined,
@@ -35,6 +35,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
     getCommissionedProjects(),
     getAllProjectsForAmc(),
     getActiveEmployees(),
+    getProjectsWithAmc(),
   ]);
 
   const hasFilters = params.status || params.category || params.project;
@@ -101,9 +102,9 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
               <option value="free_amc">Free AMC</option>
               <option value="paid_amc">Paid AMC</option>
             </FilterSelect>
-            <FilterSelect paramName="project" className="w-44 text-xs h-8">
+            <FilterSelect paramName="project" className="w-52 text-xs h-8">
               <option value="">All Projects</option>
-              {allProjects.map((p) => (
+              {filterProjects.map((p) => (
                 <option key={p.id} value={p.id}>{p.customer_name}</option>
               ))}
             </FilterSelect>
@@ -111,7 +112,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
         </CardContent>
       </Card>
 
-      {/* AMC Table — flat contract rows */}
+      {/* AMC Table — 9 columns */}
       <Card>
         <CardContent className="p-0">
           {contracts.length === 0 ? (
@@ -132,29 +133,30 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project Name</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Category</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Scheduled Visits</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Assigned To</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Status</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Start</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">End</th>
+                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Next AMC Date</th>
+                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Completed Date</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Notes</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-16">Actions</th>
+                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-20">Actions</th>
+                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-20">Report</th>
                   </tr>
                 </thead>
                 <tbody>
                   {contracts.map((contract: any) => {
                     const projectInfo = contract.projects as { project_number: string; customer_name: string } | null;
-                    const createdByName = contract.employees && 'full_name' in contract.employees
-                      ? (contract.employees as { full_name: string }).full_name : null;
                     const isFree = contract.amc_category === 'free_amc';
                     const isOpen = contract.status === 'active' || contract.status === 'quoted';
+                    const completedCount = contract.completed_visit_count as number;
+                    const totalCount = contract.total_visit_count as number;
+                    const reportCount = 0; // reports are per-visit inside AmcVisitTracker
 
                     return (
                       <tr
                         key={contract.id}
-                        className={`border-b border-n-100 hover:bg-n-50 ${!isOpen ? 'opacity-50' : ''}`}
+                        className={`border-b border-n-100 hover:bg-n-50 align-top ${!isOpen ? 'opacity-60' : ''}`}
                       >
-                        {/* Project Name — clickable link, no ID */}
-                        <td className="px-2 py-1.5 text-[11px]">
+                        {/* Project Name — clickable link */}
+                        <td className="px-2 py-2 text-[11px]">
                           {projectInfo ? (
                             <Link href={`/projects/${contract.project_id}`} className="text-p-600 hover:underline font-medium">
                               {projectInfo.customer_name}
@@ -165,7 +167,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Category */}
-                        <td className="px-2 py-1.5">
+                        <td className="px-2 py-2">
                           <Badge
                             variant={isFree ? 'outline' : 'info'}
                             className="text-[10px] px-1.5 py-0"
@@ -174,52 +176,74 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                           </Badge>
                         </td>
 
-                        {/* Scheduled Visits — expandable tracker */}
-                        <td className="px-2 py-1.5">
+                        {/* Scheduled Visits — "X / Y" with expandable tracker */}
+                        <td className="px-2 py-2">
                           <AmcVisitTracker
                             contractId={contract.id}
                             visitsIncluded={contract.visits_included}
                             employees={employees}
+                            completedCount={completedCount}
+                            totalCount={totalCount}
                           />
                         </td>
 
-                        {/* Assigned To (created by as proxy) */}
-                        <td className="px-2 py-1.5 text-[11px] text-n-700">
-                          {createdByName ?? <span className="text-n-300">—</span>}
-                        </td>
-
                         {/* Status — Open/Closed inline toggle */}
-                        <td className="px-2 py-1.5">
+                        <td className="px-2 py-2">
                           <AmcStatusToggle
                             contractId={contract.id}
                             currentStatus={contract.status}
                           />
                         </td>
 
-                        {/* Start Date */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-500">
-                          {formatDate(contract.start_date)}
-                        </td>
-
-                        {/* End Date */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-500">
-                          {formatDate(contract.end_date)}
-                        </td>
-
-                        {/* Notes */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-600">
-                          {contract.notes ? (
-                            <span title={contract.notes}>{contract.notes.substring(0, 40)}{contract.notes.length > 40 ? '...' : ''}</span>
+                        {/* Next AMC Date */}
+                        <td className="px-2 py-2 text-[10px] text-n-600">
+                          {contract.next_visit_date ? (
+                            <span className={
+                              contract.next_visit_date < new Date().toISOString().split('T')[0]!
+                                ? 'text-red-600 font-medium'
+                                : 'text-n-700'
+                            }>
+                              {formatDate(contract.next_visit_date)}
+                            </span>
                           ) : (
                             <span className="text-n-300">—</span>
                           )}
                         </td>
 
-                        {/* Actions */}
-                        <td className="px-2 py-1.5 text-[10px]">
-                          <div className="flex items-center gap-1 text-n-400">
-                            <span className="text-[9px] text-n-300">{contract.contract_number}</span>
-                          </div>
+                        {/* Completed Date — last completed visit */}
+                        <td className="px-2 py-2 text-[10px] text-n-500">
+                          {contract.last_completed_date ? (
+                            formatDate(contract.last_completed_date)
+                          ) : (
+                            <span className="text-n-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Notes */}
+                        <td className="px-2 py-2 text-[10px] text-n-600 max-w-[160px]">
+                          {contract.notes ? (
+                            <span title={contract.notes}>
+                              {contract.notes.substring(0, 50)}{contract.notes.length > 50 ? '...' : ''}
+                            </span>
+                          ) : (
+                            <span className="text-n-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Actions — contract number as identifier */}
+                        <td className="px-2 py-2 text-[10px]">
+                          <span className="text-[9px] text-n-300 font-mono">{contract.contract_number}</span>
+                        </td>
+
+                        {/* Report — per-visit reports are accessible via the visit tracker */}
+                        <td className="px-2 py-2 text-[10px]">
+                          {completedCount > 0 ? (
+                            <span className="text-green-600 font-medium text-[10px]">
+                              {completedCount} visit{completedCount !== 1 ? 's' : ''}
+                            </span>
+                          ) : (
+                            <span className="text-n-300">—</span>
+                          )}
                         </td>
                       </tr>
                     );
