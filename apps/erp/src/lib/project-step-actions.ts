@@ -1560,6 +1560,8 @@ export async function updateCommissioningReport(input: {
 export async function finalizeCommissioningReport(input: {
   projectId: string;
   reportId: string;
+  engineerSignature?: string | null;
+  customerSignature?: string | null;
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[finalizeCommissioningReport]';
   console.log(`${op} Finalizing report for project: ${input.projectId}`);
@@ -1568,9 +1570,57 @@ export async function finalizeCommissioningReport(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
+  // Upload engineer signature if provided
+  let engineerSignaturePath: string | null = null;
+  if (input.engineerSignature) {
+    const base64Part = input.engineerSignature.split(',')[1];
+    if (base64Part) {
+      const engineerSigBuffer = Buffer.from(base64Part, 'base64');
+      const path = `projects/${input.projectId}/commissioning/engineer_sig_${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage
+        .from('site-photos')
+        .upload(path, engineerSigBuffer, { contentType: 'image/png', upsert: true });
+      if (upErr) {
+        console.error(`${op} Engineer signature upload failed:`, upErr);
+      } else {
+        engineerSignaturePath = path;
+      }
+    }
+  }
+
+  // Upload customer signature if provided
+  let customerSignaturePath: string | null = null;
+  if (input.customerSignature) {
+    const base64Part = input.customerSignature.split(',')[1];
+    if (base64Part) {
+      const customerSigBuffer = Buffer.from(base64Part, 'base64');
+      const path = `projects/${input.projectId}/commissioning/customer_sig_${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage
+        .from('site-photos')
+        .upload(path, customerSigBuffer, { contentType: 'image/png', upsert: true });
+      if (upErr) {
+        console.error(`${op} Customer signature upload failed:`, upErr);
+      } else {
+        customerSignaturePath = path;
+      }
+    }
+  }
+
+  const updateData: Record<string, unknown> = {
+    status: 'finalized',
+  };
+  if (engineerSignaturePath) {
+    updateData.engineer_signature_path = engineerSignaturePath;
+  }
+  if (customerSignaturePath) {
+    updateData.signature_storage_path = customerSignaturePath;
+    updateData.signature_method = 'drawn_on_device';
+    updateData.customer_signed_at = new Date().toISOString();
+  }
+
   const { error } = await supabase
     .from('commissioning_reports')
-    .update({ status: 'finalized' } as any)
+    .update(updateData as any)
     .eq('id', input.reportId)
     .eq('project_id', input.projectId);
 

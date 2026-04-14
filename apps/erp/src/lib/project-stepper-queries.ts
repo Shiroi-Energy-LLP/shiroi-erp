@@ -432,7 +432,7 @@ export async function getStepCommissioningData(projectId: string) {
 
   const { data: report, error } = await supabase
     .from('commissioning_reports')
-    .select('id, commissioning_date, system_size_kwp, panel_count_installed, dc_voltage_v, dc_current_a, ac_voltage_v, ac_frequency_hz, insulation_resistance_mohm, earth_resistance_ohm, initial_reading_kwh, generation_confirmed, customer_explained, app_download_assisted, status, inverter_serial_number, notes, string_test_data, monitoring_portal_link, monitoring_login, monitoring_password, performance_ratio_pct, prepared_by')
+    .select('id, commissioning_date, system_size_kwp, panel_count_installed, dc_voltage_v, dc_current_a, ac_voltage_v, ac_frequency_hz, insulation_resistance_mohm, earth_resistance_ohm, initial_reading_kwh, generation_confirmed, customer_explained, app_download_assisted, status, inverter_serial_number, notes, string_test_data, monitoring_portal_link, monitoring_login, monitoring_password, performance_ratio_pct, prepared_by, engineer_signature_path, signature_storage_path, signature_method, customer_name_signed, customer_signed_at')
     .eq('project_id', projectId)
     .maybeSingle();
 

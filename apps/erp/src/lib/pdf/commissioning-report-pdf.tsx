@@ -1,7 +1,7 @@
 // apps/erp/src/lib/pdf/commissioning-report-pdf.tsx
 // Commissioning Report PDF — Shiroi Energy LLP format per Manivel's spec
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { BRAND } from './pdf-styles';
 
 export interface StringTestRow {
@@ -47,6 +47,9 @@ export interface CommissioningPdfData {
   // People
   preparedByName: string;
   status: string;
+  // Signatures (optional — only present when finalized)
+  engineerSignature?: Buffer | null;
+  customerSignature?: Buffer | null;
 }
 
 const s = StyleSheet.create({
@@ -96,6 +99,7 @@ const s = StyleSheet.create({
   sigLine: { borderBottomWidth: 1, borderBottomColor: BRAND.gray300, marginBottom: 4 },
   sigLabel: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: BRAND.gray700 },
   sigName: { fontSize: 7.5, color: BRAND.gray500, marginTop: 2 },
+  sigImage: { width: 120, height: 60, marginBottom: 4 },
   // Footer
   footer: { position: 'absolute' as const, bottom: 20, left: 40, right: 40, flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 0.5, borderTopColor: BRAND.gray300, paddingTop: 6 },
   footerText: { fontSize: 7, color: BRAND.gray500 },
@@ -256,12 +260,26 @@ export function CommissioningReportPDF({ data }: { data: CommissioningPdfData })
         {/* Signatures */}
         <View style={s.sigRow}>
           <View style={s.sigBlock}>
-            <View style={s.sigLine} />
+            {data.engineerSignature ? (
+              <Image
+                src={data.engineerSignature}
+                style={s.sigImage}
+              />
+            ) : (
+              <View style={s.sigLine} />
+            )}
             <Text style={s.sigLabel}>Prepared By</Text>
             <Text style={s.sigName}>{data.preparedByName}</Text>
           </View>
           <View style={s.sigBlock}>
-            <View style={s.sigLine} />
+            {data.customerSignature ? (
+              <Image
+                src={data.customerSignature}
+                style={s.sigImage}
+              />
+            ) : (
+              <View style={s.sigLine} />
+            )}
             <Text style={s.sigLabel}>Customer Signature</Text>
           </View>
         </View>

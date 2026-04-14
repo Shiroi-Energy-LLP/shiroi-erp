@@ -121,17 +121,17 @@ export async function StepCommissioning({ projectId }: StepCommissioningProps) {
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between">
-          <CommissioningForm
-            projectId={projectId}
-            defaults={defaults}
-            existingReport={editableReport}
-          />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <CommissioningForm
+              projectId={projectId}
+              defaults={defaults}
+              existingReport={editableReport}
+            />
+            <CommissioningPdfButton projectId={projectId} />
+          </div>
           {isDraft && (
-            <div className="flex items-center gap-2">
-              <FinalizeButton projectId={projectId} reportId={r.id} />
-              <CommissioningPdfButton projectId={projectId} />
-            </div>
+            <FinalizeButton projectId={projectId} reportId={r.id} />
           )}
         </div>
       )}

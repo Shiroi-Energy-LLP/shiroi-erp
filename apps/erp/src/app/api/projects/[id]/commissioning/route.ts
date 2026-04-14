@@ -33,7 +33,7 @@ export async function GET(
     const { data: report, error: repErr } = await supabase
       .from('commissioning_reports')
       .select(
-        'id, commissioning_date, system_size_kwp, panel_count_installed, inverter_serial_number, initial_reading_kwh, dc_voltage_v, dc_current_a, ac_voltage_v, ac_frequency_hz, earth_resistance_ohm, insulation_resistance_mohm, generation_confirmed, customer_explained, app_download_assisted, notes, status, prepared_by, string_test_data, monitoring_portal_link, monitoring_login, monitoring_password, performance_ratio_pct',
+        'id, commissioning_date, system_size_kwp, panel_count_installed, inverter_serial_number, initial_reading_kwh, dc_voltage_v, dc_current_a, ac_voltage_v, ac_frequency_hz, earth_resistance_ohm, insulation_resistance_mohm, generation_confirmed, customer_explained, app_download_assisted, notes, status, prepared_by, string_test_data, monitoring_portal_link, monitoring_login, monitoring_password, performance_ratio_pct, engineer_signature_path, signature_storage_path',
       )
       .eq('project_id', projectId)
       .maybeSingle();
@@ -87,6 +87,38 @@ export async function GET(
     const r = report as any;
     const irValue = Number(r.insulation_resistance_mohm ?? 0);
 
+    // Fetch signature images in parallel if they exist
+    const [engineerSigBuffer, customerSigBuffer] = await Promise.all([
+      (async (): Promise<Buffer | null> => {
+        if (!r.engineer_signature_path) return null;
+        const { data: signed } = await supabase.storage
+          .from('site-photos')
+          .createSignedUrl(r.engineer_signature_path, 60);
+        if (!signed?.signedUrl) return null;
+        try {
+          const resp = await fetch(signed.signedUrl);
+          if (!resp.ok) return null;
+          return Buffer.from(await resp.arrayBuffer());
+        } catch {
+          return null;
+        }
+      })(),
+      (async (): Promise<Buffer | null> => {
+        if (!r.signature_storage_path) return null;
+        const { data: signed } = await supabase.storage
+          .from('site-photos')
+          .createSignedUrl(r.signature_storage_path, 60);
+        if (!signed?.signedUrl) return null;
+        try {
+          const resp = await fetch(signed.signedUrl);
+          if (!resp.ok) return null;
+          return Buffer.from(await resp.arrayBuffer());
+        } catch {
+          return null;
+        }
+      })(),
+    ]);
+
     const pdfData: CommissioningPdfData = {
       projectNumber: (project as any).project_number ?? '',
       customerName: (project as any).customer_name ?? '',
@@ -115,6 +147,8 @@ export async function GET(
       notes: r.notes ?? '',
       preparedByName,
       status: r.status ?? 'draft',
+      engineerSignature: engineerSigBuffer,
+      customerSignature: customerSigBuffer,
     };
 
     // Render PDF
