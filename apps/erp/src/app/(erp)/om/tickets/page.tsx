@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { getAllTickets } from '@/lib/service-ticket-actions';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
+import { getProjectsWithTickets } from '@/lib/ticket-queries';
 import { formatDate } from '@repo/ui/formatters';
 import { CreateTicketDialog } from '@/components/om/create-ticket-dialog';
 import { EditTicketDialog } from '@/components/om/edit-ticket-dialog';
 import { DeleteTicketButton } from '@/components/om/delete-ticket-button';
 import { TicketStatusToggle } from '@/components/om/ticket-status-toggle';
+import { SearchableProjectFilter } from '@/components/tasks/searchable-project-filter';
 import {
   Card,
   CardContent,
@@ -84,7 +86,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  const [{ tickets, total }, employees, projects] = await Promise.all([
+  const [{ tickets, total }, employees, projects, filterProjects] = await Promise.all([
     getAllTickets({
       status: params.status || undefined,
       severity: params.severity || undefined,
@@ -97,6 +99,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
     }),
     getActiveEmployees(),
     getActiveProjects(),
+    getProjectsWithTickets(),
   ]);
 
   const totalPages = Math.ceil(total / perPage);
@@ -159,12 +162,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                 <option key={emp.id} value={emp.id}>{emp.full_name}</option>
               ))}
             </FilterSelect>
-            <FilterSelect paramName="project" className="w-44 text-xs h-8">
-              <option value="">All Projects</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.project_number} — {p.customer_name}</option>
-              ))}
-            </FilterSelect>
+            <SearchableProjectFilter projects={filterProjects} basePath="/om/tickets" />
             <SearchInput
               placeholder="Search ticket..."
               className="w-48 h-8 text-xs"
@@ -222,20 +220,17 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                         className={`border-b border-n-100 hover:bg-n-50 ${isClosed ? 'opacity-50' : ''}`}
                       >
                         {/* Ticket # */}
-                        <td className="px-2 py-1.5 text-[11px] font-mono text-n-700">
-                          {ticket.ticket_number}
+                        <td className="px-2 py-1.5 font-mono text-n-500">
+                          {String(parseInt((ticket.ticket_number || '').replace('TKT-', '') || '0')).padStart(3, '0')}
                         </td>
 
                         {/* Project */}
-                        <td className="px-2 py-1.5 text-[11px]">
-                          {projectInfo ? (
-                            <Link href={`/projects/${ticket.project_id}`} className="text-p-600 hover:underline">
-                              <div className="font-medium leading-tight">{projectInfo.project_number}</div>
-                              <div className="text-n-500 text-[10px] leading-tight">{projectInfo.customer_name}</div>
+                        <td className="px-2 py-1.5">
+                          {ticket.project_id ? (
+                            <Link href={`/projects/${ticket.project_id}`} className="text-[#00B050] hover:underline text-xs">
+                              {projectInfo?.customer_name ?? '—'}
                             </Link>
-                          ) : (
-                            <span className="text-n-400">—</span>
-                          )}
+                          ) : '—'}
                         </td>
 
                         {/* Title */}
