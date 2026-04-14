@@ -1,7 +1,37 @@
 'use server';
 
+import type { Database } from '@repo/types/database';
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
+
+// ═══════════════════════════════════════════════════════════════════════
+// Row types
+// ═══════════════════════════════════════════════════════════════════════
+
+type ServiceTicket = Database['public']['Tables']['om_service_tickets']['Row'];
+type ServiceTicketInsert = Database['public']['Tables']['om_service_tickets']['Insert'];
+type ServiceTicketUpdate = Database['public']['Tables']['om_service_tickets']['Update'];
+export type TicketStatus = Database['public']['Enums']['ticket_status'];
+
+// SLA defaults per severity — centralized so createServiceTicket and
+// updateServiceTicket agree.
+function slaHoursForSeverity(severity: string): number {
+  switch (severity) {
+    case 'critical':
+      return 4;
+    case 'high':
+      return 24;
+    case 'medium':
+      return 48;
+    default:
+      return 72;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Create Service Ticket
+// ═══════════════════════════════════════════════════════════════════════
 
 export async function createServiceTicket(input: {
   projectId: string;
@@ -10,61 +40,67 @@ export async function createServiceTicket(input: {
   issueType: string;
   severity: string;
   assignedTo?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<{ ticketId: string; ticketNumber: string }>> {
   const op = '[createServiceTicket]';
   console.log(`${op} Starting: ${input.title}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated');
 
   // Get employee ID
   const { data: employee } = await supabase
     .from('employees')
     .select('id')
     .eq('profile_id', user.id)
-    .single();
+    .maybeSingle();
 
-  if (!employee) return { success: false, error: 'Employee profile not found' };
+  if (!employee) return err('Employee profile not found');
 
   // Generate ticket number
   const { data: lastTicket } = await supabase
-    .from('om_service_tickets' as any)
+    .from('om_service_tickets')
     .select('ticket_number')
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  const nextNum = lastTicket
-    ? parseInt((lastTicket as any).ticket_number?.split('-').pop() ?? '0', 10) + 1
+  const nextNum = lastTicket?.ticket_number
+    ? parseInt(lastTicket.ticket_number.split('-').pop() ?? '0', 10) + 1
     : 1;
   const ticketNumber = `TKT-${String(nextNum).padStart(4, '0')}`;
 
-  const { error } = await supabase
-    .from('om_service_tickets' as any)
-    .insert({
-      project_id: input.projectId,
-      title: input.title,
-      description: input.description,
-      issue_type: input.issueType,
-      severity: input.severity,
-      status: 'open',
-      ticket_number: ticketNumber,
-      raised_by_employee: employee.id,
-      assigned_to: input.assignedTo || null,
-      sla_hours: input.severity === 'critical' ? 4 : input.severity === 'high' ? 24 : 48,
-    } as any);
+  const insert: ServiceTicketInsert = {
+    project_id: input.projectId,
+    title: input.title,
+    description: input.description,
+    issue_type: input.issueType,
+    severity: input.severity,
+    status: 'open',
+    ticket_number: ticketNumber,
+    raised_by_employee: employee.id,
+    assigned_to: input.assignedTo || null,
+    sla_hours: slaHoursForSeverity(input.severity),
+  };
 
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+  const { data, error } = await supabase
+    .from('om_service_tickets')
+    .insert(insert)
+    .select('id, ticket_number')
+    .single();
+
+  if (error || !data) {
+    console.error(`${op} Failed:`, { code: error?.code, message: error?.message });
+    return err(error?.message ?? 'Failed to create ticket', error?.code);
   }
 
   revalidatePath('/om/tickets');
-  return { success: true };
+  return ok({ ticketId: data.id, ticketNumber: data.ticket_number });
 }
 
-// ── Update Ticket ──
+// ═══════════════════════════════════════════════════════════════════════
+// Update Service Ticket
+// ═══════════════════════════════════════════════════════════════════════
 
 export async function updateServiceTicket(input: {
   ticketId: string;
@@ -75,54 +111,56 @@ export async function updateServiceTicket(input: {
   assignedTo?: string;
   serviceAmount?: number;
   resolutionNotes?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateServiceTicket]';
   console.log(`${op} Starting for ticket: ${input.ticketId}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated');
 
-  const updateData: Record<string, any> = {};
+  const updateData: ServiceTicketUpdate = {};
   if (input.title !== undefined) updateData.title = input.title;
-  if (input.description !== undefined) updateData.description = input.description || null;
+  if (input.description !== undefined) updateData.description = input.description || '';
   if (input.issueType !== undefined) updateData.issue_type = input.issueType;
   if (input.severity !== undefined) {
     updateData.severity = input.severity;
-    updateData.sla_hours = input.severity === 'critical' ? 4 : input.severity === 'high' ? 24 : input.severity === 'medium' ? 48 : 72;
+    updateData.sla_hours = slaHoursForSeverity(input.severity);
   }
   if (input.assignedTo !== undefined) updateData.assigned_to = input.assignedTo || null;
   if (input.serviceAmount !== undefined) updateData.service_amount = input.serviceAmount;
   if (input.resolutionNotes !== undefined) updateData.resolution_notes = input.resolutionNotes || null;
 
   const { error } = await supabase
-    .from('om_service_tickets' as any)
-    .update(updateData as any)
+    .from('om_service_tickets')
+    .update(updateData)
     .eq('id', input.ticketId);
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/om/tickets');
-  return { success: true };
+  return ok(undefined);
 }
 
-// ── Toggle Ticket Status ──
+// ═══════════════════════════════════════════════════════════════════════
+// Toggle Ticket Status
+// ═══════════════════════════════════════════════════════════════════════
 
 export async function updateTicketStatus(
   ticketId: string,
-  newStatus: string,
-): Promise<{ success: boolean; error?: string }> {
+  newStatus: TicketStatus,
+): Promise<ActionResult<void>> {
   const op = '[updateTicketStatus]';
   console.log(`${op} Toggling ticket ${ticketId} to ${newStatus}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated');
 
-  const updateData: Record<string, any> = { status: newStatus };
+  const updateData: ServiceTicketUpdate = { status: newStatus };
 
   if (newStatus === 'resolved' || newStatus === 'closed') {
     const { data: emp } = await supabase
@@ -131,19 +169,18 @@ export async function updateTicketStatus(
       .eq('profile_id', user.id)
       .maybeSingle();
 
+    const nowIso = new Date().toISOString();
     if (newStatus === 'resolved') {
-      updateData.resolved_at = new Date().toISOString();
+      updateData.resolved_at = nowIso;
       if (emp) updateData.resolved_by = emp.id;
     }
     if (newStatus === 'closed') {
-      updateData.closed_at = new Date().toISOString();
-      // Also set resolved if not already
-      updateData.resolved_at = new Date().toISOString();
+      updateData.closed_at = nowIso;
+      updateData.resolved_at = nowIso;
       if (emp) updateData.resolved_by = emp.id;
     }
   }
 
-  // If reopening, clear resolution fields
   if (newStatus === 'open') {
     updateData.resolved_at = null;
     updateData.resolved_by = null;
@@ -151,44 +188,66 @@ export async function updateTicketStatus(
   }
 
   const { error } = await supabase
-    .from('om_service_tickets' as any)
-    .update(updateData as any)
+    .from('om_service_tickets')
+    .update(updateData)
     .eq('id', ticketId);
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/om/tickets');
-  return { success: true };
+  return ok(undefined);
 }
 
-// ── Delete Ticket (soft-delete via closed status) ──
+// ═══════════════════════════════════════════════════════════════════════
+// Delete Ticket (soft-close)
+// ═══════════════════════════════════════════════════════════════════════
 
-export async function deleteServiceTicket(ticketId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteServiceTicket(ticketId: string): Promise<ActionResult<void>> {
   const op = '[deleteServiceTicket]';
   console.log(`${op} Closing ticket: ${ticketId}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated');
+
+  const update: ServiceTicketUpdate = {
+    status: 'closed',
+    closed_at: new Date().toISOString(),
+  };
 
   const { error } = await supabase
-    .from('om_service_tickets' as any)
-    .update({ status: 'closed', closed_at: new Date().toISOString() } as any)
+    .from('om_service_tickets')
+    .update(update)
     .eq('id', ticketId);
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/om/tickets');
-  return { success: true };
+  return ok(undefined);
 }
 
-// ── Get All Tickets (paginated, filtered) ──
+// ═══════════════════════════════════════════════════════════════════════
+// Get All Tickets (paginated, filtered)
+// ═══════════════════════════════════════════════════════════════════════
+
+export type TicketListRow = Pick<
+  ServiceTicket,
+  | 'id' | 'ticket_number' | 'title' | 'description' | 'issue_type'
+  | 'severity' | 'status' | 'service_amount' | 'created_at'
+  | 'sla_deadline' | 'sla_breached' | 'sla_hours' | 'resolved_at'
+  | 'closed_at' | 'resolution_notes' | 'assigned_to' | 'project_id'
+  | 'raised_by_employee'
+> & {
+  projects: { project_number: string; customer_name: string } | null;
+  assignee: { full_name: string } | null;
+  resolved_by_employee: { full_name: string } | null;
+};
 
 export async function getAllTickets(filters: {
   status?: string;
@@ -199,7 +258,7 @@ export async function getAllTickets(filters: {
   search?: string;
   page?: number;
   per_page?: number;
-}): Promise<{ tickets: any[]; total: number }> {
+}): Promise<{ tickets: TicketListRow[]; total: number }> {
   const op = '[getAllTickets]';
   const supabase = await createClient();
   const page = filters.page || 1;
@@ -208,10 +267,10 @@ export async function getAllTickets(filters: {
   const to = from + perPage - 1;
 
   let query = supabase
-    .from('om_service_tickets' as any)
+    .from('om_service_tickets')
     .select(
-      'id, ticket_number, title, description, issue_type, severity, status, service_amount, created_at, sla_deadline, sla_breached, sla_hours, resolved_at, closed_at, resolution_notes, assigned_to, project_id, raised_by_employee, projects!om_service_tickets_project_id_fkey(project_number, customer_name), assignee:employees!om_service_tickets_assigned_to_fkey(full_name), resolved_by_employee:employees!om_service_tickets_resolved_by_fkey(full_name)' as any,
-      { count: 'estimated' as any },
+      'id, ticket_number, title, description, issue_type, severity, status, service_amount, created_at, sla_deadline, sla_breached, sla_hours, resolved_at, closed_at, resolution_notes, assigned_to, project_id, raised_by_employee, projects!om_service_tickets_project_id_fkey(project_number, customer_name), assignee:employees!om_service_tickets_assigned_to_fkey(full_name), resolved_by_employee:employees!om_service_tickets_resolved_by_fkey(full_name)',
+      { count: 'estimated' },
     )
     .order('created_at', { ascending: false })
     .range(from, to);
@@ -224,7 +283,12 @@ export async function getAllTickets(filters: {
     } else if (filters.status === 'closed') {
       query = query.eq('status', 'closed');
     } else {
-      query = query.eq('status', filters.status);
+      const VALID: TicketStatus[] = [
+        'open', 'assigned', 'in_progress', 'resolved', 'closed', 'escalated',
+      ];
+      if ((VALID as string[]).includes(filters.status)) {
+        query = query.eq('status', filters.status as TicketStatus);
+      }
     }
   }
   if (filters.severity) query = query.eq('severity', filters.severity);
@@ -233,12 +297,12 @@ export async function getAllTickets(filters: {
   if (filters.assigned_to) query = query.eq('assigned_to', filters.assigned_to);
   if (filters.search) query = query.ilike('title', `%${filters.search}%`);
 
-  const { data, error, count } = await query;
+  const { data, error, count } = await query.returns<TicketListRow[]>();
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return { tickets: [], total: 0 };
   }
 
-  return { tickets: (data ?? []) as any[], total: count ?? 0 };
+  return { tickets: data ?? [], total: count ?? 0 };
 }

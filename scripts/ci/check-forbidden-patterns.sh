@@ -22,21 +22,29 @@ MODE="${1:-check}"
 
 # ------------------------------------------------------------
 # Pattern scanner — appends lines in format "RULE|FILE:LINE:MATCH"
+#
+# Uses `|| true` after rg/grep so that zero-match exit codes (rg=1,
+# grep=1) don't trigger `set -e` and kill the whole scan. This was a
+# real bug: once a pattern category was fully cleaned up, the scan
+# would silently stop halfway through.
 # ------------------------------------------------------------
 scan_pattern() {
   local rule="$1"
   local pattern="$2"
   shift 2
   local paths=("$@")
+  local raw
 
   if command -v rg >/dev/null 2>&1; then
-    rg -n "$pattern" "${paths[@]}" 2>/dev/null | while IFS= read -r line; do
-      printf "R%s|%s\n" "$rule" "$line"
-    done
+    raw=$(rg -n "$pattern" "${paths[@]}" 2>/dev/null || true)
   else
-    grep -rnE "$pattern" "${paths[@]}" 2>/dev/null | while IFS= read -r line; do
+    raw=$(grep -rnE "$pattern" "${paths[@]}" 2>/dev/null || true)
+  fi
+
+  if [[ -n "$raw" ]]; then
+    while IFS= read -r line; do
       printf "R%s|%s\n" "$rule" "$line"
-    done
+    done <<< "$raw"
   fi
 }
 

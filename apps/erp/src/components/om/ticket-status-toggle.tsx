@@ -3,9 +3,9 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@repo/ui';
-import { updateTicketStatus } from '@/lib/service-ticket-actions';
+import { updateTicketStatus, type TicketStatus } from '@/lib/service-ticket-actions';
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: { value: TicketStatus; label: string }[] = [
   { value: 'open', label: 'Open' },
   { value: 'assigned', label: 'Assigned' },
   { value: 'in_progress', label: 'In Progress' },
@@ -41,7 +41,7 @@ export function TicketStatusToggle({ ticketId, currentStatus, slaBreached }: Tic
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
 
-  async function handleSelect(newStatus: string) {
+  async function handleSelect(newStatus: TicketStatus) {
     if (newStatus === currentStatus) {
       setOpen(false);
       return;
