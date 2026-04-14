@@ -76,7 +76,7 @@ export async function GET(
       project.site_city,
       project.site_state,
       project.site_pincode,
-    ].filter(Boolean).join(', ');
+    ].filter(Boolean).join(', ') || 'Address not available';
 
     // Format date for display (dd-MMM-yyyy)
     const challanDate = dc.dc_date
@@ -94,13 +94,13 @@ export async function GET(
       deliverTo: dc.dispatch_to || siteAddress || '',
       projectName: project.customer_name + ' — ' + project.project_number,
       customerName: project.customer_name,
-      dispatchedByName,
+      dispatchedByName: dispatchedByName ?? 'Shiroi Energy',
       items: items.map((item: any, idx: number) => ({
         slNo: idx + 1,
-        description: item.item_description,
+        description: String(item.item_description ?? '—'),
         hsnCode: item.hsn_code ?? null,
-        quantity: Number(item.quantity),
-        unit: item.unit,
+        quantity: Number(item.quantity ?? 0),
+        unit: String(item.unit ?? 'Nos'),
       })),
       generatedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
     };

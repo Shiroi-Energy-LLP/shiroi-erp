@@ -277,10 +277,10 @@ export function DeliveryChallanPDF({ data }: { data: DeliveryChallanPdfData }) {
             <Text style={s.infoValue}>{data.deliverTo || '\u2014'}</Text>
 
             <Text style={s.infoLabel}>Project Name</Text>
-            <Text style={s.infoValueBold}>{data.projectName}</Text>
+            <Text style={s.infoValueBold}>{String(data.projectName ?? '')}</Text>
 
             <Text style={s.infoLabel}>Client Name</Text>
-            <Text style={s.infoValue}>{data.customerName}</Text>
+            <Text style={s.infoValue}>{String(data.customerName ?? '')}</Text>
           </View>
         </View>
 
@@ -295,16 +295,22 @@ export function DeliveryChallanPDF({ data }: { data: DeliveryChallanPdfData }) {
             <Text style={[s.tableHeaderText, { width: '20%', textAlign: 'right' as any }]}>Quantity</Text>
           </View>
 
-          {data.items.map((item, idx) => (
-            <View key={idx} style={idx % 2 === 0 ? s.tableRow : s.tableRowAlt}>
-              <Text style={[s.tableCellBold, { width: '8%' }]}>{item.slNo}</Text>
-              <Text style={[s.tableCell, { width: '50%' }]}>{item.description}</Text>
-              <Text style={[s.tableCell, { width: '22%' }]}>{item.hsnCode || '\u2014'}</Text>
-              <Text style={[s.tableCellBold, { width: '20%', textAlign: 'right' as any }]}>
-                {item.quantity} {item.unit}
-              </Text>
+          {data.items.length === 0 ? (
+            <View style={s.tableRow}>
+              <Text style={[s.tableCell, { width: '100%', textAlign: 'center' as any }]}>No items</Text>
             </View>
-          ))}
+          ) : (
+            data.items.map((item, idx) => (
+              <View key={idx} style={idx % 2 === 0 ? s.tableRow : s.tableRowAlt}>
+                <Text style={[s.tableCellBold, { width: '8%' }]}>{item.slNo}</Text>
+                <Text style={[s.tableCell, { width: '50%' }]}>{item.description}</Text>
+                <Text style={[s.tableCell, { width: '22%' }]}>{item.hsnCode || '\u2014'}</Text>
+                <Text style={[s.tableCellBold, { width: '20%', textAlign: 'right' as any }]}>
+                  {item.quantity} {item.unit}
+                </Text>
+              </View>
+            ))
+          )}
 
           {/* Total row */}
           <View style={[s.tableRow, { backgroundColor: BRAND.gray100, borderTopWidth: 1, borderTopColor: BRAND.gray300 }]}>
@@ -340,7 +346,7 @@ export function DeliveryChallanPDF({ data }: { data: DeliveryChallanPdfData }) {
           <View style={s.signatureBlock}>
             <View style={s.signatureLine} />
             <Text style={s.signatureLabel}>Client / Receiver Acknowledgment</Text>
-            <Text style={s.signatureName}>{data.customerName}</Text>
+            <Text style={s.signatureName}>{String(data.customerName ?? '')}</Text>
           </View>
         </View>
 
