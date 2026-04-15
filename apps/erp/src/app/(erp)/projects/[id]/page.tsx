@@ -175,8 +175,14 @@ async function TabContent({ projectId, tab }: { projectId: string; tab: string }
       return <StepActuals projectId={projectId} />;
     case 'qc':
       return <StepQc projectId={projectId} />;
-    case 'liaison':
-      return <StepLiaison projectId={projectId} />;
+    case 'liaison': {
+      // Post-Marketing-revamp: liaison is owned by marketing_manager.
+      // Project managers get a read-only view so they can answer client
+      // questions but can't edit CEIG / DISCOM / net-meter fields.
+      const viewerRole = await getCurrentUserRoleForProject();
+      const liaisonReadOnly = viewerRole === 'project_manager';
+      return <StepLiaison projectId={projectId} readOnly={liaisonReadOnly} />;
+    }
     case 'commissioning':
       return <StepCommissioning projectId={projectId} />;
     case 'amc':

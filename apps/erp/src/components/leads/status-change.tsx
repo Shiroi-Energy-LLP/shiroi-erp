@@ -4,25 +4,13 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@repo/supabase/client';
 import { Select, Button, Input } from '@repo/ui';
-import { getValidNextStatuses, requiresFollowUp, DEFAULT_PROBABILITY } from '@/lib/leads-helpers';
+import { getValidNextStatuses, requiresFollowUp, DEFAULT_PROBABILITY, STAGE_LABELS } from '@/lib/leads-helpers';
 import type { Database } from '@repo/types/database';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
-const STATUS_LABEL: Record<LeadStatus, string> = {
-  new: 'New',
-  contacted: 'Contacted',
-  site_survey_scheduled: 'Survey Scheduled',
-  site_survey_done: 'Survey Done',
-  proposal_sent: 'Proposal Sent',
-  negotiation: 'Negotiation',
-  won: 'Won',
-  lost: 'Lost',
-  disqualified: 'Disqualified',
-  on_hold: 'On Hold',
-  design_confirmed: 'Design Confirmed',
-  converted: 'Converted',
-};
+// Reuse STAGE_LABELS from leads-helpers.ts so we have one source of truth for display names.
+const STATUS_LABEL = STAGE_LABELS;
 
 interface StatusChangeProps {
   leadId: string;

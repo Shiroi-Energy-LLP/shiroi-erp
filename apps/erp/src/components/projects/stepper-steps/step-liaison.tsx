@@ -16,6 +16,15 @@ import {
 
 interface StepLiaisonProps {
   projectId: string;
+  /**
+   * Post-Marketing-revamp (migrations 051-053) the liaison workflow is owned
+   * by the marketing team, not project managers. When rendered under a PM
+   * context, pass `readOnly` so the display sections still show CEIG/DISCOM/
+   * net-meter status (Manivel needs that to answer client questions) but all
+   * form interactions are disabled. Marketing manager + founder get the full
+   * editable experience unchanged.
+   */
+  readOnly?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -87,7 +96,7 @@ function deriveWorkflowStages(app: any, showCeig: boolean): WorkflowStage[] {
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export async function StepLiaison({ projectId }: StepLiaisonProps) {
+export async function StepLiaison({ projectId, readOnly = false }: StepLiaisonProps) {
   let liaisonData: Awaited<ReturnType<typeof getStepLiaisonData>>;
 
   try {
@@ -111,12 +120,14 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
   if (!application) {
     return (
       <div>
-        <LiaisonCreateButton projectId={projectId} />
+        {!readOnly && <LiaisonCreateButton projectId={projectId} />}
         <div className="flex flex-col items-center justify-center py-16">
           <Building2 className="w-12 h-12 text-n-400 opacity-50 mb-3" />
           <h3 className="text-sm font-semibold text-n-700 mb-1">No Net Metering Application</h3>
           <p className="text-xs text-n-500 max-w-md text-center">
-            Click &quot;Start Net Metering Application&quot; above to begin the liaison process.
+            {readOnly
+              ? 'No liaison application has been created for this project yet. The marketing team will start the process.'
+              : 'Click "Start Net Metering Application" above to begin the liaison process.'}
           </p>
         </div>
       </div>
@@ -137,7 +148,14 @@ export async function StepLiaison({ projectId }: StepLiaisonProps) {
   const stages = deriveWorkflowStages(application, showCeig);
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${readOnly ? 'pointer-events-none select-none' : ''}`}>
+      {readOnly && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 pointer-events-auto">
+          <strong className="font-semibold">Read-only:</strong> Liaison is managed by the
+          marketing team. CEIG / DISCOM / net-meter status is visible here so you can answer
+          client questions, but edits must happen in the marketing Liaison module.
+        </div>
+      )}
       {/* ── Visual Workflow Bar ── */}
       <Card>
         <CardContent className="pt-5 pb-4">

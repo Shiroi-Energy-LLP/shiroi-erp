@@ -4,7 +4,10 @@ import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import { LeadTabs } from '@/components/leads/lead-tabs';
 import { StatusChange } from '@/components/leads/status-change';
 import { QuickQuoteButton } from '@/components/proposals/quick-quote-button';
-import { Breadcrumb } from '@repo/ui';
+import { ClosureBandBadge, ClosureBandHelper } from '@/components/sales/closure-band-badge';
+import { AttemptWonButton } from '@/components/sales/attempt-won-button';
+import { computeMargin } from '@/lib/closure-actions';
+import { Breadcrumb, Card, CardContent } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 
 interface LeadDetailLayoutProps {
@@ -22,13 +25,20 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
 
   const showPayments = lead.status === 'won' || lead.status === 'converted';
 
+  // For closure_soon leads, compute margin + band so the banner shows live
+  // numbers (and AttemptWonButton routes through attemptWon server action).
+  const inClosure = lead.status === 'closure_soon' || lead.status === 'negotiation';
+  const marginSnapshot = inClosure ? await computeMargin(id) : null;
+  const margin = marginSnapshot && marginSnapshot.success ? marginSnapshot.data : null;
+
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
+      {/* Breadcrumb - middleware redirects /leads -> /sales so this always
+          renders under /sales URL space post-revamp. */}
       <Breadcrumb
         className="mb-2"
         items={[
-          { label: 'Leads', href: '/leads' },
+          { label: 'Sales', href: '/sales' },
           { label: lead.customer_name },
         ]}
       />
@@ -66,6 +76,31 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
           <StatusChange leadId={lead.id} currentStatus={lead.status} />
         </div>
       </div>
+
+      {/* Closure Soon banner - shows live margin band + Attempt Won button */}
+      {lead.status === 'closure_soon' && margin && (
+        <Card className="border-l-4 border-l-amber-500 bg-amber-50/40">
+          <CardContent className="py-4">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="space-y-2 flex-1 min-w-[240px]">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-sm font-semibold text-n-800">Closure Soon</span>
+                  <ClosureBandBadge band={margin.band} grossMargin={margin.grossMargin} size="lg" />
+                </div>
+                <ClosureBandHelper band={margin.band} />
+                <div className="text-xs text-n-500 font-mono">
+                  Base: ₹{Math.round(margin.basePrice).toLocaleString('en-IN')} · BOM cost: ₹
+                  {Math.round(margin.bomCost).toLocaleString('en-IN')} · Site est: ₹
+                  {Math.round(margin.siteExpensesEst).toLocaleString('en-IN')}
+                </div>
+              </div>
+              <div>
+                <AttemptWonButton leadId={lead.id} disabled={margin.band === 'red'} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs */}
       <LeadTabs leadId={id} showPayments={showPayments} />

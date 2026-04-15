@@ -799,6 +799,99 @@ export type Database = {
         }
         Relationships: []
       }
+      consultant_commission_payouts: {
+        Row: {
+          channel_partner_id: string
+          created_at: string
+          customer_payment_id: string
+          gross_amount: number
+          id: string
+          lead_id: string
+          net_amount: number
+          notes: string | null
+          paid_at: string | null
+          paid_by: string | null
+          payment_reference: string | null
+          project_id: string
+          status: string
+          tds_amount: number
+          tranche_pct: number
+          updated_at: string
+        }
+        Insert: {
+          channel_partner_id: string
+          created_at?: string
+          customer_payment_id: string
+          gross_amount: number
+          id?: string
+          lead_id: string
+          net_amount: number
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_reference?: string | null
+          project_id: string
+          status?: string
+          tds_amount?: number
+          tranche_pct: number
+          updated_at?: string
+        }
+        Update: {
+          channel_partner_id?: string
+          created_at?: string
+          customer_payment_id?: string
+          gross_amount?: number
+          id?: string
+          lead_id?: string
+          net_amount?: number
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_reference?: string | null
+          project_id?: string
+          status?: string
+          tds_amount?: number
+          tranche_pct?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_commission_payouts_channel_partner_id_fkey"
+            columns: ["channel_partner_id"]
+            isOneToOne: false
+            referencedRelation: "channel_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_commission_payouts_customer_payment_id_fkey"
+            columns: ["customer_payment_id"]
+            isOneToOne: false
+            referencedRelation: "customer_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_commission_payouts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_commission_payouts_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_commission_payouts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_company_roles: {
         Row: {
           company_id: string
@@ -3949,6 +4042,79 @@ export type Database = {
           },
         ]
       }
+      lead_closure_approvals: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          band_at_request: string
+          created_at: string
+          final_base_price: number
+          gross_margin_at_request: number
+          id: string
+          lead_id: string
+          reason: string | null
+          rejected_at: string | null
+          requested_at: string
+          requested_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          band_at_request: string
+          created_at?: string
+          final_base_price: number
+          gross_margin_at_request: number
+          id?: string
+          lead_id: string
+          reason?: string | null
+          rejected_at?: string | null
+          requested_at?: string
+          requested_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          band_at_request?: string
+          created_at?: string
+          final_base_price?: number
+          gross_margin_at_request?: number
+          id?: string
+          lead_id?: string
+          reason?: string | null
+          rejected_at?: string | null
+          requested_at?: string
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_closure_approvals_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_closure_approvals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_closure_approvals_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_competitors: {
         Row: {
           competitor_name: string
@@ -4547,9 +4713,14 @@ export type Database = {
           assigned_to: string | null
           automation_pause_reason: string | null
           automation_paused: boolean
+          base_quote_price: number | null
+          channel_partner_id: string | null
           city: string
           close_probability: number | null
           company_id: string | null
+          consultant_commission_amount: number | null
+          consultant_commission_locked_at: string | null
+          consultant_commission_locked_by: string | null
           converted_at: string | null
           converted_to_project: boolean
           created_at: string
@@ -4557,7 +4728,11 @@ export type Database = {
           data_verified_at: string | null
           data_verified_by: string | null
           deleted_at: string | null
+          design_confirmed_at: string | null
+          design_confirmed_by: string | null
+          design_notes: string | null
           disqualification_reason: string | null
+          draft_proposal_id: string | null
           electricity_bill_number: string | null
           email: string | null
           estimated_size_kwp: number | null
@@ -4585,9 +4760,14 @@ export type Database = {
           assigned_to?: string | null
           automation_pause_reason?: string | null
           automation_paused?: boolean
+          base_quote_price?: number | null
+          channel_partner_id?: string | null
           city?: string
           close_probability?: number | null
           company_id?: string | null
+          consultant_commission_amount?: number | null
+          consultant_commission_locked_at?: string | null
+          consultant_commission_locked_by?: string | null
           converted_at?: string | null
           converted_to_project?: boolean
           created_at?: string
@@ -4595,7 +4775,11 @@ export type Database = {
           data_verified_at?: string | null
           data_verified_by?: string | null
           deleted_at?: string | null
+          design_confirmed_at?: string | null
+          design_confirmed_by?: string | null
+          design_notes?: string | null
           disqualification_reason?: string | null
+          draft_proposal_id?: string | null
           electricity_bill_number?: string | null
           email?: string | null
           estimated_size_kwp?: number | null
@@ -4623,9 +4807,14 @@ export type Database = {
           assigned_to?: string | null
           automation_pause_reason?: string | null
           automation_paused?: boolean
+          base_quote_price?: number | null
+          channel_partner_id?: string | null
           city?: string
           close_probability?: number | null
           company_id?: string | null
+          consultant_commission_amount?: number | null
+          consultant_commission_locked_at?: string | null
+          consultant_commission_locked_by?: string | null
           converted_at?: string | null
           converted_to_project?: boolean
           created_at?: string
@@ -4633,7 +4822,11 @@ export type Database = {
           data_verified_at?: string | null
           data_verified_by?: string | null
           deleted_at?: string | null
+          design_confirmed_at?: string | null
+          design_confirmed_by?: string | null
+          design_notes?: string | null
           disqualification_reason?: string | null
+          draft_proposal_id?: string | null
           electricity_bill_number?: string | null
           email?: string | null
           estimated_size_kwp?: number | null
@@ -4664,10 +4857,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leads_channel_partner_id_fkey"
+            columns: ["channel_partner_id"]
+            isOneToOne: false
+            referencedRelation: "channel_partners"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "leads_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_consultant_commission_locked_by_fkey"
+            columns: ["consultant_commission_locked_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_design_confirmed_by_fkey"
+            columns: ["design_confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -7644,6 +7858,7 @@ export type Database = {
           line_number: number
           model: string | null
           notes: string | null
+          price_book_id: string | null
           procurement_status: string
           project_id: string
           purchase_order_id: string | null
@@ -7671,6 +7886,7 @@ export type Database = {
           line_number?: number
           model?: string | null
           notes?: string | null
+          price_book_id?: string | null
           procurement_status?: string
           project_id: string
           purchase_order_id?: string | null
@@ -7698,6 +7914,7 @@ export type Database = {
           line_number?: number
           model?: string | null
           notes?: string | null
+          price_book_id?: string | null
           procurement_status?: string
           project_id?: string
           purchase_order_id?: string | null
@@ -7723,6 +7940,13 @@ export type Database = {
             columns: ["bom_line_id"]
             isOneToOne: false
             referencedRelation: "proposal_bom_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_boq_items_price_book_id_fkey"
+            columns: ["price_book_id"]
+            isOneToOne: false
+            referencedRelation: "price_book"
             referencedColumns: ["id"]
           },
           {
@@ -9045,6 +9269,7 @@ export type Database = {
           model: string | null
           notes: string | null
           override_reason: string | null
+          price_book_id: string | null
           proposal_id: string
           quantity: number
           raw_estimated_cost: number | null
@@ -9071,6 +9296,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           override_reason?: string | null
+          price_book_id?: string | null
           proposal_id: string
           quantity: number
           raw_estimated_cost?: number | null
@@ -9097,6 +9323,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           override_reason?: string | null
+          price_book_id?: string | null
           proposal_id?: string
           quantity?: number
           raw_estimated_cost?: number | null
@@ -9107,6 +9334,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "proposal_bom_lines_price_book_id_fkey"
+            columns: ["price_book_id"]
+            isOneToOne: false
+            referencedRelation: "price_book"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "proposal_bom_lines_proposal_id_fkey"
             columns: ["proposal_id"]
@@ -9330,6 +9564,8 @@ export type Database = {
           custom_trigger_description: string | null
           due_days_after_trigger: number | null
           due_trigger: string
+          escalation_sla_days: number
+          followup_sla_days: number
           id: string
           invoice_type: string | null
           milestone_name: string
@@ -9345,6 +9581,8 @@ export type Database = {
           custom_trigger_description?: string | null
           due_days_after_trigger?: number | null
           due_trigger: string
+          escalation_sla_days?: number
+          followup_sla_days?: number
           id?: string
           invoice_type?: string | null
           milestone_name: string
@@ -9360,6 +9598,8 @@ export type Database = {
           custom_trigger_description?: string | null
           due_days_after_trigger?: number | null
           due_trigger?: string
+          escalation_sla_days?: number
+          followup_sla_days?: number
           id?: string
           invoice_type?: string | null
           milestone_name?: string
@@ -12623,6 +12863,7 @@ export type Database = {
         Returns: number
       }
       drop_old_inverter_partitions: { Args: never; Returns: undefined }
+      enqueue_payment_escalations: { Args: never; Returns: number }
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
       get_amc_monthly_summary: {
@@ -12721,6 +12962,7 @@ export type Database = {
         | "customer"
         | "designer"
         | "purchase_officer"
+        | "marketing_manager"
       customer_segment: "residential" | "commercial" | "industrial"
       delay_responsibility:
         | "shiroi"
@@ -12743,11 +12985,15 @@ export type Database = {
       lead_status:
         | "new"
         | "contacted"
+        | "quick_quote_sent"
         | "site_survey_scheduled"
         | "site_survey_done"
+        | "design_in_progress"
         | "proposal_sent"
         | "design_confirmed"
+        | "detailed_proposal_sent"
         | "negotiation"
+        | "closure_soon"
         | "won"
         | "converted"
         | "lost"
@@ -12939,6 +13185,7 @@ export const Constants = {
         "customer",
         "designer",
         "purchase_officer",
+        "marketing_manager",
       ],
       customer_segment: ["residential", "commercial", "industrial"],
       delay_responsibility: [
@@ -12964,11 +13211,15 @@ export const Constants = {
       lead_status: [
         "new",
         "contacted",
+        "quick_quote_sent",
         "site_survey_scheduled",
         "site_survey_done",
+        "design_in_progress",
         "proposal_sent",
         "design_confirmed",
+        "detailed_proposal_sent",
         "negotiation",
+        "closure_soon",
         "won",
         "converted",
         "lost",

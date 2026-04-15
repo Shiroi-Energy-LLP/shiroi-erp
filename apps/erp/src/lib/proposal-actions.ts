@@ -48,6 +48,13 @@ interface BOMLineInput {
   unit_price: number;
   gst_type: GSTType;
   scope_owner: ScopeOwner;
+  /**
+   * Required for non-budgetary proposals post-migration 051. Every BOM line
+   * must reference a price_book row so Quote -> BOQ -> PO traceability works.
+   * Callers that don't have an id (legacy free-text imports) can pass null,
+   * but the Quote tab UI will surface a warning chip for those rows.
+   */
+  price_book_id?: string | null;
 }
 
 interface MilestoneInput {
@@ -126,6 +133,7 @@ export async function createProposalAction(input: CreateProposalInput): Promise<
         gst_rate: gstRate,
         gst_amount: gstAmount,
         scope_owner: line.scope_owner,
+        price_book_id: line.price_book_id ?? null,
       };
     });
 
@@ -252,6 +260,13 @@ interface BudgetaryQuoteActionInput {
   structureType: string;
   includeLiaison: boolean;
   includeCivil: boolean;
+  /**
+   * Optional per-category brand preference. When provided, the category
+   * selector picks the cheapest active item of the specified brand; falls
+   * back to global cheapest if the brand isn't in the category. Lets Prem
+   * steer defaults ({ panel: 'Waree', inverter: 'Sungrow' }).
+   */
+  preferredBrands?: Partial<Record<string, string>>;
 }
 
 export async function createBudgetaryQuoteAction(
@@ -294,6 +309,7 @@ export async function createBudgetaryQuoteAction(
         structureType: input.structureType,
         includeLiaison: input.includeLiaison,
         includeCivil: input.includeCivil,
+        preferredBrands: input.preferredBrands,
       },
       priceBook,
       corrections,
@@ -376,7 +392,8 @@ export async function createBudgetaryQuoteAction(
       return { error: `Failed to create proposal: ${propErr.message}` };
     }
 
-    // Insert BOM lines
+    // Insert BOM lines — note price_book_id propagation so Quote -> BOQ -> PO
+    // all reference the same master row.
     const bomInserts = bomLines.map((line, idx) => ({
       proposal_id: proposal.id,
       line_number: idx + 1,
@@ -396,17 +413,37 @@ export async function createBudgetaryQuoteAction(
       raw_estimated_cost: line.raw_estimated_cost,
       correction_factor: line.correction_factor,
       corrected_cost: line.corrected_cost,
+      price_book_id: line.price_book_id,
     }));
     const { error: bomErr } = await supabase.from('proposal_bom_lines').insert(bomInserts as any);
     if (bomErr) {
       console.error(`${op} BOM lines insert failed:`, bomErr.message);
     }
 
-    // Insert default payment schedule: 50/40/10
+    // Insert default payment schedule: 50/40/10 with per-milestone SLAs
+    // (migration 053 seeds existing rows; new quick quotes get them inline here)
     const defaultMilestones = [
-      { milestone_name: 'Advance Payment', percentage: 50, due_trigger: 'on_acceptance' },
-      { milestone_name: 'Material Delivery', percentage: 40, due_trigger: 'on_material_delivery' },
-      { milestone_name: 'Commissioning', percentage: 10, due_trigger: 'on_commissioning' },
+      {
+        milestone_name: 'Advance Payment',
+        percentage: 50,
+        due_trigger: 'on_acceptance',
+        followup_sla_days: 3,
+        escalation_sla_days: 4,
+      },
+      {
+        milestone_name: 'Material Delivery',
+        percentage: 40,
+        due_trigger: 'on_material_delivery',
+        followup_sla_days: 5,
+        escalation_sla_days: 9,
+      },
+      {
+        milestone_name: 'Commissioning',
+        percentage: 10,
+        due_trigger: 'on_commissioning',
+        followup_sla_days: 7,
+        escalation_sla_days: 7,
+      },
     ];
     const milestoneInserts = defaultMilestones.map((m, idx) => ({
       proposal_id: proposal.id,
@@ -416,6 +453,8 @@ export async function createBudgetaryQuoteAction(
       amount: new Decimal(totalAfterDiscount).mul(m.percentage).div(100).toDP(2).toNumber(),
       due_trigger: m.due_trigger,
       invoice_type: 'proforma',
+      followup_sla_days: m.followup_sla_days,
+      escalation_sla_days: m.escalation_sla_days,
     }));
     const { error: msErr } = await supabase.from('proposal_payment_schedule').insert(milestoneInserts);
     if (msErr) {

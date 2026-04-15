@@ -1,15 +1,14 @@
 import type { Database } from '@repo/types/database';
 
-type DbAppRole = Database['public']['Enums']['app_role'];
-
-// Extended role type — designer and purchase_officer are pending DB migration.
-// Once the migration runs and types are regenerated, remove this union and use DbAppRole directly.
-export type AppRole = DbAppRole | 'designer' | 'purchase_officer';
+// AppRole is now fully driven by the DB app_role enum (marketing_manager added
+// via migration 051).
+export type AppRole = Database['public']['Enums']['app_role'];
 
 export const ROLE_LABELS: Record<AppRole, string> = {
   founder: 'Founder',
   hr_manager: 'HR Manager',
   sales_engineer: 'Sales Engineer',
+  marketing_manager: 'Marketing Manager',
   project_manager: 'Project Manager',
   site_supervisor: 'Site Supervisor',
   om_technician: 'O&M Technician',
@@ -39,8 +38,10 @@ export interface NavSection {
 // ---------------------------------------------------------------------------
 const ITEMS = {
   dashboard:      { label: 'Dashboard',        href: '/dashboard',        icon: 'LayoutDashboard' },
+  sales:          { label: 'Sales',             href: '/sales',            icon: 'Users' },
   leads:          { label: 'Leads',             href: '/leads',            icon: 'Users' },
   proposals:      { label: 'Proposals',         href: '/proposals',        icon: 'FileText' },
+  partners:       { label: 'Partners',          href: '/partners',         icon: 'Handshake' },
   marketing:      { label: 'Marketing',         href: '/marketing',        icon: 'Megaphone' },
   liaison:        { label: 'Liaison',           href: '/liaison',          icon: 'Globe' },
   designQueue:    { label: 'Design Queue',      href: '/design',           icon: 'Palette' },
@@ -85,7 +86,7 @@ const ITEMS = {
 const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   founder: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
-    { label: 'Sales',        items: [ITEMS.leads, ITEMS.proposals, ITEMS.liaison] },
+    { label: 'Sales',        items: [ITEMS.sales, ITEMS.partners, ITEMS.liaison] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Approvals',    items: [ITEMS.vouchers] },
@@ -96,13 +97,24 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
     { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality, ITEMS.bomReview] },
   ],
+  marketing_manager: [
+    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
+    { label: 'Sales',        items: [ITEMS.sales, ITEMS.partners] },
+    { label: 'Design',       items: [ITEMS.designQueue] },
+    { label: 'Liaison',      items: [ITEMS.liaison, ITEMS.netMetering] },
+    { label: 'Payments',     items: [ITEMS.payments] },
+    { label: 'Projects (R/O)', items: [ITEMS.projects, ITEMS.tasks] },
+    { label: 'Reference',    items: [ITEMS.priceBook] },
+    { label: 'Contacts',     items: [ITEMS.contacts, ITEMS.companies] },
+  ],
   project_manager: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports] },
     { label: 'Approvals',    items: [ITEMS.vouchers] },
     { label: 'Execution',    items: [ITEMS.qcGates] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.inventory] },
-    { label: 'Liaison',      items: [ITEMS.liaison, ITEMS.netMetering] },
+    // Liaison rehomed to marketing_manager per revamp - PMs see the read-only
+    // Liaison step embedded in /projects/[id] detail, no top-level link.
     { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
   ],
@@ -117,14 +129,16 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   ],
   sales_engineer: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
-    { label: 'Sales',        items: [ITEMS.leads, ITEMS.proposals] },
-    { label: 'Liaison',      items: [ITEMS.netMetering] },
+    { label: 'Sales',        items: [ITEMS.sales] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
   ],
   designer: [
-    { label: 'Overview',     items: [ITEMS.dashboard] },
+    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Reference',    items: [ITEMS.priceBook] },
+    // Read-only windows onto sales + projects so designers have context
+    { label: 'Sales (R/O)',  items: [ITEMS.sales] },
+    { label: 'Projects (R/O)', items: [ITEMS.projects] },
   ],
   purchase_officer: [
     { label: 'Overview',         items: [ITEMS.dashboard] },

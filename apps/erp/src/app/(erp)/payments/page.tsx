@@ -18,10 +18,11 @@ import {
 } from '@repo/ui';
 import { DollarSign } from 'lucide-react';
 import { RecordPaymentDialog } from '@/components/finance/record-payment-dialog';
+import { PaymentFollowupsTable } from '@/components/payments/payment-followups-table';
 
 interface PaymentsPageProps {
   searchParams: Promise<{
-    filter?: string; // 'outstanding' | 'active' | 'all'
+    filter?: string; // 'outstanding' | 'active' | 'all' | 'followups'
   }>;
 }
 
@@ -145,9 +146,18 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
             All ({allRows.length})
           </Badge>
         </Link>
+        <Link href="/payments?filter=followups">
+          <Badge variant={filter === 'followups' ? 'default' : 'outline'} className="cursor-pointer">
+            Follow-ups
+          </Badge>
+        </Link>
       </div>
 
-      {/* Main Table */}
+      {/* Follow-ups tab - replaces the overview table when active */}
+      {filter === 'followups' && <PaymentFollowupsTable />}
+
+      {/* Main Table - hidden on follow-ups tab */}
+      {filter !== 'followups' && (
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -245,6 +255,7 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
