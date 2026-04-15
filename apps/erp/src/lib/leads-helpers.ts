@@ -2,27 +2,58 @@ import type { Database } from '@repo/types/database';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
+/**
+ * Lead status state machine.
+ *
+ * Scope rule: destination lists only contain statuses that appear on the
+ * stepper bar (lead-stage-nav.tsx). Terminal/legacy values (disqualified,
+ * converted, proposal_sent) are NOT offered as destinations in the dropdown
+ * — they exist in the enum for historical data and for triggers, not for
+ * user-driven transitions.
+ *
+ * Won fires an AFTER UPDATE trigger (fn_mark_proposal_accepted_on_lead_won,
+ * migration 055) which cascades into the existing
+ * create_project_from_accepted_proposal trigger, so flipping a lead to won
+ * from ANY source status here auto-creates the project downstream.
+ */
 const VALID_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
-  new: ['contacted', 'on_hold', 'disqualified'],
-  contacted: ['quick_quote_sent', 'site_survey_scheduled', 'on_hold', 'disqualified'],
+  new: ['contacted', 'on_hold'],
+  contacted: ['quick_quote_sent', 'site_survey_scheduled', 'on_hold'],
   // Path A (Quick) — added by migration 051
-  quick_quote_sent: ['negotiation', 'site_survey_scheduled', 'on_hold', 'lost', 'disqualified'],
+  quick_quote_sent: ['negotiation', 'site_survey_scheduled', 'lost', 'on_hold'],
   // Path B (Detailed)
-  site_survey_scheduled: ['site_survey_done', 'design_in_progress', 'on_hold', 'disqualified'],
-  site_survey_done: ['design_in_progress', 'proposal_sent', 'on_hold', 'disqualified'],
-  design_in_progress: ['design_confirmed', 'on_hold', 'disqualified'],
-  design_confirmed: ['detailed_proposal_sent', 'negotiation', 'design_in_progress', 'won', 'lost', 'on_hold', 'disqualified'],
-  detailed_proposal_sent: ['negotiation', 'design_in_progress', 'on_hold', 'lost', 'disqualified'],
-  // Legacy stage preserved for historical rows
-  proposal_sent: ['design_confirmed', 'detailed_proposal_sent', 'negotiation', 'closure_soon', 'on_hold', 'disqualified'],
+  site_survey_scheduled: ['site_survey_done', 'design_in_progress', 'on_hold'],
+  site_survey_done: ['design_in_progress', 'on_hold'],
+  design_in_progress: ['design_confirmed', 'on_hold'],
+  design_confirmed: ['detailed_proposal_sent', 'design_in_progress', 'on_hold'],
+  detailed_proposal_sent: ['negotiation', 'design_in_progress', 'lost', 'on_hold'],
   // Shared tail
-  negotiation: ['closure_soon', 'won', 'lost', 'on_hold', 'disqualified'],
-  closure_soon: ['won', 'lost', 'on_hold', 'negotiation'],
-  won: ['converted'],
-  lost: [],
-  on_hold: ['new', 'contacted', 'quick_quote_sent', 'site_survey_scheduled', 'site_survey_done', 'design_in_progress', 'design_confirmed', 'detailed_proposal_sent', 'proposal_sent', 'negotiation', 'closure_soon', 'disqualified'],
-  disqualified: [],
+  negotiation: ['closure_soon', 'won', 'lost', 'on_hold'],
+  closure_soon: ['won', 'lost', 'negotiation', 'on_hold'],
+
+  // ─── Legacy / terminal stages (not surfaced in the dropdown) ───
+  // Historical rows may still be in proposal_sent; leave a forward path so
+  // they can be moved out of it, but we don't offer proposal_sent as a
+  // destination from anywhere.
+  proposal_sent: ['detailed_proposal_sent', 'negotiation', 'on_hold'],
+  won: [],
   converted: [],
+  lost: [],
+  // Resume from on_hold to any visible pipeline stage
+  on_hold: [
+    'new',
+    'contacted',
+    'quick_quote_sent',
+    'site_survey_scheduled',
+    'site_survey_done',
+    'design_in_progress',
+    'design_confirmed',
+    'detailed_proposal_sent',
+    'negotiation',
+    'closure_soon',
+  ],
+  // disqualified is a terminal hidden state — no user-driven exit
+  disqualified: [],
 };
 
 export function isValidTransition(from: LeadStatus, to: LeadStatus): boolean {
