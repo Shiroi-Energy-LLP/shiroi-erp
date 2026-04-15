@@ -197,14 +197,18 @@ export async function attemptWon(
       return ok({ outcome: 'approval_requested', approvalId: approval.id });
     }
 
-    // Green band: flip to won directly
+    // Green band: flip to won directly. The DB trigger
+    // trg_mark_proposal_accepted_on_lead_won (migration 055) fires on this
+    // UPDATE, marks the relevant proposal 'accepted', which cascades through
+    // the existing create_project_from_accepted_proposal trigger to create
+    // the Project. We no longer set converted_to_project / converted_at here
+    // — those fields will be updated by the project-creation trigger chain
+    // if the project spawns successfully.
     const { error: updErr } = await supabase
       .from('leads')
       .update({
         status: 'won' as LeadStatus,
         status_updated_at: new Date().toISOString(),
-        converted_to_project: true,
-        converted_at: new Date().toISOString(),
       })
       .eq('id', leadId);
 
@@ -272,14 +276,13 @@ export async function approveClosure(approvalId: string): Promise<ActionResult<n
       .eq('id', approvalId);
     if (updApprovalErr) return err(updApprovalErr.message, updApprovalErr.code);
 
-    // Flip lead to won
+    // Flip lead to won. The trg_mark_proposal_accepted_on_lead_won trigger
+    // (migration 055) cascades into proposal acceptance + project creation.
     const { error: updLeadErr } = await supabase
       .from('leads')
       .update({
         status: 'won' as LeadStatus,
         status_updated_at: new Date().toISOString(),
-        converted_to_project: true,
-        converted_at: new Date().toISOString(),
       })
       .eq('id', approval.lead_id);
     if (updLeadErr) return err(updLeadErr.message, updLeadErr.code);

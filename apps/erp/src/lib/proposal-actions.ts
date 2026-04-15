@@ -461,6 +461,31 @@ export async function createBudgetaryQuoteAction(
       console.error(`${op} Payment schedule insert failed:`, msErr.message);
     }
 
+    // Auto-advance lead to quick_quote_sent when it's still in a pre-quote
+    // stage. Don't clobber later stages (negotiation, closure_soon, etc.) —
+    // if the user is regenerating a quote from a later stage, they know
+    // what they're doing and the stage should stay put.
+    const { data: leadRow } = await supabase
+      .from('leads')
+      .select('status')
+      .eq('id', input.leadId)
+      .maybeSingle();
+
+    if (leadRow && (leadRow.status === 'new' || leadRow.status === 'contacted')) {
+      const { error: leadUpdErr } = await supabase
+        .from('leads')
+        .update({
+          status: 'quick_quote_sent',
+          status_updated_at: new Date().toISOString(),
+        })
+        .eq('id', input.leadId);
+      if (leadUpdErr) {
+        console.error(`${op} Lead status flip to quick_quote_sent failed:`, leadUpdErr.message);
+        // Don't fail the whole operation — the proposal is created; user can
+        // manually advance the lead.
+      }
+    }
+
     console.log(`${op} Created budgetary quote ${docNum} (id: ${proposal.id})`);
     return { proposalId: proposal.id };
 

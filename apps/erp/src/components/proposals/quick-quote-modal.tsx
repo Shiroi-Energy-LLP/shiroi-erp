@@ -67,7 +67,12 @@ export function QuickQuoteModal({ leadId, defaultSystemType, defaultSizeKwp, def
       setError(result.error);
       setSubmitting(false);
     } else if (result.proposalId) {
-      router.push(`/proposals/${result.proposalId}`);
+      // /proposals/[id] was removed in the Marketing + Design revamp — the
+      // quote now lives inside the lead's Quote tab on the sales URL space.
+      // Land the user there so they see the newly created BOM + totals
+      // without leaving the lead.
+      router.push(`/sales/${leadId}/proposal`);
+      router.refresh();
     }
   }, [leadId, systemSizeKwp, systemType, segment, structureType, includeLiaison, includeCivil, router]);
 
