@@ -1,11 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createAdminClient } from '@repo/supabase/admin';
-import { createClient } from '@repo/supabase/server';
 import { getLead } from '@/lib/leads-queries';
+import { getDesignWorkspaceData, getProposalBomLines } from '@/lib/design-queries';
 import { createDraftDetailedProposal } from '@/lib/quote-actions';
 import { LeadFilesPanel } from '@/components/design/lead-files-panel';
-import { BomPicker, type BomLineRow, type PriceBookOption } from '@/components/sales/bom-picker';
+import { BomPicker } from '@/components/sales/bom-picker';
 import { DesignNotesEditor } from '@/components/design/design-notes-editor';
 import {
   Card,
@@ -39,63 +38,26 @@ export default async function DesignWorkspacePage({ params }: DesignWorkspacePro
     notFound();
   }
 
-  const supabase = await createClient();
-
-  // Fetch survey summary + draft proposal ID + BOM + price book in parallel.
-  // Survey may not exist yet (lead might just have entered design before
-  // survey was done), so survey is nullable.
-  const [surveyResult, draftProposalIdResult, priceBookResult] = await Promise.all([
-    supabase
-      .from('lead_site_surveys')
-      .select(
-        'id, survey_date, survey_status, roof_type, roof_area_sqft, usable_area_sqft, recommended_size_kwp, contact_person_name, notes, gps_lat, gps_lng',
-      )
-      .eq('lead_id', leadId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('leads')
-      .select('draft_proposal_id, design_notes, status')
-      .eq('id', leadId)
-      .maybeSingle(),
-    supabase
-      .from('price_book')
-      .select('id, item_category, item_description, brand, unit, base_price')
-      .eq('is_active', true)
-      .is('deleted_at', null)
-      .order('item_category')
-      .order('base_price', { ascending: true }),
-  ]);
-
-  const survey = surveyResult.data;
-  const leadMeta = draftProposalIdResult.data;
-  const priceBookItems = (priceBookResult.data ?? []) as PriceBookOption[];
+  // Parallel reads for the header + BOM picker.
+  const { survey, leadMeta, priceBookItems } = await getDesignWorkspaceData(leadId);
 
   // If the lead doesn't have a draft proposal yet, auto-create one now so
   // the designer can start composing BOM. This is the same action the Quote
   // tab calls when the sales engineer clicks "Start Detailed Proposal".
   let draftProposalId = leadMeta?.draft_proposal_id ?? null;
-  if (!draftProposalId && (lead.status === 'site_survey_scheduled' || lead.status === 'site_survey_done' || lead.status === 'design_in_progress')) {
+  if (
+    !draftProposalId &&
+    (lead.status === 'site_survey_scheduled' ||
+      lead.status === 'site_survey_done' ||
+      lead.status === 'design_in_progress')
+  ) {
     const createResult = await createDraftDetailedProposal(leadId);
     if (createResult.success) {
       draftProposalId = createResult.data.proposalId;
     }
   }
 
-  // Fetch BOM lines for the draft proposal (if any)
-  let bomLines: BomLineRow[] = [];
-  if (draftProposalId) {
-    const { data: lines } = await supabase
-      .from('proposal_bom_lines')
-      .select(
-        'id, item_category, item_description, brand, unit, quantity, unit_price, total_price, price_book_id',
-      )
-      .eq('proposal_id', draftProposalId)
-      .order('line_number');
-    bomLines = (lines ?? []) as BomLineRow[];
-  }
-
+  const bomLines = await getProposalBomLines(draftProposalId);
   const bomLineCount = bomLines.length;
   const bomUnmatchedCount = bomLines.filter((l) => !l.price_book_id).length;
 

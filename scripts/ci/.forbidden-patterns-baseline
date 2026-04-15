@@ -33,6 +33,7 @@ R15|apps/erp/src/app/api/projects/[id]/generate-pdf/route.ts:3:import { createCl
 R15|apps/erp/src/app/api/projects/[id]/qc/[inspectionId]/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/projects/[id]/survey/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/proposals/[id]/generate-pdf/route.ts:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/components/design/lead-files-panel.tsx:23:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/hr/leave-request-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/add-activity-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/lead-files-list.tsx:4:import { createClient } from '@repo/supabase/client';

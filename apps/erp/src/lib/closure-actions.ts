@@ -15,36 +15,29 @@
  *
  * BOM Cost = sum(raw_estimated_cost) on the accepted/draft detailed proposal.
  * Site Expenses Est. = lead-level override (TBD; defaults to 0 for now).
+ *
+ * Non-async helpers (thresholds, Band type, classifyBand, computeSnapshot-
+ * FromValues) live in `closure-helpers.ts` — Next.js forbids non-async
+ * exports from a `'use server'` file.
  */
 
 import Decimal from 'decimal.js';
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
+import {
+  AMBER_BAND_MIN_PCT,
+  computeSnapshotFromValues,
+  type MarginSnapshot,
+} from './closure-helpers';
 
-type Lead = Database['public']['Tables']['leads']['Row'];
+// Re-export type so existing callers that imported types from this file
+// (notably components/sales/closure-band-badge.tsx on the `Band` type)
+// keep working. Re-exported `type` is a pure type re-export and is
+// allowed even from a 'use server' file.
+export type { Band } from './closure-helpers';
+
 type LeadStatus = Database['public']['Enums']['lead_status'];
-type ClosureApproval = Database['public']['Tables']['lead_closure_approvals']['Row'];
-
-export const GREEN_BAND_MIN_PCT = 10;
-export const AMBER_BAND_MIN_PCT = 8;
-export const TARGET_MARGIN_PCT = 15;
-
-export type Band = 'green' | 'amber' | 'red';
-
-export interface MarginSnapshot {
-  basePrice: number;
-  bomCost: number;
-  siteExpensesEst: number;
-  grossMargin: number; // as percentage, not fraction
-  band: Band;
-}
-
-export function classifyBand(grossMarginPct: number): Band {
-  if (grossMarginPct >= GREEN_BAND_MIN_PCT) return 'green';
-  if (grossMarginPct >= AMBER_BAND_MIN_PCT) return 'amber';
-  return 'red';
-}
 
 /**
  * Compute the current margin + band for a lead based on its BOM + base price.
@@ -104,34 +97,6 @@ export async function computeMargin(leadId: string): Promise<ActionResult<Margin
     console.error(`${op} threw`, e);
     return err(e instanceof Error ? e.message : 'Unknown error');
   }
-}
-
-function computeSnapshotFromValues(
-  basePrice: number,
-  bomCost: number,
-  siteExpensesEst: number,
-): ActionResult<MarginSnapshot> {
-  if (basePrice <= 0) {
-    return ok({
-      basePrice: 0,
-      bomCost,
-      siteExpensesEst,
-      grossMargin: 0,
-      band: 'red',
-    });
-  }
-
-  const totalCost = new Decimal(bomCost).add(siteExpensesEst);
-  const profit = new Decimal(basePrice).sub(totalCost);
-  const grossMargin = profit.div(basePrice).mul(100).toDP(2).toNumber();
-
-  return ok({
-    basePrice,
-    bomCost,
-    siteExpensesEst,
-    grossMargin,
-    band: classifyBand(grossMargin),
-  });
 }
 
 /**
