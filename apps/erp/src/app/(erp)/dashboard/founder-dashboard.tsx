@@ -20,6 +20,7 @@ import { CashAlertTable } from './cash-alert-table';
 import { PipelineSummary } from './pipeline-summary';
 import { PendingApprovals } from './pending-approvals';
 import { OverdueReports } from './overdue-reports';
+import { ClosureApprovalsPanel } from '@/components/sales/closure-approvals-panel';
 
 export async function FounderDashboard() {
   // All five "company aggregate" queries below are cached via
@@ -83,6 +84,9 @@ export async function FounderDashboard() {
           icon="FileText"
         />
       </div>
+
+      {/* Pending amber-band closure approvals - self-hides when empty */}
+      <ClosureApprovalsPanel />
 
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2 space-y-6">

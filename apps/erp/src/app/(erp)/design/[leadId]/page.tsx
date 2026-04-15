@@ -1,45 +1,216 @@
-import { Card, CardContent, Breadcrumb } from '@repo/ui';
-import { Palette } from 'lucide-react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { createAdminClient } from '@repo/supabase/admin';
+import { createClient } from '@repo/supabase/server';
+import { getLead } from '@/lib/leads-queries';
+import { createDraftDetailedProposal } from '@/lib/quote-actions';
+import { LeadFilesPanel } from '@/components/design/lead-files-panel';
+import { BomPicker, type BomLineRow, type PriceBookOption } from '@/components/sales/bom-picker';
+import { DesignNotesEditor } from '@/components/design/design-notes-editor';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Badge,
+  Breadcrumb,
+  Button,
+} from '@repo/ui';
+import { STAGE_LABELS } from '@/lib/leads-helpers';
 
-export default function DesignWorkspacePage({
-  params,
-}: {
-  params: { leadId: string };
-}) {
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+interface DesignWorkspaceProps {
+  params: Promise<{ leadId: string }>;
+}
+
+export default async function DesignWorkspacePage({ params }: DesignWorkspaceProps) {
+  const { leadId } = await params;
+
+  const lead = await getLead(leadId);
+  if (!lead) {
+    notFound();
+  }
+
+  const supabase = await createClient();
+
+  // Fetch survey summary + draft proposal ID + BOM + price book in parallel.
+  // Survey may not exist yet (lead might just have entered design before
+  // survey was done), so survey is nullable.
+  const [surveyResult, draftProposalIdResult, priceBookResult] = await Promise.all([
+    supabase
+      .from('lead_site_surveys')
+      .select(
+        'id, survey_date, survey_status, roof_type, roof_area_sqft, usable_area_sqft, recommended_size_kwp, contact_person_name, notes, gps_lat, gps_lng',
+      )
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('leads')
+      .select('draft_proposal_id, design_notes, status')
+      .eq('id', leadId)
+      .maybeSingle(),
+    supabase
+      .from('price_book')
+      .select('id, item_category, item_description, brand, unit, base_price')
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('item_category')
+      .order('base_price', { ascending: true }),
+  ]);
+
+  const survey = surveyResult.data;
+  const leadMeta = draftProposalIdResult.data;
+  const priceBookItems = (priceBookResult.data ?? []) as PriceBookOption[];
+
+  // If the lead doesn't have a draft proposal yet, auto-create one now so
+  // the designer can start composing BOM. This is the same action the Quote
+  // tab calls when the sales engineer clicks "Start Detailed Proposal".
+  let draftProposalId = leadMeta?.draft_proposal_id ?? null;
+  if (!draftProposalId && (lead.status === 'site_survey_scheduled' || lead.status === 'site_survey_done' || lead.status === 'design_in_progress')) {
+    const createResult = await createDraftDetailedProposal(leadId);
+    if (createResult.success) {
+      draftProposalId = createResult.data.proposalId;
+    }
+  }
+
+  // Fetch BOM lines for the draft proposal (if any)
+  let bomLines: BomLineRow[] = [];
+  if (draftProposalId) {
+    const { data: lines } = await supabase
+      .from('proposal_bom_lines')
+      .select(
+        'id, item_category, item_description, brand, unit, quantity, unit_price, total_price, price_book_id',
+      )
+      .eq('proposal_id', draftProposalId)
+      .order('line_number');
+    bomLines = (lines ?? []) as BomLineRow[];
+  }
+
+  const bomLineCount = bomLines.length;
+  const bomUnmatchedCount = bomLines.filter((l) => !l.price_book_id).length;
+
   return (
     <div className="space-y-6">
       <Breadcrumb
-        className="mb-4"
+        className="mb-2"
         items={[
-          { label: 'Design', href: '/design' },
-          { label: `Lead ${params.leadId.slice(0, 8)}` },
+          { label: 'Design Queue', href: '/design' },
+          { label: lead.customer_name },
         ]}
       />
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Design Workspace</h1>
-      <div className="grid grid-cols-2 gap-6">
-        <Card>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Palette className="h-12 w-12 text-[#9CA0AB] opacity-50 mb-4" />
-              <h2 className="text-lg font-heading font-bold text-[#1A1D24]">Site Survey Data</h2>
-              <p className="text-sm text-[#7C818E] max-w-[320px] mt-1">
-                Site measurements, photos, and roof details will appear in this panel.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Palette className="h-12 w-12 text-[#9CA0AB] opacity-50 mb-4" />
-              <h2 className="text-lg font-heading font-bold text-[#1A1D24]">Proposal Builder</h2>
-              <p className="text-sm text-[#7C818E] max-w-[320px] mt-1">
-                BOM selection, system sizing, and margin calculation tools will be here.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+
+      {/* Header */}
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-n-900">{lead.customer_name}</h1>
+          <div className="flex items-center gap-3 mt-1 text-sm text-n-500 flex-wrap">
+            <Badge variant="neutral">{STAGE_LABELS[lead.status]}</Badge>
+            <span>{lead.city}</span>
+            {lead.estimated_size_kwp && <span>{lead.estimated_size_kwp} kWp</span>}
+            {lead.system_type && <span>{lead.system_type.replace(/_/g, ' ')}</span>}
+            {lead.segment && <span>{lead.segment}</span>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href={`/sales/${leadId}`}>
+            <Button variant="secondary" size="sm">
+              View in Sales
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {/* Survey summary - read-only snapshot */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Site Survey Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {survey ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <InfoField label="Survey Date" value={formatDate(survey.survey_date)} />
+              <InfoField label="Status" value={survey.survey_status ?? '—'} />
+              <InfoField label="Contact on site" value={survey.contact_person_name ?? '—'} />
+              <InfoField label="Recommended kWp" value={survey.recommended_size_kwp?.toString() ?? '—'} />
+              <InfoField label="Roof Type" value={survey.roof_type ?? '—'} />
+              <InfoField label="Roof Area" value={survey.roof_area_sqft ? `${survey.roof_area_sqft} sqft` : '—'} />
+              <InfoField label="Usable Area" value={survey.usable_area_sqft ? `${survey.usable_area_sqft} sqft` : '—'} />
+              <InfoField
+                label="GPS"
+                value={
+                  survey.gps_lat && survey.gps_lng
+                    ? `${Number(survey.gps_lat).toFixed(5)}, ${Number(survey.gps_lng).toFixed(5)}`
+                    : '—'
+                }
+              />
+              {survey.notes && (
+                <div className="col-span-full mt-2 pt-3 border-t border-n-100">
+                  <div className="text-xs text-n-500 uppercase mb-1">Notes</div>
+                  <p className="text-sm text-n-700 whitespace-pre-wrap">{survey.notes}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-n-500 text-center py-6">
+              No survey data yet. The surveyor will add details during the site visit.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Lead files panel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Design Files</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <LeadFilesPanel leadId={leadId} />
+        </CardContent>
+      </Card>
+
+      {/* BOM editor */}
+      {draftProposalId ? (
+        <BomPicker
+          proposalId={draftProposalId}
+          bomLines={bomLines}
+          priceBookOptions={priceBookItems}
+        />
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-n-500">
+            The lead needs to enter Site Survey Scheduled stage before a draft proposal can be
+            created. Once it does, the BOM editor will appear here.
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Design notes + Mark Design Confirmed */}
+      <DesignNotesEditor
+        leadId={leadId}
+        initialNotes={leadMeta?.design_notes ?? null}
+        currentStatus={lead.status}
+        bomLineCount={bomLineCount}
+        bomUnmatchedCount={bomUnmatchedCount}
+      />
+    </div>
+  );
+}
+
+function InfoField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-xs text-n-500 uppercase tracking-wide">{label}</div>
+      <div className="text-sm font-medium text-n-900 mt-0.5">{value}</div>
     </div>
   );
 }
