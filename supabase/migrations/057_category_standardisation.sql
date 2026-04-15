@@ -12,6 +12,25 @@
 BEGIN;
 
 -- ============================================================================
+-- 0. Drop ALL CHECK constraints up front
+-- ----------------------------------------------------------------------------
+-- Postgres validates CHECK constraints row-by-row DURING an UPDATE statement.
+-- If we leave the old constraints in place while running the rewrite CASE
+-- blocks below, the very first row that maps (say) 'solar_panel' → 'solar_panels'
+-- gets rejected because 'solar_panels' is not in the old allowed-value list.
+-- Consolidating the drops here keeps all 3 UPDATE statements safe; each section
+-- below re-adds its own constraint after its UPDATE has finished. The inline
+-- `DROP CONSTRAINT IF EXISTS` in each section becomes a harmless no-op and is
+-- preserved for section-local readability.
+-- ============================================================================
+
+ALTER TABLE project_boq_items       DROP CONSTRAINT IF EXISTS project_boq_items_item_category_check;
+ALTER TABLE price_book              DROP CONSTRAINT IF EXISTS price_book_item_category_check;
+ALTER TABLE delivery_challan_items  DROP CONSTRAINT IF EXISTS delivery_challan_items_item_category_check;
+ALTER TABLE proposal_bom_lines      DROP CONSTRAINT IF EXISTS proposal_bom_lines_item_category_check;
+ALTER TABLE purchase_order_items    DROP CONSTRAINT IF EXISTS purchase_order_items_item_category_check;
+
+-- ============================================================================
 -- 1. project_boq_items — migrate legacy → Manivel 15
 -- ============================================================================
 
