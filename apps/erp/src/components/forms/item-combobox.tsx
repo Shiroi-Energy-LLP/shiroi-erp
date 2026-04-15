@@ -7,6 +7,12 @@ import type { ItemCategory } from '@/lib/boi-constants';
 import { getCategoryLabel } from '@/lib/boi-constants';
 import { filterAndRank, type ItemSuggestion } from './item-combobox-filter';
 
+// Re-export so downstream forms can import the type from the canonical
+// component path (`@/components/forms/item-combobox`), matching the plan.
+// The type is owned by `./item-combobox-filter` so the scoring logic stays
+// testable in isolation from React.
+export type { ItemSuggestion } from './item-combobox-filter';
+
 export interface ItemComboboxProps {
   /** Current description value (controlled) */
   value: string;
