@@ -45,14 +45,29 @@ export const LEAD_COLUMNS: ColumnDef[] = [
       { value: 'cold_call', label: 'Cold Call' }, { value: 'exhibition', label: 'Exhibition' },
       { value: 'social_media', label: 'Social Media' }, { value: 'walkin', label: 'Walk-in' },
     ] },
+  // Lead status options must stay in sync with the stage-bar nav
+  // (lead-stage-nav.tsx STAGE_ORDER) and leads-helpers.ts STAGE_LABELS.
+  // Legacy/terminal values (proposal_sent, converted, disqualified) are
+  // intentionally NOT offered here — they exist in the enum for historical
+  // rows and triggers, not for user-driven edits.
   { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: true, fieldType: 'badge',
     options: [
-      { value: 'new', label: 'New' }, { value: 'contacted', label: 'Contacted' },
-      { value: 'site_survey_scheduled', label: 'Survey Scheduled' }, { value: 'site_survey_done', label: 'Survey Done' },
-      { value: 'proposal_sent', label: 'Proposal Sent' }, { value: 'design_confirmed', label: 'Design Confirmed' },
-      { value: 'negotiation', label: 'Negotiation' }, { value: 'won', label: 'Won' },
-      { value: 'converted', label: 'Converted' }, { value: 'lost', label: 'Lost' },
-      { value: 'on_hold', label: 'On Hold' }, { value: 'disqualified', label: 'Disqualified' },
+      { value: 'new', label: 'New' },
+      { value: 'contacted', label: 'Contacted' },
+      // Path A (Quick)
+      { value: 'quick_quote_sent', label: 'Quick Quote Sent' },
+      // Path B (Detailed)
+      { value: 'site_survey_scheduled', label: 'Survey Scheduled' },
+      { value: 'site_survey_done', label: 'Survey Done' },
+      { value: 'design_in_progress', label: 'Design In Progress' },
+      { value: 'design_confirmed', label: 'Design Confirmed' },
+      { value: 'detailed_proposal_sent', label: 'Detailed Proposal Sent' },
+      // Shared tail
+      { value: 'negotiation', label: 'Negotiation' },
+      { value: 'closure_soon', label: 'Closure Soon' },
+      { value: 'won', label: 'Won' },
+      { value: 'lost', label: 'Lost' },
+      { value: 'on_hold', label: 'On Hold' },
     ] },
   { key: 'assigned_to_name', label: 'Assigned To', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
