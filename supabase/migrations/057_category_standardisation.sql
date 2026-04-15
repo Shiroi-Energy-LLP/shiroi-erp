@@ -139,7 +139,7 @@ ALTER TABLE price_book ADD CONSTRAINT price_book_item_category_check
 
 -- Unique index for the import script's upsert conflict target.
 -- Case-sensitive (Manivel's sheet is the single source of truth — consistent casing).
-CREATE UNIQUE INDEX IF NOT EXISTS price_book_desc_cat_unique
+CREATE UNIQUE INDEX IF NOT EXISTS idx_price_book_desc_cat_unique
   ON price_book (item_description, item_category)
   WHERE deleted_at IS NULL;
 
@@ -204,7 +204,7 @@ ALTER TABLE proposal_bom_lines ADD CONSTRAINT proposal_bom_lines_item_category_c
     'solar_panels','inverter','battery','mms','dc_accessories','ac_accessories',
     'conduits','earthing_accessories','safety_accessories','generation_meter',
     'ic','statutory_approvals','transport_civil','miscellaneous','others',
-    -- Legacy 26 (for existing rows — preserved per strategy C)
+    -- Legacy 31 (for existing rows — preserved per strategy C)
     'panel','solar_panel','mounting_structure','structure','dc_cable','dc_access',
     'ac_cable','dcdb','acdb','lt_panel','ht_cable','ht_panel','transformer',
     'bus_duct','conduit','gi_cable_tray','earthing','earth_access','lightning_arrestor',
@@ -220,9 +220,11 @@ ALTER TABLE proposal_bom_lines ADD CONSTRAINT proposal_bom_lines_item_category_c
 ALTER TABLE purchase_order_items DROP CONSTRAINT IF EXISTS purchase_order_items_item_category_check;
 ALTER TABLE purchase_order_items ADD CONSTRAINT purchase_order_items_item_category_check
   CHECK (item_category IN (
+    -- Manivel 15 (for new inserts)
     'solar_panels','inverter','battery','mms','dc_accessories','ac_accessories',
     'conduits','earthing_accessories','safety_accessories','generation_meter',
     'ic','statutory_approvals','transport_civil','miscellaneous','others',
+    -- Legacy 31 (for existing rows — preserved per strategy C)
     'panel','solar_panel','mounting_structure','structure','dc_cable','dc_access',
     'ac_cable','dcdb','acdb','lt_panel','ht_cable','ht_panel','transformer',
     'bus_duct','conduit','gi_cable_tray','earthing','earth_access','lightning_arrestor',
@@ -265,13 +267,36 @@ BEGIN
   );
 
   IF bad_boq > 0 THEN
-    RAISE EXCEPTION 'project_boq_items has % rows with unmapped legacy category — aborting migration', bad_boq;
+    RAISE EXCEPTION 'project_boq_items has % rows with unmapped legacy category (example: %) — aborting migration',
+      bad_boq,
+      (SELECT item_category FROM project_boq_items
+        WHERE item_category NOT IN (
+          'solar_panels','inverter','battery','mms','dc_accessories','ac_accessories',
+          'conduits','earthing_accessories','safety_accessories','generation_meter',
+          'ic','statutory_approvals','transport_civil','miscellaneous','others'
+        ) LIMIT 1);
   END IF;
   IF bad_price_book > 0 THEN
-    RAISE EXCEPTION 'price_book has % active rows with unmapped legacy category — aborting migration', bad_price_book;
+    RAISE EXCEPTION 'price_book has % active rows with unmapped legacy category (example: %) — aborting migration',
+      bad_price_book,
+      (SELECT item_category FROM price_book
+        WHERE deleted_at IS NULL
+          AND item_category NOT IN (
+            'solar_panels','inverter','battery','mms','dc_accessories','ac_accessories',
+            'conduits','earthing_accessories','safety_accessories','generation_meter',
+            'ic','statutory_approvals','transport_civil','miscellaneous','others'
+          ) LIMIT 1);
   END IF;
   IF bad_dc > 0 THEN
-    RAISE EXCEPTION 'delivery_challan_items has % rows with unmapped legacy category — aborting migration', bad_dc;
+    RAISE EXCEPTION 'delivery_challan_items has % rows with unmapped legacy category (example: %) — aborting migration',
+      bad_dc,
+      (SELECT item_category FROM delivery_challan_items
+        WHERE item_category IS NOT NULL
+          AND item_category NOT IN (
+            'solar_panels','inverter','battery','mms','dc_accessories','ac_accessories',
+            'conduits','earthing_accessories','safety_accessories','generation_meter',
+            'ic','statutory_approvals','transport_civil','miscellaneous','others'
+          ) LIMIT 1);
   END IF;
 
   RAISE NOTICE 'Migration 057 sanity checks passed: 0 unmapped rows in 3 target tables';
