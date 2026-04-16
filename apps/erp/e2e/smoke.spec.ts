@@ -2,14 +2,15 @@ import { test, expect } from '@playwright/test';
 import { loginIfCredentialsPresent } from './helpers/auth';
 
 /**
- * Smoke tests — 5 critical paths per the April 14 audit plan:
+ * Smoke tests — 6 critical paths per the April 14 audit plan:
  *   1. /login renders
  *   2. Founder dashboard renders after login
  *   3. /leads loads without 500
  *   4. /projects loads without 500
  *   5. /price-book loads without 500
+ *   6. /om/plant-monitoring loads without 500
  *
- * Tests 2–5 require authentication. They are `test.skip()`-ed when
+ * Tests 2–6 require authentication. They are `test.skip()`-ed when
  * PLAYWRIGHT_LOGIN_EMAIL / _PASSWORD env vars are absent, so the suite
  * still runs green in CI without secrets. Configure these in the
  * GitHub Actions secrets + dev-only .env.playwright file.
@@ -94,5 +95,17 @@ test('price book page renders', async ({ page }) => {
 
   await page.goto('/price-book');
   await expect(page.locator('body')).toContainText(/price/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test 6: /om/plant-monitoring
+// ═══════════════════════════════════════════════════════════════════════
+test('plant monitoring page renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/om/plant-monitoring');
+  await expect(page.locator('body')).toContainText(/plant monitoring/i);
   await expectNoDevErrorOverlay(page);
 });
