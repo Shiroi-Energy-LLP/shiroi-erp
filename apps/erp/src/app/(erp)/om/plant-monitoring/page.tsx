@@ -9,7 +9,7 @@ import {
   getAllActiveProjects,
   getPlantMonitoringSummary,
 } from '@/lib/plant-monitoring-queries';
-import { createClient } from '@repo/supabase/server';
+import { getCurrentUserRoleForProject } from '@/lib/project-detail-actions';
 import { PlantMonitoringPasswordCell } from '@/components/om/plant-monitoring-password-cell';
 import { CreatePlantMonitoringDialog } from '@/components/om/create-plant-monitoring-dialog';
 import { EditPlantMonitoringDialog } from '@/components/om/edit-plant-monitoring-dialog';
@@ -67,7 +67,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
     getProjectsWithCredentials(),
     getAllActiveProjects(),
     getPlantMonitoringSummary(),
-    getViewerRole(),
+    getCurrentUserRoleForProject(),
   ]);
 
   const canEdit = viewerRole === 'founder' || viewerRole === 'project_manager';
@@ -292,23 +292,4 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
       )}
     </div>
   );
-}
-
-// ───────────────────────────────────────────────────────────────────────
-// Helper — viewer role lookup
-// Kept in the page file because it's the only place that needs it and
-// following the pattern used in projects/[id]/page.tsx.
-// ───────────────────────────────────────────────────────────────────────
-async function getViewerRole(): Promise<string | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  return data?.role ?? null;
 }
