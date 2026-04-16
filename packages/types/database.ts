@@ -1,3 +1,4 @@
+npm warn exec The following package was not found and will be installed: supabase@2.91.3
 export type Json =
   | string
   | number
@@ -7227,6 +7228,93 @@ export type Database = {
           },
         ]
       }
+      plant_monitoring_credentials: {
+        Row: {
+          commissioning_report_id: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          inverter_brand: string | null
+          notes: string | null
+          password: string
+          portal_url: string
+          project_id: string
+          updated_at: string
+          updated_by: string | null
+          username: string
+        }
+        Insert: {
+          commissioning_report_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          inverter_brand?: string | null
+          notes?: string | null
+          password: string
+          portal_url: string
+          project_id: string
+          updated_at?: string
+          updated_by?: string | null
+          username: string
+        }
+        Update: {
+          commissioning_report_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          inverter_brand?: string | null
+          notes?: string | null
+          password?: string
+          portal_url?: string
+          project_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plant_monitoring_credentials_commissioning_report_id_fkey"
+            columns: ["commissioning_report_id"]
+            isOneToOne: false
+            referencedRelation: "commissioning_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plant_monitoring_credentials_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plant_monitoring_credentials_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plant_monitoring_credentials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plant_monitoring_credentials_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plants: {
         Row: {
           address_line1: string
@@ -12933,6 +13021,20 @@ export type Database = {
           total_value: number
         }[]
       }
+      get_plant_monitoring_summary: {
+        Args: never
+        Returns: {
+          brand_fronius: number
+          brand_growatt: number
+          brand_huawei: number
+          brand_other: number
+          brand_sma: number
+          brand_solis: number
+          brand_sungrow: number
+          missing_count: number
+          total_count: number
+        }[]
+      }
       get_projects_without_today_report: {
         Args: never
         Returns: {
@@ -12943,6 +13045,10 @@ export type Database = {
         }[]
       }
       lock_stale_reports: { Args: never; Returns: undefined }
+      plant_monitoring_detect_brand: {
+        Args: { portal_url: string }
+        Returns: string
+      }
       rollup_inverter_readings_daily: { Args: never; Returns: undefined }
       rollup_inverter_readings_hourly: { Args: never; Returns: undefined }
       update_storage_mime_type: {
