@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Package } from 'lucide-react';
 import { Input } from '@repo/ui';
 import type { ItemCategory } from '@/lib/boi-constants';
@@ -38,8 +39,10 @@ export function ItemCombobox({
 }: ItemComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [highlighted, setHighlighted] = React.useState<number>(-1);
+  const [rect, setRect] = React.useState<{ top: number; left: number; width: number } | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const filtered = React.useMemo(
     () => filterAndRank(value, suggestions, 8),
@@ -55,12 +58,33 @@ export function ItemCombobox({
 
   const totalRows = filtered.length + (showCreateNew ? 1 : 0);
 
-  // Close on outside click
+  // Update rect when open so the portal dropdown tracks the input position
+  React.useLayoutEffect(() => {
+    if (!open) {
+      setRect(null);
+      return;
+    }
+    function updateRect() {
+      if (!inputRef.current) return;
+      const r = inputRef.current.getBoundingClientRect();
+      setRect({ top: r.bottom + 4, left: r.left, width: r.width });
+    }
+    updateRect();
+    window.addEventListener('scroll', updateRect, true); // capture to catch ancestor scrolls
+    window.addEventListener('resize', updateRect);
+    return () => {
+      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener('resize', updateRect);
+    };
+  }, [open]);
+
+  // Close on outside click — checks both the input wrapper and the portal dropdown
   React.useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      if (containerRef.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setOpen(false);
     }
     if (open) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -136,79 +160,90 @@ export function ItemCombobox({
         autoComplete="off"
       />
 
-      {open && totalRows > 0 && (
-        <div
-          className="absolute left-0 top-full mt-1 z-50 w-[420px] max-w-[92vw] bg-white border border-n-200 rounded shadow-lg overflow-hidden"
-          role="listbox"
-        >
-          {filtered.map((s, i) => {
-            const isHighlighted = i === highlighted;
-            return (
+      {open && totalRows > 0 && rect && typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: rect.top,
+              left: rect.left,
+              // Min 420px (readability), but never wider than the viewport minus 16px margin
+              width: Math.min(Math.max(rect.width, 420), window.innerWidth - 16),
+              zIndex: 100,
+            }}
+            className="bg-white border border-n-200 rounded shadow-lg overflow-hidden max-h-[60vh] overflow-y-auto"
+            role="listbox"
+          >
+            {filtered.map((s, i) => {
+              const isHighlighted = i === highlighted;
+              return (
+                <button
+                  key={`${s.source}-${s.description}-${s.category}-${i}`}
+                  type="button"
+                  role="option"
+                  aria-selected={isHighlighted}
+                  onMouseDown={(e) => {
+                    // onMouseDown (not onClick) so the Input doesn't lose focus first
+                    e.preventDefault();
+                    pickSuggestion(s);
+                  }}
+                  onMouseEnter={() => setHighlighted(i)}
+                  className={`w-full text-left px-3 py-2 text-xs border-b border-n-100 last:border-b-0 ${
+                    isHighlighted ? 'bg-p-50' : 'bg-white hover:bg-n-50'
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    <Package className="h-3.5 w-3.5 text-n-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-n-800 truncate">{s.description}</div>
+                      <div className="text-[11px] text-n-500 flex items-center gap-1.5 mt-0.5">
+                        <span>{getCategoryLabel(s.category)}</span>
+                        <span className="text-n-300">·</span>
+                        <span>{s.unit}</span>
+                        <span className="text-n-300">·</span>
+                        {s.base_price > 0 ? (
+                          <span className="font-mono">₹{s.base_price.toLocaleString('en-IN')}</span>
+                        ) : (
+                          <span className="text-amber-600 font-medium">Rate pending</span>
+                        )}
+                      </div>
+                    </div>
+                    {s.source === 'price_book' && (
+                      <span className="text-[10px] text-p-600 bg-p-50 px-1.5 py-0.5 rounded border border-p-200 flex-shrink-0">
+                        Price Book
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+
+            {showCreateNew && (
               <button
-                key={`${s.source}-${s.description}-${s.category}-${i}`}
                 type="button"
                 role="option"
-                aria-selected={isHighlighted}
+                aria-selected={highlighted === filtered.length}
                 onMouseDown={(e) => {
-                  // onMouseDown (not onClick) so the Input doesn't lose focus first
                   e.preventDefault();
-                  pickSuggestion(s);
+                  pickCreateNew();
                 }}
-                onMouseEnter={() => setHighlighted(i)}
-                className={`w-full text-left px-3 py-2 text-xs border-b border-n-100 last:border-b-0 ${
-                  isHighlighted ? 'bg-p-50' : 'bg-white hover:bg-n-50'
+                onMouseEnter={() => setHighlighted(filtered.length)}
+                className={`w-full text-left px-3 py-2 text-xs border-t border-n-200 ${
+                  highlighted === filtered.length ? 'bg-p-50' : 'bg-white hover:bg-n-50'
                 }`}
               >
-                <div className="flex items-start gap-2">
-                  <Package className="h-3.5 w-3.5 text-n-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-n-800 truncate">{s.description}</div>
-                    <div className="text-[11px] text-n-500 flex items-center gap-1.5 mt-0.5">
-                      <span>{getCategoryLabel(s.category)}</span>
-                      <span className="text-n-300">·</span>
-                      <span>{s.unit}</span>
-                      <span className="text-n-300">·</span>
-                      {s.base_price > 0 ? (
-                        <span className="font-mono">₹{s.base_price.toLocaleString('en-IN')}</span>
-                      ) : (
-                        <span className="text-amber-600 font-medium">Rate pending</span>
-                      )}
-                    </div>
-                  </div>
-                  {s.source === 'price_book' && (
-                    <span className="text-[10px] text-p-600 bg-p-50 px-1.5 py-0.5 rounded border border-p-200 flex-shrink-0">
-                      Price Book
-                    </span>
-                  )}
+                <div className="flex items-center gap-2 text-n-600">
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>
+                    Create new: <span className="font-medium text-n-800">&ldquo;{value}&rdquo;</span>
+                  </span>
                 </div>
               </button>
-            );
-          })}
-
-          {showCreateNew && (
-            <button
-              type="button"
-              role="option"
-              aria-selected={highlighted === filtered.length}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                pickCreateNew();
-              }}
-              onMouseEnter={() => setHighlighted(filtered.length)}
-              className={`w-full text-left px-3 py-2 text-xs border-t border-n-200 ${
-                highlighted === filtered.length ? 'bg-p-50' : 'bg-white hover:bg-n-50'
-              }`}
-            >
-              <div className="flex items-center gap-2 text-n-600">
-                <Plus className="h-3.5 w-3.5" />
-                <span>
-                  Create new: <span className="font-medium text-n-800">&ldquo;{value}&rdquo;</span>
-                </span>
-              </div>
-            </button>
-          )}
-        </div>
-      )}
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
