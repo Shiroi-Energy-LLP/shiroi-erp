@@ -7,6 +7,7 @@ import { formatINR } from '@repo/ui/formatters';
 import { RefreshCw, Save, Plus, X, Trash2, Check, Send } from 'lucide-react';
 import { seedBoqFromBom, updateCostVariance, updateBoqItemStatus, updateBoqItem, addBoqItem, deleteBoqItem, completeBoq, updateProjectCostManual, sendBoqToPurchase, applyPriceBookRates, updateEstimatedSiteExpenses } from '@/lib/project-step-actions';
 import { BOI_CATEGORIES } from '@/lib/boi-constants';
+import { ItemCombobox, type ItemSuggestion } from '@/components/forms/item-combobox';
 
 interface BoqActionsProps {
   projectId: string;
@@ -187,7 +188,13 @@ export function BoqInlineEdit({ projectId, itemId, field, currentValue }: BoqInl
 const UNITS = ['nos', 'set', 'meter', 'kg', 'lot', 'sqft', 'pair'];
 const GST_RATES = ['0', '5', '12', '18', '28'];
 
-export function BoqAddItemRow({ projectId }: { projectId: string }) {
+export function BoqAddItemRow({
+  projectId,
+  suggestions,
+}: {
+  projectId: string;
+  suggestions: ItemSuggestion[];
+}) {
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -254,9 +261,22 @@ export function BoqAddItemRow({ projectId }: { projectId: string }) {
           </Select>
         </td>
         <td className="px-3 py-1.5">
-          <Input
+          <ItemCombobox
             value={row.item_description}
-            onChange={(e) => setRow({ ...row, item_description: e.target.value })}
+            onChange={(description, picked) => {
+              if (picked) {
+                setRow({
+                  ...row,
+                  item_description: description,
+                  item_category: picked.category,
+                  unit: picked.unit,
+                  unit_price: picked.base_price > 0 ? String(picked.base_price) : row.unit_price,
+                });
+              } else {
+                setRow({ ...row, item_description: description });
+              }
+            }}
+            suggestions={suggestions}
             placeholder="Description"
             className="text-xs h-8"
           />

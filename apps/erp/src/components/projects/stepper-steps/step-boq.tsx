@@ -17,6 +17,7 @@ import {
   ApplyPriceBookButton,
 } from '@/components/projects/forms/boq-variance-form';
 import { getCategoryLabel, BOI_CATEGORIES } from '@/lib/boi-constants';
+import { getItemSuggestions } from '@/lib/item-suggestions-queries';
 import { BoqCategoryFilterWrapper } from '@/components/projects/forms/boq-category-filter-wrapper';
 import Link from 'next/link';
 
@@ -48,13 +49,15 @@ export async function StepBoq({ projectId }: StepBoqProps) {
   let bomLines: any[] = [];
   let boiState: any = null;
   let approvedSiteExpenses = 0;
+  let suggestions: Awaited<ReturnType<typeof getItemSuggestions>> = [];
 
   try {
-    [boqData, bomLines, boiState, approvedSiteExpenses] = await Promise.all([
+    [boqData, bomLines, boiState, approvedSiteExpenses, suggestions] = await Promise.all([
       getStepBoqData(projectId),
       getStepBomData(projectId),
       getBoiState(projectId),
       getApprovedSiteExpenses(projectId),
+      getItemSuggestions(),
     ]);
   } catch (error) {
     console.error('[StepBoq] Failed to load data:', error);
@@ -319,7 +322,7 @@ export async function StepBoq({ projectId }: StepBoqProps) {
                 })}
 
                 {/* Add item row */}
-                <BoqAddItemRow projectId={projectId} />
+                <BoqAddItemRow projectId={projectId} suggestions={suggestions} />
 
                 {/* Grand Total row */}
                 <tr className="border-t-2 border-n-200 bg-n-50">

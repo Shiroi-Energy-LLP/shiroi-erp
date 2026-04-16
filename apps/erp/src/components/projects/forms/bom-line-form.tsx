@@ -7,36 +7,14 @@ import { Plus, Trash2, Save, X } from 'lucide-react';
 import { addBomLine, deleteBomLine, lockBoi, unlockBoi, addBoqItem, deleteBoqItem, submitBoiVersion, approveBoiVersion, lockBoiVersion, unlockBoiVersion, createBoiVersion } from '@/lib/project-step-actions';
 import { Lock, Unlock, Send, CheckCircle, PlusCircle } from 'lucide-react';
 import { BOI_CATEGORIES } from '@/lib/boi-constants';
+import { ItemCombobox, type ItemSuggestion } from '@/components/forms/item-combobox';
+import type { ItemCategory } from '@/lib/boi-constants';
 
 interface BomLineFormProps {
   projectId: string;
   hasProposal: boolean;
 }
 
-// Legacy BOM categories (for proposal_bom_lines CHECK constraint compatibility)
-const BOM_CATEGORIES: { value: string; label: string }[] = [
-  { value: 'panel', label: 'Solar Panels' },
-  { value: 'inverter', label: 'Inverter' },
-  { value: 'structure', label: 'Mounting Structure' },
-  { value: 'dc_cable', label: 'DC Cable' },
-  { value: 'ac_cable', label: 'AC Cable' },
-  { value: 'conduit', label: 'Conduit' },
-  { value: 'acdb', label: 'AC Distribution Box' },
-  { value: 'dcdb', label: 'DC Distribution Box' },
-  { value: 'earthing', label: 'Earthing' },
-  { value: 'lightning_arrestor', label: 'Lightning Arrestor' },
-  { value: 'battery', label: 'Battery' },
-  { value: 'monitoring', label: 'Monitoring System' },
-  { value: 'connector', label: 'Connector' },
-  { value: 'junction_box', label: 'Junction Box' },
-  { value: 'safety_equipment', label: 'Safety Equipment' },
-  { value: 'civil_work', label: 'Civil Work' },
-  { value: 'installation_labour', label: 'Labour' },
-  { value: 'transport', label: 'Transportation' },
-  { value: 'net_meter', label: 'Net Meter' },
-  { value: 'liaison', label: 'Liaison' },
-  { value: 'other', label: 'Other' },
-];
 const UNITS = ['Nos', 'No', 'Meter', 'Set', 'Lot', 'Pair', 'kWp', 'kW', 'Lumpsum', 'nos', 'set', 'meter', 'kg', 'sqft'];
 const GST_RATES = ['0', '5', '12', '18', '28'];
 
@@ -56,7 +34,11 @@ const EMPTY_ROW: NewRow = {
   quantity: '', unit: 'nos', unit_price: '', gst_rate: '18',
 };
 
-export function BomInlineAddRow({ projectId, hasProposal }: BomLineFormProps) {
+export function BomInlineAddRow({
+  projectId,
+  hasProposal,
+  suggestions,
+}: BomLineFormProps & { suggestions: ItemSuggestion[] }) {
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -117,16 +99,29 @@ export function BomInlineAddRow({ projectId, hasProposal }: BomLineFormProps) {
           <Select
             value={row.item_category}
             onChange={(e) => setRow({ ...row, item_category: e.target.value })}
-            className="text-xs h-8 w-[130px]"
+            className="text-xs h-8 w-[160px]"
           >
             <option value="">Category...</option>
-            {BOM_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {BOI_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5">
-          <Input
+          <ItemCombobox
             value={row.item_description}
-            onChange={(e) => setRow({ ...row, item_description: e.target.value })}
+            onChange={(description, picked) => {
+              if (picked) {
+                setRow({
+                  ...row,
+                  item_description: description,
+                  item_category: picked.category,
+                  unit: picked.unit,
+                  unit_price: picked.base_price > 0 ? String(picked.base_price) : row.unit_price,
+                });
+              } else {
+                setRow({ ...row, item_description: description });
+              }
+            }}
+            suggestions={suggestions}
             placeholder="Description"
             className="text-xs h-8"
           />
@@ -276,7 +271,17 @@ export function BoiLockButton({ projectId, isLocked }: { projectId: string; isLo
 
 // ── BOI Inline Add Row (using Manivel's 14 categories, writes to project_boq_items) ──
 
-export function BoiInlineAddRow({ projectId, boiId, disabled }: { projectId: string; boiId?: string; disabled?: boolean }) {
+export function BoiInlineAddRow({
+  projectId,
+  boiId,
+  disabled,
+  suggestions,
+}: {
+  projectId: string;
+  boiId?: string;
+  disabled?: boolean;
+  suggestions: ItemSuggestion[];
+}) {
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -347,10 +352,23 @@ export function BoiInlineAddRow({ projectId, boiId, disabled }: { projectId: str
           </Select>
         </td>
         <td className="px-3 py-1.5">
-          <Input
+          <ItemCombobox
             value={row.item_description}
-            onChange={(e) => setRow({ ...row, item_description: e.target.value })}
-            placeholder="Item Name"
+            onChange={(description, picked) => {
+              if (picked) {
+                setRow({
+                  ...row,
+                  item_description: description,
+                  item_category: picked.category,
+                  unit: picked.unit,
+                  unit_price: picked.base_price > 0 ? String(picked.base_price) : row.unit_price,
+                });
+              } else {
+                setRow({ ...row, item_description: description });
+              }
+            }}
+            suggestions={suggestions}
+            placeholder="Type to search items…"
             className="text-xs h-8"
           />
         </td>

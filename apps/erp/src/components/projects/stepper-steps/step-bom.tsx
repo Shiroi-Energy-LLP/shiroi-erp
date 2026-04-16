@@ -11,6 +11,7 @@ import {
 } from '@/components/projects/forms/bom-line-form';
 import { BoqSeedButton } from '@/components/projects/forms/boq-variance-form';
 import { getCategoryLabel } from '@/lib/boi-constants';
+import { getItemSuggestions } from '@/lib/item-suggestions-queries';
 import { BoiCategoryFilter } from '@/components/projects/forms/boi-category-filter';
 import Link from 'next/link';
 
@@ -33,10 +34,11 @@ function BoiStatusBadge({ status }: { status: string }) {
 }
 
 export async function StepBom({ projectId }: StepBomProps) {
-  const [bois, boiState, boqData] = await Promise.all([
+  const [bois, boiState, boqData, suggestions] = await Promise.all([
     getBoisForProject(projectId),
     getBoiState(projectId),
     getStepBoqData(projectId),
+    getItemSuggestions(),
   ]);
 
   const hasProposal = !!(boiState as any)?.proposal_id;
@@ -234,7 +236,7 @@ export async function StepBom({ projectId }: StepBomProps) {
                     ))}
 
                     {/* Inline add row — only for draft BOIs */}
-                    {canEdit && <BoiInlineAddRow projectId={projectId} boiId={boi.id} />}
+                    {canEdit && <BoiInlineAddRow projectId={projectId} boiId={boi.id} suggestions={suggestions} />}
 
                     {/* Empty state */}
                     {items.length === 0 && !canEdit && (
