@@ -250,34 +250,109 @@ async function main() {
     return;
   }
 
-  // 6) Commit — batched upserts of 100, keyed on (item_description, item_category).
-  // The unique index from migration 057 lets us re-run this script safely —
-  // existing rows update in place, new rows insert. rate_updated_by = null
-  // distinguishes bulk imports from manual UI edits in the audit trail.
-  console.log(`\n${op} COMMITTING to price_book table via upsert...`);
+  // 6) Commit — read-then-partition upsert.
+  //
+  // Migration 057 originally created a 2-col unique index on
+  // (item_description, item_category). Migration 058 corrected the domain
+  // model: Price Book identity is actually a 4-tuple
+  // (item_description, item_category, brand, vendor_name) because Manivel
+  // stocks the same spec from multiple vendors at different rates. So 058
+  // dropped the 2-col index and built a 4-col *partial* index
+  // (... WHERE deleted_at IS NULL).
+  //
+  // Postgres ON CONFLICT against a partial unique index requires re-stating
+  // the index's WHERE predicate in the INSERT statement, which supabase-js
+  // does not expose through its `upsert(..., { onConflict })` API. Workaround:
+  // fetch the active rows once, build a map keyed on the 4-tuple, then
+  // partition sheet records into UPDATE-by-id and INSERT. supabase.upsert()
+  // with only the id set uses the primary key as the conflict target, which
+  // is a plain (non-partial) unique constraint — no predicate needed.
+  //
+  // rate_updated_by = null distinguishes bulk imports from manual UI edits
+  // in the audit trail.
+  console.log(`\n${op} Fetching existing active price_book rows...`);
+  type ExistingRow = {
+    id: string;
+    item_description: string;
+    item_category: string;
+    brand: string | null;
+    vendor_name: string | null;
+  };
+  const { data: existing, error: fetchErr } = await supabase
+    .from('price_book')
+    .select('id, item_description, item_category, brand, vendor_name')
+    .is('deleted_at', null)
+    .returns<ExistingRow[]>();
+  if (fetchErr) {
+    console.error(`${op} Failed to fetch existing rows:`, fetchErr.message);
+    process.exit(1);
+  }
+  console.log(`${op} Found ${existing?.length ?? 0} active rows.`);
+
+  const identityKey = (
+    desc: string,
+    cat: string,
+    brand: string | null,
+    vendor: string | null,
+  ): string =>
+    `${desc.trim()}||${cat}||${(brand ?? '').trim()}||${(vendor ?? '').trim()}`;
+
+  const existingMap = new Map<string, string>();
+  for (const row of existing ?? []) {
+    existingMap.set(
+      identityKey(row.item_description, row.item_category, row.brand, row.vendor_name),
+      row.id,
+    );
+  }
+
+  type UpdateRow = PriceBookRow & { id: string };
+  const toUpdate: UpdateRow[] = [];
+  const toInsert: PriceBookRow[] = [];
+  for (const r of records) {
+    const id = existingMap.get(identityKey(r.item_description, r.item_category, r.brand, r.vendor_name));
+    if (id) toUpdate.push({ ...r, id });
+    else toInsert.push(r);
+  }
+  console.log(`${op} ${toUpdate.length} to update, ${toInsert.length} to insert.`);
+
+  const nowIso = new Date().toISOString();
   const batchSize = 100;
-  let upserted = 0;
-  for (let i = 0; i < records.length; i += batchSize) {
-    const batch = records.slice(i, i + batchSize);
-    const stamped = batch.map((r) => ({
+
+  // Updates — upsert by id (primary key, always unique, no partial-index issue)
+  let updated = 0;
+  for (let i = 0; i < toUpdate.length; i += batchSize) {
+    const batch = toUpdate.slice(i, i + batchSize).map((r) => ({
       ...r,
-      rate_updated_at: new Date().toISOString(),
+      rate_updated_at: nowIso,
       rate_updated_by: null,
     }));
-    const { error } = await supabase
-      .from('price_book')
-      .upsert(stamped as never, {
-        onConflict: 'item_description,item_category',
-        ignoreDuplicates: false,
-      });
+    const { error } = await supabase.from('price_book').upsert(batch as never);
     if (error) {
-      console.error(`${op} Batch ${i / batchSize + 1} upsert failed:`, error.message);
+      console.error(`${op} Update batch ${i / batchSize + 1} failed:`, error.message);
       process.exit(1);
     }
-    upserted += batch.length;
-    console.log(`${op} Upserted ${upserted}/${records.length}`);
+    updated += batch.length;
+    console.log(`${op} Updated ${updated}/${toUpdate.length}`);
   }
-  console.log(`${op} Done — ${upserted} items upserted.`);
+
+  // Inserts — plain batched insert
+  let inserted = 0;
+  for (let i = 0; i < toInsert.length; i += batchSize) {
+    const batch = toInsert.slice(i, i + batchSize).map((r) => ({
+      ...r,
+      rate_updated_at: nowIso,
+      rate_updated_by: null,
+    }));
+    const { error } = await supabase.from('price_book').insert(batch as never);
+    if (error) {
+      console.error(`${op} Insert batch ${i / batchSize + 1} failed:`, error.message);
+      process.exit(1);
+    }
+    inserted += batch.length;
+    console.log(`${op} Inserted ${inserted}/${toInsert.length}`);
+  }
+
+  console.log(`${op} Done — ${updated} updated, ${inserted} inserted.`);
 }
 
 main().catch((err) => {
