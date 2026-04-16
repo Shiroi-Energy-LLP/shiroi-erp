@@ -2,6 +2,46 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import type { AppRole } from '@/lib/roles';
+
+const ALLOWED_PRICE_BOOK_EDITORS: AppRole[] = [
+  'founder',
+  'purchase_officer',
+  'finance',
+  'project_manager',
+];
+
+async function assertCanEditPriceBook(): Promise<
+  { ok: true } | { ok: false; error: string; code: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, error: 'Not authenticated', code: 'UNAUTHENTICATED' };
+  }
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  if (error || !profile) {
+    console.error('[assertCanEditPriceBook] profile lookup failed:', error);
+    return { ok: false, error: 'Profile lookup failed', code: 'PROFILE_MISSING' };
+  }
+
+  if (!ALLOWED_PRICE_BOOK_EDITORS.includes(profile.role as AppRole)) {
+    return {
+      ok: false,
+      error: 'Only founder, purchase officer, finance, and project manager can edit Price Book',
+      code: 'ROLE_DENIED',
+    };
+  }
+
+  return { ok: true };
+}
 
 export async function getPriceBookItems(params: {
   search?: string;
@@ -58,6 +98,9 @@ export async function createPriceBookItem(input: {
   default_qty?: number;
   specification?: string;
 }): Promise<{ success: boolean; error?: string }> {
+  const guard = await assertCanEditPriceBook();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const op = '[createPriceBookItem]';
   const supabase = await createClient();
 
@@ -82,6 +125,9 @@ export async function updatePriceBookItem(input: {
   id: string;
   data: Record<string, any>;
 }): Promise<{ success: boolean; error?: string }> {
+  const guard = await assertCanEditPriceBook();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const op = '[updatePriceBookItem]';
   const supabase = await createClient();
 
@@ -112,6 +158,9 @@ export async function updatePriceBookItem(input: {
 }
 
 export async function deletePriceBookItem(id: string): Promise<{ success: boolean; error?: string }> {
+  const guard = await assertCanEditPriceBook();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const op = '[deletePriceBookItem]';
   const supabase = await createClient();
 
