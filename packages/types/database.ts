@@ -7675,6 +7675,50 @@ export type Database = {
         }
         Relationships: []
       }
+      procurement_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: number
+          new_value: Json | null
+          old_value: Json | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: number
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: number
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -10280,6 +10324,7 @@ export type Database = {
           quantity_delivered: number
           quantity_ordered: number
           quantity_pending: number
+          rfq_quote_id: string | null
           total_price: number
           unit: string
           unit_price: number
@@ -10304,6 +10349,7 @@ export type Database = {
           quantity_delivered?: number
           quantity_ordered: number
           quantity_pending?: number
+          rfq_quote_id?: string | null
           total_price: number
           unit: string
           unit_price: number
@@ -10328,6 +10374,7 @@ export type Database = {
           quantity_delivered?: number
           quantity_ordered?: number
           quantity_pending?: number
+          rfq_quote_id?: string | null
           total_price?: number
           unit?: string
           unit_price?: number
@@ -10355,18 +10402,29 @@ export type Database = {
             referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "purchase_order_items_rfq_quote_id_fkey"
+            columns: ["rfq_quote_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_quotes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       purchase_orders: {
         Row: {
+          acknowledged_at: string | null
           actual_delivery_date: string | null
           advance_block_overridden: boolean
           advance_block_override_by: string | null
           advance_block_override_note: string | null
           amount_outstanding: number
           amount_paid: number
+          approval_rejection_reason: string | null
+          approval_status: string
           approved_by: string | null
           created_at: string
+          dispatched_at: string | null
           expected_delivery_date: string | null
           gst_amount: number
           id: string
@@ -10381,21 +10439,29 @@ export type Database = {
           po_number: string
           prepared_by: string
           project_id: string
+          requires_approval: boolean
+          rfq_id: string | null
           status: string
           subtotal: number
           total_amount: number
           updated_at: string
+          vendor_dispatch_date: string | null
           vendor_id: string
+          vendor_tracking_number: string | null
         }
         Insert: {
+          acknowledged_at?: string | null
           actual_delivery_date?: string | null
           advance_block_overridden?: boolean
           advance_block_override_by?: string | null
           advance_block_override_note?: string | null
           amount_outstanding?: number
           amount_paid?: number
+          approval_rejection_reason?: string | null
+          approval_status?: string
           approved_by?: string | null
           created_at?: string
+          dispatched_at?: string | null
           expected_delivery_date?: string | null
           gst_amount?: number
           id?: string
@@ -10410,21 +10476,29 @@ export type Database = {
           po_number: string
           prepared_by: string
           project_id: string
+          requires_approval?: boolean
+          rfq_id?: string | null
           status?: string
           subtotal?: number
           total_amount?: number
           updated_at?: string
+          vendor_dispatch_date?: string | null
           vendor_id: string
+          vendor_tracking_number?: string | null
         }
         Update: {
+          acknowledged_at?: string | null
           actual_delivery_date?: string | null
           advance_block_overridden?: boolean
           advance_block_override_by?: string | null
           advance_block_override_note?: string | null
           amount_outstanding?: number
           amount_paid?: number
+          approval_rejection_reason?: string | null
+          approval_status?: string
           approved_by?: string | null
           created_at?: string
+          dispatched_at?: string | null
           expected_delivery_date?: string | null
           gst_amount?: number
           id?: string
@@ -10439,11 +10513,15 @@ export type Database = {
           po_number?: string
           prepared_by?: string
           project_id?: string
+          requires_approval?: boolean
+          rfq_id?: string | null
           status?: string
           subtotal?: number
           total_amount?: number
           updated_at?: string
+          vendor_dispatch_date?: string | null
           vendor_id?: string
+          vendor_tracking_number?: string | null
         }
         Relationships: [
           {
@@ -10472,6 +10550,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
             referencedColumns: ["id"]
           },
           {
@@ -10872,6 +10957,259 @@ export type Database = {
           },
         ]
       }
+      rfq_awards: {
+        Row: {
+          awarded_at: string
+          awarded_by: string
+          id: string
+          override_reason: string | null
+          purchase_order_id: string | null
+          rfq_id: string
+          rfq_item_id: string
+          was_auto_selected: boolean
+          winning_invitation_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          awarded_by: string
+          id?: string
+          override_reason?: string | null
+          purchase_order_id?: string | null
+          rfq_id: string
+          rfq_item_id: string
+          was_auto_selected?: boolean
+          winning_invitation_id: string
+        }
+        Update: {
+          awarded_at?: string
+          awarded_by?: string
+          id?: string
+          override_reason?: string | null
+          purchase_order_id?: string | null
+          rfq_id?: string
+          rfq_item_id?: string
+          was_auto_selected?: boolean
+          winning_invitation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_awards_awarded_by_fkey"
+            columns: ["awarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_awards_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_awards_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_awards_rfq_item_id_fkey"
+            columns: ["rfq_item_id"]
+            isOneToOne: true
+            referencedRelation: "rfq_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_awards_winning_invitation_id_fkey"
+            columns: ["winning_invitation_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_invitations: {
+        Row: {
+          access_token: string
+          created_at: string
+          excel_file_path: string | null
+          expires_at: string
+          id: string
+          rfq_id: string
+          sent_at: string | null
+          sent_via_channels: string[]
+          status: string
+          submission_mode: string | null
+          submitted_at: string | null
+          submitted_by_user_id: string | null
+          updated_at: string
+          vendor_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          access_token?: string
+          created_at?: string
+          excel_file_path?: string | null
+          expires_at: string
+          id?: string
+          rfq_id: string
+          sent_at?: string | null
+          sent_via_channels?: string[]
+          status?: string
+          submission_mode?: string | null
+          submitted_at?: string | null
+          submitted_by_user_id?: string | null
+          updated_at?: string
+          vendor_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          excel_file_path?: string | null
+          expires_at?: string
+          id?: string
+          rfq_id?: string
+          sent_at?: string | null
+          sent_via_channels?: string[]
+          status?: string
+          submission_mode?: string | null
+          submitted_at?: string | null
+          submitted_by_user_id?: string | null
+          updated_at?: string
+          vendor_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_invitations_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_invitations_submitted_by_user_id_fkey"
+            columns: ["submitted_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_invitations_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_items: {
+        Row: {
+          boq_item_id: string
+          created_at: string
+          id: string
+          item_category: string
+          item_description: string
+          price_book_rate: number | null
+          quantity: number
+          rfq_id: string
+          unit: string
+        }
+        Insert: {
+          boq_item_id: string
+          created_at?: string
+          id?: string
+          item_category: string
+          item_description: string
+          price_book_rate?: number | null
+          quantity: number
+          rfq_id: string
+          unit: string
+        }
+        Update: {
+          boq_item_id?: string
+          created_at?: string
+          id?: string
+          item_category?: string
+          item_description?: string
+          price_book_rate?: number | null
+          quantity?: number
+          rfq_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_items_boq_item_id_fkey"
+            columns: ["boq_item_id"]
+            isOneToOne: false
+            referencedRelation: "project_boq_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_items_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_quotes: {
+        Row: {
+          created_at: string
+          delivery_period_days: number
+          gst_rate: number
+          id: string
+          notes: string | null
+          payment_terms: string
+          rfq_invitation_id: string
+          rfq_item_id: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          delivery_period_days: number
+          gst_rate?: number
+          id?: string
+          notes?: string | null
+          payment_terms: string
+          rfq_invitation_id: string
+          rfq_item_id: string
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          delivery_period_days?: number
+          gst_rate?: number
+          id?: string
+          notes?: string | null
+          payment_terms?: string
+          rfq_invitation_id?: string
+          rfq_item_id?: string
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_quotes_rfq_invitation_id_fkey"
+            columns: ["rfq_invitation_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_invitations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_quotes_rfq_item_id_fkey"
+            columns: ["rfq_item_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfq_requests: {
         Row: {
           created_at: string
@@ -11014,6 +11352,57 @@ export type Database = {
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfqs: {
+        Row: {
+          created_at: string
+          created_by: string
+          deadline: string
+          id: string
+          notes: string | null
+          project_id: string
+          rfq_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          deadline: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          rfq_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deadline?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          rfq_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfqs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfqs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -12953,6 +13342,7 @@ export type Database = {
       enqueue_payment_escalations: { Args: never; Returns: number }
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
+      generate_rfq_number: { Args: never; Returns: string }
       get_amc_monthly_summary: {
         Args: never
         Returns: {
