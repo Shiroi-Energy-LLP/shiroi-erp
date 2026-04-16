@@ -8,9 +8,12 @@ describe('isValidTransition', () => {
   it('blocks contacted → won', () => {
     expect(isValidTransition('contacted', 'won')).toBe(false);
   });
-  it('allows any status → disqualified', () => {
-    expect(isValidTransition('new', 'disqualified')).toBe(true);
-    expect(isValidTransition('negotiation', 'disqualified')).toBe(true);
+  it('no status → disqualified (hidden terminal state, migration 055)', () => {
+    // Marketing revamp tightened VALID_TRANSITIONS to only stepper-visible
+    // destinations. disqualified is still in the enum for historical rows
+    // + triggers, but the dropdown never offers it.
+    expect(isValidTransition('new', 'disqualified')).toBe(false);
+    expect(isValidTransition('negotiation', 'disqualified')).toBe(false);
   });
   it('allows any status → on_hold', () => {
     expect(isValidTransition('contacted', 'on_hold')).toBe(true);
