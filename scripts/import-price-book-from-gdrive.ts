@@ -38,45 +38,46 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const COMMIT = process.argv.includes('--commit');
 
-// Category display label → DB enum value (24-category CHECK from migration 046)
+// Manivel's sheet header labels → Manivel 15 vocabulary.
+// Keeps the quirky spellings (e.g. "Misscellaneous") that exist in the master sheet.
 const CATEGORY_MAP: Record<string, string> = {
-  panel: 'solar_panel',
-  'solar panel': 'solar_panel',
-  inverter: 'inverter',
-  battery: 'battery',
-  structure: 'mounting_structure',
-  'mounting structure': 'mounting_structure',
-  'dc cable': 'dc_cable',
-  'dc & access': 'dc_access',
-  'dc access': 'dc_access',
-  'ac cable': 'ac_cable',
-  dcdb: 'dcdb',
-  acdb: 'acdb',
-  'lt panel': 'lt_panel',
-  conduit: 'conduit',
-  conduits: 'conduit',
-  earthing: 'earthing',
-  'earth & access': 'earth_access',
-  'earth access': 'earth_access',
-  'net meter': 'net_meter',
-  'civil work': 'civil_work',
-  'installation labour': 'installation_labour',
-  'installation & labour': 'installation_labour',
-  labour: 'installation_labour',
-  transport: 'transport',
-  miscellaneous: 'miscellaneous',
-  misscellaneous: 'miscellaneous', // Manivel's spelling in the master sheet
-  misc: 'miscellaneous',
-  walkway: 'walkway',
-  'gi cable tray': 'gi_cable_tray',
-  'cable tray': 'gi_cable_tray',
-  handrail: 'handrail',
-  other: 'other',
+  'panel': 'solar_panels',
+  'solar panel': 'solar_panels',
+  'inverter': 'inverter',
+  'battery': 'battery',
+  'structure': 'mms',
+  'mounting structure': 'mms',
+  'dc cable': 'dc_accessories',
+  'dc & access': 'dc_accessories',
+  'dc access': 'dc_accessories',
+  'dcdb': 'dc_accessories',
+  'ac cable': 'ac_accessories',
+  'acdb': 'ac_accessories',
+  'lt panel': 'ac_accessories',
+  'conduit': 'conduits',
+  'conduits': 'conduits',
+  'gi cable tray': 'conduits',
+  'cable tray': 'conduits',
+  'earthing': 'earthing_accessories',
+  'earth & access': 'earthing_accessories',
+  'earth access': 'earthing_accessories',
+  'net meter': 'generation_meter',
+  'civil work': 'transport_civil',
+  'transport': 'transport_civil',
+  'installation labour': 'ic',
+  'installation & labour': 'ic',
+  'labour': 'ic',
+  'miscellaneous': 'miscellaneous',
+  'misscellaneous': 'miscellaneous', // Manivel's spelling in the master sheet
+  'misc': 'miscellaneous',
+  'walkway': 'safety_accessories',
+  'handrail': 'safety_accessories',
+  'other': 'others',
 };
 
 function mapCategory(raw: string): string {
   const key = raw.trim().toLowerCase();
-  return CATEGORY_MAP[key] ?? 'other';
+  return CATEGORY_MAP[key] ?? 'others';
 }
 
 function parseNumber(raw: unknown): number {
@@ -221,21 +222,34 @@ async function main() {
     return;
   }
 
-  // 6) Commit — batched inserts of 100
-  console.log(`\n${op} COMMITTING to price_book table...`);
+  // 6) Commit — batched upserts of 100, keyed on (item_description, item_category).
+  // The unique index from migration 057 lets us re-run this script safely —
+  // existing rows update in place, new rows insert. rate_updated_by = null
+  // distinguishes bulk imports from manual UI edits in the audit trail.
+  console.log(`\n${op} COMMITTING to price_book table via upsert...`);
   const batchSize = 100;
-  let inserted = 0;
+  let upserted = 0;
   for (let i = 0; i < records.length; i += batchSize) {
     const batch = records.slice(i, i + batchSize);
-    const { error } = await supabase.from('price_book').insert(batch as never);
+    const stamped = batch.map((r) => ({
+      ...r,
+      rate_updated_at: new Date().toISOString(),
+      rate_updated_by: null,
+    }));
+    const { error } = await supabase
+      .from('price_book')
+      .upsert(stamped as never, {
+        onConflict: 'item_description,item_category',
+        ignoreDuplicates: false,
+      });
     if (error) {
-      console.error(`${op} Batch ${i / batchSize + 1} failed:`, error.message);
+      console.error(`${op} Batch ${i / batchSize + 1} upsert failed:`, error.message);
       process.exit(1);
     }
-    inserted += batch.length;
-    console.log(`${op} Inserted ${inserted}/${records.length}`);
+    upserted += batch.length;
+    console.log(`${op} Upserted ${upserted}/${records.length}`);
   }
-  console.log(`${op} Done — ${inserted} items inserted.`);
+  console.log(`${op} Done — ${upserted} items upserted.`);
 }
 
 main().catch((err) => {
