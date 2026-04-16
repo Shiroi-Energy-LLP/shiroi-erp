@@ -56,6 +56,7 @@ const ITEMS = {
   omVisits:       { label: 'O&M Visits',        href: '/om/visits',        icon: 'Wrench' },
   serviceTickets: { label: 'Service Tickets',   href: '/om/tickets',       icon: 'Wrench' },
   amcSchedule:    { label: 'AMC Schedule',      href: '/om/amc',           icon: 'CalendarCheck' },
+  plantMonitoring: { label: 'Plant Monitoring', href: '/om/plant-monitoring', icon: 'Activity' },
   cashFlow:       { label: 'Cash Flow',         href: '/cash',             icon: 'TrendingUp' },
   invoices:       { label: 'Invoices',          href: '/invoices',         icon: 'DollarSign' },
   payments:       { label: 'Payments',          href: '/payments',         icon: 'DollarSign' },
@@ -91,7 +92,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Approvals',    items: [ITEMS.vouchers] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
-    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets] },
+    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
@@ -116,12 +117,12 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Reference',    items: [ITEMS.priceBook] },
     // Liaison rehomed to marketing_manager per revamp - PMs see the read-only
     // Liaison step embedded in /projects/[id] detail, no top-level link.
-    { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule] },
+    { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule, ITEMS.plantMonitoring] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
   ],
   om_technician: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
-    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets] },
+    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring] },
   ],
   site_supervisor: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
