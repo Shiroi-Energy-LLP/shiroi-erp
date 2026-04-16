@@ -113,6 +113,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Approvals',    items: [ITEMS.vouchers] },
     { label: 'Execution',    items: [ITEMS.qcGates] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.inventory] },
+    { label: 'Reference',    items: [ITEMS.priceBook] },
     // Liaison rehomed to marketing_manager per revamp - PMs see the read-only
     // Liaison step embedded in /projects/[id] detail, no top-level link.
     { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule] },
