@@ -956,6 +956,7 @@ export type Database = {
           secondary_phone: string | null
           source: string | null
           updated_at: string
+          zoho_contact_id: string | null
         }
         Insert: {
           created_at?: string
@@ -972,6 +973,7 @@ export type Database = {
           secondary_phone?: string | null
           source?: string | null
           updated_at?: string
+          zoho_contact_id?: string | null
         }
         Update: {
           created_at?: string
@@ -988,6 +990,7 @@ export type Database = {
           secondary_phone?: string | null
           source?: string | null
           updated_at?: string
+          zoho_contact_id?: string | null
         }
         Relationships: [
           {
@@ -1107,6 +1110,8 @@ export type Database = {
           receipt_number: string
           receipt_pdf_path: string | null
           recorded_by: string
+          source: string
+          zoho_customer_payment_id: string | null
         }
         Insert: {
           amount: number
@@ -1124,6 +1129,8 @@ export type Database = {
           receipt_number: string
           receipt_pdf_path?: string | null
           recorded_by: string
+          source?: string
+          zoho_customer_payment_id?: string | null
         }
         Update: {
           amount?: number
@@ -1141,6 +1148,8 @@ export type Database = {
           receipt_number?: string
           receipt_pdf_path?: string | null
           recorded_by?: string
+          source?: string
+          zoho_customer_payment_id?: string | null
         }
         Relationships: [
           {
@@ -2711,6 +2720,7 @@ export type Database = {
           rejected_at: string | null
           rejected_by: string | null
           rejected_reason: string | null
+          source: string
           status: string | null
           submitted_at: string | null
           submitted_by: string | null
@@ -2719,6 +2729,7 @@ export type Database = {
           verified_by: string | null
           voucher_no: string | null
           voucher_number: string
+          zoho_expense_id: string | null
         }
         Insert: {
           amount?: number
@@ -2733,6 +2744,7 @@ export type Database = {
           rejected_at?: string | null
           rejected_by?: string | null
           rejected_reason?: string | null
+          source?: string
           status?: string | null
           submitted_at?: string | null
           submitted_by?: string | null
@@ -2741,6 +2753,7 @@ export type Database = {
           verified_by?: string | null
           voucher_no?: string | null
           voucher_number: string
+          zoho_expense_id?: string | null
         }
         Update: {
           amount?: number
@@ -2755,6 +2768,7 @@ export type Database = {
           rejected_at?: string | null
           rejected_by?: string | null
           rejected_reason?: string | null
+          source?: string
           status?: string | null
           submitted_at?: string | null
           submitted_by?: string | null
@@ -2763,6 +2777,7 @@ export type Database = {
           verified_by?: string | null
           voucher_no?: string | null
           voucher_number?: string
+          zoho_expense_id?: string | null
         }
         Relationships: [
           {
@@ -3875,7 +3890,9 @@ export type Database = {
           project_id: string
           raised_by: string
           reason: string
+          source: string
           total_credit: number
+          zoho_credit_note_id: string | null
         }
         Insert: {
           created_at?: string
@@ -3889,7 +3906,9 @@ export type Database = {
           project_id: string
           raised_by: string
           reason: string
+          source?: string
           total_credit: number
+          zoho_credit_note_id?: string | null
         }
         Update: {
           created_at?: string
@@ -3903,7 +3922,9 @@ export type Database = {
           project_id?: string
           raised_by?: string
           reason?: string
+          source?: string
           total_credit?: number
+          zoho_credit_note_id?: string | null
         }
         Relationships: [
           {
@@ -3955,10 +3976,13 @@ export type Database = {
           raised_by: string
           sent_at: string | null
           sent_via: string | null
+          source: string
           status: string
           subtotal_supply: number
           subtotal_works: number
           total_amount: number
+          zoho_customer_gst_treatment: string | null
+          zoho_invoice_id: string | null
         }
         Insert: {
           amount_outstanding?: number
@@ -3985,10 +4009,13 @@ export type Database = {
           raised_by: string
           sent_at?: string | null
           sent_via?: string | null
+          source?: string
           status?: string
           subtotal_supply?: number
           subtotal_works?: number
           total_amount: number
+          zoho_customer_gst_treatment?: string | null
+          zoho_invoice_id?: string | null
         }
         Update: {
           amount_outstanding?: number
@@ -4015,10 +4042,13 @@ export type Database = {
           raised_by?: string
           sent_at?: string | null
           sent_via?: string | null
+          source?: string
           status?: string
           subtotal_supply?: number
           subtotal_works?: number
           total_amount?: number
+          zoho_customer_gst_treatment?: string | null
+          zoho_invoice_id?: string | null
         }
         Relationships: [
           {
@@ -9171,6 +9201,7 @@ export type Database = {
           system_size_kwp: number
           system_type: Database["public"]["Enums"]["system_type"]
           updated_at: string
+          zoho_project_id: string | null
         }
         Insert: {
           actual_end_date?: string | null
@@ -9255,6 +9286,7 @@ export type Database = {
           system_size_kwp: number
           system_type: Database["public"]["Enums"]["system_type"]
           updated_at?: string
+          zoho_project_id?: string | null
         }
         Update: {
           actual_end_date?: string | null
@@ -9339,6 +9371,7 @@ export type Database = {
           system_size_kwp?: number
           system_type?: Database["public"]["Enums"]["system_type"]
           updated_at?: string
+          zoho_project_id?: string | null
         }
         Relationships: [
           {
@@ -10552,6 +10585,7 @@ export type Database = {
           rfq_id: string | null
           sent_to_vendor_at: string | null
           sent_via_channels: string[]
+          source: string
           status: string
           subtotal: number
           total_amount: number
@@ -10559,6 +10593,7 @@ export type Database = {
           vendor_dispatch_date: string | null
           vendor_id: string
           vendor_tracking_number: string | null
+          zoho_po_id: string | null
         }
         Insert: {
           acknowledged_at?: string | null
@@ -10592,6 +10627,7 @@ export type Database = {
           rfq_id?: string | null
           sent_to_vendor_at?: string | null
           sent_via_channels?: string[]
+          source?: string
           status?: string
           subtotal?: number
           total_amount?: number
@@ -10599,6 +10635,7 @@ export type Database = {
           vendor_dispatch_date?: string | null
           vendor_id: string
           vendor_tracking_number?: string | null
+          zoho_po_id?: string | null
         }
         Update: {
           acknowledged_at?: string | null
@@ -10632,6 +10669,7 @@ export type Database = {
           rfq_id?: string | null
           sent_to_vendor_at?: string | null
           sent_via_channels?: string[]
+          source?: string
           status?: string
           subtotal?: number
           total_amount?: number
@@ -10639,6 +10677,7 @@ export type Database = {
           vendor_dispatch_date?: string | null
           vendor_id?: string
           vendor_tracking_number?: string | null
+          zoho_po_id?: string | null
         }
         Relationships: [
           {
@@ -10882,6 +10921,62 @@ export type Database = {
           },
           {
             foreignKeyName: "qc_non_conformance_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reconciliation_discrepancies: {
+        Row: {
+          difference: number | null
+          discovered_at: string
+          discovered_date: string
+          entity_ref: string
+          entity_type: Database["public"]["Enums"]["reconciliation_entity_type"]
+          erp_value: number
+          id: string
+          metric: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["reconciliation_status"]
+          zoho_value: number
+        }
+        Insert: {
+          difference?: number | null
+          discovered_at?: string
+          discovered_date?: string
+          entity_ref: string
+          entity_type: Database["public"]["Enums"]["reconciliation_entity_type"]
+          erp_value: number
+          id?: string
+          metric: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["reconciliation_status"]
+          zoho_value: number
+        }
+        Update: {
+          difference?: number | null
+          discovered_at?: string
+          discovered_date?: string
+          entity_ref?: string
+          entity_type?: Database["public"]["Enums"]["reconciliation_entity_type"]
+          erp_value?: number
+          id?: string
+          metric?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["reconciliation_status"]
+          zoho_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_discrepancies_resolved_by_fkey"
             columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "employees"
@@ -12674,6 +12769,206 @@ export type Database = {
           },
         ]
       }
+      vendor_bill_items: {
+        Row: {
+          cgst_amount: number
+          cgst_rate_pct: number
+          created_at: string
+          description: string | null
+          discount_amount: number
+          hsn_code: string | null
+          id: string
+          igst_amount: number
+          igst_rate_pct: number
+          item_name: string
+          purchase_order_item_id: string | null
+          quantity: number
+          rate: number
+          sgst_amount: number
+          sgst_rate_pct: number
+          taxable_amount: number
+          total_amount: number
+          vendor_bill_id: string
+          zoho_account_code: string | null
+          zoho_item_id: string | null
+        }
+        Insert: {
+          cgst_amount?: number
+          cgst_rate_pct?: number
+          created_at?: string
+          description?: string | null
+          discount_amount?: number
+          hsn_code?: string | null
+          id?: string
+          igst_amount?: number
+          igst_rate_pct?: number
+          item_name: string
+          purchase_order_item_id?: string | null
+          quantity?: number
+          rate?: number
+          sgst_amount?: number
+          sgst_rate_pct?: number
+          taxable_amount?: number
+          total_amount?: number
+          vendor_bill_id: string
+          zoho_account_code?: string | null
+          zoho_item_id?: string | null
+        }
+        Update: {
+          cgst_amount?: number
+          cgst_rate_pct?: number
+          created_at?: string
+          description?: string | null
+          discount_amount?: number
+          hsn_code?: string | null
+          id?: string
+          igst_amount?: number
+          igst_rate_pct?: number
+          item_name?: string
+          purchase_order_item_id?: string | null
+          quantity?: number
+          rate?: number
+          sgst_amount?: number
+          sgst_rate_pct?: number
+          taxable_amount?: number
+          total_amount?: number
+          vendor_bill_id?: string
+          zoho_account_code?: string | null
+          zoho_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_bill_items_purchase_order_item_id_fkey"
+            columns: ["purchase_order_item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_bill_items_vendor_bill_id_fkey"
+            columns: ["vendor_bill_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_bills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_bills: {
+        Row: {
+          amount_paid: number
+          balance_due: number | null
+          bill_date: string
+          bill_number: string
+          cess_amount: number
+          cgst_amount: number
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          id: string
+          igst_amount: number
+          notes: string | null
+          project_id: string | null
+          purchase_order_id: string | null
+          round_off: number
+          sgst_amount: number
+          source: string
+          status: Database["public"]["Enums"]["vendor_bill_status"]
+          subtotal: number
+          tds_amount: number
+          terms_and_conditions: string | null
+          total_amount: number
+          updated_at: string
+          vendor_id: string
+          zoho_bill_id: string | null
+          zoho_vendor_gst_treatment: string | null
+        }
+        Insert: {
+          amount_paid?: number
+          balance_due?: number | null
+          bill_date: string
+          bill_number: string
+          cess_amount?: number
+          cgst_amount?: number
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          igst_amount?: number
+          notes?: string | null
+          project_id?: string | null
+          purchase_order_id?: string | null
+          round_off?: number
+          sgst_amount?: number
+          source?: string
+          status?: Database["public"]["Enums"]["vendor_bill_status"]
+          subtotal?: number
+          tds_amount?: number
+          terms_and_conditions?: string | null
+          total_amount?: number
+          updated_at?: string
+          vendor_id: string
+          zoho_bill_id?: string | null
+          zoho_vendor_gst_treatment?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          balance_due?: number | null
+          bill_date?: string
+          bill_number?: string
+          cess_amount?: number
+          cgst_amount?: number
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          igst_amount?: number
+          notes?: string | null
+          project_id?: string | null
+          purchase_order_id?: string | null
+          round_off?: number
+          sgst_amount?: number
+          source?: string
+          status?: Database["public"]["Enums"]["vendor_bill_status"]
+          subtotal?: number
+          tds_amount?: number
+          terms_and_conditions?: string | null
+          total_amount?: number
+          updated_at?: string
+          vendor_id?: string
+          zoho_bill_id?: string | null
+          zoho_vendor_gst_treatment?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_bills_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_bills_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_bills_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_bills_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_delivery_challan_items: {
         Row: {
           condition_on_arrival: string | null
@@ -12830,18 +13125,22 @@ export type Database = {
           bill_clearing_package_id: string | null
           cheque_date: string | null
           created_at: string
-          days_from_po: number
+          days_from_bill: number | null
+          days_from_po: number | null
           id: string
           msme_compliant: boolean
           notes: string | null
           payment_date: string
           payment_method: string
           payment_reference: string | null
-          po_date: string
+          po_date: string | null
           project_id: string
-          purchase_order_id: string
+          purchase_order_id: string | null
           recorded_by: string
+          source: string
+          vendor_bill_id: string | null
           vendor_id: string
+          zoho_vendor_payment_id: string | null
         }
         Insert: {
           amount: number
@@ -12849,18 +13148,22 @@ export type Database = {
           bill_clearing_package_id?: string | null
           cheque_date?: string | null
           created_at?: string
-          days_from_po: number
+          days_from_bill?: number | null
+          days_from_po?: number | null
           id?: string
           msme_compliant?: boolean
           notes?: string | null
           payment_date: string
           payment_method: string
           payment_reference?: string | null
-          po_date: string
+          po_date?: string | null
           project_id: string
-          purchase_order_id: string
+          purchase_order_id?: string | null
           recorded_by: string
+          source?: string
+          vendor_bill_id?: string | null
           vendor_id: string
+          zoho_vendor_payment_id?: string | null
         }
         Update: {
           amount?: number
@@ -12868,18 +13171,22 @@ export type Database = {
           bill_clearing_package_id?: string | null
           cheque_date?: string | null
           created_at?: string
-          days_from_po?: number
+          days_from_bill?: number | null
+          days_from_po?: number | null
           id?: string
           msme_compliant?: boolean
           notes?: string | null
           payment_date?: string
           payment_method?: string
           payment_reference?: string | null
-          po_date?: string
+          po_date?: string | null
           project_id?: string
-          purchase_order_id?: string
+          purchase_order_id?: string | null
           recorded_by?: string
+          source?: string
+          vendor_bill_id?: string | null
           vendor_id?: string
+          zoho_vendor_payment_id?: string | null
         }
         Relationships: [
           {
@@ -12908,6 +13215,13 @@ export type Database = {
             columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payments_vendor_bill_id_fkey"
+            columns: ["vendor_bill_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_bills"
             referencedColumns: ["id"]
           },
           {
@@ -12946,9 +13260,12 @@ export type Database = {
           phone: string | null
           pincode: string | null
           state: string | null
+          udyam_number: string | null
+          udyam_type: string | null
           updated_at: string
           vendor_code: string
           vendor_type: string
+          zoho_vendor_id: string | null
         }
         Insert: {
           address_line1?: string | null
@@ -12976,9 +13293,12 @@ export type Database = {
           phone?: string | null
           pincode?: string | null
           state?: string | null
+          udyam_number?: string | null
+          udyam_type?: string | null
           updated_at?: string
           vendor_code: string
           vendor_type: string
+          zoho_vendor_id?: string | null
         }
         Update: {
           address_line1?: string | null
@@ -13006,9 +13326,12 @@ export type Database = {
           phone?: string | null
           pincode?: string | null
           state?: string | null
+          udyam_number?: string | null
+          udyam_type?: string | null
           updated_at?: string
           vendor_code?: string
           vendor_type?: string
+          zoho_vendor_id?: string | null
         }
         Relationships: []
       }
@@ -13442,6 +13765,260 @@ export type Database = {
           },
         ]
       }
+      zoho_account_codes: {
+        Row: {
+          account_code: string | null
+          account_id: string
+          account_name: string
+          account_type: string
+          imported_at: string
+          is_active: boolean
+          parent_account: string | null
+        }
+        Insert: {
+          account_code?: string | null
+          account_id: string
+          account_name: string
+          account_type: string
+          imported_at?: string
+          is_active?: boolean
+          parent_account?: string | null
+        }
+        Update: {
+          account_code?: string | null
+          account_id?: string
+          account_name?: string
+          account_type?: string
+          imported_at?: string
+          is_active?: boolean
+          parent_account?: string | null
+        }
+        Relationships: []
+      }
+      zoho_items: {
+        Row: {
+          hsn_code: string | null
+          imported_at: string
+          inter_state_tax_id: string | null
+          intra_state_tax_id: string | null
+          is_active: boolean
+          item_name: string
+          purchase_account: string | null
+          purchase_rate: number | null
+          rate: number | null
+          sales_account: string | null
+          sku: string | null
+          zoho_item_id: string
+        }
+        Insert: {
+          hsn_code?: string | null
+          imported_at?: string
+          inter_state_tax_id?: string | null
+          intra_state_tax_id?: string | null
+          is_active?: boolean
+          item_name: string
+          purchase_account?: string | null
+          purchase_rate?: number | null
+          rate?: number | null
+          sales_account?: string | null
+          sku?: string | null
+          zoho_item_id: string
+        }
+        Update: {
+          hsn_code?: string | null
+          imported_at?: string
+          inter_state_tax_id?: string | null
+          intra_state_tax_id?: string | null
+          is_active?: boolean
+          item_name?: string
+          purchase_account?: string | null
+          purchase_rate?: number | null
+          rate?: number | null
+          sales_account?: string | null
+          sku?: string | null
+          zoho_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zoho_items_inter_state_tax_id_fkey"
+            columns: ["inter_state_tax_id"]
+            isOneToOne: false
+            referencedRelation: "zoho_tax_codes"
+            referencedColumns: ["tax_id"]
+          },
+          {
+            foreignKeyName: "zoho_items_intra_state_tax_id_fkey"
+            columns: ["intra_state_tax_id"]
+            isOneToOne: false
+            referencedRelation: "zoho_tax_codes"
+            referencedColumns: ["tax_id"]
+          },
+        ]
+      }
+      zoho_monthly_summary: {
+        Row: {
+          account_id: string
+          credit_total: number
+          debit_total: number
+          fetched_at: string
+          id: string
+          month: number
+          transaction_count: number
+          year: number
+        }
+        Insert: {
+          account_id: string
+          credit_total?: number
+          debit_total?: number
+          fetched_at?: string
+          id?: string
+          month: number
+          transaction_count?: number
+          year: number
+        }
+        Update: {
+          account_id?: string
+          credit_total?: number
+          debit_total?: number
+          fetched_at?: string
+          id?: string
+          month?: number
+          transaction_count?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zoho_monthly_summary_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "zoho_account_codes"
+            referencedColumns: ["account_id"]
+          },
+        ]
+      }
+      zoho_project_mapping: {
+        Row: {
+          erp_project_id: string
+          match_confidence: number
+          match_method: string
+          matched_at: string
+          matched_by: string | null
+          notes: string | null
+          zoho_customer_name: string | null
+          zoho_project_code: string | null
+          zoho_project_id: string
+          zoho_project_name: string
+        }
+        Insert: {
+          erp_project_id: string
+          match_confidence: number
+          match_method: string
+          matched_at?: string
+          matched_by?: string | null
+          notes?: string | null
+          zoho_customer_name?: string | null
+          zoho_project_code?: string | null
+          zoho_project_id: string
+          zoho_project_name: string
+        }
+        Update: {
+          erp_project_id?: string
+          match_confidence?: number
+          match_method?: string
+          matched_at?: string
+          matched_by?: string | null
+          notes?: string | null
+          zoho_customer_name?: string | null
+          zoho_project_code?: string | null
+          zoho_project_id?: string
+          zoho_project_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zoho_project_mapping_erp_project_id_fkey"
+            columns: ["erp_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zoho_project_mapping_matched_by_fkey"
+            columns: ["matched_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zoho_sync_queue: {
+        Row: {
+          action: Database["public"]["Enums"]["zoho_sync_action"]
+          attempt_count: number
+          created_at: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["zoho_sync_entity_type"]
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          status: Database["public"]["Enums"]["zoho_sync_status"]
+          synced_at: string | null
+          zoho_response: Json | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["zoho_sync_action"]
+          attempt_count?: number
+          created_at?: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["zoho_sync_entity_type"]
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          status?: Database["public"]["Enums"]["zoho_sync_status"]
+          synced_at?: string | null
+          zoho_response?: Json | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["zoho_sync_action"]
+          attempt_count?: number
+          created_at?: string
+          entity_id?: string
+          entity_type?: Database["public"]["Enums"]["zoho_sync_entity_type"]
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          status?: Database["public"]["Enums"]["zoho_sync_status"]
+          synced_at?: string | null
+          zoho_response?: Json | null
+        }
+        Relationships: []
+      }
+      zoho_tax_codes: {
+        Row: {
+          imported_at: string
+          is_active: boolean
+          tax_id: string
+          tax_name: string
+          tax_percentage: number
+          tax_type: string
+        }
+        Insert: {
+          imported_at?: string
+          is_active?: boolean
+          tax_id: string
+          tax_name: string
+          tax_percentage: number
+          tax_type: string
+        }
+        Update: {
+          imported_at?: string
+          is_active?: boolean
+          tax_id?: string
+          tax_name?: string
+          tax_percentage?: number
+          tax_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -13462,6 +14039,14 @@ export type Database = {
       current_employee_id: { Args: never; Returns: string }
       drop_old_inverter_partitions: { Args: never; Returns: undefined }
       enqueue_payment_escalations: { Args: never; Returns: number }
+      enqueue_zoho_sync: {
+        Args: {
+          p_action: Database["public"]["Enums"]["zoho_sync_action"]
+          p_entity_id: string
+          p_entity_type: Database["public"]["Enums"]["zoho_sync_entity_type"]
+        }
+        Returns: undefined
+      }
       fn_cascade_po_approval_to_boq: {
         Args: { p_po_id: string }
         Returns: undefined
@@ -13492,6 +14077,17 @@ export type Database = {
           project_count: number
           total_invested: number
           total_receivables: number
+        }[]
+      }
+      get_company_cash_summary_v2: {
+        Args: never
+        Returns: {
+          open_reconciliation_count: number
+          total_ap_bills: number
+          total_ap_pos: number
+          total_project_expenses_paid: number
+          total_receivables: number
+          zoho_monthly_company_expenses: number
         }[]
       }
       get_data_flag_summary: {
@@ -13540,6 +14136,14 @@ export type Database = {
           weighted_value: number
         }[]
       }
+      get_msme_aging_summary: {
+        Args: never
+        Returns: {
+          bill_count: number
+          bucket: string
+          total_amount: number
+        }[]
+      }
       get_msme_due_count: { Args: { p_due_before: string }; Returns: number }
       get_my_employee_id: { Args: never; Returns: string }
       get_my_role: {
@@ -13567,6 +14171,27 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_project_profitability_v2: {
+        Args: { p_project_id?: string }
+        Returns: {
+          contracted_value: number
+          customer_name: string
+          margin_amount: number
+          margin_pct: number
+          project_id: string
+          project_number: string
+          status: string
+          total_ap_outstanding: number
+          total_ar_outstanding: number
+          total_billed: number
+          total_cost: number
+          total_expenses: number
+          total_expenses_paid: number
+          total_invoiced: number
+          total_received: number
+          total_vendor_paid: number
+        }[]
+      }
       get_projects_without_today_report: {
         Args: never
         Returns: {
@@ -13580,6 +14205,10 @@ export type Database = {
       plant_monitoring_detect_brand: {
         Args: { portal_url: string }
         Returns: string
+      }
+      recalc_vendor_bill_totals: {
+        Args: { p_bill_id: string }
+        Returns: undefined
       }
       rollup_inverter_readings_daily: { Args: never; Returns: undefined }
       rollup_inverter_readings_hourly: { Args: never; Returns: undefined }
@@ -13676,6 +14305,16 @@ export type Database = {
         | "rejected"
         | "expired"
         | "superseded"
+      reconciliation_entity_type:
+        | "project_totals"
+        | "vendor_ap_total"
+        | "customer_ar_total"
+        | "cash_balance"
+      reconciliation_status:
+        | "open"
+        | "acknowledged"
+        | "resolved"
+        | "accepted_drift"
       scope_owner: "shiroi" | "client" | "builder" | "excluded"
       system_type: "on_grid" | "hybrid" | "off_grid"
       ticket_status:
@@ -13685,6 +14324,24 @@ export type Database = {
         | "resolved"
         | "closed"
         | "escalated"
+      vendor_bill_status:
+        | "draft"
+        | "pending"
+        | "partially_paid"
+        | "paid"
+        | "cancelled"
+      zoho_sync_action: "create" | "update" | "delete"
+      zoho_sync_entity_type:
+        | "contact"
+        | "vendor"
+        | "project"
+        | "invoice"
+        | "customer_payment"
+        | "purchase_order"
+        | "vendor_bill"
+        | "vendor_payment"
+        | "expense"
+      zoho_sync_status: "pending" | "syncing" | "synced" | "failed" | "skipped"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -13908,6 +14565,18 @@ export const Constants = {
         "expired",
         "superseded",
       ],
+      reconciliation_entity_type: [
+        "project_totals",
+        "vendor_ap_total",
+        "customer_ar_total",
+        "cash_balance",
+      ],
+      reconciliation_status: [
+        "open",
+        "acknowledged",
+        "resolved",
+        "accepted_drift",
+      ],
       scope_owner: ["shiroi", "client", "builder", "excluded"],
       system_type: ["on_grid", "hybrid", "off_grid"],
       ticket_status: [
@@ -13918,6 +14587,26 @@ export const Constants = {
         "closed",
         "escalated",
       ],
+      vendor_bill_status: [
+        "draft",
+        "pending",
+        "partially_paid",
+        "paid",
+        "cancelled",
+      ],
+      zoho_sync_action: ["create", "update", "delete"],
+      zoho_sync_entity_type: [
+        "contact",
+        "vendor",
+        "project",
+        "invoice",
+        "customer_payment",
+        "purchase_order",
+        "vendor_bill",
+        "vendor_payment",
+        "expense",
+      ],
+      zoho_sync_status: ["pending", "syncing", "synced", "failed", "skipped"],
     },
   },
 } as const
