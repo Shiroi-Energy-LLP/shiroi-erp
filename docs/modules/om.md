@@ -21,9 +21,10 @@ O&M is the post-handover side of the system — everything that happens after a 
   - `AmcVisitTracker` per-contract expandable sub-table with inline status + edit panel (work done, issues, resolution, customer feedback, report file upload to `project-files` bucket)
 - `/om/plant-monitoring` — credential storage + future inverter live data
   - 3 summary cards (total, per-brand, missing credentials)
-  - Sticky filter bar (project / brand / search)
+  - Sticky filter bar (project combobox / brand / search) — project filter is a searchable combobox, not a plain select
   - 7-col table: Project, Brand, Username, Password (30s auto-remask + copy), Portal Link, Created, Actions
   - Add/Edit/Delete dialogs (founder + project_manager only; om_technician read-only)
+  - Add dialog: project picker is a searchable combobox with ↑↓/Enter/Esc keyboard nav, "Create a new project →" link when no match
   - Auto-sync from `commissioning_reports` on status transition via DB trigger
 
 ## Key Business Rules
@@ -69,10 +70,14 @@ apps/erp/src/lib/
   ticket-queries.ts            (getAllTickets paginated)
   plant-monitoring-actions.ts + plant-monitoring-queries.ts
 
+apps/erp/src/components/forms/
+  project-combobox.tsx               (pure controlled searchable combobox; used in plant-monitoring Add dialog)
+
 apps/erp/src/components/om/
   ticket-status-toggle.tsx, edit-ticket-dialog.tsx
   amc-visit-tracker.tsx, amc-status-toggle.tsx, create-amc-dialog.tsx
   plant-monitoring-password-cell.tsx   (eye toggle + 30s auto-remask + copy)
+  project-filter-combobox.tsx          (URL-aware wrapper around ProjectCombobox for plant-monitoring filter bar)
 
 packages/inverter-adapters/    (workspace package)
   base.ts        (InverterAdapter interface, NormalizedReading, error classes,
@@ -120,6 +125,8 @@ supabase/functions/inverter-poll/   (Deno Edge Function)
 - Migration 059 (Plant Monitoring credentials, detection helper, commissioning sync trigger, summary RPC)
 - `docs/superpowers/specs/2026-04-16-plant-monitoring-design.md`
 - `docs/superpowers/plans/2026-04-16-plant-monitoring.md`
+- `docs/superpowers/specs/2026-04-17-plant-monitoring-project-combobox-design.md` (searchable project picker, no migration)
+- `docs/superpowers/plans/2026-04-17-plant-monitoring-project-combobox.md`
 - Inverter adapter package: see `packages/inverter-adapters/base.ts`
 
 ## Role Access Summary
