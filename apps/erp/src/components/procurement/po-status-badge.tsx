@@ -1,11 +1,21 @@
 import { Badge } from '@repo/ui';
 
-type POStatus = 'draft' | 'approved' | 'sent' | 'acknowledged' | 'partially_delivered' | 'fully_delivered' | 'closed' | 'cancelled';
+type POStatus =
+  | 'draft'
+  | 'approved'
+  | 'sent'
+  | 'dispatched'
+  | 'acknowledged'
+  | 'partially_delivered'
+  | 'fully_delivered'
+  | 'closed'
+  | 'cancelled';
 
 const STATUS_VARIANT: Record<POStatus, 'info' | 'pending' | 'warning' | 'success' | 'error' | 'neutral' | 'outline'> = {
   draft: 'neutral',
   approved: 'info',
   sent: 'info',
+  dispatched: 'pending',
   acknowledged: 'info',
   partially_delivered: 'warning',
   fully_delivered: 'success',
@@ -17,6 +27,7 @@ const STATUS_LABEL: Record<POStatus, string> = {
   draft: 'Draft',
   approved: 'Approved',
   sent: 'Sent',
+  dispatched: 'Dispatched',
   acknowledged: 'Acknowledged',
   partially_delivered: 'Partially Delivered',
   fully_delivered: 'Fully Delivered',
