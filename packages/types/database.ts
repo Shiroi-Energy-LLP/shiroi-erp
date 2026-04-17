@@ -2456,6 +2456,7 @@ export type Database = {
           state: string | null
           uan_number: string | null
           updated_at: string
+          voucher_prefix: string | null
         }
         Insert: {
           aadhar_number?: string | null
@@ -2493,6 +2494,7 @@ export type Database = {
           state?: string | null
           uan_number?: string | null
           updated_at?: string
+          voucher_prefix?: string | null
         }
         Update: {
           aadhar_number?: string | null
@@ -2530,6 +2532,7 @@ export type Database = {
           state?: string | null
           uan_number?: string | null
           updated_at?: string
+          voucher_prefix?: string | null
         }
         Relationships: [
           {
@@ -2615,6 +2618,196 @@ export type Database = {
           milestone_order?: number
         }
         Relationships: []
+      }
+      expense_categories: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expense_documents: {
+        Row: {
+          expense_id: string
+          file_name: string | null
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          expense_id: string
+          file_name?: string | null
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          expense_id?: string
+          file_name?: string | null
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_documents_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          category_id: string
+          created_at: string
+          description: string | null
+          expense_date: string | null
+          id: string
+          project_id: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejected_reason: string | null
+          status: string | null
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          voucher_no: string | null
+          voucher_number: string
+        }
+        Insert: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string | null
+          id?: string
+          project_id?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejected_reason?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          voucher_no?: string | null
+          voucher_number: string
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string | null
+          id?: string
+          project_id?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejected_reason?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          voucher_no?: string | null
+          voucher_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_rejected_by_fkey"
+            columns: ["rejected_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_site_expenses_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_site_expenses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_site_expenses_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       finance_reports: {
         Row: {
@@ -8849,94 +9042,6 @@ export type Database = {
           },
         ]
       }
-      project_site_expenses: {
-        Row: {
-          amount: number
-          approved_at: string | null
-          approved_by: string | null
-          created_at: string
-          description: string | null
-          employee_name: string | null
-          expense_category: string | null
-          expense_date: string | null
-          id: string
-          notes: string | null
-          project_id: string
-          receipt_file_path: string | null
-          rejected_reason: string | null
-          status: string | null
-          submitted_at: string | null
-          submitted_by: string | null
-          updated_at: string
-          voucher_no: string | null
-          voucher_number: string | null
-        }
-        Insert: {
-          amount?: number
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string
-          description?: string | null
-          employee_name?: string | null
-          expense_category?: string | null
-          expense_date?: string | null
-          id?: string
-          notes?: string | null
-          project_id: string
-          receipt_file_path?: string | null
-          rejected_reason?: string | null
-          status?: string | null
-          submitted_at?: string | null
-          submitted_by?: string | null
-          updated_at?: string
-          voucher_no?: string | null
-          voucher_number?: string | null
-        }
-        Update: {
-          amount?: number
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string
-          description?: string | null
-          employee_name?: string | null
-          expense_category?: string | null
-          expense_date?: string | null
-          id?: string
-          notes?: string | null
-          project_id?: string
-          receipt_file_path?: string | null
-          rejected_reason?: string | null
-          status?: string | null
-          submitted_at?: string | null
-          submitted_by?: string | null
-          updated_at?: string
-          voucher_no?: string | null
-          voucher_number?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_site_expenses_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_site_expenses_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_site_expenses_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       project_status_history: {
         Row: {
           changed_at: string
@@ -9047,6 +9152,7 @@ export type Database = {
           project_cost_manual: number | null
           project_manager_id: string | null
           project_number: string
+          project_type: string
           proposal_id: string
           scope_civil: string | null
           scope_la: string | null
@@ -9130,6 +9236,7 @@ export type Database = {
           project_cost_manual?: number | null
           project_manager_id?: string | null
           project_number: string
+          project_type?: string
           proposal_id: string
           scope_civil?: string | null
           scope_la?: string | null
@@ -9213,6 +9320,7 @@ export type Database = {
           project_cost_manual?: number | null
           project_manager_id?: string | null
           project_number?: string
+          project_type?: string
           proposal_id?: string
           scope_civil?: string | null
           scope_la?: string | null
@@ -13347,6 +13455,11 @@ export type Database = {
         Args: never
         Returns: number
       }
+      current_app_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      current_employee_id: { Args: never; Returns: string }
       drop_old_inverter_partitions: { Args: never; Returns: undefined }
       enqueue_payment_escalations: { Args: never; Returns: number }
       fn_cascade_po_approval_to_boq: {
@@ -13360,6 +13473,10 @@ export type Database = {
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
       generate_rfq_number: { Args: never; Returns: string }
+      generate_voucher_number: {
+        Args: { p_employee_id: string }
+        Returns: string
+      }
       get_amc_monthly_summary: {
         Args: never
         Returns: {
@@ -13384,6 +13501,15 @@ export type Database = {
           resolved_flags: number
           total_flags: number
           unresolved_flags: number
+        }[]
+      }
+      get_expense_kpis: {
+        Args: { p_employee_id: string; p_role: string }
+        Returns: {
+          approved_month_amt: number
+          pending_action_amt: number
+          submitted_count: number
+          total_count: number
         }[]
       }
       get_financial_year: { Args: never; Returns: string }
