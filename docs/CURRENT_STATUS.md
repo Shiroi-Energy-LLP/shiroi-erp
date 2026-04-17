@@ -17,6 +17,7 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
+| **Purchase Module v2** | Claude | ✅ Shipped Apr 17 | Full 5-stage competitive pipeline (BOQ → RFQ → Comparison → PO → Dispatch), vendor portal, founder approval, audit log, 10 phases. See `docs/modules/purchase.md` + `docs/superpowers/specs/2026-04-17-purchase-module-v2-design.md`. Migration 060. |
 | Plant Monitoring module shipped | Claude | ✅ Shipped Apr 16 | `/om/plant-monitoring` page, migration 059, 11 commits. See `docs/modules/om.md`. |
 | Docs restructure | Claude | 🟡 In progress Apr 17 | This refactor. See `docs/superpowers/specs/2026-04-17-docs-restructure-design.md`. |
 | Marketing + Design revamp — feedback loop | Prem (marketing mgr) | 🔜 Next | Get Prem's feedback on /sales + partners + design workspace + closure band UI. Same cycle as Manivel's PM feedback. |
@@ -30,8 +31,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **059** (Plant Monitoring, Apr 16) | None — fully caught up |
-| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 059** — 47 migrations waiting on the next prod window |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **060** (Purchase Module v2, Apr 17) | None — fully caught up |
+| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 060** — 48 migrations waiting on the next prod window |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, and WhatsApp; not all of that needs to move to prod).
 
@@ -63,7 +64,7 @@ Running on every PR + push to `main` (`~1 min` total):
 
 **Forbidden-pattern baseline:** currently 61 (ratcheted down from 99 on Apr 14). Only ratchets down. Run `bash scripts/ci/check-forbidden-patterns.sh --update-baseline` after a cleanup pass.
 
-**Playwright smoke tests** exist (`e2e/smoke.spec.ts`, 6 tests) but not wired into CI yet — needs dev Supabase test user + GitHub Actions secrets.
+**Playwright smoke tests** exist (`e2e/smoke.spec.ts`, 9 tests — 6 original + 3 Purchase v2 paths) but not wired into CI yet — needs dev Supabase test user + GitHub Actions secrets.
 
 ---
 

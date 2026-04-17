@@ -266,6 +266,8 @@ leads → proposals → projects → commissioning_reports → project_handovers
 purchase_orders → vendor_payments → project_cash_positions
 purchase_orders → vendor_delivery_challans → dc_signatures → bill_clearing_packages
 purchase_orders → purchase_order_items → stock_pieces → warranty_registrations
+rfqs → rfq_items + rfq_invitations (UUID token) → rfq_vendor_quotes → purchase_orders
+procurement_audit_log ← every mutation in rfq/PO/vendor-portal actions (append-only)
 ```
 
 ```
