@@ -39,7 +39,10 @@ export function ItemCombobox({
 }: ItemComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [highlighted, setHighlighted] = React.useState<number>(-1);
-  const [rect, setRect] = React.useState<{ top: number; left: number; width: number } | null>(null);
+  type RectState =
+    | { placement: 'below'; top: number; left: number; width: number }
+    | { placement: 'above'; bottom: number; left: number; width: number };
+  const [rect, setRect] = React.useState<RectState | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -67,7 +70,28 @@ export function ItemCombobox({
     function updateRect() {
       if (!inputRef.current) return;
       const r = inputRef.current.getBoundingClientRect();
-      setRect({ top: r.bottom + 4, left: r.left, width: r.width });
+      const GAP = 4;
+      const spaceBelow = window.innerHeight - r.bottom - GAP;
+      const spaceAbove = r.top - GAP;
+      // Flip up when there's not enough room below (240px is a reasonable "can show ~4 rows" threshold)
+      // and more room above than below
+      const shouldPlaceAbove = spaceBelow < 240 && spaceAbove > spaceBelow;
+
+      if (shouldPlaceAbove) {
+        setRect({
+          placement: 'above',
+          bottom: window.innerHeight - r.top + GAP,
+          left: r.left,
+          width: r.width,
+        });
+      } else {
+        setRect({
+          placement: 'below',
+          top: r.bottom + GAP,
+          left: r.left,
+          width: r.width,
+        });
+      }
     }
     updateRect();
     window.addEventListener('scroll', updateRect, true); // capture to catch ancestor scrolls
@@ -166,11 +190,12 @@ export function ItemCombobox({
             ref={dropdownRef}
             style={{
               position: 'fixed',
-              top: rect.top,
               left: rect.left,
-              // Min 420px (readability), but never wider than the viewport minus 16px margin
               width: Math.min(Math.max(rect.width, 420), window.innerWidth - 16),
               zIndex: 100,
+              ...(rect.placement === 'below'
+                ? { top: rect.top }
+                : { bottom: rect.bottom }),
             }}
             className="bg-white border border-n-200 rounded shadow-lg overflow-hidden max-h-[60vh] overflow-y-auto"
             role="listbox"
