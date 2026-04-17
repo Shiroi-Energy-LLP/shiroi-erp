@@ -2200,6 +2200,47 @@ export async function sendBoqToPurchase(input: {
         boq_sent_to_purchase_by: employee?.id ?? null,
       } as any)
       .eq('id', input.projectId);
+
+    // ── Best-effort: notify all purchase_officer users ─────────────────────
+    // Spec §7 event 1 — "New Purchase Request for Project {X}".
+    // Wrapped in try/catch so a notification failure doesn't roll back the
+    // status flip the user actually cares about.
+    try {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('project_number, customer_name')
+        .eq('id', input.projectId)
+        .single();
+
+      const { data: officers } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'purchase_officer')
+        .eq('is_active', true);
+
+      if (officers && officers.length > 0 && project) {
+        const { data: officerEmployees } = await supabase
+          .from('employees')
+          .select('id')
+          .in('profile_id', officers.map((o) => o.id));
+
+        if (officerEmployees && officerEmployees.length > 0) {
+          const notifs = officerEmployees.map((emp) => ({
+            recipient_employee_id: emp.id,
+            notification_type: 'procurement',
+            title: `New Purchase Request for ${project.project_number}`,
+            body: `BOQ for ${project.customer_name ?? 'project'} is ready for procurement.`,
+            entity_type: 'project',
+            entity_id: input.projectId,
+          }));
+          await supabase.from('notifications').insert(notifs);
+        }
+      }
+    } catch (notifErr) {
+      console.error(`${op} notification failed (non-fatal)`, {
+        error: notifErr instanceof Error ? notifErr.message : String(notifErr),
+      });
+    }
   }
 
   revalidatePath(`/projects/${input.projectId}`);

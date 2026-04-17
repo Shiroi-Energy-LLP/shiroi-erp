@@ -440,6 +440,32 @@ export async function markItemsReceived(input: {
         procurement_received_date: new Date().toISOString().slice(0, 10),
       } as any)
       .eq('id', input.projectId);
+
+    // ── Best-effort: notify the project's project_manager_id ─────────────
+    // Spec §7 event 6 — "all materials received, ready to dispatch".
+    try {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('project_number, customer_name, project_manager_id')
+        .eq('id', input.projectId)
+        .single();
+
+      if (project?.project_manager_id) {
+        const notif = {
+          recipient_employee_id: project.project_manager_id,
+          notification_type: 'procurement',
+          title: `${project.project_number} — all materials received`,
+          body: `All BOQ items for ${project.customer_name ?? 'project'} have been received. Ready to dispatch.`,
+          entity_type: 'project',
+          entity_id: input.projectId,
+        };
+        await supabase.from('notifications').insert(notif);
+      }
+    } catch (notifErr) {
+      console.error(`${op} notification failed (non-fatal)`, {
+        error: notifErr instanceof Error ? notifErr.message : String(notifErr),
+      });
+    }
   } else {
     await supabase
       .from('projects')
