@@ -14024,6 +14024,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ack_sync_batch: { Args: { p_results: Json }; Returns: undefined }
+      claim_next_sync_batch: {
+        Args: { p_batch_size?: number; p_entity_type: string }
+        Returns: {
+          attempt_count: number
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          operation: string
+          payload: Json
+        }[]
+      }
       create_inverter_partition_for_month: {
         Args: { target_month: string }
         Returns: undefined
