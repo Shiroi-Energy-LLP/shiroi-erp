@@ -58,10 +58,10 @@ The voucher-numbering series is keyed by whoever submits — each employee has t
 
 | Action | `site_supervisor` | `project_manager` | `founder` | `finance` | All other active roles | `customer` |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| Submit new expense (project-linked or general) | ✅ | ✅ | ❌¹ | ❌¹ | ✅ | ❌ |
+| Submit new expense (project-linked or general) | ✅ | ✅ | ✅¹ | ✅¹ | ✅ | ❌ |
 | View own expenses | ✅ | ✅ (all) | ✅ (all) | ✅ (all) | ✅ (own only) | ❌ |
-| Edit own `submitted` expense | ✅ | ✅ | — | — | ✅ | ❌ |
-| Delete own `submitted` expense | ✅ | ✅ | — | — | ✅ | ❌ |
+| Edit own `submitted` expense | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Delete own `submitted` expense | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Edit any `submitted` expense | ❌ | ✅ (project-linked only) | ✅ | ❌ | ❌ | ❌ |
 | Edit any expense (all statuses) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | Delete any expense | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
@@ -119,7 +119,7 @@ The rename is justified because the module is now standalone and not a child of 
 
 Changes to the existing table:
 
-- `project_id` → **nullable** (was `NOT NULL`). Most migrations must handle this change carefully. NULL means general / non-project expense.
+- `project_id` → **nullable** (was `NOT NULL`). NULL means general / non-project expense.
 - `status` CHECK rebuilt: `'submitted' | 'verified' | 'approved' | 'rejected'`
 - `voucher_number TEXT NOT NULL UNIQUE` (retro-backfilled; see §4.5)
 - Add `verified_by UUID REFERENCES employees(id)`, `verified_at TIMESTAMPTZ`
@@ -478,7 +478,7 @@ Pre-commit:
 - `scripts/ci/check-forbidden-patterns.sh` — baseline not regressed
 
 Manual smoke test (via `preview_start`):
-1. Submit as `site_supervisor` → voucher number auto-generates as `{PREFIX}-001`
+1. Submit project-linked expense as `site_supervisor` → voucher number auto-generates as `{PREFIX}-001`
 2. Verify the row as `project_manager` → status → `verified`, PM's name + timestamp on the timeline
 3. Approve as `founder` → status → `approved`
 4. Reject flow: submit → PM rejects with reason → row shows red rejected node with reason
@@ -487,9 +487,14 @@ Manual smoke test (via `preview_start`):
 7. Role gate: `site_supervisor` sees only their own expenses in the list
 8. Role gate: `site_supervisor` cannot see Verify / Approve buttons even via direct URL
 9. Concurrency: two simultaneous submissions from the same engineer produce two distinct, consecutive voucher numbers (no collision)
-10. Project Actuals page shows the read-only embed, filtered by `project_id`, with subtotal at the bottom
+10. Project Actuals page shows the read-only embed, filtered by `project_id`, with subtotal at the bottom; general expenses do NOT appear in it
 11. `+ New Project` dialog creates a `yet_to_start` project, redirects to detail
 12. Employee form with a colliding `voucher_prefix` raises a clear error message
+13. **General expense flow**: submit as `designer` with the "General expense" checkbox on (no `project_id`) → goes directly to `submitted` scope without a Verify step; founder approves → status `approved`, timeline shows Submit → Approve (no Verify node)
+14. **General expense RLS**: designer who submitted sees own general expenses; another designer cannot see them; founder sees all
+15. **Attempt to verify a general expense via server action** → returns an error (DB constraint + action guard)
+16. **Mixed series voucher numbering**: a designer submitting their first-ever expense (general) gets `{DES}-001`; their next expense (project-linked) gets `{DES}-002` — series is per-employee, not split by scope
+17. **Scope filter chip in list**: chip `[ All | Project | General ]` correctly narrows the list; status + category filters compose with the scope filter
 
 Data integrity check post-migration:
 ```sql
@@ -510,14 +515,17 @@ SELECT DISTINCT status FROM expenses;
 
 ## 8. Risks & gotchas
 
-1. **Storage RLS for documents.** `expense_documents` paths live in the `project-files` bucket. Per `docs/modules/projects.md` gotcha #2, drag-drop operations are UPDATE on `storage.objects` and need an UPDATE policy. The bucket already has this policy (from migration 047), so nothing new — but the migration must NOT accidentally narrow it.
-2. **Voucher prefix collision on employee import.** If two existing employees resolve to the same prefix during backfill, the unique index will reject the second row. The migration must catch this and fail loudly with a clear error message listing the colliding full names. Admin then updates the column for one of them before re-running.
-3. **Legacy voucher rows without `submitted_by`.** Historical rows may have `submitted_by = NULL` (the column was nullable pre-migration-033). The retro-backfill must handle this: NULL-submitter rows get voucher_number `UNASSIGNED-###` (an explicit sentinel prefix) and are flagged in an admin-review list. Migration fails loudly if any exist and the admin hasn't assigned them.
-4. **Prod migration window.** This is the next available migration (likely 066, after in-flight 065) on top of the already-deferred batch 013–061. It ships in the same prod-deploy window after employee testing week, not separately.
-5. **Voucher prefix uniqueness is scoped to active employees.** Deactivating an employee frees their prefix. Intentional, but documented.
-6. **Deleting old code.** The `/vouchers` page, `site-expenses-actions.ts`, `site-expense-form.tsx`, `voucher-table-controls.tsx` must be fully removed — no legacy write paths remaining. CI's forbidden-patterns check plus a manual grep for `project_site_expenses` (old name) ensures nothing references the deleted table name.
-7. **Type regeneration must be in the same commit.** Per NEVER-DO rule #20: regenerate `packages/types/database.ts` immediately after the migration applies on dev, in the same commit.
-8. **`decimal.js` for amounts on the client.** NEVER-DO rule #5 — no float math on `amount`. All KPI aggregations go through SQL RPCs (per NEVER-DO rule #12), not JavaScript `.reduce()`.
+1. **Voucher prefix collisions at ~50-employee scale.** Backfilling prefixes for every active employee is more collision-prone than the originally-scoped site-engineer-only design. Common first names share initials (e.g., `Ramesh` / `Ramya` → `RAM`). The 3→4→5-letter fallback in §7.1 step 3 handles most cases, but Vivek should eyeball the migration's emitted banner log before committing. Long-term: treat the prefix as an editable HR-master field so Vivek can customise it per-employee when hiring.
+2. **Storage RLS for documents with nullable project_id.** `expense_documents` paths in the `project-files` bucket currently follow the pattern `projects/{project_id}/expenses/{expense_id}/{filename}`. For general (non-project) expenses, use a different root: `expenses/general/{expense_id}/{filename}`. Storage RLS policies must allow both patterns for the submitting employee + verifiers + founder. The bucket already has the broad UPDATE policy from migration 047 — but the migration must NOT narrow it, and a new SELECT/INSERT policy covering the `expenses/general/*` path is required.
+3. **General expenses bypass verify.** The `expenses_general_skip_verify_check` DB constraint enforces this invariant, but server actions must also short-circuit: calling `verifyExpense` on a general (project_id IS NULL) expense returns an error rather than silently no-oping. Similarly, the scope chip UI should not show a "General" row with a pending Verify action.
+4. **Voucher prefix collision on employee import.** If two existing employees resolve to the same prefix during backfill even after the 3→4→5-letter fallback, the migration raises an exception. Admin then updates the column for one of them before re-running. (§7.1 step 3.)
+5. **Legacy voucher rows without `submitted_by`.** Historical rows may have `submitted_by = NULL` (the column was nullable pre-migration-033). The retro-backfill must handle this: NULL-submitter rows get voucher_number `UNASSIGNED-###` (an explicit sentinel prefix) and are flagged in an admin-review list. Migration fails loudly if any exist and the admin hasn't assigned them.
+6. **Prod migration window.** This is the next available migration (likely 066, after in-flight 065) on top of the already-deferred batch 013–061. It ships in the same prod-deploy window after employee testing week, not separately.
+7. **Voucher prefix uniqueness is scoped to active employees.** Deactivating an employee frees their prefix. Intentional, but documented.
+8. **Deleting old code.** The `/vouchers` page, `site-expenses-actions.ts`, `site-expense-form.tsx`, `voucher-table-controls.tsx` must be fully removed — no legacy write paths remaining. CI's forbidden-patterns check plus a manual grep for `project_site_expenses` (old name) ensures nothing references the deleted table name.
+9. **Type regeneration must be in the same commit.** Per NEVER-DO rule #20: regenerate `packages/types/database.ts` immediately after the migration applies on dev, in the same commit.
+10. **`decimal.js` for amounts on the client.** NEVER-DO rule #5 — no float math on `amount`. All KPI aggregations go through SQL RPCs (per NEVER-DO rule #12), not JavaScript `.reduce()`.
+11. **Project Actuals read-only embed naturally excludes general expenses.** The embed filters by `project_id = :id`, so general expenses (project_id IS NULL) drop out automatically — no extra filter needed. Mention this in the component docblock so future readers don't add redundant filters.
 
 ## 9. Past decisions referenced
 
