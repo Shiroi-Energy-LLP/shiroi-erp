@@ -314,10 +314,10 @@ export async function getProjectFinancials(projectId: string): Promise<{
       .select('total_price, quantity, unit_price')
       .eq('project_id', projectId),
     supabase
-      .from('project_site_expenses')
+      .from('expenses')
       .select('amount, status')
       .eq('project_id', projectId)
-      .in('status', ['approved', 'auto_approved']),
+      .in('status', ['approved']),
   ]);
 
   const contractedValue = Number(project?.contracted_value ?? 0);

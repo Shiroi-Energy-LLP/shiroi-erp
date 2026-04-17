@@ -68,7 +68,7 @@ export async function getProjectPaymentOverview(): Promise<ProjectPaymentRow[]> 
       .select('project_id, total_amount')
       .in('project_id', projectIds),
     supabase
-      .from('project_site_expenses')
+      .from('expenses')
       .select('project_id, amount')
       .in('project_id', projectIds),
     // Get payment schedules via proposals linked to these projects' leads only
@@ -94,6 +94,7 @@ export async function getProjectPaymentOverview(): Promise<ProjectPaymentRow[]> 
 
   const expensesByProject = new Map<string, number>();
   for (const exp of expensesResult.data ?? []) {
+    if (!exp.project_id) continue;
     const current = expensesByProject.get(exp.project_id) ?? 0;
     expensesByProject.set(exp.project_id, current + Number(exp.amount));
   }

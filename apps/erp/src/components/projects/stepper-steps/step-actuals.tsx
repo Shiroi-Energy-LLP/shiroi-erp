@@ -1,10 +1,11 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { createClient } from '@repo/supabase/server';
-import { getProjectSiteExpenses } from '@/lib/site-expenses-actions';
-import { SiteExpenseForm } from '@/components/projects/forms/site-expense-form';
 import { ActualsLockButton, EditableQtyCell } from '@/components/projects/forms/actuals-controls';
-import { VoucherTable } from '@/components/projects/forms/voucher-table-controls';
+// TEMP: voucher controls moved to /expenses — replaced by SiteExpensesReadonly in Task 11
+// import { VoucherTable } from '@/components/projects/forms/voucher-table-controls';
+// import { SiteExpenseForm } from '@/components/projects/forms/site-expense-form';
+// import { getProjectSiteExpenses } from '@/lib/site-expenses-actions';
 import { FileText, Receipt, TrendingUp, Lock, AlertTriangle } from 'lucide-react';
 
 interface StepActualsProps {
@@ -14,7 +15,7 @@ interface StepActualsProps {
 export async function StepActuals({ projectId }: StepActualsProps) {
   const supabase = await createClient();
 
-  const [{ data: boqItems }, { data: project }, siteExpenses] = await Promise.all([
+  const [{ data: boqItems }, { data: project }] = await Promise.all([
     supabase
       .from('project_boq_items')
       .select(
@@ -27,11 +28,31 @@ export async function StepActuals({ projectId }: StepActualsProps) {
       .select('contracted_value, project_number, customer_name, actuals_locked, actuals_locked_at, actuals_locked_by')
       .eq('id', projectId)
       .maybeSingle(),
-    getProjectSiteExpenses(projectId),
   ]);
 
-  const items = (boqItems as any[]) ?? [];
-  const projectData = project as any;
+  const items = (boqItems as {
+    id: string;
+    item_category: string | null;
+    item_description: string | null;
+    brand: string | null;
+    model: string | null;
+    quantity: number | null;
+    unit: string | null;
+    unit_price: number | null;
+    total_price: number | null;
+    gst_rate: number | null;
+    procurement_status: string | null;
+    received_qty: number | null;
+    dispatched_qty: number | null;
+  }[]) ?? [];
+  const projectData = project as {
+    contracted_value: number | null;
+    project_number: string | null;
+    customer_name: string | null;
+    actuals_locked: boolean | null;
+    actuals_locked_at: string | null;
+    actuals_locked_by: string | null;
+  } | null;
   const contractedValue = Number(projectData?.contracted_value ?? 0);
   const isLocked = !!projectData?.actuals_locked;
 
@@ -43,10 +64,10 @@ export async function StepActuals({ projectId }: StepActualsProps) {
       .select('full_name')
       .eq('id', projectData.actuals_locked_by)
       .single();
-    lockedByName = (emp as any)?.full_name ?? null;
+    lockedByName = emp?.full_name ?? null;
   }
 
-  const boqTotal = items.reduce((sum, item: any) => {
+  const boqTotal = items.reduce((sum, item) => {
     const lineTotal =
       typeof item.total_price === 'number'
         ? item.total_price
@@ -54,14 +75,9 @@ export async function StepActuals({ projectId }: StepActualsProps) {
     return sum + (Number.isFinite(lineTotal) ? lineTotal : 0);
   }, 0);
 
-  const approvedExpenses = siteExpenses.filter(
-    (e) => e.status === 'approved' || e.status === 'auto_approved',
-  );
-  const pendingExpenses = siteExpenses.filter((e) => e.status === 'pending');
-
-  const approvedExpensesTotal = approvedExpenses.reduce((s, e) => s + e.amount, 0);
-  const pendingExpensesTotal = pendingExpenses.reduce((s, e) => s + e.amount, 0);
-
+  // TEMP: site expenses section replaced by SiteExpensesReadonly embed in Task 11.
+  // Pending expenses warning not available until that component is wired in.
+  const approvedExpensesTotal = 0;
   const actualsTotal = boqTotal + approvedExpensesTotal;
   const marginAmount = contractedValue - actualsTotal;
   const marginPct = contractedValue > 0 ? (marginAmount / contractedValue) * 100 : 0;
@@ -84,14 +100,8 @@ export async function StepActuals({ projectId }: StepActualsProps) {
           projectId={projectId}
           isLocked={isLocked}
           lockedByName={lockedByName}
-          lockedAt={projectData?.actuals_locked_at}
+          lockedAt={projectData?.actuals_locked_at ?? null}
         />
-        {pendingExpenses.length > 0 && !isLocked && (
-          <div className="flex items-center gap-1.5 text-amber-700">
-            <AlertTriangle className="h-3.5 w-3.5" />
-            <span className="text-xs">{pendingExpenses.length} pending vouchers — review before locking</span>
-          </div>
-        )}
       </div>
 
       {/* KPI strip */}
@@ -105,7 +115,7 @@ export async function StepActuals({ projectId }: StepActualsProps) {
         <KpiCard
           label="Site Expenses (approved)"
           value={formatINR(approvedExpensesTotal)}
-          sub={`${approvedExpenses.length} vouchers`}
+          sub="see Expenses section"
           icon={<Receipt className="h-4 w-4 text-n-500" />}
         />
         <KpiCard
@@ -159,7 +169,7 @@ export async function StepActuals({ projectId }: StepActualsProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item: any) => (
+                  {items.map((item) => (
                     <tr key={item.id} className="border-b border-n-100 last:border-b-0">
                       <td className="px-3 py-1.5 text-n-500 capitalize">
                         {(item.item_category ?? '').replace(/_/g, ' ')}
@@ -202,38 +212,11 @@ export async function StepActuals({ projectId }: StepActualsProps) {
         </CardContent>
       </Card>
 
-      {/* Voucher entry form (only when not locked) */}
-      {!isLocked && <SiteExpenseForm projectId={projectId} />}
-
-      {/* Voucher history — with category filter + inline edit */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">
-              Site Expense Vouchers {isLocked ? '(Locked)' : ''}
-            </CardTitle>
-            {pendingExpenses.length > 0 && (
-              <span className="text-xs text-amber-700">
-                {pendingExpenses.length} pending · {formatINR(pendingExpensesTotal)}
-              </span>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {siteExpenses.length === 0 ? (
-            <div className="px-6 py-10 text-[11px] text-n-500 text-center">
-              No vouchers submitted yet. Use the form above to add travel, food, lodging, and
-              other site expenses.
-            </div>
-          ) : (
-            <VoucherTable
-              vouchers={siteExpenses}
-              projectId={projectId}
-              isLocked={isLocked}
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* TEMP: SiteExpensesReadonly embedded here in Task 11 */}
+      {/* <section>
+        <h3 className="font-semibold mb-2">Site expenses</h3>
+        <SiteExpensesReadonly projectId={projectId} />
+      </section> */}
     </div>
   );
 }

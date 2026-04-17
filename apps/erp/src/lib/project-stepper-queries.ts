@@ -236,7 +236,7 @@ export async function getApprovedSiteExpenses(projectId: string): Promise<number
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('project_site_expenses')
+    .from('expenses')
     .select('amount')
     .eq('project_id', projectId)
     .eq('status', 'approved');
