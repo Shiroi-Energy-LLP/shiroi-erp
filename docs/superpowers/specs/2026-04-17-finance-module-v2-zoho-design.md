@@ -62,7 +62,7 @@ Solution: build **Finance Module V2** — fill the `vendor_bills` gap, import al
   - POSTs to Zoho Books REST API (`books.zoho.in/api/v3/...`)
   - Handles: invoices, customer_payments, purchase_orders, vendor_bills, vendor_payments, contacts, vendors, project-tagged expenses
   - On success: stamps `zoho_*_id` on ERP row, marks queue row `synced`
-  - On failure: exponential backoff (3 retries over 30 min), then alert Vivek + mark `failed`
+  - On failure: up to 3 total attempts (initial + 2 retries, one per 5-min cron tick — ~10 min total), then alert Vivek + mark `failed`
 
 - **Monthly Zoho summary puller (n8n):**
   - Runs 2nd of every month, pulls previous month's totals per account from Zoho API
@@ -690,9 +690,9 @@ Add a small card on `/dashboard` (founder view only):
 
 ### 9.3 Failure handling
 
-- **Network timeout:** Zoho API default timeout 30s. n8n retries once per run (3 total attempts across 15 min).
-- **4xx validation error:** Mark failed immediately, no retry. Email Vivek with the payload + error.
-- **429 rate limit:** Defer to next run.
+- **Network timeout:** Zoho API default timeout 30s. Failed row falls back to `pending` and is retried on the next 5-min tick (cap: 3 total attempts).
+- **4xx validation error:** Mark `failed` immediately, no retry. Email/WA Vivek with the payload + error.
+- **429 rate limit:** Set back to `pending` (not `failed`) and defer to next run; doesn't consume an attempt.
 - **Zoho 500:** Normal retry cycle.
 - **Auth failure (token expired):** Refresh via separate n8n workflow that runs hourly; if refresh also fails, alert Vivek.
 
@@ -732,7 +732,8 @@ Starting at **migration 067** (after Expenses ships as 066):
 | 069 | Sync triggers: `fn_enqueue_zoho_sync` trigger function, per-table AFTER INSERT/UPDATE triggers on the 9 synced tables (skip when `source = 'zoho_import'`) |
 | 070 | Bill payment cascade: `fn_cascade_vendor_payment_to_bill` trigger that recalcs `vendor_bills.amount_paid` / `.status` on `vendor_payments` INSERT/UPDATE |
 | 071 | RPCs: `get_project_profitability_v2`, `get_company_cash_summary_v2`, `get_msme_aging_summary` |
-| 072 | Optional: any RLS/policy refinement caught during first rollout |
+
+Any follow-on RLS or schema tweaks discovered during rollout get their own migration numbers as they're needed — not pre-reserved.
 
 Types regenerated after each migration (NEVER-DO #20). Each migration committed + tested in dev before the next.
 
@@ -811,4 +812,8 @@ Types regenerated after each migration (NEVER-DO #20). Each migration committed 
 
 **Reconciliation:**
 - Golden test: import, then immediately reconcile — should produce 0 discrepancies.
-- Drift injection: manually INSERT into ERP without sync, run reconcile, verify discrepancy row is crea
+- Drift injection: manually INSERT into ERP without sync, run reconcile, verify discrepancy row is created.
+
+---
+
+*Brainstormed 2026-04-17. Approach 2 (balanced data + UI) selected. Implementation plan follows.*
