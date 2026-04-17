@@ -8,10 +8,12 @@ import {
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
 import { createPlantMonitoringCredential } from '@/lib/plant-monitoring-actions';
+import { ProjectCombobox } from '@/components/forms/project-combobox';
 
 interface ProjectOpt {
   id: string;
   customer_name: string;
+  project_number: string | null;
 }
 
 interface CreatePlantMonitoringDialogProps {
@@ -24,6 +26,16 @@ export function CreatePlantMonitoringDialog({ projects }: CreatePlantMonitoringD
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [projectId, setProjectId] = React.useState('');
+
+  function handleOpenChange(val: boolean) {
+    setOpen(val);
+    if (!val) {
+      // Reset dialog-local state when closing so next open is clean
+      setProjectId('');
+      setError(null);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,12 +58,12 @@ export function CreatePlantMonitoringDialog({ projects }: CreatePlantMonitoringD
       return;
     }
 
-    setOpen(false);
+    handleOpenChange(false);
     router.refresh();
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" className="h-8 text-xs">
           <Plus className="h-3.5 w-3.5 mr-1" />
@@ -64,20 +76,28 @@ export function CreatePlantMonitoringDialog({ projects }: CreatePlantMonitoringD
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <Label htmlFor="project_id">Project *</Label>
-            <select
-              id="project_id"
+            <Label>Project *</Label>
+            <ProjectCombobox
+              projects={projects}
+              value={projectId}
+              onChange={setProjectId}
               name="project_id"
-              required
-              className="w-full h-9 px-2 text-sm border border-n-300 rounded"
-            >
-              <option value="">— Select project —</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.customer_name}
-                </option>
-              ))}
-            </select>
+              placeholder="Search by customer name or project number…"
+              className="w-full"
+            />
+            {!projectId && (
+              <p className="text-[10px] text-n-400 mt-0.5">
+                Can&apos;t find the project?{' '}
+                <a
+                  href="/projects/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-shiroi-green hover:underline"
+                >
+                  Create it first →
+                </a>
+              </p>
+            )}
           </div>
 
           <div>
@@ -129,16 +149,19 @@ export function CreatePlantMonitoringDialog({ projects }: CreatePlantMonitoringD
             />
           </div>
 
-          {error && (
-            <p className="text-xs text-red-600">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-600">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
+            <Button type="submit" disabled={saving || !projectId}>
+              {saving ? 'Saving…' : 'Save'}
             </Button>
           </div>
         </form>
