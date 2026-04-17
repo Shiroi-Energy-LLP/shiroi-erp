@@ -16,7 +16,7 @@ import { Card, CardContent, Badge, Button } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { ArrowLeft, ShoppingCart, Check, Lock } from 'lucide-react';
 
-import { getPurchaseDetail } from '@/lib/procurement-queries';
+import { getPurchaseDetail, getEmployeeIdForProfile } from '@/lib/procurement-queries';
 import { listRfqsForProject, getRfqComparisonData, getPendingApprovalPOs } from '@/lib/rfq-queries';
 import { getUserProfile } from '@/lib/auth';
 import { PriorityToggle } from '@/components/procurement/purchase-detail-controls';
@@ -76,6 +76,10 @@ export default async function ProcurementProjectPage({ params, searchParams }: P
 
   const viewerRole = profile?.role ?? 'project_manager';
   const viewerId = profile?.id ?? null;
+
+  // Resolve viewer's employee_id so Tab 4 can compare against PO.prepared_by.
+  // Founders often don't have an employees row — that's fine, we pass null.
+  const viewerEmployeeId = viewerId ? await getEmployeeIdForProfile(viewerId) : null;
 
   // ── Tab completion state (drives ✓ / 🔒 badges on tab headers) ─────────────
   const totalWithTax = items.reduce((sum, i) => sum + Number(i.total_price || 0), 0);
@@ -271,6 +275,7 @@ export default async function ProcurementProjectPage({ params, searchParams }: P
             pendingApprovals={pendingApprovals}
             viewerRole={viewerRole}
             viewerId={viewerId}
+            viewerEmployeeId={viewerEmployeeId}
           />
         )}
         {activeTab === 'dispatch' && (

@@ -264,6 +264,30 @@ export async function getPurchaseDetail(projectId: string): Promise<{
 }
 
 // ---------------------------------------------------------------------------
+// Viewer employee-id resolution
+//
+// Used by the Procurement project page to decide whether the viewer is the
+// preparer of a given PO (controls which approval-flow buttons render).
+// Founders often don't have an employees row — callers handle null.
+// ---------------------------------------------------------------------------
+
+export async function getEmployeeIdForProfile(profileId: string): Promise<string | null> {
+  const op = '[getEmployeeIdForProfile]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', profileId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`${op} Failed:`, { profileId, code: error.code, message: error.message });
+    return null;
+  }
+  return data?.id ?? null;
+}
+
+// ---------------------------------------------------------------------------
 // Existing PO Queries (preserved for PO detail page)
 // ---------------------------------------------------------------------------
 
