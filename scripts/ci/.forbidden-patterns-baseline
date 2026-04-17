@@ -11,6 +11,9 @@ R15|apps/erp/src/app/(erp)/daily-reports/page.tsx:1:import { createClient } from
 R15|apps/erp/src/app/(erp)/data-quality/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/deliveries/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/design/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/expenses/[id]/page.tsx:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/expenses/categories/page.tsx:2:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/expenses/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/hr/certifications/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/hr/leave/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/hr/training/page.tsx:2:import { createClient } from '@repo/supabase/server';
@@ -34,6 +37,8 @@ R15|apps/erp/src/app/api/projects/[id]/qc/[inspectionId]/route.ts:4:import { cre
 R15|apps/erp/src/app/api/projects/[id]/survey/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/proposals/[id]/generate-pdf/route.ts:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/components/design/lead-files-panel.tsx:23:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/expenses/document-upload.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/expenses/documents-list.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/components/hr/leave-request-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/add-activity-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/lead-files-list.tsx:4:import { createClient } from '@repo/supabase/client';
@@ -50,7 +55,7 @@ R15|apps/erp/src/components/projects/project-files/helpers.ts:2:import { createC
 R15|apps/erp/src/components/projects/project-files/index.tsx:17:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/projects/project-files/parts-boxes.tsx:11:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/projects/project-files/parts-rows.tsx:15:import { createClient } from '@repo/supabase/client';
-R15|apps/erp/src/components/projects/stepper-steps/step-actuals.tsx:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/components/projects/stepper-steps/step-actuals.tsx:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/components/projects/stepper-steps/step-amc.tsx:9:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/components/projects/stepper-steps/step-commissioning.tsx:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/components/projects/stepper-steps/step-qc.tsx:3:import { createClient } from '@repo/supabase/server';

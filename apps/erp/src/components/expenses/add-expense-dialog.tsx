@@ -46,8 +46,15 @@ export function AddExpenseDialog({ projects, categories }: {
   }
 
   useEffect(() => {
-    if (!open) reset();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!open) {
+      setProjectId('');
+      setCategoryId('');
+      setDescription('');
+      setAmount('');
+      setExpenseDate(new Date().toISOString().slice(0, 10));
+      setError(null);
+      setSaving(false);
+    }
   }, [open]);
 
   const isGeneral = projectId === GENERAL_SENTINEL;

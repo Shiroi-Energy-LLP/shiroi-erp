@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { createClient } from '@repo/supabase/server';
@@ -214,7 +215,7 @@ export async function StepActuals({ projectId }: StepActualsProps) {
         <h3 className="font-semibold mb-2 text-base">Site expenses</h3>
         <p className="text-xs text-n-500 mb-2">
           To submit a voucher, go to{' '}
-          <a href="/expenses" className="text-blue-600 hover:underline">/expenses</a> and select this project.
+          <Link href="/expenses" className="text-blue-600 hover:underline">/expenses</Link> and select this project.
         </p>
         <SiteExpensesReadonly projectId={projectId} />
       </section>
