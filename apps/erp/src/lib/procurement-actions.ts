@@ -480,3 +480,68 @@ export async function markItemsReadyToDispatch(input: {
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }
+
+// ---------------------------------------------------------------------------
+// Ad-hoc Vendor Creation
+//
+// Called from the RFQ "Add new vendor" inline dialog when the Purchase Engineer
+// discovers a vendor mid-RFQ and doesn't want to context-switch to /vendors.
+// Deliberately minimal — company_name + contact_person + phone + email — rest
+// is filled in later from the vendors page when the vendor matures into a
+// recurring supplier.
+// ---------------------------------------------------------------------------
+
+export async function createVendorAdHoc(input: {
+  companyName: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  projectId: string; // for revalidation only
+}): Promise<{ success: boolean; error?: string; vendorId?: string }> {
+  const op = '[createVendorAdHoc]';
+  console.log(`${op} Starting: ${input.companyName}`);
+
+  if (!input.companyName.trim()) {
+    return { success: false, error: 'Company name is required' };
+  }
+  if (!input.phone?.trim() && !input.email?.trim()) {
+    return { success: false, error: 'Provide at least a phone or email for the vendor' };
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Generate a short human-friendly vendor_code (DB has unique constraint).
+  // SHIROI/VEN/{YEAR}/{6-rand-alphanum}. Uniqueness collision risk is negligible
+  // but we tolerate the insert error and surface it cleanly.
+  const randSuffix = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const vendorCode = `SHIROI/VEN/${new Date().getFullYear()}/${randSuffix}`;
+
+  const { data, error } = await supabase
+    .from('vendors')
+    .insert({
+      company_name: input.companyName.trim(),
+      vendor_code: vendorCode,
+      contact_person: input.contactPerson?.trim() || null,
+      phone: input.phone?.trim() || null,
+      email: input.email?.trim() || null,
+      vendor_type: 'supplier',
+      is_active: true,
+      is_msme: false,
+      is_blacklisted: false,
+      is_preferred: false,
+      payment_terms_days: 30,
+    } as any)
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/procurement/project/${input.projectId}`);
+  revalidatePath('/vendors');
+  return { success: true, vendorId: data.id };
+}

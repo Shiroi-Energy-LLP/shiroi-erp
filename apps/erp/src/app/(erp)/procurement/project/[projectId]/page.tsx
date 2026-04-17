@@ -1,47 +1,139 @@
-import { getPurchaseDetail } from '@/lib/procurement-queries';
-import { formatINR, formatDate } from '@repo/ui/formatters';
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '@repo/ui';
-import { ArrowLeft, ShoppingCart, Package, Check } from 'lucide-react';
-import Link from 'next/link';
-import { POStatusBadge } from '@/components/procurement/po-status-badge';
-import {
-  VendorAssignmentTable,
-  PriorityToggle,
-} from '@/components/procurement/purchase-detail-controls';
+/**
+ * Procurement — Project workspace (5-tab shell)
+ *
+ * URL-driven tabs via `?tab=boq|rfq|comparison|po|dispatch` (default `boq`).
+ *
+ * Architecture:
+ *   - Server component (this file) fetches every tab's data in parallel via
+ *     Promise.all and passes it down.
+ *   - @repo/ui Tabs is a client component; the shell uses plain <Link>-based
+ *     navigation so only the active tab's heavy children are server-rendered.
+ *   - Tab content lives in `_tabs/*.tsx`; client interactivity lives in `_client/*.tsx`.
+ */
 
-interface PurchaseDetailPageProps {
-  params: Promise<{ projectId: string }>;
+import Link from 'next/link';
+import { Card, CardContent, Badge, Button } from '@repo/ui';
+import { formatINR } from '@repo/ui/formatters';
+import { ArrowLeft, ShoppingCart, Check, Lock } from 'lucide-react';
+
+import { getPurchaseDetail } from '@/lib/procurement-queries';
+import { listRfqsForProject, getRfqComparisonData, getPendingApprovalPOs } from '@/lib/rfq-queries';
+import { getUserProfile } from '@/lib/auth';
+import { PriorityToggle } from '@/components/procurement/purchase-detail-controls';
+
+import { TabBoq } from './_tabs/tab-boq';
+import { TabRfq } from './_tabs/tab-rfq';
+import { TabComparison } from './_tabs/tab-comparison';
+import { TabPo } from './_tabs/tab-po';
+import { TabDispatch } from './_tabs/tab-dispatch';
+
+type TabKey = 'boq' | 'rfq' | 'comparison' | 'po' | 'dispatch';
+
+const VALID_TABS: readonly TabKey[] = ['boq', 'rfq', 'comparison', 'po', 'dispatch'] as const;
+
+function parseTab(raw: string | string[] | undefined): TabKey {
+  if (typeof raw !== 'string') return 'boq';
+  return (VALID_TABS as readonly string[]).includes(raw) ? (raw as TabKey) : 'boq';
 }
 
-export default async function PurchaseDetailPage({ params }: PurchaseDetailPageProps) {
-  const { projectId } = await params;
+interface PageProps {
+  params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ tab?: string | string[] }>;
+}
 
-  let data: Awaited<ReturnType<typeof getPurchaseDetail>>;
+export default async function ProcurementProjectPage({ params, searchParams }: PageProps) {
+  const { projectId } = await params;
+  const { tab: tabParam } = await searchParams;
+  const activeTab = parseTab(tabParam);
+
+  // Fetch all tab data + profile in parallel. Each query degrades gracefully
+  // (returns null / empty list on failure) so one bad query doesn't blank the page.
+  let detail: Awaited<ReturnType<typeof getPurchaseDetail>>;
   try {
-    data = await getPurchaseDetail(projectId);
-  } catch (error) {
+    [detail] = await Promise.all([getPurchaseDetail(projectId)]);
+  } catch (e) {
+    console.error('[ProcurementProjectPage] getPurchaseDetail failed', {
+      projectId,
+      error: e instanceof Error ? e.message : String(e),
+    });
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <ShoppingCart className="w-10 h-10 text-red-400 mb-3" />
         <h3 className="text-sm font-bold text-n-700">Failed to Load</h3>
-        <p className="text-xs text-n-500">Could not load purchase data.</p>
+        <p className="text-xs text-n-500">Could not load purchase data for this project.</p>
       </div>
     );
   }
 
-  const { project, items, purchaseOrders, vendors } = data;
+  const { project, items, purchaseOrders, vendors } = detail;
 
-  // Summary
+  const [rfqs, comparison, pendingApprovals, profile] = await Promise.all([
+    listRfqsForProject(projectId),
+    getRfqComparisonData(projectId),
+    getPendingApprovalPOs(),
+    getUserProfile(),
+  ]);
+
+  const viewerRole = profile?.role ?? 'project_manager';
+  const viewerId = profile?.id ?? null;
+
+  // ── Tab completion state (drives ✓ / 🔒 badges on tab headers) ─────────────
   const totalWithTax = items.reduce((sum, i) => sum + Number(i.total_price || 0), 0);
-  const totalWithoutTax = items.reduce((sum, i) => sum + Number(i.quantity || 0) * Number(i.unit_price || 0), 0);
   const yetToPlace = items.filter((i) => i.procurement_status === 'yet_to_place').length;
   const ordered = items.filter((i) => i.procurement_status === 'order_placed').length;
-  const received = items.filter((i) => ['received', 'ready_to_dispatch', 'delivered'].includes(i.procurement_status)).length;
-  const withVendor = items.filter((i) => i.vendor_id).length;
+  const received = items.filter(
+    (i) => i.procurement_status === 'received' ||
+           i.procurement_status === 'ready_to_dispatch' ||
+           i.procurement_status === 'delivered',
+  ).length;
+
+  const tabState = {
+    boq: {
+      count: items.length,
+      complete: items.length > 0,
+      locked: false,
+    },
+    rfq: {
+      count: rfqs.length,
+      complete: rfqs.some((r) => r.status === 'sent' || r.status === 'comparing' || r.status === 'awarded'),
+      locked: items.length === 0,
+    },
+    comparison: {
+      count: comparison?.items.length ?? 0,
+      complete: Boolean(comparison && comparison.awards.length > 0),
+      locked: !comparison,
+    },
+    po: {
+      count: purchaseOrders.length,
+      complete: purchaseOrders.length > 0,
+      locked: false,
+    },
+    dispatch: {
+      count: purchaseOrders.filter((po) =>
+        po.status === 'sent_to_vendor' || po.status === 'acknowledged' || po.dispatched_at,
+      ).length,
+      complete: purchaseOrders.length > 0 && purchaseOrders.every((po) => po.actual_delivery_date),
+      locked: purchaseOrders.length === 0,
+    },
+  };
+
+  const tabsConfig: Array<{
+    key: TabKey;
+    label: string;
+    count: number;
+    complete: boolean;
+    locked: boolean;
+  }> = [
+    { key: 'boq', label: '1. BOQ', ...tabState.boq },
+    { key: 'rfq', label: '2. RFQ', ...tabState.rfq },
+    { key: 'comparison', label: '3. Compare', ...tabState.comparison },
+    { key: 'po', label: '4. POs', ...tabState.po },
+    { key: 'dispatch', label: '5. Dispatch', ...tabState.dispatch },
+  ];
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/procurement">
@@ -51,7 +143,7 @@ export default async function PurchaseDetailPage({ params }: PurchaseDetailPageP
           </Link>
           <div>
             <h1 className="text-lg font-heading font-bold text-n-900">
-              {project.project_number} — Purchase Request
+              {project.project_number} — Purchase Workspace
             </h1>
             <p className="text-xs text-n-500">{project.customer_name}</p>
           </div>
@@ -62,7 +154,7 @@ export default async function PurchaseDetailPage({ params }: PurchaseDetailPageP
         />
       </div>
 
-      {/* Summary Cards */}
+      {/* ── Summary cards ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card>
           <CardContent className="py-3 px-4 text-center">
@@ -96,67 +188,99 @@ export default async function PurchaseDetailPage({ params }: PurchaseDetailPageP
         </Card>
       </div>
 
-      {/* BOQ Items with Vendor Assignment */}
-      <Card>
-        <CardHeader className="py-3 px-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold">
-              Purchase Items — Vendor Assignment
-              <span className="text-xs font-normal text-n-500 ml-2">
-                ({withVendor}/{items.length} assigned)
+      {/* ── Tab navigation (URL-driven via Link) ────────────────────────── */}
+      <div className="flex items-center gap-1 border-b border-n-200">
+        {tabsConfig.map((t) => {
+          const isActive = t.key === activeTab;
+          const baseClasses =
+            'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors';
+          const activeClasses = 'border-p-600 text-p-700';
+          const inactiveClasses = t.locked
+            ? 'border-transparent text-n-400 cursor-not-allowed'
+            : 'border-transparent text-n-600 hover:text-n-900 hover:border-n-300';
+
+          const inner = (
+            <>
+              <span>{t.label}</span>
+              {t.count > 0 && (
+                <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+                  {t.count}
+                </Badge>
+              )}
+              {t.complete && <Check className="h-3.5 w-3.5 text-green-600" />}
+              {t.locked && <Lock className="h-3 w-3 text-n-400" />}
+            </>
+          );
+
+          if (t.locked && !isActive) {
+            return (
+              <span
+                key={t.key}
+                className={`${baseClasses} ${inactiveClasses}`}
+                aria-disabled="true"
+                title="Complete the previous step first"
+              >
+                {inner}
               </span>
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <VendorAssignmentTable
+            );
+          }
+
+          return (
+            <Link
+              key={t.key}
+              href={`/procurement/project/${projectId}?tab=${t.key}`}
+              className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+              scroll={false}
+            >
+              {inner}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* ── Active tab content (server-rendered) ────────────────────────── */}
+      <div>
+        {activeTab === 'boq' && (
+          <TabBoq
             projectId={projectId}
             items={items}
             vendors={vendors}
+            viewerRole={viewerRole}
           />
-        </CardContent>
-      </Card>
-
-      {/* Generated POs */}
-      {purchaseOrders.length > 0 && (
-        <Card>
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm font-semibold">
-              Purchase Orders ({purchaseOrders.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-n-200 bg-n-50">
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">PO Number</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Vendor</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Date</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">Amount</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {purchaseOrders.map((po) => (
-                    <tr key={po.id} className="border-b border-n-100 hover:bg-n-50">
-                      <td className="px-2 py-1.5 text-[11px]">
-                        <Link href={`/procurement/${po.id}`} className="text-p-600 hover:underline font-medium">
-                          {po.po_number}
-                        </Link>
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px] text-n-700">{po.vendors?.company_name ?? '—'}</td>
-                      <td className="px-2 py-1.5 text-[10px] text-n-500">{formatDate(po.po_date)}</td>
-                      <td className="px-2 py-1.5 text-[11px] text-right font-mono">{formatINR(po.total_amount)}</td>
-                      <td className="px-2 py-1.5"><POStatusBadge status={po.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        )}
+        {activeTab === 'rfq' && (
+          <TabRfq
+            projectId={projectId}
+            items={items}
+            rfqs={rfqs}
+            vendors={vendors}
+            viewerRole={viewerRole}
+          />
+        )}
+        {activeTab === 'comparison' && (
+          <TabComparison
+            projectId={projectId}
+            comparison={comparison}
+            viewerRole={viewerRole}
+          />
+        )}
+        {activeTab === 'po' && (
+          <TabPo
+            projectId={projectId}
+            purchaseOrders={purchaseOrders}
+            pendingApprovals={pendingApprovals}
+            viewerRole={viewerRole}
+            viewerId={viewerId}
+          />
+        )}
+        {activeTab === 'dispatch' && (
+          <TabDispatch
+            projectId={projectId}
+            purchaseOrders={purchaseOrders}
+            viewerRole={viewerRole}
+          />
+        )}
+      </div>
     </div>
   );
 }

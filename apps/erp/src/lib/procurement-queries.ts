@@ -218,7 +218,7 @@ export async function getPurchaseDetail(projectId: string): Promise<{
   project: { id: string; project_number: string; customer_name: string; procurement_status: string | null; procurement_priority: string | null };
   items: PurchaseDetailItem[];
   purchaseOrders: POListItem[];
-  vendors: { id: string; company_name: string }[];
+  vendors: { id: string; company_name: string; phone: string | null; email: string | null; contact_person: string | null }[];
 }> {
   const op = '[getPurchaseDetail]';
   console.log(`${op} Starting for: ${projectId}`);
@@ -245,7 +245,7 @@ export async function getPurchaseDetail(projectId: string): Promise<{
       .order('created_at', { ascending: false }),
     supabase
       .from('vendors')
-      .select('id, company_name')
+      .select('id, company_name, phone, email, contact_person')
       .eq('is_active', true)
       .is('deleted_at', null)
       .order('company_name')

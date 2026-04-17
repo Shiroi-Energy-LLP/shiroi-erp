@@ -1135,3 +1135,49 @@ export async function cancelRfq(rfqId: string, reason: string): Promise<ActionRe
     return err(e instanceof Error ? e.message : 'Unknown error');
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// Upload RFQ Quote File (server-side Storage write)
+//
+// Called by the Excel Quote Upload Dialog before it invokes submitQuoteFromExcel.
+// The client sends the raw file via FormData; we write it to the
+// `rfq-excel-uploads` bucket from the server so components don't need an inline
+// Supabase client import (NEVER-DO rule #15).
+// ═══════════════════════════════════════════════════════════════════════
+
+export async function uploadRfqQuoteFile(input: {
+  rfqId: string;
+  invitationId: string;
+  fileName: string;
+  file: File;
+}): Promise<ActionResult<{ filePath: string }>> {
+  const op = '[uploadRfqQuoteFile]';
+  console.log(`${op} Starting`, { invitationId: input.invitationId, fileName: input.fileName });
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return err('Not authenticated');
+
+    // Safe filename — alphanumerics + dot/underscore/dash only.
+    const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `rfq/${input.rfqId}/${input.invitationId}/${Date.now()}_${safeName}`;
+
+    const { error: uploadErr } = await supabase
+      .storage
+      .from('rfq-excel-uploads')
+      .upload(path, input.file, {
+        contentType: input.file.type || 'application/octet-stream',
+      });
+
+    if (uploadErr) {
+      console.error(`${op} upload failed`, { path, message: uploadErr.message });
+      return err(uploadErr.message);
+    }
+
+    return ok({ filePath: path });
+  } catch (e) {
+    console.error(`${op} threw`, { invitationId: input.invitationId, e });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
