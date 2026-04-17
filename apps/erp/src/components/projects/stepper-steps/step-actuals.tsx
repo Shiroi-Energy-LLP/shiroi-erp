@@ -2,11 +2,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { createClient } from '@repo/supabase/server';
 import { ActualsLockButton, EditableQtyCell } from '@/components/projects/forms/actuals-controls';
-// TEMP: voucher controls moved to /expenses — replaced by SiteExpensesReadonly in Task 11
-// import { VoucherTable } from '@/components/projects/forms/voucher-table-controls';
-// import { SiteExpenseForm } from '@/components/projects/forms/site-expense-form';
-// import { getProjectSiteExpenses } from '@/lib/site-expenses-actions';
-import { FileText, Receipt, TrendingUp, Lock, AlertTriangle } from 'lucide-react';
+import { SiteExpensesReadonly } from '@/components/projects/site-expenses-readonly';
+import { FileText, Receipt, TrendingUp, Lock } from 'lucide-react';
 
 interface StepActualsProps {
   projectId: string;
@@ -212,11 +209,15 @@ export async function StepActuals({ projectId }: StepActualsProps) {
         </CardContent>
       </Card>
 
-      {/* TEMP: SiteExpensesReadonly embedded here in Task 11 */}
-      {/* <section>
-        <h3 className="font-semibold mb-2">Site expenses</h3>
+      {/* Site expenses — read-only embed from /expenses module */}
+      <section>
+        <h3 className="font-semibold mb-2 text-base">Site expenses</h3>
+        <p className="text-xs text-n-500 mb-2">
+          To submit a voucher, go to{' '}
+          <a href="/expenses" className="text-blue-600 hover:underline">/expenses</a> and select this project.
+        </p>
         <SiteExpensesReadonly projectId={projectId} />
-      </section> */}
+      </section>
     </div>
   );
 }
