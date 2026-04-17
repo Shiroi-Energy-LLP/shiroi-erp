@@ -68,9 +68,9 @@ Milestones come from `execution_milestones_master` (migration 042) — a lookup 
 
 ### 7. Actuals
 
-`VoucherTable` with category filter and inline edit on pending rows. Vouchers live in `project_site_expenses` with `status` in `pending / approved / rejected / auto_approved`. Submit / approve / reject happen in `/vouchers` (the cross-project approval queue — owned by finance + founder + PM).
+**Voucher entry** now happens in the standalone `/expenses` module (migration 066). The Actuals tab embeds a read-only `SiteExpensesReadonly` view filtered to the project. To submit a voucher, go to `/expenses` → `+ Add Expense` and select this project. Vouchers flow through the 3-stage project-linked workflow (submitted → verified → approved).
 
-BOQ quantity is editable by PM here (click-to-edit). Lock mechanism: `actuals_locked` + `actuals_locked_at` + `actuals_locked_by` on `projects` (migration 038). Locking makes BOI / BOQ / Actuals read-only; a pending-voucher warning gates the lock action. Margin color coding: green ≥15%, amber ≥5%, red <5%.
+BOQ quantity is editable by PM here (click-to-edit). Lock mechanism: `actuals_locked` + `actuals_locked_at` + `actuals_locked_by` on `projects` (migration 038). Locking makes BOI / BOQ / Actuals read-only. Margin color coding: green ≥15%, amber ≥5%, red <5%.
 
 ### 8. QC
 

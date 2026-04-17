@@ -17,10 +17,11 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
+| **Expenses Module** | Claude | ✅ Shipped Apr 17 | Standalone /expenses module; dual workflow (project-linked 3-stage + general 2-stage); per-submitter voucher numbers; category master + CRUD; Project Actuals read-only embed. Migration 066. See `docs/modules/expenses.md`. |
 | **Purchase v2 feedback pass** | Claude | ✅ Shipped Apr 17 | Vivek-review feedback across all 5 tabs: Tab 1 inline Qty/Rate + BOQ PDF; Tab 2 vendor typeahead + invitation rows; Tab 3 terms footer; Tab 4 Send-to-vendor (Email/WA/Copy) + founder quick-PO auto-approve; Tab 5 generated `dispatch_stage` + PM role widening + receipt cascade. See `docs/superpowers/specs/2026-04-17-purchase-v2-feedback-design.md` + plan. Migration 065. |
 | **Purchase Module v2** | Claude | ✅ Shipped Apr 17 | Full 5-stage competitive pipeline (BOQ → RFQ → Comparison → PO → Dispatch), vendor portal, founder approval, audit log, 10 phases. See `docs/modules/purchase.md` + `docs/superpowers/specs/2026-04-17-purchase-module-v2-design.md`. Migration 060. |
 | Plant Monitoring module shipped | Claude | ✅ Shipped Apr 16 | `/om/plant-monitoring` page, migration 059, 11 commits. See `docs/modules/om.md`. |
-| Docs restructure | Claude | 🟡 In progress Apr 17 | This refactor. See `docs/superpowers/specs/2026-04-17-docs-restructure-design.md`. |
+| Docs restructure | Claude | ✅ Shipped Apr 17 | This refactor. See `docs/superpowers/specs/2026-04-17-docs-restructure-design.md`. |
 | Marketing + Design revamp — feedback loop | Prem (marketing mgr) | 🔜 Next | Get Prem's feedback on /sales + partners + design workspace + closure band UI. Same cycle as Manivel's PM feedback. |
 | Zoho Books import | Vivek (provides CSVs) | 🔜 Blocked on CSVs | Vendors, POs, invoices, payments. Dedup against existing 108 vendors, 850 POs. |
 | Employee testing week | All | 🔜 Planned | 5–6 employees review on dev for 1 week. Data flags + inline edit + verification. |
@@ -32,8 +33,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **065** (Purchase v2 feedback, Apr 17) | None — fully caught up |
-| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 065** — 53 migrations waiting on the next prod window |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **066** (Expenses module, Apr 17) | None — fully caught up |
+| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 066** — 54 migrations waiting on the next prod window |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, and WhatsApp; not all of that needs to move to prod).
 
