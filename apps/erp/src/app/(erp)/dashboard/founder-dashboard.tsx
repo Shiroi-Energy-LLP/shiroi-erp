@@ -11,16 +11,36 @@ import {
 } from '@/lib/cached-dashboard-queries';
 import { getUserProfile } from '@/lib/auth';
 import { shortINR } from '@repo/ui/formatters';
-import { Eyebrow } from '@repo/ui';
+import { Eyebrow, Badge } from '@repo/ui';
 import { KpiCard } from '@/components/kpi-card';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import Link from 'next/link';
+import { createClient } from '@repo/supabase/server';
 
 import { CashAlertTable } from './cash-alert-table';
 import { PipelineSummary } from './pipeline-summary';
 import { PendingApprovals } from './pending-approvals';
 import { OverdueReports } from './overdue-reports';
 import { ClosureApprovalsPanel } from '@/components/sales/closure-approvals-panel';
+
+async function getZohoSyncHealth() {
+  const op = '[getZohoSyncHealth]';
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('zoho_sync_queue')
+    .select('status')
+    .in('status', ['pending', 'in_progress', 'dead', 'failed']);
+  if (error) {
+    console.error(`${op} query failed:`, { code: error.code, message: error.message });
+    return { pending: 0, dead: 0 };
+  }
+  const rows = (data ?? []) as Array<{ status: string }>;
+  return {
+    pending: rows.filter(r => r.status === 'pending' || r.status === 'in_progress').length,
+    dead: rows.filter(r => r.status === 'dead' || r.status === 'failed').length,
+  };
+}
 
 export async function FounderDashboard() {
   // All five "company aggregate" queries below are cached via
@@ -35,6 +55,7 @@ export async function FounderDashboard() {
     profile,
     cashSummary,
     amcSummary,
+    syncHealth,
   ] = await Promise.all([
     getCashNegativeProjects(),
     getCachedPipelineSummary(),
@@ -43,6 +64,7 @@ export async function FounderDashboard() {
     getUserProfile(),
     getCachedCompanyCashSummary(),
     getCachedAmcMonthlySummary(),
+    getZohoSyncHealth(),
   ]);
   const payrollDays = daysUntilPayroll();
   const firstName = profile?.full_name?.split(' ')[0] ?? 'there';
@@ -113,6 +135,33 @@ export async function FounderDashboard() {
               </div>
               <Link href="/om/amc" className="mt-3 block text-xs text-p-600 hover:underline">
                 View AMC Schedule →
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Zoho Sync Health */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Zoho Sync</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Pending sync</span>
+                <Badge variant={syncHealth.pending > 0 ? 'pending' : 'success'}>
+                  {syncHealth.pending}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Dead / failed</span>
+                <Badge variant={syncHealth.dead > 0 ? 'error' : 'success'}>
+                  {syncHealth.dead}
+                </Badge>
+              </div>
+              <Link href="/vendor-bills" className="mt-2 block text-xs text-p-600 hover:underline">
+                View Vendor Bills →
+              </Link>
+              <Link href="/profitability" className="block text-xs text-p-600 hover:underline">
+                View Profitability →
               </Link>
             </CardContent>
           </Card>

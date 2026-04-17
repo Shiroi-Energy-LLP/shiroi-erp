@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getProjectProfitability } from '@/lib/profitability-queries';
+import { getProfitabilityV2 } from '@/lib/vendor-bills-queries';
 import { formatINR } from '@repo/ui/formatters';
 import {
   Card,
@@ -15,67 +15,60 @@ import {
   Eyebrow,
 } from '@repo/ui';
 import { BarChart3 } from 'lucide-react';
-import { FilterSelect } from '@/components/filter-select';
-import { FilterBar } from '@/components/filter-bar';
 
-const STATUS_OPTIONS = [
-  { value: 'order_received', label: 'Order Received' },
-  { value: 'yet_to_start', label: 'Yet to Start' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'holding_shiroi', label: 'Holding from Shiroi' },
-  { value: 'holding_client', label: 'Holding from Client' },
-  { value: 'waiting_net_metering', label: 'Waiting for Net Metering' },
-  { value: 'meter_client_scope', label: 'Meter - Client Scope' },
-];
-
-function marginColor(margin: number | null): string {
-  if (margin == null) return 'text-muted-foreground';
-  if (margin > 15) return 'text-[#065F46]';
-  if (margin >= 5) return 'text-[#92400E]';
-  return 'text-[#991B1B]';
-}
-
-function marginBg(margin: number | null): 'success' | 'pending' | 'error' | 'neutral' {
+function marginVariant(margin: number | null): 'success' | 'pending' | 'error' | 'neutral' {
   if (margin == null) return 'neutral';
   if (margin > 15) return 'success';
   if (margin >= 5) return 'pending';
   return 'error';
 }
 
-interface ProfitabilityPageProps {
-  searchParams: Promise<{
-    status?: string;
-  }>;
-}
+export default async function ProfitabilityPage() {
+  const projects = await getProfitabilityV2();
 
-export default async function ProfitabilityPage({ searchParams }: ProfitabilityPageProps) {
-  const params = await searchParams;
-  const projects = await getProjectProfitability({
-    status: params.status || undefined,
-  });
+  const totalContracted = projects.reduce((s, p) => s + Number(p.contracted_value), 0);
+  const totalCost = projects.reduce((s, p) => s + Number(p.total_cost ?? 0), 0);
+  const totalReceivables = projects.reduce((s, p) => s + Number(p.total_ar_outstanding ?? 0), 0);
+  const totalPayables = projects.reduce((s, p) => s + Number(p.total_ap_outstanding ?? 0), 0);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <Eyebrow className="mb-1">PROFITABILITY</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Profitability</h1>
+      <div>
+        <Eyebrow className="mb-1">FINANCE</Eyebrow>
+        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Profitability (V2)</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Live from <code className="font-mono text-xs">get_project_profitability_v2</code> — includes Zoho historical data
+        </p>
       </div>
 
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-4">
-          <FilterBar basePath="/profitability" filterParams={['status']}>
-            <FilterSelect paramName="status" className="w-44">
-              <option value="">All Statuses</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </FilterSelect>
-          </FilterBar>
-        </CardContent>
-      </Card>
+      {/* Summary KPIs */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground mb-1">Total Contracted</p>
+            <p className="text-lg font-bold font-mono">{formatINR(totalContracted)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground mb-1">Total Cost</p>
+            <p className="text-lg font-bold font-mono text-[#991B1B]">{formatINR(totalCost)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground mb-1">AR Outstanding</p>
+            <p className="text-lg font-bold font-mono text-[#92400E]">{formatINR(totalReceivables)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground mb-1">AP Outstanding</p>
+            <p className="text-lg font-bold font-mono text-[#1E3A5F]">{formatINR(totalPayables)}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Table */}
       <Card>
@@ -85,9 +78,10 @@ export default async function ProfitabilityPage({ searchParams }: ProfitabilityP
               <TableRow>
                 <TableHead>Project #</TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead className="text-right">Size (kWp)</TableHead>
-                <TableHead className="text-right">Contracted Value</TableHead>
-                <TableHead className="text-right">Actual Cost</TableHead>
+                <TableHead className="text-right">Contracted</TableHead>
+                <TableHead className="text-right">Invoiced</TableHead>
+                <TableHead className="text-right">Received</TableHead>
+                <TableHead className="text-right">Cost</TableHead>
                 <TableHead className="text-right">Margin</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
@@ -95,39 +89,42 @@ export default async function ProfitabilityPage({ searchParams }: ProfitabilityP
             <TableBody>
               {projects.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={8}>
                     <EmptyState
                       icon={<BarChart3 className="h-12 w-12" />}
-                      title="No projects found"
+                      title="No project data found"
                       description="Profitability data will appear here once projects have financial activity."
                     />
                   </TableCell>
                 </TableRow>
               ) : (
                 projects.map((proj) => (
-                  <TableRow key={proj.id}>
+                  <TableRow key={proj.project_id}>
                     <TableCell>
                       <Link
-                        href={`/projects/${proj.id}`}
+                        href={`/projects/${proj.project_id}`}
                         className="text-[#00B050] hover:underline font-medium font-mono text-sm"
                       >
                         {proj.project_number}
                       </Link>
                     </TableCell>
-                    <TableCell>{proj.customer_name}</TableCell>
+                    <TableCell className="text-sm">{proj.customer_name}</TableCell>
                     <TableCell className="text-right font-mono text-sm">
-                      {proj.system_size_kwp != null ? `${proj.system_size_kwp}` : '—'}
+                      {formatINR(Number(proj.contracted_value))}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm">
-                      {proj.contracted_value != null ? formatINR(proj.contracted_value) : '—'}
+                      {Number(proj.total_invoiced) > 0 ? formatINR(Number(proj.total_invoiced)) : '—'}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm">
-                      {proj.actual_cost != null ? formatINR(proj.actual_cost) : '—'}
+                      {Number(proj.total_received) > 0 ? formatINR(Number(proj.total_received)) : '—'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {Number(proj.total_cost) > 0 ? formatINR(Number(proj.total_cost)) : '—'}
                     </TableCell>
                     <TableCell className="text-right">
-                      {proj.margin != null ? (
-                        <Badge variant={marginBg(proj.margin)}>
-                          {proj.margin.toFixed(1)}%
+                      {proj.margin_pct != null ? (
+                        <Badge variant={marginVariant(Number(proj.margin_pct))}>
+                          {Number(proj.margin_pct).toFixed(1)}%
                         </Badge>
                       ) : (
                         <span className="text-sm text-muted-foreground">—</span>

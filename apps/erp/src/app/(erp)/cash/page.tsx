@@ -9,6 +9,7 @@ import {
   getEscalationVariant,
   cashPositionColor,
 } from '@/lib/cash-queries';
+import { getCashSummaryV2 } from '@/lib/vendor-bills-queries';
 import { formatINR, shortINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
@@ -28,10 +29,11 @@ import {
 import { TrendingUp } from 'lucide-react';
 
 export default async function CashFlowPage() {
-  const [summary, positions, overdueInvoices] = await Promise.all([
+  const [summary, positions, overdueInvoices, v2Summary] = await Promise.all([
     getCompanyCashSummary(),
     getAllProjectPositions(),
     getOverdueInvoices(),
+    getCashSummaryV2(),
   ]);
 
   return (
@@ -80,6 +82,44 @@ export default async function CashFlowPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Zoho V2 Summary Panel */}
+      {v2Summary && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Finance V2 — Consolidated View (incl. Zoho historical data)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">AR Receivables</p>
+                <p className="text-base font-bold font-mono text-[#92400E]">
+                  {shortINR(Number(v2Summary.total_receivables))}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">AP Bills Outstanding</p>
+                <p className="text-base font-bold font-mono text-[#991B1B]">
+                  {shortINR(Math.abs(Number(v2Summary.total_ap_bills)))}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">AP PO Commitments</p>
+                <p className="text-base font-bold font-mono text-[#1E3A5F]">
+                  {shortINR(Math.abs(Number(v2Summary.total_ap_pos)))}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Reconciliation Flags</p>
+                <p className="text-base font-bold font-mono">
+                  {v2Summary.open_reconciliation_count}
+                  <span className="text-xs text-muted-foreground ml-1">discrepancies</span>
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Project Positions Table */}
       <Card>

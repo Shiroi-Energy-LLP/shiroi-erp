@@ -79,6 +79,7 @@ const ITEMS = {
   dataQuality:    { label: 'Data Quality',      href: '/data-quality',       icon: 'Flag' },
   bomReview:      { label: 'BOM Review',        href: '/bom-review',         icon: 'ListChecks' },
   expenses:       { label: 'Expenses',          href: '/expenses',           icon: 'Receipt' },
+  vendorBills:    { label: 'Vendor Bills',      href: '/vendor-bills',       icon: 'FileText' },
 } as const satisfies Record<string, NavItem>;
 
 // ---------------------------------------------------------------------------
@@ -93,7 +94,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring] },
-    { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.profitability] },
+    { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.vendorBills, ITEMS.vendorPayments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
     { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality, ITEMS.bomReview] },
@@ -158,7 +159,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Overview',     items: [ITEMS.dashboard] },
     { label: 'Cash',          items: [ITEMS.cashFlow] },
     { label: 'Billing',      items: [ITEMS.invoices, ITEMS.payments] },
-    { label: 'Vendor',       items: [ITEMS.vendorPayments, ITEMS.msmeCompliance] },
+    { label: 'Vendor',       items: [ITEMS.vendorBills, ITEMS.vendorPayments, ITEMS.msmeCompliance] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Analysis',     items: [ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
