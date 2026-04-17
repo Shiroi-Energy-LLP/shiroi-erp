@@ -1,15 +1,16 @@
 /**
  * Tab 3 — Quote comparison matrix.
  *
- * Placeholder rendered by Phase 3. Full L1 auto-highlight + override + award
- * UI lands in Phase 4 via `ComparisonMatrix` client component.
+ * Server component. Renders the empty state if no quotes have been submitted
+ * across any open RFQ for this project; otherwise delegates to the interactive
+ * `<ComparisonMatrix>` client component (Phase 4).
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { formatINR } from '@repo/ui/formatters';
+import { Card, CardContent } from '@repo/ui';
 import { BarChart3 } from 'lucide-react';
 import type { Database } from '@repo/types/database';
 import type { ComparisonMatrix as ComparisonData } from '@/lib/rfq-queries';
+import { ComparisonMatrix } from '../_client/comparison-matrix';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -34,59 +35,10 @@ export function TabComparison({ comparison }: TabComparisonProps) {
     );
   }
 
-  // Minimal read-only preview for Phase 3. Phase 4 replaces this with the
-  // interactive matrix (L1 highlight, override-award UI, "Auto-Award All L1",
-  // "Generate POs" footer action bar).
   return (
     <Card>
-      <CardHeader className="py-3 px-4">
-        <CardTitle className="text-sm font-semibold">
-          Comparison — {comparison.rfqNumber}
-          <span className="text-xs font-normal text-n-500 ml-2">
-            ({comparison.items.length} items)
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-[11px]">
-            <thead>
-              <tr className="border-b border-n-200 bg-n-50">
-                <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Item</th>
-                <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">Qty</th>
-                <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">PB Rate</th>
-                <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">Quotes</th>
-                <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">L1 Rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparison.items.map((item) => {
-                const l1 =
-                  item.quotes.length > 0
-                    ? item.quotes.reduce((min, q) => (q.unitPrice < min.unitPrice ? q : min), item.quotes[0]!)
-                    : null;
-                return (
-                  <tr key={item.rfqItemId} className="border-b border-n-100 hover:bg-n-50">
-                    <td className="px-3 py-2">{item.description}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      {item.quantity} {item.unit}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-n-500">
-                      {item.priceBookRate !== null ? formatINR(item.priceBookRate) : '—'}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums">{item.quotes.length}</td>
-                    <td className="px-3 py-2 text-right tabular-nums font-medium text-green-700">
-                      {l1 ? formatINR(l1.unitPrice) : '—'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <div className="px-4 py-3 text-[11px] text-n-500 border-t border-n-100 bg-amber-50">
-          ⚠ Interactive award + Generate POs workflow lands in Phase 4.
-        </div>
+      <CardContent className="p-3">
+        <ComparisonMatrix comparison={comparison} />
       </CardContent>
     </Card>
   );
