@@ -147,6 +147,42 @@ test('vendor portal renders invalid-link state for unknown token', async ({ page
 });
 
 // ═══════════════════════════════════════════════════════════════════════
+// Test 10: /vendor-bills (Finance V2 — Apr 18)
+// ═══════════════════════════════════════════════════════════════════════
+test('vendor bills page renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/vendor-bills');
+  await expect(page.locator('body')).toContainText(/vendor bill/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test 11: /profitability renders V2 RPC output (Finance V2 — Apr 18)
+// ═══════════════════════════════════════════════════════════════════════
+test('profitability V2 page renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/profitability');
+  await expect(page.locator('body')).toContainText(/profitability/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test 12: /cash renders Zoho V2 summary panel (Finance V2 — Apr 18)
+// ═══════════════════════════════════════════════════════════════════════
+test('cash page renders with Zoho V2 panel', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/cash');
+  await expect(page.locator('body')).toContainText(/cash/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // Test 9: Procurement project comparison tab renders (empty state is fine)
 // ═══════════════════════════════════════════════════════════════════════
 //

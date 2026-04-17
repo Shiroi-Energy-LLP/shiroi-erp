@@ -2,7 +2,7 @@
 
 > Weekly-refreshed snapshot of what's in flight and where dev ↔ prod stand.
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
-> Last updated: **April 17, 2026** (Vivek).
+> Last updated: **April 18, 2026** (Claude — overnight agentic run).
 
 ---
 
@@ -17,15 +17,17 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
+| **Finance Module V2 + Zoho import** | Claude | ✅ Shipped Apr 18 | 5 migrations (067–072). 13-phase import script: 264 accounts, 17 taxes, 945 items, 296 vendors (272 new), 12 projects matched, 2336 vendor bills, 729 vendor payments, 190 expenses. Finance UI: /vendor-bills, /vendors/[id], /profitability V2, /cash Zoho panel, MSME aging strip, sync health dashboard card. Reconcile report: 3 discrepancies. See `docs/modules/finance.md`. |
 | **Expenses Module** | Claude | ✅ Shipped Apr 17 | Standalone /expenses module; dual workflow (project-linked 3-stage + general 2-stage); per-submitter voucher numbers; category master + CRUD; Project Actuals read-only embed. Migration 066. See `docs/modules/expenses.md`. |
 | **Purchase v2 feedback pass** | Claude | ✅ Shipped Apr 17 | Vivek-review feedback across all 5 tabs: Tab 1 inline Qty/Rate + BOQ PDF; Tab 2 vendor typeahead + invitation rows; Tab 3 terms footer; Tab 4 Send-to-vendor (Email/WA/Copy) + founder quick-PO auto-approve; Tab 5 generated `dispatch_stage` + PM role widening + receipt cascade. See `docs/superpowers/specs/2026-04-17-purchase-v2-feedback-design.md` + plan. Migration 065. |
 | **Purchase Module v2** | Claude | ✅ Shipped Apr 17 | Full 5-stage competitive pipeline (BOQ → RFQ → Comparison → PO → Dispatch), vendor portal, founder approval, audit log, 10 phases. See `docs/modules/purchase.md` + `docs/superpowers/specs/2026-04-17-purchase-module-v2-design.md`. Migration 060. |
 | Plant Monitoring module shipped | Claude | ✅ Shipped Apr 16 | `/om/plant-monitoring` page, migration 059, 11 commits. See `docs/modules/om.md`. |
 | Docs restructure | Claude | ✅ Shipped Apr 17 | This refactor. See `docs/superpowers/specs/2026-04-17-docs-restructure-design.md`. |
 | Marketing + Design revamp — feedback loop | Prem (marketing mgr) | 🔜 Next | Get Prem's feedback on /sales + partners + design workspace + closure band UI. Same cycle as Manivel's PM feedback. |
-| Zoho Books import | Vivek (provides CSVs) | 🔜 Blocked on CSVs | Vendors, POs, invoices, payments. Dedup against existing 108 vendors, 850 POs. |
+| Zoho manual project match | Vivek | 🔜 Action needed | 76 projects in `docs/zoho-review-queue.csv` need manual match in Supabase `zoho_project_mapping` table. After matching, re-run phases 07-13 to pick up those projects' transactions. |
+| Phase D (n8n Zoho live sync) | Claude | 🔜 Skipped per brief | n8n webhook wiring for live Zoho → ERP sync. Requires n8n running. All DB infrastructure (zoho_sync_queue, triggers, claim/ack RPCs) is ready. |
 | Employee testing week | All | 🔜 Planned | 5–6 employees review on dev for 1 week. Data flags + inline edit + verification. |
-| Prod deployment window | Vivek | 🔜 After testing | Batch-promote migrations 013–059 to prod + selective data migration. |
+| Prod deployment window | Vivek | 🔜 After testing | Batch-promote migrations 013–072 to prod + selective data migration. |
 
 ---
 
@@ -33,12 +35,16 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **066** (Expenses module, Apr 17) | None — fully caught up |
-| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 066** — 54 migrations waiting on the next prod window |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **072** (`claim_next_sync_batch` RPC, Apr 18) | None — fully caught up |
+| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 072** — 60 migrations waiting on the next prod window |
 
-**Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, and WhatsApp; not all of that needs to move to prod).
+**Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, Zoho Books, and WhatsApp; not all of that needs to move to prod — specifically the Zoho import tables are dev-only for now).
 
-All 59 migrations (001 through 059) are verified on dev via MCP `list_migrations` + spot-checks of key objects (plant_monitoring_credentials, inverters partitioned telemetry, data_flags, project_bois, channel_partners, lead_closure_approvals, `get_pipeline_summary`, `get_my_role`, `get_plant_monitoring_summary`, `get_company_cash_summary`, `get_lead_stage_counts`, `get_amc_monthly_summary`, `get_projects_without_today_report`, `marketing_manager` enum, `closure_soon` enum).
+**Overnight run 2026-04-18 results** (Claude agentic):
+- Migrations 067–072 applied and types regenerated (0 check-types errors)
+- 13-phase Zoho Books historical import run end-to-end. Key counts: 264 accounts, 17 taxes, 945 items, 20 contacts linked, 296 vendors (272 new created), 12 projects auto-matched (76 in review queue, 160 unmatched), 106 POs, 20 invoices, 7 customer payments, 2336 vendor bills (~2147 from prior run + 189 newly fixed), 729 vendor payments, 190 project expenses, 12 credit notes all skipped (no linked invoice).
+- Reconciliation: 3 discrepancies found across 12 matched projects (>₹1 tolerance). Report at `docs/zoho-import-report-2026-04-17.md`.
+- Finance UI Phase C shipped (see changelog).
 
 ---
 

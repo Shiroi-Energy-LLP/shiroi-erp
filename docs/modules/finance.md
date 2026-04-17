@@ -1,7 +1,33 @@
 # Finance Module
 
-> Invoices, customer payments, vendor payments (MSME 45-day SLA), profitability, cash, voucher approvals.
+> Invoices, customer payments, vendor bills, vendor payments (MSME 45-day SLA), profitability, cash, voucher approvals, Zoho Books historical backfill.
 > Related modules: [projects] (voucher origin), [purchase] (vendor payments), [sales] (proposal payment schedule).
+
+## Finance V2 (April 18, 2026)
+
+Finance Module V2 shipped overnight. Key additions on top of V1:
+
+**Schema additions (migrations 067–072):**
+- `vendor_bills` + `vendor_bill_items` — full bill tracking separate from POs
+- `zoho_sync_queue` — outbound sync queue with SKIP LOCKED dequeue (`claim_next_sync_batch` RPC)
+- `zoho_project_mapping`, `zoho_account_codes`, `zoho_tax_codes`, `zoho_items`, `zoho_monthly_summary`, `reconciliation_discrepancies` — Zoho Books lookup tables
+- `zoho_*_id` columns on 8 tables + `source` column on 5 tables (guard against sync re-enqueue)
+- `recalc_vendor_bill_totals()` cascade trigger on vendor_payments
+- `get_project_profitability_v2()`, `get_company_cash_summary_v2()`, `get_msme_aging_summary()` RPCs
+
+**Zoho Books historical backfill (2023–2026):**
+- 13-phase import script at `scripts/zoho-import/`
+- Reconcile report at `docs/zoho-import-report-2026-04-17.md`
+- 76 projects need manual match: `docs/zoho-review-queue.csv` → insert rows into `zoho_project_mapping` with `match_method = 'manual'`, then re-run phases 07-13
+
+**New Finance UI routes:**
+- `/vendor-bills` — list with KPIs + MSME badge + Zoho-import badge
+- `/vendor-bills/[id]` — detail with line items + payment history
+- `/vendors/[id]` — vendor detail with bills/payments/MSME info
+- `/vendor-payments` — upgraded with MSME aging strip (≥30d vendors) + bill linkage
+- `/profitability` — rebuilt on `get_project_profitability_v2`
+- `/cash` — Zoho V2 summary panel (AR/AP bills/AP POs/reconciliation flags)
+- `/dashboard` (founder) — Zoho sync health card (pending/dead queue counts)
 
 ## Overview
 
@@ -9,12 +35,15 @@ The finance module owns every rupee in and out of Shiroi — customer invoicing 
 
 ## Screens / Routes
 
+- `/vendor-bills` — V2 vendor bill list (KPI cards, MSME badge, Zoho-import source badge, status filter). `getVendorBills()` in `vendor-bills-queries.ts`.
+- `/vendor-bills/[id]` — Bill detail: vendor info card + amounts + line items + payment history.
+- `/vendors/[id]` — Vendor detail: MSME/Udyam info, total billed/outstanding/paid, bills list, payment history.
 - `/invoices` — invoice list + create. `CreateInvoiceDialog` handles GST split (CGST/SGST for intra-state, IGST inter-state) and auto-generates the SHIROI/INV/... number.
 - `/payments` — tabbed (via `payments-nav.tsx`):
   - **Overview** — project-level payments tracker. P&L per project, payment stages, next milestone amounts, expected collections this week / this month, invested vs received, filter by active / outstanding.
   - **Receipts** — customer payment log (Tier 3, immutable).
   - **Follow-ups** — `PaymentFollowupsTable` with 3 summary cards (open / overdue / escalated) and 7-column task table + `MarkFollowupCompleteButton`. Scoped to `tasks.category IN ('payment_followup','payment_escalation') AND is_completed = false`.
-- `/vendor-payments` — read-only per-PO vendor payment log (joins vendors + purchase_orders). Writes go through the `recordVendorPayment` server action in `finance-actions.ts`.
+- `/vendor-payments` — V2 upgraded: MSME aging strip (vendors ≥30d outstanding) + bill linkage column. Read-only. Writes go through the `recordVendorPayment` server action in `finance-actions.ts`.
 - `/msme-compliance` — MSME 45-day alert list (Day 40+).
 - `/profitability` — project-level P&L roll-up.
 - `/cash` — company-level cash position with opening / closing balance.
@@ -35,7 +64,12 @@ The finance module owns every rupee in and out of Shiroi — customer invoicing 
 
 - `customer_invoices` — FY-aware numbering, GST split columns, status.
 - `customer_payments` — Tier 3 immutable; triggers consultant payout.
-- `vendor_payments` — per-PO tracking, MSME 45-day SLA.
+- `vendor_bills` — V2: bill headers with `balance_due` generated column, cascaded by `recalc_vendor_bill_totals()` trigger.
+- `vendor_bill_items` — line items per bill (taxable_amount, CGST/SGST/IGST per line).
+- `vendor_payments` — per-bill or per-PO tracking, MSME 45-day SLA; `project_id` NOT NULL (derived from linked bill or PO).
+- `zoho_sync_queue` — outbound sync queue; `status` enum: pending/in_progress/done/dead; claimed via `claim_next_sync_batch()` with SKIP LOCKED.
+- `zoho_project_mapping` — 12 auto-matched + 76 pending manual review. `match_method`: auto/manual/fuzzy.
+- `reconciliation_discrepancies` — ERP vs Zoho XLS delta rows per project/metric/date.
 - `project_site_expenses` — voucher workflow (voucher_number, expense_category, status, submitted_by/at, approved_by/at, rejected_reason, receipt_file_path).
 - `proposal_payment_schedule` — milestone percentages (must sum to 100%), `followup_sla_days`, `escalation_sla_days`.
 - `consultant_commission_payouts` — per-tranche consultant disbursements, TDS-aware.
@@ -76,7 +110,12 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 
 ## RPCs (financial aggregation — SQL only, never JS `.reduce()`)
 
-- `get_company_cash_summary()` — company-wide cash position (migration 028).
+- `get_company_cash_summary()` — company-wide cash position (migration 028). **Still active on /cash V1 cards.**
+- `get_company_cash_summary_v2()` — V2: total_receivables, total_ap_bills, total_ap_pos, total_project_expenses_paid, open_reconciliation_count (migration 071).
+- `get_project_profitability_v2()` — V2 P&L per project: contracted_value, total_invoiced, total_received, total_billed, total_cost, margin_amount, margin_pct (migration 071). Used by `/profitability`.
+- `get_msme_aging_summary()` — days_outstanding + total_outstanding per MSME vendor (migration 071). Used by `/vendor-payments` aging strip.
+- `claim_next_sync_batch(entity_type, batch_size)` — atomic SKIP LOCKED dequeue from zoho_sync_queue (migration 072).
+- `ack_sync_batch(results JSONB)` — mark batch rows done/failed with exponential backoff (migration 072).
 - `get_pipeline_summary()` — sales pipeline ₹ totals weighted by close_probability (migration 048).
 - `get_msme_due_count()` — alert counter for Day 40+ vendors (migration 028).
 - `get_amc_monthly_summary()` — AMC visits scheduled vs completed (migration 048).
