@@ -3,7 +3,16 @@
  *
  * Per-PO row with the full lifecycle timeline. After Phase 6 each row exposes
  * the next available action (Mark dispatched → Record vendor dispatch → Mark
- * received) through the <DispatchActions> client component.
+ * received) through the <DispatchActions> client component, and renders a
+ * 4-stage lifecycle badge driven by the generated `dispatch_stage` column
+ * (migration 065):
+ *   draft       — PO sent to vendor (sent_to_vendor_at set)
+ *   shipped     — vendor confirmed dispatch (vendor_dispatch_date set)
+ *   in_transit  — vendor gave us a tracking number
+ *   received    — Shiroi acknowledged receipt (acknowledged_at set)
+ *
+ * The "Sent to vendor" column now prefers `sent_to_vendor_at` (set by the Send
+ * dialog / sendPOToVendor) and falls back to `dispatched_at` for legacy rows.
  */
 
 import Link from 'next/link';
@@ -13,6 +22,7 @@ import { Truck } from 'lucide-react';
 import type { Database } from '@repo/types/database';
 import type { POListItem } from '@/lib/procurement-queries';
 import { POStatusBadge } from '@/components/procurement/po-status-badge';
+import { DispatchStageBadge } from '@/components/procurement/dispatch-stage-badge';
 import { DispatchActions } from '../_client/dispatch-actions';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -20,6 +30,7 @@ type AppRole = Database['public']['Enums']['app_role'];
 interface TabDispatchProps {
   projectId: string;
   purchaseOrders: POListItem[];
+  vendors: Array<{ id: string; company_name: string; phone: string | null; email: string | null; contact_person: string | null }>;
   viewerRole: AppRole;
 }
 
@@ -65,58 +76,68 @@ export function TabDispatch({ purchaseOrders, viewerRole }: TabDispatchProps) {
                 <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Vendor shipped</th>
                 <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Tracking</th>
                 <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Received</th>
+                <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Stage</th>
                 <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Status</th>
                 <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              {trackable.map((po) => (
-                <tr key={po.id} className="border-b border-n-100 hover:bg-n-50 align-top">
-                  <td className="px-3 py-2 text-[11px]">
-                    <Link
-                      href={`/procurement/${po.id}`}
-                      className="text-p-600 hover:underline font-medium"
-                    >
-                      {po.po_number}
-                    </Link>
-                  </td>
-                  <td className="px-3 py-2 text-[11px] text-n-700">
-                    {po.vendors?.company_name ?? '—'}
-                  </td>
-                  <td className="px-3 py-2 text-[10px] text-n-600">
-                    {po.dispatched_at ? formatDate(po.dispatched_at) : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-[10px] text-n-600">
-                    {po.vendor_dispatch_date ? formatDate(po.vendor_dispatch_date) : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-[10px] text-n-700 font-mono">
-                    {po.vendor_tracking_number ?? '—'}
-                  </td>
-                  <td className="px-3 py-2 text-[10px] text-n-600">
-                    {po.acknowledged_at
-                      ? formatDate(po.acknowledged_at)
-                      : po.expected_delivery_date
-                        ? <span className="text-n-400">ETA {formatDate(po.expected_delivery_date)}</span>
-                        : '—'}
-                  </td>
-                  <td className="px-3 py-2"><POStatusBadge status={po.status} /></td>
-                  <td className="px-3 py-2 text-right">
-                    <DispatchActions
-                      po={{
-                        id: po.id,
-                        po_number: po.po_number,
-                        approval_status: po.approval_status,
-                        status: po.status,
-                        dispatched_at: po.dispatched_at,
-                        vendor_dispatch_date: po.vendor_dispatch_date,
-                        vendor_tracking_number: po.vendor_tracking_number,
-                        expected_delivery_date: po.expected_delivery_date,
-                      }}
-                      viewerRole={viewerRole}
-                    />
-                  </td>
-                </tr>
-              ))}
+              {trackable.map((po) => {
+                // Prefer sent_to_vendor_at (set by the Send dialog). Fall back
+                // to dispatched_at so legacy rows (pre-migration-065) still show
+                // something sensible.
+                const sentAt = po.sent_to_vendor_at ?? po.dispatched_at;
+                return (
+                  <tr key={po.id} className="border-b border-n-100 hover:bg-n-50 align-top">
+                    <td className="px-3 py-2 text-[11px]">
+                      <Link
+                        href={`/procurement/${po.id}`}
+                        className="text-p-600 hover:underline font-medium"
+                      >
+                        {po.po_number}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 text-[11px] text-n-700">
+                      {po.vendors?.company_name ?? '—'}
+                    </td>
+                    <td className="px-3 py-2 text-[10px] text-n-600">
+                      {sentAt ? formatDate(sentAt) : '—'}
+                    </td>
+                    <td className="px-3 py-2 text-[10px] text-n-600">
+                      {po.vendor_dispatch_date ? formatDate(po.vendor_dispatch_date) : '—'}
+                    </td>
+                    <td className="px-3 py-2 text-[10px] text-n-700 font-mono">
+                      {po.vendor_tracking_number ?? '—'}
+                    </td>
+                    <td className="px-3 py-2 text-[10px] text-n-600">
+                      {po.acknowledged_at
+                        ? formatDate(po.acknowledged_at)
+                        : po.expected_delivery_date
+                          ? <span className="text-n-400">ETA {formatDate(po.expected_delivery_date)}</span>
+                          : '—'}
+                    </td>
+                    <td className="px-3 py-2">
+                      <DispatchStageBadge stage={po.dispatch_stage} />
+                    </td>
+                    <td className="px-3 py-2"><POStatusBadge status={po.status} /></td>
+                    <td className="px-3 py-2 text-right">
+                      <DispatchActions
+                        po={{
+                          id: po.id,
+                          po_number: po.po_number,
+                          approval_status: po.approval_status,
+                          status: po.status,
+                          dispatched_at: po.dispatched_at,
+                          vendor_dispatch_date: po.vendor_dispatch_date,
+                          vendor_tracking_number: po.vendor_tracking_number,
+                          expected_delivery_date: po.expected_delivery_date,
+                        }}
+                        viewerRole={viewerRole}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

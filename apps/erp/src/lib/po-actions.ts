@@ -306,6 +306,21 @@ export async function approvePO(poId: string): Promise<ActionResult<void>> {
       }
     }
 
+    // Cascade: flip linked BOQ items yet_to_place → order_placed.
+    // Covers both competitive (rfq_awards) and quick-PO (direct FK) paths.
+    const { error: cascadeError } = await supabase.rpc(
+      'fn_cascade_po_approval_to_boq',
+      { p_po_id: poId },
+    );
+    if (cascadeError) {
+      console.error(`${op} cascade failed`, {
+        poId,
+        code: cascadeError.code,
+        message: cascadeError.message,
+      });
+      // Non-fatal — PO approval already committed; log and continue.
+    }
+
     await logProcurementAudit(supabase, {
       entityType: 'purchase_order',
       entityId: poId,
@@ -425,6 +440,9 @@ export async function markPODispatched(poId: string): Promise<ActionResult<void>
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return err('Not authenticated');
 
+    const guard = await requireDispatchRole(supabase, user.id);
+    if (!guard.ok) return err(guard.error);
+
     const { data: po, error: poError } = await supabase
       .from('purchase_orders')
       .select('id, approval_status, status, project_id')
@@ -477,6 +495,129 @@ export async function markPODispatched(poId: string): Promise<ActionResult<void>
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// Role helper — purchase_officer, project_manager, or founder.
+// Used by post-approval dispatch actions + sendPOToVendor.
+// ═══════════════════════════════════════════════════════════════════════
+
+async function requireDispatchRole(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+  const role = profile?.role;
+  if (!role || !['purchase_officer', 'project_manager', 'founder'].includes(role)) {
+    return { ok: false, error: 'Not authorised to update dispatch state' };
+  }
+  return { ok: true };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// sendPOToVendor — Purchase Engineer / PM / founder logs that the PO has
+// been sent to the vendor via a specific channel (email / whatsapp / copy-link).
+//
+// Stamps `sent_to_vendor_at` (first send only) and appends the channel to
+// `sent_via_channels` (duplicates ignored). Also flips status to 'dispatched'
+// so the PO appears in Tab 5 — same idempotent effect as markPODispatched
+// but tied to the send channel for audit. The derived `dispatch_stage`
+// column picks up the change automatically.
+// ═══════════════════════════════════════════════════════════════════════
+
+export async function sendPOToVendor(input: {
+  poId: string;
+  channel: 'email' | 'whatsapp' | 'copy_link';
+}): Promise<ActionResult<void>> {
+  const op = '[sendPOToVendor]';
+  console.log(`${op} Starting`, { poId: input.poId, channel: input.channel });
+
+  try {
+    if (!['email', 'whatsapp', 'copy_link'].includes(input.channel)) {
+      return err('Invalid channel');
+    }
+
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return err('Not authenticated');
+
+    const guard = await requireDispatchRole(supabase, user.id);
+    if (!guard.ok) return err(guard.error);
+
+    const { data: po, error: poError } = await supabase
+      .from('purchase_orders')
+      .select('id, approval_status, status, project_id, sent_to_vendor_at, sent_via_channels')
+      .eq('id', input.poId)
+      .maybeSingle();
+
+    if (poError) {
+      console.error(`${op} PO fetch failed`, {
+        poId: input.poId,
+        code: poError.code,
+        message: poError.message,
+      });
+      return err(poError.message, poError.code);
+    }
+    if (!po) return err('PO not found');
+    if (po.approval_status !== 'approved') {
+      return err('PO must be approved before it can be sent to the vendor');
+    }
+    if (po.status !== 'draft' && po.status !== 'dispatched') {
+      return err(`PO is already ${po.status} — cannot re-send`);
+    }
+
+    const now = new Date().toISOString();
+    const existingChannels = po.sent_via_channels ?? [];
+    const nextChannels = existingChannels.includes(input.channel)
+      ? existingChannels
+      : [...existingChannels, input.channel];
+
+    const update: PurchaseOrderUpdate = {
+      sent_to_vendor_at: po.sent_to_vendor_at ?? now,
+      sent_via_channels: nextChannels,
+      // Flip status to 'dispatched' on first send so Tab 5 picks it up.
+      status: po.status === 'draft' ? 'dispatched' : po.status,
+      dispatched_at: po.status === 'draft' ? now : undefined,
+    };
+
+    const { error: updateError } = await supabase
+      .from('purchase_orders')
+      .update(update)
+      .eq('id', input.poId);
+
+    if (updateError) {
+      console.error(`${op} update failed`, {
+        poId: input.poId,
+        code: updateError.code,
+        message: updateError.message,
+      });
+      return err(updateError.message, updateError.code);
+    }
+
+    await logProcurementAudit(supabase, {
+      entityType: 'purchase_order',
+      entityId: input.poId,
+      action: 'sent_to_vendor',
+      actorId: user.id,
+      newValue: {
+        channel: input.channel,
+        sent_to_vendor_at: update.sent_to_vendor_at,
+        sent_via_channels: nextChannels,
+      },
+    });
+
+    revalidatePath(`/procurement/project/${po.project_id}`);
+    revalidatePath(`/procurement/${input.poId}`);
+    revalidatePath('/procurement');
+    return ok(undefined);
+  } catch (e) {
+    console.error(`${op} threw`, { poId: input.poId, e });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // recordVendorDispatch — vendor shipped goods to Shiroi
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -495,6 +636,9 @@ export async function recordVendorDispatch(input: {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return err('Not authenticated');
+
+    const guard = await requireDispatchRole(supabase, user.id);
+    if (!guard.ok) return err(guard.error);
 
     const { data: po, error: poError } = await supabase
       .from('purchase_orders')
@@ -566,6 +710,9 @@ export async function markPOAcknowledged(input: {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return err('Not authenticated');
 
+    const guard = await requireDispatchRole(supabase, user.id);
+    if (!guard.ok) return err(guard.error);
+
     const { data: po, error: poError } = await supabase
       .from('purchase_orders')
       .select('id, status, project_id')
@@ -599,6 +746,22 @@ export async function markPOAcknowledged(input: {
     if (updateError) {
       console.error(`${op} update failed`, { poId: input.poId, code: updateError.code, message: updateError.message });
       return err(updateError.message, updateError.code);
+    }
+
+    // Cascade: flip linked BOQ items order_placed → received. When every
+    // BOQ item for the project is received, the helper rolls the project up
+    // to 'ready_to_dispatch'.
+    const { error: cascadeError } = await supabase.rpc(
+      'fn_cascade_po_receipt_to_boq',
+      { p_po_id: input.poId },
+    );
+    if (cascadeError) {
+      console.error(`${op} cascade failed`, {
+        poId: input.poId,
+        code: cascadeError.code,
+        message: cascadeError.message,
+      });
+      // Non-fatal — acknowledgement already committed.
     }
 
     await logProcurementAudit(supabase, {

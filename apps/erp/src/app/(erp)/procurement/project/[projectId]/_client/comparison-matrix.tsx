@@ -72,7 +72,14 @@ function variancePct(unitPrice: number, priceBookRate: number | null): number | 
 
 export function ComparisonMatrix({ comparison }: ComparisonMatrixProps) {
   const router = useRouter();
-  const { rfqId, rfqNumber, items, awards } = comparison;
+  const { rfqId, rfqNumber, items, awards, vendorTerms } = comparison;
+
+  // Per-invitation lookup for the commercial-terms footer rows.
+  const termsByInvitation = React.useMemo(() => {
+    const m = new Map<string, (typeof vendorTerms)[number]>();
+    for (const t of vendorTerms ?? []) m.set(t.invitationId, t);
+    return m;
+  }, [vendorTerms]);
 
   // Unique vendors across all quotes (column set).
   const vendorColumns = React.useMemo(() => {
@@ -411,6 +418,82 @@ export function ComparisonMatrix({ comparison }: ComparisonMatrixProps) {
               );
             })}
           </tbody>
+          {vendorColumns.length > 0 && (
+            <tfoot className="bg-n-50/70">
+              {/* Payment terms row */}
+              <tr className="border-t border-n-200">
+                <td className="px-2 py-2 text-[10px] font-semibold text-n-600 uppercase sticky left-0 bg-n-50/70 z-10">
+                  Payment terms
+                </td>
+                <td className="px-2 py-2" colSpan={2} />
+                {vendorColumns.map((col) => {
+                  const t = termsByInvitation.get(col.invitationId);
+                  return (
+                    <td
+                      key={`pt-${col.invitationId}`}
+                      className="px-2 py-2 text-right text-[11px] text-n-700 align-top"
+                    >
+                      {t?.paymentTerms ? (
+                        <span title={t.paymentTerms} className="inline-block max-w-[140px] truncate">
+                          {t.paymentTerms}
+                        </span>
+                      ) : (
+                        <span className="text-n-300">—</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+              {/* Delivery row */}
+              <tr className="border-t border-n-100">
+                <td className="px-2 py-2 text-[10px] font-semibold text-n-600 uppercase sticky left-0 bg-n-50/70 z-10">
+                  Delivery
+                </td>
+                <td className="px-2 py-2" colSpan={2} />
+                {vendorColumns.map((col) => {
+                  const t = termsByInvitation.get(col.invitationId);
+                  return (
+                    <td
+                      key={`dt-${col.invitationId}`}
+                      className="px-2 py-2 text-right text-[11px] text-n-700 align-top"
+                    >
+                      {t?.deliveryDays !== null && t?.deliveryDays !== undefined ? (
+                        <span className="tabular-nums">
+                          {t.deliveryDays} day{t.deliveryDays === 1 ? '' : 's'}
+                        </span>
+                      ) : (
+                        <span className="text-n-300">—</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+              {/* Notes row */}
+              <tr className="border-t border-n-100">
+                <td className="px-2 py-2 text-[10px] font-semibold text-n-600 uppercase sticky left-0 bg-n-50/70 z-10">
+                  Notes
+                </td>
+                <td className="px-2 py-2" colSpan={2} />
+                {vendorColumns.map((col) => {
+                  const t = termsByInvitation.get(col.invitationId);
+                  return (
+                    <td
+                      key={`nt-${col.invitationId}`}
+                      className="px-2 py-2 text-right text-[10px] text-n-500 align-top"
+                    >
+                      {t?.notes ? (
+                        <span title={t.notes} className="inline-block max-w-[140px] truncate">
+                          {t.notes}
+                        </span>
+                      ) : (
+                        <span className="text-n-300">—</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 

@@ -250,6 +250,12 @@ export default async function ProcurementProjectPage({ params, searchParams }: P
             items={items}
             vendors={vendors}
             viewerRole={viewerRole}
+            viewerName={profile?.full_name ?? 'Shiroi ERP'}
+            project={{
+              project_number: project.project_number,
+              customer_name: project.customer_name,
+              site_address: null,
+            }}
           />
         )}
         {activeTab === 'rfq' && (
@@ -276,12 +282,15 @@ export default async function ProcurementProjectPage({ params, searchParams }: P
             viewerRole={viewerRole}
             viewerId={viewerId}
             viewerEmployeeId={viewerEmployeeId}
+            vendors={vendors}
+            projectName={project.customer_name}
           />
         )}
         {activeTab === 'dispatch' && (
           <TabDispatch
             projectId={projectId}
             purchaseOrders={purchaseOrders}
+            vendors={vendors}
             viewerRole={viewerRole}
           />
         )}

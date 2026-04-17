@@ -72,6 +72,22 @@ export function buildRfqWhatsAppText(input: {
   return `Hi ${input.vendorName}, Shiroi Energy has a new RFQ for you. RFQ ${input.rfqNumber}, deadline ${input.deadline}. Please submit your quote here: ${input.portalUrl}`;
 }
 
+export function buildPoEmailSubject(poNumber: string, projectName: string): string {
+  return `Purchase Order ${poNumber} — ${projectName} — Shiroi Energy`;
+}
+
+export function buildPoWhatsAppText(input: {
+  vendorName: string;
+  poNumber: string;
+  projectName: string;
+  totalAmount: number;
+  portalUrl?: string;
+}): string {
+  const amt = input.totalAmount.toLocaleString('en-IN');
+  const link = input.portalUrl ? `\n\nView PO: ${input.portalUrl}` : '';
+  return `Hi ${input.vendorName}, Shiroi Energy has issued PO ${input.poNumber} for "${input.projectName}" — total ₹${amt} (incl. GST). Please acknowledge and confirm the expected delivery date.${link}`;
+}
+
 export function buildPoEmailBody(input: {
   vendorName: string;
   poNumber: string;

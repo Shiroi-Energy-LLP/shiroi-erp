@@ -4,17 +4,17 @@
 >   1. **v2 competitive pipeline** (Apr 17) — BOQ → RFQ → Quote Comparison → PO with founder approval → Dispatch lifecycle. Default for v2 projects.
 >   2. **Quick PO** (pre-v2, preserved) — direct BOQ → assigned-vendor PO for projects that don't need a competitive RFQ.
 >
-> Related modules: [projects] (BOQ origin, DC consumption), [finance] (vendor payments, MSME compliance). Cross-cutting references: master reference §7, migrations 041 + 060.
+> Related modules: [projects] (BOQ origin, DC consumption), [finance] (vendor payments, MSME compliance). Cross-cutting references: master reference §7, migrations 041 + 060 + 065.
 
 ## Overview
 
 Purchase is driven from the project's BOQ step, not from a standalone PO ledger. When a PM flips BOQ lines to "Send to Purchase" the project appears in the purchase officer's request queue (`/procurement`), where the Purchase Engineer (`purchase_officer`) works a 5-tab workspace per project:
 
-1. **BOQ** — finalize items, set price-book rates, flag shortages.
-2. **RFQ** — send a UUID-token RFQ to N vendors over Gmail compose or WhatsApp deep-link (no SMTP). Vendors submit via the public portal (no login), or the PE captures the quote manually / by Excel upload.
-3. **Comparison** — side-by-side matrix, L1 auto-highlight, per-item award (override requires reason), "Auto-award all L1" bulk action, then "Generate POs" creates one PO per winning vendor.
-4. **PO** — founder is the sole approver. PE hits "Send for approval" → founder approves/rejects (with reason). Approved POs are ready to dispatch.
-5. **Dispatch** — state-driven: `[Mark dispatched]` (PE sent PO to vendor) → `[Record vendor dispatch]` (vendor shipped with date + tracking) → `[Mark received]` (acknowledged). The Quick-PO / assignment flow is still available for projects that skip RFQs.
+1. **BOQ** — finalize items, set price-book rates, flag shortages. Pencil-edit Qty/Rate inline; PDF download per project (Shiroi-branded via `@react-pdf/renderer`).
+2. **RFQ** — send a UUID-token RFQ to N vendors over Gmail compose or WhatsApp deep-link (no SMTP). Vendors submit via the public portal (no login), or the PE captures the quote manually / by Excel upload. Vendor typeahead (2+ char) on the send panel; expandable per-RFQ rows show invitation list with per-vendor Gmail/WhatsApp/Copy-link buttons.
+3. **Comparison** — side-by-side matrix, L1 auto-highlight, per-item award (override requires reason), "Auto-award all L1" bulk action, then "Generate POs" creates one PO per winning vendor. Footer rows show each vendor's payment terms, delivery time, and notes (first non-null across their quoted items).
+4. **PO** — founder is the sole approver. PE hits "Send for approval" → founder approves/rejects (with reason). Approved POs get a **Send to vendor** button (Email / WhatsApp / Copy link) which stamps `sent_to_vendor_at`, appends the channel to `sent_via_channels`, and flips `status` to `dispatched` on first send. Founder-authored POs (quick-PO or competitive) auto-approve on insert and cascade the BOQ `procurement_status` flip immediately.
+5. **Dispatch** — state-driven: `[Mark dispatched]` (PE sent PO to vendor) → `[Record vendor dispatch]` (vendor shipped with date + tracking) → `[Mark received]` (acknowledged). A generated `dispatch_stage` column (draft/shipped/in_transit/received) drives the lifecycle badge. Receipt cascades the BOQ flip from `order_placed → ready_to_dispatch`. The Quick-PO / assignment flow is still available for projects that skip RFQs.
 
 ## User Flow / Screens
 
@@ -48,9 +48,10 @@ BOQ (yet_to_finalize) → Send to Purchase (yet_to_place) → Vendor Assigned �
 
 ## Key Business Rules
 
-- **Founder is the sole PO approver** (v2): `purchase_orders.approval_status` flows `draft → pending_approval → approved | rejected`. Rejection requires a reason stored in `approval_rejection_reason`. Approval is guarded server-side in `approvePO` / `rejectPO` — the UI just hides buttons for other roles.
+- **Founder is the sole PO approver** (v2): `purchase_orders.approval_status` flows `draft → pending_approval → approved | rejected`. Rejection requires a reason stored in `approval_rejection_reason`. Approval is guarded server-side in `approvePO` / `rejectPO` — the UI just hides buttons for other roles. **Founder-authored POs bypass the queue** — both `createPOsFromAssignedItems` and `generatePOsFromAwards` check `profiles.role === 'founder'` and set `approval_status='approved'` + `requires_approval=false` at insert, then call `fn_cascade_po_approval_to_boq` to flip the BOQ `procurement_status` immediately.
+- **Approval + receipt cascades are SQL helpers** (migration 065): `fn_cascade_po_approval_to_boq(p_po_id)` flips linked BOQ rows `yet_to_place → order_placed` (both competitive and Quick-PO paths), and `fn_cascade_po_receipt_to_boq(p_po_id)` flips `order_placed → ready_to_dispatch`. Both are `SECURITY DEFINER` and idempotent so the server actions (`approvePO`, `markPOAcknowledged`) and the existing GRN trigger converge on the same end state.
 - **Vendor portal is UUID-gated, no auth** (v2): each `rfq_invitations.access_token` is a random UUID. The `/vendor-portal/rfq/<token>` route is excluded from the auth middleware. Tokens expire per `rfq_invitations.expires_at`.
-- **Dispatch lifecycle** (v2): `purchase_orders.status` goes `draft → dispatched → acknowledged` after approval. `dispatched_at` = PE sent PO to vendor; `vendor_dispatch_date` + `vendor_tracking_number` = vendor shipped goods; `acknowledged_at` = Shiroi received.
+- **Dispatch lifecycle** (v2): `purchase_orders.status` goes `draft → dispatched → acknowledged` after approval. `sent_to_vendor_at` (migration 065) = PE sent PO to vendor; `vendor_dispatch_date` + `vendor_tracking_number` = vendor shipped goods; `acknowledged_at` = Shiroi received. The generated `dispatch_stage` column (4-stage: draft/shipped/in_transit/received) is the display column — Tab 5 renders `<DispatchStageBadge>` off of it. Purchase Engineers, Project Managers, and Founders all can drive the dispatch actions (Apr 17 role-matrix update).
 - **Audit log is mandatory** (v2): every mutation in `rfq-actions.ts`, `vendor-portal-actions.ts`, `po-actions.ts` calls `logProcurementAudit(...)` after a successful DB write. 14 user-initiated events + 1 DB-trigger event (GRN completes PO) — see spec §9.
 - **Notifications are fire-and-forget** (v2): 6 events (BOQ→purchase, quote submitted, PO sent for approval, PO approved, PO rejected, all materials received) insert into `notifications` inside try/catch so a notification failure never rolls back the primary mutation.
 - Vendor assignment is **per BOQ item** via `project_boq_items.vendor_id` (migration 041, preserved for Quick-PO flow).
@@ -64,7 +65,7 @@ BOQ (yet_to_finalize) → Send to Purchase (yet_to_place) → Vendor Assigned �
 
 ## Key Tables
 
-- `purchase_orders` — PO main. `status` (draft/approved/dispatched/acknowledged/partially_delivered/fully_delivered/closed/cancelled) + `approval_status` (draft/pending_approval/approved/rejected) + `approval_rejection_reason` + `prepared_by` (employee) + `approved_by` (employee) + `dispatched_at`, `vendor_dispatch_date`, `vendor_tracking_number`, `expected_delivery_date`, `acknowledged_at`, `actual_delivery_date`.
+- `purchase_orders` — PO main. `status` (draft/approved/dispatched/acknowledged/partially_delivered/fully_delivered/closed/cancelled) + `approval_status` (draft/pending_approval/approved/rejected) + `approval_rejection_reason` + `prepared_by` (employee) + `approved_by` (employee) + `dispatched_at`, `vendor_dispatch_date`, `vendor_tracking_number`, `expected_delivery_date`, `acknowledged_at`, `actual_delivery_date` + **`sent_to_vendor_at` + `sent_via_channels` + generated `dispatch_stage`** (migration 065).
 - `purchase_order_items` — line items with `boq_item_id` FK back to `project_boq_items`.
 - `rfqs` (migration 060) — RFQ header. `status` (draft/sent/comparing/awarded/cancelled), `created_by`, `rfq_number`.
 - `rfq_items` (migration 060) — per-RFQ line items; `winning_invitation_id` set on award.
@@ -93,14 +94,18 @@ apps/erp/src/app/(erp)/procurement/
   │   │   ├── tab-po.tsx                  # PO list + founder-only pending-approval banner
   │   │   └── tab-dispatch.tsx            # post-approval lifecycle timeline
   │   └── _client/
-  │       ├── boq-editable-table.tsx
-  │       ├── send-rfq-panel.tsx
+  │       ├── boq-editable-table.tsx      # Pencil-edit Qty/Rate inline (Apr 17 feedback)
+  │       ├── send-rfq-panel.tsx          # Vendor typeahead (2+ char) via searchVendors action
   │       ├── send-rfq-modal.tsx          # Gmail + WhatsApp deep links per vendor
+  │       ├── vendor-search-combobox.tsx  # 2+ char typeahead picker (Apr 17 feedback)
+  │       ├── invitation-action-buttons.tsx   # Re-usable per-invitation Gmail/WA/Copy row
   │       ├── manual-quote-entry-dialog.tsx
   │       ├── excel-quote-upload-dialog.tsx
-  │       ├── comparison-matrix.tsx       # L1 auto-highlight + override-with-reason
+  │       ├── comparison-matrix.tsx       # L1 auto-highlight + override-with-reason + terms footer
   │       ├── po-approval-actions.tsx     # Send / Approve / Reject state-machine buttons
-  │       └── dispatch-actions.tsx        # Mark dispatched / Record / Mark received
+  │       ├── po-send-button.tsx          # Send / Re-send PO to vendor (Apr 17 feedback)
+  │       ├── po-send-dialog.tsx          # Channel picker (Email/WhatsApp/Copy) + sendPOToVendor
+  │       └── dispatch-actions.tsx        # Mark dispatched / Record / Mark received (PE + PM + founder)
   └── [poId]/page.tsx                     # PO detail
 
 apps/erp/src/app/vendor-portal/rfq/[token]/
@@ -113,21 +118,28 @@ apps/erp/src/app/(erp)/msme-compliance/page.tsx
 apps/erp/src/app/(erp)/deliveries/page.tsx
 
 apps/erp/src/lib/
-  ├── procurement-queries.ts              # list + detail reads, getEmployeeIdForProfile helper
+  ├── procurement-queries.ts              # list + detail reads, getEmployeeIdForProfile helper,
+  │                                       #   VendorSearchResult type (search impl lives in actions)
   ├── procurement-actions.ts              # createPurchaseOrder, assignVendorToBoqItem,
-  │                                       #   bulkAssignVendor, createPOsFromAssignedItems,
+  │                                       #   bulkAssignVendor, createPOsFromAssignedItems
+  │                                       #     (founder auto-approve + cascade),
   │                                       #   markItemsReceived (+ PM notification on all-received),
-  │                                       #   markItemsReadyToDispatch, updateProcurementPriority
+  │                                       #   markItemsReadyToDispatch, updateProcurementPriority,
+  │                                       #   searchVendors (client-callable server action)
   ├── procurement-audit.ts                # logProcurementAudit helper
   ├── rfq-actions.ts                      # createRfq, markInvitationSent, submitQuoteManually,
   │                                       #   submitQuoteFromExcel, awardRfqItem, autoAwardL1,
-  │                                       #   generatePOsFromAwards, cancelRfq
-  ├── rfq-queries.ts                      # RFQ list + detail, getRfqComparisonData,
-  │                                       #   getPendingApprovalPOs
+  │                                       #   generatePOsFromAwards (founder auto-approve + cascade),
+  │                                       #   cancelRfq
+  ├── rfq-queries.ts                      # RFQ list + detail, getRfqComparisonData
+  │                                       #   (with paymentTerms/deliveryDays/notes per quote
+  │                                       #   + vendorTerms), getPendingApprovalPOs
   ├── po-actions.ts                       # updatePoLineItemRate, deletePoSoft,
-  │                                       #   sendPOForApproval, approvePO, rejectPO,
+  │                                       #   sendPOForApproval, approvePO (cascade), rejectPO,
+  │                                       #   sendPOToVendor (stamp sent_to_vendor_at + channel),
   │                                       #   markPODispatched, recordVendorDispatch,
-  │                                       #   markPOAcknowledged
+  │                                       #   markPOAcknowledged (cascade)
+  ├── gmail-whatsapp-links.ts             # buildGmail/WhatsApp URL + RFQ + PO message builders
   ├── vendor-queries.ts
   ├── vendor-portal-queries.ts            # public vendor portal reads (validateToken, etc.)
   └── vendor-portal-actions.ts            # markInvitationViewed, submitQuoteFromPortal
@@ -138,11 +150,15 @@ apps/erp/src/components/procurement/
   ├── create-po-dialog.tsx                # multi-line PO entry with auto-totals
   ├── purchase-detail-controls.tsx        # per-item vendor dropdown, bulk assign, receipt + priority
   ├── po-status-badge.tsx
+  ├── dispatch-stage-badge.tsx            # 4-stage lifecycle badge (draft/shipped/in_transit/received)
   ├── po-rate-inline-edit.tsx             # double-click rate cell
   ├── po-download-button.tsx
+  ├── boq-download-button.tsx             # per-project BOQ PDF (Apr 17 feedback)
   └── po-delete-button.tsx                # soft-delete via status=cancelled
 
-apps/erp/src/lib/pdf/purchase-order-pdf.tsx   # Shiroi-branded @react-pdf/renderer template
+apps/erp/src/lib/pdf/
+  ├── purchase-order-pdf.tsx              # Shiroi-branded @react-pdf/renderer template
+  └── boq-pdf.tsx                         # Per-project BOQ PDF (Apr 17 feedback)
 
 # API routes:
 apps/erp/src/app/api/procurement/[poId]/pdf/route.ts
@@ -159,6 +175,7 @@ apps/erp/src/app/api/procurement/[poId]/pdf/route.ts
 
 ## Past Decisions & Specs
 
+- **Migration 065 (Apr 17, 2026)** — Purchase v2 feedback pass. Adds `sent_to_vendor_at` + `sent_via_channels` + generated `dispatch_stage` to `purchase_orders`; back-fills existing dispatched/acknowledged rows; creates `fn_cascade_po_approval_to_boq` + `fn_cascade_po_receipt_to_boq` SECURITY DEFINER helpers. Paired code changes: Tab 1 inline Qty/Rate edit + per-project BOQ PDF; Tab 2 vendor typeahead + expandable invitation rows with re-usable `<InvitationActionButtons>`; Tab 3 payment-terms / delivery / notes footer rows; Tab 4 Send-to-vendor dialog (Email/WhatsApp/Copy) + founder quick-PO auto-approval; Tab 5 `<DispatchStageBadge>` + PM role widened on dispatch actions + receipt cascade. Specs: `docs/superpowers/specs/2026-04-17-purchase-v2-feedback-design.md` + plan `docs/superpowers/plans/2026-04-17-purchase-v2-feedback-implementation.md`.
 - Migration 041 — vendor_id FK on `project_boq_items`, `boq_item_id` on `purchase_order_items`, project-level procurement tracking columns (`boq_sent_to_purchase_at/by`, `procurement_priority`, `procurement_status`, `procurement_received_date`), PO status constraint fix (adds `approved`), indexes + backfill.
 - Migration 046 — Price Book expansion (24 categories, vendor_name, default_qty, rate audit columns) — rate source for PO creation.
 - **Migration 061 (Apr 17, 2026)** — Hotfix: broadens INSERT/UPDATE on `rfqs`, `rfq_items`, `rfq_invitations`, `rfq_quotes`, `rfq_awards` to include `project_manager`. Shiroi has no `purchase_officer` user; the PM (Manivel) is the de-facto PE. Founder-only approval on POs untouched.
@@ -181,9 +198,9 @@ apps/erp/src/app/api/procurement/[poId]/pdf/route.ts
 
 | Role              | Access                                                                    |
 |-------------------|---------------------------------------------------------------------------|
-| `purchase_officer`| Full CRUD on RFQs, quote entry (manual/Excel), item awards, PO creation, send-for-approval, dispatch lifecycle (Mark dispatched / Record vendor dispatch / Mark received). Cannot approve/reject POs. Full CRUD on `vendor_payments`, `vendors`. |
-| `founder`         | Full access. **Sole approver** of POs: sees the pending-approval banner on Tab 4 and can approve / reject with reason. Can also override RFQ awards and do everything the PE can. |
+| `purchase_officer`| Full CRUD on RFQs, quote entry (manual/Excel), item awards, PO creation, send-for-approval, **Send PO to vendor** (Email/WhatsApp/Copy), dispatch lifecycle (Mark dispatched / Record vendor dispatch / Mark received). Cannot approve/reject POs. Full CRUD on `vendor_payments`, `vendors`. |
+| `founder`         | Full access. **Sole approver** of POs: sees the pending-approval banner on Tab 4 and can approve / reject with reason. **Founder-authored POs auto-approve on insert** (both quick-PO and competitive paths) and cascade the BOQ flip immediately. Can also override RFQ awards, drive dispatch, and do everything the PE can. |
 | `finance`         | Vendor payment approval, MSME compliance tracker, read on POs.            |
-| `project_manager` | In practice, the PM doubles as the Purchase Engineer at Shiroi (no dedicated `purchase_officer` user exists). Migration 061 broadened RFQ-family RLS so PM can CRUD RFQs, invitations, quotes, awards, and POs. PM still can't approve/reject POs — that's founder-only. Also owns `sendBoqToPurchase` from the project BOQ step and receives the "all materials received" notification. |
+| `project_manager` | In practice, the PM doubles as the Purchase Engineer at Shiroi (no dedicated `purchase_officer` user exists). Migration 061 broadened RFQ-family RLS so PM can CRUD RFQs, invitations, quotes, awards, and POs. **Migration 065 (Apr 17) role-matrix update: PM can also drive the dispatch lifecycle and Send-to-vendor** (matching PE). PM still can't approve/reject POs — that's founder-only. Also owns `sendBoqToPurchase` from the project BOQ step and receives the "all materials received" notification. |
 | `site_supervisor` | Read-only on PO detail for material receipt context.                      |
 | vendor (anonymous)| Token-gated access to `/vendor-portal/rfq/<uuid>` only. Can view their invitation + submit a quote. No auth.                                        |

@@ -27,9 +27,22 @@ export type RfqDetail = Rfq & {
   >;
 };
 
+export type RfqInvitationSummary = {
+  id: string;
+  status: string;
+  vendor: { id: string; company_name: string; contact_person: string | null } | null;
+  categories: string[];
+  itemCount: number;
+  sent_via_channels: string[];
+  access_token: string;
+  created_at: string;
+  expires_at: string | null;
+};
+
 export type RfqSummary = Rfq & {
   invitationCount: number;
   submittedCount: number;
+  invitations: RfqInvitationSummary[];
 };
 
 export type ComparisonMatrix = {
@@ -51,7 +64,22 @@ export type ComparisonMatrix = {
       unitPrice: number;
       gstRate: number;
       totalPrice: number;
+      paymentTerms: string | null;
+      deliveryDays: number | null;
+      notes: string | null;
     }>;
+  }>;
+  /**
+   * Per-vendor commercial summary used by the 3 "extra" rows at the bottom
+   * of the comparison matrix (Payment Terms / Delivery / Notes). Shaped from
+   * the majority-mode across each vendor's quotes so the UI doesn't need to
+   * decide how to collapse per-line values.
+   */
+  vendorTerms: Array<{
+    invitationId: string;
+    paymentTerms: string | null;
+    deliveryDays: number | null;
+    notes: string | null;
   }>;
   awards: RfqAward[];
 };
@@ -63,7 +91,16 @@ export type AuditLogEntry = ProcurementAuditLog;
 // ═══════════════════════════════════════════════════════════════════════
 
 type RfqWithCountsRow = Rfq & {
-  rfq_invitations: Array<{ status: string }>;
+  rfq_invitations: Array<{
+    id: string;
+    status: string;
+    access_token: string;
+    sent_via_channels: string[];
+    created_at: string;
+    expires_at: string | null;
+    vendors: { id: string; company_name: string; contact_person: string | null } | null;
+  }>;
+  rfq_items: Array<{ item_category: string }>;
 };
 
 type RfqDetailRow = Rfq & {
@@ -93,7 +130,10 @@ export async function listRfqsForProject(projectId: string): Promise<RfqSummary[
   const { data, error } = await supabase
     .from('rfqs')
     .select(
-      'id, rfq_number, project_id, status, deadline, notes, created_by, created_at, updated_at, rfq_invitations(status)',
+      `id, rfq_number, project_id, status, deadline, notes, created_by, created_at, updated_at,
+       rfq_invitations(id, status, access_token, sent_via_channels, created_at, expires_at,
+         vendors(id, company_name, contact_person)),
+       rfq_items(item_category)`,
       { count: 'estimated' },
     )
     .eq('project_id', projectId)
@@ -106,7 +146,10 @@ export async function listRfqsForProject(projectId: string): Promise<RfqSummary[
   }
 
   return (data ?? []).map((row) => {
-    const invitations: Array<{ status: string }> = row.rfq_invitations ?? [];
+    const invs = row.rfq_invitations ?? [];
+    const allCategories = (row.rfq_items ?? []).map((i) => i.item_category).filter(Boolean);
+    const distinctCategories = [...new Set(allCategories)];
+
     return {
       id: row.id,
       rfq_number: row.rfq_number,
@@ -117,8 +160,19 @@ export async function listRfqsForProject(projectId: string): Promise<RfqSummary[
       created_by: row.created_by,
       created_at: row.created_at,
       updated_at: row.updated_at,
-      invitationCount: invitations.length,
-      submittedCount: invitations.filter((i: { status: string }) => i.status === 'submitted').length,
+      invitationCount: invs.length,
+      submittedCount: invs.filter((i) => i.status === 'submitted').length,
+      invitations: invs.map((inv) => ({
+        id: inv.id,
+        status: inv.status,
+        vendor: inv.vendors ?? null,
+        categories: distinctCategories,
+        itemCount: allCategories.length,
+        sent_via_channels: inv.sent_via_channels ?? [],
+        access_token: inv.access_token,
+        created_at: inv.created_at,
+        expires_at: inv.expires_at,
+      })),
     };
   });
 }
@@ -304,6 +358,11 @@ export async function getRfqComparisonData(projectId: string): Promise<Compariso
           unitPrice: Number(q.unit_price),
           gstRate: Number(q.gst_rate),
           totalPrice: Number(q.total_price),
+          paymentTerms: q.payment_terms ?? null,
+          deliveryDays: q.delivery_period_days !== null && q.delivery_period_days !== undefined
+            ? Number(q.delivery_period_days)
+            : null,
+          notes: q.notes ?? null,
         };
       });
 
@@ -319,10 +378,33 @@ export async function getRfqComparisonData(projectId: string): Promise<Compariso
     };
   });
 
+  // Per-vendor commercial summary — we collapse each vendor's quotes to a
+  // single representative set of terms. Strategy: first non-null value wins.
+  // Vendors typically quote one set of terms for the whole RFQ on the portal,
+  // so this is almost always a no-op aggregation.
+  const vendorTerms = (invitations ?? []).map((inv) => {
+    const vendorQuotes = quotes.filter((q) => q.rfq_invitation_id === inv.id);
+    const paymentTerms =
+      vendorQuotes.find((q) => q.payment_terms && q.payment_terms.trim())?.payment_terms ?? null;
+    const deliveryRaw = vendorQuotes.find(
+      (q) => q.delivery_period_days !== null && q.delivery_period_days !== undefined,
+    )?.delivery_period_days;
+    const deliveryDays =
+      deliveryRaw !== null && deliveryRaw !== undefined ? Number(deliveryRaw) : null;
+    const notes = vendorQuotes.find((q) => q.notes && q.notes.trim())?.notes ?? null;
+    return {
+      invitationId: inv.id,
+      paymentTerms,
+      deliveryDays,
+      notes,
+    };
+  });
+
   return {
     rfqId: targetRfq.id,
     rfqNumber: targetRfq.rfq_number,
     items: matrixItems,
+    vendorTerms,
     awards: awards ?? [],
   };
 }

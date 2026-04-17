@@ -19,6 +19,7 @@ import type { Database } from '@repo/types/database';
 import type { POListItem } from '@/lib/procurement-queries';
 import { POStatusBadge } from '@/components/procurement/po-status-badge';
 import { POApprovalActions } from '../_client/po-approval-actions';
+import { POSendButton } from '../_client/po-send-button';
 
 type AppRole = Database['public']['Enums']['app_role'];
 type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
@@ -30,6 +31,8 @@ interface TabPoProps {
   viewerRole: AppRole;
   viewerId: string | null;
   viewerEmployeeId: string | null;
+  vendors: Array<{ id: string; company_name: string; phone: string | null; email: string | null; contact_person: string | null }>;
+  projectName: string;
 }
 
 export function TabPo({
@@ -38,9 +41,16 @@ export function TabPo({
   pendingApprovals,
   viewerRole,
   viewerEmployeeId,
+  vendors,
+  projectName,
 }: TabPoProps) {
   const pendingForThisProject = pendingApprovals.filter((po) => po.project_id === projectId);
   const isFounder = viewerRole === 'founder';
+  const canSend = ['purchase_officer', 'project_manager', 'founder'].includes(viewerRole);
+
+  // Vendor lookup so the Send dialog can resolve email/phone by PO.
+  const vendorById = new Map<string, typeof vendors[number]>();
+  for (const v of vendors) vendorById.set(v.id, v);
 
   // Build a quick lookup from the project-scoped POs so we can show vendor name
   // in the pending-approvals banner without a second query.
@@ -171,18 +181,42 @@ export function TabPo({
                         )}
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <POApprovalActions
-                          po={{
-                            id: po.id,
-                            po_number: po.po_number,
-                            approval_status: po.approval_status,
-                            total_amount: po.total_amount,
-                            prepared_by: po.prepared_by,
-                          }}
-                          viewerRole={viewerRole}
-                          viewerEmployeeId={viewerEmployeeId}
-                          compact
-                        />
+                        <div className="inline-flex items-center gap-1.5 justify-end">
+                          <POApprovalActions
+                            po={{
+                              id: po.id,
+                              po_number: po.po_number,
+                              approval_status: po.approval_status,
+                              total_amount: po.total_amount,
+                              prepared_by: po.prepared_by,
+                            }}
+                            viewerRole={viewerRole}
+                            viewerEmployeeId={viewerEmployeeId}
+                            compact
+                          />
+                          {canSend &&
+                            po.approval_status === 'approved' &&
+                            (po.status === 'draft' || po.status === 'dispatched') && (
+                              <POSendButton
+                                po={{
+                                  id: po.id,
+                                  po_number: po.po_number,
+                                  total_amount: Number(po.total_amount),
+                                  project_name: projectName,
+                                  sent_to_vendor_at: po.sent_to_vendor_at,
+                                  sent_via_channels: po.sent_via_channels ?? [],
+                                }}
+                                vendor={{
+                                  company_name:
+                                    vendorById.get(po.vendor_id)?.company_name ??
+                                    po.vendors?.company_name ??
+                                    '—',
+                                  email: vendorById.get(po.vendor_id)?.email ?? null,
+                                  phone: vendorById.get(po.vendor_id)?.phone ?? null,
+                                }}
+                              />
+                            )}
+                        </div>
                       </td>
                     </tr>
                   ))}

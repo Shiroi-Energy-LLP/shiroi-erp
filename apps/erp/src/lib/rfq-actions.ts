@@ -1032,6 +1032,23 @@ export async function generatePOsFromAwards(rfqId: string): Promise<ActionResult
         .update(awardUpdate)
         .in('id', awardIds);
 
+      // If founder generated, PO is auto-approved → cascade the BOQ flip.
+      // Non-founder POs sit in pending_approval and will cascade later via
+      // approvePO → fn_cascade_po_approval_to_boq.
+      if (!requiresApproval) {
+        const { error: cascadeErr } = await supabase.rpc(
+          'fn_cascade_po_approval_to_boq',
+          { p_po_id: po.id },
+        );
+        if (cascadeErr) {
+          console.error(`${op} cascade failed (non-fatal)`, {
+            poId: po.id,
+            code: cascadeErr.code,
+            message: cascadeErr.message,
+          });
+        }
+      }
+
       poIds.push(po.id);
 
       // Notify founders if approval required

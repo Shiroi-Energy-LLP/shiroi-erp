@@ -415,6 +415,20 @@ export async function getVendorsList(): Promise<Pick<VendorRow, 'id' | 'company_
   return data ?? [];
 }
 
+// ---------------------------------------------------------------------------
+// Vendor typeahead search (Tab 2 — replaces the 200-row checkbox list)
+// Type only — the implementation is a server action in procurement-actions.ts
+// so it can be called from client components (Next.js RSC boundary).
+// ---------------------------------------------------------------------------
+
+export interface VendorSearchResult {
+  id: string;
+  company_name: string;
+  contact_person: string | null;
+  phone: string | null;
+  email: string | null;
+}
+
 export async function getProjectsList(): Promise<Pick<ProjectRow, 'id' | 'project_number' | 'customer_name'>[]> {
   const op = '[getProjectsList]';
   console.log(`${op} Starting`);

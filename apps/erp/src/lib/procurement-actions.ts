@@ -2,6 +2,9 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { logProcurementAudit } from '@/lib/procurement-audit';
+import type { VendorSearchResult } from '@/lib/procurement-queries';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -240,6 +243,17 @@ export async function createPOsFromAssignedItems(input: {
 
   if (!employee) return { success: false, error: 'Employee profile not found' };
 
+  // Founders can auto-approve their own quick POs; everyone else routes through
+  // pending_approval → approvePO. This mirrors generatePOsFromAwards.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+  const isFounder = profile?.role === 'founder';
+  const approvalStatus = isFounder ? 'approved' : 'pending_approval';
+  const requiresApproval = !isFounder;
+
   // Fetch the selected BOQ items with vendor assignments
   const { data: boqItems, error: fetchError } = await supabase
     .from('project_boq_items')
@@ -295,6 +309,8 @@ export async function createPOsFromAssignedItems(input: {
         prepared_by: employee.id,
         po_number: poNumber,
         status: 'draft',
+        approval_status: approvalStatus,
+        requires_approval: requiresApproval,
         po_date: new Date().toISOString().slice(0, 10),
         subtotal,
         gst_amount: gstTotal,
@@ -337,12 +353,30 @@ export async function createPOsFromAssignedItems(input: {
 
     await supabase.from('purchase_order_items').insert(lineItemRows);
 
-    // Link BOQ items to the PO and update status
+    // Link BOQ items to the PO. The procurement_status flip (yet_to_place →
+    // order_placed) is handled by fn_cascade_po_approval_to_boq when the PO is
+    // approved — whether that happens immediately (founder path below) or later
+    // via approvePO (non-founder path).
     const boqIds = items.map((i) => i.id);
     await supabase
       .from('project_boq_items')
-      .update({ purchase_order_id: po.id, procurement_status: 'order_placed' } as any)
+      .update({ purchase_order_id: po.id } as any)
       .in('id', boqIds);
+
+    // Founder quick-POs are already approved — cascade the BOQ flip now.
+    if (!requiresApproval) {
+      const { error: cascadeErr } = await supabase.rpc(
+        'fn_cascade_po_approval_to_boq',
+        { p_po_id: po.id },
+      );
+      if (cascadeErr) {
+        console.error(`${op} cascade failed (non-fatal)`, {
+          poId: po.id,
+          code: cascadeErr.code,
+          message: cascadeErr.message,
+        });
+      }
+    }
 
     poCount++;
   }
@@ -570,4 +604,115 @@ export async function createVendorAdHoc(input: {
   revalidatePath(`/procurement/project/${input.projectId}`);
   revalidatePath('/vendors');
   return { success: true, vendorId: data.id };
+}
+
+// ---------------------------------------------------------------------------
+// Update BOQ Item Qty + Rate (inline edit in Tab 1)
+// ---------------------------------------------------------------------------
+
+export async function updateBoqItemQtyRate(input: {
+  boqItemId: string;
+  quantity: number;
+  unitPrice: number;
+}): Promise<ActionResult<{ totalPrice: number }>> {
+  const op = '[updateBoqItemQtyRate]';
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return err('Not authenticated');
+
+    // Role gate
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    const role = profile?.role;
+    if (!role || !['founder', 'project_manager', 'purchase_officer'].includes(role)) {
+      return err('Not authorised to edit BOQ');
+    }
+
+    // Validate inputs
+    if (!Number.isFinite(input.quantity) || input.quantity <= 0) return err('Quantity must be > 0');
+    if (!Number.isFinite(input.unitPrice) || input.unitPrice < 0) return err('Rate must be ≥ 0');
+
+    // Read current for audit + state guard
+    const { data: current, error: readErr } = await supabase
+      .from('project_boq_items')
+      .select('id, project_id, quantity, unit_price, total_price, procurement_status, gst_rate')
+      .eq('id', input.boqItemId)
+      .maybeSingle();
+    if (readErr) return err(readErr.message, readErr.code);
+    if (!current) return err('BOQ item not found');
+    if (current.procurement_status !== 'yet_to_place') {
+      return err(`Cannot edit — item is already ${String(current.procurement_status).replace(/_/g, ' ')}`);
+    }
+
+    // Compute new total (GST-inclusive: qty × rate × (1 + gst/100))
+    const newSubtotal = input.quantity * input.unitPrice;
+    const gstRate = Number(current.gst_rate ?? 0);
+    const newTotal = newSubtotal * (1 + gstRate / 100);
+
+    const { error: updErr } = await supabase
+      .from('project_boq_items')
+      .update({
+        quantity: input.quantity,
+        unit_price: input.unitPrice,
+        total_price: newTotal,
+      })
+      .eq('id', input.boqItemId);
+    if (updErr) return err(updErr.message, updErr.code);
+
+    await logProcurementAudit(supabase, {
+      entityType: 'boq_item',
+      entityId: input.boqItemId,
+      action: 'qty_rate_edited',
+      actorId: user.id,
+      oldValue: {
+        quantity: current.quantity,
+        unit_price: current.unit_price,
+        total_price: current.total_price,
+      },
+      newValue: {
+        quantity: input.quantity,
+        unit_price: input.unitPrice,
+        total_price: newTotal,
+      },
+    });
+
+    revalidatePath(`/procurement/project/${current.project_id}`);
+    return ok({ totalPrice: newTotal });
+  } catch (e) {
+    console.error(`${op} threw`, e);
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Vendor typeahead search (Tab 2) — server action so client components can call it
+// ---------------------------------------------------------------------------
+
+export async function searchVendors(q: string, limit = 10): Promise<VendorSearchResult[]> {
+  const op = '[searchVendors]';
+  try {
+    const supabase = await createClient();
+    const query = q.trim().replace(/[%,()]/g, '');
+    if (query.length < 2) return [];
+    const { data, error } = await supabase
+      .from('vendors')
+      .select('id, company_name, contact_person, phone, email')
+      .or(`company_name.ilike.%${query}%,contact_person.ilike.%${query}%`)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('company_name')
+      .limit(limit);
+    if (error) {
+      console.error(`${op}`, { code: error.code, message: error.message });
+      return [];
+    }
+    return data ?? [];
+  } catch (e) {
+    console.error(`${op} threw`, e);
+    return [];
+  }
 }

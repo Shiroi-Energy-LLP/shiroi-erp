@@ -4,19 +4,21 @@
  * Send RFQ panel (Tab 2 top section).
  *
  * Select BOQ items (pre-populated from Tab 1 sessionStorage hand-off) + vendors
- * + deadline, then Create RFQ → returns invitations with access_tokens, opens
- * SendRfqModal showing per-vendor Gmail / WhatsApp / copy-link buttons.
+ * (via VendorSearchCombobox typeahead) + deadline, then Create RFQ → returns
+ * invitations with access_tokens, opens SendRfqModal showing per-vendor Gmail /
+ * WhatsApp / copy-link buttons.
  */
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@repo/ui';
-import { UserPlus, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 import type { Database } from '@repo/types/database';
 import type { PurchaseDetailItem } from '@/lib/procurement-queries';
+import type { VendorSearchResult } from '@/lib/procurement-queries';
 import { createRfqWithInvitations } from '@/lib/rfq-actions';
 import { SendRfqModal } from './send-rfq-modal';
-import { CreateVendorAdHocDialog } from './create-vendor-ad-hoc-dialog';
+import { VendorSearchCombobox } from './vendor-search-combobox';
 
 type AppRole = Database['public']['Enums']['app_role'];
 type RfqInvitation = Database['public']['Tables']['rfq_invitations']['Row'];
@@ -29,11 +31,9 @@ interface SendRfqPanelProps {
 }
 
 function defaultDeadline(): string {
-  // 7 days from now, truncated to date (YYYY-MM-DDT18:00 IST → stored as ISO)
   const d = new Date();
   d.setDate(d.getDate() + 7);
   d.setHours(18, 0, 0, 0);
-  // Return a value compatible with <input type="datetime-local">
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
@@ -41,12 +41,11 @@ function defaultDeadline(): string {
 export function SendRfqPanel({
   projectId,
   boqItems,
-  vendors,
   viewerRole: _viewerRole,
 }: SendRfqPanelProps) {
   const router = useRouter();
   const [selectedBoq, setSelectedBoq] = React.useState<Set<string>>(new Set());
-  const [selectedVendors, setSelectedVendors] = React.useState<Set<string>>(new Set());
+  const [selectedVendors, setSelectedVendors] = React.useState<VendorSearchResult[]>([]);
   const [deadline, setDeadline] = React.useState<string>(defaultDeadline());
   const [notes, setNotes] = React.useState<string>('');
   const [submitting, setSubmitting] = React.useState(false);
@@ -55,10 +54,8 @@ export function SendRfqPanel({
     rfqId: string;
     invitations: RfqInvitation[];
   } | null>(null);
-  const [showVendorDialog, setShowVendorDialog] = React.useState(false);
 
-  // On mount: read pre-selected BOQ items from sessionStorage (handed off
-  // from Tab 1) and clear the storage key so it doesn't linger.
+  // On mount: read pre-selected BOQ items from sessionStorage (handed off from Tab 1).
   React.useEffect(() => {
     try {
       const raw = sessionStorage.getItem(`rfq-preselect-${projectId}`);
@@ -81,22 +78,13 @@ export function SendRfqPanel({
     });
   }
 
-  function toggleVendor(id: string) {
-    setSelectedVendors((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
   async function handleCreate() {
     setError(null);
     if (selectedBoq.size === 0) {
       setError('Select at least one BOQ item');
       return;
     }
-    if (selectedVendors.size === 0) {
+    if (selectedVendors.length === 0) {
       setError('Select at least one vendor');
       return;
     }
@@ -106,12 +94,11 @@ export function SendRfqPanel({
     }
 
     setSubmitting(true);
-    // Convert datetime-local to ISO
     const deadlineIso = new Date(deadline).toISOString();
     const res = await createRfqWithInvitations({
       projectId,
       boqItemIds: Array.from(selectedBoq),
-      vendorIds: Array.from(selectedVendors),
+      vendorIds: selectedVendors.map((v) => v.id),
       deadline: deadlineIso,
       notes: notes.trim() || undefined,
     });
@@ -122,9 +109,8 @@ export function SendRfqPanel({
       return;
     }
     setInvitationsSent({ rfqId: res.data.rfqId, invitations: res.data.invitations });
-    // Clear the form — the modal stays up
     setSelectedBoq(new Set());
-    setSelectedVendors(new Set());
+    setSelectedVendors([]);
     setNotes('');
     router.refresh();
   }
@@ -132,12 +118,8 @@ export function SendRfqPanel({
   if (boqItems.length === 0) {
     return (
       <div className="text-center py-6">
-        <p className="text-sm text-n-600">
-          No BOQ items available for RFQ.
-        </p>
-        <p className="text-[11px] text-n-500 mt-1">
-          All items are already assigned to vendors or ordered.
-        </p>
+        <p className="text-sm text-n-600">No BOQ items available for RFQ.</p>
+        <p className="text-[11px] text-n-500 mt-1">All items are already assigned to vendors or ordered.</p>
       </div>
     );
   }
@@ -180,51 +162,16 @@ export function SendRfqPanel({
         </div>
       </div>
 
-      {/* Vendor picker */}
+      {/* Vendor typeahead */}
       <div>
-        <div className="flex items-center justify-between mb-1">
-          <label className="block text-[10px] uppercase tracking-wide text-n-500 font-medium">
-            Vendors ({selectedVendors.size}/{vendors.length})
-          </label>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 text-[10px] px-2 gap-1"
-            onClick={() => setShowVendorDialog(true)}
-          >
-            <UserPlus className="h-3 w-3" /> Add new vendor
-          </Button>
-        </div>
-        <div className="border border-n-200 rounded max-h-48 overflow-y-auto">
-          {vendors.length === 0 ? (
-            <div className="px-3 py-4 text-[11px] text-n-500 text-center">
-              No vendors. Add one with the button above.
-            </div>
-          ) : (
-            <table className="w-full text-[11px]">
-              <tbody>
-                {vendors.map((v) => (
-                  <tr
-                    key={v.id}
-                    className="border-b border-n-100 hover:bg-n-50 cursor-pointer"
-                    onClick={() => toggleVendor(v.id)}
-                  >
-                    <td className="px-2 py-1.5 w-6">
-                      <input
-                        type="checkbox"
-                        checked={selectedVendors.has(v.id)}
-                        onChange={() => toggleVendor(v.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-3 w-3"
-                      />
-                    </td>
-                    <td className="px-2 py-1.5">{v.company_name}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <label className="block text-[10px] uppercase tracking-wide text-n-500 font-medium mb-1">
+          Vendors ({selectedVendors.length} selected)
+        </label>
+        <VendorSearchCombobox
+          projectId={projectId}
+          selected={selectedVendors}
+          onChange={setSelectedVendors}
+        />
       </div>
 
       {/* Deadline + notes */}
@@ -262,13 +209,13 @@ export function SendRfqPanel({
         <Button
           size="sm"
           className="h-8 text-[11px] px-3 gap-1"
-          disabled={submitting || selectedBoq.size === 0 || selectedVendors.size === 0}
+          disabled={submitting || selectedBoq.size === 0 || selectedVendors.length === 0}
           onClick={handleCreate}
         >
           <Send className="h-3.5 w-3.5" />
           {submitting
             ? 'Creating…'
-            : `Create RFQ (${selectedBoq.size} items × ${selectedVendors.size} vendors)`}
+            : `Create RFQ (${selectedBoq.size} items × ${selectedVendors.length} vendors)`}
         </Button>
       </div>
 
@@ -277,27 +224,15 @@ export function SendRfqPanel({
         <SendRfqModal
           rfqId={invitationsSent.rfqId}
           invitations={invitationsSent.invitations}
-          vendors={vendors}
+          vendors={selectedVendors.map((v) => ({
+            id: v.id,
+            company_name: v.company_name,
+            phone: v.phone,
+            email: v.email,
+            contact_person: v.contact_person,
+          }))}
           projectName=""
           onClose={() => setInvitationsSent(null)}
-        />
-      )}
-
-      {/* Add vendor dialog */}
-      {showVendorDialog && (
-        <CreateVendorAdHocDialog
-          projectId={projectId}
-          onClose={() => setShowVendorDialog(false)}
-          onCreated={(vendorId) => {
-            setShowVendorDialog(false);
-            // Auto-select the new vendor so the engineer's next click is Create RFQ.
-            setSelectedVendors((prev) => {
-              const next = new Set(prev);
-              next.add(vendorId);
-              return next;
-            });
-            router.refresh();
-          }}
         />
       )}
     </div>

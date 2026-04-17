@@ -10424,6 +10424,7 @@ export type Database = {
           approval_status: string
           approved_by: string | null
           created_at: string
+          dispatch_stage: string | null
           dispatched_at: string | null
           expected_delivery_date: string | null
           gst_amount: number
@@ -10441,6 +10442,8 @@ export type Database = {
           project_id: string
           requires_approval: boolean
           rfq_id: string | null
+          sent_to_vendor_at: string | null
+          sent_via_channels: string[]
           status: string
           subtotal: number
           total_amount: number
@@ -10461,6 +10464,7 @@ export type Database = {
           approval_status?: string
           approved_by?: string | null
           created_at?: string
+          dispatch_stage?: string | null
           dispatched_at?: string | null
           expected_delivery_date?: string | null
           gst_amount?: number
@@ -10478,6 +10482,8 @@ export type Database = {
           project_id: string
           requires_approval?: boolean
           rfq_id?: string | null
+          sent_to_vendor_at?: string | null
+          sent_via_channels?: string[]
           status?: string
           subtotal?: number
           total_amount?: number
@@ -10498,6 +10504,7 @@ export type Database = {
           approval_status?: string
           approved_by?: string | null
           created_at?: string
+          dispatch_stage?: string | null
           dispatched_at?: string | null
           expected_delivery_date?: string | null
           gst_amount?: number
@@ -10515,6 +10522,8 @@ export type Database = {
           project_id?: string
           requires_approval?: boolean
           rfq_id?: string | null
+          sent_to_vendor_at?: string | null
+          sent_via_channels?: string[]
           status?: string
           subtotal?: number
           total_amount?: number
@@ -13340,6 +13349,14 @@ export type Database = {
       }
       drop_old_inverter_partitions: { Args: never; Returns: undefined }
       enqueue_payment_escalations: { Args: never; Returns: number }
+      fn_cascade_po_approval_to_boq: {
+        Args: { p_po_id: string }
+        Returns: undefined
+      }
+      fn_cascade_po_receipt_to_boq: {
+        Args: { p_po_id: string }
+        Returns: undefined
+      }
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
       generate_rfq_number: { Args: never; Returns: string }

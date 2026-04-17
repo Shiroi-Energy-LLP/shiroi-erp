@@ -6,6 +6,8 @@
  *   - Select BOQ rows via checkbox
  *   - Send selected rows to multiple vendors (→ creates RFQ)
  *   - OR skip competitive quoting and go direct-to-PO ("Quick PO")
+ *   - Inline-edit qty + rate (yet_to_place items only)
+ *   - Download BOQ as PDF
  *
  * The interactive pieces live in `BoqEditableTable` (client).
  */
@@ -22,9 +24,11 @@ interface TabBoqProps {
   items: PurchaseDetailItem[];
   vendors: Array<{ id: string; company_name: string; phone: string | null; email: string | null; contact_person: string | null }>;
   viewerRole: AppRole;
+  viewerName?: string;
+  project?: { project_number: string; customer_name: string; site_address?: string | null };
 }
 
-export function TabBoq({ projectId, items, vendors, viewerRole }: TabBoqProps) {
+export function TabBoq({ projectId, items, vendors, viewerRole, viewerName, project }: TabBoqProps) {
   const withVendor = items.filter((i) => i.vendor_id).length;
 
   return (
@@ -45,6 +49,8 @@ export function TabBoq({ projectId, items, vendors, viewerRole }: TabBoqProps) {
           items={items}
           vendors={vendors}
           viewerRole={viewerRole}
+          viewerName={viewerName}
+          project={project}
         />
       </CardContent>
     </Card>

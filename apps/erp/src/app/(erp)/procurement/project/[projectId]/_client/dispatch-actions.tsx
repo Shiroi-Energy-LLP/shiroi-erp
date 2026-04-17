@@ -12,9 +12,11 @@
  *   dispatched + vendor date → [Mark received]            — Shiroi acknowledged
  *   acknowledged             → (nothing — terminal)
  *
- * Only Purchase Engineers (purchase_officer) and founders act on these — the
- * guard is enforced server-side, we just hide buttons for other roles so the
- * UI doesn't look broken.
+ * Per the April 17 2026 role-matrix update, Purchase Engineers, Project
+ * Managers, and Founders can all move POs through the dispatch lifecycle. The
+ * server actions (markPODispatched / recordVendorDispatch / markPOAcknowledged)
+ * enforce the same set — we just hide buttons for other roles so the UI
+ * doesn't look broken.
  */
 
 import * as React from 'react';
@@ -60,7 +62,10 @@ function todayYMD(): string {
 
 export function DispatchActions({ po, viewerRole }: DispatchActionsProps) {
   const router = useRouter();
-  const canAct = viewerRole === 'purchase_officer' || viewerRole === 'founder';
+  const canAct =
+    viewerRole === 'purchase_officer' ||
+    viewerRole === 'project_manager' ||
+    viewerRole === 'founder';
   const [busy, setBusy] = React.useState<'send' | 'ack' | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
