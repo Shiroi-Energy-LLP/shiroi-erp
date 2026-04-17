@@ -31,8 +31,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **060** (Purchase Module v2, Apr 17) | None — fully caught up |
-| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 060** — 48 migrations waiting on the next prod window |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **061** (RFQ RLS fix for project_manager, Apr 17) | None — fully caught up |
+| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 061** — 49 migrations waiting on the next prod window |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, and WhatsApp; not all of that needs to move to prod).
 
