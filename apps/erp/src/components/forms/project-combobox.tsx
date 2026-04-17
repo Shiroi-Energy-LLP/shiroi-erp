@@ -56,8 +56,9 @@ export function ProjectCombobox({
       .slice(0, 50);
   }, [query, projects]);
 
-  // Close dropdown on click outside
+  // Close dropdown on click outside — only attach when open
   React.useEffect(() => {
+    if (!open) return;
     function handleMouseDown(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -65,7 +66,7 @@ export function ProjectCombobox({
     }
     document.addEventListener('mousedown', handleMouseDown);
     return () => document.removeEventListener('mousedown', handleMouseDown);
-  }, []);
+  }, [open]);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setQuery(e.target.value);
@@ -91,7 +92,10 @@ export function ProjectCombobox({
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (!open) {
-      if (e.key === 'ArrowDown' || e.key === 'Enter') setOpen(true);
+      if (e.key === 'ArrowDown' || e.key === 'Enter') {
+        setOpen(true);
+        setHighlighted(0);
+      }
       return;
     }
     if (e.key === 'ArrowDown') {
@@ -104,7 +108,9 @@ export function ProjectCombobox({
       e.preventDefault();
       if (highlighted >= 0 && filtered[highlighted]) handleSelect(filtered[highlighted]);
     } else if (e.key === 'Escape') {
+      e.preventDefault();
       setOpen(false);
+      setHighlighted(-1);
     }
   }
 
@@ -150,7 +156,7 @@ export function ProjectCombobox({
                 href="/projects/new"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-[#00B050] hover:underline mt-1 inline-block"
+                className="text-xs text-shiroi-green hover:underline mt-1 inline-block"
               >
                 Create a new project →
               </a>
@@ -170,7 +176,7 @@ export function ProjectCombobox({
                   className={`flex items-center justify-between px-3 py-2 cursor-pointer select-none ${
                     i === highlighted || project.id === value
                       ? 'bg-n-100 text-n-900'
-                      : 'text-n-700 hover:bg-n-50'
+                      : 'text-n-700 hover:bg-n-050'
                   }`}
                 >
                   <span className="truncate text-sm">{project.customer_name}</span>
