@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-17
 **Status:** Design approved, pending implementation plan
-**Ships with:** migration 062
+**Ships with:** the next available migration (likely 066, after in-flight 065)
 **Author:** Vivek (brainstormed with Claude)
 
 ---
@@ -16,7 +16,7 @@ Today, voucher-level site expenses are entered and approved inside each individu
 3. **Workflow is too shallow.** Today's 2-stage flow (`pending → approved/rejected`) skips the Project Manager's verification step, so the founder is the only reviewer. Manivel has asked for an explicit "Verified by PM" stage between submission and founder approval.
 4. **Categories are hardcoded.** The 8-value CHECK constraint means new categories require a migration. Admin can't add / archive categories without engineering involvement.
 
-The fix is a standalone **Expenses** module with its own navigation entry, 3-stage workflow, per-engineer auto-generated voucher numbers, and a central category master. Project Actuals becomes a read-only embed that auto-pulls from this module filtered by project.
+The fix is a standalone **Expenses** module with its own navigation entry, per-submitter auto-generated voucher numbers, and a central category master. The module handles both **project-linked site expenses** (95% — the Manivel + site-supervisor workflow) and **general non-project expenses** (5% — a marketing event, a designer's site visit reimbursement routed through the office, office petty cash). Project Actuals becomes a read-only embed that auto-pulls from this module filtered by project.
 
 ## 2. Scope
 
@@ -24,13 +24,14 @@ The fix is a standalone **Expenses** module with its own navigation entry, 3-sta
 
 - New top-level `/expenses` module with list + detail + add/edit dialog
 - Central `expense_categories` table with admin CRUD at `/expenses/categories`
-- Per-engineer auto-generated voucher numbers (e.g., `MAN-001`, `MAN-002`)
-- 3-stage workflow: `submitted → verified → approved` (+ `rejected`)
+- Per-submitter auto-generated voucher numbers (e.g., `MAN-001`, `MAN-002`)
+- **Dual workflow:** 3-stage for project-linked (`submitted → verified → approved`); 2-stage for general non-project (`submitted → approved`); both with `rejected` as a terminal
 - Multi-document attachment per expense
 - Role-based permission matrix (submit / edit own / verify / approve / delete)
-- Read-only "Site Expenses" embed on Project Actuals, filtered by project
+- **All active employees can submit** (every role except `customer`); project link is **optional**
+- Read-only "Site Expenses" embed on Project Actuals, filtered by project_id (general expenses naturally drop out)
 - `+ New Project` button on `/projects` list page for Project Manager + Founder
-- Data migration: rename `project_site_expenses → expenses`, retro-backfill voucher numbers, migrate status values
+- Data migration: rename `project_site_expenses → expenses`, retro-backfill voucher numbers, migrate status values, make `project_id` nullable
 
 ### Out of scope
 
@@ -42,25 +43,39 @@ The fix is a standalone **Expenses** module with its own navigation entry, 3-sta
 
 ## 3. Users & roles
 
-Only two roles submit expenses: `site_supervisor` and `project_manager`. **Founder does not submit their own expenses through this module** — if Vivek needs reimbursement, Manivel submits on his behalf (cleaner audit trail and a single chain of custody). The voucher-numbering series is keyed by whoever submits — Manivel (PM) submits into his own `MAN-###` series; each site supervisor has their own series.
+**Anyone can submit.** Every active employee (all roles except `customer`) can submit an expense, whether against a project or as a general non-project expense. Examples:
 
-| Action | `site_supervisor` | `project_manager` | `founder` | `finance` | Others |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Submit new expense | ✅ | ✅ | ❌ | ❌ | ❌ |
-| View own expenses | ✅ | ✅ (all) | ✅ (all, read-only submit) | ✅ (all, read-only) | ❌ |
-| Edit own `submitted` expense | ✅ | ✅ | — | — | ❌ |
-| Delete own `submitted` expense | ✅ | ✅ | — | — | ❌ |
-| Edit any `submitted` expense | ❌ | ✅ | ✅ | ❌ | ❌ |
-| Edit any expense (all statuses) | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Delete any expense | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Mark `submitted → verified` | ❌ | ✅ | ✅ | ❌ | ❌ |
-| Mark `submitted/verified → rejected` | ❌ | ✅ (from `submitted`) | ✅ | ❌ | ❌ |
-| Mark `verified → approved` | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Reverse `approved → verified` (audit) | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Manage categories (`/expenses/categories`) | ❌ | ❌ | ✅ | ✅ | ❌ |
-| Add new project (`+ New Project` button) | ❌ | ✅ | ✅ | ❌ | ❌ |
+- **Site supervisor** submits voucher for project materials (project-linked, 95% of volume)
+- **Project Manager** (Manivel) submits travel voucher for his own site visits (project-linked)
+- **Designer** submits travel reimbursement for a site survey visit (project-linked)
+- **Marketing manager** submits a voucher for a marketing event (general, no project)
+- **HR manager** submits a voucher for office supplies (general, no project)
+- **Purchase officer** submits cash-paid vendor advance (usually project-linked; could be general)
 
-`finance` sees all expenses read-only (they show up in profitability reports) and manages the category master. They do not submit, verify, or approve — that's strictly Engineer / PM / Founder.
+The voucher-numbering series is keyed by whoever submits — each employee has their own series (`MAN-001`, `VIV-001`, `SIV-001`, …). Series are strictly per-submitter, never reset.
+
+**Verification / approval** branches by whether the expense is project-linked:
+
+| Action | `site_supervisor` | `project_manager` | `founder` | `finance` | All other active roles | `customer` |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Submit new expense (project-linked or general) | ✅ | ✅ | ❌¹ | ❌¹ | ✅ | ❌ |
+| View own expenses | ✅ | ✅ (all) | ✅ (all) | ✅ (all) | ✅ (own only) | ❌ |
+| Edit own `submitted` expense | ✅ | ✅ | — | — | ✅ | ❌ |
+| Delete own `submitted` expense | ✅ | ✅ | — | — | ✅ | ❌ |
+| Edit any `submitted` expense | ❌ | ✅ (project-linked only) | ✅ | ❌ | ❌ | ❌ |
+| Edit any expense (all statuses) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Delete any expense | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Mark `submitted → verified` (project-linked only) | ❌ | ✅ (own project-linked or any) | ✅ | ❌ | ❌ | ❌ |
+| Mark `submitted/verified → rejected` | ❌ | ✅ (project-linked, from `submitted`) | ✅ | ❌ | ❌ | ❌ |
+| Mark `verified → approved` (project-linked) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Mark `submitted → approved` (**general only**, skip verify) | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Reverse terminal states (`approved → verified`, `rejected → submitted`) for audit | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Manage categories (`/expenses/categories`) | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
+| Add new project (`+ New Project` button) | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+¹ `founder` and `finance` technically *can* submit (no DB-level block) but typically delegate to Manivel for audit cleanliness. We don't special-case the UI; the Submit button is visible to everyone except `customer`.
+
+`finance` sees all expenses read-only (they feed profitability reports) and manages the category master. They do not verify or approve — that's strictly PM / Founder.
 
 ## 4. Data model
 
@@ -100,10 +115,11 @@ Files live in the existing `project-files` Storage bucket under the path `expens
 
 ### 4.3 Renamed + extended — `project_site_expenses → expenses`
 
-The rename is justified because the module is now standalone and not a child of projects. The `project_id` FK stays (an expense is still against one project — this module is cross-project, not project-agnostic).
+The rename is justified because the module is now standalone and not a child of projects. An expense is either **project-linked** (`project_id` set) or **general** (`project_id` NULL).
 
 Changes to the existing table:
 
+- `project_id` → **nullable** (was `NOT NULL`). Most migrations must handle this change carefully. NULL means general / non-project expense.
 - `status` CHECK rebuilt: `'submitted' | 'verified' | 'approved' | 'rejected'`
 - `voucher_number TEXT NOT NULL UNIQUE` (retro-backfilled; see §4.5)
 - Add `verified_by UUID REFERENCES employees(id)`, `verified_at TIMESTAMPTZ`
@@ -113,16 +129,24 @@ Changes to the existing table:
 - Drop `receipt_file_path` (migrated to `expense_documents`)
 - Drop `employee_name` (unused; we have `submitted_by` → `employees.full_name`)
 - Drop `notes` (unused per code audit)
-- Keep: `id`, `project_id`, `description`, `amount`, `expense_date`, `status`, `submitted_by/at`, `approved_by/at`, `rejected_reason`, `created_at`, `updated_at`
+- Keep: `id`, `project_id` (now nullable), `description`, `amount`, `expense_date`, `status`, `submitted_by/at`, `approved_by/at`, `rejected_reason`, `created_at`, `updated_at`
+
+**Constraint on general expenses:** a CHECK ensures that if `project_id IS NULL`, the status path follows the 2-stage rule — specifically, `verified_by` and `verified_at` **must both be NULL** for general expenses (they skip the verify stage). Project-linked expenses can have any status.
+
+```sql
+ALTER TABLE expenses ADD CONSTRAINT expenses_general_skip_verify_check
+  CHECK (project_id IS NOT NULL OR (verified_by IS NULL AND verified_at IS NULL));
+```
 
 ### 4.4 Extended — `employees`
 
-Add `voucher_prefix TEXT` column.
+Add `voucher_prefix TEXT` column, **populated for all active employees** (any role except `customer`) since anyone can submit.
 
 - Auto-derived on INSERT via a trigger: `UPPER(LEFT(REGEXP_REPLACE(full_name, '[^A-Za-z]', '', 'g'), 3))`
 - Unique among active employees: `CREATE UNIQUE INDEX idx_employees_voucher_prefix_active ON employees(voucher_prefix) WHERE is_active = TRUE`
 - On collision (two active employees both resolve to the same 3-letter prefix): the trigger **raises an exception**. Admin must enter a unique override in the employee form (e.g. `MAN` vs `MNV` for Manivel vs Manish).
 - Deactivating an employee (`is_active = FALSE`) frees the prefix for reuse.
+- **Backfill note:** populating all current active employees (~50 people) is done in the migration. The backfill SQL first tries the 3-letter rule; on collision (expected for Tamil Nadu naming distribution), it appends a 4th letter, then a 5th, then fails loudly with a list of names for admin to manually resolve. See §7.1 step 2 for the exact SQL strategy.
 
 ### 4.5 Voucher number generation
 
@@ -159,7 +183,7 @@ $$;
 
 Format: `{PREFIX}-{NNN}`, zero-padded to 3 digits. Rolls over to 4+ digits after 999 (`MAN-1000`). Sequence is **per-employee, never resets, monotonically increasing** across all projects.
 
-**Retro backfill** for existing rows (one-time in migration 062):
+**Retro backfill** for existing rows (one-time in the next available migration (likely 066, after in-flight 065)):
 
 ```sql
 WITH numbered AS (
@@ -180,7 +204,7 @@ FROM numbered
 WHERE ex.id = numbered.id;
 ```
 
-### 4.6 Indexes (added in migration 062)
+### 4.6 Indexes (added in the next available migration (likely 066, after in-flight 065))
 
 ```sql
 CREATE UNIQUE INDEX idx_expenses_voucher_number ON expenses(voucher_number);
@@ -197,23 +221,25 @@ CREATE UNIQUE INDEX idx_employees_voucher_prefix_active
 
 Add `project_type TEXT CHECK (project_type IN ('sales', 'internal')) DEFAULT 'sales'` column. Backfill all existing rows to `'sales'`. `sales` projects are born from a won sales lead (existing trigger-driven flow). `internal` projects are manually created via the new `+ New Project` dialog for non-customer-facing work (warehouse repairs, marketing events, internal tooling). The type is informational for now — no behavior branches on it yet.
 
-### 4.8 RLS policies (rewrite in migration 062)
+### 4.8 RLS policies (rewrite in the Expenses-module migration)
 
 | Operation | Policy |
 |---|---|
-| `SELECT` | `site_supervisor` → only rows where `submitted_by = self.employee_id`; `project_manager` + `founder` + `finance` → all rows |
-| `INSERT` | `site_supervisor` + `project_manager` only; `submitted_by = self` enforced |
-| `UPDATE` (general fields — description / amount / category / date) | submitter while `status = 'submitted'`; or `project_manager` / `founder` while `status = 'submitted'`; or `founder` at any status |
-| `UPDATE` (status transitions) | enforced via server action guards + trigger: `submitted → verified` by PM/founder, `verified → approved` by founder, `* → rejected` by PM (from `submitted` only) or founder (from `submitted`/`verified`) |
-| `DELETE` | submitter while `status = 'submitted'`; or founder at any status |
+| `SELECT` | Any active employee → rows where `submitted_by = self.employee_id` (sees own submissions). `project_manager` + `founder` + `finance` → all rows |
+| `INSERT` | Any active employee except `customer`. `submitted_by = self` enforced via policy USING clause |
+| `UPDATE` (general fields — description / amount / category / date) | submitter while `status = 'submitted'`; or `project_manager` while `status = 'submitted'` and `project_id IS NOT NULL` (PM can't touch general expenses); or `founder` at any status |
+| `UPDATE` (status transitions) | enforced via server action guards + trigger — see §5 state machine. `project_manager` only acts on project-linked rows; `founder` acts on either |
+| `DELETE` | submitter while `status = 'submitted'`; or `founder` at any status |
 
 `expense_categories` RLS: `SELECT` open to all authenticated roles; `INSERT/UPDATE` for `founder` + `finance`.
 
-`expense_documents` RLS: follows `expenses` — if user can SELECT the parent expense, they can SELECT its documents. INSERT gated to the submitter and PM/founder. DELETE gated to founder only.
+`expense_documents` RLS: follows `expenses` — if user can SELECT the parent expense, they can SELECT its documents. INSERT gated to anyone who can INSERT the parent (i.e. the submitter). DELETE gated to `founder` only.
 
 ## 5. Status workflow
 
-### 5.1 State machine
+The workflow **branches on `project_id`**. Project-linked expenses go through the full 3-stage flow (PM verifies, Founder approves). General expenses skip the verify step (Founder approves directly).
+
+### 5.1 Project-linked state machine (`project_id IS NOT NULL`)
 
 ```
         submitted ──PM/Founder "Verify"──▶ verified ──Founder "Approve"──▶ approved
@@ -225,16 +251,38 @@ Add `project_type TEXT CHECK (project_type IN ('sales', 'internal')) DEFAULT 'sa
 - `verified` (blue badge) — PM or Founder promotes; DB check: previous status must be `submitted`
 - `approved` (green badge) — Founder only; DB check: previous status must be `verified` (no skip-verify shortcut)
 - `rejected` (red badge) — PM (from `submitted` only) or Founder (from `submitted` or `verified`); `rejected_reason` required
-- Founder can force any transition for audit correction (including `approved → verified` or `rejected → submitted`)
 
-### 5.2 Edit / delete gates
+### 5.2 General state machine (`project_id IS NULL`)
+
+```
+        submitted ──Founder "Approve"──▶ approved
+            │
+            └── Founder "Reject" ──▶ rejected (terminal unless Founder reverses)
+```
+
+- `submitted` (yellow badge) — default on INSERT
+- `verified` — **unreachable**: CHECK constraint enforces `verified_by`/`verified_at` are always NULL for general expenses
+- `approved` (green badge) — Founder only; directly from `submitted` (skip-verify shortcut is allowed for general only)
+- `rejected` (red badge) — Founder only; `rejected_reason` required
+- PM has **no authority** over general expenses (they're not project-linked, so no PM ownership chain)
+
+### 5.3 Founder override (both state machines)
+
+Founder can force any transition for audit correction, including:
+- `approved → verified` (for project-linked) or `approved → submitted` (for general)
+- `rejected → submitted` (unreject for resubmit)
+- Any transition when evidence changes post-hoc
+
+These overrides are all recorded via the standard status columns — the most recent `<state>_at` timestamp always reflects the current state.
+
+### 5.4 Edit / delete gates
 
 - Submitter can edit/delete own row **only while `status = 'submitted'`**
-- PM can edit/delete any `submitted` row
+- PM can edit/delete any `submitted` row **where `project_id IS NOT NULL`** (no authority over general)
 - Founder can edit/delete any row at any status
-- Once `verified`, the row is locked for non-founder users (mirrors `actuals_locked` semantics)
+- Once `verified` or `approved`, the row is locked for non-founder users (mirrors `actuals_locked` semantics)
 
-### 5.3 Rejected → retry
+### 5.5 Rejected → retry
 
 Submitter can't unreject their own row. To retry, they create a **new** expense (new voucher number — the rejected number is not reused). The rejected row stays as a historical record. Founder can manually reverse a rejection via the "Revert" action if the rejection was made in error.
 
@@ -242,23 +290,24 @@ Submitter can't unreject their own row. To retry, they create a **new** expense 
 
 ### 6.1 `/expenses` — list page
 
-**Header:** "Expenses" title + eyebrow "SITE EXPENSES" + `+ Add Expense` button (visible to `site_supervisor` + `project_manager` only — founder does not submit).
+**Header:** "Expenses" title + eyebrow "VOUCHERS" + `+ Add Expense` button (visible to **any active employee except `customer`**).
 
 **KPI strip** (4 cards):
 1. Total Vouchers (count)
-2. Submitted (count, pending verification)
-3. Pending Verification ₹ (sum of `amount` where `status = 'submitted'`)
+2. Submitted (count, pending action)
+3. Pending Action ₹ (sum of `amount` where `status = 'submitted'` — this is the founder / PM inbox)
 4. Approved This Month ₹ (sum of `amount` where `status = 'approved' AND DATE_TRUNC('month', approved_at) = current month`)
 
 **Filter bar** (reuses `FilterBar` + `FilterSelect` + `SearchInput` + `ProjectFilterCombobox`):
 - Search (matches on `voucher_number`, `projects.project_number`, `projects.customer_name`, `employees.full_name`, `description`)
-- Project combobox (from existing `/components/om/project-filter-combobox.tsx`)
-- Engineer dropdown (all active `site_supervisor` + `project_manager` employees)
+- Project combobox — includes a "General (no project)" option at the top of the list
+- **Scope chips:** All / Project-linked / General (maps to `project_id IS NOT NULL` / `project_id IS NULL`)
+- Submitter dropdown (all active employees who have submitted at least once)
 - Category dropdown (active categories)
 - Status chips: All / Submitted / Verified / Approved / Rejected
 - Date range (expense_date from / to)
 
-**Table columns:** `Voucher No` (mono) · `Project` (project_number + customer_name) · `Engineer` · `Category` · `Description` (truncated) · `Amount ₹` (right, mono) · `Status` (badge) · `📎N` (document count) · `Actions` (View / Edit / Delete icons — role-gated).
+**Table columns:** `Voucher No` (mono) · `Project` (project_number + customer_name, or italic "General" if NULL) · `Submitter` · `Category` · `Description` (truncated) · `Amount ₹` (right, mono) · `Status` (badge) · `📎N` (document count) · `Actions` (View / Edit / Delete icons — role-gated).
 
 Row click → `/expenses/[id]`. Clickable column headers for sort. Pagination: 25 rows/page.
 
@@ -266,20 +315,21 @@ Empty state: `Receipt` lucide icon + "No expenses yet" + submit CTA.
 
 ### 6.2 `/expenses/[id]` — detail page
 
-- **Top band:** voucher number (mono, large) · status badge · amount ₹ (large, mono)
-- **Info card:** project (linked) · engineer · category · description (multi-line) · expense date
-- **Status timeline** (vertical): 3 nodes
-  - Submitted: `submitted_by` (name) + `submitted_at` (IST)
-  - Verified: `verified_by` + `verified_at`, or dim grey if not yet verified
-  - Approved: `approved_by` + `approved_at`, or dim grey if not yet approved
-  - If rejected: 4th red node with `rejected_by`, `rejected_at`, `rejected_reason`
+- **Top band:** voucher number (mono, large) · scope badge ("Project-linked" or "General") · status badge · amount ₹ (large, mono)
+- **Info card:** project (linked, or italic "General expense — no project" if NULL) · submitter · category · description (multi-line) · expense date
+- **Status timeline** (vertical) — branches by scope:
+  - **Project-linked:** 3 nodes — Submitted → Verified → Approved. Each node shows the actor + timestamp (IST), dim grey if not reached yet.
+  - **General:** 2 nodes — Submitted → Approved. No Verified node rendered at all (not dimmed — just absent, since it's unreachable by the state machine).
+  - **Rejected** (either scope): red node appended at the end with `rejected_by`, `rejected_at`, `rejected_reason`.
 - **Documents card:** list of `expense_documents` with inline image thumbnails (PNG/JPG) or PDF icon + filename + size; each has Preview / Download links
-- **Action bar** (bottom, role + status gated):
+- **Action bar** (bottom, role + status + scope gated):
   - Submitter + `status = 'submitted'`: `[Edit]` `[Delete]`
-  - PM + `status = 'submitted'`: `[Verify]` `[Reject]` `[Edit]` `[Delete]`
-  - Founder + `status = 'submitted'`: `[Verify]` `[Reject]` `[Edit]` `[Delete]`
-  - Founder + `status = 'verified'`: `[Approve]` `[Reject]`
-  - Founder + `status = 'approved'`: `[Revert to Verified]`
+  - **PM** + **project-linked** + `status = 'submitted'`: `[Verify]` `[Reject]` `[Edit]` `[Delete]`
+  - PM + **general** + any status: no PM controls (general expenses bypass PM)
+  - Founder + **project-linked** + `status = 'submitted'`: `[Verify]` `[Reject]` `[Edit]` `[Delete]`
+  - Founder + **project-linked** + `status = 'verified'`: `[Approve]` `[Reject]`
+  - Founder + **general** + `status = 'submitted'`: `[Approve]` `[Reject]` `[Edit]` `[Delete]` (direct approve, skip verify)
+  - Founder + `status = 'approved'`: `[Revert]` (to Verified if project-linked, Submitted if general)
   - Founder + `status = 'rejected'`: `[Revert to Submitted]`
 - Back link → `/expenses`
 
@@ -287,11 +337,11 @@ Empty state: `Receipt` lucide icon + "No expenses yet" + submit CTA.
 
 Reuses the shadcn `Dialog` pattern. Fields:
 
-- **Project** — combobox (searchable, active projects only). Reuses `components/om/project-filter-combobox.tsx`.
+- **Project** — combobox (searchable), **optional**. The combobox has a pinned `"— General expense (no project) —"` option at the top. Selecting it clears the project link and shows an info banner: `"General expenses are approved directly by the Founder (no PM verification stage)."` Reuses `components/om/project-filter-combobox.tsx` with an added "general" sentinel item.
 - **Voucher No** — greyed-out input, placeholder `"auto-generated on save ({PREFIX}-###)"`. Read-only.
-- **Engineer** — greyed-out, auto-filled from `auth.uid() → employees.full_name`.
+- **Submitter** — greyed-out, auto-filled from `auth.uid() → employees.full_name`.
 - **Category** — dropdown from `expense_categories WHERE is_active = TRUE`, ordered by `sort_order`.
-- **Description** — `<textarea>`, unbounded.
+- **Description** — `<textarea>`, unbounded. For general expenses, placeholder text prompts "Describe the expense and business purpose (since there's no project context)."
 - **Amount ₹** — numeric input, 2-decimal, `decimal.js` on client, `NUMERIC(14,2)` in SQL.
 - **Documents** — drag-drop zone (reuses existing file-upload pattern from QC). Multi-file. Accepts `.pdf / .jpg / .jpeg / .png`. Size limit 5 MB per file. Shows uploaded list with remove buttons.
 - **Warning banner** — yellow, shown if no document attached: `"Warning: no supporting document attached. You can still submit, but PM may reject without a receipt."` Submit is allowed (soft-warn per spec).
@@ -323,7 +373,7 @@ Fields:
 
 Creates a row in `projects` with `status = 'yet_to_start'`, `primary_contact_id = NULL`, no `lead_id` / `proposal_id` linkage, no contracted value. On success, redirects to `/projects/[id]` Details tab for Manivel to fill in the rest.
 
-**Note:** `projects.project_type` is a new column (`TEXT CHECK (project_type IN ('sales', 'internal'))`, default `'sales'`). Migration 062 adds this column and backfills all existing rows to `'sales'`. The type filter is not exposed on the Projects list yet (future enhancement).
+**Note:** `projects.project_type` is a new column (`TEXT CHECK (project_type IN ('sales', 'internal'))`, default `'sales'`). The Expenses-module migration adds this column and backfills all existing rows to `'sales'`. The type filter is not exposed on the Projects list yet (future enhancement).
 
 ### 6.6 Project Actuals read-only embed
 
@@ -337,24 +387,33 @@ No edit / delete / status controls. BOQ margin calculation is unchanged (it alre
 
 ## 7. Delivery plan
 
-### 7.1 SQL migration — `062_expenses_module.sql`
+### 7.1 SQL migration — `<NNN>_expenses_module.sql`
+
+(`NNN` = next available number, likely 066 after the in-flight 065_purchase_v2_feedback lands.)
 
 Single atomic migration, sectioned with banner comments. Ordered steps:
 
 1. `CREATE TABLE expense_categories` + seed 8 current categories
-2. `ALTER TABLE employees ADD voucher_prefix` + backfill from `full_name` + unique partial index + `BEFORE INSERT/UPDATE` trigger for auto-derive
-3. `ALTER TABLE project_site_expenses RENAME TO expenses`
-4. Drop old `status` CHECK, add new 4-value CHECK; migrate `pending → submitted`, `auto_approved → approved`, keep `approved` and `rejected`
-5. Add `verified_by/at`, `rejected_by/at`, `category_id` columns; backfill `category_id` from the old text `expense_category`
-6. Drop old columns: `expense_category`, `employee_name`, `notes`
-7. `CREATE TABLE expense_documents` + migrate existing `receipt_file_path` rows into it; drop the `receipt_file_path` column
-8. Retro-backfill `voucher_number` via window function
-9. `voucher_number` → `NOT NULL + UNIQUE`
-10. `CREATE FUNCTION generate_voucher_number()` + `BEFORE INSERT` trigger on `expenses` (advisory-lock based)
-11. Rewrite RLS: SELECT / INSERT / UPDATE / DELETE policies per role
-12. Add indexes (§4.6)
-13. Grant RLS policies for `expense_categories` + `expense_documents` tables
-14. `ALTER TABLE projects ADD COLUMN project_type TEXT CHECK (project_type IN ('sales', 'internal')) DEFAULT 'sales'` + backfill `'sales'`
+2. `ALTER TABLE employees ADD voucher_prefix` (nullable) + unique partial index `WHERE is_active = TRUE` + `BEFORE INSERT/UPDATE` trigger for auto-derive
+3. **Backfill `voucher_prefix` for every active employee** via plpgsql DO block:
+   - Default: first 3 uppercase letters of `full_name` (e.g., `Manivel` → `MAN`).
+   - On collision (another active employee already holds that prefix): extend to 4 letters. If still colliding: extend to 5 letters.
+   - If 5 letters still collide: raise an exception and halt migration. Vivek resolves manually before re-running.
+   - Log each assignment as a migration banner comment for traceability.
+4. `ALTER TABLE project_site_expenses RENAME TO expenses`
+5. `ALTER TABLE expenses ALTER COLUMN project_id DROP NOT NULL` — allow general (non-project) expenses
+6. `ADD CONSTRAINT expenses_general_skip_verify_check CHECK (project_id IS NOT NULL OR (verified_by IS NULL AND verified_at IS NULL))` — enforces the "general expenses skip verify" invariant at the DB level
+7. Drop old `status` CHECK, add new 4-value CHECK; migrate `pending → submitted`, `auto_approved → approved`, keep `approved` and `rejected`
+8. Add `verified_by/at`, `rejected_by/at`, `category_id` columns; backfill `category_id` from the old text `expense_category`
+9. Drop old columns: `expense_category`, `employee_name`, `notes`
+10. `CREATE TABLE expense_documents` + migrate existing `receipt_file_path` rows into it; drop the `receipt_file_path` column
+11. Retro-backfill `voucher_number` via window function, partitioned by `submitted_by`, ordered by `created_at`
+12. `voucher_number` → `NOT NULL + UNIQUE`
+13. `CREATE FUNCTION generate_voucher_number()` + `BEFORE INSERT` trigger on `expenses` (advisory-lock based, scoped by `voucher_prefix`)
+14. Rewrite RLS: SELECT / INSERT / UPDATE / DELETE policies per role (all active employees can INSERT; verify/approve/reject gated as per §4.8)
+15. Add indexes (§4.6)
+16. Grant RLS policies for `expense_categories` + `expense_documents` tables
+17. `ALTER TABLE projects ADD COLUMN project_type TEXT CHECK (project_type IN ('sales', 'internal')) DEFAULT 'sales'` + backfill `'sales'`
 
 After migration applies cleanly on dev, regenerate `packages/types/database.ts`.
 
@@ -454,7 +513,7 @@ SELECT DISTINCT status FROM expenses;
 1. **Storage RLS for documents.** `expense_documents` paths live in the `project-files` bucket. Per `docs/modules/projects.md` gotcha #2, drag-drop operations are UPDATE on `storage.objects` and need an UPDATE policy. The bucket already has this policy (from migration 047), so nothing new — but the migration must NOT accidentally narrow it.
 2. **Voucher prefix collision on employee import.** If two existing employees resolve to the same prefix during backfill, the unique index will reject the second row. The migration must catch this and fail loudly with a clear error message listing the colliding full names. Admin then updates the column for one of them before re-running.
 3. **Legacy voucher rows without `submitted_by`.** Historical rows may have `submitted_by = NULL` (the column was nullable pre-migration-033). The retro-backfill must handle this: NULL-submitter rows get voucher_number `UNASSIGNED-###` (an explicit sentinel prefix) and are flagged in an admin-review list. Migration fails loudly if any exist and the admin hasn't assigned them.
-4. **Prod migration window.** This is migration 062 on top of the already-deferred batch 013–061. It ships in the same prod-deploy window after employee testing week, not separately.
+4. **Prod migration window.** This is the next available migration (likely 066, after in-flight 065) on top of the already-deferred batch 013–061. It ships in the same prod-deploy window after employee testing week, not separately.
 5. **Voucher prefix uniqueness is scoped to active employees.** Deactivating an employee frees their prefix. Intentional, but documented.
 6. **Deleting old code.** The `/vouchers` page, `site-expenses-actions.ts`, `site-expense-form.tsx`, `voucher-table-controls.tsx` must be fully removed — no legacy write paths remaining. CI's forbidden-patterns check plus a manual grep for `project_site_expenses` (old name) ensures nothing references the deleted table name.
 7. **Type regeneration must be in the same commit.** Per NEVER-DO rule #20: regenerate `packages/types/database.ts` immediately after the migration applies on dev, in the same commit.
