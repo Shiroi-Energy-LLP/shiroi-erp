@@ -2,15 +2,20 @@ import { test, expect } from '@playwright/test';
 import { loginIfCredentialsPresent } from './helpers/auth';
 
 /**
- * Smoke tests — 6 critical paths per the April 14 audit plan:
+ * Smoke tests — 9 critical paths:
  *   1. /login renders
  *   2. Founder dashboard renders after login
  *   3. /leads loads without 500
  *   4. /projects loads without 500
  *   5. /price-book loads without 500
  *   6. /om/plant-monitoring loads without 500
+ *   7. /procurement workspace list renders after login (Apr 17 Purchase v2)
+ *   8. /vendor-portal/rfq/<bogus-token> renders the "Invalid link" state
+ *      without any server-side crash. Public route — no auth.
+ *   9. /procurement/project/<any>?tab=comparison renders (empty state when
+ *      no awards exist).
  *
- * Tests 2–6 require authentication. They are `test.skip()`-ed when
+ * Tests 2–7 and 9 require authentication. They are `test.skip()`-ed when
  * PLAYWRIGHT_LOGIN_EMAIL / _PASSWORD env vars are absent, so the suite
  * still runs green in CI without secrets. Configure these in the
  * GitHub Actions secrets + dev-only .env.playwright file.
@@ -107,5 +112,70 @@ test('plant monitoring page renders', async ({ page }) => {
 
   await page.goto('/om/plant-monitoring');
   await expect(page.locator('body')).toContainText(/plant monitoring/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test 7: /procurement (purchase module v2 — Apr 17)
+// ═══════════════════════════════════════════════════════════════════════
+test('procurement workspace list renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/procurement');
+  // The list page always says "Procurement" somewhere in chrome or heading.
+  await expect(page.locator('body')).toContainText(/procurement/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test 8: /vendor-portal/rfq/<bogus-token> — public, no auth required
+// ═══════════════════════════════════════════════════════════════════════
+//
+// This exercises the fact that validateToken() must gracefully handle a
+// well-formed-but-unknown UUID without throwing. The Apr 17 Purchase v2
+// release added this public route; a regression here would block every
+// vendor from responding to an RFQ.
+test('vendor portal renders invalid-link state for unknown token', async ({ page }) => {
+  // Deliberately bogus but well-shaped UUID.
+  const bogusToken = '00000000-0000-0000-0000-000000000000';
+  await page.goto(`/vendor-portal/rfq/${bogusToken}`);
+  // Either "Invalid link" or "Link expired" is acceptable — both mean the
+  // page rendered the error state instead of crashing.
+  await expect(page.locator('body')).toContainText(/invalid link|link expired|not valid/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test 9: Procurement project comparison tab renders (empty state is fine)
+// ═══════════════════════════════════════════════════════════════════════
+//
+// We navigate to /procurement, click the first project row if any, then
+// hop to the comparison tab. If no projects exist we fall back to the
+// list page assertion — the point is that the server component in
+// tab-comparison.tsx doesn't crash when no awards are present.
+test('procurement comparison tab renders (empty or populated)', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/procurement');
+  await expectNoDevErrorOverlay(page);
+
+  // Look for any /procurement/project/<uuid> link on the page.
+  const firstProjectLink = page.locator('a[href^="/procurement/project/"]').first();
+  const hasAnyProject = await firstProjectLink.count();
+
+  if (hasAnyProject === 0) {
+    // No projects in this dev DB — list page renders fine, that's enough.
+    await expect(page.locator('body')).toContainText(/procurement/i);
+    return;
+  }
+
+  const href = await firstProjectLink.getAttribute('href');
+  // Load the comparison tab directly.
+  await page.goto(`${href}?tab=comparison`);
+  // Either the comparison matrix renders, or the empty state does — both
+  // mean the server component didn't crash.
+  await expect(page.locator('body')).toContainText(/compare|comparison|purchase workspace/i);
   await expectNoDevErrorOverlay(page);
 });
