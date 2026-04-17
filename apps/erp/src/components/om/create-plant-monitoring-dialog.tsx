@@ -34,6 +34,8 @@ export function CreatePlantMonitoringDialog({ projects }: CreatePlantMonitoringD
       // Reset dialog-local state when closing so next open is clean
       setProjectId('');
       setError(null);
+      setShowPassword(false);
+      setSaving(false);
     }
   }
 
