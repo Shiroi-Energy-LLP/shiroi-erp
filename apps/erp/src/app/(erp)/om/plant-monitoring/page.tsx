@@ -17,6 +17,7 @@ import { DeletePlantMonitoringButton } from '@/components/om/delete-plant-monito
 import { FilterBar } from '@/components/filter-bar';
 import { FilterSelect } from '@/components/filter-select';
 import { SearchInput } from '@/components/search-input';
+import { ProjectFilterCombobox } from '@/components/om/project-filter-combobox';
 
 const BRAND_OPTIONS = [
   { value: 'sungrow', label: 'Sungrow' },
@@ -149,12 +150,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
       <Card className="sticky top-0 z-20 shadow-sm">
         <CardContent className="py-3">
           <FilterBar basePath="/om/plant-monitoring" filterParams={['search', 'project', 'brand']}>
-            <FilterSelect paramName="project" className="w-48 text-xs h-8">
-              <option value="">All Projects</option>
-              {filterProjects.map((p) => (
-                <option key={p.id} value={p.id}>{p.customer_name}</option>
-              ))}
-            </FilterSelect>
+            <ProjectFilterCombobox projects={filterProjects} />
             <FilterSelect paramName="brand" className="w-32 text-xs h-8">
               <option value="">All Brands</option>
               {BRAND_OPTIONS.map((b) => (
