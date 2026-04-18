@@ -411,6 +411,53 @@ export type Database = {
         }
         Relationships: []
       }
+      bug_reports: {
+        Row: {
+          category: Database["public"]["Enums"]["bug_report_category"]
+          created_at: string
+          description: string
+          id: string
+          page_url: string | null
+          resolved_at: string | null
+          severity: Database["public"]["Enums"]["bug_report_severity"]
+          status: Database["public"]["Enums"]["bug_report_status"]
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["bug_report_category"]
+          created_at?: string
+          description: string
+          id?: string
+          page_url?: string | null
+          resolved_at?: string | null
+          severity: Database["public"]["Enums"]["bug_report_severity"]
+          status?: Database["public"]["Enums"]["bug_report_status"]
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["bug_report_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          page_url?: string | null
+          resolved_at?: string | null
+          severity?: Database["public"]["Enums"]["bug_report_severity"]
+          status?: Database["public"]["Enums"]["bug_report_status"]
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_partner_leads: {
         Row: {
           channel_partner_id: string
@@ -14243,6 +14290,9 @@ export type Database = {
         | "designer"
         | "purchase_officer"
         | "marketing_manager"
+      bug_report_category: "bug" | "feature_request" | "question" | "other"
+      bug_report_severity: "low" | "medium" | "high"
+      bug_report_status: "open" | "in_progress" | "resolved"
       customer_segment: "residential" | "commercial" | "industrial"
       delay_responsibility:
         | "shiroi"
@@ -14495,6 +14545,9 @@ export const Constants = {
         "purchase_officer",
         "marketing_manager",
       ],
+      bug_report_category: ["bug", "feature_request", "question", "other"],
+      bug_report_severity: ["low", "medium", "high"],
+      bug_report_status: ["open", "in_progress", "resolved"],
       customer_segment: ["residential", "commercial", "industrial"],
       delay_responsibility: [
         "shiroi",
