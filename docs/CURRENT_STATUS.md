@@ -17,6 +17,7 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
+| **Data: historical dates backfill** | Claude | ✅ Shipped Apr 18 | Zoho import clobbered `created_at` on ~600 projects/proposals/leads with the 2026-04-02 batch timestamp. Migration 073 used Zoho invoice dates (12 projects). Migration 076 used `project_number` FY (154 projects). Migration 077 parsed year from `proposal_number` (428 proposals) + cascaded to leads. Final state: 0 unexplained April-2026 rows in projects; 7 orphan proposals (sequential-number format, no year info). Google Drive folder dates collected (`docs/gdrive-folder-dates.csv`, 179 folders) but not applied — `project_number` proved more reliable than Drive `createdTime` due to 2025-01-28 bulk-reorg artifact on 2024 folders. |
 | **Fix: Expenses invisible in project Actuals tab** | Claude | ✅ Shipped Apr 18 | Migration 066 table rename preserved old FK names (`project_site_expenses_*_fkey`); PostgREST embed hints in `listExpenses` expected `expenses_*_fkey` and failed silently — project Actuals tab showed "no expenses" for all 121 projects with 1358 existing vouchers. Renamed 3 FKs. Reported by Manivel. Migration 074. |
 | **User Settings Page** | Claude | ✅ Shipped Apr 18 | `/settings` route with Account / Feedback / Users (founder-only) tabs. Password change, bug reporting (with optional n8n webhook), role + active controls. New `ProfileMenu` dropdown in topbar. Migration 073 (`bug_reports` table + founder-admin RLS). 3 Playwright smoke tests. See `docs/superpowers/plans/2026-04-18-user-settings-page.md`. |
 | **Finance Module V2 + Zoho import** | Claude | ✅ Shipped Apr 18 | 5 migrations (067–072). 13-phase import script: 264 accounts, 17 taxes, 945 items, 296 vendors (272 new), 12 projects matched, 2336 vendor bills, 729 vendor payments, 190 expenses. Finance UI: /vendor-bills, /vendors/[id], /profitability V2, /cash Zoho panel, MSME aging strip, sync health dashboard card. Reconcile report: 3 discrepancies. See `docs/modules/finance.md`. |
@@ -37,8 +38,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **074** (rename expenses FKs to match new table name, Apr 18) | None — fully caught up |
-| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 074** — 62 migrations waiting on the next prod window |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **077** (proposal/lead date backfill from proposal_number, Apr 18) | None — fully caught up |
+| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 077** — 65 migrations waiting on the next prod window |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, Zoho Books, and WhatsApp; not all of that needs to move to prod — specifically the Zoho import tables are dev-only for now).
 
