@@ -22,7 +22,8 @@
     "SENTRY_DSN",
     "SENTRY_ORG",
     "SENTRY_PROJECT",
-    "N8N_WEBHOOK_SECRET"
+    "N8N_WEBHOOK_SECRET",
+    "N8N_BUG_REPORT_WEBHOOK_URL"
   ],
   "tasks": {
     "build": {
