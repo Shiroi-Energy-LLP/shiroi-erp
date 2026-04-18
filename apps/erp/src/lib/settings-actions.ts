@@ -40,6 +40,12 @@ export async function changePassword(
     // Verify the current password by re-authenticating. This MUST NOT be
     // skipped — it is the only check that the person at the keyboard
     // actually knows the existing password (vs an unattended session).
+    //
+    // NOTE: signInWithPassword issues a fresh session token and writes
+    // new auth cookies on the response. This is equivalent to an
+    // implicit re-login; acceptable for this app because we do not
+    // rely on session-ID-based revocation. If that changes, switch to
+    // supabase.auth.reauthenticate() + verifyOtp instead.
     const { error: reauthError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password: currentPassword,
@@ -67,6 +73,7 @@ export async function changePassword(
       return err(updateError.message || 'Could not update password');
     }
 
+    // No revalidatePath — password change doesn't invalidate any cached page data.
     return ok(undefined as void);
   } catch (e) {
     console.error(`${op} unexpected failure`, {
@@ -97,8 +104,14 @@ export async function submitBugReport(input: {
     if (!validation.ok) return err(validation.error);
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return err('You must be signed in to submit a report');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error(`${op} no authenticated user`, {
+        error: userError,
+        timestamp: new Date().toISOString(),
+      });
+      return err('You must be signed in to submit a report');
+    }
 
     const { data, error } = await supabase
       .from('bug_reports')
@@ -122,7 +135,9 @@ export async function submitBugReport(input: {
       return err(error?.message ?? 'Could not save the report');
     }
 
-    // Fire-and-forget n8n webhook. NEVER let webhook failures fail the submit.
+    // Best-effort notification to n8n. Blocks up to 3 s (AbortSignal timeout
+    // inside notifyBugReport), but NEVER fails the submit — helper swallows
+    // all errors.
     await notifyBugReport({
       id: data.id,
       userId: user.id,
@@ -164,7 +179,10 @@ async function notifyBugReport(payload: {
   try {
     const resp = await fetch(webhookUrl, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        'x-webhook-secret': process.env.N8N_WEBHOOK_SECRET ?? '',
+      },
       body: JSON.stringify({
         id: payload.id,
         user_id: payload.userId,
@@ -217,7 +235,7 @@ export async function updateUserRole(
         error,
         timestamp: new Date().toISOString(),
       });
-      return err(error.message);
+      return err(error.message || 'Could not update role');
     }
     revalidatePath('/settings');
     return ok(undefined as void);
@@ -257,7 +275,7 @@ export async function setUserActive(
         error,
         timestamp: new Date().toISOString(),
       });
-      return err(error.message);
+      return err(error.message || 'Could not update user status');
     }
     revalidatePath('/settings');
     return ok(undefined as void);
