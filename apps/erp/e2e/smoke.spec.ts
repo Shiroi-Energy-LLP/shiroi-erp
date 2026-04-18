@@ -215,3 +215,52 @@ test('procurement comparison tab renders (empty or populated)', async ({ page })
   await expect(page.locator('body')).toContainText(/compare|comparison|purchase workspace/i);
   await expectNoDevErrorOverlay(page);
 });
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test: /settings page renders (auth required)
+// ═══════════════════════════════════════════════════════════════════════
+test('settings page renders after login', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/settings');
+  // Use .first() to avoid strict-mode violation: the topbar also renders
+  // an <h1>Settings</h1> on this route, so two headings match the name.
+  await expect(page.getByRole('heading', { name: 'Settings' }).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('tab', { name: /account/i })).toBeVisible();
+  await expect(page.getByRole('tab', { name: /feedback/i })).toBeVisible();
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test: profile menu opens from topbar and exposes Settings + Sign out
+// ═══════════════════════════════════════════════════════════════════════
+test('profile menu dropdown reaches settings', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/');
+  await page.getByRole('button', { name: /open profile menu/i }).click();
+  await expect(page.getByRole('menuitem', { name: /settings/i })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /sign out/i })).toBeVisible();
+  await page.getByRole('menuitem', { name: /settings/i }).click();
+  await expect(page).toHaveURL(/\/settings/, { timeout: 10_000 });
+  await expectNoDevErrorOverlay(page);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Test: feedback tab form validation — submit disabled under 10 chars
+// ═══════════════════════════════════════════════════════════════════════
+test('feedback form blocks submit under 10 characters', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/settings');
+  await page.getByRole('tab', { name: /feedback/i }).click();
+  await page.getByLabel(/description/i).fill('short');
+  const submit = page.getByRole('button', { name: /submit report/i });
+  await expect(submit).toBeDisabled();
+  await page.getByLabel(/description/i).fill('This is a long enough description.');
+  await expect(submit).toBeEnabled();
+  await expectNoDevErrorOverlay(page);
+});
