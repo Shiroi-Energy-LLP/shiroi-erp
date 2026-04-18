@@ -14,10 +14,10 @@ const MIN_PASSWORD_LENGTH = 6;
 
 export function validateNewPassword(newPassword: string, confirmPassword: string): ValidationResult {
   if (!newPassword) return { ok: false, error: 'New password is required' };
+  if (newPassword !== confirmPassword) return { ok: false, error: 'Passwords do not match' };
   if (newPassword.length < MIN_PASSWORD_LENGTH) {
     return { ok: false, error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` };
   }
-  if (newPassword !== confirmPassword) return { ok: false, error: 'Passwords do not match' };
   return { ok: true };
 }
 
@@ -47,7 +47,9 @@ export interface BugReportDraft {
 }
 
 export function validateBugReport(draft: BugReportDraft): ValidationResult {
-  if (!draft.description) return { ok: false, error: 'Description is required' };
+  if (draft.description.trim().length === 0) {
+    return { ok: false, error: 'Description is required' };
+  }
   if (draft.description.trim().length < 10) {
     return { ok: false, error: 'Description must be at least 10 characters' };
   }

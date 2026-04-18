@@ -20,6 +20,12 @@ describe('validateNewPassword', () => {
   it('accepts matching password >= 6 chars', () => {
     expect(validateNewPassword('abcdef', 'abcdef')).toEqual({ ok: true });
   });
+  it('prefers mismatch message over length message when both fail', () => {
+    expect(validateNewPassword('abc', 'xyz')).toEqual({
+      ok: false,
+      error: 'Passwords do not match',
+    });
+  });
 });
 
 describe('validateBugReport', () => {
@@ -49,5 +55,11 @@ describe('validateBugReport', () => {
     expect(
       validateBugReport({ category: 'bug', severity: 'medium', description: 'Something is off here.' }),
     ).toEqual({ ok: true });
+  });
+  it('treats whitespace-only description as missing (not too-short)', () => {
+    expect(validateBugReport({ category: 'bug', severity: 'low', description: '     ' })).toEqual({
+      ok: false,
+      error: 'Description is required',
+    });
   });
 });
