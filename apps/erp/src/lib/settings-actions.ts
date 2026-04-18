@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { createClient } from '@repo/supabase/server';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { getUserProfile } from '@/lib/auth';
@@ -13,6 +14,26 @@ import {
 import type { Database } from '@repo/types/database';
 
 type AppRole = Database['public']['Enums']['app_role'];
+
+// ───────────────────────────────────────────────────────────────────────────
+// signOut — clears the Supabase session cookie and redirects to /login.
+// Server-side so we don't import @repo/supabase/client from a component
+// (CLAUDE.md rule #15). `redirect` throws a Next.js internal signal, so
+// this function never returns normally.
+// ───────────────────────────────────────────────────────────────────────────
+export async function signOut(): Promise<never> {
+  const op = '[signOut]';
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error(`${op} signOut failed`, {
+      errorCode: error.code ?? error.status,
+      timestamp: new Date().toISOString(),
+    });
+    // Still redirect — stuck-session is worse than a noisy log.
+  }
+  redirect('/login');
+}
 
 // ───────────────────────────────────────────────────────────────────────────
 // changePassword — re-auth with current password, then update.

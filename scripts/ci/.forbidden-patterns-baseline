@@ -61,5 +61,4 @@ R15|apps/erp/src/components/projects/stepper-steps/step-qc.tsx:3:import { create
 R15|apps/erp/src/components/proposals/proposal-files.tsx:4:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/reports/photo-upload.tsx:4:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/reports/report-photos.tsx:4:import { createClient } from '@repo/supabase/client';
-R15|apps/erp/src/components/topbar.tsx:4:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/ui/image-viewer.tsx:4:import { createClient } from '@repo/supabase/client';

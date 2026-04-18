@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@repo/supabase/client';
+import { useTransition } from 'react';
 import {
   Badge,
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
 } from '@repo/ui';
 import { ChevronDown, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { getRoleLabel, type AppRole } from '@/lib/roles';
+import { signOut } from '@/lib/settings-actions';
 
 interface ProfileMenuProps {
   fullName: string;
@@ -20,13 +20,12 @@ interface ProfileMenuProps {
 }
 
 export function ProfileMenu({ fullName, role }: ProfileMenuProps) {
-  const router = useRouter();
-  const supabase = createClient();
+  const [pending, startTransition] = useTransition();
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
+  function handleSignOut() {
+    startTransition(() => {
+      signOut();
+    });
   }
 
   return (
@@ -52,10 +51,11 @@ export function ProfileMenu({ fullName, role }: ProfileMenuProps) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleSignOut}
+          disabled={pending}
           className="flex items-center gap-2 cursor-pointer text-status-error-text"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          {pending ? 'Signing out…' : 'Sign out'}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
