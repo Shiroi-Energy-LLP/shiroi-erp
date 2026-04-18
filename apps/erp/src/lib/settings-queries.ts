@@ -12,6 +12,7 @@ type ProfileRow   = Database['public']['Tables']['profiles']['Row'];
  */
 export async function listMyBugReports(): Promise<BugReportRow[]> {
   const op = '[listMyBugReports]';
+  console.log(`${op} Starting`);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('bug_reports')
@@ -35,9 +36,10 @@ export async function listAllUsers(): Promise<
   Pick<ProfileRow, 'id' | 'full_name' | 'email' | 'role' | 'is_active'>[]
 > {
   const op = '[listAllUsers]';
+  console.log(`${op} Starting`);
   const caller = await getUserProfile();
   if (!caller || caller.role !== 'founder') {
-    console.error(`${op} called without founder role`, { callerRole: caller?.role });
+    console.warn(`${op} called without founder role`, { callerRole: caller?.role });
     return [];
   }
   const supabase = await createClient();
