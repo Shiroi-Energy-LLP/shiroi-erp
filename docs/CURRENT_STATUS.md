@@ -2,7 +2,7 @@
 
 > Weekly-refreshed snapshot of what's in flight and where dev ↔ prod stand.
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
-> Last updated: **April 18, 2026** (Claude — overnight agentic run).
+> Last updated: **April 18, 2026** (Claude — overnight agentic run + finance over-count fix).
 
 ---
 
@@ -17,6 +17,7 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
+| **Fix: vendor payment over-counting from Zoho import** | Claude | ✅ Shipped Apr 18 | Vivek flagged financial data as wrong ("VAF is fully paid and so on"). Phase 11 Zoho import linked 669/729 vendor payments to wrong bills/POs via bad fallback heuristic (first open bill / latest PO for vendor). Trigger summed unrelated payments onto single targets; `total_ap_bills` was −₹1.39Cr and `total_ap_pos` was −₹4.29Cr (negative = impossible). Migration 079 clamps `amount_paid` to `total_amount` on 2 bills + 25 POs, hardens `update_po_amount_paid` and `recalc_vendor_bill_totals` with LEAST() guards so future imports can't break the invariant. Post-fix VAF AP outstanding ₹0 as Vivek said. AR untouched. Root-cause bug in `phase-11-vendor-payments.ts` to be fixed before next Zoho sync. Findings in `docs/2026-04-18-finance-overcounting-fix.md`. |
 | **Data: historical dates backfill** | Claude | ✅ Shipped Apr 18 | Zoho import clobbered `created_at` on ~600 projects/proposals/leads with the 2026-04-02 batch timestamp. Migration 073 used Zoho invoice dates (12 projects). Migration 076 used `project_number` FY (154 projects). Migration 077 parsed year from `proposal_number` (428 proposals) + cascaded to leads. **Migration 078 (follow-up):** walked 4 `Proposals YYYY` Drive folders (1,405 children), matched 229 unambiguous proposals by normalised proposal number, replaced synthetic FY-start dates with real Drive `createdTime` @ noon IST. Dispersed the 2024-01-01 cluster 96→3 and 2023-01-01 cluster 84→28. Remaining Sep-2025 clusters are SHIROI/PROP/2025-26/NNNN internal proposals (not in Drive), sit within correct FY. Full findings in `docs/2026-04-18-date-backfill-findings.md`. |
 | **Fix: Expenses invisible in project Actuals tab** | Claude | ✅ Shipped Apr 18 | Migration 066 table rename preserved old FK names (`project_site_expenses_*_fkey`); PostgREST embed hints in `listExpenses` expected `expenses_*_fkey` and failed silently — project Actuals tab showed "no expenses" for all 121 projects with 1358 existing vouchers. Renamed 3 FKs. Reported by Manivel. Migration 074. |
 | **User Settings Page** | Claude | ✅ Shipped Apr 18 | `/settings` route with Account / Feedback / Users (founder-only) tabs. Password change, bug reporting (with optional n8n webhook), role + active controls. New `ProfileMenu` dropdown in topbar. Migration 073 (`bug_reports` table + founder-admin RLS). 3 Playwright smoke tests. See `docs/superpowers/plans/2026-04-18-user-settings-page.md`. |
@@ -38,8 +39,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **078** (proposal date backfill from Drive folder createdTime, Apr 18) | None — fully caught up |
-| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 078** — 66 migrations waiting on the next prod window |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **079** (vendor payment over-count fix + trigger hardening, Apr 18) | None — fully caught up |
+| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 079** — 67 migrations waiting on the next prod window |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, Zoho Books, and WhatsApp; not all of that needs to move to prod — specifically the Zoho import tables are dev-only for now).
 

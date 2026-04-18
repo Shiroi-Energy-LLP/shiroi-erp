@@ -4,7 +4,13 @@
 // vendor_payments NOT NULL: vendor_id, recorded_by, amount, payment_date, payment_method, msme_compliant
 // Now nullable: purchase_order_id, po_date, days_from_po (after migration 067)
 // CHECK: purchase_order_id IS NOT NULL OR vendor_bill_id IS NOT NULL
-// Strategy: look up the vendor bill by vendor + matching amounts, else link to any open bill for that vendor
+// Strategy: only link a Zoho payment to a bill when `balance_due ≈ payment_amount` (exact match).
+// DO NOT fall back to "first open bill for vendor" or "latest PO for vendor" — Apr 18 2026 migration 079
+// cleaned up 669 mis-linked payments from a prior run that used those heuristics. Unlinked payments
+// are counted and reported but NOT inserted: the schema requires bill_id OR po_id plus a non-null
+// project_id, and we don't have that info in Zoho's Vendor_Payment.xls (only the vendor-level total).
+// To insert unlinked payments in the future we need either (a) Zoho's per-bill allocation export, or
+// (b) a schema change to allow vendor-level payments without a bill/PO/project link.
 import { admin, getSystemEmployeeId } from './supabase';
 import { loadSheet, toStr, toNumber, toDateISO } from './parse-xls';
 import { emptyResult, PhaseResult } from './logger';
@@ -79,8 +85,8 @@ export async function runPhase11(): Promise<PhaseResult> {
   const existingIds = new Set((existing ?? []).map(r => r.zoho_vendor_payment_id as string | null).filter((x): x is string => x != null));
 
   let skippedNoVendor = 0;
+  let skippedNoMatch = 0;
   let linkedToBill = 0;
-  let linkedToPO = 0;
 
   for (const [zohoId, r] of seen.entries()) {
     if (existingIds.has(zohoId)) { result.skipped++; continue; }
@@ -96,47 +102,27 @@ export async function runPhase11(): Promise<PhaseResult> {
     const paymentAmount = toNumber(r['Amount']);
     const paymentDate = toDateISO(r['Date']) ?? '2023-01-01';
 
-    // Try to link to an open bill for this vendor
+    // Only link to a bill when balance_due matches the payment amount within ₹1.
+    // Any looser heuristic (first open bill / latest PO for vendor) corrupts amount_paid
+    // via the update_po_amount_paid trigger — see migration 079 for the clean-up.
     const vendorBills = billsByVendor.get(vendorId) ?? [];
-    let vendorBillId: string | null = null;
-    let projectId: string | null = null;
-
-    // Find a bill where the balance_due ≈ payment amount
     const matchingBill = vendorBills.find(
       b => Math.abs((b.total_amount - b.amount_paid) - paymentAmount) < 1
     );
-    if (matchingBill) {
-      vendorBillId = matchingBill.id;
-      projectId = matchingBill.project_id;
-      linkedToBill++;
+
+    if (!matchingBill) {
+      skippedNoMatch++;
+      result.skipped++;
+      continue;
     }
 
-    // If no bill match, see if there's any unpaid bill for this vendor
-    if (!vendorBillId && vendorBills.length > 0) {
-      vendorBillId = vendorBills[0].id;
-      projectId = vendorBills[0].project_id;
-      linkedToBill++;
-    }
+    const vendorBillId = matchingBill.id;
+    const projectId = matchingBill.project_id;
+    linkedToBill++;
 
-    // If still no bill, look for a PO
-    let purchaseOrderId: string | null = null;
-    if (!vendorBillId) {
-      const { data: po } = await admin
-        .from('purchase_orders')
-        .select('id, po_date, project_id')
-        .eq('vendor_id', vendorId)
-        .order('po_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (po) {
-        purchaseOrderId = po.id;
-        projectId = po.project_id;
-        linkedToPO++;
-      }
-    }
-
-    // Skip if we can't satisfy the CHECK constraint or the NOT NULL project_id
-    if ((!vendorBillId && !purchaseOrderId) || !projectId) {
+    // project_id is NOT NULL on vendor_payments — if the matched bill has no project, skip.
+    if (!projectId) {
+      skippedNoMatch++;
       result.skipped++;
       continue;
     }
@@ -151,7 +137,7 @@ export async function runPhase11(): Promise<PhaseResult> {
       payment_reference: toStr(r['Reference Number']),
       msme_compliant: true,
       vendor_bill_id: vendorBillId,
-      purchase_order_id: purchaseOrderId,
+      purchase_order_id: null,
       notes: toStr(r['Description']),
       source: 'zoho_import',
       zoho_vendor_payment_id: zohoId,
@@ -170,7 +156,7 @@ export async function runPhase11(): Promise<PhaseResult> {
     }
   }
 
-  console.log(`  Linked to bill: ${linkedToBill}, linked to PO: ${linkedToPO}, skipped no-vendor: ${skippedNoVendor}`);
+  console.log(`  Linked to bill (exact amount match): ${linkedToBill}, skipped no-vendor: ${skippedNoVendor}, skipped no-match (need Zoho per-bill allocation): ${skippedNoMatch}`);
   if (dryRun) console.log(`  DRY RUN: would process ${seen.size} vendor payments`);
   return result;
 }
