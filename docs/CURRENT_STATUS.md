@@ -17,6 +17,7 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
+| **User Settings Page** | Claude | ✅ Shipped Apr 18 | `/settings` route with Account / Feedback / Users (founder-only) tabs. Password change, bug reporting (with optional n8n webhook), role + active controls. New `ProfileMenu` dropdown in topbar. Migration 073 (`bug_reports` table + founder-admin RLS). 3 Playwright smoke tests. See `docs/superpowers/plans/2026-04-18-user-settings-page.md`. |
 | **Finance Module V2 + Zoho import** | Claude | ✅ Shipped Apr 18 | 5 migrations (067–072). 13-phase import script: 264 accounts, 17 taxes, 945 items, 296 vendors (272 new), 12 projects matched, 2336 vendor bills, 729 vendor payments, 190 expenses. Finance UI: /vendor-bills, /vendors/[id], /profitability V2, /cash Zoho panel, MSME aging strip, sync health dashboard card. Reconcile report: 3 discrepancies. See `docs/modules/finance.md`. |
 | **Expenses Module** | Claude | ✅ Shipped Apr 17 | Standalone /expenses module; dual workflow (project-linked 3-stage + general 2-stage); per-submitter voucher numbers; category master + CRUD; Project Actuals read-only embed. Migration 066. See `docs/modules/expenses.md`. |
 | **Purchase v2 feedback pass** | Claude | ✅ Shipped Apr 17 | Vivek-review feedback across all 5 tabs: Tab 1 inline Qty/Rate + BOQ PDF; Tab 2 vendor typeahead + invitation rows; Tab 3 terms footer; Tab 4 Send-to-vendor (Email/WA/Copy) + founder quick-PO auto-approve; Tab 5 generated `dispatch_stage` + PM role widening + receipt cascade. See `docs/superpowers/specs/2026-04-17-purchase-v2-feedback-design.md` + plan. Migration 065. |
@@ -35,8 +36,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **072** (`claim_next_sync_batch` RPC, Apr 18) | None — fully caught up |
-| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 072** — 60 migrations waiting on the next prod window |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **073** (`bug_reports` + founder-admin RLS, Apr 18) | None — fully caught up |
+| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 073** — 61 migrations waiting on the next prod window |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, Zoho Books, and WhatsApp; not all of that needs to move to prod — specifically the Zoho import tables are dev-only for now).
 

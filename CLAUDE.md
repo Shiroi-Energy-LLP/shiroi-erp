@@ -101,6 +101,7 @@ ANTHROPIC_API_KEY
 PVWATTS_API_KEY
 PVLIB_MICROSERVICE_URL
 N8N_WEBHOOK_SECRET
+N8N_BUG_REPORT_WEBHOOK_URL            (optional — n8n webhook that receives a JSON payload on bug report submit; if unset, reports are still stored in DB)
 NEXT_PUBLIC_SENTRY_DSN + SENTRY_DSN + SENTRY_ORG + SENTRY_PROJECT
 ```
 
