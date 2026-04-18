@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { createClient } from '@repo/supabase/server';
 import { formatDate, formatINR } from '@repo/ui/formatters';
 import {
   Card,
@@ -14,46 +13,59 @@ import {
   TableCell,
   EmptyState,
   Eyebrow,
-  Badge,
 } from '@repo/ui';
 import { DollarSign, AlertCircle } from 'lucide-react';
+import {
+  getRecentVendorPayments,
+  getMsmeAgingSummary,
+  type MsmeAgingBucket,
+} from '@/lib/vendor-payments-queries';
 
-interface MsmeAgingRow {
-  vendor_id: string;
-  company_name: string;
-  msme_category: string | null;
-  days_outstanding: number;
-  total_outstanding: number;
-  bill_count: number;
+const BUCKET_ORDER: Record<string, number> = {
+  '0-30': 0,
+  '31-40': 1,
+  '41-45': 2,
+  overdue: 3,
+};
+
+function bucketLabel(bucket: string): string {
+  switch (bucket) {
+    case '0-30':
+      return '0–30 days';
+    case '31-40':
+      return '31–40 days';
+    case '41-45':
+      return '41–45 days';
+    case 'overdue':
+      return 'Overdue (>45 days)';
+    default:
+      return bucket;
+  }
+}
+
+function bucketTone(bucket: string): string {
+  switch (bucket) {
+    case 'overdue':
+      return 'text-[#991B1B] font-bold';
+    case '41-45':
+      return 'text-[#92400E] font-semibold';
+    case '31-40':
+      return 'text-[#92400E]';
+    default:
+      return '';
+  }
 }
 
 export default async function VendorPaymentsPage() {
-  const op = '[VendorPaymentsPage]';
-  const supabase = await createClient();
-
-  const [paymentsResult, msmeResult] = await Promise.all([
-    supabase
-      .from('vendor_payments')
-      .select(
-        'id, amount, payment_date, payment_method, payment_reference, notes, vendor_id, vendor_bill_id, purchase_order_id, vendors!vendor_payments_vendor_id_fkey(company_name, is_msme), vendor_bills!vendor_payments_vendor_bill_id_fkey(bill_number), purchase_orders!vendor_payments_purchase_order_id_fkey(po_number)'
-      )
-      .order('payment_date', { ascending: false })
-      .limit(100),
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any).rpc('get_msme_aging_summary'),
+  const [rows, msmeBuckets] = await Promise.all([
+    getRecentVendorPayments(),
+    getMsmeAgingSummary(),
   ]);
 
-  if (paymentsResult.error) {
-    console.error(`${op} payments query failed:`, { code: paymentsResult.error.code, message: paymentsResult.error.message });
-  }
-  if (msmeResult.error) {
-    console.error(`${op} MSME aging RPC failed:`, { code: msmeResult.error.code, message: msmeResult.error.message });
-  }
-
-  const rows = paymentsResult.data ?? [];
-  const msmeRows: MsmeAgingRow[] = msmeResult.data ?? [];
-  const criticalMsme = msmeRows.filter((r: MsmeAgingRow) => r.days_outstanding >= 30);
+  const sortedBuckets: MsmeAgingBucket[] = [...msmeBuckets].sort(
+    (a, b) => (BUCKET_ORDER[a.bucket] ?? 99) - (BUCKET_ORDER[b.bucket] ?? 99)
+  );
+  const overdueBucket = sortedBuckets.find((b) => b.bucket === 'overdue');
 
   return (
     <div className="space-y-6">
@@ -62,71 +74,42 @@ export default async function VendorPaymentsPage() {
         <h1 className="text-2xl font-bold text-[#1A1D24]">Vendor Payments</h1>
       </div>
 
-      {/* MSME Aging Strip */}
-      {criticalMsme.length > 0 && (
+      {/* MSME overdue alert strip */}
+      {overdueBucket && overdueBucket.bill_count > 0 && (
         <Card className="border-[#991B1B] bg-[#FEF2F2]">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-[#991B1B]">
               <AlertCircle className="h-4 w-4" />
-              MSME Bills Overdue ≥30 Days ({criticalMsme.length} vendors)
+              MSME Bills Overdue ({'>'}45 days) — {overdueBucket.bill_count} bill
+              {overdueBucket.bill_count !== 1 ? 's' : ''} · {formatINR(overdueBucket.total_amount)}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              {criticalMsme.slice(0, 10).map((r: MsmeAgingRow) => (
-                <Link key={r.vendor_id} href={`/vendors/${r.vendor_id}`}>
-                  <div className="rounded border border-[#991B1B]/30 bg-white px-3 py-2 text-xs hover:bg-[#FEF2F2]">
-                    <div className="font-semibold">{r.company_name}</div>
-                    <div className="text-muted-foreground">
-                      {r.days_outstanding}d · {formatINR(Number(r.total_outstanding))}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </CardContent>
         </Card>
       )}
 
-      {/* MSME full aging table */}
-      {msmeRows.length > 0 && (
+      {/* MSME aging summary by bucket */}
+      {sortedBuckets.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              MSME Aging Summary
-            </CardTitle>
+            <CardTitle className="text-sm">MSME Aging Summary</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Vendor</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Days Outstanding</TableHead>
-                  <TableHead className="text-right">Total Outstanding</TableHead>
+                  <TableHead>Bucket</TableHead>
                   <TableHead className="text-right">Bills</TableHead>
+                  <TableHead className="text-right">Total Outstanding</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {msmeRows.slice(0, 20).map((r: MsmeAgingRow) => (
-                  <TableRow key={r.vendor_id}>
-                    <TableCell>
-                      <Link href={`/vendors/${r.vendor_id}`} className="text-[#00B050] hover:underline font-medium">
-                        {r.company_name}
-                      </Link>
+                {sortedBuckets.map((b) => (
+                  <TableRow key={b.bucket}>
+                    <TableCell className={bucketTone(b.bucket)}>{bucketLabel(b.bucket)}</TableCell>
+                    <TableCell className="text-right font-mono">{b.bill_count}</TableCell>
+                    <TableCell className={`text-right font-mono ${bucketTone(b.bucket)}`}>
+                      {formatINR(b.total_amount)}
                     </TableCell>
-                    <TableCell>
-                      {r.msme_category ? <Badge variant="pending">{r.msme_category}</Badge> : '—'}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      <span className={r.days_outstanding >= 45 ? 'text-[#991B1B] font-bold' : r.days_outstanding >= 30 ? 'text-[#92400E]' : ''}>
-                        {r.days_outstanding}d
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-[#991B1B]">
-                      {formatINR(Number(r.total_outstanding))}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">{r.bill_count}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -173,10 +156,15 @@ export default async function VendorPaymentsPage() {
                     </TableCell>
                     <TableCell className="font-mono text-sm">
                       {payment.vendor_bill_id && payment.vendor_bills ? (
-                        <Link href={`/vendor-bills/${payment.vendor_bill_id}`} className="text-[#00B050] hover:underline">
+                        <Link
+                          href={`/vendor-bills/${payment.vendor_bill_id}`}
+                          className="text-[#00B050] hover:underline"
+                        >
                           {payment.vendor_bills.bill_number}
                         </Link>
-                      ) : payment.purchase_orders?.po_number ?? '—'}
+                      ) : (
+                        payment.purchase_orders?.po_number ?? '—'
+                      )}
                     </TableCell>
                     <TableCell>
                       {payment.payment_date ? formatDate(payment.payment_date) : '—'}

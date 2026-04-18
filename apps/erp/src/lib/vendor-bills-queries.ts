@@ -144,8 +144,7 @@ export async function getProfitabilityV2() {
   const op = '[getProfitabilityV2]';
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).rpc('get_project_profitability_v2');
+  const { data, error } = await supabase.rpc('get_project_profitability_v2');
   if (error) {
     console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
     return [];
@@ -174,8 +173,7 @@ export async function getCashSummaryV2() {
   const op = '[getCashSummaryV2]';
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).rpc('get_company_cash_summary_v2');
+  const { data, error } = await supabase.rpc('get_company_cash_summary_v2');
   if (error) {
     console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
     return null;

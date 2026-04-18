@@ -101,3 +101,26 @@ export async function getAmcMonthlySummary(): Promise<{ scheduled: number; compl
     completed: Number(row?.completed_count ?? 0),
   };
 }
+
+/**
+ * Zoho sync queue health — counts active (pending/syncing) vs failed rows.
+ * Drives the "Zoho Sync" card on the founder dashboard.
+ * Enum values match migration 067: pending, syncing, synced, failed, skipped.
+ */
+export async function getZohoSyncHealth() {
+  const op = '[getZohoSyncHealth]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('zoho_sync_queue')
+    .select('status')
+    .in('status', ['pending', 'syncing', 'failed']);
+  if (error) {
+    console.error(`${op} query failed:`, { code: error.code, message: error.message });
+    return { pending: 0, dead: 0 };
+  }
+  const rows = data ?? [];
+  return {
+    pending: rows.filter((r) => r.status === 'pending' || r.status === 'syncing').length,
+    dead: rows.filter((r) => r.status === 'failed').length,
+  };
+}

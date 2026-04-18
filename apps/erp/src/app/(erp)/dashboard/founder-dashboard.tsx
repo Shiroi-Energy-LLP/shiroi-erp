@@ -1,6 +1,7 @@
 import {
   getCashNegativeProjects,
   getProposalsPendingApproval,
+  getZohoSyncHealth,
   daysUntilPayroll,
 } from '@/lib/dashboard-queries';
 import {
@@ -15,32 +16,12 @@ import { Eyebrow, Badge } from '@repo/ui';
 import { KpiCard } from '@/components/kpi-card';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import Link from 'next/link';
-import { createClient } from '@repo/supabase/server';
 
 import { CashAlertTable } from './cash-alert-table';
 import { PipelineSummary } from './pipeline-summary';
 import { PendingApprovals } from './pending-approvals';
 import { OverdueReports } from './overdue-reports';
 import { ClosureApprovalsPanel } from '@/components/sales/closure-approvals-panel';
-
-async function getZohoSyncHealth() {
-  const op = '[getZohoSyncHealth]';
-  const supabase = await createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
-    .from('zoho_sync_queue')
-    .select('status')
-    .in('status', ['pending', 'in_progress', 'dead', 'failed']);
-  if (error) {
-    console.error(`${op} query failed:`, { code: error.code, message: error.message });
-    return { pending: 0, dead: 0 };
-  }
-  const rows = (data ?? []) as Array<{ status: string }>;
-  return {
-    pending: rows.filter(r => r.status === 'pending' || r.status === 'in_progress').length,
-    dead: rows.filter(r => r.status === 'dead' || r.status === 'failed').length,
-  };
-}
 
 export async function FounderDashboard() {
   // All five "company aggregate" queries below are cached via

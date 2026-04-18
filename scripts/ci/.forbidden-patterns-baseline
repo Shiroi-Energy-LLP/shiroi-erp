@@ -28,7 +28,6 @@ R15|apps/erp/src/app/(erp)/om/visits/page.tsx:2:import { createClient } from '@r
 R15|apps/erp/src/app/(erp)/projects/[id]/page.tsx:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/proposals/[id]/page.tsx:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/qc-gates/page.tsx:1:import { createClient } from '@repo/supabase/server';
-R15|apps/erp/src/app/(erp)/vendor-payments/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/procurement/[poId]/pdf/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/projects/[id]/commissioning/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/projects/[id]/dc/[dcId]/route.ts:4:import { createClient } from '@repo/supabase/server';
