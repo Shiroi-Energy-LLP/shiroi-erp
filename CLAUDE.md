@@ -31,7 +31,7 @@
 
 ## IDENTITY
 
-**Shiroi Energy Private Limited** — solar EPC, Chennai, Tamil Nadu. Rooftop solar (residential, commercial, industrial). ~50 employees, 500+ projects completed.
+**Shiroi Energy LLP** — solar EPC, Chennai, Tamil Nadu. Rooftop solar (residential, commercial, industrial). ~50 employees, 500+ projects completed.
 
 This ERP is **single-tenant, built for Shiroi only**. No `company_id` on any table. Ever.
 

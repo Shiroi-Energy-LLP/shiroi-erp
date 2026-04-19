@@ -28,7 +28,7 @@
 
 ## 1. Company & Project Context
 
-**Shiroi Energy Private Limited** — Solar EPC, Chennai, Tamil Nadu. Rooftop solar for residential, commercial, industrial customers. Systems: on-grid, hybrid, off-grid. Also net metering to TNEB/DISCOM and AMC. Scale: 500+ projects completed, ~100 active at any time, ~50 employees. Single-tenant — no `company_id` on any table, ever.
+**Shiroi Energy LLP** — Solar EPC, Chennai, Tamil Nadu. Rooftop solar for residential, commercial, industrial customers. Systems: on-grid, hybrid, off-grid. Also net metering to TNEB/DISCOM and AMC. Scale: 500+ projects completed, ~100 active at any time, ~50 employees. Single-tenant — no `company_id` on any table, ever.
 
 **Founder:** Vivek. Reviews every file before commit. No autonomous pushes to production.
 

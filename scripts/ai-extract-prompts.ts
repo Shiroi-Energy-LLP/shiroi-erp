@@ -47,7 +47,7 @@ Document text follows:
 
 export const VENDOR_EXTRACTION_PROMPT = `You are extracting vendor and document information from a purchase order, invoice, or delivery challan for solar equipment procurement.
 
-The documents are from Shiroi Energy Private Limited (a solar EPC company in Chennai, India) dealing with various solar equipment vendors.
+The documents are from Shiroi Energy LLP (a solar EPC company in Chennai, India) dealing with various solar equipment vendors.
 
 Extract ALL available vendor and document information into JSON. Only include fields you are confident about.
 
