@@ -1,0 +1,131 @@
+{
+  "name": "55 — Global Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "node-error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "workflow_name",
+              "value": "={{ $json.workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "workflow_id",
+              "value": "={{ $json.workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "execution_id",
+              "value": "={{ $json.execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "execution_url",
+              "value": "={{ $json.execution.url }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "error_message",
+              "value": "={{ $json.execution.error?.message || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "error_node",
+              "value": "={{ $json.execution.error?.node?.name || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "timestamp_ist",
+              "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-normalize",
+      "name": "Normalize error payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "vivek@shiroienergy.com",
+        "subject": "=[n8n ERROR] {{ $json.workflow_name }}",
+        "emailType": "text",
+        "message": "=Workflow errored in n8n.\n\nWorkflow: {{ $json.workflow_name }}\nNode: {{ $json.error_node }}\nError: {{ $json.error_message }}\nTime: {{ $json.timestamp_ist }}\n\nExecution: {{ $json.execution_url }}\n\n---\nThis is the global error handler (workflow 55). Every other workflow in this n8n instance is configured with errorWorkflow=this one. Acknowledge and investigate in the n8n UI."
+      },
+      "id": "node-email-vivek",
+      "name": "Email Vivek",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [500, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_OAUTH_CRED_ID",
+          "name": "Gmail (Vivek)"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "Placeholder channel. Swap to WhatsApp node once WABA is live; keep Gmail as a fallback branch."
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize error payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize error payload": {
+      "main": [
+        [
+          {
+            "node": "Email Vivek",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-6" },
+    { "name": "meta" }
+  ],
+  "meta": {
+    "description": "Fires when any workflow in this n8n instance errors (via errorWorkflow setting). Composes an IST-timestamped summary and emails Vivek. When WABA is live, prepend a WhatsApp branch and keep email as fallback."
+  },
+  "pinData": {}
+}

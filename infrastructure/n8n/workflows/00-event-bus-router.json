@@ -1,0 +1,334 @@
+{
+  "name": "00 — Event Bus Router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "erp-event-bus",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "erp-event-bus",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_HEADER_AUTH_CRED_ID",
+          "name": "x-webhook-secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-lead-created",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "lead.created",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead.created"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-proposal-approved",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "proposal.approved",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "proposal.approved"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-project-commissioned",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "project.commissioned",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "project.commissioned"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-expense-submitted",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "expense_claim.submitted",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "expense_claim.submitted"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-bug-report",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "bug_report.submitted",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "bug_report.submitted"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "unhandled"
+        }
+      },
+      "id": "node-switch",
+      "name": "Route by event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_LEAD_CREATED_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-lead-created",
+      "name": "→ 02 Lead created",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 80]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_PROPOSAL_APPROVED_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-proposal-approved",
+      "name": "→ 06 Proposal approved",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 220]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_PROJECT_COMMISSIONED_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-project-commissioned",
+      "name": "→ 13 Project commissioned",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 360]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_EXPENSE_SUBMITTED_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-expense-submitted",
+      "name": "→ 16 Expense submitted",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 500]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_BUG_REPORT_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-bug-report",
+      "name": "→ 01 Bug report",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 640]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "event",
+              "value": "={{ $json.body.event }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "emitted_at",
+              "value": "={{ $json.body.emitted_at }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "payload",
+              "value": "={{ JSON.stringify($json.body.payload) }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "reason",
+              "value": "Unhandled event — no sub-workflow registered",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-unhandled-log",
+      "name": "Log unhandled event",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [700, 800]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route by event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by event": {
+      "main": [
+        [
+          {
+            "node": "→ 02 Lead created",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 06 Proposal approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 13 Project commissioned",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 16 Expense submitted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 01 Bug report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log unhandled event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "router" },
+    { "name": "tier-6" }
+  ],
+  "meta": {
+    "description": "Single-ingress router for all ERP → n8n events. Receives POST /webhook/erp-event-bus {event, emitted_at, payload}, routes on body.event to the appropriate sub-workflow. Unknown events fall through to Log unhandled event for observability."
+  },
+  "pinData": {}
+}
