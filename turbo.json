@@ -23,7 +23,10 @@
     "SENTRY_ORG",
     "SENTRY_PROJECT",
     "N8N_WEBHOOK_SECRET",
-    "N8N_BUG_REPORT_WEBHOOK_URL"
+    "N8N_BUG_REPORT_WEBHOOK_URL",
+    "N8N_EVENT_BUS_URL",
+    "N8N_BASE_URL",
+    "N8N_API_KEY"
   ],
   "tasks": {
     "build": {
