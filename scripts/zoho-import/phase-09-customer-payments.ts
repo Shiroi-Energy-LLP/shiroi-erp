@@ -99,7 +99,7 @@ export async function runPhase09(): Promise<PhaseResult> {
       }
     }
 
-    if (!projectId) { skippedNoProject++; result.skipped++; continue; }
+    if (!projectId) skippedNoProject++;
 
     const amount = toNumber(r['Amount Applied to Invoice']);
     if (amount <= 0) { result.skipped++; continue; }
@@ -139,7 +139,7 @@ export async function runPhase09(): Promise<PhaseResult> {
     }
   }
 
-  console.log(`  Linked via invoice: ${linkedToInvoice}, via customer name: ${linkedByCustomer}, skipped no-project: ${skippedNoProject}, skipped blank-id: ${skippedBlankId}`);
+  console.log(`  Linked via invoice: ${linkedToInvoice}, via customer name: ${linkedByCustomer}, NULL project (kept): ${skippedNoProject}, skipped blank-id: ${skippedBlankId}`);
   if (dryRun) console.log(`  DRY RUN: would process ${rows.length} customer payments`);
   return result;
 }

@@ -1153,7 +1153,7 @@ export type Database = {
           payment_date: string
           payment_method: string
           payment_reference: string | null
-          project_id: string
+          project_id: string | null
           receipt_number: string
           receipt_pdf_path: string | null
           recorded_by: string
@@ -1172,7 +1172,7 @@ export type Database = {
           payment_date: string
           payment_method: string
           payment_reference?: string | null
-          project_id: string
+          project_id?: string | null
           receipt_number: string
           receipt_pdf_path?: string | null
           recorded_by: string
@@ -1191,7 +1191,7 @@ export type Database = {
           payment_date?: string
           payment_method?: string
           payment_reference?: string | null
-          project_id?: string
+          project_id?: string | null
           receipt_number?: string
           receipt_pdf_path?: string | null
           recorded_by?: string
@@ -4018,7 +4018,7 @@ export type Database = {
           paid_at: string | null
           payment_schedule_id: string | null
           pdf_storage_path: string | null
-          project_id: string
+          project_id: string | null
           proposal_id: string | null
           raised_by: string
           sent_at: string | null
@@ -4051,7 +4051,7 @@ export type Database = {
           paid_at?: string | null
           payment_schedule_id?: string | null
           pdf_storage_path?: string | null
-          project_id: string
+          project_id?: string | null
           proposal_id?: string | null
           raised_by: string
           sent_at?: string | null
@@ -4084,7 +4084,7 @@ export type Database = {
           paid_at?: string | null
           payment_schedule_id?: string | null
           pdf_storage_path?: string | null
-          project_id?: string
+          project_id?: string | null
           proposal_id?: string | null
           raised_by?: string
           sent_at?: string | null
@@ -10627,7 +10627,7 @@ export type Database = {
           po_date: string
           po_number: string
           prepared_by: string
-          project_id: string
+          project_id: string | null
           requires_approval: boolean
           rfq_id: string | null
           sent_to_vendor_at: string | null
@@ -10669,7 +10669,7 @@ export type Database = {
           po_date?: string
           po_number: string
           prepared_by: string
-          project_id: string
+          project_id?: string | null
           requires_approval?: boolean
           rfq_id?: string | null
           sent_to_vendor_at?: string | null
@@ -10711,7 +10711,7 @@ export type Database = {
           po_date?: string
           po_number?: string
           prepared_by?: string
-          project_id?: string
+          project_id?: string | null
           requires_approval?: boolean
           rfq_id?: string | null
           sent_to_vendor_at?: string | null
@@ -13181,7 +13181,7 @@ export type Database = {
           payment_method: string
           payment_reference: string | null
           po_date: string | null
-          project_id: string
+          project_id: string | null
           purchase_order_id: string | null
           recorded_by: string
           source: string
@@ -13204,7 +13204,7 @@ export type Database = {
           payment_method: string
           payment_reference?: string | null
           po_date?: string | null
-          project_id: string
+          project_id?: string | null
           purchase_order_id?: string | null
           recorded_by: string
           source?: string
@@ -13227,7 +13227,7 @@ export type Database = {
           payment_method?: string
           payment_reference?: string | null
           po_date?: string | null
-          project_id?: string
+          project_id?: string | null
           purchase_order_id?: string | null
           recorded_by?: string
           source?: string

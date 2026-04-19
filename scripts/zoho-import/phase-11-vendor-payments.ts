@@ -102,7 +102,7 @@ export async function runPhase11(): Promise<PhaseResult> {
     }
 
     if (!bill) { skippedNoBill++; result.skipped++; continue; }
-    if (!bill.project_id) { skippedNoProject++; result.skipped++; continue; }
+    if (!bill.project_id) skippedNoProject++;
     linkedToBill++;
 
     const amount = toNumber(r['Bill Amount']);
@@ -139,7 +139,7 @@ export async function runPhase11(): Promise<PhaseResult> {
     }
   }
 
-  console.log(`  Linked to bill: ${linkedToBill}, skipped no-vendor: ${skippedNoVendor}, no-bill: ${skippedNoBill}, no-project: ${skippedNoProject}, blank-id: ${skippedBlankId}`);
+  console.log(`  Linked to bill: ${linkedToBill}, skipped no-vendor: ${skippedNoVendor}, no-bill: ${skippedNoBill}, NULL project (kept): ${skippedNoProject}, blank-id: ${skippedBlankId}`);
   if (dryRun) console.log(`  DRY RUN: would process ${rows.length} vendor payments`);
   return result;
 }

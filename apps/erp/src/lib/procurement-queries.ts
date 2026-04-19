@@ -164,6 +164,7 @@ export async function getPurchaseRequests(filters: ProcurementFilters = {}): Pro
 
   const poCountByProject: Record<string, number> = {};
   for (const po of poRows ?? []) {
+    if (!po.project_id) continue;
     poCountByProject[po.project_id] = (poCountByProject[po.project_id] || 0) + 1;
   }
 
