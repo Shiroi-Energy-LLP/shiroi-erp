@@ -1,0 +1,102 @@
+{
+  "name": "16 — Expense submitted",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "expense_claim_id", "value": "={{ $json.body.payload.expense_claim_id }}", "type": "string" },
+            { "id": "f2", "name": "employee_name", "value": "={{ $json.body.payload.employee_name }}", "type": "string" },
+            { "id": "f3", "name": "amount_inr", "value": "={{ $json.body.payload.amount_inr }}", "type": "number" },
+            { "id": "f4", "name": "category", "value": "={{ $json.body.payload.category }}", "type": "string" },
+            { "id": "f5", "name": "purpose", "value": "={{ $json.body.payload.purpose }}", "type": "string" },
+            { "id": "f6", "name": "project_code", "value": "={{ $json.body.payload.project_code || '—' }}", "type": "string" },
+            { "id": "f7", "name": "manager_name", "value": "={{ $json.body.payload.manager_name }}", "type": "string" },
+            { "id": "f8", "name": "manager_whatsapp", "value": "={{ $json.body.payload.manager_whatsapp }}", "type": "string" },
+            { "id": "f9", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
+            { "id": "f10", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" },
+            { "id": "f11", "name": "amount_display", "value": "={{ $json.body.payload.amount_inr ? '₹' + Number($json.body.payload.amount_inr).toLocaleString('en-IN') : '—' }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=🧾 *Expense claim awaiting approval*\n\nFrom: {{ $json.employee_name }}\nAmount: {{ $json.amount_display }}\nCategory: {{ $json.category }}\nProject: {{ $json.project_code }}\nPurpose: {{ $json.purpose }}\n\nSubmitted: {{ $json.timestamp_ist }}\n\nReview + approve: {{ $json.erp_url }}\n\nReimbursement runs on the 1st & 15th — approve before cutoff to avoid a 2-week delay.",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $json.manager_whatsapp }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose WhatsApp message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves", "type": "string" },
+            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
+            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
+    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message", "type": "main", "index": 0 }]] },
+    "Compose WhatsApp message": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "hr" }
+  ],
+  "meta": {
+    "description": "Triggered on expense_claim.submitted. Nudges the employee's manager with the claim summary and a deep link. Expects payload: {expense_claim_id, employee_name, amount_inr, category, purpose, project_code, manager_name, manager_whatsapp, erp_url}."
+  },
+  "pinData": {}
+}

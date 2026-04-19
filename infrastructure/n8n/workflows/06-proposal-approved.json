@@ -1,0 +1,110 @@
+{
+  "name": "06 — Proposal approved",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "proposal_id", "value": "={{ $json.body.payload.proposal_id }}", "type": "string" },
+            { "id": "f2", "name": "customer_name", "value": "={{ $json.body.payload.customer_name }}", "type": "string" },
+            { "id": "f3", "name": "customer_phone", "value": "={{ $json.body.payload.customer_phone }}", "type": "string" },
+            { "id": "f4", "name": "system_size_kwp", "value": "={{ $json.body.payload.system_size_kwp }}", "type": "number" },
+            { "id": "f5", "name": "total_cost_inr", "value": "={{ $json.body.payload.total_cost_inr }}", "type": "number" },
+            { "id": "f6", "name": "project_manager_name", "value": "={{ $json.body.payload.project_manager_name }}", "type": "string" },
+            { "id": "f7", "name": "project_manager_whatsapp", "value": "={{ $json.body.payload.project_manager_whatsapp }}", "type": "string" },
+            { "id": "f8", "name": "finance_head_whatsapp", "value": "={{ $json.body.payload.finance_head_whatsapp }}", "type": "string" },
+            { "id": "f9", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
+            { "id": "f10", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" },
+            { "id": "f11", "name": "total_cost_display", "value": "={{ $json.body.payload.total_cost_inr ? '₹' + ($json.body.payload.total_cost_inr / 100000).toFixed(2) + 'L' : '—' }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message_pm",
+              "value": "=✅ *Proposal approved* — {{ $json.customer_name }}\n\nSize: {{ $json.system_size_kwp }} kWp\nValue: {{ $json.total_cost_display }}\nApproved: {{ $json.timestamp_ist }}\n\nCustomer handover is yours now. Next step:\n• Share payment schedule within 24h\n• Schedule kickoff call this week\n• Confirm site readiness date\n\nOpen: {{ $json.erp_url }}",
+              "type": "string"
+            },
+            {
+              "id": "m2",
+              "name": "message_finance",
+              "value": "=💰 *Proposal approved* — {{ $json.customer_name }}\n\nSize: {{ $json.system_size_kwp }} kWp\nValue: {{ $json.total_cost_display }}\nPM: {{ $json.project_manager_name }}\n\nAction: create customer invoice for milestone 1 (advance) and send within 48h.\n\nOpen: {{ $json.erp_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose both messages",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with two WhatsApp sends (PM + Finance) once Meta approves", "type": "string" },
+            { "id": "s3", "name": "would_send_pm_to", "value": "={{ $json.project_manager_whatsapp }}", "type": "string" },
+            { "id": "s4", "name": "would_send_pm_body", "value": "={{ $json.message_pm }}", "type": "string" },
+            { "id": "s5", "name": "would_send_finance_to", "value": "={{ $json.finance_head_whatsapp }}", "type": "string" },
+            { "id": "s6", "name": "would_send_finance_body", "value": "={{ $json.message_finance }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
+    "Extract fields": { "main": [[{ "node": "Compose both messages", "type": "main", "index": 0 }]] },
+    "Compose both messages": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "design" },
+    { "name": "finance" }
+  ],
+  "meta": {
+    "description": "Triggered on proposal.approved. Sends parallel messages to assigned PM (handover instructions) and Finance (invoice kickoff). Expects payload: {proposal_id, customer_name, customer_phone, system_size_kwp, total_cost_inr, project_manager_name, project_manager_whatsapp, finance_head_whatsapp, erp_url}."
+  },
+  "pinData": {}
+}
