@@ -2,7 +2,7 @@
 
 > Weekly-refreshed snapshot of what's in flight and where dev ↔ prod stand.
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
-> Last updated: **April 18, 2026** (Claude — overnight agentic run + finance over-count fix).
+> Last updated: **April 19, 2026** (Claude — cash-position root-cause fix, migs 080+081).
 
 ---
 
@@ -13,10 +13,11 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 ---
 
-## In flight this week (April 14–18, 2026)
+## In flight this week (April 14–19, 2026)
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
+| **Fix: project cash position wrong on 115 projects (root cause, not symptom)** | Claude | ✅ Shipped Apr 19 | Vivek pushed back on mig 079: *"the numbers are still wrong. VAF still shows -3 cr, whereas it should be profitable. same with a lot of other projects. you have not found the root cause for the cash position numbers. pls dig deep and get this sorted out."* Two bugs stacked. **(A)** `scripts/migrate-google-drive.ts` had pre-created 869 ERP-source POs from BOM with fake `amount_paid=total_amount` + `status='fully_delivered'`. **(B)** `refresh_project_cash_position()` trigger computed `total_invoiced` via a backwards LEFT JOIN starting from customer_payments, so projects with 0 payments showed `invoiced=0` even with real invoices. Combined effect on VAF: cash said `net=-3Cr`, truth is `+17L`. **Mig 080** deletes 75 Drive-BOM POs on 8 dup-PO projects + rewrites the trigger to query invoices/payments independently + force-refreshes all 57 cash-position rows. **Mig 081** soft-cancels the remaining 775 Drive-BOM POs on 115 non-dup projects (57 real Zoho payments worth ₹98.49L kept attached to satisfy CHECK). Post-fix: only 5 projects remain with net<0 — all legitimate "vendor-spend-ahead-of-invoice" states (real Zoho POs). Findings in `docs/2026-04-19-cash-position-root-cause.md`. |
 | **Fix: vendor payment over-counting from Zoho import** | Claude | ✅ Shipped Apr 18 | Vivek flagged financial data as wrong ("VAF is fully paid and so on"). Phase 11 Zoho import linked 669/729 vendor payments to wrong bills/POs via bad fallback heuristic (first open bill / latest PO for vendor). Trigger summed unrelated payments onto single targets; `total_ap_bills` was −₹1.39Cr and `total_ap_pos` was −₹4.29Cr (negative = impossible). Migration 079 clamps `amount_paid` to `total_amount` on 2 bills + 25 POs, hardens `update_po_amount_paid` and `recalc_vendor_bill_totals` with LEAST() guards so future imports can't break the invariant. Post-fix VAF AP outstanding ₹0 as Vivek said. AR untouched. Root-cause bug in `phase-11-vendor-payments.ts` to be fixed before next Zoho sync. Findings in `docs/2026-04-18-finance-overcounting-fix.md`. |
 | **Data: historical dates backfill** | Claude | ✅ Shipped Apr 18 | Zoho import clobbered `created_at` on ~600 projects/proposals/leads with the 2026-04-02 batch timestamp. Migration 073 used Zoho invoice dates (12 projects). Migration 076 used `project_number` FY (154 projects). Migration 077 parsed year from `proposal_number` (428 proposals) + cascaded to leads. **Migration 078 (follow-up):** walked 4 `Proposals YYYY` Drive folders (1,405 children), matched 229 unambiguous proposals by normalised proposal number, replaced synthetic FY-start dates with real Drive `createdTime` @ noon IST. Dispersed the 2024-01-01 cluster 96→3 and 2023-01-01 cluster 84→28. Remaining Sep-2025 clusters are SHIROI/PROP/2025-26/NNNN internal proposals (not in Drive), sit within correct FY. Full findings in `docs/2026-04-18-date-backfill-findings.md`. |
 | **Fix: Expenses invisible in project Actuals tab** | Claude | ✅ Shipped Apr 18 | Migration 066 table rename preserved old FK names (`project_site_expenses_*_fkey`); PostgREST embed hints in `listExpenses` expected `expenses_*_fkey` and failed silently — project Actuals tab showed "no expenses" for all 121 projects with 1358 existing vouchers. Renamed 3 FKs. Reported by Manivel. Migration 074. |
@@ -39,8 +40,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **079** (vendor payment over-count fix + trigger hardening, Apr 18) | None — fully caught up |
-| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 079** — 67 migrations waiting on the next prod window |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **081** (cancel Drive-BOM fabricated POs, Apr 19) | None — fully caught up |
+| **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 081** — 69 migrations waiting on the next prod window |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, Zoho Books, and WhatsApp; not all of that needs to move to prod — specifically the Zoho import tables are dev-only for now).
 
