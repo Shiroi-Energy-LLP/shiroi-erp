@@ -1,0 +1,2 @@
+# Real .env lives on the droplet only — never commit.
+.env

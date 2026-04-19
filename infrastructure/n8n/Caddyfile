@@ -1,0 +1,3 @@
+n8n.shiroienergy.com {
+    reverse_proxy n8n:5678
+}

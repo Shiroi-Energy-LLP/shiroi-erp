@@ -1,0 +1,28 @@
+#cloud-config
+# Paste into DigitalOcean's "Add Initialization Scripts (free)" field when creating
+# a new droplet. Runs at first boot, non-interactively. Installs Docker + UFW,
+# creates the /opt/shiroi-automation directory, and auto-accepts local config
+# files on every apt conflict (so the sshd_config prompt that blocked the
+# first setup attempt can never happen again).
+apt:
+  conf: |
+    Dpkg::Options {
+      "--force-confdef";
+      "--force-confold";
+    };
+package_update: true
+package_upgrade: true
+packages:
+  - ca-certificates
+  - curl
+  - ufw
+runcmd:
+  - curl -fsSL https://get.docker.com | sh
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow 22/tcp
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+  - mkdir -p /opt/shiroi-automation
+  - systemctl enable --now docker

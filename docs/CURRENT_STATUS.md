@@ -2,7 +2,7 @@
 
 > Weekly-refreshed snapshot of what's in flight and where dev ↔ prod stand.
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
-> Last updated: **April 19, 2026** (Claude — cash-position root-cause fix, migs 080+081).
+> Last updated: **April 19, 2026** (n8n + Caddy infrastructure shipped; cash-position root-cause fix earlier today, migs 080+081).
 
 ---
 
@@ -17,6 +17,7 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
+| **n8n + Caddy infrastructure** | Vivek + Claude | ✅ Shipped Apr 19 | DigitalOcean Bangalore droplet (`shiroi-erp`, 2 GB / $12/mo) running n8n + Caddy via `docker-compose`. Public URL `https://n8n.shiroienergy.com` (auto-HTTPS via Let's Encrypt). Cloud-init user-data script bakes Docker + UFW + `/opt/shiroi-automation/` at first boot — after two aborted attempts (stuck `sshd_config` apt prompt, then failed rebuild), the cloud-init path worked first-try. Replaces the "spare laptop" plan from master reference §3.2 — same software, different host; trades ~₹1,000/mo for public IP (so Supabase webhooks land without LAN tunneling) + zero uptime management. Infra files mirrored in `infrastructure/n8n/` (docker-compose + Caddyfile + cloud-init + README). Unblocks Phase D (Zoho live sync), daily training microlearning, WhatsApp drip sequences, nightly crons, and the bug-report webhook from `/settings`. |
 | **Fix: project cash position wrong on 115 projects (root cause, not symptom)** | Claude | ✅ Shipped Apr 19 | Vivek pushed back on mig 079: *"the numbers are still wrong. VAF still shows -3 cr, whereas it should be profitable. same with a lot of other projects. you have not found the root cause for the cash position numbers. pls dig deep and get this sorted out."* Two bugs stacked. **(A)** `scripts/migrate-google-drive.ts` had pre-created 869 ERP-source POs from BOM with fake `amount_paid=total_amount` + `status='fully_delivered'`. **(B)** `refresh_project_cash_position()` trigger computed `total_invoiced` via a backwards LEFT JOIN starting from customer_payments, so projects with 0 payments showed `invoiced=0` even with real invoices. Combined effect on VAF: cash said `net=-3Cr`, truth is `+17L`. **Mig 080** deletes 75 Drive-BOM POs on 8 dup-PO projects + rewrites the trigger to query invoices/payments independently + force-refreshes all 57 cash-position rows. **Mig 081** soft-cancels the remaining 775 Drive-BOM POs on 115 non-dup projects (57 real Zoho payments worth ₹98.49L kept attached to satisfy CHECK). Post-fix: only 5 projects remain with net<0 — all legitimate "vendor-spend-ahead-of-invoice" states (real Zoho POs). Findings in `docs/2026-04-19-cash-position-root-cause.md`. |
 | **Fix: vendor payment over-counting from Zoho import** | Claude | ✅ Shipped Apr 18 | Vivek flagged financial data as wrong ("VAF is fully paid and so on"). Phase 11 Zoho import linked 669/729 vendor payments to wrong bills/POs via bad fallback heuristic (first open bill / latest PO for vendor). Trigger summed unrelated payments onto single targets; `total_ap_bills` was −₹1.39Cr and `total_ap_pos` was −₹4.29Cr (negative = impossible). Migration 079 clamps `amount_paid` to `total_amount` on 2 bills + 25 POs, hardens `update_po_amount_paid` and `recalc_vendor_bill_totals` with LEAST() guards so future imports can't break the invariant. Post-fix VAF AP outstanding ₹0 as Vivek said. AR untouched. Root-cause bug in `phase-11-vendor-payments.ts` to be fixed before next Zoho sync. Findings in `docs/2026-04-18-finance-overcounting-fix.md`. |
 | **Data: historical dates backfill** | Claude | ✅ Shipped Apr 18 | Zoho import clobbered `created_at` on ~600 projects/proposals/leads with the 2026-04-02 batch timestamp. Migration 073 used Zoho invoice dates (12 projects). Migration 076 used `project_number` FY (154 projects). Migration 077 parsed year from `proposal_number` (428 proposals) + cascaded to leads. **Migration 078 (follow-up):** walked 4 `Proposals YYYY` Drive folders (1,405 children), matched 229 unambiguous proposals by normalised proposal number, replaced synthetic FY-start dates with real Drive `createdTime` @ noon IST. Dispersed the 2024-01-01 cluster 96→3 and 2023-01-01 cluster 84→28. Remaining Sep-2025 clusters are SHIROI/PROP/2025-26/NNNN internal proposals (not in Drive), sit within correct FY. Full findings in `docs/2026-04-18-date-backfill-findings.md`. |
@@ -30,7 +31,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 | Docs restructure | Claude | ✅ Shipped Apr 17 | This refactor. See `docs/superpowers/specs/2026-04-17-docs-restructure-design.md`. |
 | Marketing + Design revamp — feedback loop | Prem (marketing mgr) | 🔜 Next | Get Prem's feedback on /sales + partners + design workspace + closure band UI. Same cycle as Manivel's PM feedback. |
 | Zoho manual project match | Vivek | 🔜 Action needed | 76 projects in `docs/zoho-review-queue.csv` need manual match in Supabase `zoho_project_mapping` table. After matching, re-run phases 07-13 to pick up those projects' transactions. |
-| Phase D (n8n Zoho live sync) | Claude | 🔜 Skipped per brief | n8n webhook wiring for live Zoho → ERP sync. Requires n8n running. All DB infrastructure (zoho_sync_queue, triggers, claim/ack RPCs) is ready. |
+| Phase D (n8n Zoho live sync) | Claude | 🔜 Unblocked | n8n now running (Apr 19). DB infrastructure (zoho_sync_queue, triggers, claim/ack RPCs) was ready since migration 072. Next: build the workflow — consume `zoho_sync_queue`, call Zoho Books API, ack on success. |
+| Bug-report webhook → alert | Claude | 🔜 Next up | `/settings → Report a Bug` already POSTs to `N8N_BUG_REPORT_WEBHOOK_URL` via `notifyBugReport` in `settings-actions.ts`. First validation workflow: receive webhook → WhatsApp/email to Vivek. End-to-end test of the whole n8n pipeline in ~15 min. |
 | Employee testing week | All | 🔜 Planned | 5–6 employees review on dev for 1 week. Data flags + inline edit + verification. |
 | Prod deployment window | Vivek | 🔜 After testing | Batch-promote migrations 013–072 to prod + selective data migration. |
 
@@ -62,8 +64,8 @@ Building out final modules before moving to full prod rollout. Still active deve
 | ERP (points at **dev** Supabase) | `erp.shiroienergy.com` (Vercel, auto-deploys on push to `main`) |
 | GitHub | `github.com/Shiroi-Energy-LLP/shiroi-erp` (private) |
 | Local dev | `localhost:3000` |
-| n8n | `[spare-laptop-ip]:5678` |
-| PVLib microservice | `[spare-laptop-ip]:5001` |
+| n8n | `https://n8n.shiroienergy.com` (DO Bangalore droplet `shiroi-erp`, `68.183.91.111`) |
+| PVLib microservice | `https://pvlib.shiroienergy.com` (same droplet, not yet deployed) |
 
 ---
 
