@@ -64,29 +64,47 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
-            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with two WhatsApp sends (PM + Finance) once Meta approves", "type": "string" },
-            { "id": "s3", "name": "would_send_pm_to", "value": "={{ $json.project_manager_whatsapp }}", "type": "string" },
-            { "id": "s4", "name": "would_send_pm_body", "value": "={{ $json.message_pm }}", "type": "string" },
-            { "id": "s5", "name": "would_send_finance_to", "value": "={{ $json.finance_head_whatsapp }}", "type": "string" },
-            { "id": "s6", "name": "would_send_finance_body", "value": "={{ $json.message_finance }}", "type": "string" }
-          ]
-        },
+        "phoneNumberId": "1140448799143790",
+        "toPhoneNumber": "={{ $json.project_manager_whatsapp }}",
+        "message": "={{ $json.message_pm }}",
         "options": {}
       },
-      "id": "node-simulate-send",
-      "name": "SIMULATED SEND (replace with WhatsApp)",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [750, 300]
+      "id": "node-whatsapp-pm",
+      "name": "Send WhatsApp to PM",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [750, 200],
+      "credentials": {
+        "whatsAppBusinessAccountApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "1140448799143790",
+        "toPhoneNumber": "={{ $json.finance_head_whatsapp }}",
+        "message": "={{ $json.message_finance }}",
+        "options": {}
+      },
+      "id": "node-whatsapp-finance",
+      "name": "Send WhatsApp to Finance",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [750, 400],
+      "credentials": {
+        "whatsAppBusinessAccountApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
     }
   ],
   "connections": {
     "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
     "Extract fields": { "main": [[{ "node": "Compose both messages", "type": "main", "index": 0 }]] },
-    "Compose both messages": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+    "Compose both messages": { "main": [[{ "node": "Send WhatsApp to PM", "type": "main", "index": 0 }, { "node": "Send WhatsApp to Finance", "type": "main", "index": 0 }]] }
   },
   "active": false,
   "settings": {

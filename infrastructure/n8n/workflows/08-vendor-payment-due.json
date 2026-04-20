@@ -85,29 +85,66 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
-            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp fan-out node. High-value (>₹5L) items should fan out to Finance + Vivek; others go to Finance only.", "type": "string" },
-            { "id": "s3", "name": "would_send_to_finance", "value": "={{ $json.to_phone_finance }}", "type": "string" },
-            { "id": "s4", "name": "would_send_to_vivek", "value": "={{ $json.is_high_value ? $json.to_phone_vivek : '(not cc\\'d — amount ≤ ₹5L)' }}", "type": "string" },
-            { "id": "s5", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
-          ]
-        },
+        "phoneNumberId": "1140448799143790",
+        "toPhoneNumber": "={{ $json.to_phone_finance }}",
+        "message": "={{ $json.message }}",
         "options": {}
       },
-      "id": "node-simulate-send",
-      "name": "SIMULATED SEND (replace with WhatsApp fan-out)",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [1000, 300]
+      "id": "node-whatsapp-finance",
+      "name": "Send to Finance (always)",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [900, 250],
+      "credentials": {
+        "whatsAppBusinessAccountApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [
+            { "id": "cond-1", "leftValue": "={{ $json.is_high_value }}", "rightValue": "true", "operator": { "type": "boolean", "operation": "equals" } }
+          ]
+        },
+        "options": { "fallbackOutput": "no-value" }
+      },
+      "id": "node-if-high-value",
+      "name": "Is high value (>₹5L)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 450]
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "1140448799143790",
+        "toPhoneNumber": "={{ $json.to_phone_vivek }}",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "node-whatsapp-vivek",
+      "name": "Send to Vivek (cc high-value only)",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [1100, 450],
+      "credentials": {
+        "whatsAppBusinessAccountApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
     }
   ],
   "connections": {
     "Daily 9:00 IST (03:30 UTC)": { "main": [[{ "node": "Fetch payments due", "type": "main", "index": 0 }]] },
     "Fetch payments due": { "main": [[{ "node": "One item per PO", "type": "main", "index": 0 }]] },
     "One item per PO": { "main": [[{ "node": "Compose WhatsApp per payment", "type": "main", "index": 0 }]] },
-    "Compose WhatsApp per payment": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp fan-out)", "type": "main", "index": 0 }]] }
+    "Compose WhatsApp per payment": { "main": [[{ "node": "Send to Finance (always)", "type": "main", "index": 0 }, { "node": "Is high value (>₹5L)?", "type": "main", "index": 0 }]] },
+    "Is high value (>₹5L)?": { "main": [[{ "node": "Send to Vivek (cc high-value only)", "type": "main", "index": 0 }]] }
   },
   "active": false,
   "settings": {
