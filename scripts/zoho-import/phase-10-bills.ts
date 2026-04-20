@@ -184,6 +184,8 @@ export async function runPhase10(): Promise<PhaseResult> {
         zoho_bill_id: zohoBillId,
         notes: toStr(firstRow['Vendor Notes']),
         created_by: systemId,
+        // Anchor created_at to the bill date (12:00 IST) — see mig 086.
+        created_at: `${billDate}T12:00:00+05:30`,
       })
       .select('id')
       .single();

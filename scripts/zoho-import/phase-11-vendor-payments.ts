@@ -124,6 +124,9 @@ export async function runPhase11(): Promise<PhaseResult> {
       notes: toStr(r['Description']),
       source: 'zoho_import',
       zoho_vendor_payment_id: piPayId,
+      // Anchor created_at to the payment date (12:00 IST) so sorts/filters
+      // that key off created_at reflect real history. See mig 086.
+      created_at: `${paymentDate}T12:00:00+05:30`,
     };
 
     if (dryRun) { result.skipped++; continue; }

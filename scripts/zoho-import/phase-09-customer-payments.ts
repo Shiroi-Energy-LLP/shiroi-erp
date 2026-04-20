@@ -124,6 +124,10 @@ export async function runPhase09(): Promise<PhaseResult> {
       notes: toStr(r['Description']),
       source: 'zoho_import',
       zoho_customer_payment_id: invPayId,
+      // Anchor created_at to the actual payment date (12:00 IST) so
+      // "when did this happen" queries / sorts line up with real history
+      // instead of the import-batch moment. See mig 086 for backfill.
+      created_at: `${paymentDate}T12:00:00+05:30`,
     };
 
     if (dryRun) { result.skipped++; continue; }

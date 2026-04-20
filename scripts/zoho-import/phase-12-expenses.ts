@@ -129,18 +129,27 @@ export async function runPhase12(): Promise<PhaseResult> {
     const amount = toNumber(r['Total']) || toNumber(r['Expense Amount']);
     if (amount <= 0) { result.skipped++; continue; }
 
+    // Derive workflow timestamps from the voucher date so the expenses
+    // list (ordered by submitted_at DESC) and get_expense_kpis
+    // (approved_month_amt filters on approved_at) reflect real history
+    // instead of rolling every import into "this month". Anchor at 12:00
+    // IST via explicit ISO offset. Historical rows get fixed by mig 086.
+    const expenseDate = toDateISO(r['Expense Date']) ?? '2023-01-01';
+    const historicalTs = `${expenseDate}T12:00:00+05:30`;
+
     const row = {
       project_id: projectId,
       description: toStr(r['Expense Description']) ?? 'Zoho import',
-      expense_date: toDateISO(r['Expense Date']) ?? '2023-01-01',
+      expense_date: expenseDate,
       amount,
       voucher_number: voucherNum,
       category_id: categoryId,
       status: 'approved',
       submitted_by: systemId,
-      submitted_at: new Date().toISOString(),
+      submitted_at: historicalTs,
       approved_by: systemId,
-      approved_at: new Date().toISOString(),
+      approved_at: historicalTs,
+      created_at: historicalTs,
       source: 'zoho_import',
       zoho_expense_id: zohoId,
     };

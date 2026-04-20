@@ -177,6 +177,8 @@ export async function runPhase07(): Promise<PhaseResult> {
       sent_via_channels: [],
       source: 'zoho_import',
       zoho_po_id: zohoPoId,
+      // Anchor created_at to the PO date (12:00 IST) — see mig 086.
+      created_at: `${poDate}T12:00:00+05:30`,
     });
   }
 

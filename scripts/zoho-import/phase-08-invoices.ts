@@ -140,6 +140,7 @@ export async function runPhase08(): Promise<PhaseResult> {
     }
     const gstTotal = cgst + sgst + igst;
 
+    const invoiceDate = toDateISO(first['Invoice Date']) ?? '2023-01-01';
     const row = {
       project_id: projectId,
       raised_by: systemId,
@@ -152,7 +153,7 @@ export async function runPhase08(): Promise<PhaseResult> {
       total_amount: total,
       amount_paid: amountPaid,
       amount_outstanding: balance,
-      invoice_date: toDateISO(first['Invoice Date']) ?? '2023-01-01',
+      invoice_date: invoiceDate,
       due_date: toDateISO(first['Due Date']) ?? '2023-01-01',
       status: mapInvoiceStatus(toStr(first['Invoice Status'])),
       escalation_level: 0,
@@ -161,6 +162,8 @@ export async function runPhase08(): Promise<PhaseResult> {
       source: 'zoho_import',
       zoho_invoice_id: zohoInvId,
       zoho_customer_gst_treatment: toStr(first['GST Treatment']),
+      // Anchor created_at to the invoice date (12:00 IST) — see mig 086.
+      created_at: `${invoiceDate}T12:00:00+05:30`,
     };
 
     if (dryRun) { result.skipped++; continue; }
