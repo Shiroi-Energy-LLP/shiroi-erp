@@ -40,12 +40,27 @@ const WORKFLOW_PLACEHOLDERS: Record<string, string> = {
   REPLACE_WITH_EXPENSE_SUBMITTED_WORKFLOW_ID: '16 — Expense submitted',
   REPLACE_WITH_BUG_REPORT_WORKFLOW_ID: '01 — Bug report',
   REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID: '55 — Global Error Handler',
+  // Tier 1 webhook sub-workflows added April 20, 2026
+  REPLACE_WITH_PROPOSAL_REQUESTED_WORKFLOW_ID: '04 — Proposal requested (Design)',
+  REPLACE_WITH_PROPOSAL_SUBMITTED_WORKFLOW_ID: '05 — Proposal submitted (Design → Sales)',
+  REPLACE_WITH_PO_APPROVED_WORKFLOW_ID: '07 — Purchase order approved',
+  REPLACE_WITH_GRN_RECORDED_WORKFLOW_ID: '09 — GRN recorded',
+  REPLACE_WITH_INSTALL_SCHEDULED_WORKFLOW_ID: '10 — Installation scheduled',
+  REPLACE_WITH_INSTALL_COMPLETE_WORKFLOW_ID: '11 — Installation complete',
+  REPLACE_WITH_CEIG_APPROVAL_WORKFLOW_ID: '12 — CEIG approval received',
+  REPLACE_WITH_CUSTOMER_PAYMENT_WORKFLOW_ID: '14 — Customer payment received',
+  REPLACE_WITH_OM_TICKET_WORKFLOW_ID: '15 — O&M ticket created',
+  REPLACE_WITH_LEAVE_REQUEST_WORKFLOW_ID: '17 — Leave request submitted',
+  REPLACE_WITH_EMPLOYEE_CREATED_WORKFLOW_ID: '18 — Employee created',
 };
 
 // Credential placeholders resolve by n8n credential name + type.
 const CREDENTIAL_PLACEHOLDERS: Record<string, { name: string; type: string }> = {
   REPLACE_WITH_HEADER_AUTH_CRED_ID: { name: 'x-webhook-secret', type: 'httpHeaderAuth' },
   REPLACE_WITH_GMAIL_OAUTH_CRED_ID: { name: 'Gmail (Vivek)', type: 'gmailOAuth2' },
+  // Supabase service-role HTTP Header Auth for cron workflows (03, 08, Tier 2 digests).
+  // Credential header is `apikey: {sb_secret_...}` — create once in n8n Settings → Credentials.
+  REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID: { name: 'Supabase service role', type: 'httpHeaderAuth' },
 };
 
 interface N8nWorkflow {

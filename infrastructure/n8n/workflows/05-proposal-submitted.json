@@ -1,0 +1,103 @@
+{
+  "name": "05 — Proposal submitted (Design → Sales)",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "proposal_id", "value": "={{ $json.body.payload.proposal_id }}", "type": "string" },
+            { "id": "f2", "name": "proposal_number", "value": "={{ $json.body.payload.proposal_number }}", "type": "string" },
+            { "id": "f3", "name": "customer_name", "value": "={{ $json.body.payload.customer_name }}", "type": "string" },
+            { "id": "f4", "name": "system_size_kwp", "value": "={{ $json.body.payload.system_size_kwp }}", "type": "string" },
+            { "id": "f5", "name": "total_price", "value": "={{ $json.body.payload.total_price }}", "type": "string" },
+            { "id": "f6", "name": "margin_approval_required", "value": "={{ $json.body.payload.margin_approval_required }}", "type": "boolean" },
+            { "id": "f7", "name": "sales_person_name", "value": "={{ $json.body.payload.sales_person_name }}", "type": "string" },
+            { "id": "f8", "name": "sales_person_whatsapp", "value": "={{ $json.body.payload.sales_person_whatsapp }}", "type": "string" },
+            { "id": "f9", "name": "prepared_by_name", "value": "={{ $json.body.payload.prepared_by_name }}", "type": "string" },
+            { "id": "f10", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
+            { "id": "f11", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=📋 *Proposal ready* — {{ $json.customer_name }}\n\nProposal: {{ $json.proposal_number }}\nSize: {{ $json.system_size_kwp }} kWp\nTotal: ₹{{ $json.total_price }}\nPrepared by: {{ $json.prepared_by_name }}\n{{ $json.margin_approval_required ? '\\n⚠️ *Margin approval required* — below standard.\\n' : '' }}\nReady: {{ $json.timestamp_ist }}\n\nOpen: {{ $json.erp_url }}\n\nPlease review and send to customer.",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $json.sales_person_whatsapp }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose WhatsApp message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves", "type": "string" },
+            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
+            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
+    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message", "type": "main", "index": 0 }]] },
+    "Compose WhatsApp message": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "sales" }
+  ],
+  "meta": {
+    "description": "Triggered by router on proposal.submitted (design completes first pass). Payload: {proposal_id, proposal_number, customer_name, system_size_kwp, total_price, margin_approval_required, sales_person_name, sales_person_whatsapp, prepared_by_name, erp_url}. Pings the salesperson. Inline margin-approval nudge fires when design prices below target."
+  },
+  "pinData": {}
+}

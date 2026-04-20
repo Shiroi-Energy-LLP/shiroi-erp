@@ -1,0 +1,107 @@
+{
+  "name": "17 — Leave request submitted",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "leave_id", "value": "={{ $json.body.payload.leave_id }}", "type": "string" },
+            { "id": "f2", "name": "leave_type", "value": "={{ $json.body.payload.leave_type }}", "type": "string" },
+            { "id": "f3", "name": "from_date", "value": "={{ $json.body.payload.from_date }}", "type": "string" },
+            { "id": "f4", "name": "to_date", "value": "={{ $json.body.payload.to_date }}", "type": "string" },
+            { "id": "f5", "name": "total_days", "value": "={{ $json.body.payload.total_days }}", "type": "string" },
+            { "id": "f6", "name": "reason", "value": "={{ $json.body.payload.reason }}", "type": "string" },
+            { "id": "f7", "name": "employee_name", "value": "={{ $json.body.payload.employee_name }}", "type": "string" },
+            { "id": "f8", "name": "employee_code", "value": "={{ $json.body.payload.employee_code }}", "type": "string" },
+            { "id": "f9", "name": "department", "value": "={{ $json.body.payload.department }}", "type": "string" },
+            { "id": "f10", "name": "manager_name", "value": "={{ $json.body.payload.manager_name }}", "type": "string" },
+            { "id": "f11", "name": "manager_whatsapp", "value": "={{ $json.body.payload.manager_whatsapp }}", "type": "string" },
+            { "id": "f12", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
+            { "id": "f13", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" },
+            { "id": "f14", "name": "from_date_ist", "value": "={{ DateTime.fromISO($json.body.payload.from_date).setZone('Asia/Kolkata').toFormat('dd LLL yyyy') }}", "type": "string" },
+            { "id": "f15", "name": "to_date_ist", "value": "={{ DateTime.fromISO($json.body.payload.to_date).setZone('Asia/Kolkata').toFormat('dd LLL yyyy') }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=🏖️ *Leave request* — {{ $json.employee_name }} ({{ $json.employee_code }})\n\nType: {{ $json.leave_type }}\nFrom: {{ $json.from_date_ist }}\nTo: {{ $json.to_date_ist }}\nDays: {{ $json.total_days }}\nDept: {{ $json.department }}\nReason: {{ $json.reason }}\nSubmitted: {{ $json.timestamp_ist }}\n\nOpen: {{ $json.erp_url }}\n\nPlease approve or reject.",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $json.manager_whatsapp }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose WhatsApp message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves", "type": "string" },
+            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
+            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
+    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message", "type": "main", "index": 0 }]] },
+    "Compose WhatsApp message": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "hr" }
+  ],
+  "meta": {
+    "description": "Triggered by router on leave_request.submitted. Payload: {leave_id, leave_type, from_date, to_date, total_days, reason, employee_name, employee_code, department, manager_name, manager_whatsapp, erp_url}. Pings the reporting manager for approval. Still blocked on ERP wiring — no createLeaveRequest action yet."
+  },
+  "pinData": {}
+}

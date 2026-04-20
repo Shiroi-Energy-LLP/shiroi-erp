@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 // ── Create Invoice ──
 
@@ -150,7 +151,78 @@ export async function recordPayment(input: {
   revalidatePath('/payments');
   revalidatePath('/invoices');
   revalidatePath('/cash');
+
+  if (data?.id) void emitCustomerPaymentReceived(data.id);
+
   return { success: true, paymentId: data?.id };
+}
+
+async function emitCustomerPaymentReceived(paymentId: string): Promise<void> {
+  const op = '[emitCustomerPaymentReceived]';
+  try {
+    const supabase = await createClient();
+    const { data: enriched } = await supabase
+      .from('customer_payments')
+      .select(`
+        id,
+        receipt_number,
+        amount,
+        payment_date,
+        payment_method,
+        is_advance,
+        invoice:invoices!customer_payments_invoice_id_fkey ( invoice_number ),
+        project:projects!customer_payments_project_id_fkey ( project_number, customer_name, customer_phone, lead_id )
+      `)
+      .eq('id', paymentId)
+      .single();
+    if (!enriched) return;
+
+    const invoice = Array.isArray(enriched.invoice) ? enriched.invoice[0] : enriched.invoice;
+    const project = Array.isArray(enriched.project) ? enriched.project[0] : enriched.project;
+
+    // Commission tracking: resolve the lead's original salesperson so Tier 1 #14
+    // can ping them. If the project was created outside the lead funnel we
+    // simply skip the salesperson bit.
+    let salesPersonName: string | null = null;
+    let salesPersonPhone: string | null = null;
+    if (project?.lead_id) {
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('assigned_to')
+        .eq('id', project.lead_id)
+        .maybeSingle();
+      if (lead?.assigned_to) {
+        const { data: emp } = await supabase
+          .from('employees')
+          .select('full_name, whatsapp_number')
+          .eq('id', lead.assigned_to)
+          .maybeSingle();
+        salesPersonName = emp?.full_name ?? null;
+        salesPersonPhone = emp?.whatsapp_number ?? null;
+      }
+    }
+
+    await emitErpEvent('customer_payment.received', {
+      payment_id: enriched.id,
+      receipt_number: enriched.receipt_number,
+      amount: enriched.amount,
+      payment_date: enriched.payment_date,
+      payment_method: enriched.payment_method,
+      is_advance: enriched.is_advance,
+      invoice_number: invoice?.invoice_number ?? null,
+      project_code: project?.project_number ?? null,
+      customer_name: project?.customer_name ?? null,
+      customer_phone: project?.customer_phone ?? null,
+      sales_person_name: salesPersonName,
+      sales_person_whatsapp: salesPersonPhone,
+      erp_url: `https://erp.shiroienergy.com/payments`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      paymentId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 // ── Record Vendor Payment ──

@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 /**
  * Create a net metering application for a project.
@@ -93,7 +94,59 @@ export async function updateCeigStatus(input: {
 
   revalidatePath(`/liaison/net-metering`);
   revalidatePath(`/projects/${input.projectId}`);
+
+  if (input.ceigStatus === 'approved') {
+    void emitCeigApprovalReceived(input.projectId, input.ceigCertificateNumber, input.ceigApprovalDate);
+  }
+
   return { success: true };
+}
+
+async function emitCeigApprovalReceived(
+  projectId: string,
+  certificateNumber: string | undefined,
+  approvalDate: string | undefined,
+): Promise<void> {
+  const op = '[emitCeigApprovalReceived]';
+  try {
+    const supabase = await createClient();
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id, project_number, customer_name, customer_phone, system_size_kwp, project_manager_id')
+      .eq('id', projectId)
+      .single();
+    if (!project) return;
+
+    let pmName: string | null = null;
+    let pmPhone: string | null = null;
+    if (project.project_manager_id) {
+      const { data: pm } = await supabase
+        .from('employees')
+        .select('full_name, whatsapp_number')
+        .eq('id', project.project_manager_id)
+        .maybeSingle();
+      pmName = pm?.full_name ?? null;
+      pmPhone = pm?.whatsapp_number ?? null;
+    }
+
+    await emitErpEvent('ceig_approval.received', {
+      project_id: project.id,
+      project_code: project.project_number,
+      customer_name: project.customer_name,
+      customer_phone: project.customer_phone,
+      system_size_kwp: project.system_size_kwp,
+      certificate_number: certificateNumber ?? null,
+      approval_date: approvalDate ?? null,
+      project_manager_name: pmName,
+      project_manager_whatsapp: pmPhone,
+      erp_url: `https://erp.shiroienergy.com/projects/${project.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      projectId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 /**

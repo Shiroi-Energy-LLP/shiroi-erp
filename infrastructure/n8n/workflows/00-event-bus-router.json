@@ -106,6 +106,182 @@
               },
               "renameOutput": true,
               "outputKey": "bug_report.submitted"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-proposal-requested",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "proposal.requested",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "proposal.requested"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-proposal-submitted",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "proposal.submitted",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "proposal.submitted"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-po-approved",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "purchase_order.approved",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "purchase_order.approved"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-grn-recorded",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "grn.recorded",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "grn.recorded"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-install-scheduled",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "project.installation_scheduled",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "project.installation_scheduled"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-install-complete",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "project.installation_complete",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "project.installation_complete"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-ceig-received",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "ceig_approval.received",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ceig_approval.received"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-customer-payment",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "customer_payment.received",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "customer_payment.received"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-om-ticket",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "om_ticket.created",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "om_ticket.created"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-leave-submitted",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "leave_request.submitted",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "leave_request.submitted"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "cond-employee-created",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "employee.created",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "employee.created"
             }
           ]
         },
@@ -123,14 +299,8 @@
     {
       "parameters": {
         "source": "database",
-        "workflowId": {
-          "__rl": true,
-          "value": "REPLACE_WITH_LEAD_CREATED_WORKFLOW_ID",
-          "mode": "id"
-        },
-        "workflowInputs": {
-          "mappingMode": "passthrough"
-        },
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_LEAD_CREATED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
         "options": {}
       },
       "id": "node-exec-lead-created",
@@ -142,107 +312,206 @@
     {
       "parameters": {
         "source": "database",
-        "workflowId": {
-          "__rl": true,
-          "value": "REPLACE_WITH_PROPOSAL_APPROVED_WORKFLOW_ID",
-          "mode": "id"
-        },
-        "workflowInputs": {
-          "mappingMode": "passthrough"
-        },
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_PROPOSAL_APPROVED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
         "options": {}
       },
       "id": "node-exec-proposal-approved",
       "name": "→ 06 Proposal approved",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [700, 220]
+      "position": [700, 200]
     },
     {
       "parameters": {
         "source": "database",
-        "workflowId": {
-          "__rl": true,
-          "value": "REPLACE_WITH_PROJECT_COMMISSIONED_WORKFLOW_ID",
-          "mode": "id"
-        },
-        "workflowInputs": {
-          "mappingMode": "passthrough"
-        },
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_PROJECT_COMMISSIONED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
         "options": {}
       },
       "id": "node-exec-project-commissioned",
       "name": "→ 13 Project commissioned",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [700, 360]
+      "position": [700, 320]
     },
     {
       "parameters": {
         "source": "database",
-        "workflowId": {
-          "__rl": true,
-          "value": "REPLACE_WITH_EXPENSE_SUBMITTED_WORKFLOW_ID",
-          "mode": "id"
-        },
-        "workflowInputs": {
-          "mappingMode": "passthrough"
-        },
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_EXPENSE_SUBMITTED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
         "options": {}
       },
       "id": "node-exec-expense-submitted",
       "name": "→ 16 Expense submitted",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [700, 500]
+      "position": [700, 440]
     },
     {
       "parameters": {
         "source": "database",
-        "workflowId": {
-          "__rl": true,
-          "value": "REPLACE_WITH_BUG_REPORT_WORKFLOW_ID",
-          "mode": "id"
-        },
-        "workflowInputs": {
-          "mappingMode": "passthrough"
-        },
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_BUG_REPORT_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
         "options": {}
       },
       "id": "node-exec-bug-report",
       "name": "→ 01 Bug report",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [700, 640]
+      "position": [700, 560]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_PROPOSAL_REQUESTED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-proposal-requested",
+      "name": "→ 04 Proposal requested",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 680]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_PROPOSAL_SUBMITTED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-proposal-submitted",
+      "name": "→ 05 Proposal submitted",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 800]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_PO_APPROVED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-po-approved",
+      "name": "→ 07 PO approved",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 920]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_GRN_RECORDED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-grn-recorded",
+      "name": "→ 09 GRN recorded",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 1040]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_INSTALL_SCHEDULED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-install-scheduled",
+      "name": "→ 10 Installation scheduled",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 1160]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_INSTALL_COMPLETE_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-install-complete",
+      "name": "→ 11 Installation complete",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 1280]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_CEIG_APPROVAL_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-ceig-approval",
+      "name": "→ 12 CEIG approval received",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 1400]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_CUSTOMER_PAYMENT_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-customer-payment",
+      "name": "→ 14 Customer payment received",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 1520]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_OM_TICKET_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-om-ticket",
+      "name": "→ 15 O&M ticket created",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 1640]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_LEAVE_REQUEST_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-leave-request",
+      "name": "→ 17 Leave request submitted",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 1760]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_EMPLOYEE_CREATED_WORKFLOW_ID", "mode": "id" },
+        "workflowInputs": { "mappingMode": "passthrough" },
+        "options": {}
+      },
+      "id": "node-exec-employee-created",
+      "name": "→ 18 Employee created",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 1880]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            {
-              "id": "a1",
-              "name": "event",
-              "value": "={{ $json.body.event }}",
-              "type": "string"
-            },
-            {
-              "id": "a2",
-              "name": "emitted_at",
-              "value": "={{ $json.body.emitted_at }}",
-              "type": "string"
-            },
-            {
-              "id": "a3",
-              "name": "payload",
-              "value": "={{ JSON.stringify($json.body.payload) }}",
-              "type": "string"
-            },
-            {
-              "id": "a4",
-              "name": "reason",
-              "value": "Unhandled event — no sub-workflow registered",
-              "type": "string"
-            }
+            { "id": "a1", "name": "event", "value": "={{ $json.body.event }}", "type": "string" },
+            { "id": "a2", "name": "emitted_at", "value": "={{ $json.body.emitted_at }}", "type": "string" },
+            { "id": "a3", "name": "payload", "value": "={{ JSON.stringify($json.body.payload) }}", "type": "string" },
+            { "id": "a4", "name": "reason", "value": "Unhandled event — no sub-workflow registered", "type": "string" }
           ]
         },
         "options": {}
@@ -251,65 +520,32 @@
       "name": "Log unhandled event",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [700, 800]
+      "position": [700, 2000]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Route by event",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Route by event", "type": "main", "index": 0 }]]
     },
     "Route by event": {
       "main": [
-        [
-          {
-            "node": "→ 02 Lead created",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "→ 06 Proposal approved",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "→ 13 Project commissioned",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "→ 16 Expense submitted",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "→ 01 Bug report",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log unhandled event",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "→ 02 Lead created", "type": "main", "index": 0 }],
+        [{ "node": "→ 06 Proposal approved", "type": "main", "index": 0 }],
+        [{ "node": "→ 13 Project commissioned", "type": "main", "index": 0 }],
+        [{ "node": "→ 16 Expense submitted", "type": "main", "index": 0 }],
+        [{ "node": "→ 01 Bug report", "type": "main", "index": 0 }],
+        [{ "node": "→ 04 Proposal requested", "type": "main", "index": 0 }],
+        [{ "node": "→ 05 Proposal submitted", "type": "main", "index": 0 }],
+        [{ "node": "→ 07 PO approved", "type": "main", "index": 0 }],
+        [{ "node": "→ 09 GRN recorded", "type": "main", "index": 0 }],
+        [{ "node": "→ 10 Installation scheduled", "type": "main", "index": 0 }],
+        [{ "node": "→ 11 Installation complete", "type": "main", "index": 0 }],
+        [{ "node": "→ 12 CEIG approval received", "type": "main", "index": 0 }],
+        [{ "node": "→ 14 Customer payment received", "type": "main", "index": 0 }],
+        [{ "node": "→ 15 O&M ticket created", "type": "main", "index": 0 }],
+        [{ "node": "→ 17 Leave request submitted", "type": "main", "index": 0 }],
+        [{ "node": "→ 18 Employee created", "type": "main", "index": 0 }],
+        [{ "node": "Log unhandled event", "type": "main", "index": 0 }]
       ]
     }
   },
@@ -328,7 +564,7 @@
     { "name": "tier-6" }
   ],
   "meta": {
-    "description": "Single-ingress router for all ERP → n8n events. Receives POST /webhook/erp-event-bus {event, emitted_at, payload}, routes on body.event to the appropriate sub-workflow. Unknown events fall through to Log unhandled event for observability."
+    "description": "Single-ingress router for all ERP → n8n events. Receives POST /webhook/erp-event-bus {event, emitted_at, payload}, routes on body.event to the appropriate sub-workflow. 16 events routed (Tier 1 webhook events + bug_report); unknown events fall through to Log unhandled event for observability. Tier 1 cron workflows (03 lead stale, 08 vendor payment due) are self-triggered — they don't flow through this router."
   },
   "pinData": {}
 }

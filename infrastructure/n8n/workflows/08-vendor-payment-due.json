@@ -1,0 +1,132 @@
+{
+  "name": "08 — Vendor payment due (7d cron)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 3 * * *" }
+          ]
+        }
+      },
+      "id": "node-cron",
+      "name": "Daily 9:00 IST (03:30 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_ID }}.supabase.co/rest/v1/v_digest_vendor_payments_due_7d",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "node-http",
+      "name": "Fetch payments due",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
+          "name": "Supabase service role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "node-split",
+      "name": "One item per PO",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=💸 *Vendor payment due* — {{ $json.vendor_name }}\n\nPO: {{ $json.po_number }}\nTotal: ₹{{ $json.total_amount }}\nPaid: ₹{{ $json.amount_paid }}\nOutstanding: ₹{{ $json.amount_outstanding }}\nDue: {{ $json.payment_due_date }} (in {{ $json.days_until_due }} day{{ $json.days_until_due === 1 ? '' : 's' }}){{ $json.vendor_is_msme ? '\\n🔔 MSME — 45-day statutory payment window applies.' : '' }}{{ Number($json.amount_outstanding) > 500000 ? '\\n🚨 High value (>₹5L) — Vivek cc\\'d.' : '' }}\nProject: {{ $json.project_number || '—' }} ({{ $json.customer_name || '—' }})\nVendor contact: {{ $json.vendor_contact_person || '—' }} · {{ $json.vendor_phone || '—' }}\n\nPlease schedule payment or flag if disputed.",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone_finance", "value": "={{ $env.FINANCE_HEAD_WHATSAPP }}", "type": "string" },
+            { "id": "m3", "name": "to_phone_vivek", "value": "={{ Number($json.amount_outstanding) > 500000 ? $env.VIVEK_WHATSAPP : '' }}", "type": "string" },
+            { "id": "m4", "name": "is_high_value", "value": "={{ Number($json.amount_outstanding) > 500000 }}", "type": "boolean" },
+            { "id": "m5", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose WhatsApp per payment",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp fan-out node. High-value (>₹5L) items should fan out to Finance + Vivek; others go to Finance only.", "type": "string" },
+            { "id": "s3", "name": "would_send_to_finance", "value": "={{ $json.to_phone_finance }}", "type": "string" },
+            { "id": "s4", "name": "would_send_to_vivek", "value": "={{ $json.is_high_value ? $json.to_phone_vivek : '(not cc\\'d — amount ≤ ₹5L)' }}", "type": "string" },
+            { "id": "s5", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp fan-out)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Daily 9:00 IST (03:30 UTC)": { "main": [[{ "node": "Fetch payments due", "type": "main", "index": 0 }]] },
+    "Fetch payments due": { "main": [[{ "node": "One item per PO", "type": "main", "index": 0 }]] },
+    "One item per PO": { "main": [[{ "node": "Compose WhatsApp per payment", "type": "main", "index": 0 }]] },
+    "Compose WhatsApp per payment": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp fan-out)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "finance" },
+    { "name": "procurement" },
+    { "name": "cron" }
+  ],
+  "meta": {
+    "description": "Daily 9:00 IST cron. Queries v_digest_vendor_payments_due_7d (migration 085) and sends one WhatsApp per due PO to Finance head. Payments where amount_outstanding > ₹5,00,000 are cc'd to Vivek (founder). MSME flag triggers inline 45-day statutory reminder. Requires env vars on n8n droplet: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, FINANCE_HEAD_WHATSAPP, VIVEK_WHATSAPP + Supabase service-role HTTP Header Auth credential."
+  },
+  "pinData": {}
+}

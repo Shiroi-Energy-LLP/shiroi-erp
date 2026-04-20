@@ -44,18 +44,66 @@ Every workflow's `settings.errorWorkflow` points to `55 — Global Error Handler
 3. **Supabase credential (for digests):** add `sb_secret_*` value as header auth or use HTTP Request → Supabase REST pattern. Will be used by Tier 2 workflows when they land.
 4. **WhatsApp credential:** will be added after WABA creation. Placeholder until then.
 
-## Current state (2026-04-19)
+## Current state (2026-04-20)
+
+### Router + error handler
 
 | File | Status | Activated? |
 |------|--------|------------|
-| `00-event-bus-router.json` | Ready to import | No |
+| `00-event-bus-router.json` | Ready to import — 16 event routes wired | No |
 | `55-global-error-handler.json` | Ready to import | No |
-| `02-lead-created.json` | Template stub — WhatsApp branch disabled | No |
-| `06-proposal-approved.json` | Template stub — WhatsApp branch disabled | No |
-| `13-project-commissioned.json` | Template stub — WhatsApp branch disabled | No |
-| `16-expense-submitted.json` | Template stub — WhatsApp branch disabled | No |
 
-All other numbers from the catalog are still unbuilt. Build order per `docs/superpowers/specs/2026-04-19-n8n-workflow-catalog.md#build-order-recommended`.
+### Tier 1 — webhook handoffs (ERP event → router → sub-workflow)
+
+| File | ERP event | Wired in ERP? | Send node |
+|------|-----------|---------------|-----------|
+| `01-bug-report.json` | `bug_report.submitted` (legacy URL still live) | Via legacy webhook | Simulated |
+| `02-lead-created.json` | `lead.created` | Yes | Simulated |
+| `04-proposal-requested.json` | `proposal.requested` | Yes | Simulated |
+| `05-proposal-submitted.json` | `proposal.submitted` | Yes | Simulated |
+| `06-proposal-approved.json` | `proposal.approved` | Yes | Simulated |
+| `07-purchase-order-approved.json` | `purchase_order.approved` | Yes | Simulated |
+| `09-grn-recorded.json` | `grn.recorded` | ⏳ Pending createGRN action | Simulated |
+| `10-installation-scheduled.json` | `project.installation_scheduled` | Yes | Simulated |
+| `11-installation-complete.json` | `project.installation_complete` | Yes | Simulated |
+| `12-ceig-approval-received.json` | `ceig_approval.received` | Yes | Simulated |
+| `13-project-commissioned.json` | `project.commissioned` | Yes | Simulated |
+| `14-customer-payment-received.json` | `customer_payment.received` | Yes | Simulated |
+| `15-om-ticket-created.json` | `om_ticket.created` | Yes | Simulated |
+| `16-expense-submitted.json` | `expense_claim.submitted` | Yes | Simulated |
+| `17-leave-request-submitted.json` | `leave_request.submitted` | ⏳ Pending leave-request action | Simulated |
+| `18-employee-created.json` | `employee.created` | Yes | Simulated |
+
+### Tier 1 — cron handoffs (Supabase view → per-item WhatsApp)
+
+| File | Source view (migration) | Schedule | Send node |
+|------|-------------------------|----------|-----------|
+| `03-lead-stale-24h.json` | `v_digest_leads_stale_24h` (083) | Daily 9:00 IST | Simulated |
+| `08-vendor-payment-due.json` | `v_digest_vendor_payments_due_7d` (085) | Daily 9:00 IST | Simulated — Finance + Vivek cc if >₹5L |
+
+All `Simulated` send nodes are placeholder `Set` nodes. Replace each with a WhatsApp node once WABA credential lands (Meta approval pending).
+
+### Still unbuilt
+
+- Tier 2 digests (`19`–`28`)
+- Tier 3 monitoring (`29`–`37`)
+- Tier 4 customer-facing (`38`–`49`)
+- Tier 5 reports (`50`–`54`)
+- Tier 6 meta excluding router/error handler (`56`–`58`)
+
+Build order per `docs/superpowers/specs/2026-04-19-n8n-workflow-catalog.md#build-order-recommended`.
+
+### New env vars required on n8n droplet
+
+Already needed: `N8N_WEBHOOK_SECRET` (matched by `x-webhook-secret` Header Auth credential).
+
+Added April 20, 2026 for cron workflows:
+- `SUPABASE_PROJECT_ID` — e.g. `kfkydkwycgijvexqiysc` (prod) / `actqtzoxjilqnldnacqz` (dev)
+- `SUPABASE_SECRET_KEY` — `sb_secret_*` value, used as `apikey` header
+- `FINANCE_HEAD_WHATSAPP` — E.164 phone (used by `08`)
+- `VIVEK_WHATSAPP` — E.164 phone (used by `08` for >₹5L cc)
+
+Credential to create: `Supabase service role` as type `httpHeaderAuth`, header `apikey: {sb_secret_*}`. Push script resolves `REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID` against this credential name.
 
 ## The existing standalone bug-report workflow
 
