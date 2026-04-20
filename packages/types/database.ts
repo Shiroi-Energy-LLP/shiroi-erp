@@ -58,7 +58,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       activity_associations: {
@@ -90,7 +90,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "activities"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       attendance_corrections: {
@@ -151,48 +151,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "attendance_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "attendance_corrections_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
@@ -200,97 +158,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "attendance_corrections_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "attendance_corrections_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "attendance_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       bill_clearing_packages: {
         Row: {
@@ -371,67 +245,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bill_clearing_packages_approved_by_finance_fkey"
-            columns: ["approved_by_finance"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_approved_by_finance_fkey"
-            columns: ["approved_by_finance"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_approved_by_finance_fkey"
-            columns: ["approved_by_finance"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_approved_by_finance_fkey"
-            columns: ["approved_by_finance"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_approved_by_finance_fkey"
-            columns: ["approved_by_finance"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_approved_by_finance_fkey"
-            columns: ["approved_by_finance"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "bill_clearing_packages_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "bill_clearing_packages_purchase_order_id_fkey"
@@ -446,50 +264,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "bill_clearing_packages_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       blacklisted_phones: {
         Row: {
@@ -523,50 +299,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blacklisted_phones_blacklisted_by_fkey"
-            columns: ["blacklisted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "blacklisted_phones_blacklisted_by_fkey"
-            columns: ["blacklisted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "blacklisted_phones_blacklisted_by_fkey"
-            columns: ["blacklisted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "blacklisted_phones_blacklisted_by_fkey"
-            columns: ["blacklisted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "blacklisted_phones_blacklisted_by_fkey"
-            columns: ["blacklisted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "blacklisted_phones_blacklisted_by_fkey"
-            columns: ["blacklisted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       bom_correction_factor_updates: {
         Row: {
@@ -623,22 +357,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bom_correction_factor_updates_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "bom_correction_factor_updates_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       bom_correction_factors: {
         Row: {
@@ -735,7 +455,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       channel_partner_leads: {
@@ -786,22 +506,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "channel_partner_leads_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "channel_partner_leads_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-        ]
+          }
+          ]
       }
       channel_partners: {
         Row: {
@@ -999,67 +705,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "commissioning_reports_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "commissioning_reports_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "commissioning_reports_qc_gate3_inspection_id_fkey"
@@ -1074,50 +724,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_witnessed_by_fkey"
-            columns: ["witnessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_witnessed_by_fkey"
-            columns: ["witnessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_witnessed_by_fkey"
-            columns: ["witnessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_witnessed_by_fkey"
-            columns: ["witnessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_witnessed_by_fkey"
-            columns: ["witnessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "commissioning_reports_witnessed_by_fkey"
-            columns: ["witnessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       companies: {
         Row: {
@@ -1184,7 +792,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       company_cashflow_snapshots: {
@@ -1316,20 +924,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "consultant_commission_payouts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "consultant_commission_payouts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "consultant_commission_payouts_paid_by_fkey"
             columns: ["paid_by"]
             isOneToOne: false
@@ -1337,69 +931,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "consultant_commission_payouts_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "consultant_commission_payouts_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "consultant_commission_payouts_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "consultant_commission_payouts_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "consultant_commission_payouts_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "consultant_commission_payouts_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "consultant_commission_payouts_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "consultant_commission_payouts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "consultant_commission_payouts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       contact_company_roles: {
         Row: {
@@ -1446,7 +984,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       contacts: {
@@ -1508,7 +1046,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       customer_checkins: {
@@ -1587,48 +1125,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "customer_checkins_conducted_by_fkey"
-            columns: ["conducted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "customer_checkins_conducted_by_fkey"
-            columns: ["conducted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "customer_checkins_conducted_by_fkey"
-            columns: ["conducted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "customer_checkins_conducted_by_fkey"
-            columns: ["conducted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "customer_checkins_conducted_by_fkey"
-            columns: ["conducted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "customer_checkins_conducted_by_fkey"
-            columns: ["conducted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "customer_checkins_customer_profile_id_fkey"
             columns: ["customer_profile_id"]
             isOneToOne: false
@@ -1641,22 +1137,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_checkins_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "customer_checkins_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       customer_payments: {
         Row: {
@@ -1725,13 +1207,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "customer_payments_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["invoice_id"]
-          },
-          {
             foreignKeyName: "customer_payments_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -1739,69 +1214,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "customer_payments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "customer_payments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "customer_payments_recorded_by_fkey"
             columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "customer_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "customer_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "customer_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "customer_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "customer_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       customer_quarterly_reports: {
         Row: {
@@ -1889,48 +1308,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "customer_quarterly_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "customer_quarterly_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "customer_quarterly_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "customer_quarterly_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "customer_quarterly_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "customer_quarterly_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "customer_quarterly_reports_plant_id_fkey"
             columns: ["plant_id"]
             isOneToOne: false
@@ -1943,22 +1320,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_quarterly_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "customer_quarterly_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       daily_question_delivery_log: {
         Row: {
@@ -2012,48 +1375,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "daily_question_delivery_log_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "daily_question_delivery_log_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "daily_question_delivery_log_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "daily_question_delivery_log_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "daily_question_delivery_log_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "daily_question_delivery_log_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "daily_question_delivery_log_progress_id_fkey"
             columns: ["progress_id"]
             isOneToOne: false
@@ -2066,7 +1387,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "training_questions"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       daily_site_reports: {
@@ -2182,69 +1503,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "daily_site_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "daily_site_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "daily_site_reports_submitted_by_fkey"
             columns: ["submitted_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "daily_site_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "daily_site_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "daily_site_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "daily_site_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "daily_site_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "daily_site_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       data_flags: {
         Row: {
@@ -2334,54 +1599,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "dc_signatures_signed_by_employee_fkey"
-            columns: ["signed_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "dc_signatures_signed_by_employee_fkey"
-            columns: ["signed_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "dc_signatures_signed_by_employee_fkey"
-            columns: ["signed_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "dc_signatures_signed_by_employee_fkey"
-            columns: ["signed_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "dc_signatures_signed_by_employee_fkey"
-            columns: ["signed_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "dc_signatures_signed_by_employee_fkey"
-            columns: ["signed_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "dc_signatures_vendor_dc_id_fkey"
             columns: ["vendor_dc_id"]
             isOneToOne: false
             referencedRelation: "vendor_delivery_challans"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       delivery_challan_items: {
@@ -2432,7 +1655,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "delivery_challans"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       delivery_challans: {
@@ -2508,69 +1731,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "delivery_challans_dispatched_by_fkey"
-            columns: ["dispatched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "delivery_challans_dispatched_by_fkey"
-            columns: ["dispatched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "delivery_challans_dispatched_by_fkey"
-            columns: ["dispatched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "delivery_challans_dispatched_by_fkey"
-            columns: ["dispatched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "delivery_challans_dispatched_by_fkey"
-            columns: ["dispatched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "delivery_challans_dispatched_by_fkey"
-            columns: ["dispatched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "delivery_challans_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "delivery_challans_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "delivery_challans_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       drip_sequence_enrollments: {
         Row: {
@@ -2627,20 +1794,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "drip_sequence_enrollments_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "drip_sequence_enrollments_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "drip_sequence_enrollments_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -2648,26 +1801,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "drip_sequence_enrollments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "drip_sequence_enrollments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "drip_sequence_enrollments_sequence_id_fkey"
             columns: ["sequence_id"]
             isOneToOne: false
             referencedRelation: "drip_sequences"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       drip_sequence_steps: {
@@ -2720,7 +1859,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "drip_sequences"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       drip_sequences: {
@@ -2774,50 +1913,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "drip_sequences_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "drip_sequences_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "drip_sequences_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "drip_sequences_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "drip_sequences_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "drip_sequences_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       employee_certifications: {
         Row: {
@@ -2872,50 +1969,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_certifications_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_certifications_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_certifications_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_certifications_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_certifications_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_certifications_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       employee_compensation: {
         Row: {
@@ -2999,97 +2054,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "employee_compensation_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "employee_compensation_set_by_fkey"
             columns: ["set_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_set_by_fkey"
-            columns: ["set_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_set_by_fkey"
-            columns: ["set_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_set_by_fkey"
-            columns: ["set_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_set_by_fkey"
-            columns: ["set_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_set_by_fkey"
-            columns: ["set_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_compensation_set_by_fkey"
-            columns: ["set_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       employee_documents: {
         Row: {
@@ -3137,97 +2108,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "employee_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "employee_documents_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       employee_exit_checklists: {
         Row: {
@@ -3326,97 +2213,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "employee_exit_checklists_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "employee_exit_checklists_initiated_by_fkey"
             columns: ["initiated_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_initiated_by_fkey"
-            columns: ["initiated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_initiated_by_fkey"
-            columns: ["initiated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_initiated_by_fkey"
-            columns: ["initiated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_initiated_by_fkey"
-            columns: ["initiated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_initiated_by_fkey"
-            columns: ["initiated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_exit_checklists_initiated_by_fkey"
-            columns: ["initiated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       employee_insurance: {
         Row: {
@@ -3489,50 +2292,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_insurance_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_insurance_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_insurance_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_insurance_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_insurance_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_insurance_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       employee_lifecycle_events: {
         Row: {
@@ -3583,97 +2344,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "employee_lifecycle_events_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "employee_lifecycle_events_recorded_by_fkey"
             columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_lifecycle_events_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       employee_question_progress: {
         Row: {
@@ -3736,54 +2413,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "employee_question_progress_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_question_progress_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_question_progress_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_question_progress_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_question_progress_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_question_progress_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "employee_question_progress_question_id_fkey"
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "training_questions"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       employee_skills: {
@@ -3832,97 +2467,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "employee_skills_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "employee_skills_verified_by_fkey"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_skills_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employee_skills_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       employees: {
         Row: {
@@ -4056,50 +2607,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employees_reporting_to_id_fkey"
-            columns: ["reporting_to_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "employees_reporting_to_id_fkey"
-            columns: ["reporting_to_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "employees_reporting_to_id_fkey"
-            columns: ["reporting_to_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "employees_reporting_to_id_fkey"
-            columns: ["reporting_to_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "employees_reporting_to_id_fkey"
-            columns: ["reporting_to_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "employees_reporting_to_id_fkey"
-            columns: ["reporting_to_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       entity_contacts: {
         Row: {
@@ -4136,7 +2645,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       execution_milestones_master: {
@@ -4239,62 +2748,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "expense_documents_expense_id_fkey"
-            columns: ["expense_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["expense_id"]
-          },
-          {
             foreignKeyName: "expense_documents_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "expense_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "expense_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "expense_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "expense_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "expense_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "expense_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       expenses: {
         Row: {
@@ -4378,48 +2838,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "expenses_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "expenses_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "expenses_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "expenses_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "expenses_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "expenses_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "expenses_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
@@ -4434,67 +2852,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "expenses_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "expenses_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "expenses_rejected_by_fkey"
             columns: ["rejected_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "expenses_rejected_by_fkey"
-            columns: ["rejected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "expenses_rejected_by_fkey"
-            columns: ["rejected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "expenses_rejected_by_fkey"
-            columns: ["rejected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "expenses_rejected_by_fkey"
-            columns: ["rejected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "expenses_rejected_by_fkey"
-            columns: ["rejected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "expenses_rejected_by_fkey"
-            columns: ["rejected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "expenses_submitted_by_fkey"
@@ -4504,97 +2866,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "expenses_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "expenses_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "expenses_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "expenses_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "expenses_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "expenses_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "expenses_verified_by_fkey"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "expenses_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "expenses_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "expenses_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "expenses_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "expenses_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "expenses_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       finance_reports: {
         Row: {
@@ -4640,50 +2918,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "finance_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "finance_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "finance_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "finance_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "finance_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "finance_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       form_interaction_metrics: {
         Row: {
@@ -4732,50 +2968,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "form_interaction_metrics_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "form_interaction_metrics_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "form_interaction_metrics_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "form_interaction_metrics_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "form_interaction_metrics_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "form_interaction_metrics_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       generated_documents: {
         Row: {
@@ -4905,48 +3099,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "generated_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "generated_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "generated_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "generated_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "generated_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "generated_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "generated_documents_generated_by_fkey"
             columns: ["generated_by"]
             isOneToOne: false
@@ -4959,13 +3111,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "invoices"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "generated_documents_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["invoice_id"]
           },
           {
             foreignKeyName: "generated_documents_om_contract_id_fkey"
@@ -4987,20 +3132,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "generated_documents_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "generated_documents_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "generated_documents_proposal_id_fkey"
@@ -5043,7 +3174,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       goods_receipt_notes: {
@@ -5101,48 +3232,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "goods_receipt_notes_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "goods_receipt_notes_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "goods_receipt_notes_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "goods_receipt_notes_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "goods_receipt_notes_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "goods_receipt_notes_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "goods_receipt_notes_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -5150,26 +3239,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "goods_receipt_notes_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "goods_receipt_notes_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "goods_receipt_notes_vendor_dc_id_fkey"
             columns: ["vendor_dc_id"]
             isOneToOne: false
             referencedRelation: "vendor_delivery_challans"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       grn_items: {
@@ -5242,7 +3317,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "purchase_order_items"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       hr_letters: {
@@ -5303,97 +3378,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_letters_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "hr_letters_generated_by_fkey"
             columns: ["generated_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "hr_letters_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "hr_letters_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       inverter_monitoring_credentials: {
         Row: {
@@ -5430,7 +3421,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_poll_failures: {
@@ -5465,7 +3456,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inverters"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_readings: {
@@ -5521,7 +3512,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inverters"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_readings_2026_04: {
@@ -5709,7 +3700,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inverters"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_readings_hourly: {
@@ -5747,7 +3738,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inverters"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_string_readings: {
@@ -5933,22 +3924,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inverters_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "inverters_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       invoice_credit_notes: {
         Row: {
@@ -6008,13 +3985,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invoice_credit_notes_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["invoice_id"]
-          },
-          {
             foreignKeyName: "invoice_credit_notes_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -6022,69 +3992,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invoice_credit_notes_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "invoice_credit_notes_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "invoice_credit_notes_raised_by_fkey"
             columns: ["raised_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoice_credit_notes_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "invoice_credit_notes_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "invoice_credit_notes_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "invoice_credit_notes_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "invoice_credit_notes_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "invoice_credit_notes_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       invoices: {
         Row: {
@@ -6202,20 +4116,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invoices_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "invoices_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "invoices_proposal_id_fkey"
             columns: ["proposal_id"]
             isOneToOne: false
@@ -6228,50 +4128,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       language_training_scenarios: {
         Row: {
@@ -6337,54 +4195,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "language_training_scenarios_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "language_training_scenarios_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "language_training_scenarios_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "language_training_scenarios_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "language_training_scenarios_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "language_training_scenarios_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "language_training_scenarios_module_id_fkey"
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "training_modules"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       lead_activities: {
@@ -6439,69 +4255,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_activities_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_activities_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "lead_activities_performed_by_fkey"
             columns: ["performed_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_activities_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_activities_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_activities_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_activities_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_activities_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_activities_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       lead_assignments: {
         Row: {
@@ -6540,48 +4300,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "lead_assignments_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
@@ -6589,69 +4307,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_assignments_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "lead_assignments_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_assignments_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-        ]
+          }
+          ]
       }
       lead_closure_approvals: {
         Row: {
@@ -6711,48 +4373,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_closure_approvals_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "lead_closure_approvals_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
@@ -6760,69 +4380,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_closure_approvals_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "lead_closure_approvals_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_closure_approvals_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       lead_competitors: {
         Row: {
@@ -6862,22 +4426,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_competitors_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_competitors_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-        ]
+          }
+          ]
       }
       lead_documents: {
         Row: {
@@ -6925,69 +4475,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_documents_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_documents_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "lead_documents_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       lead_loss_reasons: {
         Row: {
@@ -7039,69 +4533,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_loss_reasons_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_loss_reasons_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "lead_loss_reasons_logged_by_fkey"
             columns: ["logged_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_loss_reasons_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_loss_reasons_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_loss_reasons_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_loss_reasons_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_loss_reasons_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_loss_reasons_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       lead_referrals: {
         Row: {
@@ -7161,26 +4599,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_referrals_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_referrals_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "lead_referrals_referrer_customer_profile_id_fkey"
             columns: ["referrer_customer_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       lead_site_surveys: {
@@ -7451,69 +4875,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_site_surveys_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_site_surveys_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "lead_site_surveys_surveyed_by_fkey"
             columns: ["surveyed_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_site_surveys_surveyed_by_fkey"
-            columns: ["surveyed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_site_surveys_surveyed_by_fkey"
-            columns: ["surveyed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_site_surveys_surveyed_by_fkey"
-            columns: ["surveyed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_site_surveys_surveyed_by_fkey"
-            columns: ["surveyed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_site_surveys_surveyed_by_fkey"
-            columns: ["surveyed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_site_surveys_surveyed_by_fkey"
-            columns: ["surveyed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       lead_source_analytics: {
         Row: {
@@ -7603,69 +4971,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "lead_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "lead_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "lead_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "lead_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "lead_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "lead_status_history_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_status_history_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_status_history_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-        ]
+          }
+          ]
       }
       leads: {
         Row: {
@@ -7818,48 +5130,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leads_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leads_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leads_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leads_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leads_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leads_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "leads_channel_partner_id_fkey"
             columns: ["channel_partner_id"]
             isOneToOne: false
@@ -7881,97 +5151,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leads_consultant_commission_locked_by_fkey"
-            columns: ["consultant_commission_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leads_consultant_commission_locked_by_fkey"
-            columns: ["consultant_commission_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leads_consultant_commission_locked_by_fkey"
-            columns: ["consultant_commission_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leads_consultant_commission_locked_by_fkey"
-            columns: ["consultant_commission_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leads_consultant_commission_locked_by_fkey"
-            columns: ["consultant_commission_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leads_consultant_commission_locked_by_fkey"
-            columns: ["consultant_commission_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "leads_design_confirmed_by_fkey"
             columns: ["design_confirmed_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leads_design_confirmed_by_fkey"
-            columns: ["design_confirmed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leads_design_confirmed_by_fkey"
-            columns: ["design_confirmed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leads_design_confirmed_by_fkey"
-            columns: ["design_confirmed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leads_design_confirmed_by_fkey"
-            columns: ["design_confirmed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leads_design_confirmed_by_fkey"
-            columns: ["design_confirmed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leads_design_confirmed_by_fkey"
-            columns: ["design_confirmed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       leave_balances: {
         Row: {
@@ -8005,50 +5191,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leave_balances_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leave_balances_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leave_balances_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leave_balances_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leave_balances_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leave_balances_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       leave_ledger: {
         Row: {
@@ -8102,48 +5246,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leave_ledger_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "leave_ledger_leave_request_id_fkey"
             columns: ["leave_request_id"]
             isOneToOne: false
@@ -8158,54 +5260,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leave_ledger_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leave_ledger_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "leave_ledger_reversal_of_id_fkey"
             columns: ["reversal_of_id"]
             isOneToOne: false
             referencedRelation: "leave_ledger"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       leave_requests: {
@@ -8278,48 +5338,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leave_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "leave_requests_backup_assigned_to_fkey"
             columns: ["backup_assigned_to"]
             isOneToOne: false
@@ -8327,97 +5345,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leave_requests_backup_assigned_to_fkey"
-            columns: ["backup_assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_backup_assigned_to_fkey"
-            columns: ["backup_assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_backup_assigned_to_fkey"
-            columns: ["backup_assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_backup_assigned_to_fkey"
-            columns: ["backup_assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_backup_assigned_to_fkey"
-            columns: ["backup_assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_backup_assigned_to_fkey"
-            columns: ["backup_assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "leave_requests_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leave_requests_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       letters_of_intent: {
         Row: {
@@ -8477,48 +5411,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "letters_of_intent_issued_by_fkey"
-            columns: ["issued_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "letters_of_intent_issued_by_fkey"
-            columns: ["issued_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "letters_of_intent_issued_by_fkey"
-            columns: ["issued_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "letters_of_intent_issued_by_fkey"
-            columns: ["issued_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "letters_of_intent_issued_by_fkey"
-            columns: ["issued_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "letters_of_intent_issued_by_fkey"
-            columns: ["issued_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "letters_of_intent_po_id_fkey"
             columns: ["po_id"]
             isOneToOne: false
@@ -8533,26 +5425,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "letters_of_intent_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "letters_of_intent_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "letters_of_intent_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       liaison_documents: {
@@ -8623,69 +5501,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "liaison_documents_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "liaison_documents_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "liaison_documents_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "liaison_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "liaison_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "liaison_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "liaison_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "liaison_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "liaison_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       liaison_objections: {
         Row: {
@@ -8754,48 +5576,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "liaison_objections_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "liaison_objections_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "liaison_objections_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "liaison_objections_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "liaison_objections_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "liaison_objections_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "liaison_objections_net_metering_id_fkey"
             columns: ["net_metering_id"]
             isOneToOne: false
@@ -8808,22 +5588,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "liaison_objections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "liaison_objections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       marketing_campaign_deliveries: {
         Row: {
@@ -8887,20 +5653,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "marketing_campaign_deliveries_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaign_deliveries_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "marketing_campaign_deliveries_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -8908,69 +5660,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "marketing_campaign_deliveries_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaign_deliveries_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "marketing_campaign_deliveries_sent_by_employee_fkey"
             columns: ["sent_by_employee"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "marketing_campaign_deliveries_sent_by_employee_fkey"
-            columns: ["sent_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaign_deliveries_sent_by_employee_fkey"
-            columns: ["sent_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaign_deliveries_sent_by_employee_fkey"
-            columns: ["sent_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaign_deliveries_sent_by_employee_fkey"
-            columns: ["sent_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaign_deliveries_sent_by_employee_fkey"
-            columns: ["sent_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaign_deliveries_sent_by_employee_fkey"
-            columns: ["sent_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       marketing_campaigns: {
         Row: {
@@ -9047,50 +5743,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "marketing_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "marketing_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       message_delivery_log: {
         Row: {
@@ -9210,50 +5864,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "message_delivery_log_sent_to_employee_id_fkey"
-            columns: ["sent_to_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "message_delivery_log_sent_to_employee_id_fkey"
-            columns: ["sent_to_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "message_delivery_log_sent_to_employee_id_fkey"
-            columns: ["sent_to_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "message_delivery_log_sent_to_employee_id_fkey"
-            columns: ["sent_to_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "message_delivery_log_sent_to_employee_id_fkey"
-            columns: ["sent_to_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "message_delivery_log_sent_to_employee_id_fkey"
-            columns: ["sent_to_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       monthly_attendance_summary: {
         Row: {
@@ -9323,50 +5935,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "monthly_attendance_summary_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "monthly_attendance_summary_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "monthly_attendance_summary_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "monthly_attendance_summary_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "monthly_attendance_summary_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "monthly_attendance_summary_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       net_metering_applications: {
         Row: {
@@ -9462,69 +6032,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "net_metering_applications_managed_by_fkey"
-            columns: ["managed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "net_metering_applications_managed_by_fkey"
-            columns: ["managed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "net_metering_applications_managed_by_fkey"
-            columns: ["managed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "net_metering_applications_managed_by_fkey"
-            columns: ["managed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "net_metering_applications_managed_by_fkey"
-            columns: ["managed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "net_metering_applications_managed_by_fkey"
-            columns: ["managed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "net_metering_applications_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "net_metering_applications_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "net_metering_applications_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       notifications: {
         Row: {
@@ -9570,50 +6084,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_recipient_employee_id_fkey"
-            columns: ["recipient_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "notifications_recipient_employee_id_fkey"
-            columns: ["recipient_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "notifications_recipient_employee_id_fkey"
-            columns: ["recipient_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "notifications_recipient_employee_id_fkey"
-            columns: ["recipient_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "notifications_recipient_employee_id_fkey"
-            columns: ["recipient_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "notifications_recipient_employee_id_fkey"
-            columns: ["recipient_employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       om_contracts: {
         Row: {
@@ -9703,48 +6175,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_contracts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_contracts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_contracts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_contracts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_contracts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_contracts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "om_contracts_customer_profile_id_fkey"
             columns: ["customer_profile_id"]
             isOneToOne: false
@@ -9759,26 +6189,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_contracts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "om_contracts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "om_contracts_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       om_pricing_rules: {
@@ -9894,7 +6310,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "om_contracts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       om_service_tickets: {
@@ -10012,48 +6428,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_service_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "om_service_tickets_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -10066,20 +6440,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "om_service_tickets_raised_by_customer_fkey"
@@ -10096,48 +6456,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_service_tickets_raised_by_employee_fkey"
-            columns: ["raised_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_raised_by_employee_fkey"
-            columns: ["raised_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_raised_by_employee_fkey"
-            columns: ["raised_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_raised_by_employee_fkey"
-            columns: ["raised_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_raised_by_employee_fkey"
-            columns: ["raised_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_raised_by_employee_fkey"
-            columns: ["raised_by_employee"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "om_service_tickets_resolution_visit_id_fkey"
             columns: ["resolution_visit_id"]
             isOneToOne: false
@@ -10152,54 +6470,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_service_tickets_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_service_tickets_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "om_service_tickets_visit_report_id_fkey"
             columns: ["visit_report_id"]
             isOneToOne: false
             referencedRelation: "om_visit_reports"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       om_visit_checklist_items: {
@@ -10237,7 +6513,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "om_visit_reports"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       om_visit_corrections: {
@@ -10301,48 +6577,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_visit_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "om_visit_corrections_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -10364,69 +6598,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_visit_corrections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "om_visit_corrections_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       om_visit_reports: {
         Row: {
@@ -10574,20 +6752,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_visit_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "om_visit_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "om_visit_reports_schedule_id_fkey"
             columns: ["schedule_id"]
             isOneToOne: false
@@ -10600,50 +6764,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "om_visit_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_visit_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_visit_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_visit_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       om_visit_schedules: {
         Row: {
@@ -10740,48 +6862,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_visit_schedules_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "om_visit_schedules_backup_technician_id_fkey"
             columns: ["backup_technician_id"]
             isOneToOne: false
@@ -10789,95 +6869,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "om_visit_schedules_backup_technician_id_fkey"
-            columns: ["backup_technician_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_backup_technician_id_fkey"
-            columns: ["backup_technician_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_backup_technician_id_fkey"
-            columns: ["backup_technician_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_backup_technician_id_fkey"
-            columns: ["backup_technician_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_backup_technician_id_fkey"
-            columns: ["backup_technician_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_backup_technician_id_fkey"
-            columns: ["backup_technician_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "om_visit_schedules_completed_by_fkey"
             columns: ["completed_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "om_visit_schedules_contract_id_fkey"
@@ -10892,22 +6888,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "om_visit_schedules_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       onboarding_track_assignments: {
         Row: {
@@ -10973,48 +6955,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "onboarding_track_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "onboarding_track_assignments_current_module_id_fkey"
             columns: ["current_module_id"]
             isOneToOne: false
@@ -11029,54 +6969,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "onboarding_track_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "onboarding_track_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "onboarding_track_assignments_track_id_fkey"
             columns: ["track_id"]
             isOneToOne: false
             referencedRelation: "onboarding_tracks"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       onboarding_tracks: {
@@ -11173,48 +7071,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payment_receipts_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "payment_receipts_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "payment_receipts_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "payment_receipts_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "payment_receipts_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "payment_receipts_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "payment_receipts_payment_id_fkey"
             columns: ["payment_id"]
             isOneToOne: true
@@ -11227,22 +7083,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payment_receipts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "payment_receipts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       payroll_export_files: {
         Row: {
@@ -11311,97 +7153,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payroll_export_files_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "payroll_export_files_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "payroll_export_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       payroll_monthly_inputs: {
         Row: {
@@ -11492,97 +7250,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payroll_monthly_inputs_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "payroll_monthly_inputs_entered_by_fkey"
             columns: ["entered_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_entered_by_fkey"
-            columns: ["entered_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_entered_by_fkey"
-            columns: ["entered_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_entered_by_fkey"
-            columns: ["entered_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_entered_by_fkey"
-            columns: ["entered_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_entered_by_fkey"
-            columns: ["entered_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "payroll_monthly_inputs_entered_by_fkey"
-            columns: ["entered_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       photo_gate_verifications: {
         Row: {
@@ -11634,20 +7308,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "photo_gate_verifications_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "photo_gate_verifications_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "photo_gate_verifications_site_photo_id_fkey"
             columns: ["site_photo_id"]
             isOneToOne: false
@@ -11660,50 +7320,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "photo_gate_verifications_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "photo_gate_verifications_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "photo_gate_verifications_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "photo_gate_verifications_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "photo_gate_verifications_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "photo_gate_verifications_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       photo_tags: {
         Row: {
@@ -11761,7 +7379,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "site_photos"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       plant_daily_summaries: {
@@ -11814,7 +7432,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "plants"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       plant_data_readings: {
@@ -11879,7 +7497,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "plants"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       plant_monitoring_credentials: {
@@ -11947,95 +7565,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "plant_monitoring_credentials_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "plant_monitoring_credentials_deleted_by_fkey"
             columns: ["deleted_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "plant_monitoring_credentials_project_id_fkey"
@@ -12045,69 +7579,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "plant_monitoring_credentials_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "plant_monitoring_credentials_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "plant_monitoring_credentials_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       plants: {
         Row: {
@@ -12241,22 +7719,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plants_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "plants_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       price_book: {
         Row: {
@@ -12355,54 +7819,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "price_book_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "price_book_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "price_book_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "price_book_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "price_book_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "price_book_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "price_book_rate_updated_by_fkey"
             columns: ["rate_updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       price_book_accuracy: {
@@ -12463,8 +7885,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       processing_jobs: {
         Row: {
@@ -12567,7 +7989,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       profiles: {
@@ -12667,32 +8089,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proforma_invoices_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["invoice_id"]
-          },
-          {
             foreignKeyName: "proforma_invoices_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proforma_invoices_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "proforma_invoices_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "proforma_invoices_proposal_id_fkey"
@@ -12707,50 +8108,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proforma_invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "proforma_invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "proforma_invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "proforma_invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "proforma_invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "proforma_invoices_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       project_assignments: {
         Row: {
@@ -12795,48 +8154,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_assignments_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
@@ -12844,69 +8161,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_assignments_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_assignments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_assignments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_bois: {
         Row: {
@@ -12963,48 +8224,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_bois_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_bois_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_bois_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_bois_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_bois_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_bois_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_bois_locked_by_fkey"
             columns: ["locked_by"]
             isOneToOne: false
@@ -13012,95 +8231,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_bois_locked_by_fkey"
-            columns: ["locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_bois_locked_by_fkey"
-            columns: ["locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_bois_locked_by_fkey"
-            columns: ["locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_bois_locked_by_fkey"
-            columns: ["locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_bois_locked_by_fkey"
-            columns: ["locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_bois_locked_by_fkey"
-            columns: ["locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_bois_prepared_by_fkey"
             columns: ["prepared_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_bois_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_bois_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_bois_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_bois_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_bois_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_bois_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "project_bois_project_id_fkey"
@@ -13108,22 +8243,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_bois_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_bois_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_boq_items: {
         Row: {
@@ -13240,20 +8361,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_boq_items_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_boq_items_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "project_boq_items_purchase_order_id_fkey"
             columns: ["purchase_order_id"]
             isOneToOne: false
@@ -13266,7 +8373,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       project_cash_positions: {
@@ -13337,22 +8444,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_cash_positions_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_cash_positions_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_change_orders: {
         Row: {
@@ -13418,48 +8511,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_change_orders_approved_by_internal_fkey"
-            columns: ["approved_by_internal"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_approved_by_internal_fkey"
-            columns: ["approved_by_internal"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_approved_by_internal_fkey"
-            columns: ["approved_by_internal"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_approved_by_internal_fkey"
-            columns: ["approved_by_internal"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_approved_by_internal_fkey"
-            columns: ["approved_by_internal"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_approved_by_internal_fkey"
-            columns: ["approved_by_internal"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_change_orders_prepared_by_fkey"
             columns: ["prepared_by"]
             isOneToOne: false
@@ -13467,69 +8518,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_change_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_change_orders_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_change_orders_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_completion_components: {
         Row: {
@@ -13598,48 +8593,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_completion_components_last_updated_by_fkey"
-            columns: ["last_updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_completion_components_last_updated_by_fkey"
-            columns: ["last_updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_completion_components_last_updated_by_fkey"
-            columns: ["last_updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_completion_components_last_updated_by_fkey"
-            columns: ["last_updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_completion_components_last_updated_by_fkey"
-            columns: ["last_updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_completion_components_last_updated_by_fkey"
-            columns: ["last_updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_completion_components_milestone_id_fkey"
             columns: ["milestone_id"]
             isOneToOne: false
@@ -13652,22 +8605,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_completion_components_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_completion_components_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_cost_variances: {
         Row: {
@@ -13720,22 +8659,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_cost_variances_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_cost_variances_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_delay_log: {
         Row: {
@@ -13792,48 +8717,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_delay_log_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_delay_log_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_delay_log_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_delay_log_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_delay_log_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_delay_log_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_delay_log_milestone_id_fkey"
             columns: ["milestone_id"]
             isOneToOne: false
@@ -13846,22 +8729,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_delay_log_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_delay_log_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_handovers: {
         Row: {
@@ -13952,69 +8821,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_handovers_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_handovers_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_handovers_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_handovers_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_handovers_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_handovers_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_handovers_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_handovers_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_handovers_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_issues: {
         Row: {
@@ -14080,48 +8893,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_issues_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_issues_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_issues_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_issues_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_issues_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_issues_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_issues_milestone_id_fkey"
             columns: ["milestone_id"]
             isOneToOne: false
@@ -14136,20 +8907,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_issues_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_issues_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "project_issues_raised_by_fkey"
             columns: ["raised_by"]
             isOneToOne: false
@@ -14157,97 +8914,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_issues_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_issues_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_issues_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_issues_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_issues_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_issues_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_issues_resolved_by_fkey"
             columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_issues_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_issues_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_issues_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_issues_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_issues_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_issues_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       project_milestone_weights: {
         Row: {
@@ -14356,22 +9029,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_milestones_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_milestones_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_profitability: {
         Row: {
@@ -14455,69 +9114,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_profitability_finalised_by_fkey"
-            columns: ["finalised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_profitability_finalised_by_fkey"
-            columns: ["finalised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_profitability_finalised_by_fkey"
-            columns: ["finalised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_profitability_finalised_by_fkey"
-            columns: ["finalised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_profitability_finalised_by_fkey"
-            columns: ["finalised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_profitability_finalised_by_fkey"
-            columns: ["finalised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_profitability_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_profitability_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_profitability_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       project_status_history: {
         Row: {
@@ -14556,69 +9159,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_status_history_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_status_history_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_status_history_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       projects: {
         Row: {
@@ -14885,48 +9432,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "projects_actuals_locked_by_fkey"
-            columns: ["actuals_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "projects_actuals_locked_by_fkey"
-            columns: ["actuals_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "projects_actuals_locked_by_fkey"
-            columns: ["actuals_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "projects_actuals_locked_by_fkey"
-            columns: ["actuals_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "projects_actuals_locked_by_fkey"
-            columns: ["actuals_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "projects_actuals_locked_by_fkey"
-            columns: ["actuals_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "projects_boi_locked_by_fkey"
             columns: ["boi_locked_by"]
             isOneToOne: false
@@ -14934,95 +9439,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "projects_boi_locked_by_fkey"
-            columns: ["boi_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "projects_boi_locked_by_fkey"
-            columns: ["boi_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "projects_boi_locked_by_fkey"
-            columns: ["boi_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "projects_boi_locked_by_fkey"
-            columns: ["boi_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "projects_boi_locked_by_fkey"
-            columns: ["boi_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "projects_boi_locked_by_fkey"
-            columns: ["boi_locked_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "projects_boq_sent_to_purchase_by_fkey"
             columns: ["boq_sent_to_purchase_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_boq_sent_to_purchase_by_fkey"
-            columns: ["boq_sent_to_purchase_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "projects_boq_sent_to_purchase_by_fkey"
-            columns: ["boq_sent_to_purchase_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "projects_boq_sent_to_purchase_by_fkey"
-            columns: ["boq_sent_to_purchase_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "projects_boq_sent_to_purchase_by_fkey"
-            columns: ["boq_sent_to_purchase_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "projects_boq_sent_to_purchase_by_fkey"
-            columns: ["boq_sent_to_purchase_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "projects_boq_sent_to_purchase_by_fkey"
-            columns: ["boq_sent_to_purchase_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "projects_company_id_fkey"
@@ -15046,20 +9467,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "projects_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "projects_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "projects_primary_contact_id_fkey"
             columns: ["primary_contact_id"]
             isOneToOne: false
@@ -15074,48 +9481,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "projects_project_manager_id_fkey"
-            columns: ["project_manager_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "projects_project_manager_id_fkey"
-            columns: ["project_manager_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "projects_project_manager_id_fkey"
-            columns: ["project_manager_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "projects_project_manager_id_fkey"
-            columns: ["project_manager_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "projects_project_manager_id_fkey"
-            columns: ["project_manager_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "projects_project_manager_id_fkey"
-            columns: ["project_manager_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "projects_proposal_id_fkey"
             columns: ["proposal_id"]
             isOneToOne: true
@@ -15128,50 +9493,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_site_supervisor_id_fkey"
-            columns: ["site_supervisor_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "projects_site_supervisor_id_fkey"
-            columns: ["site_supervisor_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "projects_site_supervisor_id_fkey"
-            columns: ["site_supervisor_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "projects_site_supervisor_id_fkey"
-            columns: ["site_supervisor_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "projects_site_supervisor_id_fkey"
-            columns: ["site_supervisor_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "projects_site_supervisor_id_fkey"
-            columns: ["site_supervisor_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_analytics: {
         Row: {
@@ -15247,50 +9570,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proposal_analytics_sales_engineer_id_fkey"
-            columns: ["sales_engineer_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "proposal_analytics_sales_engineer_id_fkey"
-            columns: ["sales_engineer_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "proposal_analytics_sales_engineer_id_fkey"
-            columns: ["sales_engineer_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "proposal_analytics_sales_engineer_id_fkey"
-            columns: ["sales_engineer_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "proposal_analytics_sales_engineer_id_fkey"
-            columns: ["sales_engineer_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "proposal_analytics_sales_engineer_id_fkey"
-            columns: ["sales_engineer_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_bom_lines: {
         Row: {
@@ -15388,8 +9669,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_correction_log: {
         Row: {
@@ -15450,55 +9731,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proposal_correction_log_overridden_by_fkey"
-            columns: ["overridden_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "proposal_correction_log_overridden_by_fkey"
-            columns: ["overridden_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "proposal_correction_log_overridden_by_fkey"
-            columns: ["overridden_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "proposal_correction_log_overridden_by_fkey"
-            columns: ["overridden_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "proposal_correction_log_overridden_by_fkey"
-            columns: ["overridden_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "proposal_correction_log_overridden_by_fkey"
-            columns: ["overridden_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "proposal_correction_log_proposal_id_fkey"
             columns: ["proposal_id"]
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_digital_acceptance: {
         Row: {
@@ -15577,8 +9816,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_otp_log: {
         Row: {
@@ -15637,8 +9876,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_payment_schedule: {
         Row: {
@@ -15699,8 +9938,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_revisions: {
         Row: {
@@ -15753,50 +9992,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proposal_revisions_revised_by_fkey"
-            columns: ["revised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "proposal_revisions_revised_by_fkey"
-            columns: ["revised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "proposal_revisions_revised_by_fkey"
-            columns: ["revised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "proposal_revisions_revised_by_fkey"
-            columns: ["revised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "proposal_revisions_revised_by_fkey"
-            columns: ["revised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "proposal_revisions_revised_by_fkey"
-            columns: ["revised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_scenarios: {
         Row: {
@@ -15854,8 +10051,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_scope_split: {
         Row: {
@@ -15910,8 +10107,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_simulations: {
         Row: {
@@ -16008,8 +10205,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_status_history: {
         Row: {
@@ -16048,55 +10245,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proposal_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "proposal_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "proposal_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "proposal_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "proposal_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "proposal_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "proposal_status_history_proposal_id_fkey"
             columns: ["proposal_id"]
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposals: {
         Row: {
@@ -16267,67 +10422,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proposals_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "proposals_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "proposals_margin_approved_by_fkey"
             columns: ["margin_approved_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proposals_margin_approved_by_fkey"
-            columns: ["margin_approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "proposals_margin_approved_by_fkey"
-            columns: ["margin_approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "proposals_margin_approved_by_fkey"
-            columns: ["margin_approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "proposals_margin_approved_by_fkey"
-            columns: ["margin_approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "proposals_margin_approved_by_fkey"
-            columns: ["margin_approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "proposals_margin_approved_by_fkey"
-            columns: ["margin_approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "proposals_prepared_by_fkey"
@@ -16337,97 +10436,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proposals_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "proposals_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "proposals_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "proposals_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "proposals_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "proposals_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "proposals_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proposals_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "proposals_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "proposals_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "proposals_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "proposals_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "proposals_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       purchase_order_amendments: {
         Row: {
@@ -16472,55 +10487,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "purchase_order_amendments_amended_by_fkey"
-            columns: ["amended_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "purchase_order_amendments_amended_by_fkey"
-            columns: ["amended_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "purchase_order_amendments_amended_by_fkey"
-            columns: ["amended_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "purchase_order_amendments_amended_by_fkey"
-            columns: ["amended_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "purchase_order_amendments_amended_by_fkey"
-            columns: ["amended_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "purchase_order_amendments_amended_by_fkey"
-            columns: ["amended_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "purchase_order_amendments_purchase_order_id_fkey"
             columns: ["purchase_order_id"]
             isOneToOne: false
             referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       purchase_order_items: {
         Row: {
@@ -16626,7 +10599,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rfq_quotes"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       purchase_orders: {
@@ -16765,48 +10738,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "purchase_orders_advance_block_override_by_fkey"
-            columns: ["advance_block_override_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_advance_block_override_by_fkey"
-            columns: ["advance_block_override_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_advance_block_override_by_fkey"
-            columns: ["advance_block_override_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_advance_block_override_by_fkey"
-            columns: ["advance_block_override_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_advance_block_override_by_fkey"
-            columns: ["advance_block_override_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_advance_block_override_by_fkey"
-            columns: ["advance_block_override_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "purchase_orders_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
@@ -16814,95 +10745,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "purchase_orders_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "purchase_orders_prepared_by_fkey"
             columns: ["prepared_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_prepared_by_fkey"
-            columns: ["prepared_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "purchase_orders_project_id_fkey"
@@ -16910,20 +10757,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "purchase_orders_rfq_id_fkey"
@@ -16938,7 +10771,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       qc_gate_inspections: {
@@ -17020,95 +10853,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "qc_gate_inspections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "qc_gate_inspections_inspected_by_fkey"
             columns: ["inspected_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_inspected_by_fkey"
-            columns: ["inspected_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "qc_gate_inspections_milestone_id_fkey"
@@ -17125,26 +10874,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "qc_gate_inspections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "qc_gate_inspections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "qc_gate_inspections_reinspection_of_id_fkey"
             columns: ["reinspection_of_id"]
             isOneToOne: false
             referencedRelation: "qc_gate_inspections"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       qc_non_conformance_reports: {
@@ -17214,67 +10949,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "qc_non_conformance_reports_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "qc_non_conformance_reports_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "qc_non_conformance_reports_qc_inspection_id_fkey"
@@ -17291,97 +10970,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "qc_non_conformance_reports_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "qc_non_conformance_reports_resolved_by_fkey"
             columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "qc_non_conformance_reports_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       reconciliation_discrepancies: {
         Row: {
@@ -17436,50 +11031,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reconciliation_discrepancies_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "reconciliation_discrepancies_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "reconciliation_discrepancies_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "reconciliation_discrepancies_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "reconciliation_discrepancies_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "reconciliation_discrepancies_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       record_audit_log: {
         Row: {
@@ -17528,7 +11081,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       referral_rewards: {
@@ -17585,50 +11138,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "referral_rewards_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "referral_rewards_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "referral_rewards_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "referral_rewards_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "referral_rewards_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "referral_rewards_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       regulatory_ecosystem_contacts: {
         Row: {
@@ -17700,54 +11211,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "regulatory_ecosystem_contacts_known_by_fkey"
-            columns: ["known_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "regulatory_ecosystem_contacts_known_by_fkey"
-            columns: ["known_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "regulatory_ecosystem_contacts_known_by_fkey"
-            columns: ["known_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "regulatory_ecosystem_contacts_known_by_fkey"
-            columns: ["known_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "regulatory_ecosystem_contacts_known_by_fkey"
-            columns: ["known_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "regulatory_ecosystem_contacts_known_by_fkey"
-            columns: ["known_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "regulatory_ecosystem_contacts_replacement_contact_id_fkey"
             columns: ["replacement_contact_id"]
             isOneToOne: false
             referencedRelation: "regulatory_ecosystem_contacts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_awards: {
@@ -17819,7 +11288,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rfq_invitations"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_invitations: {
@@ -17895,7 +11364,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_items: {
@@ -17946,7 +11415,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rfqs"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_quotes: {
@@ -18000,7 +11469,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rfq_items"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_requests: {
@@ -18064,67 +11533,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "rfq_requests_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "rfq_requests_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "rfq_requests_raised_by_fkey"
             columns: ["raised_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rfq_requests_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "rfq_requests_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "rfq_requests_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "rfq_requests_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "rfq_requests_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "rfq_requests_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "rfq_requests_selected_po_id_fkey"
@@ -18139,7 +11552,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_responses: {
@@ -18202,7 +11615,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfqs: {
@@ -18253,22 +11666,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rfqs_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "rfqs_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       salary_increment_history: {
         Row: {
@@ -18325,95 +11724,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "salary_increment_history_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "salary_increment_history_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "salary_increment_history_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "salary_increment_history_new_compensation_id_fkey"
@@ -18428,7 +11743,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employee_compensation"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       site_photos: {
@@ -18520,67 +11835,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "site_photos_gate_verified_by_fkey"
-            columns: ["gate_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "site_photos_gate_verified_by_fkey"
-            columns: ["gate_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "site_photos_gate_verified_by_fkey"
-            columns: ["gate_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "site_photos_gate_verified_by_fkey"
-            columns: ["gate_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "site_photos_gate_verified_by_fkey"
-            columns: ["gate_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "site_photos_gate_verified_by_fkey"
-            columns: ["gate_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "site_photos_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "site_photos_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "site_photos_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
           },
           {
             foreignKeyName: "site_photos_project_id_fkey"
@@ -18590,69 +11849,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "site_photos_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "site_photos_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "site_photos_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "site_photos_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "site_photos_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "site_photos_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "site_photos_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "site_photos_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "site_photos_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       site_report_corrections: {
         Row: {
@@ -18712,48 +11915,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "site_report_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "site_report_corrections_original_report_id_fkey"
             columns: ["original_report_id"]
             isOneToOne: false
@@ -18768,69 +11929,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "site_report_corrections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "site_report_corrections_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "site_report_corrections_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       stock_pieces: {
         Row: {
@@ -18943,67 +12048,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_pieces_installed_at_project_id_fkey"
-            columns: ["installed_at_project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "stock_pieces_installed_at_project_id_fkey"
-            columns: ["installed_at_project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "stock_pieces_installed_by_fkey"
             columns: ["installed_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_pieces_installed_by_fkey"
-            columns: ["installed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "stock_pieces_installed_by_fkey"
-            columns: ["installed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "stock_pieces_installed_by_fkey"
-            columns: ["installed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "stock_pieces_installed_by_fkey"
-            columns: ["installed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "stock_pieces_installed_by_fkey"
-            columns: ["installed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "stock_pieces_installed_by_fkey"
-            columns: ["installed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "stock_pieces_project_id_fkey"
@@ -19013,27 +12062,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_pieces_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "stock_pieces_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "stock_pieces_purchase_order_id_fkey"
             columns: ["purchase_order_id"]
             isOneToOne: false
             referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       stock_replacement_history: {
         Row: {
@@ -19094,67 +12129,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_replacement_history_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "stock_replacement_history_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "stock_replacement_history_replaced_by_fkey"
             columns: ["replaced_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_replacement_history_replaced_by_fkey"
-            columns: ["replaced_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "stock_replacement_history_replaced_by_fkey"
-            columns: ["replaced_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "stock_replacement_history_replaced_by_fkey"
-            columns: ["replaced_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "stock_replacement_history_replaced_by_fkey"
-            columns: ["replaced_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "stock_replacement_history_replaced_by_fkey"
-            columns: ["replaced_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "stock_replacement_history_replaced_by_fkey"
-            columns: ["replaced_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "stock_replacement_history_replacement_piece_id_fkey"
@@ -19169,7 +12148,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "warranty_claims"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       subcontractor_work_orders: {
@@ -19236,20 +12215,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "subcontractor_work_orders_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "subcontractor_work_orders_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "subcontractor_work_orders_raised_by_fkey"
             columns: ["raised_by"]
             isOneToOne: false
@@ -19257,54 +12222,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "subcontractor_work_orders_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "subcontractor_work_orders_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "subcontractor_work_orders_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "subcontractor_work_orders_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "subcontractor_work_orders_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "subcontractor_work_orders_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "subcontractor_work_orders_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       system_logs: {
@@ -19444,7 +12367,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       task_work_logs: {
@@ -19490,54 +12413,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "task_work_logs_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "task_work_logs_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "task_work_logs_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "task_work_logs_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "task_work_logs_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "task_work_logs_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "task_work_logs_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       tasks: {
@@ -19616,48 +12497,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_tasks_completed_by_fkey"
             columns: ["completed_by"]
             isOneToOne: false
@@ -19665,95 +12504,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_tasks_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "project_tasks_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "project_tasks_milestone_id_fkey"
@@ -19768,22 +12523,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_tasks_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_tasks_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       three_way_match: {
         Row: {
@@ -19840,20 +12581,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "three_way_match_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "three_way_match_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "three_way_match_purchase_order_id_fkey"
             columns: ["purchase_order_id"]
             isOneToOne: false
@@ -19866,50 +12593,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "three_way_match_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "three_way_match_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "three_way_match_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "three_way_match_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "three_way_match_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "three_way_match_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       training_assessment_results: {
         Row: {
@@ -19966,48 +12651,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "training_assessment_results_assessed_by_fkey"
-            columns: ["assessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_assessed_by_fkey"
-            columns: ["assessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_assessed_by_fkey"
-            columns: ["assessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_assessed_by_fkey"
-            columns: ["assessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_assessed_by_fkey"
-            columns: ["assessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_assessed_by_fkey"
-            columns: ["assessed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "training_assessment_results_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
@@ -20015,54 +12658,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "training_assessment_results_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "training_assessment_results_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "training_assessment_results_module_id_fkey"
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "training_modules"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       training_modules: {
@@ -20112,50 +12713,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "training_modules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "training_modules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "training_modules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "training_modules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "training_modules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "training_modules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       training_questions: {
         Row: {
@@ -20245,48 +12804,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "training_questions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "training_questions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "training_questions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "training_questions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "training_questions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "training_questions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "training_questions_last_verified_by_fkey"
             columns: ["last_verified_by"]
             isOneToOne: false
@@ -20294,54 +12811,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "training_questions_last_verified_by_fkey"
-            columns: ["last_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "training_questions_last_verified_by_fkey"
-            columns: ["last_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "training_questions_last_verified_by_fkey"
-            columns: ["last_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "training_questions_last_verified_by_fkey"
-            columns: ["last_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "training_questions_last_verified_by_fkey"
-            columns: ["last_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "training_questions_last_verified_by_fkey"
-            columns: ["last_verified_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "training_questions_module_id_fkey"
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "training_modules"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_bill_items: {
@@ -20425,7 +12900,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendor_bills"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_bills: {
@@ -20522,67 +12997,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vendor_bills_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "vendor_bills_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "vendor_bills_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "vendor_bills_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "vendor_bills_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "vendor_bills_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "vendor_bills_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vendor_bills_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "vendor_bills_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "vendor_bills_purchase_order_id_fkey"
@@ -20597,7 +13016,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_delivery_challan_items: {
@@ -20654,7 +13073,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendor_delivery_challans"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_delivery_challans: {
@@ -20727,20 +13146,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vendor_delivery_challans_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "vendor_delivery_challans_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "vendor_delivery_challans_purchase_order_id_fkey"
             columns: ["purchase_order_id"]
             isOneToOne: false
@@ -20755,54 +13160,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vendor_delivery_challans_received_by_fkey"
-            columns: ["received_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "vendor_delivery_challans_received_by_fkey"
-            columns: ["received_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "vendor_delivery_challans_received_by_fkey"
-            columns: ["received_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "vendor_delivery_challans_received_by_fkey"
-            columns: ["received_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "vendor_delivery_challans_received_by_fkey"
-            columns: ["received_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "vendor_delivery_challans_received_by_fkey"
-            columns: ["received_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "vendor_delivery_challans_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_payments: {
@@ -20891,20 +13254,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vendor_payments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "vendor_payments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "vendor_payments_purchase_order_id_fkey"
             columns: ["purchase_order_id"]
             isOneToOne: false
@@ -20919,48 +13268,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vendor_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "vendor_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "vendor_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "vendor_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "vendor_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "vendor_payments_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "vendor_payments_vendor_bill_id_fkey"
             columns: ["vendor_bill_id"]
             isOneToOne: false
@@ -20973,7 +13280,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendors: {
@@ -21121,54 +13428,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vip_contact_interactions_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "vip_contact_interactions_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "vip_contact_interactions_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "vip_contact_interactions_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "vip_contact_interactions_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "vip_contact_interactions_logged_by_fkey"
-            columns: ["logged_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
             foreignKeyName: "vip_contact_interactions_vip_contact_id_fkey"
             columns: ["vip_contact_id"]
             isOneToOne: false
             referencedRelation: "vip_contacts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vip_contacts: {
@@ -21251,50 +13516,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vip_contacts_relationship_owner_fkey"
-            columns: ["relationship_owner"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "vip_contacts_relationship_owner_fkey"
-            columns: ["relationship_owner"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "vip_contacts_relationship_owner_fkey"
-            columns: ["relationship_owner"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "vip_contacts_relationship_owner_fkey"
-            columns: ["relationship_owner"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "vip_contacts_relationship_owner_fkey"
-            columns: ["relationship_owner"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "vip_contacts_relationship_owner_fkey"
-            columns: ["relationship_owner"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       warranty_claims: {
         Row: {
@@ -21382,67 +13605,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "warranty_claims_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "warranty_claims_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "warranty_claims_raised_by_fkey"
             columns: ["raised_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "warranty_claims_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "warranty_claims_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "warranty_claims_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "warranty_claims_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "warranty_claims_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "warranty_claims_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
           },
           {
             foreignKeyName: "warranty_claims_replacement_stock_piece_id_fkey"
@@ -21457,7 +13624,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "warranty_registrations"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       warranty_registrations: {
@@ -21546,26 +13713,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "warranty_registrations_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "warranty_registrations_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "warranty_registrations_stock_piece_id_fkey"
             columns: ["stock_piece_id"]
             isOneToOne: true
             referencedRelation: "stock_pieces"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       whatsapp_import_queue: {
@@ -21647,20 +13800,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "whatsapp_import_queue_matched_lead_id_fkey"
-            columns: ["matched_lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "whatsapp_import_queue_matched_lead_id_fkey"
-            columns: ["matched_lead_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["lead_id"]
-          },
-          {
             foreignKeyName: "whatsapp_import_queue_matched_project_id_fkey"
             columns: ["matched_project_id"]
             isOneToOne: false
@@ -21668,69 +13807,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "whatsapp_import_queue_matched_project_id_fkey"
-            columns: ["matched_project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "whatsapp_import_queue_matched_project_id_fkey"
-            columns: ["matched_project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "whatsapp_import_queue_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "whatsapp_import_queue_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "whatsapp_import_queue_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "whatsapp_import_queue_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "whatsapp_import_queue_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "whatsapp_import_queue_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "whatsapp_import_queue_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       zoho_account_codes: {
         Row: {
@@ -21819,7 +13902,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "zoho_tax_codes"
             referencedColumns: ["tax_id"]
-          },
+          }
         ]
       }
       zoho_monthly_summary: {
@@ -21860,7 +13943,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "zoho_account_codes"
             referencedColumns: ["account_id"]
-          },
+          }
         ]
       }
       zoho_project_mapping: {
@@ -21909,69 +13992,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "zoho_project_mapping_erp_project_id_fkey"
-            columns: ["erp_project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "zoho_project_mapping_erp_project_id_fkey"
-            columns: ["erp_project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-          {
             foreignKeyName: "zoho_project_mapping_matched_by_fkey"
             columns: ["matched_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "zoho_project_mapping_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_employees_birthday_today"
-            referencedColumns: ["employee_id"]
-          },
-          {
-            foreignKeyName: "zoho_project_mapping_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["manager_id"]
-          },
-          {
-            foreignKeyName: "zoho_project_mapping_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_expenses_pending_approval"
-            referencedColumns: ["submitter_id"]
-          },
-          {
-            foreignKeyName: "zoho_project_mapping_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_invoices_overdue_15d"
-            referencedColumns: ["sales_person_id"]
-          },
-          {
-            foreignKeyName: "zoho_project_mapping_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_new_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-          {
-            foreignKeyName: "zoho_project_mapping_matched_by_fkey"
-            columns: ["matched_by"]
-            isOneToOne: false
-            referencedRelation: "v_digest_leads_stale_24h"
-            referencedColumns: ["assigned_employee_id"]
-          },
-        ]
+          }
+          ]
       }
       zoho_sync_queue: {
         Row: {
@@ -22100,6 +14127,26 @@ export type Database = {
         }
         Relationships: []
       }
+      v_digest_invoices_due_7d: {
+        Row: {
+          amount_outstanding: number | null
+          customer_name: string | null
+          customer_phone: string | null
+          days_until_due: number | null
+          due_date: string | null
+          invoice_date: string | null
+          invoice_id: string | null
+          invoice_number: string | null
+          project_id: string | null
+          project_number: string | null
+          sales_person_id: string | null
+          sales_person_name: string | null
+          sales_person_whatsapp_number: string | null
+          status: string | null
+          total_amount: number | null
+        }
+        Relationships: []
+      }
       v_digest_invoices_overdue_15d: {
         Row: {
           amount_outstanding: number | null
@@ -22124,22 +14171,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_installs_today"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "invoices_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "v_digest_projects_overdue_commissioning"
-            referencedColumns: ["project_id"]
-          },
-        ]
+          }
+          ]
       }
       v_digest_leads_new_24h: {
         Row: {
@@ -22168,6 +14201,86 @@ export type Database = {
           phone: string | null
           status: Database["public"]["Enums"]["lead_status"] | null
           status_updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_digest_leave_pending: {
+        Row: {
+          days_pending: number | null
+          department: string | null
+          employee_code: string | null
+          employee_id: string | null
+          employee_name: string | null
+          employee_whatsapp_number: string | null
+          from_date: string | null
+          leave_id: string | null
+          leave_type: Database["public"]["Enums"]["leave_type"] | null
+          manager_id: string | null
+          manager_name: string | null
+          manager_whatsapp_number: string | null
+          reason: string | null
+          submitted_at: string | null
+          to_date: string | null
+          total_days: number | null
+        }
+        Relationships: []
+      }
+      v_digest_milestones_overdue: {
+        Row: {
+          customer_name: string | null
+          customer_phone: string | null
+          days_overdue: number | null
+          milestone_id: string | null
+          milestone_name: string | null
+          planned_end_date: string | null
+          project_id: string | null
+          project_manager_id: string | null
+          project_manager_name: string | null
+          project_manager_whatsapp_number: string | null
+          project_number: string | null
+          status: Database["public"]["Enums"]["milestone_status"] | null
+          system_size_kwp: number | null
+        }
+        Relationships: []
+      }
+      v_digest_om_tickets_open_48h: {
+        Row: {
+          assignee_id: string | null
+          assignee_name: string | null
+          assignee_whatsapp_number: string | null
+          created_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          hours_open: number | null
+          project_id: string | null
+          project_number: string | null
+          severity: string | null
+          sla_breached: boolean | null
+          sla_deadline: string | null
+          status: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_id: string | null
+          ticket_number: string | null
+          title: string | null
+        }
+        Relationships: []
+      }
+      v_digest_pos_pending_approval: {
+        Row: {
+          approval_status: string | null
+          customer_name: string | null
+          days_pending: number | null
+          po_date: string | null
+          po_id: string | null
+          po_number: string | null
+          prepared_by_id: string | null
+          prepared_by_name: string | null
+          prepared_by_whatsapp_number: string | null
+          project_id: string | null
+          project_number: string | null
+          total_amount: number | null
+          vendor_id: string | null
+          vendor_is_msme: boolean | null
+          vendor_name: string | null
         }
         Relationships: []
       }
@@ -22201,6 +14314,65 @@ export type Database = {
           project_number: string | null
           status: Database["public"]["Enums"]["project_status"] | null
           system_size_kwp: number | null
+        }
+        Relationships: []
+      }
+      v_digest_proposals_design_backlog: {
+        Row: {
+          city: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          estimated_size_kwp: number | null
+          hours_in_draft: number | null
+          lead_id: string | null
+          prepared_by_id: string | null
+          prepared_by_name: string | null
+          prepared_by_whatsapp_number: string | null
+          proposal_id: string | null
+          proposal_number: string | null
+          status_updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_digest_proposals_silent_3d: {
+        Row: {
+          city: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          days_silent: number | null
+          estimated_size_kwp: number | null
+          lead_id: string | null
+          prepared_by_id: string | null
+          prepared_by_name: string | null
+          prepared_by_whatsapp_number: string | null
+          proposal_id: string | null
+          proposal_number: string | null
+          sales_person_id: string | null
+          sales_person_name: string | null
+          sales_person_whatsapp_number: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["proposal_status"] | null
+        }
+        Relationships: []
+      }
+      v_digest_vendor_payments_due_7d: {
+        Row: {
+          amount_outstanding: number | null
+          amount_paid: number | null
+          customer_name: string | null
+          days_until_due: number | null
+          payment_due_date: string | null
+          po_date: string | null
+          po_id: string | null
+          po_number: string | null
+          project_id: string | null
+          project_number: string | null
+          total_amount: number | null
+          vendor_contact_person: string | null
+          vendor_id: string | null
+          vendor_is_msme: boolean | null
+          vendor_name: string | null
+          vendor_phone: string | null
         }
         Relationships: []
       }
@@ -22678,7 +14850,7 @@ export const Constants = {
         "customer",
         "designer",
         "purchase_officer",
-        "marketing_manager",
+        "marketing_manager"
       ],
       bug_report_category: ["bug", "feature_request", "question", "other"],
       bug_report_severity: ["low", "medium", "high"],
@@ -22691,7 +14863,7 @@ export const Constants = {
         "discom",
         "weather",
         "ceig",
-        "other",
+        "other"
       ],
       gst_type: ["supply", "works_contract"],
       lead_source: [
@@ -22702,7 +14874,7 @@ export const Constants = {
         "cold_call",
         "exhibition",
         "social_media",
-        "walkin",
+        "walkin"
       ],
       lead_status: [
         "new",
@@ -22720,7 +14892,7 @@ export const Constants = {
         "converted",
         "lost",
         "on_hold",
-        "disqualified",
+        "disqualified"
       ],
       leave_type: [
         "casual",
@@ -22730,21 +14902,21 @@ export const Constants = {
         "paternity",
         "compensatory",
         "loss_of_pay",
-        "other",
+        "other"
       ],
       milestone_status: [
         "pending",
         "in_progress",
         "completed",
         "blocked",
-        "skipped",
+        "skipped"
       ],
       om_contract_status: [
         "quoted",
         "active",
         "expired",
         "cancelled",
-        "renewal_pending",
+        "renewal_pending"
       ],
       project_status: [
         "order_received",
@@ -22754,7 +14926,7 @@ export const Constants = {
         "holding_shiroi",
         "holding_client",
         "waiting_net_metering",
-        "meter_client_scope",
+        "meter_client_scope"
       ],
       proposal_status: [
         "draft",
@@ -22764,19 +14936,19 @@ export const Constants = {
         "accepted",
         "rejected",
         "expired",
-        "superseded",
+        "superseded"
       ],
       reconciliation_entity_type: [
         "project_totals",
         "vendor_ap_total",
         "customer_ar_total",
-        "cash_balance",
+        "cash_balance"
       ],
       reconciliation_status: [
         "open",
         "acknowledged",
         "resolved",
-        "accepted_drift",
+        "accepted_drift"
       ],
       scope_owner: ["shiroi", "client", "builder", "excluded"],
       system_type: ["on_grid", "hybrid", "off_grid"],
@@ -22786,14 +14958,14 @@ export const Constants = {
         "in_progress",
         "resolved",
         "closed",
-        "escalated",
+        "escalated"
       ],
       vendor_bill_status: [
         "draft",
         "pending",
         "partially_paid",
         "paid",
-        "cancelled",
+        "cancelled"
       ],
       zoho_sync_action: ["create", "update", "delete"],
       zoho_sync_entity_type: [
@@ -22805,7 +14977,7 @@ export const Constants = {
         "purchase_order",
         "vendor_bill",
         "vendor_payment",
-        "expense",
+        "expense"
       ],
       zoho_sync_status: ["pending", "syncing", "synced", "failed", "skipped"],
     },
