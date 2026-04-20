@@ -100,12 +100,26 @@ All `Simulated` send nodes are placeholder `Set` nodes. Replace each with a What
 
 Each digest has the same 4-node shape: `scheduleTrigger → httpRequest (Supabase REST) → Set (compose) → Set (SIMULATED SEND)`. Placeholder workflows (`26`, `28`) drop the HTTP step and compose a documentation-style stub noting which views are missing.
 
+### Tier 6 — meta / infra
+
+| File | Trigger | Purpose |
+|------|---------|---------|
+| `55-global-error-handler.json` | `errorTrigger` | Any workflow error → Gmail Vivek (see above) |
+| `56-droplet-health.json` | Cron every 15 min | Shell exec CPU/RAM/disk on n8n host; alert when any ≥ 85% |
+| `57-n8n-backup.json` | Cron daily 2:00 IST | tar ~/.n8n → Supabase Storage `n8n-backups/YYYY-MM-DD.tar.gz` with sha256 |
+| `58-sentry-forwarder.json` | Webhook `/webhook/sentry-alert` | Sentry POSTs P0/P1 → WhatsApp Vivek; lower severities logged + dropped |
+
+Pre-reqs for Tier 6:
+- **56:** Execute Command node requires `N8N_SECURE_MODE=false` or the container running as a user with shell access. The cloud-init stack already runs `docker-compose` with the default n8n image (shell available inside the container).
+- **57:** Create a private Supabase Storage bucket named `n8n-backups` (Supabase dashboard → Storage → New bucket). Restore procedure: download the latest `.tar.gz`, verify `sha256sum`, `tar xzf` into a fresh `~/.n8n` volume, restart the container.
+- **58:** In Sentry, configure an Alert Rule → Send notification via webhook → `https://n8n.shiroienergy.com/webhook/sentry-alert`, with a custom header `x-webhook-secret: <N8N_WEBHOOK_SECRET>`. Set the alert rule to fatal/error level only; the Switch double-filters in case of misconfiguration.
+
 ### Still unbuilt
 
 - Tier 3 monitoring (`29`–`37`)
 - Tier 4 customer-facing (`38`–`49`)
 - Tier 5 reports (`50`–`54`)
-- Tier 6 meta excluding router/error handler (`56`–`58`)
+- Tier 6 #59 training microlearning
 
 Build order per `docs/superpowers/specs/2026-04-19-n8n-workflow-catalog.md#build-order-recommended`.
 

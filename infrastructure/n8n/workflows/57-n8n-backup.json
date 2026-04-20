@@ -1,0 +1,158 @@
+{
+  "name": "57 — n8n nightly backup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 20 * * *" }
+          ]
+        }
+      },
+      "id": "node-cron",
+      "name": "Daily 2:00 IST (20:30 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "command": "=bash -c 'set -e; ts=$(date -u +%Y-%m-%d); out=/tmp/n8n-backup-$ts.tar.gz; tar czf $out -C /home/node .n8n 2>/dev/null; sha=$(sha256sum $out | awk \"{print \\$1}\"); sz=$(stat -c%s $out); echo \"{\\\"path\\\":\\\"$out\\\",\\\"filename\\\":\\\"n8n-backup-$ts.tar.gz\\\",\\\"checksum_sha256\\\":\\\"$sha\\\",\\\"size_bytes\\\":$sz,\\\"date\\\":\\\"$ts\\\"}\"'"
+      },
+      "id": "node-archive",
+      "name": "Archive .n8n to /tmp",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "tars the ~/.n8n data directory (SQLite DB + encrypted credentials + config). Returns JSON with path, filename, sha256, size."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "p1", "name": "path", "value": "={{ JSON.parse($json.stdout).path }}", "type": "string" },
+            { "id": "p2", "name": "filename", "value": "={{ JSON.parse($json.stdout).filename }}", "type": "string" },
+            { "id": "p3", "name": "checksum_sha256", "value": "={{ JSON.parse($json.stdout).checksum_sha256 }}", "type": "string" },
+            { "id": "p4", "name": "size_bytes", "value": "={{ JSON.parse($json.stdout).size_bytes }}", "type": "number" },
+            { "id": "p5", "name": "date", "value": "={{ JSON.parse($json.stdout).date }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-parse",
+      "name": "Parse archive metadata",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.path }}",
+        "options": {}
+      },
+      "id": "node-read-binary",
+      "name": "Read archive as binary",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_ID }}.supabase.co/storage/v1/object/n8n-backups/{{ $json.filename }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Content-Type", "value": "application/gzip" },
+            { "name": "x-upsert", "value": "true" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "node-upload",
+      "name": "Upload to Supabase Storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
+          "name": "Supabase service role"
+        }
+      },
+      "notes": "PUT via POST + x-upsert=true to allow re-runs same day. Bucket `n8n-backups` must exist — create once in Supabase dashboard with private access. Service-role header bypasses RLS."
+    },
+    {
+      "parameters": {
+        "command": "=bash -c 'rm -f {{ $(\"Parse archive metadata\").item.json.path }}'"
+      },
+      "id": "node-cleanup",
+      "name": "Cleanup /tmp",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "o1", "name": "status", "value": "ok", "type": "string" },
+            { "id": "o2", "name": "filename", "value": "={{ $(\"Parse archive metadata\").item.json.filename }}", "type": "string" },
+            { "id": "o3", "name": "checksum_sha256", "value": "={{ $(\"Parse archive metadata\").item.json.checksum_sha256 }}", "type": "string" },
+            { "id": "o4", "name": "size_bytes", "value": "={{ $(\"Parse archive metadata\").item.json.size_bytes }}", "type": "number" },
+            { "id": "o5", "name": "supabase_path", "value": "=n8n-backups/{{ $(\"Parse archive metadata\").item.json.filename }}", "type": "string" },
+            { "id": "o6", "name": "timestamp_ist", "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-summary",
+      "name": "Summarize",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1500, 300]
+    }
+  ],
+  "connections": {
+    "Daily 2:00 IST (20:30 UTC)": { "main": [[{ "node": "Archive .n8n to /tmp", "type": "main", "index": 0 }]] },
+    "Archive .n8n to /tmp": { "main": [[{ "node": "Parse archive metadata", "type": "main", "index": 0 }]] },
+    "Parse archive metadata": { "main": [[{ "node": "Read archive as binary", "type": "main", "index": 0 }]] },
+    "Read archive as binary": { "main": [[{ "node": "Upload to Supabase Storage", "type": "main", "index": 0 }]] },
+    "Upload to Supabase Storage": { "main": [[{ "node": "Cleanup /tmp", "type": "main", "index": 0 }]] },
+    "Cleanup /tmp": { "main": [[{ "node": "Summarize", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-6" },
+    { "name": "meta" },
+    { "name": "infra" },
+    { "name": "backup" },
+    { "name": "cron" }
+  ],
+  "meta": {
+    "description": "Nightly 2:00 IST — tar+gzip of ~/.n8n (SQLite DB + credentials + config) uploaded to Supabase Storage bucket `n8n-backups` with SHA-256 checksum. Re-runs the same day upsert (x-upsert: true). Bucket must exist in Supabase before first run (create with private access). Restore procedure: download file, verify sha256, untar to a fresh ~/.n8n volume. Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY."
+  },
+  "pinData": {}
+}

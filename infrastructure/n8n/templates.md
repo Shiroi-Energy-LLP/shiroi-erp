@@ -232,6 +232,243 @@ Approve before {{6}} or leave will auto-escalate.
 
 ---
 
+### `shiroi_emp_proposal_requested`
+
+**Category:** Utility
+**Purpose:** Sales requests a proposal → design team notified. Tier 1 #4.
+
+**Body:**
+```
+New proposal request — {{1}}.
+
+Customer: {{2}}
+Size estimate: {{3}} kWp
+City: {{4}}
+Requested by: {{5}}
+
+Design target: first draft within 24h.
+```
+
+**Buttons:**
+- URL: `Open in design` → `https://erp.shiroienergy.com/design/{{1}}`
+
+---
+
+### `shiroi_emp_proposal_submitted`
+
+**Category:** Utility
+**Purpose:** Design submits proposal → sales notified. Tier 1 #5.
+
+**Body:**
+```
+Proposal ready for review — {{1}}.
+
+Customer: {{2}}
+Size: {{3}} kWp
+Quote: {{4}}
+Prepared by: {{5}}
+
+Send to customer today.
+```
+
+**Buttons:**
+- URL: `Open proposal` → `https://erp.shiroienergy.com/proposals/{{1}}`
+
+---
+
+### `shiroi_emp_po_approved`
+
+**Category:** Utility
+**Purpose:** PO cleared founder approval → PE / finance can dispatch + pay. Tier 1 #7.
+Distinct from `shiroi_emp_po_created` above — that fires on PO draft creation; this one fires post-approval.
+
+**Body:**
+```
+PO approved ✅
+
+PO: {{1}}
+Vendor: {{2}}{{3}}
+Amount: {{4}}
+Project: {{5}}
+
+Dispatch: place the order with the vendor.
+Finance: schedule payment per terms.
+```
+
+**Example variable 3:** ` 🔔MSME` (interpolated inline when `vendor_is_msme` is true; empty string otherwise)
+
+**Buttons:**
+- URL: `Open PO` → `https://erp.shiroienergy.com/procurement/{{1}}`
+
+---
+
+### `shiroi_emp_vendor_payment_due`
+
+**Category:** Utility
+**Purpose:** Vendor PO with payment due in ≤7 days. Tier 1 #8 (cron).
+
+**Body:**
+```
+Vendor payment due — {{1}}.
+
+PO: {{2}}
+Outstanding: {{3}}
+Due: {{4}} (in {{5}} days){{6}}{{7}}
+
+Please schedule or flag if disputed.
+```
+
+**Example variable 6:** `\n🔔 MSME — 45-day statutory window applies.` (empty when not MSME)
+**Example variable 7:** `\n🚨 High value (>₹5L) — Vivek cc'd.` (empty when ≤₹5L)
+
+**Buttons:**
+- URL: `Open PO` → `https://erp.shiroienergy.com/procurement/{{1}}`
+
+---
+
+### `shiroi_emp_install_complete`
+
+**Category:** Utility
+**Purpose:** Internal notification — install work finished, liaison can start CEIG. Tier 1 #11.
+Distinct from the customer-facing `shiroi_cust_install_complete`.
+
+**Body:**
+```
+Installation finished — {{1}}.
+
+Size: {{2}} kWp
+Site supervisor: {{3}}
+QC status: {{4}}
+
+Next: liaison team to file CEIG application within 48h.
+```
+
+**Buttons:**
+- URL: `Open project` → `https://erp.shiroienergy.com/projects/{{1}}`
+
+---
+
+### `shiroi_emp_ceig_approval`
+
+**Category:** Utility
+**Purpose:** CEIG approval received → PM schedules commissioning. Tier 1 #12.
+
+**Body:**
+```
+CEIG approval received ✅
+
+Project: {{1}}
+Customer: {{2}}
+Approval no: {{3}}
+Dated: {{4}}
+
+Schedule commissioning + meter installation this week.
+```
+
+**Buttons:**
+- URL: `Open project` → `https://erp.shiroienergy.com/projects/{{1}}`
+
+---
+
+### `shiroi_emp_customer_payment`
+
+**Category:** Utility
+**Purpose:** Customer payment landed → finance (receipt), PM (visibility), salesperson (commission when closure). Tier 1 #14.
+One template, three audiences — the calling workflow sets `{{1}}` to the recipient's role phrasing.
+
+**Body:**
+```
+Payment received — {{1}}.
+
+Customer: {{2}}
+Amount: {{3}}{{4}}
+Receipt: {{5}}
+Project: {{6}}
+
+{{7}}
+```
+
+**Example variable 4:** ` (advance)` when `is_advance=true`, else empty
+**Example variable 7:** Finance → "GST invoice copy queued to customer." / PM → "Keep delivery timeline intact." / Salesperson → "Commission released on final milestone."
+
+**Buttons:**
+- URL: `Open payment` → `https://erp.shiroienergy.com/payments/{{1}}`
+
+---
+
+### `shiroi_emp_om_ticket_assigned`
+
+**Category:** Utility
+**Purpose:** New service ticket → O&M assignee. Tier 1 #15.
+
+**Body:**
+```
+New service ticket — {{1}}.
+
+Ticket: {{2}}
+Severity: {{3}}
+Customer: {{4}}
+Plant: {{5}} kWp
+SLA: {{6}}
+
+Acknowledge within 1h.
+```
+
+**Buttons:**
+- URL: `Open ticket` → `https://erp.shiroienergy.com/om/tickets/{{1}}`
+
+---
+
+### `shiroi_emp_employee_onboarded`
+
+**Category:** Utility
+**Purpose:** New-hire fan-out to HR + IT. Tier 1 #18.
+Unified template — `{{1}}` framing ("Welcome aboard" / "Setup requested") sets the audience.
+
+**Body:**
+```
+{{1}} — {{2}}.
+
+Employee code: {{3}}
+Department: {{4}}
+Designation: {{5}}
+Reporting to: {{6}}
+Start date: {{7}}
+
+{{8}}
+```
+
+**Example variable 1:** `Welcome aboard` (HR) / `IT setup requested` (IT)
+**Example variable 8:** HR → "Prepare onboarding kit + payroll setup." / IT → "Create Gmail + Supabase account + laptop allocation by start date."
+
+**Buttons:**
+- URL: `Open employee` → `https://erp.shiroienergy.com/hr/{{1}}`
+
+---
+
+### `shiroi_infra_alert`
+
+**Category:** Utility
+**Purpose:** Infrastructure alerts (droplet health ≥85%, Sentry P0/P1). Tier 6 #56 + #58.
+Kept unified because Meta template quota is finite and the shape is identical across source.
+
+**Body:**
+```
+🚨 {{1}} — {{2}}
+
+{{3}}
+
+Time: {{4}}
+{{5}}
+```
+
+**Example variable 1:** `Droplet health` / `Sentry FATAL` / `Sentry ERROR`
+**Example variable 2:** `n8n.shiroienergy.com` / Sentry project slug
+**Example variable 3:** Free-form body — CPU/mem/disk percentages, or Sentry title + culprit
+**Example variable 5:** Action link — SSH command or Sentry issue URL
+
+---
+
 ### `shiroi_digest_morning`
 
 **Category:** Utility

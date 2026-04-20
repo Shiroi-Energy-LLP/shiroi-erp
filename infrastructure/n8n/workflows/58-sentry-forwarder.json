@@ -1,0 +1,182 @@
+{
+  "name": "58 — Sentry P0/P1 forwarder",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sentry-alert",
+        "authentication": "headerAuth",
+        "options": {
+          "responseMode": "onReceived",
+          "responseCode": 200,
+          "responseData": "={\"status\":\"received\"}"
+        }
+      },
+      "id": "node-webhook",
+      "name": "Sentry webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "sentry-alert",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_HEADER_AUTH_CRED_ID",
+          "name": "x-webhook-secret"
+        }
+      },
+      "notes": "Sentry integrations → Alerts → Add Action → 'Send a notification via an integration' → generic webhook. URL: https://n8n.shiroienergy.com/webhook/sentry-alert. Configure Sentry to send only P0/P1 (fatal + error) — the Switch below double-filters in case Sentry's alert rule is broad."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "e1", "name": "level", "value": "={{ $json.body?.event?.level || $json.body?.level || $json.body?.event_action || 'unknown' }}", "type": "string" },
+            { "id": "e2", "name": "title", "value": "={{ $json.body?.event?.title || $json.body?.message || $json.body?.event?.metadata?.value || '(no title)' }}", "type": "string" },
+            { "id": "e3", "name": "environment", "value": "={{ $json.body?.event?.environment || $json.body?.environment || 'unknown' }}", "type": "string" },
+            { "id": "e4", "name": "project", "value": "={{ $json.body?.project_slug || $json.body?.event?.project || 'unknown' }}", "type": "string" },
+            { "id": "e5", "name": "culprit", "value": "={{ $json.body?.event?.culprit || $json.body?.culprit || '—' }}", "type": "string" },
+            { "id": "e6", "name": "issue_url", "value": "={{ $json.body?.url || $json.body?.event?.web_url || '—' }}", "type": "string" },
+            { "id": "e7", "name": "timestamp_ist", "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract Sentry fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "combinator": "or",
+                "conditions": [
+                  {
+                    "id": "c-fatal",
+                    "leftValue": "={{ $json.level }}",
+                    "rightValue": "fatal",
+                    "operator": { "type": "string", "operation": "equals" }
+                  },
+                  {
+                    "id": "c-error",
+                    "leftValue": "={{ $json.level }}",
+                    "rightValue": "error",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "p0_p1"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "node-severity",
+      "name": "Severity P0 / P1?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=🛑 *Sentry {{ ($json.level || '').toUpperCase() }}* — {{ $json.project }} [{{ $json.environment }}]\n\n{{ $json.title }}\n\nWhere: {{ $json.culprit }}\nWhen: {{ $json.timestamp_ist }}\n\nOpen in Sentry: {{ $json.issue_url }}",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $env.VIVEK_WHATSAPP }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves", "type": "string" },
+            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
+            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "d1", "name": "status", "value": "dropped", "type": "string" },
+            { "id": "d2", "name": "reason", "value": "Severity below P0/P1 threshold — not forwarded", "type": "string" },
+            { "id": "d3", "name": "dropped_level", "value": "={{ $json.level }}", "type": "string" },
+            { "id": "d4", "name": "dropped_title", "value": "={{ $json.title }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-drop",
+      "name": "Log + drop",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 400]
+    }
+  ],
+  "connections": {
+    "Sentry webhook": { "main": [[{ "node": "Extract Sentry fields", "type": "main", "index": 0 }]] },
+    "Extract Sentry fields": { "main": [[{ "node": "Severity P0 / P1?", "type": "main", "index": 0 }]] },
+    "Severity P0 / P1?": {
+      "main": [
+        [{ "node": "Compose alert", "type": "main", "index": 0 }],
+        [{ "node": "Log + drop", "type": "main", "index": 0 }]
+      ]
+    },
+    "Compose alert": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-6" },
+    { "name": "meta" },
+    { "name": "infra" },
+    { "name": "webhook" }
+  ],
+  "meta": {
+    "description": "Webhook-triggered. Sentry POSTs alerts to /webhook/sentry-alert with x-webhook-secret header auth. Filters P0 (fatal) / P1 (error) → WhatsApp Vivek; lower severities are logged and dropped. Configure the Sentry alert rule to post here for high-severity events only (double-filter in Switch catches misconfigurations). Requires env: VIVEK_WHATSAPP."
+  },
+  "pinData": {}
+}
