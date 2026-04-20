@@ -1,0 +1,106 @@
+{
+  "name": "01 — Bug report",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "bug_report_id", "value": "={{ $json.body.payload.bug_report_id }}", "type": "string" },
+            { "id": "f2", "name": "category", "value": "={{ $json.body.payload.category }}", "type": "string" },
+            { "id": "f3", "name": "severity", "value": "={{ $json.body.payload.severity }}", "type": "string" },
+            { "id": "f4", "name": "description", "value": "={{ $json.body.payload.description }}", "type": "string" },
+            { "id": "f5", "name": "page_url", "value": "={{ $json.body.payload.page_url || '—' }}", "type": "string" },
+            { "id": "f6", "name": "submitter_user_id", "value": "={{ $json.body.payload.submitter_user_id }}", "type": "string" },
+            { "id": "f7", "name": "submitter_full_name", "value": "={{ $json.body.payload.submitter_full_name }}", "type": "string" },
+            { "id": "f8", "name": "submitter_email", "value": "={{ $json.body.payload.submitter_email }}", "type": "string" },
+            { "id": "f9", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
+            { "id": "f10", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" },
+            { "id": "f11", "name": "submitter_display", "value": "={{ $json.body.payload.submitter_full_name || $json.body.payload.submitter_email }}", "type": "string" },
+            { "id": "f12", "name": "category_label", "value": "={{ ({bug: 'Bug', feature_request: 'Feature request', question: 'Question', other: 'Other'})[$json.body.payload.category] || $json.body.payload.category }}", "type": "string" },
+            { "id": "f13", "name": "severity_icon", "value": "={{ ({high: '🔴', medium: '🟡', low: '🟢'})[$json.body.payload.severity] || '⚪' }}", "type": "string" },
+            { "id": "f14", "name": "title", "value": "={{ ($json.body.payload.description || '').split('\\n')[0].slice(0, 80) }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=🐞 *New bug report* — {{ $json.category_label }}\n\n*{{ $json.title }}*\n\nFrom: {{ $json.submitter_display }}\nSeverity: {{ $json.severity_icon }} {{ $json.severity }}\nPage: {{ $json.page_url }}\nSubmitted: {{ $json.timestamp_ist }}\n\n{{ $json.description }}\n\nOpen: {{ $json.erp_url }}",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $env.VIVEK_WHATSAPP }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose WhatsApp message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves", "type": "string" },
+            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
+            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
+    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message", "type": "main", "index": 0 }]] },
+    "Compose WhatsApp message": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "meta" }
+  ],
+  "meta": {
+    "description": "Triggered by the event bus router on bug_report.submitted. Formats the submission and WhatsApps Vivek ($env.VIVEK_WHATSAPP) so founder feedback lands in-channel without waiting on the /settings tab. Expects payload: {bug_report_id, category, severity, description, page_url, submitter_user_id, submitter_full_name, submitter_email, erp_url}. Replaces the legacy standalone webhook (N8N_BUG_REPORT_WEBHOOK_URL) once ERP fires through emitErpEvent."
+  },
+  "pinData": {}
+}

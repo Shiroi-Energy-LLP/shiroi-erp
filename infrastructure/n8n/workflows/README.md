@@ -57,7 +57,7 @@ Every workflow's `settings.errorWorkflow` points to `55 — Global Error Handler
 
 | File | ERP event | Wired in ERP? | Send node |
 |------|-----------|---------------|-----------|
-| `01-bug-report.json` | `bug_report.submitted` (legacy URL still live) | Via legacy webhook | Simulated |
+| `01-bug-report.json` | `bug_report.submitted` | Yes | Simulated |
 | `02-lead-created.json` | `lead.created` | Yes | Simulated |
 | `04-proposal-requested.json` | `proposal.requested` | Yes | Simulated |
 | `05-proposal-submitted.json` | `proposal.submitted` | Yes | Simulated |
@@ -142,6 +142,6 @@ Added April 20, 2026 for cron workflows (Tier 1 crons + all Tier 2 digests):
 
 Credential to create: `Supabase service role` as type `httpHeaderAuth`, header `apikey: {sb_secret_*}`. Push script resolves `REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID` against this credential name.
 
-## The existing standalone bug-report workflow
+## The legacy standalone bug-report webhook
 
-The original bug-report workflow tested on 2026-04-19 uses its own webhook URL (`N8N_BUG_REPORT_WEBHOOK_URL`). Keep it running as-is. The event bus router also has a `bug_report.submitted` route that we'll flip to once `notifyBugReport` is migrated to `emitErpEvent('bug_report.submitted', …)`.
+The original bug-report workflow tested on 2026-04-19 used its own webhook URL (`N8N_BUG_REPORT_WEBHOOK_URL`). ERP's `notifyBugReport` now fires through the event bus router (`bug_report.submitted` → `01 — Bug report`) whenever `N8N_EVENT_BUS_URL` is set, and only falls back to the legacy URL when it isn't. The standalone workflow can be retired once the router is activated in n8n — until then, leave `N8N_BUG_REPORT_WEBHOOK_URL` set as a safety net for local dev.
