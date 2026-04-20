@@ -41,8 +41,10 @@ Every workflow's `settings.errorWorkflow` points to `55 — Global Error Handler
 
 1. **Header Auth credential:** create an n8n credential named `x-webhook-secret` with the value of `N8N_WEBHOOK_SECRET` from `.env.local`. The router webhook references this by name at import; n8n resolves it to an ID.
 2. **Gmail OAuth credential:** create an `n8n-nodes-base.gmailOAuth2` credential named `Gmail (Vivek)` using the Google Cloud OAuth client from `docs/CURRENT_STATUS.md`. Referenced by name in the error handler.
-3. **Supabase credential (for digests):** add `sb_secret_*` value as header auth or use HTTP Request → Supabase REST pattern. Will be used by Tier 2 workflows when they land.
-4. **WhatsApp credential:** will be added after WABA creation. Placeholder until then.
+3. **Supabase credential (for digests):** create an `httpHeaderAuth` credential named `Supabase service role` with header `apikey: {sb_secret_*}`. Used by all Tier 1 cron + Tier 2 digest workflows to fetch view data.
+4. **WhatsApp Business Cloud API credential:** create a credential named `WhatsApp (Shiroi)` with type `whatsAppBusinessAccountApi`. Paste your System User permanent access token (EAAVob8gwerQBRd5...). All 18 WhatsApp workflows reference this credential by name; n8n resolves it at import time.
+   - Business Account ID: 1366524581909221
+   - Phone Number ID: 1140448799143790 (registered: +91-9444998787)
 
 ## Current state (2026-04-20)
 
@@ -57,18 +59,18 @@ Every workflow's `settings.errorWorkflow` points to `55 — Global Error Handler
 
 | File | ERP event | Wired in ERP? | Send node |
 |------|-----------|---------------|-----------|
-| `01-bug-report.json` | `bug_report.submitted` | Yes | Simulated |
-| `02-lead-created.json` | `lead.created` | Yes | Simulated |
-| `04-proposal-requested.json` | `proposal.requested` | Yes | Simulated |
-| `05-proposal-submitted.json` | `proposal.submitted` | Yes | Simulated |
-| `06-proposal-approved.json` | `proposal.approved` | Yes | Simulated |
-| `07-purchase-order-approved.json` | `purchase_order.approved` | Yes | Simulated |
+| `01-bug-report.json` | `bug_report.submitted` | Yes | WhatsApp Send (Vivek) |
+| `02-lead-created.json` | `lead.created` | Yes | WhatsApp Send (assignee phone) |
+| `04-proposal-requested.json` | `proposal.requested` | Yes | WhatsApp Send (Design head) |
+| `05-proposal-submitted.json` | `proposal.submitted` | Yes | WhatsApp Send (Sales person) |
+| `06-proposal-approved.json` | `proposal.approved` | Yes | WhatsApp Send × 2 (PM + Finance) |
+| `07-purchase-order-approved.json` | `purchase_order.approved` | Yes | WhatsApp Send (PO preparer) |
 | `09-grn-recorded.json` | `grn.recorded` | ⏳ Pending createGRN action | Simulated |
 | `10-installation-scheduled.json` | `project.installation_scheduled` | Yes | Simulated |
 | `11-installation-complete.json` | `project.installation_complete` | Yes | Simulated |
 | `12-ceig-approval-received.json` | `ceig_approval.received` | Yes | Simulated |
 | `13-project-commissioned.json` | `project.commissioned` | Yes | Simulated |
-| `14-customer-payment-received.json` | `customer_payment.received` | Yes | Simulated |
+| `14-customer-payment-received.json` | `customer_payment.received` | Yes | WhatsApp Send (sales person) |
 | `15-om-ticket-created.json` | `om_ticket.created` | Yes | Simulated |
 | `16-expense-submitted.json` | `expense_claim.submitted` | Yes | Simulated |
 | `17-leave-request-submitted.json` | `leave_request.submitted` | ⏳ Pending leave-request action | Simulated |
@@ -79,9 +81,7 @@ Every workflow's `settings.errorWorkflow` points to `55 — Global Error Handler
 | File | Source view (migration) | Schedule | Send node |
 |------|-------------------------|----------|-----------|
 | `03-lead-stale-24h.json` | `v_digest_leads_stale_24h` (083) | Daily 9:00 IST | Simulated |
-| `08-vendor-payment-due.json` | `v_digest_vendor_payments_due_7d` (085) | Daily 9:00 IST | Simulated — Finance + Vivek cc if >₹5L |
-
-All `Simulated` send nodes are placeholder `Set` nodes. Replace each with a WhatsApp node once WABA credential lands (Meta approval pending).
+| `08-vendor-payment-due.json` | `v_digest_vendor_payments_due_7d` (085) | Daily 9:00 IST | WhatsApp Send × 2 (Finance always, Vivek if >₹5L) |
 
 ### Tier 2 — daily digests (cron → Supabase view → morning summary)
 
@@ -98,16 +98,16 @@ All `Simulated` send nodes are placeholder `Set` nodes. Replace each with a What
 | `27-hr-head-daily-8am.json` | `v_digest_leave_pending` (085) | Daily 8:00 IST | HR head |
 | `28-vivek-weekly-monday-8am.json` | ⏳ Placeholder — no weekly rollups yet | Monday 8:00 IST | Vivek |
 
-Each digest has the same 4-node shape: `scheduleTrigger → httpRequest (Supabase REST) → Set (compose) → Set (SIMULATED SEND)`. Placeholder workflows (`26`, `28`) drop the HTTP step and compose a documentation-style stub noting which views are missing.
+Each digest has the same 4-node shape: `scheduleTrigger → httpRequest (Supabase REST) → Set (compose) → WhatsApp Send Message`. Placeholder workflows (`26`, `28`) drop the HTTP step, compose a documentation-style stub noting which views are missing, but still route to WhatsApp Send.
 
 ### Tier 6 — meta / infra
 
 | File | Trigger | Purpose |
 |------|---------|---------|
 | `55-global-error-handler.json` | `errorTrigger` | Any workflow error → Gmail Vivek (see above) |
-| `56-droplet-health.json` | Cron every 15 min | Shell exec CPU/RAM/disk on n8n host; alert when any ≥ 85% |
+| `56-droplet-health.json` | Cron every 15 min | Shell exec CPU/RAM/disk on n8n host; WhatsApp Vivek when any ≥ 85% |
 | `57-n8n-backup.json` | Cron daily 2:00 IST | tar ~/.n8n → Supabase Storage `n8n-backups/YYYY-MM-DD.tar.gz` with sha256 |
-| `58-sentry-forwarder.json` | Webhook `/webhook/sentry-alert` | Sentry POSTs P0/P1 → WhatsApp Vivek; lower severities logged + dropped |
+| `58-sentry-forwarder.json` | Webhook `/webhook/sentry-alert` | Sentry POSTs P0/P1 via WhatsApp to Vivek; lower severities logged + dropped |
 
 Pre-reqs for Tier 6:
 - **56:** Execute Command node requires `N8N_SECURE_MODE=false` or the container running as a user with shell access. The cloud-init stack already runs `docker-compose` with the default n8n image (shell available inside the container).
@@ -140,7 +140,9 @@ Added April 20, 2026 for cron workflows (Tier 1 crons + all Tier 2 digests):
 - `LIAISON_HEAD_WHATSAPP` — E.164 phone (used by `26`)
 - `HR_HEAD_WHATSAPP` — E.164 phone (used by `27`)
 
-Credential to create: `Supabase service role` as type `httpHeaderAuth`, header `apikey: {sb_secret_*}`. Push script resolves `REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID` against this credential name.
+Credentials to create:
+- `Supabase service role` as type `httpHeaderAuth`, header `apikey: {sb_secret_*}`. Push script resolves `REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID`.
+- `WhatsApp (Shiroi)` as type `whatsAppBusinessAccountApi` with System User permanent access token. Push script resolves `REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID`. All 18 WhatsApp send nodes reference this by name.
 
 ## The legacy standalone bug-report webhook
 
