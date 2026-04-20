@@ -83,9 +83,25 @@ Every workflow's `settings.errorWorkflow` points to `55 — Global Error Handler
 
 All `Simulated` send nodes are placeholder `Set` nodes. Replace each with a WhatsApp node once WABA credential lands (Meta approval pending).
 
+### Tier 2 — daily digests (cron → Supabase view → morning summary)
+
+| File | Source view (migration) | Schedule | To |
+|------|-------------------------|----------|-----|
+| `19-vivek-daily-7am.json` | `v_digest_leads_new_24h` (083) | Daily 7:00 IST | Vivek |
+| `20-sales-head-daily-8am.json` | `v_digest_leads_stale_24h` (083) | Daily 8:00 IST | Sales head |
+| `21-design-head-daily-8am.json` | `v_digest_proposals_design_backlog` (085) | Daily 8:00 IST | Design head |
+| `22-projects-head-daily-8am.json` | `v_digest_milestones_overdue` (085) | Daily 8:00 IST | Projects head |
+| `23-purchase-head-daily-8am.json` | `v_digest_pos_pending_approval` (085) | Daily 8:00 IST | Purchase head |
+| `24-finance-head-daily-8am.json` | `v_digest_invoices_overdue_15d` (083) | Daily 8:00 IST | Finance head |
+| `25-om-head-daily-8am.json` | `v_digest_om_tickets_open_48h` (085) | Daily 8:00 IST | O&M head |
+| `26-liaison-head-daily-8am.json` | ⏳ Placeholder — no view yet | Daily 8:00 IST | Liaison head |
+| `27-hr-head-daily-8am.json` | `v_digest_leave_pending` (085) | Daily 8:00 IST | HR head |
+| `28-vivek-weekly-monday-8am.json` | ⏳ Placeholder — no weekly rollups yet | Monday 8:00 IST | Vivek |
+
+Each digest has the same 4-node shape: `scheduleTrigger → httpRequest (Supabase REST) → Set (compose) → Set (SIMULATED SEND)`. Placeholder workflows (`26`, `28`) drop the HTTP step and compose a documentation-style stub noting which views are missing.
+
 ### Still unbuilt
 
-- Tier 2 digests (`19`–`28`)
 - Tier 3 monitoring (`29`–`37`)
 - Tier 4 customer-facing (`38`–`49`)
 - Tier 5 reports (`50`–`54`)
@@ -97,11 +113,18 @@ Build order per `docs/superpowers/specs/2026-04-19-n8n-workflow-catalog.md#build
 
 Already needed: `N8N_WEBHOOK_SECRET` (matched by `x-webhook-secret` Header Auth credential).
 
-Added April 20, 2026 for cron workflows:
+Added April 20, 2026 for cron workflows (Tier 1 crons + all Tier 2 digests):
 - `SUPABASE_PROJECT_ID` — e.g. `kfkydkwycgijvexqiysc` (prod) / `actqtzoxjilqnldnacqz` (dev)
 - `SUPABASE_SECRET_KEY` — `sb_secret_*` value, used as `apikey` header
-- `FINANCE_HEAD_WHATSAPP` — E.164 phone (used by `08`)
-- `VIVEK_WHATSAPP` — E.164 phone (used by `08` for >₹5L cc)
+- `VIVEK_WHATSAPP` — E.164 phone (used by `08`, `19`, `28`)
+- `FINANCE_HEAD_WHATSAPP` — E.164 phone (used by `08`, `24`)
+- `SALES_HEAD_WHATSAPP` — E.164 phone (used by `20`)
+- `DESIGN_HEAD_WHATSAPP` — E.164 phone (used by `21`)
+- `PROJECTS_HEAD_WHATSAPP` — E.164 phone (used by `22`)
+- `PURCHASE_HEAD_WHATSAPP` — E.164 phone (used by `23`)
+- `OM_HEAD_WHATSAPP` — E.164 phone (used by `25`)
+- `LIAISON_HEAD_WHATSAPP` — E.164 phone (used by `26`)
+- `HR_HEAD_WHATSAPP` — E.164 phone (used by `27`)
 
 Credential to create: `Supabase service role` as type `httpHeaderAuth`, header `apikey: {sb_secret_*}`. Push script resolves `REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID` against this credential name.
 

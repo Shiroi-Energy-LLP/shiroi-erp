@@ -1,0 +1,117 @@
+{
+  "name": "27 — HR head daily 8AM digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 2 * * *" }
+          ]
+        }
+      },
+      "id": "node-cron",
+      "name": "Daily 8:00 IST (02:30 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_ID }}.supabase.co/rest/v1/v_digest_leave_pending",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "node-http",
+      "name": "Fetch pending leave requests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
+          "name": "Supabase service role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=👥 *HR digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nLeave requests awaiting approval: {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ No pending approvals.' : ($json.data || []).slice(0, 15).map((l, i) => `${i+1}. ${l.employee_name} (${l.employee_code || '—'}) · ${l.leave_type} · ${l.total_days}d · ${l.from_date} → ${l.to_date} · mgr: ${l.manager_name || 'unassigned'} · ${l.days_pending}d pending`).join('\\n') }}{{ ($json.data || []).length > 15 ? '\\n…and ' + (($json.data || []).length - 15) + ' more.' :  '' }}\n\nOpen: https://erp.shiroienergy.com/hr/leave\n\n_TODO: add v_digest_employees_birthday_today (team wishes) + v_digest_expenses_pending_approval (manager queue) + cert-expiry view for the full HR morning view._",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $env.HR_HEAD_WHATSAPP }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose digest",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves", "type": "string" },
+            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
+            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "Daily 8:00 IST (02:30 UTC)": { "main": [[{ "node": "Fetch pending leave requests", "type": "main", "index": 0 }]] },
+    "Fetch pending leave requests": { "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]] },
+    "Compose digest": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-2" },
+    { "name": "hr" },
+    { "name": "digest" },
+    { "name": "cron" }
+  ],
+  "meta": {
+    "description": "Daily 8:00 IST — HR head digest. Queries v_digest_leave_pending (migration 085). Future extensions: merge with v_digest_employees_birthday_today + v_digest_expenses_pending_approval (both from 083) for consolidated HR morning briefing. Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, HR_HEAD_WHATSAPP."
+  },
+  "pinData": {}
+}

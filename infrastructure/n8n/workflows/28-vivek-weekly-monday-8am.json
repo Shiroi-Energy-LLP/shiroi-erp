@@ -1,0 +1,85 @@
+{
+  "name": "28 — Vivek weekly Monday 8AM digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 2 * * 1" }
+          ]
+        }
+      },
+      "id": "node-cron",
+      "name": "Monday 8:00 IST (02:30 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=📊 *Weekly roundup* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\n⚠️ Placeholder — weekly-rollup views not yet built.\n\nWhen ready, this Monday digest should surface last-7d stats:\n• New leads (count) vs prior week\n• Proposals sent + win rate\n• POs raised + ₹ value\n• Customer invoices raised + collected\n• Vendor payments made\n• Commissionings completed\n• Open escalations / SLA breaches\n• Headline risks (cash, inventory, compliance)\n\nOpen: https://erp.shiroienergy.com/dashboard\n\n_TODO: author v_digest_weekly_* aggregation views (migration 086 or later), then replace this Set with an HTTP fetch + rich compose._",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $env.VIVEK_WHATSAPP }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose placeholder weekly",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "Placeholder workflow — weekly rollup views not yet built AND WABA credential not yet configured", "type": "string" },
+            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
+            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Monday 8:00 IST (02:30 UTC)": { "main": [[{ "node": "Compose placeholder weekly", "type": "main", "index": 0 }]] },
+    "Compose placeholder weekly": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-2" },
+    { "name": "founder" },
+    { "name": "digest" },
+    { "name": "cron" },
+    { "name": "weekly" },
+    { "name": "placeholder" }
+  ],
+  "meta": {
+    "description": "Monday 8:00 IST — Vivek weekly roundup. PLACEHOLDER: no weekly-rollup v_digest views exist yet. When the weekly aggregation views land (future migration), replace the Compose node with HTTP fetches + rich KPI summary. Requires env: VIVEK_WHATSAPP."
+  },
+  "pinData": {}
+}
