@@ -117,11 +117,11 @@ async function emitExpenseSubmitted(
     if (submitter?.reporting_to_id) {
       const { data: manager } = await supabase
         .from('employees')
-        .select('full_name, personal_phone')
+        .select('full_name, whatsapp_number')
         .eq('id', submitter.reporting_to_id)
         .single();
       managerName = manager?.full_name ?? null;
-      managerPhone = manager?.personal_phone ?? null;
+      managerPhone = manager?.whatsapp_number ?? null;
     }
 
     await emitErpEvent('expense_claim.submitted', {

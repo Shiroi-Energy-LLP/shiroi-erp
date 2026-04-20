@@ -95,6 +95,10 @@ COMMENT ON VIEW v_digest_projects_installs_today IS
 -- ── v_digest_projects_overdue_commissioning ──
 -- Tier 3 #35 (installed but not commissioned >30d). Tracks projects that
 -- completed installation but haven't been commissioned for over 30 days.
+-- Note: project_status enum has no distinct 'installed' value — in this ERP,
+-- commissioning is marked by commissioned_date being set, separate from
+-- actual_end_date which records when install work finished. View uses those
+-- two dates directly rather than status.
 CREATE OR REPLACE VIEW v_digest_projects_overdue_commissioning AS
 SELECT
   p.id AS project_id,
@@ -104,19 +108,19 @@ SELECT
   p.system_size_kwp,
   p.actual_end_date,
   p.status,
-  (CURRENT_DATE - p.actual_end_date::date) AS days_since_install,
+  (CURRENT_DATE - p.actual_end_date) AS days_since_install,
   pm.full_name AS project_manager_name,
   pm.personal_phone AS project_manager_phone
 FROM projects p
 LEFT JOIN employees pm ON pm.id = p.project_manager_id
 WHERE p.deleted_at IS NULL
-  AND p.status = 'installed'
   AND p.actual_end_date IS NOT NULL
+  AND p.commissioned_date IS NULL
   AND p.actual_end_date < (CURRENT_DATE - INTERVAL '30 days')
 ORDER BY p.actual_end_date ASC;
 
 COMMENT ON VIEW v_digest_projects_overdue_commissioning IS
-  'Tier 3 #35 source — projects installed >30d ago but still not commissioned. Oldest first.';
+  'Tier 3 #35 source — projects where install finished (actual_end_date set) but commissioned_date is NULL and actual_end_date is >30d old. Oldest first.';
 
 -- ── v_digest_expenses_pending_approval ──
 -- Tier 2 #27 (HR head / Manager digest). Expense claims submitted but not yet
