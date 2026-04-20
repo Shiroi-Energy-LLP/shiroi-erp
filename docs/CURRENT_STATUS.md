@@ -2,7 +2,7 @@
 
 > Weekly-refreshed snapshot of what's in flight and where dev ↔ prod stand.
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
-> Last updated: **April 20, 2026** (Tier 1 + Tier 2 + Tier 6 n8n scaffolding complete on `feat/n8n-workflow-scaffolding` — 13 Tier 1 workflow JSONs (11 webhook + 2 cron), 10 Tier 2 digest JSONs (#19–#28 daily/weekly cron), 3 Tier 6 meta/infra JSONs (#56 droplet health, #57 nightly backup, #58 Sentry forwarder), router expanded to 16 routes, 5 more `emitErpEvent` sites wired, migration 085 with 8 more digest views applied to dev, types regen + strip-script added, 10 more WhatsApp templates catalogued. Zoho data-accuracy pass earlier on the same branch with mig 084 DDL already live; cash-position root-cause fix migs 080+081 before that).
+> Last updated: **April 20, 2026** (Tier 1 + Tier 2 + Tier 6 n8n scaffolding complete on `feat/n8n-workflow-scaffolding` — 14 Tier 1 workflow JSONs (12 webhook incl. `01-bug-report` + 2 cron), 10 Tier 2 digest JSONs (#19–#28 daily/weekly cron), 3 Tier 6 meta/infra JSONs (#56 droplet health, #57 nightly backup, #58 Sentry forwarder), router wired to 16 routes, 6 `emitErpEvent` call sites (incl. `notifyBugReport` now via event bus with legacy webhook as fallback), migration 085 with 8 more digest views applied to dev, types regen + strip-script added, 10 more WhatsApp templates catalogued. Zoho data-accuracy pass earlier on the same branch with mig 084 DDL already live; cash-position root-cause fix migs 080+081 before that).
 
 ---
 
@@ -34,7 +34,7 @@ Building out final modules before moving to full prod rollout. Still active deve
 | Marketing + Design revamp — feedback loop | Prem (marketing mgr) | 🔜 Next | Get Prem's feedback on /sales + partners + design workspace + closure band UI. Same cycle as Manivel's PM feedback. |
 | Zoho manual project match | Vivek | 🔜 Action needed | 76 projects in `docs/zoho-review-queue.csv` need manual match in Supabase `zoho_project_mapping` table. After matching, re-run phases 07-13 to pick up those projects' transactions. |
 | Phase D (n8n Zoho live sync) | Claude | 🔜 Unblocked | n8n now running (Apr 19). DB infrastructure (zoho_sync_queue, triggers, claim/ack RPCs) was ready since migration 072. Next: build the workflow — consume `zoho_sync_queue`, call Zoho Books API, ack on success. |
-| Bug-report webhook → alert | Claude | 🔜 Next up | `/settings → Report a Bug` already POSTs to `N8N_BUG_REPORT_WEBHOOK_URL` via `notifyBugReport` in `settings-actions.ts`. First validation workflow: receive webhook → WhatsApp/email to Vivek. End-to-end test of the whole n8n pipeline in ~15 min. |
+| Bug-report webhook → alert | Claude | ✅ Shipped Apr 20 | `notifyBugReport` in `settings-actions.ts` now fires through the event bus router (`emitErpEvent('bug_report.submitted', …)` — with submitter full_name fetched from profiles) whenever `N8N_EVENT_BUS_URL` is set, and falls back to the legacy standalone `N8N_BUG_REPORT_WEBHOOK_URL` only when the event bus env is unset. New `01-bug-report.json` sub-workflow follows the Tier 1 template and WhatsApps `$env.VIVEK_WHATSAPP` with a severity-iconed summary + `/settings?tab=feedback&id=…` deep link. Retires the last standalone webhook on the Tier 1 surface. |
 | Employee testing week | All | 🔜 Planned | 5–6 employees review on dev for 1 week. Data flags + inline edit + verification. |
 | Prod deployment window | Vivek | 🔜 After testing | Batch-promote migrations 013–072 to prod + selective data migration. |
 
