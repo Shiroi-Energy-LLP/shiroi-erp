@@ -124,6 +124,11 @@ export async function runPhase09(): Promise<PhaseResult> {
       notes: toStr(r['Description']),
       source: 'zoho_import',
       zoho_customer_payment_id: invPayId,
+      // Capture Zoho customer identity (mig 087) — needed when project_id
+      // can't be resolved at import (e.g., parent-company billing without
+      // project tag) and a later backfill needs to retry attribution.
+      zoho_customer_id: toStr(r['CustomerID']),
+      zoho_customer_name: toStr(r['Customer Name']),
       // Anchor created_at to the actual payment date (12:00 IST) so
       // "when did this happen" queries / sorts line up with real history
       // instead of the import-batch moment. See mig 086 for backfill.

@@ -162,6 +162,10 @@ export async function runPhase08(): Promise<PhaseResult> {
       source: 'zoho_import',
       zoho_invoice_id: zohoInvId,
       zoho_customer_gst_treatment: toStr(first['GST Treatment']),
+      // Capture Zoho customer identity (mig 087) — useful when project_id can't
+      // be resolved at import time and a later backfill needs to disambiguate.
+      zoho_customer_id: toStr(first['Customer ID']),
+      zoho_customer_name: toStr(first['Customer Name']),
       // Anchor created_at to the invoice date (12:00 IST) — see mig 086.
       created_at: `${invoiceDate}T12:00:00+05:30`,
     };
