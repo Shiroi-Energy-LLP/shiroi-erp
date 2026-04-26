@@ -1,9 +1,9 @@
 import { createClient } from '@repo/supabase/server';
-import Decimal from 'decimal.js';
 
 export interface SalesDashboardData {
   newLeadsThisMonth: number;
   pipelineValue: number;
+  pipelineLeadCount: number;
   wonThisMonth: number;
   conversionRate: number;
   followUpsToday: Array<{
@@ -58,11 +58,18 @@ export async function getSalesDashboardData(profileId: string): Promise<SalesDas
       .gte('created_at', monthStartStr)
       .is('deleted_at', null),
 
-    // Pipeline value (active proposals)
-    supabase
-      .from('proposals')
-      .select('total_after_discount')
-      .in('status', ['draft', 'sent', 'viewed', 'negotiating']),
+    // Pipeline value: ONLY leads currently in 'negotiation' stage.
+    // Vivek (Apr 26 2026): "I want to see pipeline value of only what is in
+    // negotiation not the entire pipeline." Previously summed all active
+    // proposals (draft/sent/viewed/negotiating) which conflated early-funnel
+    // exploration with deals close to closing AND was inflated by corrupt
+    // proposal totals (a handful of imported proposals had values up to
+    // ₹985 Cr for residential systems — see follow-up data-cleanup task).
+    //
+    // Uses the established convention from get_lead_stage_counts:
+    // total_value = SUM(estimated_size_kwp × 60000). Computed in SQL to
+    // satisfy rule #12 (no .reduce() on financial rows in JS).
+    supabase.rpc('get_lead_stage_counts'),
 
     // Won this month
     supabase
@@ -107,6 +114,15 @@ export async function getSalesDashboardData(profileId: string): Promise<SalesDas
     throw new Error(`Failed to load pipeline: ${pipelineResult.error.message}`);
   }
 
+  // Pull the negotiation row out of the per-stage breakdown; default to 0 if
+  // no leads are currently in that stage. RPC return type is array of
+  // { status, lead_count, total_value, weighted_value }.
+  const negotiationRow = (pipelineResult.data ?? []).find(
+    (r: { status: string }) => r.status === 'negotiation',
+  );
+  const pipelineValue = Number(negotiationRow?.total_value ?? 0);
+  const pipelineLeadCount = Number(negotiationRow?.lead_count ?? 0);
+
   if (wonResult.error) {
     console.error(`${op} Won leads query failed:`, { code: wonResult.error.code, message: wonResult.error.message });
     throw new Error(`Failed to load won leads: ${wonResult.error.message}`);
@@ -123,12 +139,6 @@ export async function getSalesDashboardData(profileId: string): Promise<SalesDas
   if (funnelResult.error) {
     console.error(`${op} Funnel query failed:`, { code: funnelResult.error.code, message: funnelResult.error.message });
   }
-
-  // Calculate pipeline value with decimal.js
-  const pipelineTotal = (pipelineResult.data ?? []).reduce(
-    (sum, p) => sum.add(new Decimal(p.total_after_discount ?? '0')),
-    new Decimal(0),
-  );
 
   // Conversion rate
   const wonCount = wonResult.count ?? 0;
@@ -159,7 +169,8 @@ export async function getSalesDashboardData(profileId: string): Promise<SalesDas
 
   return {
     newLeadsThisMonth: newLeadsResult.count ?? 0,
-    pipelineValue: pipelineTotal.toNumber(),
+    pipelineValue,
+    pipelineLeadCount,
     wonThisMonth: wonCount,
     conversionRate,
     followUpsToday: followUps,
