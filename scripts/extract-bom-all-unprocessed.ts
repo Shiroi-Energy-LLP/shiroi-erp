@@ -196,6 +196,17 @@ async function main() {
     for (const file of excelFiles) {
       // Strategy 1: Direct lead_id match (folder = project's lead)
       if (file.folder_id === target.lead_id) {
+        // Tightened 2026-04-30: a costing/BOM file in this folder is only trusted
+        // if its filename contains a customer-name token of length ≥ 4. Lead folders
+        // commonly contain unrelated files from co-mingled Google Drive imports.
+        const customerTokens = target.name_tokens.filter(t => t.length >= 4);
+        const fileTokens = tokenize(file.filename);
+        const filenameMatchesCustomer =
+          customerTokens.length === 0
+            ? true // no customer name available → fall back to old behaviour rather than reject
+            : customerTokens.some(t => fileTokens.some(ft => ft.includes(t) || t.includes(ft)));
+        if (!filenameMatchesCustomer) continue; // skip — wrong customer's file in this folder
+
         // Prefer costing/BOM files
         const isCostingFile = /costing|bom|cost/i.test(file.filename);
         const score = isCostingFile ? 1.0 : 0.8;

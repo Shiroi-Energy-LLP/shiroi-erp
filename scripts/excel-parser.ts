@@ -272,6 +272,19 @@ function parseBOMSheet(sheet: ExcelJS.Worksheet): ParsedBOMLine[] {
     // Skip if description is just a number (like "Cost Per Watt" followed by value)
     if (/^cost\s*per\s*watt$/i.test(desc)) continue;
 
+    // Reject capex-summary or pricing-matrix rows masquerading as line items.
+    // Symptoms (from corruption analysis 2026-04-30):
+    //   - "Cost /KW in Rs", "Cost per kW", "Total Project Value" etc. appearing
+    //     in the description column with huge qty/unit_price.
+    //   - "Unnamed item" (description is empty/whitespace) but with ₹crore-scale total.
+    if (/^cost\s*\/?\s*kw|^cost\s*per\s*kw|^total\s*project|^grand\s*total|^project\s*cost/i.test(desc)) continue;
+    if ((!desc || desc.trim().length === 0) && effectiveAmount > 5_000_000) continue; // empty desc + > ₹50L = sus
+    // No real residential line item is > ₹50L; commercial rarely > ₹2Cr per line.
+    if (effectiveAmount > 50_000_000) {
+      console.warn(`[excel-parser] Skipping line with implausible total ₹${effectiveAmount}: "${desc.slice(0, 80)}"`);
+      continue;
+    }
+
     const { category, gst_type } = classifyItem(desc || currentSection);
 
     // Determine GST rate
@@ -404,6 +417,28 @@ export async function parseCostingSheet(buffer: Buffer): Promise<ParsedBOM> {
   // If no total from summary, calculate from BOM lines
   if (!summary.total_cost && bestLines.length > 0) {
     summary.total_cost = bestLines.reduce((sum, l) => sum + l.total_price, 0);
+  }
+
+  // SANITY CHECK — see docs/superpowers/plans/2026-04-30-proposal-corruption-implementation.md
+  // Real Shiroi installs cap out around ₹2L/kWp (premium hybrid + battery).
+  // ₹5L/kWp is already implausible. Reject anything beyond as a wrong-file extraction
+  // (capex summary mistaken for BOM, multi-project pricing matrix, etc.).
+  const MAX_PLAUSIBLE_PER_KWP = 500_000;
+  if (systemSize && systemSize > 0 && summary.total_cost) {
+    const perKwp = summary.total_cost / systemSize;
+    if (perKwp > MAX_PLAUSIBLE_PER_KWP) {
+      console.warn(
+        `[excel-parser] Rejecting summary: ₹${summary.total_cost} for ${systemSize} kWp ` +
+        `= ₹${Math.round(perKwp)}/kWp > ₹${MAX_PLAUSIBLE_PER_KWP}/kWp ceiling. Likely wrong file.`,
+      );
+      summary.supply_cost = null;
+      summary.installation_cost = null;
+      summary.gst_supply = null;
+      summary.gst_installation = null;
+      summary.total_cost = null;
+      bestLines = []; // discard the contaminating lines too
+      bestSheetName = '';
+    }
   }
 
   // Determine parse quality
