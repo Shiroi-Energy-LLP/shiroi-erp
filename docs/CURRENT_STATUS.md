@@ -2,7 +2,7 @@
 
 > Weekly-refreshed snapshot of what's in flight and where dev ↔ prod stand.
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
-> Last updated: **May 1, 2026** — `feat/n8n-workflow-scaffolding` merged into `main` (29 commits, 98 files, +10.6k LOC). Vercel auto-deploys to `erp.shiroienergy.com`. Bundle: lead status RLS fix + `/payments/tracker` tab (mig 088); Zoho data-accuracy pass (migs 084/086/087 + phases 06–12 rewrite); full n8n Tier 1 + Tier 2 + Tier 6 scaffolding (32 workflow JSONs, event-bus router, error handler, push script); WhatsApp Business Cloud API live integration; dashboard pipeline value scoped to negotiation-only; LLP legal-name corrections.
+> Last updated: **May 2, 2026** — `feat/n8n-workflow-scaffolding` merged into `main` May 1 (29 commits, 98 files, +10.6k LOC). Bundle: lead status RLS fix + `/payments/tracker` tab (mig 088); Zoho data-accuracy pass (migs 084/086/087 + phases 06–12 rewrite); full n8n Tier 1 + Tier 2 + Tier 6 scaffolding; WhatsApp Business Cloud API live; dashboard pipeline value scoped to negotiation-only. Then `friendly-montalcini-e601d1` merged May 2: proposal financial corruption recovery — importer guardrails (Phase 1, `67a4cba`/`73ae369`), Tier A reset of 130 corrupted proposals (Phase 2 Part 1, migs 089/090/091 — `d287984`), Tier B AI re-extraction recovering 7 proposals + UI data-quality banner (Phase 2 Part 2, mig 090b — `17e7b65`/`45f09ab`). Vercel auto-deploys to `erp.shiroienergy.com`.
 
 ---
 
@@ -13,7 +13,11 @@ Building out final modules before moving to full prod rollout. Still active deve
 
 ---
 
-## In flight this week (April 14 – May 1, 2026)
+## In flight this week (April 14 – May 2, 2026)
+
+| Item | Owner | Status | Detail |
+|------|-------|--------|--------|
+| **Proposal financial corruption recovery — Phases 1+2 complete** | Claude (worktree `friendly-montalcini-e601d1` → merged May 2) | ✅ Shipped May 2 | Phase 1: importer guardrails in `excel-parser.ts` (per-kWp ceiling + capex-summary row rejection) + `extract-bom-all-unprocessed.ts` (filename-must-match-customer) + `migrate-hubspot.ts` (TPV sanity check) + Vitest coverage. Phase 2 Part 1: migrations 089/090/091 — schema flags + Tier A reset of 130 corrupted proposals (per-kWp > ₹2L confident or > ₹5L doubtful), 24 also flagged `system_size_uncertain` + CHECK constraint at ₹10L/kWp. Phase 2 Part 2: AI re-extraction across 17 Tier B candidates → 7 clean recoveries applied via mig 090b (₹4–18L per proposal); 10 stayed banner-flagged (5 caveated, 5 no-signal). UI yellow banner on `/proposals/[id]` and `/leads/[id]/proposal` surfaces `financials_invalidated`, `system_size_uncertain`, and per-kWp > ₹2L soft trigger. Phase 3 (HubSpot re-import for 63 corrupted HubSpot-migrated proposals) blocked on Vivek delivering the cleaned HubSpot CSV. Plan: `2026-04-30-proposal-corruption-implementation.md`. Design: `2026-04-26-proposal-financial-corruption-recovery.md`. |
 
 | Item | Owner | Status | Detail |
 |------|-------|--------|--------|
