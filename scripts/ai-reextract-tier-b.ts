@@ -19,7 +19,7 @@ dotenv.config({ path: 'C:/Users/vivek/Projects/shiroi-erp/.env.local' });
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import mammoth from 'mammoth';
-import * as pdfParse from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 import * as fs from 'fs';
 import { ProposalDocSchema } from './ai-extract-schemas';
 import { PROPOSAL_EXTRACTION_PROMPT } from './ai-extract-prompts';
@@ -137,8 +137,14 @@ async function extractText(buffer: Buffer, ext: 'docx' | 'pdf'): Promise<string>
   if (ext === 'docx') {
     return (await mammoth.extractRawText({ buffer })).value.trim();
   }
-  const result = await (pdfParse as any).default(buffer);
-  return (result.text || '').trim();
+  // pdf-parse v2: class-based API
+  const parser = new PDFParse({ data: buffer });
+  try {
+    const result = await parser.getText();
+    return (result.text ?? '').trim();
+  } finally {
+    await parser.destroy();
+  }
 }
 
 async function callClaude(text: string, fileName: string): Promise<{ parsed: any; tokens: number; error?: string }> {
