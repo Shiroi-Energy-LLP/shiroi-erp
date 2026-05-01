@@ -1158,6 +1158,8 @@ export type Database = {
           receipt_pdf_path: string | null
           recorded_by: string
           source: string
+          zoho_customer_id: string | null
+          zoho_customer_name: string | null
           zoho_customer_payment_id: string | null
         }
         Insert: {
@@ -1177,6 +1179,8 @@ export type Database = {
           receipt_pdf_path?: string | null
           recorded_by: string
           source?: string
+          zoho_customer_id?: string | null
+          zoho_customer_name?: string | null
           zoho_customer_payment_id?: string | null
         }
         Update: {
@@ -1196,6 +1200,8 @@ export type Database = {
           receipt_pdf_path?: string | null
           recorded_by?: string
           source?: string
+          zoho_customer_id?: string | null
+          zoho_customer_name?: string | null
           zoho_customer_payment_id?: string | null
         }
         Relationships: [
@@ -4032,6 +4038,8 @@ export type Database = {
           subtotal_works: number
           total_amount: number
           zoho_customer_gst_treatment: string | null
+          zoho_customer_id: string | null
+          zoho_customer_name: string | null
           zoho_invoice_id: string | null
         }
         Insert: {
@@ -4065,6 +4073,8 @@ export type Database = {
           subtotal_works?: number
           total_amount: number
           zoho_customer_gst_treatment?: string | null
+          zoho_customer_id?: string | null
+          zoho_customer_name?: string | null
           zoho_invoice_id?: string | null
         }
         Update: {
@@ -4098,6 +4108,8 @@ export type Database = {
           subtotal_works?: number
           total_amount?: number
           zoho_customer_gst_treatment?: string | null
+          zoho_customer_id?: string | null
+          zoho_customer_name?: string | null
           zoho_invoice_id?: string | null
         }
         Relationships: [
@@ -14516,6 +14528,25 @@ export type Database = {
       get_my_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_payment_tracker_rows: {
+        Args: never
+        Returns: {
+          completed_date: string
+          contracted_value: number
+          customer_name: string
+          days_since_order: number
+          latest_payment_date: string
+          order_date: string
+          order_date_source: string
+          project_id: string
+          project_number: string
+          project_status: Database["public"]["Enums"]["project_status"]
+          remaining: number
+          total_invoice_sent: number
+          total_invoiced: number
+          total_received: number
+        }[]
       }
       get_pipeline_summary: {
         Args: never

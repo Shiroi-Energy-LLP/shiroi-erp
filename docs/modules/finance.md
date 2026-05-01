@@ -40,9 +40,10 @@ The finance module owns every rupee in and out of Shiroi — customer invoicing 
 - `/vendors/[id]` — Vendor detail: MSME/Udyam info, total billed/outstanding/paid, bills list, payment history.
 - `/invoices` — invoice list + create. `CreateInvoiceDialog` handles GST split (CGST/SGST for intra-state, IGST inter-state) and auto-generates the SHIROI/INV/... number.
 - `/payments` — tabbed (via `payments-nav.tsx`):
-  - **Overview** — project-level payments tracker. P&L per project, payment stages, next milestone amounts, expected collections this week / this month, invested vs received, filter by active / outstanding.
+  - **Project Payments** — project-level payments tracker. P&L per project, payment stages, next milestone amounts, expected collections this week / this month, invested vs received, filter by active / outstanding.
+  - **Tracker** — per-project follow-up view for marketing manager: order date, completion date, invoiced ₹, sent ₹, received ₹, remaining ₹, days-since-order, KPI strip + 6 filter badges. SQL RPC `get_payment_tracker_rows()`.
   - **Receipts** — customer payment log (Tier 3, immutable).
-  - **Follow-ups** — `PaymentFollowupsTable` with 3 summary cards (open / overdue / escalated) and 7-column task table + `MarkFollowupCompleteButton`. Scoped to `tasks.category IN ('payment_followup','payment_escalation') AND is_completed = false`.
+  - **Follow-ups** (filter param, not a tab) — `PaymentFollowupsTable` with 3 summary cards (open / overdue / escalated) and 7-column task table + `MarkFollowupCompleteButton`. Scoped to `tasks.category IN ('payment_followup','payment_escalation') AND is_completed = false`.
 - `/vendor-payments` — V2 upgraded: MSME aging strip (vendors ≥30d outstanding) + bill linkage column. Read-only. Writes go through the `recordVendorPayment` server action in `finance-actions.ts`.
 - `/msme-compliance` — MSME 45-day alert list (Day 40+).
 - `/profitability` — project-level P&L roll-up.
@@ -120,6 +121,7 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 - `get_msme_due_count()` — alert counter for Day 40+ vendors (migration 028).
 - `get_amc_monthly_summary()` — AMC visits scheduled vs completed (migration 048).
 - `get_projects_without_today_report()` — daily-report anti-join for site-ops alerts (migration 048).
+- `get_payment_tracker_rows()` — per-project rollup of invoiced / sent / received / remaining + order/completion dates + days-since-order (migration 088). Used by `/payments/tracker`.
 
 ## Known Gotchas
 

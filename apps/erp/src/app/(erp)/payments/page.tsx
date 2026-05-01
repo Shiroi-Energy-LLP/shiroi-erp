@@ -19,23 +19,13 @@ import {
 import { DollarSign } from 'lucide-react';
 import { RecordPaymentDialog } from '@/components/finance/record-payment-dialog';
 import { PaymentFollowupsTable } from '@/components/payments/payment-followups-table';
+import { STATUS_LABEL } from '@/components/payments/payments-helpers';
 
 interface PaymentsPageProps {
   searchParams: Promise<{
     filter?: string; // 'outstanding' | 'active' | 'all' | 'followups'
   }>;
 }
-
-const STATUS_LABEL: Record<string, string> = {
-  order_received: 'Order Received',
-  yet_to_start: 'Yet to Start',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  holding_shiroi: 'Holding - Shiroi',
-  holding_client: 'Holding - Client',
-  waiting_net_metering: 'Net Metering',
-  meter_client_scope: 'Meter - Client',
-};
 
 export default async function PaymentsOverviewPage({ searchParams }: PaymentsPageProps) {
   const params = await searchParams;
