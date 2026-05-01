@@ -5,7 +5,10 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 */15 * * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 */15 * * * *"
+            }
           ]
         }
       },
@@ -13,7 +16,10 @@
       "name": "Every 15 min",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -23,19 +29,52 @@
       "name": "Collect CPU / RAM / disk",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "notes": "Runs on the n8n container's host (Bangalore droplet). Returns single JSON line: {\"cpu_pct\":N,\"mem_pct\":N,\"disk_pct\":N}. Parsed by the next Set node."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "p1", "name": "cpu_pct", "value": "={{ JSON.parse($json.stdout).cpu_pct }}", "type": "number" },
-            { "id": "p2", "name": "mem_pct", "value": "={{ JSON.parse($json.stdout).mem_pct }}", "type": "number" },
-            { "id": "p3", "name": "disk_pct", "value": "={{ JSON.parse($json.stdout).disk_pct }}", "type": "number" },
-            { "id": "p4", "name": "threshold_pct", "value": 85, "type": "number" },
-            { "id": "p5", "name": "breach", "value": "={{ JSON.parse($json.stdout).cpu_pct >= 85 || JSON.parse($json.stdout).mem_pct >= 85 || JSON.parse($json.stdout).disk_pct >= 85 }}", "type": "boolean" },
-            { "id": "p6", "name": "timestamp_ist", "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST", "type": "string" }
+            {
+              "id": "p1",
+              "name": "cpu_pct",
+              "value": "={{ JSON.parse($json.stdout).cpu_pct }}",
+              "type": "number"
+            },
+            {
+              "id": "p2",
+              "name": "mem_pct",
+              "value": "={{ JSON.parse($json.stdout).mem_pct }}",
+              "type": "number"
+            },
+            {
+              "id": "p3",
+              "name": "disk_pct",
+              "value": "={{ JSON.parse($json.stdout).disk_pct }}",
+              "type": "number"
+            },
+            {
+              "id": "p4",
+              "name": "threshold_pct",
+              "value": 85,
+              "type": "number"
+            },
+            {
+              "id": "p5",
+              "name": "breach",
+              "value": "={{ JSON.parse($json.stdout).cpu_pct >= 85 || JSON.parse($json.stdout).mem_pct >= 85 || JSON.parse($json.stdout).disk_pct >= 85 }}",
+              "type": "boolean"
+            },
+            {
+              "id": "p6",
+              "name": "timestamp_ist",
+              "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -44,7 +83,10 @@
       "name": "Parse + threshold",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
@@ -84,7 +126,10 @@
       "name": "Breach?",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [750, 300]
+      "position": [
+        750,
+        300
+      ]
     },
     {
       "parameters": {
@@ -96,8 +141,18 @@
               "value": "=🚨 *Droplet health breach* — {{ $json.timestamp_ist }}\n\nHost: n8n.shiroienergy.com (DO Bangalore)\nCPU: {{ $json.cpu_pct }}%\nMem: {{ $json.mem_pct }}%\nDisk: {{ $json.disk_pct }}%\nThreshold: {{ $json.threshold_pct }}%\n\nSSH in and investigate: ssh root@68.183.91.111\n_Alerted because at least one of CPU/mem/disk ≥ threshold._",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $env.VIVEK_WHATSAPP }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $env.VIVEK_WHATSAPP }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -106,22 +161,30 @@
       "name": "Compose alert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1000, 200]
+      "position": [
+        1000,
+        200
+      ]
     },
     {
       "parameters": {
+        "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "toPhoneNumber": "={{ $json.to_phone }}",
-        "message": "={{ $json.message }}",
-        "options": {}
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1,
-      "position": [1250, 200],
+      "typeVersion": 1.1,
+      "position": [
+        1250,
+        200
+      ],
       "credentials": {
-        "whatsAppBusinessAccountApi": {
+        "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
@@ -131,11 +194,36 @@
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "o1", "name": "status", "value": "ok", "type": "string" },
-            { "id": "o2", "name": "cpu_pct", "value": "={{ $json.cpu_pct }}", "type": "number" },
-            { "id": "o3", "name": "mem_pct", "value": "={{ $json.mem_pct }}", "type": "number" },
-            { "id": "o4", "name": "disk_pct", "value": "={{ $json.disk_pct }}", "type": "number" },
-            { "id": "o5", "name": "note", "value": "All metrics under threshold — no alert fired.", "type": "string" }
+            {
+              "id": "o1",
+              "name": "status",
+              "value": "ok",
+              "type": "string"
+            },
+            {
+              "id": "o2",
+              "name": "cpu_pct",
+              "value": "={{ $json.cpu_pct }}",
+              "type": "number"
+            },
+            {
+              "id": "o3",
+              "name": "mem_pct",
+              "value": "={{ $json.mem_pct }}",
+              "type": "number"
+            },
+            {
+              "id": "o4",
+              "name": "disk_pct",
+              "value": "={{ $json.disk_pct }}",
+              "type": "number"
+            },
+            {
+              "id": "o5",
+              "name": "note",
+              "value": "All metrics under threshold — no alert fired.",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -144,20 +232,104 @@
       "name": "Log OK",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1000, 400]
+      "position": [
+        1000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "node-whatsapp-vinodh-elixdv",
+      "name": "Send WhatsApp to Vinodh",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1250,
+        350
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
     }
   ],
   "connections": {
-    "Every 15 min": { "main": [[{ "node": "Collect CPU / RAM / disk", "type": "main", "index": 0 }]] },
-    "Collect CPU / RAM / disk": { "main": [[{ "node": "Parse + threshold", "type": "main", "index": 0 }]] },
-    "Parse + threshold": { "main": [[{ "node": "Breach?", "type": "main", "index": 0 }]] },
-    "Breach?": {
+    "Every 15 min": {
       "main": [
-        [{ "node": "Compose alert", "type": "main", "index": 0 }],
-        [{ "node": "Log OK", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Collect CPU / RAM / disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Compose alert": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "Collect CPU / RAM / disk": {
+      "main": [
+        [
+          {
+            "node": "Parse + threshold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse + threshold": {
+      "main": [
+        [
+          {
+            "node": "Breach?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Breach?": {
+      "main": [
+        [
+          {
+            "node": "Compose alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose alert": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp to Vinodh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -169,11 +341,21 @@
     "saveDataSuccessExecution": "none"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-6" },
-    { "name": "meta" },
-    { "name": "infra" },
-    { "name": "cron" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-6"
+    },
+    {
+      "name": "meta"
+    },
+    {
+      "name": "infra"
+    },
+    {
+      "name": "cron"
+    }
   ],
   "meta": {
     "description": "Every 15 minutes — checks n8n droplet CPU/RAM/disk%; alerts Vivek when any exceeds 85%. Execute Command node runs on the n8n container's host (see notes on the node for exact shell). Set saveDataSuccessExecution=none to keep the execution log clean of the 96 daily no-op runs. Requires env: VIVEK_WHATSAPP."

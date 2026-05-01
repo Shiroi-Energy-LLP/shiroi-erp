@@ -9,22 +9,75 @@
       "name": "When called by router",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "f1", "name": "proposal_id", "value": "={{ $json.body.payload.proposal_id }}", "type": "string" },
-            { "id": "f2", "name": "proposal_number", "value": "={{ $json.body.payload.proposal_number }}", "type": "string" },
-            { "id": "f3", "name": "customer_name", "value": "={{ $json.body.payload.customer_name }}", "type": "string" },
-            { "id": "f4", "name": "customer_phone", "value": "={{ $json.body.payload.customer_phone }}", "type": "string" },
-            { "id": "f5", "name": "city", "value": "={{ $json.body.payload.city }}", "type": "string" },
-            { "id": "f6", "name": "estimated_size_kwp", "value": "={{ $json.body.payload.estimated_size_kwp }}", "type": "string" },
-            { "id": "f7", "name": "requested_by_name", "value": "={{ $json.body.payload.requested_by_name }}", "type": "string" },
-            { "id": "f8", "name": "design_head_whatsapp", "value": "={{ $json.body.payload.design_head_whatsapp }}", "type": "string" },
-            { "id": "f9", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
-            { "id": "f10", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" }
+            {
+              "id": "f1",
+              "name": "proposal_id",
+              "value": "={{ $json.body.payload.proposal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "proposal_number",
+              "value": "={{ $json.body.payload.proposal_number }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "customer_name",
+              "value": "={{ $json.body.payload.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "customer_phone",
+              "value": "={{ $json.body.payload.customer_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "city",
+              "value": "={{ $json.body.payload.city }}",
+              "type": "string"
+            },
+            {
+              "id": "f6",
+              "name": "estimated_size_kwp",
+              "value": "={{ $json.body.payload.estimated_size_kwp }}",
+              "type": "string"
+            },
+            {
+              "id": "f7",
+              "name": "requested_by_name",
+              "value": "={{ $json.body.payload.requested_by_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f8",
+              "name": "design_head_whatsapp",
+              "value": "={{ $json.body.payload.design_head_whatsapp }}",
+              "type": "string"
+            },
+            {
+              "id": "f9",
+              "name": "erp_url",
+              "value": "={{ $json.body.payload.erp_url }}",
+              "type": "string"
+            },
+            {
+              "id": "f10",
+              "name": "timestamp_ist",
+              "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -33,7 +86,10 @@
       "name": "Extract fields",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -45,8 +101,18 @@
               "value": "=📐 *New proposal requested* — {{ $json.customer_name }}\n\nPhone: {{ $json.customer_phone }}\nCity: {{ $json.city }}\nSize: {{ $json.estimated_size_kwp }} kWp\nRequested by: {{ $json.requested_by_name }}\nRaised: {{ $json.timestamp_ist }}\n\nOpen: {{ $json.erp_url }}\n\nPlease assign a designer — salesperson is waiting on a quote.",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $json.design_head_whatsapp }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $json.design_head_whatsapp }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -55,22 +121,30 @@
       "name": "Compose WhatsApp message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
+        "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "toPhoneNumber": "={{ $json.to_phone }}",
-        "message": "={{ $json.message }}",
-        "options": {}
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1,
-      "position": [750, 300],
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        300
+      ],
       "credentials": {
-        "whatsAppBusinessAccountApi": {
+        "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
@@ -78,9 +152,39 @@
     }
   ],
   "connections": {
-    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
-    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message", "type": "main", "index": 0 }]] },
-    "Compose WhatsApp message": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "When called by router": {
+      "main": [
+        [
+          {
+            "node": "Extract fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract fields": {
+      "main": [
+        [
+          {
+            "node": "Compose WhatsApp message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose WhatsApp message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -92,9 +196,15 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-1" },
-    { "name": "design" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-1"
+    },
+    {
+      "name": "design"
+    }
   ],
   "meta": {
     "description": "Triggered by router on proposal.requested. Payload: {proposal_id, proposal_number, customer_name, customer_phone, city, estimated_size_kwp, requested_by_name, design_head_whatsapp, erp_url}. Pings the Design team head so they can assign a designer to draft the quote."

@@ -9,21 +9,69 @@
       "name": "When called by router",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "f1", "name": "purchase_order_id", "value": "={{ $json.body.payload.purchase_order_id }}", "type": "string" },
-            { "id": "f2", "name": "po_number", "value": "={{ $json.body.payload.po_number }}", "type": "string" },
-            { "id": "f3", "name": "vendor_name", "value": "={{ $json.body.payload.vendor_name }}", "type": "string" },
-            { "id": "f4", "name": "total_amount", "value": "={{ $json.body.payload.total_amount }}", "type": "string" },
-            { "id": "f5", "name": "project_code", "value": "={{ $json.body.payload.project_code }}", "type": "string" },
-            { "id": "f6", "name": "preparer_name", "value": "={{ $json.body.payload.preparer_name }}", "type": "string" },
-            { "id": "f7", "name": "preparer_whatsapp", "value": "={{ $json.body.payload.preparer_whatsapp }}", "type": "string" },
-            { "id": "f8", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
-            { "id": "f9", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" }
+            {
+              "id": "f1",
+              "name": "purchase_order_id",
+              "value": "={{ $json.body.payload.purchase_order_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "po_number",
+              "value": "={{ $json.body.payload.po_number }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "vendor_name",
+              "value": "={{ $json.body.payload.vendor_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "total_amount",
+              "value": "={{ $json.body.payload.total_amount }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "project_code",
+              "value": "={{ $json.body.payload.project_code }}",
+              "type": "string"
+            },
+            {
+              "id": "f6",
+              "name": "preparer_name",
+              "value": "={{ $json.body.payload.preparer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f7",
+              "name": "preparer_whatsapp",
+              "value": "={{ $json.body.payload.preparer_whatsapp }}",
+              "type": "string"
+            },
+            {
+              "id": "f8",
+              "name": "erp_url",
+              "value": "={{ $json.body.payload.erp_url }}",
+              "type": "string"
+            },
+            {
+              "id": "f9",
+              "name": "timestamp_ist",
+              "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -32,7 +80,10 @@
       "name": "Extract fields",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -44,8 +95,18 @@
               "value": "=✅ *PO approved* — {{ $json.po_number }}\n\nVendor: {{ $json.vendor_name }}\nAmount: ₹{{ $json.total_amount }}\nProject: {{ $json.project_code }}\nApproved: {{ $json.timestamp_ist }}\n\nOpen: {{ $json.erp_url }}\n\nYou can now send the PO to the vendor.",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $json.preparer_whatsapp }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $json.preparer_whatsapp }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -54,22 +115,30 @@
       "name": "Compose WhatsApp message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
+        "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "toPhoneNumber": "={{ $json.to_phone }}",
-        "message": "={{ $json.message }}",
-        "options": {}
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1,
-      "position": [750, 300],
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        300
+      ],
       "credentials": {
-        "whatsAppBusinessAccountApi": {
+        "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
@@ -77,9 +146,39 @@
     }
   ],
   "connections": {
-    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
-    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message", "type": "main", "index": 0 }]] },
-    "Compose WhatsApp message": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "When called by router": {
+      "main": [
+        [
+          {
+            "node": "Extract fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract fields": {
+      "main": [
+        [
+          {
+            "node": "Compose WhatsApp message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose WhatsApp message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -91,9 +190,15 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-1" },
-    { "name": "procurement" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-1"
+    },
+    {
+      "name": "procurement"
+    }
   ],
   "meta": {
     "description": "Triggered by router on purchase_order.approved. Payload: {purchase_order_id, po_number, vendor_name, total_amount, project_code, preparer_name, preparer_whatsapp, erp_url}. Pings the PO preparer that the approval has landed so they can dispatch it to the vendor. Wired to po-actions.approvePO → emitPurchaseOrderApproved."
