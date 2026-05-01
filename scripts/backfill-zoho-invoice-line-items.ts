@@ -30,7 +30,7 @@ const admin = createClient<Database>(supabaseUrl, serviceKey, {
 interface XlsLineRow {
   'Invoice ID': string | null;
   'Item Name': string | null;
-  'Item Description': string | null;
+  'Item Desc': string | null;
   'Quantity': string | number | null;
   'Item Price': string | number | null;
   'Item Total': string | number | null;
@@ -71,18 +71,21 @@ async function run() {
   console.log(`  ${grouped.size} unique invoices in XLS`);
 
   // Lookup ERP invoices by zoho_invoice_id.
+  // Compare line-item sums to subtotal_supply (pre-GST), not total_amount —
+  // XLS Item Total is pre-GST, ERP total_amount is GST-inclusive, so a direct
+  // total comparison falsely flags every GST-bearing invoice as a mismatch.
   const { data: invoices, error: invErr } = await admin
     .from('invoices')
-    .select('id, zoho_invoice_id, total_amount')
+    .select('id, zoho_invoice_id, subtotal_supply, subtotal_works')
     .eq('source', 'zoho_import');
   if (invErr) throw invErr;
 
-  const invoiceByZohoId = new Map<string, { id: string; total: number }>();
+  const invoiceByZohoId = new Map<string, { id: string; subtotal: number }>();
   for (const inv of invoices ?? []) {
     if (inv.zoho_invoice_id) {
       invoiceByZohoId.set(inv.zoho_invoice_id, {
         id: inv.id,
-        total: Number(inv.total_amount ?? 0),
+        subtotal: Number(inv.subtotal_supply ?? 0) + Number(inv.subtotal_works ?? 0),
       });
     }
   }
@@ -110,13 +113,13 @@ async function run() {
       continue;
     }
     const sumLines = lines.reduce((s, r) => s + toNumber(r['Item Total']), 0);
-    const erpTotal = erp.total;
-    const absDev = Math.abs(sumLines - erpTotal);
-    const pctDev = erpTotal === 0 ? 0 : absDev / erpTotal;
+    const erpSubtotal = erp.subtotal;
+    const absDev = Math.abs(sumLines - erpSubtotal);
+    const pctDev = erpSubtotal === 0 ? 0 : absDev / erpSubtotal;
     if (absDev > 10000 && pctDev > 0.05) {
       console.warn(
         `  SKIP mismatch: ${zohoId} — XLS lines sum ₹${sumLines.toFixed(2)} ` +
-        `vs ERP total ₹${erpTotal.toFixed(2)} (Δ ₹${absDev.toFixed(2)}, ${(pctDev * 100).toFixed(1)}%)`,
+        `vs ERP subtotal ₹${erpSubtotal.toFixed(2)} (Δ ₹${absDev.toFixed(2)}, ${(pctDev * 100).toFixed(1)}%)`,
       );
       mismatchSkipped++;
       continue;
@@ -128,7 +131,7 @@ async function run() {
         zoho_invoice_id: zohoId,
         line_number: idx + 1,
         item_name: toStr(r['Item Name']),
-        item_description: toStr(r['Item Description']),
+        item_description: toStr(r['Item Desc']),
         quantity: toNumber(r['Quantity']),
         rate: toNumber(r['Item Price']),
         amount: toNumber(r['Item Total']),
