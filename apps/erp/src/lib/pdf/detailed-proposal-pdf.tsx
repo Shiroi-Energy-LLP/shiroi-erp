@@ -46,7 +46,7 @@ function PageFooter({ proposalNumber, pageNum, totalPages }: { proposalNumber: s
   return (
     <View style={styles.footer}>
       <Text>{proposalNumber}</Text>
-      <Text>Shiroi Energy Private Limited</Text>
+      <Text>Shiroi Energy LLP</Text>
       <Text>Page {pageNum} of {totalPages}</Text>
     </View>
   );
@@ -99,7 +99,7 @@ function CoverPage({ data }: { data: ProposalPDFData }) {
 
       <View style={{ position: 'absolute', bottom: 30, left: 50, right: 50, borderTopWidth: 1, borderTopColor: BRAND.gray300, paddingTop: 8 }}>
         <Text style={{ fontSize: 8, color: BRAND.gray500, textAlign: 'center' }}>
-          Shiroi Energy Private Limited | Chennai, Tamil Nadu | www.shiroienergy.com
+          Shiroi Energy LLP | Chennai, Tamil Nadu | www.shiroienergy.com
         </Text>
       </View>
     </Page>
@@ -117,7 +117,7 @@ function AboutPage({ data }: { data: ProposalPDFData }) {
       <Text style={styles.h1}>About Shiroi Energy</Text>
 
       <Text style={[styles.body, { marginTop: 12 }]}>
-        Shiroi Energy Private Limited is a Chennai-based solar EPC company specializing in the design, engineering,
+        Shiroi Energy LLP is a Chennai-based solar EPC company specializing in the design, engineering,
         procurement, and installation of rooftop solar power systems. Since our founding, we have completed over
         500 solar installations across Tamil Nadu, serving residential, commercial, and industrial customers.
       </Text>
@@ -514,7 +514,7 @@ function PaymentPage({ data }: { data: ProposalPDFData }) {
       </View>
 
       <Text style={[styles.body, { marginTop: 16 }]}>
-        All payments to be made via bank transfer (NEFT/RTGS/UPI) to Shiroi Energy Private Limited.
+        All payments to be made via bank transfer (NEFT/RTGS/UPI) to Shiroi Energy LLP.
         Proforma invoices will be raised at each milestone. GST invoices will be issued upon receipt of payment.
       </Text>
 
@@ -680,7 +680,7 @@ export function DetailedProposalPDF({ data }: { data: ProposalPDFData }) {
   return (
     <Document
       title={`Solar Proposal — ${data.customerName} — ${data.systemSizeKwp}kWp`}
-      author="Shiroi Energy Private Limited"
+      author="Shiroi Energy LLP"
       subject={`Proposal ${data.proposalNumber}`}
     >
       <CoverPage data={data} />

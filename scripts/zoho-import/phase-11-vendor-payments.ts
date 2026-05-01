@@ -1,16 +1,20 @@
 // scripts/zoho-import/phase-11-vendor-payments.ts
-// Vendor_Payment.xls → vendor_payments table
-// Headers: VendorPayment ID | Payment Number | Date | Vendor Name | Amount | Mode | Reference Number
-// vendor_payments NOT NULL: vendor_id, recorded_by, amount, payment_date, payment_method, msme_compliant
-// Now nullable: purchase_order_id, po_date, days_from_po (after migration 067)
-// CHECK: purchase_order_id IS NOT NULL OR vendor_bill_id IS NOT NULL
-// Strategy: only link a Zoho payment to a bill when `balance_due ≈ payment_amount` (exact match).
-// DO NOT fall back to "first open bill for vendor" or "latest PO for vendor" — Apr 18 2026 migration 079
-// cleaned up 669 mis-linked payments from a prior run that used those heuristics. Unlinked payments
-// are counted and reported but NOT inserted: the schema requires bill_id OR po_id plus a non-null
-// project_id, and we don't have that info in Zoho's Vendor_Payment.xls (only the vendor-level total).
-// To insert unlinked payments in the future we need either (a) Zoho's per-bill allocation export, or
-// (b) a schema change to allow vendor-level payments without a bill/PO/project link.
+// Vendor_Payment.xls → vendor_payments table (ONE DB ROW PER XLS ROW).
+//
+// Vendor_Payment.xls is ALREADY per-allocation: one row per bill the parent
+// VendorPayment was split across. Prior versions of this phase deduped by
+// `VendorPayment ID` (parent payment) and then used a fragile "exact balance
+// match" heuristic to guess which bill the payment belonged to — dropping
+// ~2700 of 3397 rows and mis-linking the ones that did match (see migration
+// 079 for the clean-up).
+//
+// Re-architecture (Apr 19 2026):
+//   Dedupe key = `PIPayment ID` (each allocation is unique)
+//   Stored in  = `vendor_payments.zoho_vendor_payment_id` (UNIQUE)
+//   Amount     = `Bill Amount` (the per-bill allocated amount, not the parent total)
+//   Link bill  = `Bill ID` → `vendor_bills.zoho_bill_id` (direct ID match)
+//   Project    = inherited from linked bill; skip if bill has no project
+//                (vendor_payments.project_id is NOT NULL)
 import { admin, getSystemEmployeeId } from './supabase';
 import { loadSheet, toStr, toNumber, toDateISO } from './parse-xls';
 import { emptyResult, PhaseResult } from './logger';
@@ -18,14 +22,17 @@ import { mapPaymentMode, normalizeName, tokens, jaccard } from './normalize';
 
 interface ZohoVendorPayRow {
   'VendorPayment ID': string | null;
+  'PIPayment ID': string | null;
   'Payment Number': string | null;
   'Date': unknown;
   'Vendor Name': string | null;
   'Amount': string | number | null;
+  'Bill Amount': string | number | null;
+  'Bill ID': string | null;
+  'Bill Number': string | null;
   'Mode': string | null;
   'Reference Number': string | null;
   'Description': string | null;
-  'Unused Amount': string | number | null;
 }
 
 export async function runPhase11(): Promise<PhaseResult> {
@@ -34,16 +41,9 @@ export async function runPhase11(): Promise<PhaseResult> {
   const systemId = await getSystemEmployeeId();
 
   const rows = loadSheet<ZohoVendorPayRow>('Vendor_Payment.xls');
+  console.log(`  ${rows.length} rows in Vendor_Payment.xls (one DB row per XLS row)`);
 
-  // De-duplicate by VendorPayment ID
-  const seen = new Map<string, ZohoVendorPayRow>();
-  for (const r of rows) {
-    const id = toStr(r['VendorPayment ID']);
-    if (id && !seen.has(id)) seen.set(id, r);
-  }
-  console.log(`  ${rows.length} rows → ${seen.size} unique vendor payments`);
-
-  // Load vendor lookup by name (with fuzzy fallback)
+  // Vendor lookup: exact name, then fuzzy Jaccard fallback (>=0.50).
   const { data: erpVendors } = await admin.from('vendors').select('id, company_name');
   const vendorByName = new Map<string, string>();
   for (const v of erpVendors ?? []) {
@@ -61,86 +61,72 @@ export async function runPhase11(): Promise<PhaseResult> {
     return bestScore >= 0.50 ? bestId : undefined;
   };
 
-  // Load bills by vendor for linking — include project_id for propagation
+  // Bill lookup by Zoho Bill ID → ERP bill id + project_id.
   const { data: bills } = await admin
     .from('vendor_bills')
-    .select('id, vendor_id, total_amount, amount_paid, status, project_id')
-    .in('status', ['pending', 'partially_paid']);
-  const billsByVendor = new Map<string, Array<{ id: string; total_amount: number; amount_paid: number; project_id: string | null }>>();
+    .select('id, project_id, zoho_bill_id, vendor_id')
+    .not('zoho_bill_id', 'is', null);
+  const billByZohoId = new Map<string, { id: string; project_id: string | null; vendor_id: string }>();
   for (const b of bills ?? []) {
-    if (!billsByVendor.has(b.vendor_id)) billsByVendor.set(b.vendor_id, []);
-    billsByVendor.get(b.vendor_id)!.push({
-      id: b.id,
-      total_amount: Number(b.total_amount),
-      amount_paid: Number(b.amount_paid),
-      project_id: b.project_id,
-    });
+    if (b.zoho_bill_id) billByZohoId.set(b.zoho_bill_id, { id: b.id, project_id: b.project_id, vendor_id: b.vendor_id });
   }
 
-  // Idempotency
+  // Idempotency: skip PIPayment IDs already imported.
   const { data: existing } = await admin
     .from('vendor_payments')
     .select('zoho_vendor_payment_id')
     .not('zoho_vendor_payment_id', 'is', null);
-  const existingIds = new Set((existing ?? []).map(r => r.zoho_vendor_payment_id as string | null).filter((x): x is string => x != null));
+  const existingIds = new Set(
+    (existing ?? []).map(r => r.zoho_vendor_payment_id as string | null).filter((x): x is string => x != null)
+  );
 
-  let skippedNoVendor = 0;
-  let skippedNoMatch = 0;
   let linkedToBill = 0;
+  let skippedNoVendor = 0;
+  let skippedNoBill = 0;
+  let skippedNoProject = 0;
+  let skippedBlankId = 0;
 
-  for (const [zohoId, r] of seen.entries()) {
-    if (existingIds.has(zohoId)) { result.skipped++; continue; }
+  for (const r of rows) {
+    const piPayId = toStr(r['PIPayment ID']);
+    if (!piPayId) { skippedBlankId++; result.skipped++; continue; }
+    if (existingIds.has(piPayId)) { result.skipped++; continue; }
 
-    const vendorId = findVendorPay(toStr(r['Vendor Name']) ?? '');
+    const zohoBillId = toStr(r['Bill ID']);
+    const bill = zohoBillId ? billByZohoId.get(zohoBillId) : undefined;
 
+    // Primary vendor from bill (authoritative); fall back to name lookup.
+    let vendorId: string | undefined = bill?.vendor_id;
     if (!vendorId) {
-      skippedNoVendor++;
-      result.skipped++;
-      continue;
+      vendorId = findVendorPay(toStr(r['Vendor Name']) ?? '');
+      if (!vendorId) { skippedNoVendor++; result.skipped++; continue; }
     }
 
-    const paymentAmount = toNumber(r['Amount']);
-    const paymentDate = toDateISO(r['Date']) ?? '2023-01-01';
-
-    // Only link to a bill when balance_due matches the payment amount within ₹1.
-    // Any looser heuristic (first open bill / latest PO for vendor) corrupts amount_paid
-    // via the update_po_amount_paid trigger — see migration 079 for the clean-up.
-    const vendorBills = billsByVendor.get(vendorId) ?? [];
-    const matchingBill = vendorBills.find(
-      b => Math.abs((b.total_amount - b.amount_paid) - paymentAmount) < 1
-    );
-
-    if (!matchingBill) {
-      skippedNoMatch++;
-      result.skipped++;
-      continue;
-    }
-
-    const vendorBillId = matchingBill.id;
-    const projectId = matchingBill.project_id;
+    if (!bill) { skippedNoBill++; result.skipped++; continue; }
+    if (!bill.project_id) skippedNoProject++;
     linkedToBill++;
 
-    // project_id is NOT NULL on vendor_payments — if the matched bill has no project, skip.
-    if (!projectId) {
-      skippedNoMatch++;
-      result.skipped++;
-      continue;
-    }
+    const amount = toNumber(r['Bill Amount']);
+    if (amount <= 0) { result.skipped++; continue; }
+
+    const paymentDate = toDateISO(r['Date']) ?? '2023-01-01';
 
     const row = {
       vendor_id: vendorId,
-      project_id: projectId,
+      project_id: bill.project_id,
       recorded_by: systemId,
-      amount: paymentAmount,
+      amount,
       payment_date: paymentDate,
       payment_method: mapPaymentMode(toStr(r['Mode'])),
       payment_reference: toStr(r['Reference Number']),
       msme_compliant: true,
-      vendor_bill_id: vendorBillId,
+      vendor_bill_id: bill.id,
       purchase_order_id: null,
       notes: toStr(r['Description']),
       source: 'zoho_import',
-      zoho_vendor_payment_id: zohoId,
+      zoho_vendor_payment_id: piPayId,
+      // Anchor created_at to the payment date (12:00 IST) so sorts/filters
+      // that key off created_at reflect real history. See mig 086.
+      created_at: `${paymentDate}T12:00:00+05:30`,
     };
 
     if (dryRun) { result.skipped++; continue; }
@@ -149,14 +135,14 @@ export async function runPhase11(): Promise<PhaseResult> {
     const { error } = await admin.from('vendor_payments').insert(row as any);
     if (error) {
       if (error.code === '23505') { result.skipped++; continue; }
-      result.errors.push({ row: 0, reason: `${zohoId}: ${error.message}` });
+      result.errors.push({ row: 0, reason: `${piPayId}: ${error.message}` });
       result.failed++;
     } else {
       result.inserted++;
     }
   }
 
-  console.log(`  Linked to bill (exact amount match): ${linkedToBill}, skipped no-vendor: ${skippedNoVendor}, skipped no-match (need Zoho per-bill allocation): ${skippedNoMatch}`);
-  if (dryRun) console.log(`  DRY RUN: would process ${seen.size} vendor payments`);
+  console.log(`  Linked to bill: ${linkedToBill}, skipped no-vendor: ${skippedNoVendor}, no-bill: ${skippedNoBill}, NULL project (kept): ${skippedNoProject}, blank-id: ${skippedBlankId}`);
+  if (dryRun) console.log(`  DRY RUN: would process ${rows.length} vendor payments`);
   return result;
 }

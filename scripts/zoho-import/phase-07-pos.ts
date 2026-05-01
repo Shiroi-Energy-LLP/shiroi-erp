@@ -1,7 +1,13 @@
 // scripts/zoho-import/phase-07-pos.ts
 // Purchase_Order.xls → purchase_orders (header only)
-// PO row is de-duplicated by Purchase Order ID (one PO spans multiple line-item rows).
+// Grain: one XLS row per line item; dedupe by Purchase Order ID (first row wins —
+//   Total/SubTotal/Balance/Project ID repeat on every line item of the same PO).
 // Numbers prefixed with ZHI/ to avoid collision with ERP-issued PO numbers.
+//
+// Project attribution priority (Apr 19 2026 — data accuracy pass):
+//   1. Zoho Project ID column → lookup in projects.zoho_project_id (set by Phase 06)
+//   2. Zoho Project Name → lookup in zoho_project_mapping (legacy name-based)
+//   3. NULL (allowed after migration 084; ERP-source POs still require project_id)
 import { admin, getSystemEmployeeId } from './supabase';
 import { loadSheet, toStr, toNumber, toDateISO } from './parse-xls';
 import { emptyResult, PhaseResult } from './logger';
@@ -17,6 +23,7 @@ interface ZohoPORow {
   'SubTotal': string | number | null;
   'Total': string | number | null;
   'Balance': string | number | null;
+  'Project ID': string | null;
   'Project Name': string | null;
   'Terms & Conditions': string | null;
 }
@@ -37,7 +44,7 @@ export async function runPhase07(): Promise<PhaseResult> {
 
   const rows = loadSheet<ZohoPORow>('Purchase_Order.xls');
 
-  // De-duplicate: first occurrence wins per PO ID
+  // De-duplicate: first occurrence wins per PO ID (header fields repeat on every line item).
   const seen = new Map<string, ZohoPORow>();
   for (const r of rows) {
     const id = toStr(r['Purchase Order ID']);
@@ -45,13 +52,12 @@ export async function runPhase07(): Promise<PhaseResult> {
   }
   console.log(`  ${rows.length} rows → ${seen.size} unique POs`);
 
-  // Load vendor lookup by name (exact + fuzzy fallback)
+  // Vendor lookup: exact name, then fuzzy Jaccard fallback (>=0.50).
   const { data: erpVendors } = await admin.from('vendors').select('id, company_name');
   const vendorByName = new Map<string, string>();
   for (const v of erpVendors ?? []) {
     vendorByName.set(v.company_name.toLowerCase().trim(), v.id);
   }
-  // Fuzzy vendor lookup for cases like "FESTA SOLAR PRIVATE LIMITED" → "Festa Solar"
   const findVendor = (rawName: string): string | undefined => {
     const exact = vendorByName.get(rawName.toLowerCase().trim());
     if (exact) return exact;
@@ -65,7 +71,17 @@ export async function runPhase07(): Promise<PhaseResult> {
     return bestScore >= 0.50 ? bestId : undefined;
   };
 
-  // Load project mapping name → ERP id
+  // Project lookup 1: Zoho Project ID → ERP project id (set by Phase 06 after matching).
+  const { data: projById } = await admin
+    .from('projects')
+    .select('id, zoho_project_id')
+    .not('zoho_project_id', 'is', null);
+  const projByZohoId = new Map<string, string>();
+  for (const p of projById ?? []) {
+    if (p.zoho_project_id) projByZohoId.set(p.zoho_project_id, p.id);
+  }
+
+  // Project lookup 2: zoho_project_mapping fallback by name.
   const { data: projMappings } = await admin
     .from('zoho_project_mapping')
     .select('zoho_project_name, erp_project_id');
@@ -74,7 +90,7 @@ export async function runPhase07(): Promise<PhaseResult> {
     projByName.set(m.zoho_project_name.toLowerCase().trim(), m.erp_project_id);
   }
 
-  // Load existing imported PO IDs (idempotency)
+  // Idempotency: skip PO IDs already imported.
   const { data: existingPOs } = await admin
     .from('purchase_orders')
     .select('zoho_po_id')
@@ -106,13 +122,12 @@ export async function runPhase07(): Promise<PhaseResult> {
   };
 
   const batch: POInsert[] = [];
+  let resolvedByZohoId = 0;
+  let resolvedByName = 0;
+  let unresolvedProject = 0;
 
   for (const [zohoPoId, r] of seen.entries()) {
     if (existingPoIds.has(zohoPoId)) { result.skipped++; continue; }
-
-    const poDate = toDateISO(r['Purchase Order Date']) ?? '2023-01-01';
-    const vendorName = (toStr(r['Vendor Name']) ?? '').toLowerCase().trim();
-    const projectName = (toStr(r['Project Name']) ?? '').toLowerCase().trim();
 
     const vendorId = findVendor(toStr(r['Vendor Name']) ?? '');
     if (!vendorId) {
@@ -121,10 +136,21 @@ export async function runPhase07(): Promise<PhaseResult> {
       continue;
     }
 
-    const projectId = projectName ? (projByName.get(projectName) ?? null) : null;
-    // purchase_orders.project_id is NOT NULL — skip POs with no matched project
-    if (!projectId) { result.skipped++; continue; }
+    // Resolve project — Zoho ID first, then name, then NULL.
+    const zohoProjectId = toStr(r['Project ID']);
+    const zohoProjectName = (toStr(r['Project Name']) ?? '').toLowerCase().trim();
+    let projectId: string | null = null;
+    if (zohoProjectId && projByZohoId.has(zohoProjectId)) {
+      projectId = projByZohoId.get(zohoProjectId)!;
+      resolvedByZohoId++;
+    } else if (zohoProjectName && projByName.has(zohoProjectName)) {
+      projectId = projByName.get(zohoProjectName)!;
+      resolvedByName++;
+    } else {
+      unresolvedProject++;
+    }
 
+    const poDate = toDateISO(r['Purchase Order Date']) ?? '2023-01-01';
     const subtotal = toNumber(r['SubTotal']);
     const total = toNumber(r['Total']);
     const balance = toNumber(r['Balance']);
@@ -151,11 +177,15 @@ export async function runPhase07(): Promise<PhaseResult> {
       sent_via_channels: [],
       source: 'zoho_import',
       zoho_po_id: zohoPoId,
+      // Anchor created_at to the PO date (12:00 IST) — see mig 086.
+      created_at: `${poDate}T12:00:00+05:30`,
     });
   }
 
+  console.log(`  Project resolution: ${resolvedByZohoId} by Zoho ID, ${resolvedByName} by name, ${unresolvedProject} NULL`);
+
   if (dryRun) {
-    console.log(`  DRY RUN: would insert ${batch.length} POs (${result.errors.length} vendor-not-found skips)`);
+    console.log(`  DRY RUN: would insert ${batch.length} POs`);
     result.skipped += batch.length;
     return result;
   }

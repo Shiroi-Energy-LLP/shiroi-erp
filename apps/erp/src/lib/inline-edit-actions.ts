@@ -67,10 +67,11 @@ export async function updateCellValue(input: {
 
   console.log(`${op} Updating ${tableName}.${field} for ${rowId}`);
 
-  const { error } = await supabase
+  const { data: updatedRows, error } = await supabase
     .from(tableName as any)
     .update({ [field]: value } as any)
-    .eq('id', rowId);
+    .eq('id', rowId)
+    .select('id');
 
   if (error) {
     console.error(`${op} Failed:`, {
@@ -79,8 +80,19 @@ export async function updateCellValue(input: {
       table: tableName,
       field,
       rowId,
+      timestamp: new Date().toISOString(),
     });
     return { success: false, error: error.message };
+  }
+
+  if (!updatedRows || updatedRows.length === 0) {
+    console.error(`${op} 0 rows affected — RLS blocked or row missing:`, {
+      table: tableName,
+      field,
+      rowId,
+      timestamp: new Date().toISOString(),
+    });
+    return { success: false, error: 'Update blocked — permission denied or row missing' };
   }
 
   // Revalidate the entity list page

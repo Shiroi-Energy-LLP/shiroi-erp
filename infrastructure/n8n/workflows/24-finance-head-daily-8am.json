@@ -1,0 +1,118 @@
+{
+  "name": "24 — Finance head daily 8AM digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 2 * * *" }
+          ]
+        }
+      },
+      "id": "node-cron",
+      "name": "Daily 8:00 IST (02:30 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_ID }}.supabase.co/rest/v1/v_digest_invoices_overdue_15d",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "node-http",
+      "name": "Fetch overdue invoices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
+          "name": "Supabase service role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=💰 *Finance digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nOverdue invoices (>15d): {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ No invoices overdue — AR is clean.' : ($json.data || []).slice(0, 15).map((i, idx) => `${idx+1}. ${i.invoice_number} · ${i.customer_name} · ₹${i.amount_outstanding} · ${i.days_overdue}d overdue · ${i.sales_person_name || '—'}`).join('\\n') }}{{ ($json.data || []).length > 15 ? '\\n…and ' + (($json.data || []).length - 15) + ' more.' : '' }}\n\nOpen: https://erp.shiroienergy.com/invoices\n\n_TODO: add v_digest_invoices_due_7d (upcoming) + v_digest_vendor_payments_due_7d (payables) for a full AR/AP picture._",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $env.FINANCE_HEAD_WHATSAPP }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose digest",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "1140448799143790",
+        "toPhoneNumber": "={{ $json.to_phone }}",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "node-whatsapp-send",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "credentials": {
+        "whatsAppBusinessAccountApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 8:00 IST (02:30 UTC)": { "main": [[{ "node": "Fetch overdue invoices", "type": "main", "index": 0 }]] },
+    "Fetch overdue invoices": { "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]] },
+    "Compose digest": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-2" },
+    { "name": "finance" },
+    { "name": "digest" },
+    { "name": "cron" }
+  ],
+  "meta": {
+    "description": "Daily 8:00 IST — Finance head digest. Queries v_digest_invoices_overdue_15d (migration 083). Future: extend to include v_digest_invoices_due_7d + v_digest_vendor_payments_due_7d (migration 085) for consolidated AR/AP morning view. Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, FINANCE_HEAD_WHATSAPP."
+  },
+  "pinData": {}
+}

@@ -20,6 +20,7 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { logProcurementAudit } from '@/lib/procurement-audit';
+import { emitErpEvent } from '@/lib/n8n/emit';
 import type { Database } from '@repo/types/database';
 
 type PurchaseOrderUpdate = Database['public']['Tables']['purchase_orders']['Update'];
@@ -333,10 +334,53 @@ export async function approvePO(poId: string): Promise<ActionResult<void>> {
     revalidatePath(`/procurement/project/${po.project_id}`);
     revalidatePath(`/procurement/${poId}`);
     revalidatePath('/procurement');
+
+    void emitPurchaseOrderApproved(poId);
+
     return ok(undefined);
   } catch (e) {
     console.error(`${op} threw`, { poId, e });
     return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+async function emitPurchaseOrderApproved(poId: string): Promise<void> {
+  const op = '[emitPurchaseOrderApproved]';
+  try {
+    const supabase = await createClient();
+    const { data: enriched } = await supabase
+      .from('purchase_orders')
+      .select(`
+        id,
+        po_number,
+        total_amount,
+        project:projects!purchase_orders_project_id_fkey ( project_number ),
+        vendor:vendors!purchase_orders_vendor_id_fkey ( company_name ),
+        preparer:employees!purchase_orders_prepared_by_fkey ( id, full_name, whatsapp_number )
+      `)
+      .eq('id', poId)
+      .single();
+    if (!enriched) return;
+
+    const project = Array.isArray(enriched.project) ? enriched.project[0] : enriched.project;
+    const vendor = Array.isArray(enriched.vendor) ? enriched.vendor[0] : enriched.vendor;
+    const preparer = Array.isArray(enriched.preparer) ? enriched.preparer[0] : enriched.preparer;
+
+    await emitErpEvent('purchase_order.approved', {
+      purchase_order_id: enriched.id,
+      po_number: enriched.po_number,
+      vendor_name: vendor?.company_name ?? null,
+      total_amount: enriched.total_amount,
+      project_code: project?.project_number ?? null,
+      preparer_name: preparer?.full_name ?? null,
+      preparer_whatsapp: preparer?.whatsapp_number ?? null,
+      erp_url: `https://erp.shiroienergy.com/procurement/${enriched.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      poId,
+      error: e instanceof Error ? e.message : String(e),
+    });
   }
 }
 

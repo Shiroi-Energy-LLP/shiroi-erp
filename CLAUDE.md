@@ -31,7 +31,7 @@
 
 ## IDENTITY
 
-**Shiroi Energy Private Limited** — solar EPC, Chennai, Tamil Nadu. Rooftop solar (residential, commercial, industrial). ~50 employees, 500+ projects completed.
+**Shiroi Energy LLP** — solar EPC, Chennai, Tamil Nadu. Rooftop solar (residential, commercial, industrial). ~50 employees, 500+ projects completed.
 
 This ERP is **single-tenant, built for Shiroi only**. No `company_id` on any table. Ever.
 
@@ -100,8 +100,10 @@ PROD_SUPABASE_SECRET_KEY
 ANTHROPIC_API_KEY
 PVWATTS_API_KEY
 PVLIB_MICROSERVICE_URL
-N8N_WEBHOOK_SECRET
-N8N_BUG_REPORT_WEBHOOK_URL            (optional — n8n webhook that receives a JSON payload on bug report submit; if unset, reports are still stored in DB)
+N8N_WEBHOOK_SECRET                    (shared secret for every n8n webhook; matched via Header Auth credential as `x-webhook-secret`)
+N8N_EVENT_BUS_URL                     (single-ingress router webhook: ERP fires all events here → n8n Switch-routes to downstream workflows; if unset, emitErpEvent is a silent no-op)
+N8N_BUG_REPORT_WEBHOOK_URL            (legacy standalone webhook for /settings bug reports — predates event bus; still live)
+N8N_API_KEY                           (n8n REST API key for programmatic workflow push from scripts/push-n8n-workflows.ts)
 NEXT_PUBLIC_SENTRY_DSN + SENTRY_DSN + SENTRY_ORG + SENTRY_PROJECT
 ```
 

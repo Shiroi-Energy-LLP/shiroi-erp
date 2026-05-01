@@ -56,10 +56,10 @@ export async function SalesDashboard() {
           subNote="This month"
         />
         <KpiCard
-          label="Pipeline Value"
+          label="Negotiation Pipeline"
           value={shortINR(data.pipelineValue)}
           icon="TrendingUp"
-          subNote="Active proposals"
+          subNote={`${data.pipelineLeadCount} lead${data.pipelineLeadCount === 1 ? '' : 's'} in negotiation`}
         />
         <KpiCard
           label="Won This Month"

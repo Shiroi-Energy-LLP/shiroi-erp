@@ -1,0 +1,118 @@
+{
+  "name": "20 — Sales head daily 8AM digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 2 * * *" }
+          ]
+        }
+      },
+      "id": "node-cron",
+      "name": "Daily 8:00 IST (02:30 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_ID }}.supabase.co/rest/v1/v_digest_leads_stale_24h",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "node-http",
+      "name": "Fetch stale leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
+          "name": "Supabase service role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=📣 *Sales digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nStuck leads (>24h): {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ Everything moved — clean board!' : ($json.data || []).slice(0, 20).map((l, i) => `${i+1}. ${l.customer_name} · ${l.status} · ${Math.floor(l.hours_since_update)}h · ${l.assigned_employee_name || 'unassigned'}`).join('\\n') }}{{ ($json.data || []).length > 20 ? '\\n…and ' + (($json.data || []).length - 20) + ' more.' : '' }}\n\nOpen: https://erp.shiroienergy.com/sales\n\n_TODO: extend with new leads (24h) + proposals silent >3d._",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $env.SALES_HEAD_WHATSAPP }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose digest",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "1140448799143790",
+        "toPhoneNumber": "={{ $json.to_phone }}",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "node-whatsapp-send",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "credentials": {
+        "whatsAppBusinessAccountApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 8:00 IST (02:30 UTC)": { "main": [[{ "node": "Fetch stale leads", "type": "main", "index": 0 }]] },
+    "Fetch stale leads": { "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]] },
+    "Compose digest": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-2" },
+    { "name": "sales" },
+    { "name": "digest" },
+    { "name": "cron" }
+  ],
+  "meta": {
+    "description": "Daily 8:00 IST — Sales head digest. Queries v_digest_leads_stale_24h (migration 083). Capped at 20 leads inline; remainder count shown. Future extensions: merge with v_digest_leads_new_24h + v_digest_proposals_silent_3d for a full sales picture. Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, SALES_HEAD_WHATSAPP."
+  },
+  "pinData": {}
+}

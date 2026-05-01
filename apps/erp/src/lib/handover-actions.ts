@@ -96,7 +96,7 @@ export async function generateHandoverPack(
       amcPeriod: '1 year complimentary',
     },
     emergencyContact: {
-      company: 'Shiroi Energy Private Limited',
+      company: 'Shiroi Energy LLP',
       phone: '+91-XXXXXXXXXX',
       email: 'support@shiroienergy.com',
       serviceHours: 'Mon-Sat, 9 AM - 6 PM IST',

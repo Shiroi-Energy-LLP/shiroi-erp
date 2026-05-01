@@ -4,6 +4,7 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import type { Database } from '@repo/types/database';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 type ExpenseInsert = Database['public']['Tables']['expenses']['Insert'];
 type ExpenseUpdate = Database['public']['Tables']['expenses']['Update'];
@@ -79,7 +80,68 @@ export async function submitExpense(input: {
 
   revalidatePath('/expenses');
   if (input.projectId) revalidatePath(`/projects/${input.projectId}`);
+
+  void emitExpenseSubmitted(data.id, supabase);
+
   return ok({ id: data.id, voucherNumber: data.voucher_number });
+}
+
+async function emitExpenseSubmitted(
+  expenseId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<void> {
+  const op = '[emitExpenseSubmitted]';
+  try {
+    const { data: enriched } = await supabase
+      .from('expenses')
+      .select(`
+        id,
+        voucher_number,
+        amount,
+        description,
+        expense_date,
+        expense_categories!expenses_category_id_fkey ( label ),
+        projects!expenses_project_id_fkey ( project_number ),
+        submitter:employees!expenses_submitted_by_fkey ( id, full_name, reporting_to_id )
+      `)
+      .eq('id', expenseId)
+      .single();
+    if (!enriched) return;
+
+    const submitter = Array.isArray(enriched.submitter) ? enriched.submitter[0] : enriched.submitter;
+    const category = Array.isArray(enriched.expense_categories) ? enriched.expense_categories[0] : enriched.expense_categories;
+    const project = Array.isArray(enriched.projects) ? enriched.projects[0] : enriched.projects;
+
+    let managerName: string | null = null;
+    let managerPhone: string | null = null;
+    if (submitter?.reporting_to_id) {
+      const { data: manager } = await supabase
+        .from('employees')
+        .select('full_name, whatsapp_number')
+        .eq('id', submitter.reporting_to_id)
+        .single();
+      managerName = manager?.full_name ?? null;
+      managerPhone = manager?.whatsapp_number ?? null;
+    }
+
+    await emitErpEvent('expense_claim.submitted', {
+      expense_claim_id: enriched.id,
+      voucher_number: enriched.voucher_number,
+      employee_name: submitter?.full_name ?? null,
+      amount_inr: enriched.amount,
+      category: category?.label ?? null,
+      purpose: enriched.description,
+      project_code: project?.project_number ?? null,
+      manager_name: managerName,
+      manager_whatsapp: managerPhone,
+      erp_url: `https://erp.shiroienergy.com/expenses/${enriched.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      expenseId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 export async function updateExpense(

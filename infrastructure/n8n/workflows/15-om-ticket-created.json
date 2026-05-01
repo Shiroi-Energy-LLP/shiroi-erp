@@ -1,0 +1,107 @@
+{
+  "name": "15 — O&M ticket created",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "ticket_id", "value": "={{ $json.body.payload.ticket_id }}", "type": "string" },
+            { "id": "f2", "name": "ticket_number", "value": "={{ $json.body.payload.ticket_number }}", "type": "string" },
+            { "id": "f3", "name": "title", "value": "={{ $json.body.payload.title }}", "type": "string" },
+            { "id": "f4", "name": "description", "value": "={{ $json.body.payload.description }}", "type": "string" },
+            { "id": "f5", "name": "issue_type", "value": "={{ $json.body.payload.issue_type }}", "type": "string" },
+            { "id": "f6", "name": "severity", "value": "={{ $json.body.payload.severity }}", "type": "string" },
+            { "id": "f7", "name": "sla_hours", "value": "={{ $json.body.payload.sla_hours }}", "type": "string" },
+            { "id": "f8", "name": "project_code", "value": "={{ $json.body.payload.project_code }}", "type": "string" },
+            { "id": "f9", "name": "customer_name", "value": "={{ $json.body.payload.customer_name }}", "type": "string" },
+            { "id": "f10", "name": "customer_phone", "value": "={{ $json.body.payload.customer_phone }}", "type": "string" },
+            { "id": "f11", "name": "raised_by_name", "value": "={{ $json.body.payload.raised_by_name }}", "type": "string" },
+            { "id": "f12", "name": "assignee_name", "value": "={{ $json.body.payload.assignee_name }}", "type": "string" },
+            { "id": "f13", "name": "assignee_whatsapp", "value": "={{ $json.body.payload.assignee_whatsapp }}", "type": "string" },
+            { "id": "f14", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
+            { "id": "f15", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=🛠️ *New O&M ticket* — {{ $json.ticket_number }}\n\nTitle: {{ $json.title }}\nSeverity: {{ $json.severity }}\nType: {{ $json.issue_type }}\nSLA: {{ $json.sla_hours }} hrs\nCustomer: {{ $json.customer_name }} ({{ $json.project_code }})\nPhone: {{ $json.customer_phone }}\nRaised by: {{ $json.raised_by_name }}\nAt: {{ $json.timestamp_ist }}\n\n{{ $json.description }}\n\nOpen: {{ $json.erp_url }}\n\nPlease acknowledge and schedule a site visit within SLA.",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $json.assignee_whatsapp }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose WhatsApp message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves", "type": "string" },
+            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
+            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
+    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message", "type": "main", "index": 0 }]] },
+    "Compose WhatsApp message": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "om" }
+  ],
+  "meta": {
+    "description": "Triggered by router on om_ticket.created. Payload: {ticket_id, ticket_number, title, description, issue_type, severity, sla_hours, project_code, customer_name, customer_phone, raised_by_name, assignee_name, assignee_whatsapp, erp_url}. Pings the assigned tech. Wired to service-ticket-actions.createServiceTicket → emitOmTicketCreated."
+  },
+  "pinData": {}
+}

@@ -1,0 +1,107 @@
+{
+  "name": "18 — Employee created",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "employee_id", "value": "={{ $json.body.payload.employee_id }}", "type": "string" },
+            { "id": "f2", "name": "employee_code", "value": "={{ $json.body.payload.employee_code }}", "type": "string" },
+            { "id": "f3", "name": "full_name", "value": "={{ $json.body.payload.full_name }}", "type": "string" },
+            { "id": "f4", "name": "department", "value": "={{ $json.body.payload.department }}", "type": "string" },
+            { "id": "f5", "name": "designation", "value": "={{ $json.body.payload.designation }}", "type": "string" },
+            { "id": "f6", "name": "date_of_joining", "value": "={{ $json.body.payload.date_of_joining }}", "type": "string" },
+            { "id": "f7", "name": "personal_email", "value": "={{ $json.body.payload.personal_email }}", "type": "string" },
+            { "id": "f8", "name": "whatsapp_number", "value": "={{ $json.body.payload.whatsapp_number }}", "type": "string" },
+            { "id": "f9", "name": "hr_head_whatsapp", "value": "={{ $json.body.payload.hr_head_whatsapp }}", "type": "string" },
+            { "id": "f10", "name": "it_admin_whatsapp", "value": "={{ $json.body.payload.it_admin_whatsapp }}", "type": "string" },
+            { "id": "f11", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
+            { "id": "f12", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" },
+            { "id": "f13", "name": "doj_ist", "value": "={{ DateTime.fromISO($json.body.payload.date_of_joining).setZone('Asia/Kolkata').toFormat('dd LLL yyyy') }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=👤 *New hire* — {{ $json.full_name }} ({{ $json.employee_code }})\n\nDept: {{ $json.department }}\nDesignation: {{ $json.designation }}\nJoining: {{ $json.doj_ist }}\nEmail: {{ $json.personal_email }}\nWhatsApp: {{ $json.whatsapp_number }}\nCreated: {{ $json.timestamp_ist }}\n\nOpen: {{ $json.erp_url }}\n\nIT: please provision email + laptop.\nHR: please prepare onboarding kit.",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone_hr", "value": "={{ $json.hr_head_whatsapp }}", "type": "string" },
+            { "id": "m3", "name": "to_phone_it", "value": "={{ $json.it_admin_whatsapp }}", "type": "string" },
+            { "id": "m4", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose WhatsApp message (HR+IT)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
+            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node. HR + IT fan-out should become two WhatsApp nodes in parallel when WABA lands.", "type": "string" },
+            { "id": "s3", "name": "would_send_to_hr", "value": "={{ $json.to_phone_hr }}", "type": "string" },
+            { "id": "s4", "name": "would_send_to_it", "value": "={{ $json.to_phone_it }}", "type": "string" },
+            { "id": "s5", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-simulate-send",
+      "name": "SIMULATED SEND (replace with WhatsApp fan-out)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
+    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message (HR+IT)", "type": "main", "index": 0 }]] },
+    "Compose WhatsApp message (HR+IT)": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp fan-out)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "hr" }
+  ],
+  "meta": {
+    "description": "Triggered by router on employee.created. Payload: {employee_id, employee_code, full_name, department, designation, date_of_joining, personal_email, whatsapp_number, hr_head_whatsapp, it_admin_whatsapp, erp_url}. Pings HR + IT for onboarding. Wired to employee-actions.createEmployeeAccount → emitEmployeeCreated."
+  },
+  "pinData": {}
+}

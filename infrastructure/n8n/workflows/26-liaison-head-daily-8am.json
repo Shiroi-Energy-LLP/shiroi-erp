@@ -1,0 +1,85 @@
+{
+  "name": "26 — Liaison head daily 8AM digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 2 * * *" }
+          ]
+        }
+      },
+      "id": "node-cron",
+      "name": "Daily 8:00 IST (02:30 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "=📋 *Liaison digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\n⚠️ Placeholder — underlying digest views not yet built.\n\nWhen ready, this workflow should surface:\n• Net-metering applications past SLA (no v_digest_net_metering_stuck yet)\n• CEIG / DISCOM approvals pending with age (no v_digest_liaison_pending yet)\n• Statutory docs expiring in 30 days (no v_digest_docs_expiring_30d yet)\n\nOpen: https://erp.shiroienergy.com/liaison\n\n_TODO: author the three views above in a future migration, then replace this Set with an HTTP fetch + compose._",
+              "type": "string"
+            },
+            { "id": "m2", "name": "to_phone", "value": "={{ $env.LIAISON_HEAD_WHATSAPP }}", "type": "string" },
+            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compose",
+      "name": "Compose placeholder digest",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "1140448799143790",
+        "toPhoneNumber": "={{ $json.to_phone }}",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "node-whatsapp-send",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "credentials": {
+        "whatsAppBusinessAccountApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 8:00 IST (02:30 UTC)": { "main": [[{ "node": "Compose placeholder digest", "type": "main", "index": 0 }]] },
+    "Compose placeholder digest": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-2" },
+    { "name": "liaison" },
+    { "name": "digest" },
+    { "name": "cron" },
+    { "name": "placeholder" }
+  ],
+  "meta": {
+    "description": "Daily 8:00 IST — Liaison head digest. PLACEHOLDER: no underlying v_digest views exist yet for liaison module. When net-metering / CEIG / statutory-docs views are authored (future migration), replace the Compose node with an HTTP fetch against those views. Requires env: LIAISON_HEAD_WHATSAPP (once live)."
+  },
+  "pinData": {}
+}

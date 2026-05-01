@@ -1,6 +1,16 @@
 // scripts/zoho-import/phase-09-customer-payments.ts
-// Customer_Payment.xls → customer_payments table
-// Headers: CustomerPayment ID | Payment Number | Date | Customer Name | Amount | Mode | Reference Number
+// Customer_Payment.xls → customer_payments table (ONE DB ROW PER XLS ROW).
+//
+// Customer_Payment.xls is ALREADY per-allocation: one row per invoice the parent
+// CustomerPayment was split across. Prior versions of this phase deduped by
+// `CustomerPayment ID` (the parent) and dropped 99% of the allocation detail
+// (1197 rows → 7 imports). Re-architecture (Apr 19 2026):
+//
+//   Dedupe key = `InvoicePayment ID` (each allocation is unique)
+//   Stored in  = `customer_payments.zoho_customer_payment_id` (UNIQUE)
+//   Amount     = `Amount Applied to Invoice` (per-allocation amount)
+//   Link       = `Invoice Number` → `invoices.invoice_number` = 'ZHI/' + number
+//   Project    = inherited from linked invoice; fallback to customer name
 import { admin, getSystemEmployeeId } from './supabase';
 import { loadSheet, toStr, toNumber, toDateISO } from './parse-xls';
 import { emptyResult, PhaseResult } from './logger';
@@ -8,14 +18,18 @@ import { mapPaymentMode } from './normalize';
 
 interface ZohoCustPayRow {
   'CustomerPayment ID': string | null;
+  'InvoicePayment ID': string | null;
   'Payment Number': string | null;
   'Date': unknown;
   'Customer Name': string | null;
   'CustomerID': string | null;
   'Amount': string | number | null;
+  'Amount Applied to Invoice': string | number | null;
   'Mode': string | null;
   'Reference Number': string | null;
   'Description': string | null;
+  'Invoice Number': string | null;
+  'Payment Type': string | null;
 }
 
 export async function runPhase09(): Promise<PhaseResult> {
@@ -24,27 +38,19 @@ export async function runPhase09(): Promise<PhaseResult> {
   const systemId = await getSystemEmployeeId();
 
   const rows = loadSheet<ZohoCustPayRow>('Customer_Payment.xls');
+  console.log(`  ${rows.length} rows in Customer_Payment.xls (one DB row per XLS row)`);
 
-  // De-duplicate by CustomerPayment ID
-  const seen = new Map<string, ZohoCustPayRow>();
-  for (const r of rows) {
-    const id = toStr(r['CustomerPayment ID']);
-    if (id && !seen.has(id)) seen.set(id, r);
-  }
-  console.log(`  ${rows.length} rows → ${seen.size} unique customer payments`);
-
-  // Load contacts by zoho_contact_id for project lookup fallback
-  const { data: erpContacts } = await admin
-    .from('contacts')
-    .select('id, display_name, zoho_contact_id');
-  const contactByZohoId = new Map<string, string>();
-  const contactByName = new Map<string, string>();
-  for (const c of erpContacts ?? []) {
-    if (c.zoho_contact_id) contactByZohoId.set(c.zoho_contact_id, c.id);
-    contactByName.set((c.display_name ?? '').toLowerCase().trim(), c.id);
+  // Invoice lookup by prefixed invoice number → ERP id + project_id.
+  const { data: invoices } = await admin
+    .from('invoices')
+    .select('id, project_id, invoice_number')
+    .like('invoice_number', 'ZHI/%');
+  const invoiceByNumber = new Map<string, { id: string; project_id: string | null }>();
+  for (const inv of invoices ?? []) {
+    invoiceByNumber.set(inv.invoice_number, { id: inv.id, project_id: inv.project_id });
   }
 
-  // Load projects by customer_name for project attribution
+  // Project fallback: customer name → project.
   const { data: erpProjects } = await admin
     .from('projects')
     .select('id, customer_name');
@@ -53,43 +59,80 @@ export async function runPhase09(): Promise<PhaseResult> {
     projByCust.set(p.customer_name.toLowerCase().trim(), p.id);
   }
 
-  // Idempotency
+  // Idempotency: skip InvoicePayment IDs already imported.
   const { data: existing } = await admin
     .from('customer_payments')
     .select('zoho_customer_payment_id')
     .not('zoho_customer_payment_id', 'is', null);
-  const existingIds = new Set((existing ?? []).map(r => r.zoho_customer_payment_id as string | null).filter((x): x is string => x != null));
+  const existingIds = new Set(
+    (existing ?? []).map(r => r.zoho_customer_payment_id as string | null).filter((x): x is string => x != null)
+  );
 
-  // Get existing receipt numbers to avoid collision
-  const { data: existingReceipts } = await admin
-    .from('customer_payments')
-    .select('receipt_number')
-    .like('receipt_number', 'ZHI/%');
-  const usedReceipts = new Set((existingReceipts ?? []).map(r => r.receipt_number));
+  let linkedToInvoice = 0;
+  let linkedByCustomer = 0;
+  let skippedNoProject = 0;
+  let skippedBlankId = 0;
 
-  for (const [zohoId, r] of seen.entries()) {
-    if (existingIds.has(zohoId)) { result.skipped++; continue; }
+  for (const r of rows) {
+    const invPayId = toStr(r['InvoicePayment ID']);
+    if (!invPayId) { skippedBlankId++; result.skipped++; continue; }
+    if (existingIds.has(invPayId)) { result.skipped++; continue; }
 
-    const custName = (toStr(r['Customer Name']) ?? '').toLowerCase().trim();
-    const projectId = projByCust.get(custName);
+    const rawInvNum = toStr(r['Invoice Number']);
+    const lookupKey = rawInvNum ? `ZHI/${rawInvNum}` : null;
+    const invoice = lookupKey ? invoiceByNumber.get(lookupKey) : undefined;
 
-    if (!projectId) { result.skipped++; continue; }
+    let projectId: string | null = null;
+    let invoiceId: string | null = null;
 
-    const receiptNum = `ZHI/${toStr(r['Payment Number']) ?? zohoId}`;
-    if (usedReceipts.has(receiptNum)) { result.skipped++; continue; }
+    if (invoice) {
+      invoiceId = invoice.id;
+      projectId = invoice.project_id;
+      linkedToInvoice++;
+    }
+
+    if (!projectId) {
+      const custName = (toStr(r['Customer Name']) ?? '').toLowerCase().trim();
+      if (custName && projByCust.has(custName)) {
+        projectId = projByCust.get(custName)!;
+        linkedByCustomer++;
+      }
+    }
+
+    if (!projectId) skippedNoProject++;
+
+    const amount = toNumber(r['Amount Applied to Invoice']);
+    if (amount <= 0) { result.skipped++; continue; }
+
+    // receipt_number is UNIQUE; use the InvoicePayment ID as the suffix so each
+    // allocation gets a distinct identifier even when they share a parent Payment Number.
+    const receiptNum = `ZHI/${toStr(r['Payment Number']) ?? 'P'}/${invPayId}`;
+
+    const isAdvance = !invoiceId; // no linked invoice → treat as advance
+    const paymentDate = toDateISO(r['Date']) ?? '2023-01-01';
 
     const row = {
       project_id: projectId,
+      invoice_id: invoiceId,
       recorded_by: systemId,
       receipt_number: receiptNum,
-      amount: toNumber(r['Amount']),
-      payment_date: toDateISO(r['Date']) ?? '2023-01-01',
+      amount,
+      payment_date: paymentDate,
       payment_method: mapPaymentMode(toStr(r['Mode'])),
       payment_reference: toStr(r['Reference Number']),
-      is_advance: false,
+      is_advance: isAdvance,
       notes: toStr(r['Description']),
       source: 'zoho_import',
-      zoho_customer_payment_id: zohoId,
+      zoho_customer_payment_id: invPayId,
+      // Capture Zoho customer identity (mig 087) — needed when project_id
+      // can't be resolved at import (e.g., parent-company billing without
+      // project tag) and a later backfill needs to retry attribution.
+      zoho_customer_id: toStr(r['CustomerID']),
+      zoho_customer_name: toStr(r['Customer Name']),
+      // Anchor created_at to the actual payment date (12:00 IST) so
+      // "when did this happen" queries / sorts line up with real history
+      // instead of the import-batch moment. See mig 086 for backfill.
+      created_at: `${paymentDate}T12:00:00+05:30`,
     };
 
     if (dryRun) { result.skipped++; continue; }
@@ -98,16 +141,14 @@ export async function runPhase09(): Promise<PhaseResult> {
     const { error } = await admin.from('customer_payments').insert(row as any);
     if (error) {
       if (error.code === '23505') { result.skipped++; continue; }
-      result.errors.push({ row: 0, reason: `${zohoId}: ${error.message}` });
+      result.errors.push({ row: 0, reason: `${invPayId}: ${error.message}` });
       result.failed++;
     } else {
       result.inserted++;
-      usedReceipts.add(receiptNum);
     }
   }
 
-  if (dryRun) {
-    console.log(`  DRY RUN: would process ${seen.size} customer payments`);
-  }
+  console.log(`  Linked via invoice: ${linkedToInvoice}, via customer name: ${linkedByCustomer}, NULL project (kept): ${skippedNoProject}, skipped blank-id: ${skippedBlankId}`);
+  if (dryRun) console.log(`  DRY RUN: would process ${rows.length} customer payments`);
   return result;
 }

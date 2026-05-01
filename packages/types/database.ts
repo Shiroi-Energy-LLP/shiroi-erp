@@ -58,7 +58,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       activity_associations: {
@@ -90,7 +90,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "activities"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       attendance_corrections: {
@@ -163,8 +163,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       bill_clearing_packages: {
         Row: {
@@ -264,8 +264,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       blacklisted_phones: {
         Row: {
@@ -299,8 +299,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       bom_correction_factor_updates: {
         Row: {
@@ -357,8 +357,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       bom_correction_factors: {
         Row: {
@@ -455,7 +455,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       channel_partner_leads: {
@@ -506,8 +506,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       channel_partners: {
         Row: {
@@ -724,8 +724,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       companies: {
         Row: {
@@ -792,7 +792,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       company_cashflow_snapshots: {
@@ -936,8 +936,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       contact_company_roles: {
         Row: {
@@ -984,7 +984,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       contacts: {
@@ -1046,7 +1046,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       customer_checkins: {
@@ -1137,8 +1137,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       customer_payments: {
         Row: {
@@ -1153,11 +1153,13 @@ export type Database = {
           payment_date: string
           payment_method: string
           payment_reference: string | null
-          project_id: string
+          project_id: string | null
           receipt_number: string
           receipt_pdf_path: string | null
           recorded_by: string
           source: string
+          zoho_customer_id: string | null
+          zoho_customer_name: string | null
           zoho_customer_payment_id: string | null
         }
         Insert: {
@@ -1172,11 +1174,13 @@ export type Database = {
           payment_date: string
           payment_method: string
           payment_reference?: string | null
-          project_id: string
+          project_id?: string | null
           receipt_number: string
           receipt_pdf_path?: string | null
           recorded_by: string
           source?: string
+          zoho_customer_id?: string | null
+          zoho_customer_name?: string | null
           zoho_customer_payment_id?: string | null
         }
         Update: {
@@ -1191,11 +1195,13 @@ export type Database = {
           payment_date?: string
           payment_method?: string
           payment_reference?: string | null
-          project_id?: string
+          project_id?: string | null
           receipt_number?: string
           receipt_pdf_path?: string | null
           recorded_by?: string
           source?: string
+          zoho_customer_id?: string | null
+          zoho_customer_name?: string | null
           zoho_customer_payment_id?: string | null
         }
         Relationships: [
@@ -1219,8 +1225,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       customer_quarterly_reports: {
         Row: {
@@ -1320,8 +1326,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       daily_question_delivery_log: {
         Row: {
@@ -1387,7 +1393,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "training_questions"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       daily_site_reports: {
@@ -1508,8 +1514,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       data_flags: {
         Row: {
@@ -1604,7 +1610,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendor_delivery_challans"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       delivery_challan_items: {
@@ -1655,7 +1661,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "delivery_challans"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       delivery_challans: {
@@ -1736,8 +1742,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       drip_sequence_enrollments: {
         Row: {
@@ -1806,7 +1812,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "drip_sequences"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       drip_sequence_steps: {
@@ -1859,7 +1865,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "drip_sequences"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       drip_sequences: {
@@ -1913,8 +1919,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       employee_certifications: {
         Row: {
@@ -1969,8 +1975,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       employee_compensation: {
         Row: {
@@ -2059,8 +2065,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       employee_documents: {
         Row: {
@@ -2113,8 +2119,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       employee_exit_checklists: {
         Row: {
@@ -2218,8 +2224,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       employee_insurance: {
         Row: {
@@ -2292,8 +2298,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       employee_lifecycle_events: {
         Row: {
@@ -2349,8 +2355,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       employee_question_progress: {
         Row: {
@@ -2418,7 +2424,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "training_questions"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       employee_skills: {
@@ -2472,8 +2478,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       employees: {
         Row: {
@@ -2513,6 +2519,7 @@ export type Database = {
           uan_number: string | null
           updated_at: string
           voucher_prefix: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           aadhar_number?: string | null
@@ -2551,6 +2558,7 @@ export type Database = {
           uan_number?: string | null
           updated_at?: string
           voucher_prefix?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           aadhar_number?: string | null
@@ -2589,6 +2597,7 @@ export type Database = {
           uan_number?: string | null
           updated_at?: string
           voucher_prefix?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: [
           {
@@ -2604,8 +2613,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       entity_contacts: {
         Row: {
@@ -2642,7 +2651,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       execution_milestones_master: {
@@ -2750,8 +2759,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       expenses: {
         Row: {
@@ -2868,8 +2877,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       finance_reports: {
         Row: {
@@ -2915,8 +2924,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       form_interaction_metrics: {
         Row: {
@@ -2965,8 +2974,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       generated_documents: {
         Row: {
@@ -3171,7 +3180,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       goods_receipt_notes: {
@@ -3241,7 +3250,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendor_delivery_challans"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       grn_items: {
@@ -3314,7 +3323,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "purchase_order_items"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       hr_letters: {
@@ -3380,8 +3389,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       inverter_monitoring_credentials: {
         Row: {
@@ -3418,7 +3427,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_poll_failures: {
@@ -3453,7 +3462,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inverters"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_readings: {
@@ -3509,7 +3518,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inverters"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_readings_2026_04: {
@@ -3697,7 +3706,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inverters"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_readings_hourly: {
@@ -3735,7 +3744,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inverters"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       inverter_string_readings: {
@@ -3921,8 +3930,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       invoice_credit_notes: {
         Row: {
@@ -3994,8 +4003,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       invoices: {
         Row: {
@@ -4018,7 +4027,7 @@ export type Database = {
           paid_at: string | null
           payment_schedule_id: string | null
           pdf_storage_path: string | null
-          project_id: string
+          project_id: string | null
           proposal_id: string | null
           raised_by: string
           sent_at: string | null
@@ -4029,6 +4038,8 @@ export type Database = {
           subtotal_works: number
           total_amount: number
           zoho_customer_gst_treatment: string | null
+          zoho_customer_id: string | null
+          zoho_customer_name: string | null
           zoho_invoice_id: string | null
         }
         Insert: {
@@ -4051,7 +4062,7 @@ export type Database = {
           paid_at?: string | null
           payment_schedule_id?: string | null
           pdf_storage_path?: string | null
-          project_id: string
+          project_id?: string | null
           proposal_id?: string | null
           raised_by: string
           sent_at?: string | null
@@ -4062,6 +4073,8 @@ export type Database = {
           subtotal_works?: number
           total_amount: number
           zoho_customer_gst_treatment?: string | null
+          zoho_customer_id?: string | null
+          zoho_customer_name?: string | null
           zoho_invoice_id?: string | null
         }
         Update: {
@@ -4084,7 +4097,7 @@ export type Database = {
           paid_at?: string | null
           payment_schedule_id?: string | null
           pdf_storage_path?: string | null
-          project_id?: string
+          project_id?: string | null
           proposal_id?: string | null
           raised_by?: string
           sent_at?: string | null
@@ -4095,6 +4108,8 @@ export type Database = {
           subtotal_works?: number
           total_amount?: number
           zoho_customer_gst_treatment?: string | null
+          zoho_customer_id?: string | null
+          zoho_customer_name?: string | null
           zoho_invoice_id?: string | null
         }
         Relationships: [
@@ -4125,8 +4140,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       language_training_scenarios: {
         Row: {
@@ -4197,7 +4212,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "training_modules"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       lead_activities: {
@@ -4257,8 +4272,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       lead_assignments: {
         Row: {
@@ -4309,8 +4324,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       lead_closure_approvals: {
         Row: {
@@ -4382,8 +4397,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       lead_competitors: {
         Row: {
@@ -4423,8 +4438,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       lead_documents: {
         Row: {
@@ -4477,8 +4492,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       lead_loss_reasons: {
         Row: {
@@ -4535,8 +4550,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       lead_referrals: {
         Row: {
@@ -4601,7 +4616,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       lead_site_surveys: {
@@ -4877,8 +4892,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       lead_source_analytics: {
         Row: {
@@ -4973,8 +4988,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       leads: {
         Row: {
@@ -5153,8 +5168,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       leave_balances: {
         Row: {
@@ -5188,8 +5203,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       leave_ledger: {
         Row: {
@@ -5262,7 +5277,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "leave_ledger"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       leave_requests: {
@@ -5347,8 +5362,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       letters_of_intent: {
         Row: {
@@ -5427,7 +5442,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       liaison_documents: {
@@ -5503,8 +5518,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       liaison_objections: {
         Row: {
@@ -5585,8 +5600,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       marketing_campaign_deliveries: {
         Row: {
@@ -5662,8 +5677,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       marketing_campaigns: {
         Row: {
@@ -5740,8 +5755,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       message_delivery_log: {
         Row: {
@@ -5861,8 +5876,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       monthly_attendance_summary: {
         Row: {
@@ -5932,8 +5947,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       net_metering_applications: {
         Row: {
@@ -6034,8 +6049,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       notifications: {
         Row: {
@@ -6081,8 +6096,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       om_contracts: {
         Row: {
@@ -6191,7 +6206,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       om_pricing_rules: {
@@ -6307,7 +6322,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "om_contracts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       om_service_tickets: {
@@ -6472,7 +6487,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "om_visit_reports"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       om_visit_checklist_items: {
@@ -6510,7 +6525,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "om_visit_reports"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       om_visit_corrections: {
@@ -6600,8 +6615,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       om_visit_reports: {
         Row: {
@@ -6761,8 +6776,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       om_visit_schedules: {
         Row: {
@@ -6885,8 +6900,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       onboarding_track_assignments: {
         Row: {
@@ -6971,7 +6986,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "onboarding_tracks"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       onboarding_tracks: {
@@ -7080,8 +7095,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       payroll_export_files: {
         Row: {
@@ -7155,8 +7170,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       payroll_monthly_inputs: {
         Row: {
@@ -7252,8 +7267,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       photo_gate_verifications: {
         Row: {
@@ -7317,8 +7332,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       photo_tags: {
         Row: {
@@ -7376,7 +7391,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "site_photos"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       plant_daily_summaries: {
@@ -7429,7 +7444,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "plants"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       plant_data_readings: {
@@ -7494,7 +7509,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "plants"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       plant_monitoring_credentials: {
@@ -7581,8 +7596,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       plants: {
         Row: {
@@ -7716,8 +7731,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       price_book: {
         Row: {
@@ -7821,7 +7836,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       price_book_accuracy: {
@@ -7882,8 +7897,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       processing_jobs: {
         Row: {
@@ -7986,7 +8001,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       profiles: {
@@ -8105,8 +8120,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_assignments: {
         Row: {
@@ -8163,8 +8178,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_bois: {
         Row: {
@@ -8240,8 +8255,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_boq_items: {
         Row: {
@@ -8370,7 +8385,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       project_cash_positions: {
@@ -8441,8 +8456,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_change_orders: {
         Row: {
@@ -8520,8 +8535,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_completion_components: {
         Row: {
@@ -8602,8 +8617,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_cost_variances: {
         Row: {
@@ -8656,8 +8671,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_delay_log: {
         Row: {
@@ -8726,8 +8741,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_handovers: {
         Row: {
@@ -8823,8 +8838,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_issues: {
         Row: {
@@ -8916,8 +8931,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_milestone_weights: {
         Row: {
@@ -9026,8 +9041,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_profitability: {
         Row: {
@@ -9116,8 +9131,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       project_status_history: {
         Row: {
@@ -9161,8 +9176,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       projects: {
         Row: {
@@ -9490,8 +9505,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_analytics: {
         Row: {
@@ -9567,8 +9582,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_bom_lines: {
         Row: {
@@ -9666,8 +9681,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_correction_log: {
         Row: {
@@ -9733,8 +9748,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_digital_acceptance: {
         Row: {
@@ -9813,8 +9828,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_otp_log: {
         Row: {
@@ -9873,8 +9888,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_payment_schedule: {
         Row: {
@@ -9935,8 +9950,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_revisions: {
         Row: {
@@ -9989,8 +10004,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_scenarios: {
         Row: {
@@ -10048,8 +10063,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_scope_split: {
         Row: {
@@ -10104,8 +10119,8 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_simulations: {
         Row: {
@@ -10202,8 +10217,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposal_status_history: {
         Row: {
@@ -10247,8 +10262,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proposals"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       proposals: {
         Row: {
@@ -10438,8 +10453,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       purchase_order_amendments: {
         Row: {
@@ -10489,8 +10504,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       purchase_order_items: {
         Row: {
@@ -10596,7 +10611,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rfq_quotes"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       purchase_orders: {
@@ -10627,7 +10642,7 @@ export type Database = {
           po_date: string
           po_number: string
           prepared_by: string
-          project_id: string
+          project_id: string | null
           requires_approval: boolean
           rfq_id: string | null
           sent_to_vendor_at: string | null
@@ -10669,7 +10684,7 @@ export type Database = {
           po_date?: string
           po_number: string
           prepared_by: string
-          project_id: string
+          project_id?: string | null
           requires_approval?: boolean
           rfq_id?: string | null
           sent_to_vendor_at?: string | null
@@ -10711,7 +10726,7 @@ export type Database = {
           po_date?: string
           po_number?: string
           prepared_by?: string
-          project_id?: string
+          project_id?: string | null
           requires_approval?: boolean
           rfq_id?: string | null
           sent_to_vendor_at?: string | null
@@ -10768,7 +10783,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       qc_gate_inspections: {
@@ -10876,7 +10891,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "qc_gate_inspections"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       qc_non_conformance_reports: {
@@ -10972,8 +10987,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       reconciliation_discrepancies: {
         Row: {
@@ -11028,8 +11043,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       record_audit_log: {
         Row: {
@@ -11078,7 +11093,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       referral_rewards: {
@@ -11135,8 +11150,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       regulatory_ecosystem_contacts: {
         Row: {
@@ -11213,7 +11228,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "regulatory_ecosystem_contacts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_awards: {
@@ -11285,7 +11300,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rfq_invitations"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_invitations: {
@@ -11361,7 +11376,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_items: {
@@ -11412,7 +11427,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rfqs"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_quotes: {
@@ -11466,7 +11481,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rfq_items"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_requests: {
@@ -11549,7 +11564,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfq_responses: {
@@ -11612,7 +11627,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rfqs: {
@@ -11663,8 +11678,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       salary_increment_history: {
         Row: {
@@ -11740,7 +11755,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employee_compensation"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       site_photos: {
@@ -11851,8 +11866,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       site_report_corrections: {
         Row: {
@@ -11931,8 +11946,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       stock_pieces: {
         Row: {
@@ -12064,8 +12079,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       stock_replacement_history: {
         Row: {
@@ -12145,7 +12160,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "warranty_claims"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       subcontractor_work_orders: {
@@ -12224,7 +12239,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       system_logs: {
@@ -12364,7 +12379,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       task_work_logs: {
@@ -12415,7 +12430,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       tasks: {
@@ -12520,8 +12535,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       three_way_match: {
         Row: {
@@ -12590,8 +12605,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       training_assessment_results: {
         Row: {
@@ -12660,7 +12675,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "training_modules"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       training_modules: {
@@ -12710,8 +12725,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       training_questions: {
         Row: {
@@ -12813,7 +12828,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "training_modules"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_bill_items: {
@@ -12897,7 +12912,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendor_bills"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_bills: {
@@ -13013,7 +13028,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_delivery_challan_items: {
@@ -13070,7 +13085,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendor_delivery_challans"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_delivery_challans: {
@@ -13162,7 +13177,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendor_payments: {
@@ -13181,7 +13196,7 @@ export type Database = {
           payment_method: string
           payment_reference: string | null
           po_date: string | null
-          project_id: string
+          project_id: string | null
           purchase_order_id: string | null
           recorded_by: string
           source: string
@@ -13204,7 +13219,7 @@ export type Database = {
           payment_method: string
           payment_reference?: string | null
           po_date?: string | null
-          project_id: string
+          project_id?: string | null
           purchase_order_id?: string | null
           recorded_by: string
           source?: string
@@ -13227,7 +13242,7 @@ export type Database = {
           payment_method?: string
           payment_reference?: string | null
           po_date?: string | null
-          project_id?: string
+          project_id?: string | null
           purchase_order_id?: string | null
           recorded_by?: string
           source?: string
@@ -13277,7 +13292,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vendors"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vendors: {
@@ -13430,7 +13445,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vip_contacts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       vip_contacts: {
@@ -13513,8 +13528,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       warranty_claims: {
         Row: {
@@ -13621,7 +13636,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "warranty_registrations"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       warranty_registrations: {
@@ -13715,7 +13730,7 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "stock_pieces"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       whatsapp_import_queue: {
@@ -13809,8 +13824,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       zoho_account_codes: {
         Row: {
@@ -13899,7 +13914,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "zoho_tax_codes"
             referencedColumns: ["tax_id"]
-          },
+          }
         ]
       }
       zoho_monthly_summary: {
@@ -13940,7 +13955,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "zoho_account_codes"
             referencedColumns: ["account_id"]
-          },
+          }
         ]
       }
       zoho_project_mapping: {
@@ -13994,8 +14009,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
-          },
-        ]
+          }
+          ]
       }
       zoho_sync_queue: {
         Row: {
@@ -14068,7 +14083,311 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_digest_employees_birthday_today: {
+        Row: {
+          age_today: number | null
+          date_of_birth: string | null
+          department: string | null
+          designation: string | null
+          employee_code: string | null
+          employee_id: string | null
+          full_name: string | null
+          personal_email: string | null
+          personal_phone: string | null
+        }
+        Insert: {
+          age_today?: never
+          date_of_birth?: string | null
+          department?: string | null
+          designation?: string | null
+          employee_code?: string | null
+          employee_id?: string | null
+          full_name?: string | null
+          personal_email?: string | null
+          personal_phone?: string | null
+        }
+        Update: {
+          age_today?: never
+          date_of_birth?: string | null
+          department?: string | null
+          designation?: string | null
+          employee_code?: string | null
+          employee_id?: string | null
+          full_name?: string | null
+          personal_email?: string | null
+          personal_phone?: string | null
+        }
+        Relationships: []
+      }
+      v_digest_expenses_pending_approval: {
+        Row: {
+          amount: number | null
+          category: string | null
+          days_pending: number | null
+          description: string | null
+          expense_date: string | null
+          expense_id: string | null
+          manager_id: string | null
+          manager_name: string | null
+          manager_phone: string | null
+          project_number: string | null
+          submitted_at: string | null
+          submitter_id: string | null
+          submitter_name: string | null
+          submitter_phone: string | null
+          voucher_number: string | null
+        }
+        Relationships: []
+      }
+      v_digest_invoices_due_7d: {
+        Row: {
+          amount_outstanding: number | null
+          customer_name: string | null
+          customer_phone: string | null
+          days_until_due: number | null
+          due_date: string | null
+          invoice_date: string | null
+          invoice_id: string | null
+          invoice_number: string | null
+          project_id: string | null
+          project_number: string | null
+          sales_person_id: string | null
+          sales_person_name: string | null
+          sales_person_whatsapp_number: string | null
+          status: string | null
+          total_amount: number | null
+        }
+        Relationships: []
+      }
+      v_digest_invoices_overdue_15d: {
+        Row: {
+          amount_outstanding: number | null
+          customer_name: string | null
+          customer_phone: string | null
+          days_overdue: number | null
+          due_date: string | null
+          invoice_date: string | null
+          invoice_id: string | null
+          invoice_number: string | null
+          project_id: string | null
+          project_number: string | null
+          sales_person_id: string | null
+          sales_person_name: string | null
+          sales_person_phone: string | null
+          total_amount: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      v_digest_leads_new_24h: {
+        Row: {
+          assigned_employee_id: string | null
+          assigned_employee_name: string | null
+          assigned_employee_phone: string | null
+          city: string | null
+          created_at: string | null
+          customer_name: string | null
+          estimated_size_kwp: number | null
+          lead_id: string | null
+          phone: string | null
+          segment: Database["public"]["Enums"]["customer_segment"] | null
+          source: Database["public"]["Enums"]["lead_source"] | null
+        }
+        Relationships: []
+      }
+      v_digest_leads_stale_24h: {
+        Row: {
+          assigned_employee_id: string | null
+          assigned_employee_name: string | null
+          assigned_employee_phone: string | null
+          customer_name: string | null
+          hours_since_update: number | null
+          lead_id: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["lead_status"] | null
+          status_updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_digest_leave_pending: {
+        Row: {
+          days_pending: number | null
+          department: string | null
+          employee_code: string | null
+          employee_id: string | null
+          employee_name: string | null
+          employee_whatsapp_number: string | null
+          from_date: string | null
+          leave_id: string | null
+          leave_type: Database["public"]["Enums"]["leave_type"] | null
+          manager_id: string | null
+          manager_name: string | null
+          manager_whatsapp_number: string | null
+          reason: string | null
+          submitted_at: string | null
+          to_date: string | null
+          total_days: number | null
+        }
+        Relationships: []
+      }
+      v_digest_milestones_overdue: {
+        Row: {
+          customer_name: string | null
+          customer_phone: string | null
+          days_overdue: number | null
+          milestone_id: string | null
+          milestone_name: string | null
+          planned_end_date: string | null
+          project_id: string | null
+          project_manager_id: string | null
+          project_manager_name: string | null
+          project_manager_whatsapp_number: string | null
+          project_number: string | null
+          status: Database["public"]["Enums"]["milestone_status"] | null
+          system_size_kwp: number | null
+        }
+        Relationships: []
+      }
+      v_digest_om_tickets_open_48h: {
+        Row: {
+          assignee_id: string | null
+          assignee_name: string | null
+          assignee_whatsapp_number: string | null
+          created_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          hours_open: number | null
+          project_id: string | null
+          project_number: string | null
+          severity: string | null
+          sla_breached: boolean | null
+          sla_deadline: string | null
+          status: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_id: string | null
+          ticket_number: string | null
+          title: string | null
+        }
+        Relationships: []
+      }
+      v_digest_pos_pending_approval: {
+        Row: {
+          approval_status: string | null
+          customer_name: string | null
+          days_pending: number | null
+          po_date: string | null
+          po_id: string | null
+          po_number: string | null
+          prepared_by_id: string | null
+          prepared_by_name: string | null
+          prepared_by_whatsapp_number: string | null
+          project_id: string | null
+          project_number: string | null
+          total_amount: number | null
+          vendor_id: string | null
+          vendor_is_msme: boolean | null
+          vendor_name: string | null
+        }
+        Relationships: []
+      }
+      v_digest_projects_installs_today: {
+        Row: {
+          customer_name: string | null
+          customer_phone: string | null
+          planned_start_date: string | null
+          project_id: string | null
+          project_manager_name: string | null
+          project_manager_phone: string | null
+          project_number: string | null
+          site_address_line1: string | null
+          site_city: string | null
+          site_supervisor_name: string | null
+          site_supervisor_phone: string | null
+          status: Database["public"]["Enums"]["project_status"] | null
+          system_size_kwp: number | null
+        }
+        Relationships: []
+      }
+      v_digest_projects_overdue_commissioning: {
+        Row: {
+          actual_end_date: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          days_since_install: number | null
+          project_id: string | null
+          project_manager_name: string | null
+          project_manager_phone: string | null
+          project_number: string | null
+          status: Database["public"]["Enums"]["project_status"] | null
+          system_size_kwp: number | null
+        }
+        Relationships: []
+      }
+      v_digest_proposals_design_backlog: {
+        Row: {
+          city: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          estimated_size_kwp: number | null
+          hours_in_draft: number | null
+          lead_id: string | null
+          prepared_by_id: string | null
+          prepared_by_name: string | null
+          prepared_by_whatsapp_number: string | null
+          proposal_id: string | null
+          proposal_number: string | null
+          status_updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_digest_proposals_silent_3d: {
+        Row: {
+          city: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          days_silent: number | null
+          estimated_size_kwp: number | null
+          lead_id: string | null
+          prepared_by_id: string | null
+          prepared_by_name: string | null
+          prepared_by_whatsapp_number: string | null
+          proposal_id: string | null
+          proposal_number: string | null
+          sales_person_id: string | null
+          sales_person_name: string | null
+          sales_person_whatsapp_number: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["proposal_status"] | null
+        }
+        Relationships: []
+      }
+      v_digest_vendor_payments_due_7d: {
+        Row: {
+          amount_outstanding: number | null
+          amount_paid: number | null
+          customer_name: string | null
+          days_until_due: number | null
+          payment_due_date: string | null
+          po_date: string | null
+          po_id: string | null
+          po_number: string | null
+          project_id: string | null
+          project_number: string | null
+          total_amount: number | null
+          vendor_contact_person: string | null
+          vendor_id: string | null
+          vendor_is_msme: boolean | null
+          vendor_name: string | null
+          vendor_phone: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       ack_sync_batch: { Args: { p_results: Json }; Returns: undefined }
@@ -14209,6 +14528,25 @@ export type Database = {
       get_my_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_payment_tracker_rows: {
+        Args: never
+        Returns: {
+          completed_date: string
+          contracted_value: number
+          customer_name: string
+          days_since_order: number
+          latest_payment_date: string
+          order_date: string
+          order_date_source: string
+          project_id: string
+          project_number: string
+          project_status: Database["public"]["Enums"]["project_status"]
+          remaining: number
+          total_invoice_sent: number
+          total_invoiced: number
+          total_received: number
+        }[]
       }
       get_pipeline_summary: {
         Args: never
@@ -14543,7 +14881,7 @@ export const Constants = {
         "customer",
         "designer",
         "purchase_officer",
-        "marketing_manager",
+        "marketing_manager"
       ],
       bug_report_category: ["bug", "feature_request", "question", "other"],
       bug_report_severity: ["low", "medium", "high"],
@@ -14556,7 +14894,7 @@ export const Constants = {
         "discom",
         "weather",
         "ceig",
-        "other",
+        "other"
       ],
       gst_type: ["supply", "works_contract"],
       lead_source: [
@@ -14567,7 +14905,7 @@ export const Constants = {
         "cold_call",
         "exhibition",
         "social_media",
-        "walkin",
+        "walkin"
       ],
       lead_status: [
         "new",
@@ -14585,7 +14923,7 @@ export const Constants = {
         "converted",
         "lost",
         "on_hold",
-        "disqualified",
+        "disqualified"
       ],
       leave_type: [
         "casual",
@@ -14595,21 +14933,21 @@ export const Constants = {
         "paternity",
         "compensatory",
         "loss_of_pay",
-        "other",
+        "other"
       ],
       milestone_status: [
         "pending",
         "in_progress",
         "completed",
         "blocked",
-        "skipped",
+        "skipped"
       ],
       om_contract_status: [
         "quoted",
         "active",
         "expired",
         "cancelled",
-        "renewal_pending",
+        "renewal_pending"
       ],
       project_status: [
         "order_received",
@@ -14619,7 +14957,7 @@ export const Constants = {
         "holding_shiroi",
         "holding_client",
         "waiting_net_metering",
-        "meter_client_scope",
+        "meter_client_scope"
       ],
       proposal_status: [
         "draft",
@@ -14629,19 +14967,19 @@ export const Constants = {
         "accepted",
         "rejected",
         "expired",
-        "superseded",
+        "superseded"
       ],
       reconciliation_entity_type: [
         "project_totals",
         "vendor_ap_total",
         "customer_ar_total",
-        "cash_balance",
+        "cash_balance"
       ],
       reconciliation_status: [
         "open",
         "acknowledged",
         "resolved",
-        "accepted_drift",
+        "accepted_drift"
       ],
       scope_owner: ["shiroi", "client", "builder", "excluded"],
       system_type: ["on_grid", "hybrid", "off_grid"],
@@ -14651,14 +14989,14 @@ export const Constants = {
         "in_progress",
         "resolved",
         "closed",
-        "escalated",
+        "escalated"
       ],
       vendor_bill_status: [
         "draft",
         "pending",
         "partially_paid",
         "paid",
-        "cancelled",
+        "cancelled"
       ],
       zoho_sync_action: ["create", "update", "delete"],
       zoho_sync_entity_type: [
@@ -14670,7 +15008,7 @@ export const Constants = {
         "purchase_order",
         "vendor_bill",
         "vendor_payment",
-        "expense",
+        "expense"
       ],
       zoho_sync_status: ["pending", "syncing", "synced", "failed", "skipped"],
     },

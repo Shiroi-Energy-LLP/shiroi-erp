@@ -11,6 +11,7 @@ import {
   type BugReportCategory,
   type BugReportSeverity,
 } from '@/lib/settings-helpers';
+import { emitErpEvent } from '@/lib/n8n/emit';
 import type { Database } from '@repo/types/database';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -156,16 +157,25 @@ export async function submitBugReport(input: {
       return err(error?.message ?? 'Could not save the report');
     }
 
+    // Resolve submitter display name for the notification. Profile read may
+    // miss (RLS, fresh auth user without a row yet) — fall back to auth email.
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+
     // Best-effort notification to n8n. Blocks up to 3 s (AbortSignal timeout
     // inside notifyBugReport), but NEVER fails the submit — helper swallows
     // all errors.
     await notifyBugReport({
       id: data.id,
       userId: user.id,
+      userFullName: profile?.full_name ?? null,
       userEmail: user.email ?? '',
       category: input.category,
       severity: input.severity,
-      description: input.description,
+      description: input.description.trim(),
       pageUrl: input.pageUrl,
     });
 
@@ -181,12 +191,20 @@ export async function submitBugReport(input: {
 }
 
 /**
- * POST the bug report summary to the n8n webhook if configured. Never throws.
- * Best-effort: we accept missed notifications rather than missed submissions.
+ * Notify n8n about a submitted bug report. Never throws.
+ *
+ * Primary path: single-ingress event bus router via `emitErpEvent`. The
+ * router's `bug_report.submitted` route dispatches to workflow "01 — Bug
+ * report".
+ *
+ * Legacy path: if `N8N_EVENT_BUS_URL` is unset, fall back to the standalone
+ * `N8N_BUG_REPORT_WEBHOOK_URL` workflow that predates the event bus. Either
+ * unset → silent no-op (expected for local dev).
  */
 async function notifyBugReport(payload: {
   id: string;
   userId: string;
+  userFullName: string | null;
   userEmail: string;
   category: BugReportCategory;
   severity: BugReportSeverity;
@@ -194,11 +212,27 @@ async function notifyBugReport(payload: {
   pageUrl: string;
 }): Promise<void> {
   const op = '[notifyBugReport]';
-  const webhookUrl = process.env.N8N_BUG_REPORT_WEBHOOK_URL;
-  if (!webhookUrl) return; // Not configured — silent skip is expected.
+
+  if (process.env.N8N_EVENT_BUS_URL) {
+    await emitErpEvent('bug_report.submitted', {
+      bug_report_id: payload.id,
+      category: payload.category,
+      severity: payload.severity,
+      description: payload.description,
+      page_url: payload.pageUrl || null,
+      submitter_user_id: payload.userId,
+      submitter_full_name: payload.userFullName,
+      submitter_email: payload.userEmail,
+      erp_url: `https://erp.shiroienergy.com/settings?tab=feedback&id=${payload.id}`,
+    });
+    return;
+  }
+
+  const legacyUrl = process.env.N8N_BUG_REPORT_WEBHOOK_URL;
+  if (!legacyUrl) return;
 
   try {
-    const resp = await fetch(webhookUrl, {
+    const resp = await fetch(legacyUrl, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -214,17 +248,16 @@ async function notifyBugReport(payload: {
         page_url: payload.pageUrl,
         created_at: new Date().toISOString(),
       }),
-      // Short timeout — don't hold the server action thread.
       signal: AbortSignal.timeout(3000),
     });
     if (!resp.ok) {
-      console.error(`${op} webhook non-2xx`, {
+      console.error(`${op} legacy webhook non-2xx`, {
         status: resp.status,
         timestamp: new Date().toISOString(),
       });
     }
   } catch (e) {
-    console.error(`${op} webhook failure (non-blocking)`, {
+    console.error(`${op} legacy webhook failure (non-blocking)`, {
       error: e instanceof Error ? e.message : String(e),
       timestamp: new Date().toISOString(),
     });

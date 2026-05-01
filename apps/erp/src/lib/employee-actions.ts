@@ -3,6 +3,7 @@
 import { createAdminClient } from '@repo/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -96,7 +97,7 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
   console.log(`${op} Profile updated with role: ${input.role}`);
 
   // Step 3: Create employee record
-  const { error: employeeError } = await adminClient
+  const { data: newEmployee, error: employeeError } = await adminClient
     .from('employees')
     .insert({
       profile_id: userId,
@@ -104,21 +105,57 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
       full_name: input.fullName.trim(),
       personal_phone: input.phone.trim(),
       personal_email: input.email.trim().toLowerCase(),
+      whatsapp_number: input.phone.trim(),
       department: input.department.trim(),
       designation: input.designation.trim(),
       date_of_joining: input.dateOfJoining,
       is_active: true,
-    });
+    })
+    .select('id, full_name, employee_code, department, designation, date_of_joining, whatsapp_number')
+    .single();
 
-  if (employeeError) {
-    console.error(`${op} Employee insert failed:`, { code: employeeError.code, message: employeeError.message });
-    return { success: false, error: `Auth + profile created but employee record failed: ${employeeError.message}` };
+  if (employeeError || !newEmployee) {
+    console.error(`${op} Employee insert failed:`, { code: employeeError?.code, message: employeeError?.message });
+    return { success: false, error: `Auth + profile created but employee record failed: ${employeeError?.message ?? 'unknown'}` };
   }
 
   console.log(`${op} Employee record created for: ${input.fullName}`);
 
   revalidatePath('/hr/employees');
+
+  void emitEmployeeCreated(newEmployee.id);
+
   return { success: true, tempPassword };
+}
+
+async function emitEmployeeCreated(employeeId: string): Promise<void> {
+  const op = '[emitEmployeeCreated]';
+  try {
+    const adminClient = createAdminClient();
+    const { data: enriched } = await adminClient
+      .from('employees')
+      .select('id, employee_code, full_name, department, designation, date_of_joining, personal_email, whatsapp_number')
+      .eq('id', employeeId)
+      .single();
+    if (!enriched) return;
+
+    await emitErpEvent('employee.created', {
+      employee_id: enriched.id,
+      employee_code: enriched.employee_code,
+      full_name: enriched.full_name,
+      department: enriched.department,
+      designation: enriched.designation,
+      date_of_joining: enriched.date_of_joining,
+      personal_email: enriched.personal_email,
+      whatsapp_number: enriched.whatsapp_number,
+      erp_url: `https://erp.shiroienergy.com/hr/employees/${enriched.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      employeeId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 export async function deactivateEmployee(employeeId: string): Promise<{ success: boolean; error?: string }> {

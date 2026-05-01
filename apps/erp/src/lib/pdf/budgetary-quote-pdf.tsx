@@ -90,7 +90,7 @@ function CoverPage({ data }: { data: ProposalPDFData }) {
       <View style={{ position: 'absolute', bottom: 30, left: 50, right: 50 }}>
         <View style={{ borderTopWidth: 1, borderTopColor: BRAND.gray300, paddingTop: 8 }}>
           <Text style={{ fontSize: 8, color: BRAND.gray500, textAlign: 'center' }}>
-            Shiroi Energy Private Limited | Chennai, Tamil Nadu | www.shiroienergy.com
+            Shiroi Energy LLP | Chennai, Tamil Nadu | www.shiroienergy.com
           </Text>
         </View>
       </View>
@@ -303,7 +303,7 @@ function NextStepsPage({ data }: { data: ProposalPDFData }) {
       {/* Contact */}
       <View style={{ marginTop: 24, borderTopWidth: 1, borderTopColor: BRAND.gray300, paddingTop: 16 }}>
         <Text style={styles.h3}>Contact Us</Text>
-        <Text style={styles.body}>Shiroi Energy Private Limited</Text>
+        <Text style={styles.body}>Shiroi Energy LLP</Text>
         <Text style={styles.body}>Chennai, Tamil Nadu</Text>
         <Text style={[styles.body, { color: BRAND.green }]}>www.shiroienergy.com</Text>
       </View>
@@ -323,7 +323,7 @@ export function BudgetaryQuotePDF({ data }: { data: ProposalPDFData }) {
   return (
     <Document
       title={`Budgetary Proposal — ${data.customerName} — ${data.systemSizeKwp}kWp`}
-      author="Shiroi Energy Private Limited"
+      author="Shiroi Energy LLP"
       subject={`Proposal ${data.proposalNumber}`}
     >
       <CoverPage data={data} />

@@ -3,6 +3,7 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { getNextStatus, getStatusLabel } from '@/lib/project-status-helpers';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 // ── Survey CRUD ──
 
@@ -548,7 +549,39 @@ export async function advanceProjectStatus(input: {
   }
 
   revalidatePath(`/projects/${input.projectId}`);
+
+  if (nextStatus === 'completed') {
+    void emitProjectCommissioned(input.projectId);
+  }
+
   return { success: true, newStatus: nextStatus };
+}
+
+async function emitProjectCommissioned(projectId: string): Promise<void> {
+  const op = '[emitProjectCommissioned]';
+  try {
+    const supabase = await createClient();
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id, customer_name, customer_phone, system_size_kwp, commissioned_date, project_manager_id')
+      .eq('id', projectId)
+      .single();
+    if (!project) return;
+
+    await emitErpEvent('project.commissioned', {
+      project_id: project.id,
+      customer_name: project.customer_name,
+      customer_phone: project.customer_phone,
+      system_size_kwp: project.system_size_kwp,
+      commissioning_date: project.commissioned_date,
+      erp_url: `https://erp.shiroienergy.com/projects/${project.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      projectId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 // ── Helper: Get milestones for QC form dropdown ──

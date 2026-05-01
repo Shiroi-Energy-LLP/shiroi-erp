@@ -72,7 +72,7 @@ export function BoqPdf({ project, items, generatedBy, generatedAt }: BoqPdfProps
   return (
     <Document
       title={`BOQ — ${project.project_number}`}
-      author="Shiroi Energy Private Limited"
+      author="Shiroi Energy LLP"
     >
       <Page size="A4" style={styles.page}>
         {/* Brand bar */}

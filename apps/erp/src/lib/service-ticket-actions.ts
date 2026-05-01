@@ -4,6 +4,7 @@ import type { Database } from '@repo/types/database';
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Row types
@@ -95,7 +96,60 @@ export async function createServiceTicket(input: {
   }
 
   revalidatePath('/om/tickets');
+
+  void emitOmTicketCreated(data.id);
+
   return ok({ ticketId: data.id, ticketNumber: data.ticket_number });
+}
+
+async function emitOmTicketCreated(ticketId: string): Promise<void> {
+  const op = '[emitOmTicketCreated]';
+  try {
+    const supabase = await createClient();
+    const { data: enriched } = await supabase
+      .from('om_service_tickets')
+      .select(`
+        id,
+        ticket_number,
+        title,
+        description,
+        issue_type,
+        severity,
+        sla_hours,
+        project:projects!om_service_tickets_project_id_fkey ( project_number, customer_name, customer_phone ),
+        assignee:employees!om_service_tickets_assigned_to_fkey ( id, full_name, whatsapp_number ),
+        raiser:employees!om_service_tickets_raised_by_employee_fkey ( full_name )
+      `)
+      .eq('id', ticketId)
+      .single();
+    if (!enriched) return;
+
+    const project = Array.isArray(enriched.project) ? enriched.project[0] : enriched.project;
+    const assignee = Array.isArray(enriched.assignee) ? enriched.assignee[0] : enriched.assignee;
+    const raiser = Array.isArray(enriched.raiser) ? enriched.raiser[0] : enriched.raiser;
+
+    await emitErpEvent('om_ticket.created', {
+      ticket_id: enriched.id,
+      ticket_number: enriched.ticket_number,
+      title: enriched.title,
+      description: enriched.description,
+      issue_type: enriched.issue_type,
+      severity: enriched.severity,
+      sla_hours: enriched.sla_hours,
+      project_code: project?.project_number ?? null,
+      customer_name: project?.customer_name ?? null,
+      customer_phone: project?.customer_phone ?? null,
+      raised_by_name: raiser?.full_name ?? null,
+      assignee_name: assignee?.full_name ?? null,
+      assignee_whatsapp: assignee?.whatsapp_number ?? null,
+      erp_url: `https://erp.shiroienergy.com/om/tickets/${enriched.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      ticketId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════

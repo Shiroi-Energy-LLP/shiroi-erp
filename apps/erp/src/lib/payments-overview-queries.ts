@@ -82,12 +82,14 @@ export async function getProjectPaymentOverview(): Promise<ProjectPaymentRow[]> 
   // Build lookup maps
   const paymentsByProject = new Map<string, number>();
   for (const p of paymentsResult.data ?? []) {
+    if (!p.project_id) continue;
     const current = paymentsByProject.get(p.project_id) ?? 0;
     paymentsByProject.set(p.project_id, current + Number(p.amount));
   }
 
   const poCostByProject = new Map<string, number>();
   for (const po of posResult.data ?? []) {
+    if (!po.project_id) continue;
     const current = poCostByProject.get(po.project_id) ?? 0;
     poCostByProject.set(po.project_id, current + Number(po.total_amount));
   }

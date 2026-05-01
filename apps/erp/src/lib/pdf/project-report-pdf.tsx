@@ -285,7 +285,7 @@ export function ProjectReportPDF({ data, sections }: ProjectReportPDFProps) {
 
         {/* Footer */}
         <View style={s.footer} fixed>
-          <Text>Shiroi Energy Private Limited</Text>
+          <Text>Shiroi Energy LLP</Text>
           <Text>Generated: {data.generatedAt}</Text>
           <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
         </View>

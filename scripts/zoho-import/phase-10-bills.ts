@@ -21,6 +21,7 @@ interface ZohoBillRow {
   'Total': string | number | null;
   'Balance': string | number | null;
   'Project Name': string | null;
+  'Customer Name': string | null;
   'Item Name': string | null;
   'Product ID': string | null;
   'Quantity': string | number | null;
@@ -98,6 +99,17 @@ export async function runPhase10(): Promise<PhaseResult> {
     projByName.set(m.zoho_project_name.toLowerCase().trim(), m.erp_project_id);
   }
 
+  // Fallback project lookup: by customer name (Bill.xls has a Customer Name column
+  // which often matches ERP's projects.customer_name). Used when Project Name lookup
+  // fails — catches bills where Zoho's Project was unnamed or didn't map.
+  const { data: erpProjectsForFallback } = await admin
+    .from('projects')
+    .select('id, customer_name');
+  const projByCust = new Map<string, string>();
+  for (const p of erpProjectsForFallback ?? []) {
+    projByCust.set(p.customer_name.toLowerCase().trim(), p.id);
+  }
+
   // Idempotency: load existing bill zoho IDs
   const { data: existingBills } = await admin
     .from('vendor_bills')
@@ -122,7 +134,9 @@ export async function runPhase10(): Promise<PhaseResult> {
     }
 
     const projectName = (toStr(firstRow['Project Name']) ?? '').toLowerCase().trim();
-    const projectId = projectName ? (projByName.get(projectName) ?? null) : null;
+    const customerName = (toStr(firstRow['Customer Name']) ?? '').toLowerCase().trim();
+    let projectId: string | null = projectName ? (projByName.get(projectName) ?? null) : null;
+    if (!projectId && customerName) projectId = projByCust.get(customerName) ?? null;
 
     const billDate = toDateISO(firstRow['Bill Date']) ?? '2023-01-01';
     const dueDate = toDateISO(firstRow['Due Date']);
@@ -170,6 +184,8 @@ export async function runPhase10(): Promise<PhaseResult> {
         zoho_bill_id: zohoBillId,
         notes: toStr(firstRow['Vendor Notes']),
         created_by: systemId,
+        // Anchor created_at to the bill date (12:00 IST) — see mig 086.
+        created_at: `${billDate}T12:00:00+05:30`,
       })
       .select('id')
       .single();
