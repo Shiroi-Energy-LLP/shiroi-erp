@@ -4,6 +4,7 @@ import { getLead } from '@/lib/leads-queries';
 import { createClient } from '@repo/supabase/server';
 import { createDraftDetailedProposal } from '@/lib/quote-actions';
 import { ProposalStatusBadge } from '@/components/proposals/proposal-status-badge';
+import { ProposalDataQualityBanner } from '@/components/proposal-data-quality-banner';
 import { QuickQuoteButton } from '@/components/proposals/quick-quote-button';
 import { BomPicker, type BomLineRow, type PriceBookOption } from '@/components/sales/bom-picker';
 import { ConsultantPicker } from '@/components/sales/consultant-picker';
@@ -52,7 +53,7 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
     supabase
       .from('proposals')
       .select(
-        'id, proposal_number, revision_number, status, system_type, system_size_kwp, total_after_discount, gross_margin_pct, created_at, is_budgetary',
+        'id, proposal_number, revision_number, status, system_type, system_size_kwp, total_after_discount, gross_margin_pct, created_at, is_budgetary, financials_invalidated, system_size_uncertain, financials_invalidated_reason',
       )
       .eq('lead_id', leadId)
       .order('created_at', { ascending: false }),
@@ -256,8 +257,22 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
               {proposalList.map((proposal: any) => (
                 <div
                   key={proposal.id}
-                  className="px-4 py-3 flex items-center justify-between hover:bg-n-50"
+                  className="px-4 py-3 hover:bg-n-50"
                 >
+                  {(proposal.financials_invalidated || proposal.system_size_uncertain ||
+                    (proposal.total_after_discount && proposal.system_size_kwp &&
+                     Number(proposal.total_after_discount) / Number(proposal.system_size_kwp) > 200_000)) && (
+                    <div className="mb-2">
+                      <ProposalDataQualityBanner
+                        financialsInvalidated={proposal.financials_invalidated}
+                        systemSizeUncertain={proposal.system_size_uncertain}
+                        reason={proposal.financials_invalidated_reason}
+                        storedTotal={proposal.total_after_discount ? Number(proposal.total_after_discount) : null}
+                        systemSizeKwp={proposal.system_size_kwp ? Number(proposal.system_size_kwp) : null}
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-3 flex-wrap">
                       <Link
@@ -300,6 +315,7 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
                         {Number(proposal.gross_margin_pct).toFixed(1)}% margin
                       </div>
                     )}
+                  </div>
                   </div>
                 </div>
               ))}
