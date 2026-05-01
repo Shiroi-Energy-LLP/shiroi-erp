@@ -2508,9 +2508,11 @@ export type Database = {
       customer_payments: {
         Row: {
           amount: number
+          attribution_status: string
           bank_name: string | null
           cheque_date: string | null
           created_at: string
+          excluded_from_cash: boolean
           id: string
           invoice_id: string | null
           is_advance: boolean
@@ -2529,9 +2531,11 @@ export type Database = {
         }
         Insert: {
           amount: number
+          attribution_status?: string
           bank_name?: string | null
           cheque_date?: string | null
           created_at?: string
+          excluded_from_cash?: boolean
           id?: string
           invoice_id?: string | null
           is_advance?: boolean
@@ -2550,9 +2554,11 @@ export type Database = {
         }
         Update: {
           amount?: number
+          attribution_status?: string
           bank_name?: string | null
           cheque_date?: string | null
           created_at?: string
+          excluded_from_cash?: boolean
           id?: string
           invoice_id?: string | null
           is_advance?: boolean
@@ -9463,9 +9469,11 @@ export type Database = {
         Row: {
           amount_outstanding: number
           amount_paid: number
+          attribution_status: string
           created_at: string
           due_date: string
           escalation_level: number
+          excluded_from_cash: boolean
           gst_supply_amount: number
           gst_works_amount: number
           id: string
@@ -9498,9 +9506,11 @@ export type Database = {
         Insert: {
           amount_outstanding?: number
           amount_paid?: number
+          attribution_status?: string
           created_at?: string
           due_date: string
           escalation_level?: number
+          excluded_from_cash?: boolean
           gst_supply_amount?: number
           gst_works_amount?: number
           id?: string
@@ -9533,9 +9543,11 @@ export type Database = {
         Update: {
           amount_outstanding?: number
           amount_paid?: number
+          attribution_status?: string
           created_at?: string
           due_date?: string
           escalation_level?: number
+          excluded_from_cash?: boolean
           gst_supply_amount?: number
           gst_works_amount?: number
           id?: string
