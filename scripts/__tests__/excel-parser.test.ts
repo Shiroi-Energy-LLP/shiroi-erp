@@ -14,19 +14,30 @@ async function bookToBuffer(book: ExcelJS.Workbook): Promise<Buffer> {
 
 describe('parseCostingSheet sanity checks', () => {
   it('rejects a parsed total > ₹5L/kWp', async () => {
+    // Each line is individually plausible (₹3L ≪ ₹5Cr per-line limit, real descriptions),
+    // but 5 × ₹3L = ₹15L for a 2 kWp system = ₹7.5L/kWp > ₹5L/kWp ceiling.
+    // This exercises the per-kWp accumulation guard in parseCostingSheet, NOT the
+    // per-line ₹5Cr guard in parseBOMSheet (which fired on the old ₹100Cr fixture).
     const book = new ExcelJS.Workbook();
     const sheet = book.addWorksheet('Detailed BOM');
-    sheet.addRow(['System Size', '4 kWp']);
+    sheet.addRow(['System Size', '2 kWp']);
     sheet.addRow([]);
     sheet.addRow(['S.No', 'Description', 'Qty', 'Rate', 'Amount']);
-    // 1 row × ₹100 Cr — way above 4 kWp × ₹5L/kWp = ₹20L ceiling.
-    sheet.addRow([1, 'Solar Panels', 1, 1_000_000_000, 1_000_000_000]);
+    // 5 lines × ₹3L each = ₹15L total = ₹7.5L/kWp > ₹5L/kWp threshold.
+    // Each ₹3,00,000 line is safely below the ₹5Cr per-line guard.
+    sheet.addRow([1, 'Solar Panels 400 Wp Mono PERC', 5, 60_000, 300_000]);
+    sheet.addRow([2, 'Grid-Tie Inverter 2 kW', 1, 300_000, 300_000]);
+    sheet.addRow([3, 'Mounting Structure GI', 1, 300_000, 300_000]);
+    sheet.addRow([4, 'AC/DC Cabling & Conduit', 1, 300_000, 300_000]);
+    sheet.addRow([5, 'Balance of System & Installation', 1, 300_000, 300_000]);
 
-    const summary = await bookToBuffer(book);
-    const result = await parseCostingSheet(summary);
+    const buffer = await bookToBuffer(book);
+    const result = await parseCostingSheet(buffer);
 
     expect(result.summary.total_cost).toBeNull();
     expect(result.bom_lines).toHaveLength(0);
+    expect(result.summary.supply_cost).toBeNull();
+    expect(result.summary.installation_cost).toBeNull();
   });
 
   it('keeps a reasonable total intact (₹2L/kWp ≈ premium hybrid)', async () => {
