@@ -57,7 +57,7 @@ const WORKFLOW_PLACEHOLDERS: Record<string, string> = {
 // Credential placeholders resolve by n8n credential name + type.
 const CREDENTIAL_PLACEHOLDERS: Record<string, { name: string; type: string }> = {
   REPLACE_WITH_HEADER_AUTH_CRED_ID: { name: 'x-webhook-secret', type: 'httpHeaderAuth' },
-  REPLACE_WITH_GMAIL_OAUTH_CRED_ID: { name: 'Gmail (Vivek)', type: 'gmailOAuth2' },
+  REPLACE_WITH_GMAIL_OAUTH_CRED_ID: { name: 'Gmail account', type: 'gmailOAuth2' },
   // Supabase service-role HTTP Header Auth for cron workflows (03, 08, Tier 2 digests).
   // Credential header is `apikey: {sb_secret_...}` — create once in n8n Settings → Credentials.
   REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID: { name: 'Supabase service role', type: 'httpHeaderAuth' },

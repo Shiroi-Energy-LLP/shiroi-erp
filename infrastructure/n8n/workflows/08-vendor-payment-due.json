@@ -132,12 +132,30 @@
     },
     {
       "parameters": {
-        "operation": "send",
+        "resource": "message",
+        "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $json.to_phone_finance }}",
-        "messageType": "text",
-        "textBody": "={{ $json.message }}",
-        "additionalFields": {}
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "id": "node-whatsapp-finance",
       "name": "Send to Finance (always)",
@@ -156,12 +174,30 @@
     },
     {
       "parameters": {
-        "operation": "send",
+        "resource": "message",
+        "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
-        "messageType": "text",
-        "textBody": "={{ $json.message }}",
-        "additionalFields": {}
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "id": "node-whatsapp-vinodh-always",
       "name": "Send to Vinodh (always)",
@@ -214,12 +250,30 @@
     },
     {
       "parameters": {
-        "operation": "send",
+        "resource": "message",
+        "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $json.to_phone_vivek }}",
-        "messageType": "text",
-        "textBody": "={{ $json.message }}",
-        "additionalFields": {}
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "id": "node-whatsapp-vivek",
       "name": "Send to Vivek (cc high-value only)",
@@ -238,12 +292,30 @@
     },
     {
       "parameters": {
-        "operation": "send",
+        "resource": "message",
+        "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $json.to_phone_vinodh }}",
-        "messageType": "text",
-        "textBody": "={{ $json.message }}",
-        "additionalFields": {}
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "id": "node-whatsapp-vinodh-gufpc0",
       "name": "Send to Vinodh (cc high-value only)",
@@ -262,12 +334,30 @@
     },
     {
       "parameters": {
-        "operation": "send",
+        "resource": "message",
+        "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $env.SRIDHAR_WHATSAPP }}",
-        "messageType": "text",
-        "textBody": "={{ $json.message }}",
-        "additionalFields": {}
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "id": "node-whatsapp-sridhar-qvs1b9",
       "name": "Send to Sridhar (always)",

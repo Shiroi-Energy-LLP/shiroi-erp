@@ -47,9 +47,9 @@ Every workflow's `settings.errorWorkflow` points to `55 — Global Error Handler
    - Phone Number ID: 1140448799143790 (registered: +91-9444998787)
    - Credential schema: `{ accessToken, businessAccountId }` — store BOTH values in the credential.
 
-## Current state (2026-05-01)
+## Current state (2026-05-02 night)
 
-**Deployment status:** 19 of 20 workflows pushed to `n8n.shiroienergy.com` and **active**. End-to-end tested 2026-05-01 (Meta Cloud API → workflow → Vivek's WhatsApp landed in 2 sec).
+**Deployment status:** **32 of 34 workflows ACTIVE.** All 47 WhatsApp Send nodes flipped from text mode to template mode using the approved Meta `erp_alert` template (2 vars). Multi-line `message` strings flattened to title (line 1) + bullet-separated body for Meta compliance. End-to-end validated: webhook → router → Tier 1 sub-workflow → both founder phones in <2 sec. Still inactive: `57 — n8n nightly backup` (needs Supabase Storage bucket `n8n-backups`) and `58 — Sentry P0/P1 forwarder` (needs Sentry alert rule pointed at the webhook).
 
 > ⚠️ **DigitalOcean has externally blocked ports 80/443/8080** on the droplet (in response to a Netcraft alert despite our abuse response). The droplet itself is healthy, n8n + Caddy are up. Until DO restores the ports, **management traffic** goes through SSH tunnel:
 >
@@ -176,7 +176,25 @@ To update vars, SSH in (`ssh root@68.183.91.111`), edit `/opt/shiroi-automation/
 | `Supabase service role` | `httpHeaderAuth` (`apikey: sb_secret_*`) | Tier 1 cron + Tier 2 digests fetch view rows | ✅ Created (2026-05-01) |
 | `Gmail (Vivek)` | `gmailOAuth2` | Error handler #55 emails Vivek on workflow failure | ✅ Created (2026-05-02) — Google Cloud project `shiroi-n8n`, OAuth client `n8n Shiroi`, scope `gmail.send`. See "Gmail OAuth via SSH tunnel" section below for the workaround used to complete OAuth while DO ports were blocked. |
 
-## Two runtime gotchas (caught + fixed 2026-05-02)
+## Three runtime gotchas (caught + fixed 2026-05-02)
+
+### 0. Meta forbids newlines/tabs/4+ spaces in template parameter VALUES
+
+The Meta `erp_alert` template body itself uses literal `\n\n` between `{{1}}` and `{{2}}` — that's fine. But the values you SUBSTITUTE for `{{1}}` and `{{2}}` cannot contain `\n`, `\t`, or 4+ consecutive spaces. Hitting any of those returns Meta error code `132018`: "Param text cannot have new-line/tab characters or more than 4 consecutive spaces".
+
+Our existing `message` fields are multi-line ERP-formatted text. The `flip-n8n-whatsapp-to-template.ts` script handles the flatten:
+
+```js
+// {{1}} = first line only
+$json.message.split('\n')[0]
+
+// {{2}} = remaining lines, filtered empty, joined with bullet separator
+$json.message.split('\n').slice(1).filter(l => l.trim()).join(' · ') || ' '
+```
+
+When designing future workflow message strings, **don't bury the most important info past line 1** — the headline goes into `{{1}}`, everything else into `{{2}}` collapsed to a single line. Keep `{{2}}` informative but flat.
+
+
 
 ### 1. `$env.X` access is blocked by default in n8n 1.x
 

@@ -114,44 +114,45 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
             {
-              "id": "s1",
-              "name": "status",
-              "value": "simulated",
-              "type": "string"
-            },
-            {
-              "id": "s2",
-              "name": "reason",
-              "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves",
-              "type": "string"
-            },
-            {
-              "id": "s3",
-              "name": "would_send_to",
-              "value": "={{ $json.to_phone }}",
-              "type": "string"
-            },
-            {
-              "id": "s4",
-              "name": "would_send_body",
-              "value": "={{ $json.message }}",
-              "type": "string"
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
             }
           ]
-        },
-        "options": {}
+        }
       },
-      "id": "node-simulate-send",
-      "name": "SIMULATED SEND (replace with WhatsApp)",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "id": "node-whatsapp-0lnscz",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
       "position": [
         1000,
         300
-      ]
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
     }
   ],
   "connections": {
@@ -192,7 +193,7 @@
       "main": [
         [
           {
-            "node": "SIMULATED SEND (replace with WhatsApp)",
+            "node": "Send WhatsApp",
             "type": "main",
             "index": 0
           }

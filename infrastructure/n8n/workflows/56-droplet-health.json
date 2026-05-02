@@ -5,7 +5,10 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 0 9 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 0 9 * * *"
+            }
           ]
         }
       },
@@ -13,14 +16,27 @@
       "name": "Daily 9:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "h1", "name": "timestamp_ist", "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST", "type": "string" },
-            { "id": "h2", "name": "uptime_iso", "value": "={{ DateTime.now().setZone('Asia/Kolkata').toISO() }}", "type": "string" },
+            {
+              "id": "h1",
+              "name": "timestamp_ist",
+              "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST",
+              "type": "string"
+            },
+            {
+              "id": "h2",
+              "name": "uptime_iso",
+              "value": "={{ DateTime.now().setZone('Asia/Kolkata').toISO() }}",
+              "type": "string"
+            },
             {
               "id": "h3",
               "name": "message",
@@ -35,22 +51,46 @@
       "name": "Compose heartbeat",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
-        "operation": "send",
+        "resource": "message",
+        "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $env.VIVEK_WHATSAPP }}",
-        "messageType": "text",
-        "textBody": "={{ $json.message }}",
-        "additionalFields": {}
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "id": "node-whatsapp-vivek",
       "name": "Send WhatsApp to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [500, 200],
+      "position": [
+        500,
+        200
+      ],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
@@ -60,18 +100,39 @@
     },
     {
       "parameters": {
-        "operation": "send",
+        "resource": "message",
+        "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
-        "messageType": "text",
-        "textBody": "={{ $json.message }}",
-        "additionalFields": {}
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "id": "node-whatsapp-vinodh",
       "name": "Send WhatsApp to Vinodh",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [500, 400],
+      "position": [
+        500,
+        400
+      ],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
@@ -81,12 +142,30 @@
     }
   ],
   "connections": {
-    "Daily 9:00 IST": { "main": [[{ "node": "Compose heartbeat", "type": "main", "index": 0 }]] },
+    "Daily 9:00 IST": {
+      "main": [
+        [
+          {
+            "node": "Compose heartbeat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Compose heartbeat": {
       "main": [
         [
-          { "node": "Send WhatsApp to Vivek", "type": "main", "index": 0 },
-          { "node": "Send WhatsApp to Vinodh", "type": "main", "index": 0 }
+          {
+            "node": "Send WhatsApp to Vivek",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp to Vinodh",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
@@ -101,11 +180,21 @@
     "saveDataSuccessExecution": "none"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-6" },
-    { "name": "meta" },
-    { "name": "infra" },
-    { "name": "cron" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-6"
+    },
+    {
+      "name": "meta"
+    },
+    {
+      "name": "infra"
+    },
+    {
+      "name": "cron"
+    }
   ],
   "meta": {
     "description": "Daily 9 AM IST heartbeat — sends a 'still alive' WhatsApp ping to founders. If you don't see this message at 9 AM, n8n may be down. Replaces the original 15-min CPU/RAM/disk metrics monitor (which used n8n-nodes-base.executeCommand — that node was removed in current n8n version for security). For threshold-based metrics monitoring, use DigitalOcean's built-in monitoring + alerts (Droplets → shiroi-erp → Insights → Alerts) which is free, integrated, and doesn't depend on n8n. Requires env: VIVEK_WHATSAPP, VINODH_WHATSAPP."

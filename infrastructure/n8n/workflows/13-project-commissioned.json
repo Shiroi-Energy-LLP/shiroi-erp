@@ -9,23 +9,81 @@
       "name": "When called by router",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "f1", "name": "project_id", "value": "={{ $json.body.payload.project_id }}", "type": "string" },
-            { "id": "f2", "name": "customer_name", "value": "={{ $json.body.payload.customer_name }}", "type": "string" },
-            { "id": "f3", "name": "customer_phone", "value": "={{ $json.body.payload.customer_phone }}", "type": "string" },
-            { "id": "f4", "name": "system_size_kwp", "value": "={{ $json.body.payload.system_size_kwp }}", "type": "number" },
-            { "id": "f5", "name": "commissioning_date", "value": "={{ $json.body.payload.commissioning_date }}", "type": "string" },
-            { "id": "f6", "name": "finance_head_whatsapp", "value": "={{ $json.body.payload.finance_head_whatsapp }}", "type": "string" },
-            { "id": "f7", "name": "final_invoice_amount", "value": "={{ $json.body.payload.final_invoice_amount }}", "type": "number" },
-            { "id": "f8", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
-            { "id": "f9", "name": "customer_portal_url", "value": "={{ $json.body.payload.customer_portal_url }}", "type": "string" },
-            { "id": "f10", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" },
-            { "id": "f11", "name": "final_invoice_display", "value": "={{ $json.body.payload.final_invoice_amount ? '₹' + ($json.body.payload.final_invoice_amount / 100000).toFixed(2) + 'L' : '—' }}", "type": "string" }
+            {
+              "id": "f1",
+              "name": "project_id",
+              "value": "={{ $json.body.payload.project_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "customer_name",
+              "value": "={{ $json.body.payload.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "customer_phone",
+              "value": "={{ $json.body.payload.customer_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "system_size_kwp",
+              "value": "={{ $json.body.payload.system_size_kwp }}",
+              "type": "number"
+            },
+            {
+              "id": "f5",
+              "name": "commissioning_date",
+              "value": "={{ $json.body.payload.commissioning_date }}",
+              "type": "string"
+            },
+            {
+              "id": "f6",
+              "name": "finance_head_whatsapp",
+              "value": "={{ $json.body.payload.finance_head_whatsapp }}",
+              "type": "string"
+            },
+            {
+              "id": "f7",
+              "name": "final_invoice_amount",
+              "value": "={{ $json.body.payload.final_invoice_amount }}",
+              "type": "number"
+            },
+            {
+              "id": "f8",
+              "name": "erp_url",
+              "value": "={{ $json.body.payload.erp_url }}",
+              "type": "string"
+            },
+            {
+              "id": "f9",
+              "name": "customer_portal_url",
+              "value": "={{ $json.body.payload.customer_portal_url }}",
+              "type": "string"
+            },
+            {
+              "id": "f10",
+              "name": "timestamp_ist",
+              "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST",
+              "type": "string"
+            },
+            {
+              "id": "f11",
+              "name": "final_invoice_display",
+              "value": "={{ $json.body.payload.final_invoice_amount ? '₹' + ($json.body.payload.final_invoice_amount / 100000).toFixed(2) + 'L' : '—' }}",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -34,7 +92,10 @@
       "name": "Extract fields",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -60,33 +121,135 @@
       "name": "Compose both messages",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
-            { "id": "s2", "name": "reason", "value": "Customer-facing template requires Meta pre-approval. Keep disabled until template is approved; Finance side can be enabled earlier with a utility template.", "type": "string" },
-            { "id": "s3", "name": "would_send_customer_to", "value": "={{ $json.customer_phone }}", "type": "string" },
-            { "id": "s4", "name": "would_send_customer_body", "value": "={{ $json.message_customer }}", "type": "string" },
-            { "id": "s5", "name": "would_send_finance_to", "value": "={{ $json.finance_head_whatsapp }}", "type": "string" },
-            { "id": "s6", "name": "would_send_finance_body", "value": "={{ $json.message_finance }}", "type": "string" }
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $json.customer_phone }}",
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message_customer.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message_customer.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
           ]
-        },
-        "options": {}
+        }
       },
-      "id": "node-simulate-send",
-      "name": "SIMULATED SEND (replace with WhatsApp)",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [750, 300]
+      "id": "node-whatsapp-4jds2q",
+      "name": "Send WhatsApp to Customer",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        200
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $json.finance_head_whatsapp }}",
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message_finance.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message_finance.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-whatsapp-2ybz6f",
+      "name": "Send WhatsApp to Finance",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        400
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
     }
   ],
   "connections": {
-    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
-    "Extract fields": { "main": [[{ "node": "Compose both messages", "type": "main", "index": 0 }]] },
-    "Compose both messages": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+    "When called by router": {
+      "main": [
+        [
+          {
+            "node": "Extract fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract fields": {
+      "main": [
+        [
+          {
+            "node": "Compose both messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose both messages": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp to Customer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp to Finance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -98,11 +261,21 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-1" },
-    { "name": "tier-4" },
-    { "name": "projects" },
-    { "name": "finance" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-1"
+    },
+    {
+      "name": "tier-4"
+    },
+    {
+      "name": "projects"
+    },
+    {
+      "name": "finance"
+    }
   ],
   "meta": {
     "description": "Triggered on project.commissioned. Sends a celebration message to the customer AND a final-invoice trigger to Finance. Customer message requires an approved Meta template (marketing/utility); keep customer branch disabled until template approval lands. Expects payload: {project_id, customer_name, customer_phone, system_size_kwp, commissioning_date, finance_head_whatsapp, final_invoice_amount, erp_url, customer_portal_url}."

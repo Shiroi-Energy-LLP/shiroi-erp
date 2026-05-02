@@ -152,12 +152,30 @@
     },
     {
       "parameters": {
-        "operation": "send",
+        "resource": "message",
+        "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $json.to_phone }}",
-        "messageType": "text",
-        "textBody": "={{ $json.message }}",
-        "additionalFields": {}
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "type": "text",
+                    "text": "={{ $json.message.split('\\n')[0] }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
