@@ -15,7 +15,7 @@
 #   1. Spin up new droplet, run cloud-init / docker compose stack.
 #   2. Pull latest backup:
 #        curl -sS -o n8n-backup-YYYY-MM-DD.tar.gz \
-#          -H "Authorization: Bearer ${SUPABASE_SECRET_KEY}" \
+#          -H "apikey: ${SUPABASE_SECRET_KEY}" \
 #          "https://${SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/n8n-backups/n8n-backup-YYYY-MM-DD.tar.gz"
 #   3. Verify checksum against /var/log/n8n-backup.log entry.
 #   4. Stop n8n: docker compose -f /opt/shiroi-automation/docker-compose.yml stop n8n
@@ -73,10 +73,15 @@ tar czf "$TMP_FILE" -C "$VOLUME_PATH" .
 SHA=$(sha256sum "$TMP_FILE" | awk '{print $1}')
 SZ=$(stat -c%s "$TMP_FILE")
 
-# Upload — x-upsert: true so re-running the same day overwrites cleanly
+# Upload — x-upsert: true so re-running the same day overwrites cleanly.
+#
+# Auth note: Supabase Storage API rejects `Authorization: Bearer <sb_secret_*>`
+# with "Invalid Compact JWS" because the new sb_secret_* keys are NOT JWTs.
+# Must use `apikey: <sb_secret_*>` header instead. (Confirmed against
+# storage/v1 endpoint 2026-05-02.)
 HTTP_CODE=$(curl -sS -o /tmp/n8n-backup-upload-resp.json -w "%{http_code}" \
   -X POST \
-  -H "Authorization: Bearer ${SUPABASE_SECRET_KEY}" \
+  -H "apikey: ${SUPABASE_SECRET_KEY}" \
   -H "Content-Type: application/gzip" \
   -H "x-upsert: true" \
   --data-binary "@${TMP_FILE}" \
