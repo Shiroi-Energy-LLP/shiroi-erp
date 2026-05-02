@@ -117,6 +117,7 @@ apps/erp/src/components/
 - **Migration 055** — FK fix on `log_lead_status_change` + won→proposal→project cascade trigger + `employees.is_active` fix
 - **Migration 056** — FK fix on `log_proposal_status_change` (dormant bug surfaced by 055's new trigger); column-config status options reconciled
 - **Migration 088** — `leads_update` RLS expanded to include `sales_engineer` (aligns with `leads_insert` / `leads_read` and documented role access). Closes silent-RLS-failure footgun where unassigned leads appeared to update successfully but did not.
+- **Migration 094** — `leads.map_link TEXT NULL` added (optional Google Maps URL, mirrors `projects.location_map_link`); `create_project_from_accepted_proposal` trigger now inherits the link onto the new project; RPCs `get_expected_orders(window_days)` + `get_expected_payments(window_days)` powering the dashboard cards; backfill of `payment_followup`/`payment_escalation` tasks to the oldest active marketing_manager (no-op at apply time but kept as a safety net). (Originally drafted as mig 089 but renumbered after origin/main shipped 088-091 in parallel.)
 - **Migration 017** — Contacts V2 foundation (see `docs/modules/contacts.md`)
 - **Migration 020** — pipeline fields (`expected_close_date`, `close_probability`, `is_archived`)
 - **Migration 048** — `get_pipeline_summary()` RPC + supporting indexes

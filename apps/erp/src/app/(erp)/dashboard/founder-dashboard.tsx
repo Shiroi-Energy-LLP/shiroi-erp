@@ -22,6 +22,13 @@ import { PipelineSummary } from './pipeline-summary';
 import { PendingApprovals } from './pending-approvals';
 import { OverdueReports } from './overdue-reports';
 import { ClosureApprovalsPanel } from '@/components/sales/closure-approvals-panel';
+import { ExpectedOrdersCard } from '@/components/dashboard/expected-orders-card';
+import { ExpectedPaymentsCard } from '@/components/dashboard/expected-payments-card';
+import {
+  getExpectedOrders,
+  getExpectedPayments,
+  splitWeekAndMonthOnly,
+} from '@/lib/dashboard-expected-queries';
 
 export async function FounderDashboard() {
   // All five "company aggregate" queries below are cached via
@@ -37,6 +44,10 @@ export async function FounderDashboard() {
     cashSummary,
     amcSummary,
     syncHealth,
+    expectedOrdersWeek,
+    expectedOrdersMonth,
+    expectedPaymentsWeek,
+    expectedPaymentsMonth,
   ] = await Promise.all([
     getCashNegativeProjects(),
     getCachedPipelineSummary(),
@@ -46,7 +57,22 @@ export async function FounderDashboard() {
     getCachedCompanyCashSummary(),
     getCachedAmcMonthlySummary(),
     getZohoSyncHealth(),
+    getExpectedOrders(7),
+    getExpectedOrders(30),
+    getExpectedPayments(7),
+    getExpectedPayments(30),
   ]);
+
+  const orders = splitWeekAndMonthOnly(
+    expectedOrdersWeek,
+    expectedOrdersMonth,
+    (r) => r.lead_id,
+  );
+  const payments = splitWeekAndMonthOnly(
+    expectedPaymentsWeek,
+    expectedPaymentsMonth,
+    (r) => `${r.project_id}::${r.milestone_order}`,
+  );
   const payrollDays = daysUntilPayroll();
   const firstName = profile?.full_name?.split(' ')[0] ?? 'there';
 
@@ -97,6 +123,8 @@ export async function FounderDashboard() {
           <OverdueReports projects={overdueReports} />
         </div>
         <div className="space-y-6">
+          <ExpectedOrdersCard weekRows={orders.week} monthOnlyRows={orders.monthOnly} />
+          <ExpectedPaymentsCard weekRows={payments.week} monthOnlyRows={payments.monthOnly} />
           <PipelineSummary pipeline={pipeline} />
           <PendingApprovals proposals={pendingApprovals} />
           <Card>

@@ -73,6 +73,19 @@ export default async function LeadDetailsTab({ params }: LeadDetailPageProps) {
             <InfoRow label="State" value={lead.state} />
             {lead.pincode && <InfoRow label="Pincode" value={lead.pincode} />}
             {lead.address_line1 && <InfoRow label="Address" value={lead.address_line1} />}
+            {lead.map_link && (
+              <div className="flex justify-between text-sm">
+                <span className="text-n-500">Site location</span>
+                <a
+                  href={lead.map_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-p-600 hover:underline font-medium"
+                >
+                  View on map ↗
+                </a>
+              </div>
+            )}
           </CardContent>
         </Card>
 

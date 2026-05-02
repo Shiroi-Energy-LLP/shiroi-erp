@@ -122,6 +122,8 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 - `get_amc_monthly_summary()` — AMC visits scheduled vs completed (migration 048).
 - `get_projects_without_today_report()` — daily-report anti-join for site-ops alerts (migration 048).
 - `get_payment_tracker_rows()` — per-project rollup of invoiced / sent / received / remaining + order/completion dates + days-since-order (migration 088). Used by `/payments/tracker`.
+- `get_expected_orders(window_days INT)` — leads in `negotiation`/`closure_soon` with `expected_close_date` in the next N days. Returns customer name, kWp, ₹ value (`base_quote_price` or derived), expected date, probability, days-until (migration 094). Used by Expected Orders dashboard card.
+- `get_expected_payments(window_days INT)` — payment milestones whose computed expected date (`due_trigger` + `due_days_after_trigger` against `projects.order_date` / `actual_start_date` / `commissioned_date`) falls in the next N days. Skips already-paid milestones via window-fn cumulative sum vs `customer_payments` total. Returns project + customer + milestone + ₹ + date + days-until (migration 094). Used by Expected Payments dashboard + cash-page cards.
 
 ## Known Gotchas
 

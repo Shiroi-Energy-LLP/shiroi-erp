@@ -50,5 +50,38 @@ export async function getAllTasks(filters: TaskFilters = {}) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load tasks: ${error.message}`);
   }
-  return { tasks: data ?? [], total: count ?? 0 };
+
+  const tasks = data ?? [];
+
+  // Second-pass: enrich lead-linked tasks with customer_name.
+  // tasks.entity_id has no FK to leads (it's a generic reference), so we
+  // fetch the names in a separate query and attach them via a Map.
+  const leadIds = tasks
+    .filter((t) => t.entity_type === 'lead' && t.entity_id && !t.project_id)
+    .map((t) => t.entity_id as string);
+
+  const leadNameMap = new Map<string, string>();
+  if (leadIds.length > 0) {
+    const { data: leadRows, error: leadErr } = await supabase
+      .from('leads')
+      .select('id, customer_name')
+      .in('id', leadIds);
+    if (leadErr) {
+      console.error(`${op} Lead enrichment failed:`, { code: leadErr.code, message: leadErr.message });
+      // Non-fatal: continue without names
+    } else {
+      for (const row of leadRows ?? []) {
+        leadNameMap.set(row.id, row.customer_name);
+      }
+    }
+  }
+
+  const enriched = tasks.map((t) => {
+    if (t.entity_type === 'lead' && t.entity_id && !t.project_id) {
+      return { ...t, lead_customer_name: leadNameMap.get(t.entity_id) ?? null };
+    }
+    return { ...t, lead_customer_name: null };
+  });
+
+  return { tasks: enriched, total: count ?? 0 };
 }

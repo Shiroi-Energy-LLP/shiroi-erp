@@ -10,6 +10,11 @@ import {
   cashPositionColor,
 } from '@/lib/cash-queries';
 import { getCashSummaryV2 } from '@/lib/vendor-bills-queries';
+import {
+  getExpectedPayments,
+  splitWeekAndMonthOnly,
+} from '@/lib/dashboard-expected-queries';
+import { ExpectedPaymentsCard } from '@/components/dashboard/expected-payments-card';
 import { formatINR, shortINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
@@ -29,12 +34,27 @@ import {
 import { TrendingUp } from 'lucide-react';
 
 export default async function CashFlowPage() {
-  const [summary, positions, overdueInvoices, v2Summary] = await Promise.all([
+  const [
+    summary,
+    positions,
+    overdueInvoices,
+    v2Summary,
+    expectedPaymentsWeek,
+    expectedPaymentsMonth,
+  ] = await Promise.all([
     getCompanyCashSummary(),
     getAllProjectPositions(),
     getOverdueInvoices(),
     getCashSummaryV2(),
+    getExpectedPayments(7),
+    getExpectedPayments(30),
   ]);
+
+  const expectedPayments = splitWeekAndMonthOnly(
+    expectedPaymentsWeek,
+    expectedPaymentsMonth,
+    (r) => `${r.project_id}::${r.milestone_order}`,
+  );
 
   return (
     <div className="space-y-6">
@@ -82,6 +102,12 @@ export default async function CashFlowPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Expected Payments — cash flow management view */}
+      <ExpectedPaymentsCard
+        weekRows={expectedPayments.week}
+        monthOnlyRows={expectedPayments.monthOnly}
+      />
 
       {/* Zoho V2 Summary Panel */}
       {v2Summary && (

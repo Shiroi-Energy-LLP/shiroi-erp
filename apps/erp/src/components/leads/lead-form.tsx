@@ -58,6 +58,7 @@ export function LeadForm() {
     source: '' as LeadSource | '',
     system_type: '' as SystemType | '',
     estimated_size_kwp: '',
+    map_link: '',
     notes: '',
   });
 
@@ -87,6 +88,12 @@ export function LeadForm() {
       return;
     }
 
+    const trimmedMapLink = form.map_link.trim();
+    if (trimmedMapLink && !/^https?:\/\//i.test(trimmedMapLink)) {
+      setError('Map link must be a URL starting with https:// (e.g. a Google Maps link).');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -107,6 +114,7 @@ export function LeadForm() {
       source: form.source as LeadSource,
       system_type: form.system_type ? (form.system_type as SystemType) : null,
       estimated_size_kwp: form.estimated_size_kwp ? parseFloat(form.estimated_size_kwp) : null,
+      map_link: trimmedMapLink || null,
       notes: form.notes.trim() || null,
       status: 'new' as const,
     });
@@ -278,6 +286,18 @@ export function LeadForm() {
                 placeholder="Street address"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="map_link">Google Maps Link <span className="text-n-400 font-normal">(optional)</span></Label>
+            <Input
+              id="map_link"
+              type="url"
+              value={form.map_link}
+              onChange={(e) => updateField('map_link', e.target.value)}
+              placeholder="https://maps.google.com/... or https://maps.app.goo.gl/..."
+            />
+            <p className="text-xs text-n-500">Paste a Google Maps link to the customer site. Helps the design + project teams.</p>
           </div>
 
           <div className="space-y-2">

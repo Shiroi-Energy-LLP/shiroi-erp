@@ -142,7 +142,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project Name</th>
+                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Client</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Task Name</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Assigned To</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Status</th>
