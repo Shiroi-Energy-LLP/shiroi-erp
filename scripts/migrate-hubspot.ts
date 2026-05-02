@@ -1149,8 +1149,19 @@ async function migrateDeals(): Promise<void> {
         const proposalId = crypto.randomUUID();
         const proposalNumber = propNumGen.generate();
         const closeDate = parseHubSpotDate(deal['Close Date']) ?? createdAt;
-        const totalProjectValue = parseAmount(deal['Total Project Value']) ?? 0;
+        let totalProjectValue = parseAmount(deal['Total Project Value']) ?? 0;
         const systemSizeKwp = sizeKwp ?? 5; // Default 5 kWp if unknown
+
+        // Sanity check: HubSpot's Total Project Value is unreliable for some deals.
+        // Anything > ₹5L/kWp is implausible. Drop the value and note it; the row
+        // will surface in the UI banner as "needs re-quote".
+        const MAX_PLAUSIBLE_PER_KWP = 500_000;
+        let droppedTpvNote: string | null = null;
+        if (totalProjectValue > systemSizeKwp * MAX_PLAUSIBLE_PER_KWP) {
+          droppedTpvNote = `Original HubSpot TPV ₹${totalProjectValue} dropped — implausible for ${systemSizeKwp} kWp.`;
+          console.warn(`${op} ${droppedTpvNote} Deal: "${dealName}" (${dealId})`);
+          totalProjectValue = 0;
+        }
         const validUntil = new Date(new Date(closeDate).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
         const proposalInsert = {
@@ -1167,7 +1178,10 @@ async function migrateDeals(): Promise<void> {
           shiroi_revenue: totalProjectValue,
           created_at: createdAt,
           hubspot_deal_id: dealId || null,
-          notes: `[HubSpot Migration] Won deal imported. PV: ${pvInfo ? `PV${pvInfo.pvNumber}/${pvInfo.fy}` : 'N/A'}`,
+          notes: [
+            `[HubSpot Migration] Won deal imported. PV: ${pvInfo ? `PV${pvInfo.pvNumber}/${pvInfo.fy}` : 'N/A'}`,
+            droppedTpvNote ? `[Sanity check] ${droppedTpvNote}` : null,
+          ].filter(Boolean).join(' | '),
         };
 
         const { error: propError } = await supabase.from('proposals').insert(proposalInsert);

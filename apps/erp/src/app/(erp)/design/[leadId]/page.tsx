@@ -81,6 +81,16 @@ export default async function DesignWorkspacePage({ params }: DesignWorkspacePro
             {lead.estimated_size_kwp && <span>{lead.estimated_size_kwp} kWp</span>}
             {lead.system_type && <span>{lead.system_type.replace(/_/g, ' ')}</span>}
             {lead.segment && <span>{lead.segment}</span>}
+            {lead.map_link && (
+              <a
+                href={lead.map_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-p-600 hover:underline"
+              >
+                View on map ↗
+              </a>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">

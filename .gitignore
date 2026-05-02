@@ -53,3 +53,6 @@ supabase/.temp/
 .worktrees/
 .security-key
 logs/security/
+
+# Tier B re-extraction: extracted doc texts (large, generated, not needed in git)
+scripts/data/tier-b-doc-texts/

@@ -5,15 +5,21 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 30 2 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 0 8 * * *"
+            }
           ]
         }
       },
       "id": "node-cron",
-      "name": "Daily 8:00 IST (02:30 UTC)",
+      "name": "Daily 8:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -24,8 +30,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "options": {
@@ -40,7 +52,10 @@
       "name": "Fetch open tickets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -58,8 +73,18 @@
               "value": "=🛠️ *O&M digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nOpen tickets >48h or SLA-breached: {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ All tickets on track — no aged queue.' : ($json.data || []).slice(0, 15).map((t, i) => `${i+1}. ${t.ticket_number} · ${t.severity}${t.sla_breached ? ' 🚨SLA' : ''} · ${t.customer_name} · ${t.hours_open}h · ${t.assignee_name || 'unassigned'}`).join('\\n') }}{{ ($json.data || []).length > 15 ? '\\n…and ' + (($json.data || []).length - 15) + ' more.' : '' }}\n\nOpen: https://erp.shiroienergy.com/om/tickets\n\n_TODO: add v_digest_om_visits_today + plant-monitoring anomalies once those views land._",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $env.OM_HEAD_WHATSAPP }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $env.OM_HEAD_WHATSAPP }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -68,22 +93,54 @@
       "name": "Compose digest",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
+        "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "toPhoneNumber": "={{ $json.to_phone }}",
-        "message": "={{ $json.message }}",
-        "options": {}
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1,
-      "position": [750, 300],
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        300
+      ],
       "credentials": {
-        "whatsAppBusinessAccountApi": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "node-whatsapp-vinodh-8sntlm",
+      "name": "Send WhatsApp to Vinodh",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        450
+      ],
+      "credentials": {
+        "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
@@ -91,9 +148,44 @@
     }
   ],
   "connections": {
-    "Daily 8:00 IST (02:30 UTC)": { "main": [[{ "node": "Fetch open tickets", "type": "main", "index": 0 }]] },
-    "Fetch open tickets": { "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]] },
-    "Compose digest": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "Daily 8:00 IST (02:30 UTC)": {
+      "main": [
+        [
+          {
+            "node": "Fetch open tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch open tickets": {
+      "main": [
+        [
+          {
+            "node": "Compose digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose digest": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp to Vinodh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -105,11 +197,21 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-2" },
-    { "name": "om" },
-    { "name": "digest" },
-    { "name": "cron" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-2"
+    },
+    {
+      "name": "om"
+    },
+    {
+      "name": "digest"
+    },
+    {
+      "name": "cron"
+    }
   ],
   "meta": {
     "description": "Daily 8:00 IST — O&M head digest. Queries v_digest_om_tickets_open_48h (migration 085). Ordered by severity DESC so critical tickets surface first. SLA-breached flag shown inline. Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, OM_HEAD_WHATSAPP."

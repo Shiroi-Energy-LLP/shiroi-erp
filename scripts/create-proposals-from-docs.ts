@@ -11,7 +11,7 @@ dotenv.config({ path: 'C:/Users/vivek/Projects/shiroi-erp/.env.local' });
 
 import { createClient } from '@supabase/supabase-js';
 import mammoth from 'mammoth';
-import * as pdfParse from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 import * as path from 'path';
 
 const supabase = createClient(
@@ -179,7 +179,14 @@ async function main() {
       if (targetFile.ext === 'docx') {
         text = (await mammoth.extractRawText({ buffer })).value.trim();
       } else {
-        text = ((await (pdfParse as any).default(buffer)).text || '').trim();
+        // pdf-parse v2: class-based API
+        const parser = new PDFParse({ data: buffer });
+        try {
+          const result = await parser.getText();
+          text = (result.text ?? '').trim();
+        } finally {
+          await parser.destroy();
+        }
       }
     } catch { stats.errors++; continue; }
 

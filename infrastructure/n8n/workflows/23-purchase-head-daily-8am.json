@@ -5,15 +5,21 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 30 2 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 0 8 * * *"
+            }
           ]
         }
       },
       "id": "node-cron",
-      "name": "Daily 8:00 IST (02:30 UTC)",
+      "name": "Daily 8:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -24,8 +30,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "options": {
@@ -40,7 +52,10 @@
       "name": "Fetch pending POs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -58,8 +73,18 @@
               "value": "=📦 *Purchase digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nPOs awaiting approval: {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ No pending approvals.' : ($json.data || []).slice(0, 15).map((p, i) => `${i+1}. ${p.po_number} · ${p.vendor_name}${p.vendor_is_msme ? ' 🔔MSME' : ''} · ₹${p.total_amount} · ${p.days_pending}d · ${p.prepared_by_name || '—'}`).join('\\n') }}{{ ($json.data || []).length > 15 ? '\\n…and ' + (($json.data || []).length - 15) + ' more.' : '' }}\n\nOpen: https://erp.shiroienergy.com/procurement\n\n_TODO: add v_digest_vendor_payments_due_7d + expected deliveries._",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $env.PURCHASE_HEAD_WHATSAPP }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $env.PURCHASE_HEAD_WHATSAPP }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -68,22 +93,30 @@
       "name": "Compose digest",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
+        "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "toPhoneNumber": "={{ $json.to_phone }}",
-        "message": "={{ $json.message }}",
-        "options": {}
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1,
-      "position": [750, 300],
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        300
+      ],
       "credentials": {
-        "whatsAppBusinessAccountApi": {
+        "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
@@ -91,9 +124,39 @@
     }
   ],
   "connections": {
-    "Daily 8:00 IST (02:30 UTC)": { "main": [[{ "node": "Fetch pending POs", "type": "main", "index": 0 }]] },
-    "Fetch pending POs": { "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]] },
-    "Compose digest": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "Daily 8:00 IST (02:30 UTC)": {
+      "main": [
+        [
+          {
+            "node": "Fetch pending POs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch pending POs": {
+      "main": [
+        [
+          {
+            "node": "Compose digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose digest": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -105,11 +168,21 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-2" },
-    { "name": "procurement" },
-    { "name": "digest" },
-    { "name": "cron" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-2"
+    },
+    {
+      "name": "procurement"
+    },
+    {
+      "name": "digest"
+    },
+    {
+      "name": "cron"
+    }
   ],
   "meta": {
     "description": "Daily 8:00 IST — Purchase head digest. Queries v_digest_pos_pending_approval (migration 085). MSME vendors flagged inline. Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, PURCHASE_HEAD_WHATSAPP."

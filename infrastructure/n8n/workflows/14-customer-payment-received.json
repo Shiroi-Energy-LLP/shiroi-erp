@@ -9,26 +9,99 @@
       "name": "When called by router",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "f1", "name": "payment_id", "value": "={{ $json.body.payload.payment_id }}", "type": "string" },
-            { "id": "f2", "name": "receipt_number", "value": "={{ $json.body.payload.receipt_number }}", "type": "string" },
-            { "id": "f3", "name": "amount", "value": "={{ $json.body.payload.amount }}", "type": "string" },
-            { "id": "f4", "name": "payment_date", "value": "={{ $json.body.payload.payment_date }}", "type": "string" },
-            { "id": "f5", "name": "payment_method", "value": "={{ $json.body.payload.payment_method }}", "type": "string" },
-            { "id": "f6", "name": "is_advance", "value": "={{ $json.body.payload.is_advance }}", "type": "boolean" },
-            { "id": "f7", "name": "invoice_number", "value": "={{ $json.body.payload.invoice_number }}", "type": "string" },
-            { "id": "f8", "name": "project_code", "value": "={{ $json.body.payload.project_code }}", "type": "string" },
-            { "id": "f9", "name": "customer_name", "value": "={{ $json.body.payload.customer_name }}", "type": "string" },
-            { "id": "f10", "name": "sales_person_name", "value": "={{ $json.body.payload.sales_person_name }}", "type": "string" },
-            { "id": "f11", "name": "sales_person_whatsapp", "value": "={{ $json.body.payload.sales_person_whatsapp }}", "type": "string" },
-            { "id": "f12", "name": "erp_url", "value": "={{ $json.body.payload.erp_url }}", "type": "string" },
-            { "id": "f13", "name": "timestamp_ist", "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST", "type": "string" },
-            { "id": "f14", "name": "payment_date_ist", "value": "={{ DateTime.fromISO($json.body.payload.payment_date).setZone('Asia/Kolkata').toFormat('dd LLL yyyy') }}", "type": "string" }
+            {
+              "id": "f1",
+              "name": "payment_id",
+              "value": "={{ $json.body.payload.payment_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "receipt_number",
+              "value": "={{ $json.body.payload.receipt_number }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "amount",
+              "value": "={{ $json.body.payload.amount }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "payment_date",
+              "value": "={{ $json.body.payload.payment_date }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "payment_method",
+              "value": "={{ $json.body.payload.payment_method }}",
+              "type": "string"
+            },
+            {
+              "id": "f6",
+              "name": "is_advance",
+              "value": "={{ $json.body.payload.is_advance }}",
+              "type": "boolean"
+            },
+            {
+              "id": "f7",
+              "name": "invoice_number",
+              "value": "={{ $json.body.payload.invoice_number }}",
+              "type": "string"
+            },
+            {
+              "id": "f8",
+              "name": "project_code",
+              "value": "={{ $json.body.payload.project_code }}",
+              "type": "string"
+            },
+            {
+              "id": "f9",
+              "name": "customer_name",
+              "value": "={{ $json.body.payload.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f10",
+              "name": "sales_person_name",
+              "value": "={{ $json.body.payload.sales_person_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f11",
+              "name": "sales_person_whatsapp",
+              "value": "={{ $json.body.payload.sales_person_whatsapp }}",
+              "type": "string"
+            },
+            {
+              "id": "f12",
+              "name": "erp_url",
+              "value": "={{ $json.body.payload.erp_url }}",
+              "type": "string"
+            },
+            {
+              "id": "f13",
+              "name": "timestamp_ist",
+              "value": "={{ DateTime.fromISO($json.body.emitted_at).setZone('Asia/Kolkata').toFormat('dd LLL yyyy HH:mm') }} IST",
+              "type": "string"
+            },
+            {
+              "id": "f14",
+              "name": "payment_date_ist",
+              "value": "={{ DateTime.fromISO($json.body.payload.payment_date).setZone('Asia/Kolkata').toFormat('dd LLL yyyy') }}",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -37,7 +110,10 @@
       "name": "Extract fields",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -49,8 +125,18 @@
               "value": "=💰 *Payment received* — {{ $json.customer_name }} ({{ $json.project_code }})\n\nReceipt: {{ $json.receipt_number }}\nAmount: ₹{{ $json.amount }}\nMethod: {{ $json.payment_method }}\nDate: {{ $json.payment_date_ist }}\n{{ $json.is_advance ? '\\n📌 Advance payment' : $json.invoice_number ? '\\nAgainst: ' + $json.invoice_number : '' }}\n\nOpen: {{ $json.erp_url }}\n\nCommission accrues once project is commissioned — this is your handoff confirmation.",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $json.sales_person_whatsapp }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $json.sales_person_whatsapp }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -59,22 +145,30 @@
       "name": "Compose WhatsApp message (Salesperson)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
+        "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "toPhoneNumber": "={{ $json.to_phone }}",
-        "message": "={{ $json.message }}",
-        "options": {}
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1,
-      "position": [750, 300],
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        300
+      ],
       "credentials": {
-        "whatsAppBusinessAccountApi": {
+        "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
@@ -82,9 +176,39 @@
     }
   ],
   "connections": {
-    "When called by router": { "main": [[{ "node": "Extract fields", "type": "main", "index": 0 }]] },
-    "Extract fields": { "main": [[{ "node": "Compose WhatsApp message (Salesperson)", "type": "main", "index": 0 }]] },
-    "Compose WhatsApp message (Salesperson)": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "When called by router": {
+      "main": [
+        [
+          {
+            "node": "Extract fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract fields": {
+      "main": [
+        [
+          {
+            "node": "Compose WhatsApp message (Salesperson)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose WhatsApp message (Salesperson)": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -96,10 +220,18 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-1" },
-    { "name": "finance" },
-    { "name": "sales" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-1"
+    },
+    {
+      "name": "finance"
+    },
+    {
+      "name": "sales"
+    }
   ],
   "meta": {
     "description": "Triggered by router on customer_payment.received. Payload: {payment_id, receipt_number, amount, payment_date, payment_method, is_advance, invoice_number, project_code, customer_name, sales_person_name, sales_person_whatsapp, erp_url}. Pings the original salesperson so commission tracking + customer-relationship handoff are visible. Wired to finance-actions.recordPayment → emitCustomerPaymentReceived."

@@ -62,14 +62,21 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
       updates.close_probability = defaultProb;
     }
 
-    const { error: updateError } = await supabase
+    const { data: updatedRows, error: updateError } = await supabase
       .from('leads')
       .update(updates)
-      .eq('id', leadId);
+      .eq('id', leadId)
+      .select('id');
 
     if (updateError) {
       console.error(`${op} Update failed:`, { code: updateError.code, message: updateError.message, leadId });
       setError(`Failed to update status: ${updateError.message}`);
+      return;
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      console.error(`${op} 0 rows affected — RLS blocked or lead missing:`, { leadId, timestamp: new Date().toISOString() });
+      setError('Update blocked — you may not have permission, or the lead no longer exists.');
       return;
     }
 

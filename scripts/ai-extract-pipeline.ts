@@ -20,7 +20,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import mammoth from 'mammoth';
-import * as pdfParse from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 import { ProposalDocSchema, VendorDocSchema, type ProposalDoc, type VendorDoc } from './ai-extract-schemas';
 import { PROPOSAL_EXTRACTION_PROMPT, VENDOR_EXTRACTION_PROMPT } from './ai-extract-prompts';
 import { isDryRun, logMigrationStart, logMigrationEnd } from './migration-utils';
@@ -59,8 +59,14 @@ async function extractTextFromDocx(buffer: Buffer): Promise<string> {
 }
 
 async function extractTextFromPdf(buffer: Buffer): Promise<string> {
-  const result = await (pdfParse as any).default(buffer);
-  return (result.text || '').trim();
+  // pdf-parse v2: class-based API
+  const parser = new PDFParse({ data: buffer });
+  try {
+    const result = await parser.getText();
+    return (result.text ?? '').trim();
+  } finally {
+    await parser.destroy();
+  }
 }
 
 async function extractTextFromPptx(buffer: Buffer): Promise<string> {

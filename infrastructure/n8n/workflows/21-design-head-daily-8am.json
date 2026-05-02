@@ -5,15 +5,21 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 30 2 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 0 8 * * *"
+            }
           ]
         }
       },
       "id": "node-cron",
-      "name": "Daily 8:00 IST (02:30 UTC)",
+      "name": "Daily 8:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -24,8 +30,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "options": {
@@ -40,7 +52,10 @@
       "name": "Fetch design backlog",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -58,8 +73,18 @@
               "value": "=🎨 *Design digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nProposals stuck in draft >24h: {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ Nothing in backlog — caught up!' : ($json.data || []).slice(0, 15).map((p, i) => `${i+1}. ${p.proposal_number} · ${p.customer_name} · ${p.estimated_size_kwp || '—'} kWp · ${p.hours_in_draft}h · ${p.prepared_by_name || 'unassigned'}`).join('\\n') }}{{ ($json.data || []).length > 15 ? '\\n…and ' + (($json.data || []).length - 15) + ' more.' : '' }}\n\nOpen: https://erp.shiroienergy.com/design\n\n_TODO: add v_digest_proposals_silent_3d for after-send silence._",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $env.DESIGN_HEAD_WHATSAPP }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $env.DESIGN_HEAD_WHATSAPP }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -68,22 +93,30 @@
       "name": "Compose digest",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
+        "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "toPhoneNumber": "={{ $json.to_phone }}",
-        "message": "={{ $json.message }}",
-        "options": {}
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1,
-      "position": [750, 300],
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        300
+      ],
       "credentials": {
-        "whatsAppBusinessAccountApi": {
+        "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
@@ -91,9 +124,39 @@
     }
   ],
   "connections": {
-    "Daily 8:00 IST (02:30 UTC)": { "main": [[{ "node": "Fetch design backlog", "type": "main", "index": 0 }]] },
-    "Fetch design backlog": { "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]] },
-    "Compose digest": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "Daily 8:00 IST (02:30 UTC)": {
+      "main": [
+        [
+          {
+            "node": "Fetch design backlog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch design backlog": {
+      "main": [
+        [
+          {
+            "node": "Compose digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose digest": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -105,11 +168,21 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-2" },
-    { "name": "design" },
-    { "name": "digest" },
-    { "name": "cron" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-2"
+    },
+    {
+      "name": "design"
+    },
+    {
+      "name": "digest"
+    },
+    {
+      "name": "cron"
+    }
   ],
   "meta": {
     "description": "Daily 8:00 IST — Design head digest. Queries v_digest_proposals_design_backlog (migration 085). Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, DESIGN_HEAD_WHATSAPP."

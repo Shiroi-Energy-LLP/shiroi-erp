@@ -40,9 +40,10 @@ The finance module owns every rupee in and out of Shiroi — customer invoicing 
 - `/vendors/[id]` — Vendor detail: MSME/Udyam info, total billed/outstanding/paid, bills list, payment history.
 - `/invoices` — invoice list + create. `CreateInvoiceDialog` handles GST split (CGST/SGST for intra-state, IGST inter-state) and auto-generates the SHIROI/INV/... number.
 - `/payments` — tabbed (via `payments-nav.tsx`):
-  - **Overview** — project-level payments tracker. P&L per project, payment stages, next milestone amounts, expected collections this week / this month, invested vs received, filter by active / outstanding.
+  - **Project Payments** — project-level payments tracker. P&L per project, payment stages, next milestone amounts, expected collections this week / this month, invested vs received, filter by active / outstanding.
+  - **Tracker** — per-project follow-up view for marketing manager: order date, completion date, invoiced ₹, sent ₹, received ₹, remaining ₹, days-since-order, KPI strip + 6 filter badges. SQL RPC `get_payment_tracker_rows()`.
   - **Receipts** — customer payment log (Tier 3, immutable).
-  - **Follow-ups** — `PaymentFollowupsTable` with 3 summary cards (open / overdue / escalated) and 7-column task table + `MarkFollowupCompleteButton`. Scoped to `tasks.category IN ('payment_followup','payment_escalation') AND is_completed = false`.
+  - **Follow-ups** (filter param, not a tab) — `PaymentFollowupsTable` with 3 summary cards (open / overdue / escalated) and 7-column task table + `MarkFollowupCompleteButton`. Scoped to `tasks.category IN ('payment_followup','payment_escalation') AND is_completed = false`.
 - `/vendor-payments` — V2 upgraded: MSME aging strip (vendors ≥30d outstanding) + bill linkage column. Read-only. Writes go through the `recordVendorPayment` server action in `finance-actions.ts`.
 - `/msme-compliance` — MSME 45-day alert list (Day 40+).
 - `/profitability` — project-level P&L roll-up.
@@ -124,6 +125,9 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 - `get_msme_due_count()` — alert counter for Day 40+ vendors (migration 028).
 - `get_amc_monthly_summary()` — AMC visits scheduled vs completed (migration 048).
 - `get_projects_without_today_report()` — daily-report anti-join for site-ops alerts (migration 048).
+- `get_payment_tracker_rows()` — per-project rollup of invoiced / sent / received / remaining + order/completion dates + days-since-order (migration 088). Used by `/payments/tracker`.
+- `get_expected_orders(window_days INT)` — leads in `negotiation`/`closure_soon` with `expected_close_date` in the next N days. Returns customer name, kWp, ₹ value (`base_quote_price` or derived), expected date, probability, days-until (migration 094). Used by Expected Orders dashboard card.
+- `get_expected_payments(window_days INT)` — payment milestones whose computed expected date (`due_trigger` + `due_days_after_trigger` against `projects.order_date` / `actual_start_date` / `commissioned_date`) falls in the next N days. Skips already-paid milestones via window-fn cumulative sum vs `customer_payments` total. Returns project + customer + milestone + ₹ + date + days-until (migration 094). Used by Expected Payments dashboard + cash-page cards.
 - `assign_orphan_invoice(p_invoice_id, p_project_id, p_made_by, p_notes)` / `exclude_orphan_invoice(p_invoice_id, p_made_by, p_notes)` / `reassign_orphan_invoice(p_invoice_id, p_new_project_id, p_made_by, p_notes)` — atomic cascade helpers backing the orphan triage UI (mig 100). Each returns `(success BOOLEAN, code TEXT, cascaded_payment_count INT)`; the JS layer maps to `ActionResult<T>`. SECURITY INVOKER (caller's RLS still applies).
 - `get_orphan_zoho_customer_summary()` / `get_candidate_projects_for_zoho_customer(p_zoho_name TEXT)` / `get_orphan_counts()` — read aggregations for the triage page (mig 101).
 

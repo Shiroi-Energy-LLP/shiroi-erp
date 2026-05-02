@@ -6,6 +6,7 @@ import { Eyebrow } from '@repo/ui';
 
 const TABS = [
   { label: 'Project Payments', href: '/payments' },
+  { label: 'Tracker', href: '/payments/tracker' },
   { label: 'Receipts', href: '/payments/receipts' },
 ];
 

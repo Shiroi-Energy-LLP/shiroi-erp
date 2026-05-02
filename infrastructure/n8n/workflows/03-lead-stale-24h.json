@@ -5,15 +5,21 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 30 3 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 0 9 * * *"
+            }
           ]
         }
       },
       "id": "node-cron",
-      "name": "Daily 9:00 IST (03:30 UTC)",
+      "name": "Daily 9:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -24,8 +30,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "options": {
@@ -40,7 +52,10 @@
       "name": "Fetch stale leads",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -57,7 +72,10 @@
       "name": "One item per stale lead",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
@@ -69,8 +87,18 @@
               "value": "=⏰ *Lead stuck >24h* — {{ $json.customer_name }}\n\nPhone: {{ $json.phone }}\nStatus: {{ $json.status }}\nStuck: {{ Math.floor($json.hours_since_update) }} hrs\nAssigned: {{ $json.assigned_employee_name }}\n\nPlease move it forward today — either call, requalify, or mark lost.",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $json.assigned_employee_phone }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $json.assigned_employee_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -79,16 +107,39 @@
       "name": "Compose WhatsApp per lead",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [750, 300]
+      "position": [
+        750,
+        300
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "s1", "name": "status", "value": "simulated", "type": "string" },
-            { "id": "s2", "name": "reason", "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves", "type": "string" },
-            { "id": "s3", "name": "would_send_to", "value": "={{ $json.to_phone }}", "type": "string" },
-            { "id": "s4", "name": "would_send_body", "value": "={{ $json.message }}", "type": "string" }
+            {
+              "id": "s1",
+              "name": "status",
+              "value": "simulated",
+              "type": "string"
+            },
+            {
+              "id": "s2",
+              "name": "reason",
+              "value": "WABA credential not yet configured — replace this Set with a WhatsApp node once Meta approves",
+              "type": "string"
+            },
+            {
+              "id": "s3",
+              "name": "would_send_to",
+              "value": "={{ $json.to_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "s4",
+              "name": "would_send_body",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -97,14 +148,57 @@
       "name": "SIMULATED SEND (replace with WhatsApp)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1000, 300]
+      "position": [
+        1000,
+        300
+      ]
     }
   ],
   "connections": {
-    "Daily 9:00 IST (03:30 UTC)": { "main": [[{ "node": "Fetch stale leads", "type": "main", "index": 0 }]] },
-    "Fetch stale leads": { "main": [[{ "node": "One item per stale lead", "type": "main", "index": 0 }]] },
-    "One item per stale lead": { "main": [[{ "node": "Compose WhatsApp per lead", "type": "main", "index": 0 }]] },
-    "Compose WhatsApp per lead": { "main": [[{ "node": "SIMULATED SEND (replace with WhatsApp)", "type": "main", "index": 0 }]] }
+    "Daily 9:00 IST (03:30 UTC)": {
+      "main": [
+        [
+          {
+            "node": "Fetch stale leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch stale leads": {
+      "main": [
+        [
+          {
+            "node": "One item per stale lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per stale lead": {
+      "main": [
+        [
+          {
+            "node": "Compose WhatsApp per lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose WhatsApp per lead": {
+      "main": [
+        [
+          {
+            "node": "SIMULATED SEND (replace with WhatsApp)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -116,10 +210,18 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-1" },
-    { "name": "sales" },
-    { "name": "cron" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-1"
+    },
+    {
+      "name": "sales"
+    },
+    {
+      "name": "cron"
+    }
   ],
   "meta": {
     "description": "Daily 9:00 IST cron. Queries v_digest_leads_stale_24h (created in migration 083) and sends one WhatsApp per stale lead to its assigned salesperson. View handles all filtering (active lead + no status change >24h + not in terminal state) — this workflow is pure orchestration. Requires Supabase service-role HTTP Header Auth credential with SUPABASE_PROJECT_ID + SUPABASE_SECRET_KEY env vars set on the n8n droplet."

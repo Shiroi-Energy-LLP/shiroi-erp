@@ -99,6 +99,7 @@ apps/erp/src/components/
 
 ## Known Gotchas
 
+- **Silent RLS failure on leads UPDATE** — fixed in `status-change.tsx`, `inline-edit-actions.ts`, and `bulkChangeLeadStatus` to call `.select('id')` and treat a zero-length response as "Update blocked". Without this, Supabase returns success on RLS-blocked UPDATEs and the UI shows a misleading "Saved" toast. Apply this pattern to any new code that updates a lead.
 - **Middleware** (`apps/erp/src/middleware.ts`) 307-redirects `/leads` + `/leads/*` → `/sales` + `/sales/*` and `/proposals` → `/sales`. `/proposals/[id]` still serves historical detail pages. Don't add new routes under `/leads`.
 - **Single source of truth for stages:** always import `STAGE_LABELS` from `leads-helpers.ts`. Never hardcode stage strings in badges, filter dropdowns, or column configs.
 - **Column config drift:** `LEAD_COLUMNS.status.options` in `column-config.ts` must match `STAGE_ORDER` in `lead-stage-nav.tsx`. This drifted once (missing the 4 new revamp stages) and broke inline edit on /sales — fixed in migration 056. Keep them in sync.
@@ -115,6 +116,8 @@ apps/erp/src/components/
 - **Migrations 051–053** — marketing + design revamp (enum additions, schema + triggers + RLS, seed)
 - **Migration 055** — FK fix on `log_lead_status_change` + won→proposal→project cascade trigger + `employees.is_active` fix
 - **Migration 056** — FK fix on `log_proposal_status_change` (dormant bug surfaced by 055's new trigger); column-config status options reconciled
+- **Migration 088** — `leads_update` RLS expanded to include `sales_engineer` (aligns with `leads_insert` / `leads_read` and documented role access). Closes silent-RLS-failure footgun where unassigned leads appeared to update successfully but did not.
+- **Migration 094** — `leads.map_link TEXT NULL` added (optional Google Maps URL, mirrors `projects.location_map_link`); `create_project_from_accepted_proposal` trigger now inherits the link onto the new project; RPCs `get_expected_orders(window_days)` + `get_expected_payments(window_days)` powering the dashboard cards; backfill of `payment_followup`/`payment_escalation` tasks to the oldest active marketing_manager (no-op at apply time but kept as a safety net). (Originally drafted as mig 089 but renumbered after origin/main shipped 088-091 in parallel.)
 - **Migration 017** — Contacts V2 foundation (see `docs/modules/contacts.md`)
 - **Migration 020** — pipeline fields (`expected_close_date`, `close_probability`, `is_archived`)
 - **Migration 048** — `get_pipeline_summary()` RPC + supporting indexes

@@ -66,11 +66,15 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
         return (
           <React.Fragment key={task.id}>
             <tr className="border-b border-n-100 hover:bg-n-50">
-              {/* Project Name — clickable, customer_name only */}
+              {/* Client — project customer if project-linked, lead customer otherwise */}
               <td className="px-2 py-1.5 text-[11px]">
                 {projectInfo ? (
                   <Link href={`/projects/${task.project_id}`} className="text-p-600 hover:underline font-medium">
                     {projectInfo.customer_name}
+                  </Link>
+                ) : task.lead_customer_name && task.entity_type === 'lead' ? (
+                  <Link href={`/sales/${task.entity_id}`} className="text-p-600 hover:underline font-medium">
+                    {task.lead_customer_name}
                   </Link>
                 ) : (
                   <span className="text-n-400">—</span>

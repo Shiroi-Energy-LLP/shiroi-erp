@@ -35,21 +35,32 @@ export async function bulkChangeLeadStatus(leadIds: string[], status: LeadStatus
   if (leadIds.length === 0) return { success: false, error: 'No leads selected' };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('leads')
     .update({
       status,
       status_updated_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
-    .in('id', leadIds);
+    .in('id', leadIds)
+    .select('id');
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return { success: false, error: error.message };
   }
 
+  const updatedCount = data?.length ?? 0;
   revalidatePath('/leads');
+
+  if (updatedCount < leadIds.length) {
+    console.warn(`${op} Partial update: ${updatedCount} of ${leadIds.length} leads updated`, { timestamp: new Date().toISOString() });
+    return {
+      success: true,
+      error: `Updated ${updatedCount} of ${leadIds.length} leads — check permissions for the rest`,
+    };
+  }
+
   return { success: true };
 }
 

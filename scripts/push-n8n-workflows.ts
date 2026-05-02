@@ -61,6 +61,9 @@ const CREDENTIAL_PLACEHOLDERS: Record<string, { name: string; type: string }> = 
   // Supabase service-role HTTP Header Auth for cron workflows (03, 08, Tier 2 digests).
   // Credential header is `apikey: {sb_secret_...}` — create once in n8n Settings → Credentials.
   REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID: { name: 'Supabase service role', type: 'httpHeaderAuth' },
+  // WhatsApp Business Cloud API for all 18 WhatsApp Send nodes (Tier 1, Tier 2, Tier 6).
+  // Note: n8n's actual credential type for the whatsApp node is `whatsAppApi` (not `whatsAppBusinessAccountApi`).
+  REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID: { name: 'WhatsApp (Shiroi)', type: 'whatsAppApi' },
 };
 
 interface N8nWorkflow {

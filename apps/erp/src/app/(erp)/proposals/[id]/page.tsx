@@ -9,6 +9,7 @@ import { BOMTable } from '@/components/proposals/bom-table';
 import { PaymentSchedule } from '@/components/proposals/payment-schedule';
 import { ProposalFiles } from '@/components/proposals/proposal-files';
 import { GeneratePDFButton } from '@/components/proposals/generate-pdf-button';
+import { ProposalDataQualityBanner } from '@/components/proposal-data-quality-banner';
 import { formatINR, toIST } from '@repo/ui/formatters';
 import { calcMarginPct } from '@/lib/proposal-calc';
 import {
@@ -55,6 +56,13 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
 
   return (
     <div className="space-y-6">
+      <ProposalDataQualityBanner
+        financialsInvalidated={proposal.financials_invalidated}
+        systemSizeUncertain={proposal.system_size_uncertain}
+        reason={proposal.financials_invalidated_reason}
+        storedTotal={proposal.total_after_discount ? Number(proposal.total_after_discount) : null}
+        systemSizeKwp={proposal.system_size_kwp ? Number(proposal.system_size_kwp) : null}
+      />
       {/* Header */}
       <Breadcrumb
         className="mb-4"

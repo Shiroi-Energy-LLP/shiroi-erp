@@ -16,7 +16,10 @@
       "name": "Sentry webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 300],
+      "position": [
+        0,
+        300
+      ],
       "webhookId": "sentry-alert",
       "credentials": {
         "httpHeaderAuth": {
@@ -30,13 +33,48 @@
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "e1", "name": "level", "value": "={{ $json.body?.event?.level || $json.body?.level || $json.body?.event_action || 'unknown' }}", "type": "string" },
-            { "id": "e2", "name": "title", "value": "={{ $json.body?.event?.title || $json.body?.message || $json.body?.event?.metadata?.value || '(no title)' }}", "type": "string" },
-            { "id": "e3", "name": "environment", "value": "={{ $json.body?.event?.environment || $json.body?.environment || 'unknown' }}", "type": "string" },
-            { "id": "e4", "name": "project", "value": "={{ $json.body?.project_slug || $json.body?.event?.project || 'unknown' }}", "type": "string" },
-            { "id": "e5", "name": "culprit", "value": "={{ $json.body?.event?.culprit || $json.body?.culprit || '—' }}", "type": "string" },
-            { "id": "e6", "name": "issue_url", "value": "={{ $json.body?.url || $json.body?.event?.web_url || '—' }}", "type": "string" },
-            { "id": "e7", "name": "timestamp_ist", "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST", "type": "string" }
+            {
+              "id": "e1",
+              "name": "level",
+              "value": "={{ $json.body?.event?.level || $json.body?.level || $json.body?.event_action || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "e2",
+              "name": "title",
+              "value": "={{ $json.body?.event?.title || $json.body?.message || $json.body?.event?.metadata?.value || '(no title)' }}",
+              "type": "string"
+            },
+            {
+              "id": "e3",
+              "name": "environment",
+              "value": "={{ $json.body?.event?.environment || $json.body?.environment || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "e4",
+              "name": "project",
+              "value": "={{ $json.body?.project_slug || $json.body?.event?.project || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "e5",
+              "name": "culprit",
+              "value": "={{ $json.body?.event?.culprit || $json.body?.culprit || '—' }}",
+              "type": "string"
+            },
+            {
+              "id": "e6",
+              "name": "issue_url",
+              "value": "={{ $json.body?.url || $json.body?.event?.web_url || '—' }}",
+              "type": "string"
+            },
+            {
+              "id": "e7",
+              "name": "timestamp_ist",
+              "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -45,7 +83,10 @@
       "name": "Extract Sentry fields",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -64,13 +105,19 @@
                     "id": "c-fatal",
                     "leftValue": "={{ $json.level }}",
                     "rightValue": "fatal",
-                    "operator": { "type": "string", "operation": "equals" }
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
                   },
                   {
                     "id": "c-error",
                     "leftValue": "={{ $json.level }}",
                     "rightValue": "error",
-                    "operator": { "type": "string", "operation": "equals" }
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
                   }
                 ]
               },
@@ -87,7 +134,10 @@
       "name": "Severity P0 / P1?",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
@@ -99,8 +149,18 @@
               "value": "=🛑 *Sentry {{ ($json.level || '').toUpperCase() }}* — {{ $json.project }} [{{ $json.environment }}]\n\n{{ $json.title }}\n\nWhere: {{ $json.culprit }}\nWhen: {{ $json.timestamp_ist }}\n\nOpen in Sentry: {{ $json.issue_url }}",
               "type": "string"
             },
-            { "id": "m2", "name": "to_phone", "value": "={{ $env.VIVEK_WHATSAPP }}", "type": "string" },
-            { "id": "m3", "name": "channel", "value": "whatsapp", "type": "string" }
+            {
+              "id": "m2",
+              "name": "to_phone",
+              "value": "={{ $env.VIVEK_WHATSAPP }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -109,22 +169,30 @@
       "name": "Compose alert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [750, 200]
+      "position": [
+        750,
+        200
+      ]
     },
     {
       "parameters": {
+        "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "toPhoneNumber": "={{ $json.to_phone }}",
-        "message": "={{ $json.message }}",
-        "options": {}
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
       },
       "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1,
-      "position": [1000, 200],
+      "typeVersion": 1.1,
+      "position": [
+        1000,
+        200
+      ],
       "credentials": {
-        "whatsAppBusinessAccountApi": {
+        "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
@@ -134,10 +202,30 @@
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "d1", "name": "status", "value": "dropped", "type": "string" },
-            { "id": "d2", "name": "reason", "value": "Severity below P0/P1 threshold — not forwarded", "type": "string" },
-            { "id": "d3", "name": "dropped_level", "value": "={{ $json.level }}", "type": "string" },
-            { "id": "d4", "name": "dropped_title", "value": "={{ $json.title }}", "type": "string" }
+            {
+              "id": "d1",
+              "name": "status",
+              "value": "dropped",
+              "type": "string"
+            },
+            {
+              "id": "d2",
+              "name": "reason",
+              "value": "Severity below P0/P1 threshold — not forwarded",
+              "type": "string"
+            },
+            {
+              "id": "d3",
+              "name": "dropped_level",
+              "value": "={{ $json.level }}",
+              "type": "string"
+            },
+            {
+              "id": "d4",
+              "name": "dropped_title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -146,19 +234,93 @@
       "name": "Log + drop",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [750, 400]
+      "position": [
+        750,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "node-whatsapp-vinodh-dpr3an",
+      "name": "Send WhatsApp to Vinodh",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1000,
+        350
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
     }
   ],
   "connections": {
-    "Sentry webhook": { "main": [[{ "node": "Extract Sentry fields", "type": "main", "index": 0 }]] },
-    "Extract Sentry fields": { "main": [[{ "node": "Severity P0 / P1?", "type": "main", "index": 0 }]] },
-    "Severity P0 / P1?": {
+    "Sentry webhook": {
       "main": [
-        [{ "node": "Compose alert", "type": "main", "index": 0 }],
-        [{ "node": "Log + drop", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Extract Sentry fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Compose alert": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "Extract Sentry fields": {
+      "main": [
+        [
+          {
+            "node": "Severity P0 / P1?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Severity P0 / P1?": {
+      "main": [
+        [
+          {
+            "node": "Compose alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log + drop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose alert": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp to Vinodh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -170,11 +332,21 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-6" },
-    { "name": "meta" },
-    { "name": "infra" },
-    { "name": "webhook" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-6"
+    },
+    {
+      "name": "meta"
+    },
+    {
+      "name": "infra"
+    },
+    {
+      "name": "webhook"
+    }
   ],
   "meta": {
     "description": "Webhook-triggered. Sentry POSTs alerts to /webhook/sentry-alert with x-webhook-secret header auth. Filters P0 (fatal) / P1 (error) → WhatsApp Vivek; lower severities are logged and dropped. Configure the Sentry alert rule to post here for high-severity events only (double-filter in Switch catches misconfigurations). Requires env: VIVEK_WHATSAPP."
