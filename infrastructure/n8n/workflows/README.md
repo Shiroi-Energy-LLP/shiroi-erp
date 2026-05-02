@@ -118,12 +118,12 @@ Each digest has the same 4-node shape: `scheduleTrigger → httpRequest (Supabas
 | File | Trigger | Purpose | Activated? |
 |------|---------|---------|-----------|
 | `55-global-error-handler.json` | `errorTrigger` | Any workflow error → Gmail Vivek (see above) | ❌ (Gmail OAuth needed) |
-| `56-droplet-health.json` | Cron every 15 min | Shell exec CPU/RAM/disk on n8n host; WhatsApp Vivek + Vinodh when any ≥ 85% | ❌ (executeCommand node disabled by default in current n8n version — needs redesign to poll metrics differently) |
+| `56-droplet-health.json` (renamed `56 — Droplet heartbeat`) | Cron daily 9 AM IST | Sends "n8n heartbeat — alive" WhatsApp to Vivek + Vinodh. Original 15-min CPU/RAM/disk check used `executeCommand` which n8n removed for security in current version. For metric thresholds, use DO's built-in monitoring (Droplets → shiroi-erp → Insights → Alerts) — free, integrated. | ❌ (active when Meta template approved) |
 | `57-n8n-backup.json` | Cron daily 2:00 IST | tar ~/.n8n → Supabase Storage `n8n-backups/YYYY-MM-DD.tar.gz` with sha256 | ❌ (Supabase bucket `n8n-backups` not yet created) |
 | `58-sentry-forwarder.json` | Webhook `/webhook/sentry-alert` | Sentry POSTs P0/P1 via WhatsApp to Vivek + Vinodh; lower severities logged + dropped | ❌ (Sentry alert rule not yet pointed at this webhook) |
 
 Pre-reqs for Tier 6:
-- **56:** Execute Command node requires `N8N_SECURE_MODE=false` or the container running as a user with shell access. The cloud-init stack already runs `docker-compose` with the default n8n image (shell available inside the container).
+- **56:** Now a daily heartbeat workflow (no shell access needed). For threshold-based metrics monitoring, configure DigitalOcean's built-in monitoring instead — it's free, integrated, and emails you when CPU/RAM/disk exceed your threshold.
 - **57:** Create a private Supabase Storage bucket named `n8n-backups` (Supabase dashboard → Storage → New bucket). Restore procedure: download the latest `.tar.gz`, verify `sha256sum`, `tar xzf` into a fresh `~/.n8n` volume, restart the container.
 - **58:** In Sentry, configure an Alert Rule → Send notification via webhook → `https://n8n.shiroienergy.com/webhook/sentry-alert`, with a custom header `x-webhook-secret: <N8N_WEBHOOK_SECRET>`. Set the alert rule to fatal/error level only; the Switch double-filters in case of misconfiguration.
 

@@ -1,156 +1,30 @@
 {
-  "name": "56 — Droplet health",
+  "name": "56 — Droplet heartbeat",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "0 */15 * * * *"
-            }
+            { "field": "cronExpression", "expression": "0 0 9 * * *" }
           ]
         }
       },
       "id": "node-cron",
-      "name": "Every 15 min",
+      "name": "Daily 9:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        0,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "command": "=bash -c 'cpu=$(top -bn1 | awk \"/Cpu\\\\(s\\\\):/{printf \\\"%.0f\\\", \\$2+\\$4}\"); mem=$(free | awk \"/Mem:/{printf \\\"%.0f\\\", \\$3/\\$2*100}\"); disk=$(df / | awk \"NR==2{print \\$5+0}\"); echo \"{\\\"cpu_pct\\\":$cpu,\\\"mem_pct\\\":$mem,\\\"disk_pct\\\":$disk}\"'"
-      },
-      "id": "node-collect",
-      "name": "Collect CPU / RAM / disk",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
-      "position": [
-        250,
-        300
-      ],
-      "notes": "Runs on the n8n container's host (Bangalore droplet). Returns single JSON line: {\"cpu_pct\":N,\"mem_pct\":N,\"disk_pct\":N}. Parsed by the next Set node."
+      "position": [0, 300]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
+            { "id": "h1", "name": "timestamp_ist", "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST", "type": "string" },
+            { "id": "h2", "name": "uptime_iso", "value": "={{ DateTime.now().setZone('Asia/Kolkata').toISO() }}", "type": "string" },
             {
-              "id": "p1",
-              "name": "cpu_pct",
-              "value": "={{ JSON.parse($json.stdout).cpu_pct }}",
-              "type": "number"
-            },
-            {
-              "id": "p2",
-              "name": "mem_pct",
-              "value": "={{ JSON.parse($json.stdout).mem_pct }}",
-              "type": "number"
-            },
-            {
-              "id": "p3",
-              "name": "disk_pct",
-              "value": "={{ JSON.parse($json.stdout).disk_pct }}",
-              "type": "number"
-            },
-            {
-              "id": "p4",
-              "name": "threshold_pct",
-              "value": 85,
-              "type": "number"
-            },
-            {
-              "id": "p5",
-              "name": "breach",
-              "value": "={{ JSON.parse($json.stdout).cpu_pct >= 85 || JSON.parse($json.stdout).mem_pct >= 85 || JSON.parse($json.stdout).disk_pct >= 85 }}",
-              "type": "boolean"
-            },
-            {
-              "id": "p6",
-              "name": "timestamp_ist",
-              "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "node-parse",
-      "name": "Parse + threshold",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        500,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict"
-                },
-                "combinator": "and",
-                "conditions": [
-                  {
-                    "id": "c-breach",
-                    "leftValue": "={{ $json.breach }}",
-                    "rightValue": true,
-                    "operator": {
-                      "type": "boolean",
-                      "operation": "true",
-                      "singleValue": true
-                    }
-                  }
-                ]
-              },
-              "renameOutput": true,
-              "outputKey": "breach"
-            }
-          ]
-        },
-        "options": {
-          "fallbackOutput": "extra"
-        }
-      },
-      "id": "node-switch",
-      "name": "Breach?",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        750,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "m1",
+              "id": "h3",
               "name": "message",
-              "value": "=🚨 *Droplet health breach* — {{ $json.timestamp_ist }}\n\nHost: n8n.shiroienergy.com (DO Bangalore)\nCPU: {{ $json.cpu_pct }}%\nMem: {{ $json.mem_pct }}%\nDisk: {{ $json.disk_pct }}%\nThreshold: {{ $json.threshold_pct }}%\n\nSSH in and investigate: ssh root@68.183.91.111\n_Alerted because at least one of CPU/mem/disk ≥ threshold._",
-              "type": "string"
-            },
-            {
-              "id": "m2",
-              "name": "to_phone",
-              "value": "={{ $env.VIVEK_WHATSAPP }}",
-              "type": "string"
-            },
-            {
-              "id": "m3",
-              "name": "channel",
-              "value": "whatsapp",
+              "value": "=✅ *n8n heartbeat* — droplet alive\n\nTime: {{ $json.timestamp_ist }}\nHost: n8n.shiroienergy.com (DO Bangalore)\n\n_If you don't see this message tomorrow at 9 AM IST, n8n may be down — check_ https://cloud.digitalocean.com/droplets",
               "type": "string"
             }
           ]
@@ -158,84 +32,31 @@
         "options": {}
       },
       "id": "node-compose",
-      "name": "Compose alert",
+      "name": "Compose heartbeat",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        1000,
-        200
-      ]
+      "position": [250, 300]
     },
     {
       "parameters": {
         "operation": "send",
         "phoneNumberId": "1140448799143790",
-        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "recipientPhoneNumber": "={{ $env.VIVEK_WHATSAPP }}",
         "messageType": "text",
         "textBody": "={{ $json.message }}",
         "additionalFields": {}
       },
-      "id": "node-whatsapp-send",
-      "name": "Send WhatsApp",
+      "id": "node-whatsapp-vivek",
+      "name": "Send WhatsApp to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        1250,
-        200
-      ],
+      "position": [500, 200],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
       }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "o1",
-              "name": "status",
-              "value": "ok",
-              "type": "string"
-            },
-            {
-              "id": "o2",
-              "name": "cpu_pct",
-              "value": "={{ $json.cpu_pct }}",
-              "type": "number"
-            },
-            {
-              "id": "o3",
-              "name": "mem_pct",
-              "value": "={{ $json.mem_pct }}",
-              "type": "number"
-            },
-            {
-              "id": "o4",
-              "name": "disk_pct",
-              "value": "={{ $json.disk_pct }}",
-              "type": "number"
-            },
-            {
-              "id": "o5",
-              "name": "note",
-              "value": "All metrics under threshold — no alert fired.",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "node-ok",
-      "name": "Log OK",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1000,
-        400
-      ]
     },
     {
       "parameters": {
@@ -246,14 +67,11 @@
         "textBody": "={{ $json.message }}",
         "additionalFields": {}
       },
-      "id": "node-whatsapp-vinodh-elixdv",
+      "id": "node-whatsapp-vinodh",
       "name": "Send WhatsApp to Vinodh",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        1250,
-        350
-      ],
+      "position": [500, 400],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
@@ -263,70 +81,12 @@
     }
   ],
   "connections": {
-    "Every 15 min": {
+    "Daily 9:00 IST": { "main": [[{ "node": "Compose heartbeat", "type": "main", "index": 0 }]] },
+    "Compose heartbeat": {
       "main": [
         [
-          {
-            "node": "Collect CPU / RAM / disk",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Collect CPU / RAM / disk": {
-      "main": [
-        [
-          {
-            "node": "Parse + threshold",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse + threshold": {
-      "main": [
-        [
-          {
-            "node": "Breach?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Breach?": {
-      "main": [
-        [
-          {
-            "node": "Compose alert",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log OK",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Compose alert": {
-      "main": [
-        [
-          {
-            "node": "Send WhatsApp",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send WhatsApp to Vinodh",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send WhatsApp to Vivek", "type": "main", "index": 0 },
+          { "node": "Send WhatsApp to Vinodh", "type": "main", "index": 0 }
         ]
       ]
     }
@@ -341,24 +101,14 @@
     "saveDataSuccessExecution": "none"
   },
   "tags": [
-    {
-      "name": "erp"
-    },
-    {
-      "name": "tier-6"
-    },
-    {
-      "name": "meta"
-    },
-    {
-      "name": "infra"
-    },
-    {
-      "name": "cron"
-    }
+    { "name": "erp" },
+    { "name": "tier-6" },
+    { "name": "meta" },
+    { "name": "infra" },
+    { "name": "cron" }
   ],
   "meta": {
-    "description": "Every 15 minutes — checks n8n droplet CPU/RAM/disk%; alerts Vivek when any exceeds 85%. Execute Command node runs on the n8n container's host (see notes on the node for exact shell). Set saveDataSuccessExecution=none to keep the execution log clean of the 96 daily no-op runs. Requires env: VIVEK_WHATSAPP."
+    "description": "Daily 9 AM IST heartbeat — sends a 'still alive' WhatsApp ping to founders. If you don't see this message at 9 AM, n8n may be down. Replaces the original 15-min CPU/RAM/disk metrics monitor (which used n8n-nodes-base.executeCommand — that node was removed in current n8n version for security). For threshold-based metrics monitoring, use DigitalOcean's built-in monitoring + alerts (Droplets → shiroi-erp → Insights → Alerts) which is free, integrated, and doesn't depend on n8n. Requires env: VIVEK_WHATSAPP, VINODH_WHATSAPP."
   },
   "pinData": {}
 }
