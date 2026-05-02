@@ -123,9 +123,12 @@ export async function GET(
       generatedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
     };
 
+    console.log(`${op} Calling renderToBuffer for ${pdfData.items.length} items`);
+    const renderStart = Date.now();
     const pdfBuffer = await renderToBuffer(
       React.createElement(PurchaseOrderPDF, { data: pdfData }) as any
     );
+    console.log(`${op} renderToBuffer done in ${Date.now() - renderStart}ms, ${pdfBuffer.length} bytes`);
 
     const fileName = `${(po.po_number ?? 'PO').replace(/\//g, '-')}_PurchaseOrder.pdf`;
 
@@ -136,12 +139,13 @@ export async function GET(
       },
     });
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     console.error(`${op} Failed:`, {
       poId,
-      error: err instanceof Error ? err.message : String(err),
+      error: msg,
       stack: err instanceof Error ? err.stack : undefined,
       timestamp: new Date().toISOString(),
     });
-    return NextResponse.json({ error: 'PDF generation failed' }, { status: 500 });
+    return new NextResponse(`PDF generation failed: ${msg}`, { status: 500 });
   }
 }

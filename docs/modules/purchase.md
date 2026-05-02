@@ -112,7 +112,9 @@ apps/erp/src/app/vendor-portal/rfq/[token]/
   ├── page.tsx                            # PUBLIC (no auth) — validates UUID, renders form
   └── _client/quote-submit-form.tsx
 
-apps/erp/src/app/(erp)/vendors/page.tsx
+apps/erp/src/app/(erp)/vendors/page.tsx           # vendor master (read + Add Vendor button)
+apps/erp/src/components/vendors/add-vendor-dialog.tsx  # full-schema Add dialog (May 2, 2026)
+apps/erp/src/lib/vendor-actions.ts                # createVendor / updateVendor (May 2, 2026)
 apps/erp/src/app/(erp)/vendor-payments/page.tsx
 apps/erp/src/app/(erp)/msme-compliance/page.tsx
 apps/erp/src/app/(erp)/deliveries/page.tsx
@@ -175,6 +177,8 @@ apps/erp/src/app/api/procurement/[poId]/pdf/route.ts
 
 ## Past Decisions & Specs
 
+- **Migration 103 (May 2, 2026) — `purchase_orders_status_check` finally allows `'dispatched'`.** v2 (migration 060/065) wired the `draft → dispatched → acknowledged` flow but the legacy CHECK constraint added in migration 041 only listed `('draft','approved','sent','acknowledged','partially_delivered','fully_delivered','closed','cancelled')`. Every `sendPOToVendor` / `markPODispatched` call hit `new row for relation "purchase_orders" violates check constraint "purchase_orders_status_check"`. Migration 103 drops + recreates the constraint with `'dispatched'` added; legacy values retained for backward-compat. Same-day code fixes: `createVendorAdHoc` wrote `vendor_type='supplier'` (not in the enum) → changed to `'other'` (`as any` cast also removed); Download PDF now surfaces server errors inline instead of silently swallowing into `console.error`; Copy-link button removed from PO send dialog (the URL `/procurement/<poId>` is internal-only and sent vendors to login).
+- **Vendor master Add UI (May 2, 2026).** `/vendors` got an "+ Add Vendor" button (rendered only for founder / finance / project_manager / purchase_officer per RLS). Dialog covers the full schema (Identity / Address / Tax / Terms sections + MSME flag + payment terms days). New `apps/erp/src/lib/vendor-actions.ts` with `createVendor` + `updateVendor` server actions. Edit-from-row UI + vendor portal `/vendor-portal/po/[token]` deferred for a follow-up.
 - **Migration 065 (Apr 17, 2026)** — Purchase v2 feedback pass. Adds `sent_to_vendor_at` + `sent_via_channels` + generated `dispatch_stage` to `purchase_orders`; back-fills existing dispatched/acknowledged rows; creates `fn_cascade_po_approval_to_boq` + `fn_cascade_po_receipt_to_boq` SECURITY DEFINER helpers. Paired code changes: Tab 1 inline Qty/Rate edit + per-project BOQ PDF; Tab 2 vendor typeahead + expandable invitation rows with re-usable `<InvitationActionButtons>`; Tab 3 payment-terms / delivery / notes footer rows; Tab 4 Send-to-vendor dialog (Email/WhatsApp/Copy) + founder quick-PO auto-approval; Tab 5 `<DispatchStageBadge>` + PM role widened on dispatch actions + receipt cascade. Specs: `docs/superpowers/specs/2026-04-17-purchase-v2-feedback-design.md` + plan `docs/superpowers/plans/2026-04-17-purchase-v2-feedback-implementation.md`.
 - Migration 041 — vendor_id FK on `project_boq_items`, `boq_item_id` on `purchase_order_items`, project-level procurement tracking columns (`boq_sent_to_purchase_at/by`, `procurement_priority`, `procurement_status`, `procurement_received_date`), PO status constraint fix (adds `approved`), indexes + backfill.
 - Migration 046 — Price Book expansion (24 categories, vendor_name, default_qty, rate audit columns) — rate source for PO creation.

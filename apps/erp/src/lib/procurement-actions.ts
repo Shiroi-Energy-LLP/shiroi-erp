@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { logProcurementAudit } from '@/lib/procurement-audit';
 import type { VendorSearchResult } from '@/lib/procurement-queries';
+import type { Database } from '@repo/types/database';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -578,21 +579,23 @@ export async function createVendorAdHoc(input: {
   const randSuffix = Math.random().toString(36).slice(2, 8).toUpperCase();
   const vendorCode = `SHIROI/VEN/${new Date().getFullYear()}/${randSuffix}`;
 
+  const insert: Database['public']['Tables']['vendors']['Insert'] = {
+    company_name: input.companyName.trim(),
+    vendor_code: vendorCode,
+    contact_person: input.contactPerson?.trim() || null,
+    phone: input.phone?.trim() || null,
+    email: input.email?.trim() || null,
+    vendor_type: 'other',
+    is_active: true,
+    is_msme: false,
+    is_blacklisted: false,
+    is_preferred: false,
+    payment_terms_days: 30,
+  };
+
   const { data, error } = await supabase
     .from('vendors')
-    .insert({
-      company_name: input.companyName.trim(),
-      vendor_code: vendorCode,
-      contact_person: input.contactPerson?.trim() || null,
-      phone: input.phone?.trim() || null,
-      email: input.email?.trim() || null,
-      vendor_type: 'supplier',
-      is_active: true,
-      is_msme: false,
-      is_blacklisted: false,
-      is_preferred: false,
-      payment_terms_days: 30,
-    } as any)
+    .insert(insert)
     .select('id')
     .single();
 

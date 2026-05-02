@@ -23,7 +23,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@repo/ui';
-import { Mail, MessageCircle, Copy, Check, Send } from 'lucide-react';
+import { Mail, MessageCircle, Send } from 'lucide-react';
 import {
   buildGmailComposeUrl,
   buildWhatsAppUrl,
@@ -58,11 +58,10 @@ function buildPoPortalUrl(poId: string): string {
 
 export function POSendDialog({ po, vendor, open, onOpenChange }: POSendDialogProps) {
   const router = useRouter();
-  const [busy, setBusy] = React.useState<'email' | 'whatsapp' | 'copy_link' | null>(null);
-  const [copied, setCopied] = React.useState(false);
+  const [busy, setBusy] = React.useState<'email' | 'whatsapp' | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
-  async function fire(channel: 'email' | 'whatsapp' | 'copy_link') {
+  async function fire(channel: 'email' | 'whatsapp') {
     setError(null);
     setBusy(channel);
     const res = await sendPOToVendor({ poId: po.id, channel });
@@ -105,18 +104,6 @@ export function POSendDialog({ po, vendor, open, onOpenChange }: POSendDialogPro
     });
     window.open(url, '_blank', 'noopener,noreferrer');
     await fire('whatsapp');
-  }
-
-  async function handleCopy() {
-    const portalUrl = buildPoPortalUrl(po.id);
-    try {
-      await navigator.clipboard.writeText(portalUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard API may be blocked — fall through and still fire the action
-    }
-    await fire('copy_link');
   }
 
   return (
@@ -164,24 +151,9 @@ export function POSendDialog({ po, vendor, open, onOpenChange }: POSendDialogPro
             </span>
           </button>
 
-          <button
-            type="button"
-            disabled={busy !== null}
-            onClick={handleCopy}
-            className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 text-[11px] rounded border border-n-200 hover:bg-n-50 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span className="inline-flex items-center gap-1.5">
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-green-600" />
-              ) : (
-                <Copy className="h-3.5 w-3.5 text-n-600" />
-              )}
-              <span className="font-medium text-n-800">
-                {copied ? 'Link copied' : 'Copy PO link'}
-              </span>
-            </span>
-            <span className="text-n-500">Use with any channel</span>
-          </button>
+          <p className="text-[10px] text-n-500 pt-1">
+            Attach the Download PDF (from the PO detail page) to the email or WhatsApp message — vendors don&apos;t have a portal login yet.
+          </p>
         </div>
 
         {error && <p className="text-[11px] text-red-600">{error}</p>}

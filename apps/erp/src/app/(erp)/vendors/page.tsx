@@ -1,4 +1,5 @@
 import { getVendors } from '@/lib/vendor-queries';
+import { getUserProfile } from '@/lib/auth';
 import {
   Card,
   CardContent,
@@ -15,6 +16,9 @@ import { Building2 } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
+import { AddVendorButton } from '@/components/vendors/add-vendor-dialog';
+
+const VENDOR_WRITE_ROLES = ['founder', 'finance', 'project_manager', 'purchase_officer'] as const;
 
 const VENDOR_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: 'panel_supplier', label: 'Panel Supplier' },
@@ -37,10 +41,17 @@ interface VendorsPageProps {
 
 export default async function VendorsPage({ searchParams }: VendorsPageProps) {
   const params = await searchParams;
-  const vendors = await getVendors({
-    type: params.type || undefined,
-    search: params.search || undefined,
-  });
+  const [vendors, profile] = await Promise.all([
+    getVendors({
+      type: params.type || undefined,
+      search: params.search || undefined,
+    }),
+    getUserProfile(),
+  ]);
+
+  const canAddVendor = profile?.role
+    ? (VENDOR_WRITE_ROLES as readonly string[]).includes(profile.role)
+    : false;
 
   return (
     <div className="space-y-6">
@@ -53,6 +64,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
             <Badge variant="neutral">{vendors.length}</Badge>
           </div>
         </div>
+        {canAddVendor && <AddVendorButton />}
       </div>
 
       {/* Filters */}
