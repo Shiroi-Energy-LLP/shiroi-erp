@@ -1,6 +1,6 @@
 -- ============================================================
--- Migration 089b — Apply Tier B AI re-extraction recoveries
--- File: supabase/migrations/089b_apply_tier_b_reextractions.sql
+-- Migration 090b — Apply Tier B AI re-extraction recoveries
+-- File: supabase/migrations/090b_apply_tier_b_reextractions.sql
 -- Description: Restores total_after_discount for 7 proposals where
 --              Claude Sonnet re-extracted a plausible per-kWp total
 --              from the original docx in Supabase Storage. Source
@@ -10,8 +10,8 @@
 -- Rollback: NOT SAFE — original totals are stored in the notes
 --           column for forensic reference but the column-level
 --           reset cannot be undone without manual lookup.
--- Dependencies: 088_proposal_data_quality_flags.sql (provides flag
---               columns), 089 (Tier A reset must already be done so
+-- Dependencies: 089_proposal_data_quality_flags.sql (provides flag
+--               columns), 090 (Tier A reset must already be done so
 --               these Tier B rows are not also in Tier A — verified
 --               in the JSON: none of the 7 had financials_invalidated
 --               applied).

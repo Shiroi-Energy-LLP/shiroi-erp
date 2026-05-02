@@ -1,6 +1,6 @@
 -- ============================================================
--- Migration 089 — Reset corrupted proposal financials (Tier A)
--- File: supabase/migrations/089_reset_corrupted_proposal_financials.sql
+-- Migration 090 — Reset corrupted proposal financials (Tier A)
+-- File: supabase/migrations/090_reset_corrupted_proposal_financials.sql
 -- Description: One-time cleanup. Resets total_after_discount,
 --              total_before_discount, subtotals, GST, and revenue
 --              for ~130 proposals where per-kWp price is implausibly
@@ -18,7 +18,7 @@
 --           reference. Re-running this migration is idempotent
 --           (rows already at 0 stay at 0, but the flag/reason gets
 --           refreshed to NOW()).
--- Dependencies: 088_proposal_data_quality_flags.sql
+-- Dependencies: 089_proposal_data_quality_flags.sql
 -- ============================================================
 
 BEGIN;
@@ -91,7 +91,7 @@ SET
   financials_invalidated = TRUE,
   financials_invalidated_at = NOW(),
   financials_invalidated_reason = format(
-    'Reset by migration 089 on %s. Original total_after_discount=%s for system_size_kwp=%s (per-kWp=%s, threshold=%s, kwp_confident=%s). Cause: BOM extracted from wrong file in co-mingled lead folder. Re-quote to populate.',
+    'Reset by migration 090 on %s. Original total_after_discount=%s for system_size_kwp=%s (per-kWp=%s, threshold=%s, kwp_confident=%s). Cause: BOM extracted from wrong file in co-mingled lead folder. Re-quote to populate.',
     NOW()::date,
     t.total_after_discount,
     t.system_size_kwp,

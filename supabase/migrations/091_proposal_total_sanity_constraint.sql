@@ -1,13 +1,13 @@
 -- ============================================================
--- Migration 090 — Proposal total sanity CHECK constraint
--- File: supabase/migrations/090_proposal_total_sanity_constraint.sql
+-- Migration 091 — Proposal total sanity CHECK constraint
+-- File: supabase/migrations/091_proposal_total_sanity_constraint.sql
 -- Description: Final regression net. Rejects any UPDATE/INSERT that
 --              would set total_after_discount > ₹10L/kWp (twice the
 --              importer's ₹5L threshold so importer warnings happen
 --              first; this only catches code-path regressions).
 -- Date: 2026-04-30
 -- Rollback: ALTER TABLE proposals DROP CONSTRAINT proposal_total_sanity;
--- Dependencies: 089_reset_corrupted_proposal_financials.sql (must be
+-- Dependencies: 090_reset_corrupted_proposal_financials.sql (must be
 --               applied first; otherwise the constraint blocks the
 --               existing corrupted rows from being reset to 0).
 -- ============================================================
