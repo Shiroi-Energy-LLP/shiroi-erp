@@ -148,7 +148,8 @@ Loaded into the n8n container via `env_file: - .env` in `docker-compose.yml`. As
 | `SUPABASE_PROJECT_ID` | ✅ set (`kfkydkwycgijvexqiysc` prod) | Tier 1 cron #03, #08; Tier 2 digests `19–28` |
 | `SUPABASE_SECRET_KEY` | ✅ set (`sb_secret_*` from prod) | Same — used as `apikey` header |
 | `VIVEK_WHATSAPP` | ✅ `+919444414087` | `01`, `08`, `19`, `28`, `56`, `58` (founder) |
-| `VINODH_WHATSAPP` | ✅ `+919444052787` | Same as VIVEK — co-founder cc |
+| `VINODH_WHATSAPP` | ✅ `+919444065787` | Same as VIVEK — co-founder cc |
+| `SRIDHAR_WHATSAPP` | ✅ `+919444052787` (Chairman) | Report-tier only: `19` daily, `28` weekly, `08` vendor-payment-due |
 | `SALES_HEAD_WHATSAPP` | ✅ `+919444060787` (Prem) | `02`, `03`, `05`, `14`, `20` |
 | `DESIGN_HEAD_WHATSAPP` | ✅ `+919704514879` | `04`, `21` |
 | `PROJECTS_HEAD_WHATSAPP` | ✅ `+919486801859` | `10`, `11`, `13`, `22` |
@@ -159,6 +160,10 @@ Loaded into the n8n container via `env_file: - .env` in `docker-compose.yml`. As
 | `HR_HEAD_WHATSAPP` | ✅ `+919444414087` (= Vivek — until HR head is hired) | `17`, `18`, `27` |
 
 **Routing strategy for unassigned heads (per Vivek 2026-05-02):** Finance/OM/HR all route to Vivek for now AND a parallel "Send WhatsApp to Vinodh" node was added to each digest workflow (`24`, `25`, `27`) and to `08` Vendor payment due so co-founder Vinodh sees every founder-routed message. When real Finance/O&M/HR heads are hired, just update the corresponding `*_HEAD_WHATSAPP` env var on the droplet — workflows will route to the new person, and the Vinodh parallel node continues to cc him.
+
+**Chairman (Sridhar) report fan-out (added 2026-05-02 evening):** Sridhar gets WhatsApp reports but won't log into the ERP. Added as a parallel "Send WhatsApp to Sridhar" / "Send to Sridhar (always)" node on the **report-tier** workflows only — `19` Vivek daily 7AM, `28` Vivek weekly Monday 8AM, `08` Vendor payment due (financial report). Operational alerts (`01` bug-report, `56` droplet-heartbeat, `58` Sentry) are NOT sent to him. Pattern via `scripts/add-sridhar-chairman-fanout.ts`.
+
+**Important: when updating any phone env var on the droplet, you MUST `docker compose up -d --force-recreate n8n` — a plain `docker compose restart n8n` does NOT reload `env_file`.** Verified the hard way 2026-05-02: a wrong-Vinodh-number was fixed via sed in `.env` + `restart`, but the container kept the old value cached and kept sending to the wrong number until force-recreate. Inspect with `docker exec shiroi-automation-n8n-1 env | grep VINODH` to confirm.
 
 To update vars, SSH in (`ssh root@68.183.91.111`), edit `/opt/shiroi-automation/.env`, then `docker compose restart n8n`.
 
