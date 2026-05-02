@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getLead, leadHasProject } from '@/lib/leads-queries';
+import { getLead, leadHasProject, leadHasProposal } from '@/lib/leads-queries';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import { LeadTabs } from '@/components/leads/lead-tabs';
 import { StatusChange } from '@/components/leads/status-change';
@@ -36,6 +36,13 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
   // import, no in-play proposal at won-time), surface a manual fallback so
   // ops isn't stuck. Hidden once a project exists.
   const hasProjectForLead = lead.status === 'won' ? await leadHasProject(id) : true;
+
+  // Mig 107's DB trigger blocks UPDATE leads SET status = 'won' when no
+  // proposal exists. Show a banner on stages where won is the natural next
+  // click so the user knows BEFORE hitting the error.
+  const TERMINAL = ['won', 'lost', 'on_hold', 'disqualified', 'converted'];
+  const showNoProposalBanner =
+    !TERMINAL.includes(lead.status) && !(await leadHasProposal(id));
 
   return (
     <div className="space-y-6">
@@ -85,6 +92,23 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
           <StatusChange leadId={lead.id} currentStatus={lead.status} />
         </div>
       </div>
+
+      {/* No-proposal banner — shows when the lead is in an active (non-terminal)
+          stage but has no proposal yet. Mig 107 blocks the won transition
+          server-side; this surfaces the requirement up-front. */}
+      {showNoProposalBanner && (
+        <Card className="border-l-4 border-l-amber-500 bg-amber-50/40">
+          <CardContent className="py-3">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="text-sm text-n-800">
+                <span className="font-semibold">No proposal yet.</span>{' '}
+                Create a Quick Quote (fast lane) or a detailed proposal before
+                marking this lead Won — the Won transition is blocked otherwise.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Closure Soon banner - shows live margin band + Attempt Won button */}
       {lead.status === 'closure_soon' && margin && (

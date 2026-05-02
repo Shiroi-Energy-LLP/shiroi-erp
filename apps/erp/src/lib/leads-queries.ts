@@ -143,6 +143,32 @@ export async function leadHasProject(leadId: string): Promise<boolean> {
   return !!data;
 }
 
+/**
+ * Returns true if the given lead has any proposal (any status).
+ * Mig 107's BEFORE UPDATE trigger blocks the won transition when this
+ * is false; the lead detail layout uses this to show a "create a
+ * proposal first" banner before the user hits the error.
+ */
+export async function leadHasProposal(leadId: string): Promise<boolean> {
+  const op = '[leadHasProposal]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('proposals')
+    .select('id')
+    .eq('lead_id', leadId)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error(`${op} query failed:`, {
+      code: error.code,
+      message: error.message,
+      leadId,
+    });
+    throw new Error(`Failed to check proposal existence: ${error.message}`);
+  }
+  return !!data;
+}
+
 export async function getSalesEngineers() {
   const op = '[getSalesEngineers]';
   const supabase = await createClient();
