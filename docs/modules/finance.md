@@ -48,6 +48,7 @@ The finance module owns every rupee in and out of Shiroi — customer invoicing 
 - `/profitability` — project-level P&L roll-up.
 - `/cash` — company-level cash position with opening / closing balance.
 - `/vouchers` — site expense voucher approval queue. KPI strip (pending count, pending total, projects with pending). Approve + Reject-with-reason dialog. Receipt file view-link.
+- `/cash/orphan-invoices` — triage UI for parent-company Zoho invoices/payments left orphaned after mig 087. Three-pane layout (Zoho customer list / orphan invoices with line items + linked payments / candidate ERP projects). Outcomes: assign, exclude-from-cash (no ERP match), defer. Reassign + undo from Excluded/Deferred tabs. Append-only audit log built into the page. Founder + finance + marketing_manager roles. Powered by `orphan-triage-queries.ts` + `orphan-triage-actions.ts`. Banner on `/cash` shows live counts.
 
 ## Key Business Rules
 
@@ -74,6 +75,9 @@ The finance module owns every rupee in and out of Shiroi — customer invoicing 
 - `proposal_payment_schedule` — milestone percentages (must sum to 100%), `followup_sla_days`, `escalation_sla_days`.
 - `consultant_commission_payouts` — per-tranche consultant disbursements, TDS-aware.
 - `tasks` — rows with `category IN ('payment_followup','payment_escalation')`.
+- `zoho_invoice_line_items` — line items extracted from Zoho's `Invoice.xls`, joined to `invoices` via `zoho_invoice_id`. Backfilled by `scripts/backfill-zoho-invoice-line-items.ts`. Compares line-item sums against `invoices.subtotal_supply` (pre-GST); skips invoices with deviation >5% AND >₹10K. ~923 rows.
+- `zoho_attribution_audit` — append-only history of every triage decision (`assign`/`exclude`/`skip`/`reassign`/`undo_exclude`/`undo_skip`). RLS to founder + finance + marketing_manager only.
+- `invoices.attribution_status` + `invoices.excluded_from_cash` — state-tracking columns for the orphan triage flow (mig 089). Same on `customer_payments`. Seeded `'assigned'` for rows mig 087 already attributed.
 
 ## Key Files
 
@@ -120,6 +124,8 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 - `get_msme_due_count()` — alert counter for Day 40+ vendors (migration 028).
 - `get_amc_monthly_summary()` — AMC visits scheduled vs completed (migration 048).
 - `get_projects_without_today_report()` — daily-report anti-join for site-ops alerts (migration 048).
+- `assign_orphan_invoice(p_invoice_id, p_project_id, p_made_by, p_notes)` / `exclude_orphan_invoice(p_invoice_id, p_made_by, p_notes)` / `reassign_orphan_invoice(p_invoice_id, p_new_project_id, p_made_by, p_notes)` — atomic cascade helpers backing the orphan triage UI (mig 092). Each returns `(success BOOLEAN, code TEXT, cascaded_payment_count INT)`; the JS layer maps to `ActionResult<T>`. SECURITY INVOKER (caller's RLS still applies).
+- `get_orphan_zoho_customer_summary()` / `get_candidate_projects_for_zoho_customer(p_zoho_name TEXT)` / `get_orphan_counts()` — read aggregations for the triage page (mig 093).
 
 ## Known Gotchas
 
