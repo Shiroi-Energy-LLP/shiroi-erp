@@ -9,6 +9,7 @@ import { CustomerListPane } from './customer-list-pane';
 import { InvoicesPane } from './invoices-pane';
 import { CandidatesPane } from './candidates-pane';
 import { AuditLogTable } from './audit-log-table';
+import { TriageProvider } from './triage-context';
 
 interface Props {
   counts: OrphanCounts;
@@ -68,15 +69,17 @@ export function TriageShell({ counts, customers, activeTab, selectedCustomer }: 
           {customers.length === 0 ? (
             <EmptyDone />
           ) : (
-            <div className="grid gap-4" style={{ gridTemplateColumns: '260px 1fr 320px' }}>
-              <CustomerListPane
-                customers={customers}
-                selected={selected}
-                onSelect={setSelected}
-              />
-              <InvoicesPane zohoCustomerName={selected} />
-              <CandidatesPane zohoCustomerName={selected} />
-            </div>
+            <TriageProvider>
+              <div className="grid gap-4" style={{ gridTemplateColumns: '260px 1fr 320px' }}>
+                <CustomerListPane
+                  customers={customers}
+                  selected={selected}
+                  onSelect={setSelected}
+                />
+                <InvoicesPane zohoCustomerName={selected} />
+                <CandidatesPane zohoCustomerName={selected} />
+              </div>
+            </TriageProvider>
           )}
         </TabsContent>
 

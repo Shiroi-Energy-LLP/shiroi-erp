@@ -8,6 +8,7 @@ import { AssignModal } from './assign-modal';
 import { ExcludeModal } from './exclude-modal';
 import { DeferModal } from './defer-modal';
 import { getOrphansForCustomerClient } from './_client-fetchers';
+import { useTriage } from './triage-context';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import type { OrphanInvoiceWithLineItems } from '@/lib/orphan-triage-queries';
 import type { Database } from '@repo/types/database';
@@ -39,6 +40,7 @@ type ModalState =
 
 export function InvoicesPane({ zohoCustomerName }: Props) {
   const router = useRouter();
+  const { selectedProject } = useTriage();
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
@@ -219,7 +221,7 @@ export function InvoicesPane({ zohoCustomerName }: Props) {
           open
           onClose={() => setModal(null)}
           entity={modal.entity}
-          project={null /* Task 18 wires this from selected-project context */}
+          project={selectedProject}
           onSuccess={refresh}
         />
       )}
