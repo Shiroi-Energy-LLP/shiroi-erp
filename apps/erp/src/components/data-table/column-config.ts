@@ -71,7 +71,7 @@ export const LEAD_COLUMNS: ColumnDef[] = [
     ] },
   { key: 'assigned_to_name', label: 'Assigned To', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
-  { key: 'estimated_size_kwp', label: 'System Size (kWp)', sortKey: 'estimated_size_kwp', defaultVisible: false, sortable: true, editable: true, fieldType: 'number' },
+  { key: 'estimated_size_kwp', label: 'System Size (kWp)', sortKey: 'estimated_size_kwp', defaultVisible: true, sortable: true, editable: true, fieldType: 'number' },
   { key: 'address_line1', label: 'Address', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
   { key: 'pincode', label: 'Pincode', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
   { key: 'is_qualified', label: 'Qualified', defaultVisible: false, sortable: true, editable: false, fieldType: 'select',
