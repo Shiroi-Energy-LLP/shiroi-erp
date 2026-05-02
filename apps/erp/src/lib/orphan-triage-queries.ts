@@ -1,6 +1,5 @@
 // apps/erp/src/lib/orphan-triage-queries.ts
 import { createClient } from '@repo/supabase/server';
-import { unstable_cache } from 'next/cache';
 import type { Database } from '@repo/types/database';
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -244,39 +243,89 @@ export async function searchAllProjects(query: string): Promise<CandidateProject
 }
 
 // ── Counts (for KPI strip and /cash banner) ──
+//
+// NOTE: do NOT wrap this in `unstable_cache`. The query relies on
+// `createClient()` from `@repo/supabase/server`, which calls `cookies()`
+// internally — and `unstable_cache` forbids dynamic data sources like
+// cookies/headers. Wrapping it crashes every render of the component
+// that calls it (including `<OrphanBanner />` on `/cash`). The RPC is
+// fast (<10ms) so a per-request fetch is fine.
 
-export const getOrphanCounts = unstable_cache(
-  async (): Promise<OrphanCounts> => {
-    const op = '[getOrphanCounts]';
-    console.log(`${op} Starting`);
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc('get_orphan_counts');
-    if (error) {
-      console.error(`${op} RPC failed`, { error });
-      throw new Error(`Failed to load orphan counts: ${error.message}`);
-    }
-    const r = (data as any)?.[0] ?? {
-      pending_invoice_count: 0,
-      pending_invoice_total: 0,
-      pending_payment_count: 0,
-      pending_payment_total: 0,
-      excluded_count: 0,
-      excluded_total: 0,
-      deferred_count: 0,
-    };
-    return {
-      pendingInvoiceCount: Number(r.pending_invoice_count),
-      pendingInvoiceTotal: String(r.pending_invoice_total ?? '0'),
-      pendingPaymentCount: Number(r.pending_payment_count),
-      pendingPaymentTotal: String(r.pending_payment_total ?? '0'),
-      excludedCount: Number(r.excluded_count),
-      excludedTotal: String(r.excluded_total ?? '0'),
-      deferredCount: Number(r.deferred_count),
-    };
-  },
-  ['orphan-counts'],
-  { revalidate: 60, tags: ['orphan-counts'] },
-);
+export async function getOrphanCounts(): Promise<OrphanCounts> {
+  const op = '[getOrphanCounts]';
+  console.log(`${op} Starting`);
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('get_orphan_counts');
+  if (error) {
+    console.error(`${op} RPC failed`, { error });
+    throw new Error(`Failed to load orphan counts: ${error.message}`);
+  }
+  const r = (data as any)?.[0] ?? {
+    pending_invoice_count: 0,
+    pending_invoice_total: 0,
+    pending_payment_count: 0,
+    pending_payment_total: 0,
+    excluded_count: 0,
+    excluded_total: 0,
+    deferred_count: 0,
+  };
+  return {
+    pendingInvoiceCount: Number(r.pending_invoice_count),
+    pendingInvoiceTotal: String(r.pending_invoice_total ?? '0'),
+    pendingPaymentCount: Number(r.pending_payment_count),
+    pendingPaymentTotal: String(r.pending_payment_total ?? '0'),
+    excludedCount: Number(r.excluded_count),
+    excludedTotal: String(r.excluded_total ?? '0'),
+    deferredCount: Number(r.deferred_count),
+  };
+}
+
+// ── Deferred / Excluded tab content ──
+
+/**
+ * Lists zoho_import invoices + customer_payments in the given attribution
+ * status (deferred or excluded). Limit 200 rows each side. Used by the
+ * Deferred and Excluded tabs in `/cash/orphan-invoices`.
+ *
+ * Backs `fetchByStatus` in `_client-fetchers.ts`. Lives in the queries
+ * module per NEVER-DO #15 (no inline Supabase in page/component code).
+ */
+export async function getOrphansByStatus(
+  status: 'deferred' | 'excluded',
+): Promise<{ invoices: any[]; payments: any[] }> {
+  const op = '[getOrphansByStatus]';
+  console.log(`${op} Starting`, { status });
+  const supabase = await createClient();
+  const [inv, pay] = await Promise.all([
+    supabase
+      .from('invoices')
+      .select(
+        'id, invoice_number, invoice_date, total_amount, zoho_customer_name, attribution_status, excluded_from_cash',
+      )
+      .eq('source', 'zoho_import')
+      .eq('attribution_status', status)
+      .order('invoice_date', { ascending: false })
+      .limit(200),
+    supabase
+      .from('customer_payments')
+      .select(
+        'id, receipt_number, payment_date, amount, zoho_customer_name, attribution_status, excluded_from_cash',
+      )
+      .eq('source', 'zoho_import')
+      .eq('attribution_status', status)
+      .order('payment_date', { ascending: false })
+      .limit(200),
+  ]);
+  if (inv.error) {
+    console.error(`${op} invoices query failed`, { error: inv.error });
+    throw new Error(`Failed to load ${status} invoices: ${inv.error.message}`);
+  }
+  if (pay.error) {
+    console.error(`${op} payments query failed`, { error: pay.error });
+    throw new Error(`Failed to load ${status} payments: ${pay.error.message}`);
+  }
+  return { invoices: inv.data ?? [], payments: pay.data ?? [] };
+}
 
 // ── Audit log ──
 

@@ -1,12 +1,19 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@repo/supabase/server';
+import { getUserProfile } from '@/lib/auth';
 import { getOrphanCounts, getOrphanCustomerSummary } from '@/lib/orphan-triage-queries';
 import { TriageShell } from './_components/triage-shell';
 import { Eyebrow, Breadcrumb } from '@repo/ui';
 
 export const metadata = { title: 'Zoho Orphan Triage' };
 
-const ALLOWED = new Set(['founder', 'finance', 'marketing_manager']);
+// Triage access. project_manager included so PMs (Manivel et al.) can do
+// the BOM/attribution review alongside Prem (marketing_manager) + Vivek.
+const ALLOWED = new Set([
+  'founder',
+  'finance',
+  'marketing_manager',
+  'project_manager',
+]);
 
 export default async function OrphanTriagePage({
   searchParams,
@@ -14,15 +21,9 @@ export default async function OrphanTriagePage({
   searchParams: Promise<{ tab?: string; customer?: string }>;
 }) {
   const params = await searchParams;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  if (!profile || !ALLOWED.has(profile.role)) {
+  const profile = await getUserProfile();
+  if (!profile) redirect('/login');
+  if (!ALLOWED.has(profile.role)) {
     redirect('/cash?notice=orphan-triage-forbidden');
   }
 

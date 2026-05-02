@@ -2,10 +2,17 @@
 'use server';
 
 import { createClient } from '@repo/supabase/server';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 
-const ALLOWED_ROLES = new Set(['founder', 'finance', 'marketing_manager']);
+// Triage access. project_manager is included so PMs (Manivel et al.) can do
+// the BOM/attribution review alongside Prem (marketing_manager) and Vivek.
+const ALLOWED_ROLES = new Set([
+  'founder',
+  'finance',
+  'marketing_manager',
+  'project_manager',
+]);
 
 interface CallerContext {
   employeeId: string;
@@ -21,7 +28,10 @@ async function requireTriageRole(): Promise<ActionResult<CallerContext>> {
     .eq('id', user.id)
     .single();
   if (!profile || !ALLOWED_ROLES.has(profile.role)) {
-    return err('Forbidden — triage requires founder, finance, or marketing_manager', 'forbidden');
+    return err(
+      'Forbidden — triage requires founder, finance, marketing_manager, or project_manager',
+      'forbidden',
+    );
   }
   const { data: employee } = await supabase
     .from('employees')
@@ -35,7 +45,6 @@ async function requireTriageRole(): Promise<ActionResult<CallerContext>> {
 function postSuccess() {
   revalidatePath('/cash/orphan-invoices');
   revalidatePath('/cash');
-  revalidateTag('orphan-counts');
 }
 
 // ── Assign actions ──
