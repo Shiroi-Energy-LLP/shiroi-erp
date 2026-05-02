@@ -274,3 +274,112 @@ export async function deferPayment(
   postSuccess();
   return ok(undefined);
 }
+
+// ── Reassign action ──
+
+export async function reassignInvoice(
+  invoiceId: string,
+  newProjectId: string,
+  notes: string | null,
+): Promise<ActionResult<{ cascadedPaymentCount: number }>> {
+  const op = '[reassignInvoice]';
+  const auth = await requireTriageRole();
+  if (!auth.success) return auth;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('reassign_orphan_invoice', {
+    p_invoice_id: invoiceId,
+    p_new_project_id: newProjectId,
+    p_made_by: auth.data.employeeId,
+    p_notes: notes as string,
+  });
+  if (error) {
+    console.error(`${op} RPC failed`, { invoiceId, newProjectId, error });
+    return err(error.message, error.code);
+  }
+  const row = (data as any)?.[0];
+  if (!row?.success) {
+    return err(`Cannot reassign — ${row?.code ?? 'unknown'}`, row?.code);
+  }
+  postSuccess();
+  return ok({ cascadedPaymentCount: Number(row.cascaded_payment_count ?? 0) });
+}
+
+// ── Undo actions ──
+
+export async function undoExclude(
+  entityType: 'invoice' | 'payment',
+  entityId: string,
+): Promise<ActionResult<void>> {
+  const op = '[undoExclude]';
+  const auth = await requireTriageRole();
+  if (!auth.success) return auth;
+  const supabase = await createClient();
+  const table = entityType === 'invoice' ? 'invoices' : 'customer_payments';
+
+  const { error: upErr } = await supabase
+    .from(table as any)
+    .update({ excluded_from_cash: false, attribution_status: 'pending' })
+    .eq('id', entityId);
+  if (upErr) {
+    console.error(`${op} update failed`, { entityType, entityId, error: upErr });
+    return err(upErr.message, upErr.code);
+  }
+  const { error: auditErr } = await supabase
+    .from('zoho_attribution_audit')
+    .insert({
+      entity_type: entityType,
+      entity_id: entityId,
+      decision: 'undo_exclude',
+      made_by: auth.data.employeeId,
+      notes: null,
+    });
+  if (auditErr) return err(auditErr.message, auditErr.code);
+
+  // For invoices, undo also cascades to linked payments.
+  if (entityType === 'invoice') {
+    const { error: cascadeErr } = await supabase
+      .from('customer_payments')
+      .update({ excluded_from_cash: false, attribution_status: 'pending' })
+      .eq('invoice_id', entityId)
+      .eq('excluded_from_cash', true);
+    if (cascadeErr) {
+      console.error(`${op} cascade undo failed`, { entityId, error: cascadeErr });
+      // Non-fatal — primary update succeeded.
+    }
+  }
+
+  postSuccess();
+  return ok(undefined);
+}
+
+export async function undoDefer(
+  entityType: 'invoice' | 'payment',
+  entityId: string,
+): Promise<ActionResult<void>> {
+  const op = '[undoDefer]';
+  const auth = await requireTriageRole();
+  if (!auth.success) return auth;
+  const supabase = await createClient();
+  const table = entityType === 'invoice' ? 'invoices' : 'customer_payments';
+
+  const { error: upErr } = await supabase
+    .from(table as any)
+    .update({ attribution_status: 'pending' })
+    .eq('id', entityId);
+  if (upErr) {
+    console.error(`${op} update failed`, { entityType, entityId, error: upErr });
+    return err(upErr.message, upErr.code);
+  }
+  const { error: auditErr } = await supabase
+    .from('zoho_attribution_audit')
+    .insert({
+      entity_type: entityType,
+      entity_id: entityId,
+      decision: 'undo_skip',
+      made_by: auth.data.employeeId,
+      notes: null,
+    });
+  if (auditErr) return err(auditErr.message, auditErr.code);
+  postSuccess();
+  return ok(undefined);
+}
