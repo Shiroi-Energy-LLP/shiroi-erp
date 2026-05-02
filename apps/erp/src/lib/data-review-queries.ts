@@ -27,7 +27,7 @@ export interface ReviewProjectRow {
   is_likely_duplicate: boolean;
 }
 
-export type ReviewTab = 'needs_review' | 'all' | 'confirmed' | 'duplicates';
+export type ReviewTab = 'needs_review' | 'all' | 'confirmed' | 'duplicates' | 'audit';
 
 export interface ProjectReviewCounts {
   needs_review: number;
@@ -57,7 +57,7 @@ export async function getProjectReviewCounts(): Promise<ProjectReviewCounts> {
 // ── Project listing (paginated) ───────────────────────────────────────────────
 
 export async function listProjectsForReview(opts: {
-  tab: ReviewTab;
+  tab: Exclude<ReviewTab, 'audit'>;
   page: number;
   pageSize: number;
   search?: string;

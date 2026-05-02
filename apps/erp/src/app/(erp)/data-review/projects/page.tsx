@@ -25,15 +25,21 @@ export default async function DataReviewProjectsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const tab = (['needs_review', 'all', 'confirmed', 'duplicates'].includes(params.tab ?? '')
+  const tab = (['needs_review', 'all', 'confirmed', 'duplicates', 'audit'].includes(
+    params.tab ?? '',
+  )
     ? params.tab
     : 'needs_review') as ReviewTab;
   const page = Math.max(0, Number(params.page ?? '0'));
   const search = params.search ?? '';
 
+  // The audit tab doesn't need a project listing — AuditLogTab fetches its own data client-side.
+  const listingTab: Exclude<ReviewTab, 'audit'> =
+    tab === 'audit' ? 'needs_review' : tab;
+
   const [counts, listing] = await Promise.all([
     getProjectReviewCounts(),
-    listProjectsForReview({ tab, page, pageSize: 50, search }),
+    listProjectsForReview({ tab: listingTab, page, pageSize: 50, search }),
   ]);
 
   return (
