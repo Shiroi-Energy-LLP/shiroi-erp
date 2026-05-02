@@ -1,6 +1,6 @@
 -- ============================================================
--- Migration 094 — Apply PV333/24 (Mr. Lakshman) recovery
--- File: supabase/migrations/094_apply_pv333_recovery.sql
+-- Migration 095 — Apply PV333/24 (Mr. Lakshman) recovery
+-- File: supabase/migrations/095_apply_pv333_recovery.sql
 -- Description: PV333/24 was the only Tier B candidate that hit a
 --              pdf-parse v1 interop bug during the 2026-04-30
 --              re-extraction pass. After commit 5d8fa42 swapped
