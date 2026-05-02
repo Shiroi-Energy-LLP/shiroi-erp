@@ -143,6 +143,7 @@ Loaded into the n8n container via `env_file: - .env` in `docker-compose.yml`. As
 | Var | Status | Used by |
 |-----|--------|---------|
 | `N8N_ENCRYPTION_KEY` | ✅ set | n8n itself (encrypts credential storage) |
+| `N8N_BLOCK_ENV_ACCESS_IN_NODE` | ✅ `false` (added 2026-05-02) | Without this, `$env.X` in workflow expressions throws `ExpressionError: access to env vars denied`. Default in n8n 1.x is to block; we need access for every cron + digest workflow. |
 | `N8N_WEBHOOK_SECRET` | ✅ set (matched by `x-webhook-secret` credential) | Router #00, Sentry forwarder #58 |
 | `SUPABASE_PROJECT_ID` | ✅ set (`kfkydkwycgijvexqiysc` prod) | Tier 1 cron #03, #08; Tier 2 digests `19–28` |
 | `SUPABASE_SECRET_KEY` | ✅ set (`sb_secret_*` from prod) | Same — used as `apikey` header |
@@ -169,6 +170,20 @@ To update vars, SSH in (`ssh root@68.183.91.111`), edit `/opt/shiroi-automation/
 | `x-webhook-secret` | `httpHeaderAuth` | Router auth + Sentry forwarder auth | ✅ Created (2026-05-01) |
 | `Supabase service role` | `httpHeaderAuth` (`apikey: sb_secret_*`) | Tier 1 cron + Tier 2 digests fetch view rows | ✅ Created (2026-05-01) |
 | `Gmail (Vivek)` | `gmailOAuth2` | Error handler #55 emails Vivek on workflow failure | ✅ Created (2026-05-02) — Google Cloud project `shiroi-n8n`, OAuth client `n8n Shiroi`, scope `gmail.send`. See "Gmail OAuth via SSH tunnel" section below for the workaround used to complete OAuth while DO ports were blocked. |
+
+## Two runtime gotchas (caught + fixed 2026-05-02)
+
+### 1. `$env.X` access is blocked by default in n8n 1.x
+
+n8n's `N8N_BLOCK_ENV_ACCESS_IN_NODE` defaults to `true` in current versions, which throws `ExpressionError: access to env vars denied` whenever a workflow expression like `={{ $env.SUPABASE_PROJECT_ID }}` runs. Every cron + digest workflow in this repo uses `$env.X` (for Supabase config, recipient phone numbers, etc.), so this would silently break the entire cron tier on first scheduled run.
+
+**Fix already applied:** `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` is set in the n8n service env block on the droplet (`/opt/shiroi-automation/docker-compose.yml`).
+
+### 2. Cron expressions interpret in `GENERIC_TIMEZONE`, not UTC
+
+The droplet runs with `GENERIC_TIMEZONE=Asia/Kolkata`, so n8n interprets cron expressions in IST. **Always write cron expressions in IST wall-clock time**, not UTC. Example: for "fire at 7 AM IST daily", use `0 0 7 * * *` — NOT `0 30 1 * * *` (which would mean 01:30 IST since IST is the interpretation TZ).
+
+If you ever change the droplet's `GENERIC_TIMEZONE`, run `scripts/fix-n8n-cron-timezones.ts` (extending the lookup map if needed) to keep cron expressions aligned.
 
 ## Gmail OAuth via SSH tunnel (workaround used 2026-05-02)
 

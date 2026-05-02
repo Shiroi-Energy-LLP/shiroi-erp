@@ -7,13 +7,13 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 30 1 * * *"
+              "expression": "0 0 7 * * *"
             }
           ]
         }
       },
       "id": "node-cron",
-      "name": "Daily 7:00 IST (01:30 UTC)",
+      "name": "Daily 7:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
