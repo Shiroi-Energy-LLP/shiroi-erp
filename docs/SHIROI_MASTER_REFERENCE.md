@@ -118,6 +118,14 @@ production   → kfkydkwycgijvexqiysc.supabase.co, live system, real users, real
 
 Claude writes SQL in chat → pasted into Supabase SQL Editor (**dev first**) → confirmed working → saved as `.sql` in `supabase/migrations/` → committed. No Supabase CLI needed. Every SQL change lands in a migration file immediately — no one-off SQL.
 
+### Task completion workflow (locked)
+
+CLAUDE.md §WORKFLOW step 3 is the authoritative form; recap here so it travels with the dev-environment context:
+
+1. **CI locally before push.** `pnpm check-types && pnpm lint && bash scripts/ci/check-forbidden-patterns.sh`. Mirrors `.github/workflows/ci.yml` exactly. Fix locally; don't push red and rely on remote CI to catch it.
+2. **Docs after CI passes.** `docs/CHANGELOG.md` (one line, always), `docs/CURRENT_STATUS.md` (if in-flight state changed), `docs/modules/<module>.md` (if the module gained a capability / table / significant decision). CLAUDE.md does not grow.
+3. **Push to main and push to remote.** `git add` → `git commit` → `git push origin main`. The remote tip is the source of truth for "shipped" — a local commit that hasn't been pushed isn't done.
+
 ### Type generation
 
 ```bash
