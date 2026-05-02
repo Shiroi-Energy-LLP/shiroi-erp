@@ -117,7 +117,7 @@ Each digest has the same 4-node shape: `scheduleTrigger → httpRequest (Supabas
 
 | File | Trigger | Purpose | Activated? |
 |------|---------|---------|-----------|
-| `55-global-error-handler.json` | `errorTrigger` | Any workflow error → Gmail Vivek (see above) | ❌ (Gmail OAuth needed) |
+| `55-global-error-handler.json` | `errorTrigger` | Any workflow error → Gmail Vivek (see above) | ✅ Active (Gmail OAuth completed 2026-05-02) |
 | `56-droplet-health.json` (renamed `56 — Droplet heartbeat`) | Cron daily 9 AM IST | Sends "n8n heartbeat — alive" WhatsApp to Vivek + Vinodh. Original 15-min CPU/RAM/disk check used `executeCommand` which n8n removed for security in current version. For metric thresholds, use DO's built-in monitoring (Droplets → shiroi-erp → Insights → Alerts) — free, integrated. | ❌ (active when Meta template approved) |
 | `57-n8n-backup.json` | Cron daily 2:00 IST | tar ~/.n8n → Supabase Storage `n8n-backups/YYYY-MM-DD.tar.gz` with sha256 | ❌ (Supabase bucket `n8n-backups` not yet created) |
 | `58-sentry-forwarder.json` | Webhook `/webhook/sentry-alert` | Sentry POSTs P0/P1 via WhatsApp to Vivek + Vinodh; lower severities logged + dropped | ❌ (Sentry alert rule not yet pointed at this webhook) |
@@ -168,8 +168,56 @@ To update vars, SSH in (`ssh root@68.183.91.111`), edit `/opt/shiroi-automation/
 | `WhatsApp (Shiroi)` | `whatsAppApi` | All 22 WhatsApp Send nodes | ✅ Created (2026-05-01) |
 | `x-webhook-secret` | `httpHeaderAuth` | Router auth + Sentry forwarder auth | ✅ Created (2026-05-01) |
 | `Supabase service role` | `httpHeaderAuth` (`apikey: sb_secret_*`) | Tier 1 cron + Tier 2 digests fetch view rows | ✅ Created (2026-05-01) |
-| `Gmail (Vivek)` | `gmailOAuth2` | Error handler #55 emails Vivek on workflow failure | ❌ Not yet (manual OAuth flow) |
+| `Gmail (Vivek)` | `gmailOAuth2` | Error handler #55 emails Vivek on workflow failure | ✅ Created (2026-05-02) — Google Cloud project `shiroi-n8n`, OAuth client `n8n Shiroi`, scope `gmail.send`. See "Gmail OAuth via SSH tunnel" section below for the workaround used to complete OAuth while DO ports were blocked. |
+
+## Gmail OAuth via SSH tunnel (workaround used 2026-05-02)
+
+While DigitalOcean had ports 80/443/8080 blocked, the standard OAuth flow couldn't complete: n8n constructs the OAuth callback URL from `WEBHOOK_URL`, which on the droplet is set to `https://n8n.shiroienergy.com/...` — that URL was unreachable from the public internet, so Google's redirect after sign-in failed with `ERR_CONNECTION_TIMED_OUT`.
+
+**Workaround that worked:**
+
+1. Add **two** Authorized redirect URIs to the Google Cloud OAuth client (Credentials → OAuth 2.0 Client IDs → click client → edit):
+   - `https://n8n.shiroienergy.com/rest/oauth2-credential/callback` (production)
+   - `http://localhost:5679/rest/oauth2-credential/callback` (tunnel-time temporary)
+
+2. SSH to droplet and temporarily switch n8n's OAuth callback base URL to localhost (kills the production URL routing for everything, but only briefly):
+   ```bash
+   cd /opt/shiroi-automation
+   sed -i 's|WEBHOOK_URL=https://n8n.shiroienergy.com/|WEBHOOK_URL=http://localhost:5679/|' docker-compose.yml
+   sed -i 's|N8N_EDITOR_BASE_URL=https://n8n.shiroienergy.com/|N8N_EDITOR_BASE_URL=http://localhost:5679/|' docker-compose.yml
+   docker compose up -d n8n
+   ```
+
+3. From local machine, restart the SSH tunnel (`ssh -N -L 5679:172.18.0.2:5678 root@68.183.91.111`).
+
+4. In browser at `http://localhost:5679`, create the Gmail OAuth credential — Google now redirects to `localhost:5679/...` which routes through the tunnel and completes successfully. The credential gets stored encrypted in n8n's DB and survives any future env-var changes.
+
+5. **Revert** the env vars on droplet so the production URL is restored:
+   ```bash
+   sed -i 's|WEBHOOK_URL=http://localhost:5679/|WEBHOOK_URL=https://n8n.shiroienergy.com/|' docker-compose.yml
+   sed -i 's|N8N_EDITOR_BASE_URL=http://localhost:5679/|N8N_EDITOR_BASE_URL=https://n8n.shiroienergy.com/|' docker-compose.yml
+   docker compose up -d n8n
+   ```
+
+A helper script lives at `/tmp/oauth.sh` on the droplet during the OAuth flow (deleted after revert) — code is in `infrastructure/n8n/workflows/README.md` (this section).
+
+**Why we don't leave this as the permanent setup:** with `WEBHOOK_URL=http://localhost:5679/`, all webhook URLs n8n hands out (e.g., for the event bus router, Sentry forwarder) point at `localhost:5679` instead of `https://n8n.shiroienergy.com/...`. That's only useful for the local SSH tunnel and breaks any external integration once DigitalOcean restores the public ports.
 
 ## The legacy standalone bug-report webhook
 
-The original bug-report workflow tested on 2026-04-19 used its own webhook URL (`N8N_BUG_REPORT_WEBHOOK_URL`). ERP's `notifyBugReport` now fires through the event bus router (`bug_report.submitted` → `01 — Bug report`) whenever `N8N_EVENT_BUS_URL` is set, and only falls back to the legacy URL when it isn't. The standalone workflow can be retired once the router is activated in n8n — until then, leave `N8N_BUG_REPORT_WEBHOOK_URL` set as a safety net for local dev.
+The original bug-report workflow tested on 2026-04-19 used its own webhook URL (`N8N_BUG_REPORT_WEBHOOK_URL`). ERP's `notifyBugReport` now fires through the event bus router (`bug_report.submitted` → `01 — Bug report`) whenever `N8N_EVENT_BUS_URL` is set, and only falls back to the legacy URL when it isn't. The standalone workflow can be retired once the router is activated in n8n AND the public-internet route to it is restored (DigitalOcean ports 80/443) — until then, leave `N8N_BUG_REPORT_WEBHOOK_URL` set as a safety net for local dev.
+
+## DigitalOcean port-block status (2026-04-25 → ongoing)
+
+On 2026-04-25, DigitalOcean's Trust & Safety automated system blocked **ports 80/443/8080** on the droplet in response to a Netcraft alert that flagged n8n's `executeCommand` node and webhook ingestion as "potential malware infrastructure." Detailed abuse responses were sent to tickets #12078644 and #12078645 explaining the legitimate use case; both tickets auto-closed without human review and ports remained blocked. A regular Support ticket was filed under Networking/Firewall on 2026-05-01 requesting manual port restoration — pending response.
+
+**While ports are blocked:**
+- Port 22 (SSH) is still open. All n8n management uses an SSH tunnel: `ssh -N -L 5679:172.18.0.2:5678 root@68.183.91.111` then point n8n REST API tooling and the editor UI at `http://localhost:5679/`.
+- Workflows are activated and run on the droplet's internal cron, so digests fire daily at their scheduled IST times — they just can't be called from the public internet (e.g., ERP's `emitErpEvent` won't reach the router webhook until ports are restored).
+- WhatsApp Send works fine — it's outbound traffic to Meta's servers, not affected by the inbound port block.
+- Gmail send works fine for the same reason (outbound to Google).
+
+**When ports are restored:**
+- Wire `N8N_EVENT_BUS_URL=https://n8n.shiroienergy.com/webhook/event-bus` into Vercel env so ERP starts firing real events into the router.
+- Configure Sentry alert rule to webhook `https://n8n.shiroienergy.com/webhook/sentry-alert` with `x-webhook-secret` header.
+- Retire the legacy standalone bug-report webhook.
