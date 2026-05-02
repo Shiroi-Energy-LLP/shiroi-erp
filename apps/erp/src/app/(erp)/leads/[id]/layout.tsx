@@ -1,11 +1,13 @@
 import { notFound } from 'next/navigation';
 import { getLead } from '@/lib/leads-queries';
+import { createClient } from '@repo/supabase/server';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import { LeadTabs } from '@/components/leads/lead-tabs';
 import { StatusChange } from '@/components/leads/status-change';
 import { QuickQuoteButton } from '@/components/proposals/quick-quote-button';
 import { ClosureBandBadge, ClosureBandHelper } from '@/components/sales/closure-band-badge';
 import { AttemptWonButton } from '@/components/sales/attempt-won-button';
+import { CreateProjectFromLeadButton } from '@/components/sales/create-project-from-lead-button';
 import { computeMargin } from '@/lib/closure-actions';
 import { Breadcrumb, Card, CardContent } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
@@ -30,6 +32,21 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
   const inClosure = lead.status === 'closure_soon' || lead.status === 'negotiation';
   const marginSnapshot = inClosure ? await computeMargin(id) : null;
   const margin = marginSnapshot && marginSnapshot.success ? marginSnapshot.data : null;
+
+  // Won leads should always have a project. If the cascade missed (bulk
+  // import, no in-play proposal at won-time), surface a manual fallback so
+  // ops isn't stuck. Hidden once a project exists.
+  let hasProjectForLead = true;
+  if (lead.status === 'won') {
+    const supabase = await createClient();
+    const { data: existingProject } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('lead_id', id)
+      .is('deleted_at', null)
+      .limit(1);
+    hasProjectForLead = !!(existingProject && existingProject.length > 0);
+  }
 
   return (
     <div className="space-y-6">
@@ -67,6 +84,9 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {lead.status === 'won' && !hasProjectForLead && (
+            <CreateProjectFromLeadButton leadId={lead.id} />
+          )}
           <QuickQuoteButton
             leadId={lead.id}
             systemType={lead.system_type}
