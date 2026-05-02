@@ -9149,6 +9149,76 @@ export type Database = {
           }
           ]
       }
+      project_review_audit: {
+        Row: {
+          decision: string
+          duplicate_of_project_id: string | null
+          id: string
+          losing_score: number | null
+          made_at: string
+          made_by: string
+          new_contracted_value: number | null
+          new_size_kwp: number | null
+          notes: string | null
+          prev_contracted_value: number | null
+          prev_size_kwp: number | null
+          project_id: string
+          winning_score: number | null
+        }
+        Insert: {
+          decision: string
+          duplicate_of_project_id?: string | null
+          id?: string
+          losing_score?: number | null
+          made_at?: string
+          made_by: string
+          new_contracted_value?: number | null
+          new_size_kwp?: number | null
+          notes?: string | null
+          prev_contracted_value?: number | null
+          prev_size_kwp?: number | null
+          project_id: string
+          winning_score?: number | null
+        }
+        Update: {
+          decision?: string
+          duplicate_of_project_id?: string | null
+          id?: string
+          losing_score?: number | null
+          made_at?: string
+          made_by?: string
+          new_contracted_value?: number | null
+          new_size_kwp?: number | null
+          notes?: string | null
+          prev_contracted_value?: number | null
+          prev_size_kwp?: number | null
+          project_id?: string
+          winning_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_review_audit_duplicate_of_project_id_fkey"
+            columns: ["duplicate_of_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_review_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_review_audit_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       project_status_history: {
         Row: {
           changed_at: string
@@ -9261,6 +9331,7 @@ export type Database = {
           project_number: string
           project_type: string
           proposal_id: string
+          review_status: string
           scope_civil: string | null
           scope_la: string | null
           scope_meter: string | null
@@ -9346,6 +9417,7 @@ export type Database = {
           project_number: string
           project_type?: string
           proposal_id: string
+          review_status?: string
           scope_civil?: string | null
           scope_la?: string | null
           scope_meter?: string | null
@@ -9431,6 +9503,7 @@ export type Database = {
           project_number?: string
           project_type?: string
           proposal_id?: string
+          review_status?: string
           scope_civil?: string | null
           scope_la?: string | null
           scope_meter?: string | null
@@ -14548,6 +14621,18 @@ export type Database = {
           payload: Json
         }[]
       }
+      confirm_project_review: {
+        Args: {
+          p_made_by: string
+          p_new_contracted_value: number
+          p_new_size_kwp: number
+          p_project_id: string
+        }
+        Returns: {
+          code: string
+          success: boolean
+        }[]
+      }
       create_inverter_partition_for_month: {
         Args: { target_month: string }
         Returns: undefined
@@ -14810,6 +14895,15 @@ export type Database = {
           total_vendor_paid: number
         }[]
       }
+      get_project_review_counts: {
+        Args: never
+        Returns: {
+          all_projects: number
+          confirmed: number
+          duplicate: number
+          needs_review: number
+        }[]
+      }
       get_projects_without_today_report: {
         Args: never
         Returns: {
@@ -14820,6 +14914,22 @@ export type Database = {
         }[]
       }
       lock_stale_reports: { Args: never; Returns: undefined }
+      mark_project_duplicate: {
+        Args: {
+          p_made_by: string
+          p_notes: string
+          p_project_a_id: string
+          p_project_b_id: string
+        }
+        Returns: {
+          code: string
+          deleted_project_id: string
+          deleted_score: number
+          kept_project_id: string
+          kept_score: number
+          success: boolean
+        }[]
+      }
       plant_monitoring_detect_brand: {
         Args: { portal_url: string }
         Returns: string
@@ -14843,6 +14953,17 @@ export type Database = {
       }
       rollup_inverter_readings_daily: { Args: never; Returns: undefined }
       rollup_inverter_readings_hourly: { Args: never; Returns: undefined }
+      score_project_data_richness: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
+      undo_project_review: {
+        Args: { p_made_by: string; p_project_id: string }
+        Returns: {
+          code: string
+          success: boolean
+        }[]
+      }
       update_storage_mime_type: {
         Args: { p_bucket: string; p_mime: string; p_path: string }
         Returns: undefined
