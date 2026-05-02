@@ -121,6 +121,30 @@
           "name": "WhatsApp (Shiroi)"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "node-whatsapp-vinodh-xqg7jp",
+      "name": "Send WhatsApp to Vinodh",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        450
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
     }
   ],
   "connections": {
@@ -151,6 +175,11 @@
         [
           {
             "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp to Vinodh",
             "type": "main",
             "index": 0
           }

@@ -81,6 +81,28 @@ const FOUNDER_WORKFLOWS: Array<{
     upstreamNodeName: 'Compose alert',
     vinodhNodeName: 'Send WhatsApp to Vinodh',
   },
+  // Per Vivek's directive 2026-05-02: "Finance, OM, HR send to Vinodh and me".
+  // Each *_HEAD_WHATSAPP env var is set to Vivek's phone on the droplet so the
+  // existing "Send WhatsApp" node already routes to Vivek; this clone routes
+  // the same message to Vinodh in parallel.
+  {
+    file: '24-finance-head-daily-8am.json',
+    originalSendNodeName: 'Send WhatsApp',
+    upstreamNodeName: 'Compose digest',
+    vinodhNodeName: 'Send WhatsApp to Vinodh',
+  },
+  {
+    file: '25-om-head-daily-8am.json',
+    originalSendNodeName: 'Send WhatsApp',
+    upstreamNodeName: 'Compose digest',
+    vinodhNodeName: 'Send WhatsApp to Vinodh',
+  },
+  {
+    file: '27-hr-head-daily-8am.json',
+    originalSendNodeName: 'Send WhatsApp',
+    upstreamNodeName: 'Compose digest',
+    vinodhNodeName: 'Send WhatsApp to Vinodh',
+  },
 ];
 
 function findNode(wf: N8nWorkflow, name: string): N8nNode | undefined {

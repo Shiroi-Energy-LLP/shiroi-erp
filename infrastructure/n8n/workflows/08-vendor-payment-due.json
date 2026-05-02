@@ -156,6 +156,30 @@
     },
     {
       "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
+        "messageType": "text",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "node-whatsapp-vinodh-always",
+      "name": "Send to Vinodh (always)",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        100
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": false,
@@ -276,6 +300,11 @@
         [
           {
             "node": "Send to Finance (always)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Vinodh (always)",
             "type": "main",
             "index": 0
           },

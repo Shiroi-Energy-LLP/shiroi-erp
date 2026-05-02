@@ -138,7 +138,7 @@ Build order per `docs/superpowers/specs/2026-04-19-n8n-workflow-catalog.md#build
 
 ### Env vars on the n8n droplet (`/opt/shiroi-automation/.env`)
 
-Loaded into the n8n container via `env_file: - .env` in `docker-compose.yml`. As of 2026-05-01:
+Loaded into the n8n container via `env_file: - .env` in `docker-compose.yml`. As of 2026-05-02:
 
 | Var | Status | Used by |
 |-----|--------|---------|
@@ -148,14 +148,16 @@ Loaded into the n8n container via `env_file: - .env` in `docker-compose.yml`. As
 | `SUPABASE_SECRET_KEY` | ✅ set (`sb_secret_*` from prod) | Same — used as `apikey` header |
 | `VIVEK_WHATSAPP` | ✅ `+919444414087` | `01`, `08`, `19`, `28`, `56`, `58` (founder) |
 | `VINODH_WHATSAPP` | ✅ `+919444052787` | Same as VIVEK — co-founder cc |
-| `SALES_HEAD_WHATSAPP` | ✅ `+919444060787` | `02`, `03`, `05`, `14`, `20` |
+| `SALES_HEAD_WHATSAPP` | ✅ `+919444060787` (Prem) | `02`, `03`, `05`, `14`, `20` |
 | `DESIGN_HEAD_WHATSAPP` | ✅ `+919704514879` | `04`, `21` |
 | `PROJECTS_HEAD_WHATSAPP` | ✅ `+919486801859` | `10`, `11`, `13`, `22` |
 | `PURCHASE_HEAD_WHATSAPP` | ✅ `+919698685985` | `07`, `09`, `23` |
-| `FINANCE_HEAD_WHATSAPP` | ❌ empty (no role assigned yet) | `06`, `08`, `14`, `16`, `24` |
-| `OM_HEAD_WHATSAPP` | ❌ empty | `15`, `25` |
-| `LIAISON_HEAD_WHATSAPP` | ❌ empty | `12`, `26` |
-| `HR_HEAD_WHATSAPP` | ❌ empty | `17`, `18`, `27` |
+| `LIAISON_HEAD_WHATSAPP` | ✅ `+919444060787` (= Sales head — same person) | `12`, `26` |
+| `FINANCE_HEAD_WHATSAPP` | ✅ `+919444414087` (= Vivek — until Finance head is hired) | `06`, `08`, `14`, `16`, `24` |
+| `OM_HEAD_WHATSAPP` | ✅ `+919444414087` (= Vivek — until O&M head is hired) | `15`, `25` |
+| `HR_HEAD_WHATSAPP` | ✅ `+919444414087` (= Vivek — until HR head is hired) | `17`, `18`, `27` |
+
+**Routing strategy for unassigned heads (per Vivek 2026-05-02):** Finance/OM/HR all route to Vivek for now AND a parallel "Send WhatsApp to Vinodh" node was added to each digest workflow (`24`, `25`, `27`) and to `08` Vendor payment due so co-founder Vinodh sees every founder-routed message. When real Finance/O&M/HR heads are hired, just update the corresponding `*_HEAD_WHATSAPP` env var on the droplet — workflows will route to the new person, and the Vinodh parallel node continues to cc him.
 
 To update vars, SSH in (`ssh root@68.183.91.111`), edit `/opt/shiroi-automation/.env`, then `docker compose restart n8n`.
 
