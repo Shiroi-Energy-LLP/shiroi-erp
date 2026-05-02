@@ -1,6 +1,6 @@
--- supabase/migrations/089_attribution_status_columns.sql
+-- supabase/migrations/097_attribution_status_columns.sql
 -- ============================================================================
--- Migration 089 — attribution_status + excluded_from_cash columns
+-- Migration 097 — attribution_status + excluded_from_cash columns
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -49,7 +49,7 @@ BEGIN
          COUNT(*) FILTER (WHERE attribution_status = 'assigned')
     INTO pay_pending, pay_assigned
     FROM customer_payments WHERE source = 'zoho_import';
-  RAISE NOTICE '=== Migration 089 applied ===';
+  RAISE NOTICE '=== Migration 097 applied ===';
   RAISE NOTICE 'Invoices: pending=%, assigned=%', inv_pending, inv_assigned;
   RAISE NOTICE 'Payments: pending=%, assigned=%', pay_pending, pay_assigned;
 END $$;

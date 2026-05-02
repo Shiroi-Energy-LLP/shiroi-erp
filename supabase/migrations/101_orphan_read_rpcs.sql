@@ -1,6 +1,6 @@
--- supabase/migrations/093_orphan_read_rpcs.sql
+-- supabase/migrations/101_orphan_read_rpcs.sql
 -- ============================================================================
--- Migration 093 — Orphan triage read RPCs
+-- Migration 101 — Orphan triage read RPCs
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -155,7 +155,7 @@ $$ LANGUAGE sql STABLE SECURITY INVOKER;
 
 DO $$
 BEGIN
-  RAISE NOTICE '=== Migration 093 applied ===';
+  RAISE NOTICE '=== Migration 101 applied ===';
 END $$;
 
 COMMIT;

@@ -214,7 +214,7 @@ The simpler operations (defer, advance-payment assign, undo) stay JS-only since 
 
 ### Type regeneration
 
-`packages/types/database.ts` is regenerated after mig 089 (new columns), mig 091 (new audit table), and mig 088 (new line-items table). Per NEVER-DO #20 (never ship schema changes without regenerating types), each migration is committed alongside its type regen.
+`packages/types/database.ts` is regenerated after mig 097 (new columns), mig 099 (new audit table), and mig 096 (new line-items table). Per NEVER-DO #20 (never ship schema changes without regenerating types), each migration is committed alongside its type regen.
 
 ---
 

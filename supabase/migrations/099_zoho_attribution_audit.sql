@@ -1,6 +1,6 @@
--- supabase/migrations/091_zoho_attribution_audit.sql
+-- supabase/migrations/099_zoho_attribution_audit.sql
 -- ============================================================================
--- Migration 091 — zoho_attribution_audit table
+-- Migration 099 — zoho_attribution_audit table
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -53,7 +53,7 @@ CREATE POLICY "Triage roles can insert audit"
 
 DO $$
 BEGIN
-  RAISE NOTICE '=== Migration 091 applied ===';
+  RAISE NOTICE '=== Migration 099 applied ===';
   RAISE NOTICE 'zoho_attribution_audit table created with RLS.';
 END $$;
 

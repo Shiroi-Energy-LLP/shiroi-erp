@@ -1,6 +1,6 @@
--- supabase/migrations/092_orphan_triage_functions.sql
+-- supabase/migrations/100_orphan_triage_functions.sql
 -- ============================================================================
--- Migration 092 — atomic orphan-triage SQL helper functions
+-- Migration 100 — atomic orphan-triage SQL helper functions
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -192,7 +192,7 @@ $$ LANGUAGE plpgsql SECURITY INVOKER;
 
 DO $$
 BEGIN
-  RAISE NOTICE '=== Migration 092 applied ===';
+  RAISE NOTICE '=== Migration 100 applied ===';
   RAISE NOTICE 'assign_orphan_invoice, exclude_orphan_invoice, reassign_orphan_invoice created.';
 END $$;
 

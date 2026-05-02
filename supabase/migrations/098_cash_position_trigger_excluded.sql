@@ -1,11 +1,11 @@
--- supabase/migrations/090_cash_position_trigger_excluded.sql
+-- supabase/migrations/098_cash_position_trigger_excluded.sql
 -- ============================================================================
--- Migration 090 — Cash position trigger filters excluded_from_cash rows
+-- Migration 098 — Cash position trigger filters excluded_from_cash rows
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
 -- The trigger function from mig 080 (`refresh_project_cash_position`) sums
--- invoices and customer_payments per project. After mig 089 added
+-- invoices and customer_payments per project. After mig 097 added
 -- excluded_from_cash, the trigger needs to skip rows where that flag is TRUE
 -- so MEGAGRID-style "no ERP match" decisions don't pollute any project's
 -- cash position.
@@ -204,7 +204,7 @@ BEGIN
          COUNT(*) FILTER (WHERE net_cash_position = 0)
     INTO total_proj, neg, pos, zero_
     FROM project_cash_positions;
-  RAISE NOTICE '=== Migration 090 applied ===';
+  RAISE NOTICE '=== Migration 098 applied ===';
   RAISE NOTICE 'Total: %, negative: %, positive: %, zero: %',
     total_proj, neg, pos, zero_;
 END $$;

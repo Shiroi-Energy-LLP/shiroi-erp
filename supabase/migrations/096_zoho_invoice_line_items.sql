@@ -1,6 +1,6 @@
--- supabase/migrations/088_zoho_invoice_line_items.sql
+-- supabase/migrations/096_zoho_invoice_line_items.sql
 -- ============================================================================
--- Migration 088 — Zoho invoice line items table
+-- Migration 096 — Zoho invoice line items table
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_zoho_invoice_line_items_zoho_invoice_id
 
 DO $$
 BEGIN
-  RAISE NOTICE '=== Migration 088 applied ===';
+  RAISE NOTICE '=== Migration 096 applied ===';
   RAISE NOTICE 'zoho_invoice_line_items table created. Backfill pending.';
 END $$;
 

@@ -18,11 +18,11 @@
 
 ```
 supabase/migrations/
-  088_zoho_invoice_line_items.sql
-  089_attribution_status_columns.sql
-  090_cash_position_trigger_excluded.sql
-  091_zoho_attribution_audit.sql
-  092_orphan_triage_functions.sql
+  096_zoho_invoice_line_items.sql
+  097_attribution_status_columns.sql
+  098_cash_position_trigger_excluded.sql
+  099_zoho_attribution_audit.sql
+  100_orphan_triage_functions.sql
 
 scripts/
   backfill-zoho-invoice-line-items.ts
@@ -76,18 +76,18 @@ apps/erp/src/components/finance/
 
 ## Phase A — Schema + data layer
 
-### Task 1: Migration 088 — `zoho_invoice_line_items` table
+### Task 1: Migration 096 — `zoho_invoice_line_items` table
 
 **Files:**
-- Create: `supabase/migrations/088_zoho_invoice_line_items.sql`
+- Create: `supabase/migrations/096_zoho_invoice_line_items.sql`
 - Modify: `packages/types/database.ts` (regenerated)
 
 - [ ] **Step 1: Write the migration**
 
 ```sql
--- supabase/migrations/088_zoho_invoice_line_items.sql
+-- supabase/migrations/096_zoho_invoice_line_items.sql
 -- ============================================================================
--- Migration 088 — Zoho invoice line items table
+-- Migration 096 — Zoho invoice line items table
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -118,7 +118,7 @@ CREATE INDEX IF NOT EXISTS idx_zoho_invoice_line_items_zoho_invoice_id
 
 DO $$
 BEGIN
-  RAISE NOTICE '=== Migration 088 applied ===';
+  RAISE NOTICE '=== Migration 096 applied ===';
   RAISE NOTICE 'zoho_invoice_line_items table created. Backfill pending.';
 END $$;
 
@@ -131,7 +131,7 @@ Open Supabase SQL Editor against the dev project (`actqtzoxjilqnldnacqz`), paste
 
 Expected: success message + `RAISE NOTICE` output:
 ```
-=== Migration 088 applied ===
+=== Migration 096 applied ===
 zoho_invoice_line_items table created. Backfill pending.
 ```
 
@@ -158,8 +158,8 @@ Expected: `database.ts` now contains a `zoho_invoice_line_items` entry under `Ta
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/088_zoho_invoice_line_items.sql packages/types/database.ts
-git commit -m "feat(zoho): mig 088 — zoho_invoice_line_items table"
+git add supabase/migrations/096_zoho_invoice_line_items.sql packages/types/database.ts
+git commit -m "feat(zoho): mig 096 — zoho_invoice_line_items table"
 ```
 
 ---
@@ -399,18 +399,18 @@ totals deviate from the header total by >5% AND >₹10,000."
 
 ---
 
-### Task 3: Migration 089 — `attribution_status` + `excluded_from_cash`
+### Task 3: Migration 097 — `attribution_status` + `excluded_from_cash`
 
 **Files:**
-- Create: `supabase/migrations/089_attribution_status_columns.sql`
+- Create: `supabase/migrations/097_attribution_status_columns.sql`
 - Modify: `packages/types/database.ts` (regenerated)
 
 - [ ] **Step 1: Write the migration**
 
 ```sql
--- supabase/migrations/089_attribution_status_columns.sql
+-- supabase/migrations/097_attribution_status_columns.sql
 -- ============================================================================
--- Migration 089 — attribution_status + excluded_from_cash columns
+-- Migration 097 — attribution_status + excluded_from_cash columns
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -459,7 +459,7 @@ BEGIN
          COUNT(*) FILTER (WHERE attribution_status = 'assigned')
     INTO pay_pending, pay_assigned
     FROM customer_payments WHERE source = 'zoho_import';
-  RAISE NOTICE '=== Migration 089 applied ===';
+  RAISE NOTICE '=== Migration 097 applied ===';
   RAISE NOTICE 'Invoices: pending=%, assigned=%', inv_pending, inv_assigned;
   RAISE NOTICE 'Payments: pending=%, assigned=%', pay_pending, pay_assigned;
 END $$;
@@ -471,7 +471,7 @@ COMMIT;
 
 Expected `RAISE NOTICE` output (numbers approximate):
 ```
-=== Migration 089 applied ===
+=== Migration 097 applied ===
 Invoices: pending=303, assigned=178
 Payments: pending=659, assigned=419
 ```
@@ -502,16 +502,16 @@ Verify the new columns are in the regenerated file.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/089_attribution_status_columns.sql packages/types/database.ts
-git commit -m "feat(zoho): mig 089 — attribution_status + excluded_from_cash"
+git add supabase/migrations/097_attribution_status_columns.sql packages/types/database.ts
+git commit -m "feat(zoho): mig 097 — attribution_status + excluded_from_cash"
 ```
 
 ---
 
-### Task 4: Migration 090 — Cash position trigger update
+### Task 4: Migration 098 — Cash position trigger update
 
 **Files:**
-- Create: `supabase/migrations/090_cash_position_trigger_excluded.sql`
+- Create: `supabase/migrations/098_cash_position_trigger_excluded.sql`
 
 - [ ] **Step 1: Read the existing trigger function**
 
@@ -527,14 +527,14 @@ Copy the output — you'll need it as the base for the new function. The migrati
 - [ ] **Step 2: Write the migration**
 
 ```sql
--- supabase/migrations/090_cash_position_trigger_excluded.sql
+-- supabase/migrations/098_cash_position_trigger_excluded.sql
 -- ============================================================================
--- Migration 090 — Cash position trigger filters excluded_from_cash rows
+-- Migration 098 — Cash position trigger filters excluded_from_cash rows
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
 -- The trigger function from mig 080 sums invoices and customer_payments per
--- project. After mig 089 added excluded_from_cash, the trigger needs to skip
+-- project. After mig 097 added excluded_from_cash, the trigger needs to skip
 -- rows where excluded_from_cash = TRUE (so MEGAGRID-style "no ERP match"
 -- decisions don't pollute any project's cash position).
 --
@@ -641,7 +641,7 @@ BEGIN
          COUNT(*) FILTER (WHERE net_cash_position = 0)
     INTO total_proj, neg, pos, zero_
     FROM project_cash_positions;
-  RAISE NOTICE '=== Migration 090 applied ===';
+  RAISE NOTICE '=== Migration 098 applied ===';
   RAISE NOTICE 'Total: %, negative: %, positive: %, zero: %',
     total_proj, neg, pos, zero_;
 END $$;
@@ -697,24 +697,24 @@ PERFORM recompute_project_cash_position('<the project_id from above>');
 - [ ] **Step 6: Commit**
 
 ```bash
-git add supabase/migrations/090_cash_position_trigger_excluded.sql
-git commit -m "feat(zoho): mig 090 — cash trigger filters excluded_from_cash"
+git add supabase/migrations/098_cash_position_trigger_excluded.sql
+git commit -m "feat(zoho): mig 098 — cash trigger filters excluded_from_cash"
 ```
 
 ---
 
-### Task 5: Migration 091 — `zoho_attribution_audit` table
+### Task 5: Migration 099 — `zoho_attribution_audit` table
 
 **Files:**
-- Create: `supabase/migrations/091_zoho_attribution_audit.sql`
+- Create: `supabase/migrations/099_zoho_attribution_audit.sql`
 - Modify: `packages/types/database.ts` (regenerated)
 
 - [ ] **Step 1: Write the migration**
 
 ```sql
--- supabase/migrations/091_zoho_attribution_audit.sql
+-- supabase/migrations/099_zoho_attribution_audit.sql
 -- ============================================================================
--- Migration 091 — zoho_attribution_audit table
+-- Migration 099 — zoho_attribution_audit table
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -767,7 +767,7 @@ CREATE POLICY "Triage roles can insert audit"
 
 DO $$
 BEGIN
-  RAISE NOTICE '=== Migration 091 applied ===';
+  RAISE NOTICE '=== Migration 099 applied ===';
   RAISE NOTICE 'zoho_attribution_audit table created with RLS.';
 END $$;
 
@@ -793,23 +793,23 @@ pnpm dlx supabase gen types typescript --project-id actqtzoxjilqnldnacqz --schem
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/091_zoho_attribution_audit.sql packages/types/database.ts
-git commit -m "feat(zoho): mig 091 — attribution audit table"
+git add supabase/migrations/099_zoho_attribution_audit.sql packages/types/database.ts
+git commit -m "feat(zoho): mig 099 — attribution audit table"
 ```
 
 ---
 
-### Task 6: Migration 092 — SQL helper functions
+### Task 6: Migration 100 — SQL helper functions
 
 **Files:**
-- Create: `supabase/migrations/092_orphan_triage_functions.sql`
+- Create: `supabase/migrations/100_orphan_triage_functions.sql`
 
 - [ ] **Step 1: Write the migration**
 
 ```sql
--- supabase/migrations/092_orphan_triage_functions.sql
+-- supabase/migrations/100_orphan_triage_functions.sql
 -- ============================================================================
--- Migration 092 — atomic orphan-triage SQL helper functions
+-- Migration 100 — atomic orphan-triage SQL helper functions
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -1001,7 +1001,7 @@ $$ LANGUAGE plpgsql SECURITY INVOKER;
 
 DO $$
 BEGIN
-  RAISE NOTICE '=== Migration 092 applied ===';
+  RAISE NOTICE '=== Migration 100 applied ===';
   RAISE NOTICE 'assign_orphan_invoice, exclude_orphan_invoice, reassign_orphan_invoice created.';
 END $$;
 
@@ -1049,8 +1049,8 @@ DELETE FROM zoho_attribution_audit WHERE notes = 'smoke test';
 - [ ] **Step 4: Commit**
 
 ```bash
-git add supabase/migrations/092_orphan_triage_functions.sql
-git commit -m "feat(zoho): mig 092 — orphan triage SQL helper functions"
+git add supabase/migrations/100_orphan_triage_functions.sql
+git commit -m "feat(zoho): mig 100 — orphan triage SQL helper functions"
 ```
 
 ---
@@ -1060,19 +1060,19 @@ git commit -m "feat(zoho): mig 092 — orphan triage SQL helper functions"
 ### Task 7: RPC `get_orphan_zoho_customer_summary()`
 
 **Files:**
-- Modify: `supabase/migrations/092_orphan_triage_functions.sql` (append) — OR create a new mig 093 if you've already moved on. The plan assumes 092 is still being edited; if you've committed and applied 092, create `093_orphan_read_rpcs.sql` instead.
+- Modify: `supabase/migrations/100_orphan_triage_functions.sql` (append) — OR create a new mig 101 if you've already moved on. The plan assumes 092 is still being edited; if you've committed and applied 092, create `101_orphan_read_rpcs.sql` instead.
 
-For the cleanest history we'll add **all the read RPCs in one new migration 093** (so the helpers stay separate from the read aggregations).
+For the cleanest history we'll add **all the read RPCs in one new migration 101** (so the helpers stay separate from the read aggregations).
 
 **Files (revised):**
-- Create: `supabase/migrations/093_orphan_read_rpcs.sql`
+- Create: `supabase/migrations/101_orphan_read_rpcs.sql`
 
 - [ ] **Step 1: Write the migration**
 
 ```sql
--- supabase/migrations/093_orphan_read_rpcs.sql
+-- supabase/migrations/101_orphan_read_rpcs.sql
 -- ============================================================================
--- Migration 093 — Orphan triage read RPCs
+-- Migration 101 — Orphan triage read RPCs
 -- ============================================================================
 -- Spec: docs/superpowers/specs/2026-05-01-zoho-orphan-triage-design.md
 --
@@ -1226,7 +1226,7 @@ $$ LANGUAGE sql STABLE SECURITY INVOKER;
 
 DO $$
 BEGIN
-  RAISE NOTICE '=== Migration 093 applied ===';
+  RAISE NOTICE '=== Migration 101 applied ===';
 END $$;
 
 COMMIT;
@@ -1253,8 +1253,8 @@ SELECT * FROM get_orphan_counts();
 - [ ] **Step 4: Commit**
 
 ```bash
-git add supabase/migrations/093_orphan_read_rpcs.sql
-git commit -m "feat(zoho): mig 093 — orphan triage read RPCs"
+git add supabase/migrations/101_orphan_read_rpcs.sql
+git commit -m "feat(zoho): mig 101 — orphan triage read RPCs"
 ```
 
 ---
@@ -4080,7 +4080,7 @@ Remove the orphan-attribution work from the in-flight list. Add a one-liner unde
 In `docs/modules/finance.md`, inside "Screens / Routes" add:
 
 ```markdown
-- `/cash/orphan-invoices` — triage UI for parent-company Zoho invoices/payments. Three panes (Zoho customer list / orphan invoices with line items / candidate ERP projects). Outcomes: assign, exclude-from-cash (no ERP match), defer. Audit log built into the page. Founder + finance + marketing_manager roles. Powered by `orphan-triage-queries.ts` + `orphan-triage-actions.ts`. Backed by mig 092 SQL helpers and mig 093 read RPCs.
+- `/cash/orphan-invoices` — triage UI for parent-company Zoho invoices/payments. Three panes (Zoho customer list / orphan invoices with line items / candidate ERP projects). Outcomes: assign, exclude-from-cash (no ERP match), defer. Audit log built into the page. Founder + finance + marketing_manager roles. Powered by `orphan-triage-queries.ts` + `orphan-triage-actions.ts`. Backed by mig 100 SQL helpers and mig 101 read RPCs.
 ```
 
 In "Key Tables":
@@ -4093,8 +4093,8 @@ In "Key Tables":
 In "RPCs":
 
 ```markdown
-- `assign_orphan_invoice(p_invoice_id, p_project_id, p_made_by, p_notes)` / `exclude_orphan_invoice` / `reassign_orphan_invoice` — atomic cascade helpers backing the triage UI (mig 092).
-- `get_orphan_zoho_customer_summary()` / `get_candidate_projects_for_zoho_customer(zoho_name)` / `get_orphan_counts()` — read aggregations for the page (mig 093).
+- `assign_orphan_invoice(p_invoice_id, p_project_id, p_made_by, p_notes)` / `exclude_orphan_invoice` / `reassign_orphan_invoice` — atomic cascade helpers backing the triage UI (mig 100).
+- `get_orphan_zoho_customer_summary()` / `get_candidate_projects_for_zoho_customer(zoho_name)` / `get_orphan_counts()` — read aggregations for the page (mig 101).
 ```
 
 - [ ] **Step 4: Commit**
@@ -4110,7 +4110,7 @@ git commit -m "docs: zoho orphan triage — changelog, current status, finance m
 
 > **Reminder:** every step is run by Vivek directly. The plan documents the order; nothing here is automated.
 
-- [ ] **Step 1: Apply migrations 088–093 in order on prod**
+- [ ] **Step 1: Apply migrations 096–101 in order on prod**
 
 For each `088…093.sql`:
 1. Open the file locally.
