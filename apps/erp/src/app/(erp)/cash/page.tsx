@@ -32,6 +32,7 @@ import {
   Eyebrow,
 } from '@repo/ui';
 import { TrendingUp } from 'lucide-react';
+import { OrphanBanner } from '@/components/finance/orphan-banner';
 
 export default async function CashFlowPage() {
   const [
@@ -65,6 +66,8 @@ export default async function CashFlowPage() {
           <h1 className="text-2xl font-bold text-[#1A1D24]">Cash Flow</h1>
         </div>
       </div>
+
+      <OrphanBanner />
 
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
