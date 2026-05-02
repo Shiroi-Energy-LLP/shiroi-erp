@@ -6,7 +6,14 @@ import { Eyebrow, Breadcrumb } from '@repo/ui';
 
 export const metadata = { title: 'Zoho Orphan Triage' };
 
-const ALLOWED = new Set(['founder', 'finance', 'marketing_manager']);
+// Triage access. project_manager included so PMs (Manivel et al.) can do
+// the BOM/attribution review alongside Prem (marketing_manager) + Vivek.
+const ALLOWED = new Set([
+  'founder',
+  'finance',
+  'marketing_manager',
+  'project_manager',
+]);
 
 export default async function OrphanTriagePage({
   searchParams,
