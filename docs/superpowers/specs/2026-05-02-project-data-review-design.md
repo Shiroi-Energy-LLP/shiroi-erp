@@ -44,6 +44,7 @@ This is a one-time sweep across the entire project table — once it's done, the
 ```
 ┌─ Tabs ───────────────────────────────────────────────────────────────────┐
 │ [Needs Review · N]  [All · 362]  [Confirmed · 0]  [Duplicates · 0]  [Audit]│
+│ (no Defer tab — defer action removed per Vivek 2026-05-02)                 │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ KPI strip:  Pending: N · Confirmed today: 0 · Marked duplicate: 0          │
 ├──────────────────────────────────────────────────────────────────────────┤
@@ -56,7 +57,6 @@ This is a one-time sweep across the entire project table — once it's done, the
 │             ├ HubSpot deal: 160241054423 — created 2025-09-13              │
 │             ├ Drive: ↗   ·  Created: 2025-09-13                            │
 │             └ [Save & Confirm]  [Confirm — no change]  [Mark Duplicate]    │
-│                                  [Defer]                                   │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -74,8 +74,7 @@ Rows expand-on-click into the inline edit form (kWp + ₹ inputs + four buttons 
 
 - **`[Save & Confirm]`** — UPDATEs `projects.system_size_kwp` + `projects.contracted_value` AND the linked `proposals.system_size_kwp` + `total_before_discount` + `total_after_discount` + `shiroi_revenue`. Clears `financials_invalidated` + `system_size_uncertain` on the proposal. Sets `projects.review_status='confirmed'`. Inserts an audit row.
 - **`[Confirm — no change]`** — same flag-clear + `review_status='confirmed'` + audit row, but no field updates. For when the existing values are correct.
-- **`[Mark Duplicate]`** — requires a free-text "duplicate of" notes field. Soft-deletes the project (`deleted_at=NOW()`). Sets `projects.review_status='duplicate'`. Inserts an audit row noting which project_number this duplicates. Does **not** modify the proposal or the lead — those stay around so the HubSpot link is preserved.
-- **`[Defer]`** — sets `projects.review_status='deferred'`. Hides from "Needs Review" but keeps in "All". Audit row.
+- **`[Mark Duplicate]`** — opens a typeahead to pick the canonical project this duplicates. Once both are selected, the page **scores both projects on data-richness** (count of attached `invoices` + `customer_payments` + `purchase_orders` + `vendor_bills` + `project_expenses` + `bom_items`) and shows a side-by-side comparison panel. The richer project is auto-suggested as the canonical (tie-break: older `created_at` wins). User confirms; server applies — the **lower-scored project is soft-deleted** (`deleted_at=NOW()`, `review_status='duplicate'`), the canonical project's `review_status` flips to `'confirmed'` (it didn't need a review either since the duplicate validates that the canonical is the source of truth). Audit row stores both project IDs + scores + the user's notes. Lead + proposal of the deleted project stay intact (so HubSpot link is preserved).
 - **`[Undo]`** (Audit tab only) — reverses the last decision for a project: pops the most-recent audit row, restores `review_status='pending'`, and if it was a duplicate, restores `deleted_at=NULL`. Inserts an `undo` audit row. Available only to founder + marketing_manager.
 
 ### Cascade on `[Save & Confirm]` with edits
@@ -104,7 +103,7 @@ ALTER TABLE projects
   ADD COLUMN review_status TEXT
     NOT NULL
     DEFAULT 'pending'
-    CHECK (review_status IN ('pending','confirmed','duplicate','deferred'));
+    CHECK (review_status IN ('pending','confirmed','duplicate'));
 
 -- Index for the "Needs Review" tab (most common query)
 CREATE INDEX projects_review_status_idx
@@ -115,12 +114,15 @@ CREATE INDEX projects_review_status_idx
 CREATE TABLE project_review_audit (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  decision TEXT NOT NULL CHECK (decision IN ('confirmed','duplicate','deferred','undo')),
+  decision TEXT NOT NULL CHECK (decision IN ('confirmed','duplicate','undo')),
   prev_size_kwp NUMERIC(10,2),
   new_size_kwp NUMERIC(10,2),
   prev_contracted_value NUMERIC(14,2),
   new_contracted_value NUMERIC(14,2),
   duplicate_of_project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  -- For duplicate decisions: data-richness scores at decision time
+  losing_score INTEGER,
+  winning_score INTEGER,
   notes TEXT,
   made_by UUID NOT NULL REFERENCES profiles(id),
   made_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -155,7 +157,7 @@ CREATE POLICY project_review_audit_insert
 
 -- get_project_review_counts: powers the banner + tab counts (cached 60s on the page)
 CREATE OR REPLACE FUNCTION get_project_review_counts()
-  RETURNS TABLE(needs_review BIGINT, all_projects BIGINT, confirmed BIGINT, duplicate BIGINT, deferred BIGINT)
+  RETURNS TABLE(needs_review BIGINT, all_projects BIGINT, confirmed BIGINT, duplicate BIGINT)
   LANGUAGE sql STABLE SECURITY INVOKER AS $$
   SELECT
     COUNT(*) FILTER (
@@ -169,8 +171,7 @@ CREATE OR REPLACE FUNCTION get_project_review_counts()
     ) AS needs_review,
     COUNT(*) FILTER (WHERE p.deleted_at IS NULL) AS all_projects,
     COUNT(*) FILTER (WHERE p.review_status = 'confirmed') AS confirmed,
-    COUNT(*) FILTER (WHERE p.review_status = 'duplicate') AS duplicate,
-    COUNT(*) FILTER (WHERE p.review_status = 'deferred' AND p.deleted_at IS NULL) AS deferred
+    COUNT(*) FILTER (WHERE p.review_status = 'duplicate') AS duplicate
   FROM projects p
   LEFT JOIN proposals pr ON pr.id = p.proposal_id;
 $$;
@@ -227,42 +228,79 @@ BEGIN
 END;
 $$;
 
--- mark_project_duplicate: soft-delete project + audit
+-- score_project_data_richness: counts attached transactions, used by mark_project_duplicate
+-- to auto-pick the canonical (richer) row.
+CREATE OR REPLACE FUNCTION score_project_data_richness(p_project_id UUID)
+  RETURNS INTEGER LANGUAGE sql STABLE SECURITY INVOKER AS $$
+  SELECT
+    COALESCE((SELECT COUNT(*) FROM invoices WHERE project_id = p_project_id), 0) +
+    COALESCE((SELECT COUNT(*) FROM customer_payments WHERE project_id = p_project_id), 0) +
+    COALESCE((SELECT COUNT(*) FROM purchase_orders WHERE project_id = p_project_id), 0) +
+    COALESCE((SELECT COUNT(*) FROM vendor_bills WHERE project_id = p_project_id), 0) +
+    COALESCE((SELECT COUNT(*) FROM expenses WHERE project_id = p_project_id), 0) +
+    COALESCE((SELECT COUNT(*) FROM bom_items WHERE project_id = p_project_id), 0);
+$$;
+
+-- mark_project_duplicate: scores both projects, soft-deletes the lower-scored, audits both.
+-- p_project_a_id and p_project_b_id are the two projects the user has paired up. The function
+-- decides which is canonical based on score (tie-break: older created_at wins).
 CREATE OR REPLACE FUNCTION mark_project_duplicate(
-  p_project_id UUID,
-  p_duplicate_of_project_id UUID,
+  p_project_a_id UUID,
+  p_project_b_id UUID,
   p_notes TEXT,
   p_made_by UUID
-) RETURNS TABLE(success BOOLEAN, code TEXT)
+) RETURNS TABLE(success BOOLEAN, code TEXT, kept_project_id UUID, deleted_project_id UUID, kept_score INTEGER, deleted_score INTEGER)
   LANGUAGE plpgsql SECURITY INVOKER AS $$
 DECLARE
-  v_project projects%ROWTYPE;
+  v_a projects%ROWTYPE;
+  v_b projects%ROWTYPE;
+  v_score_a INTEGER;
+  v_score_b INTEGER;
+  v_kept_id UUID;
+  v_deleted_id UUID;
+  v_kept_score INTEGER;
+  v_deleted_score INTEGER;
 BEGIN
-  SELECT * INTO v_project FROM projects WHERE id = p_project_id AND deleted_at IS NULL FOR UPDATE;
-  IF NOT FOUND THEN RETURN QUERY SELECT FALSE, 'not_found'::TEXT; RETURN; END IF;
-  IF v_project.review_status <> 'pending' THEN RETURN QUERY SELECT FALSE, 'already_triaged'::TEXT; RETURN; END IF;
-  IF p_duplicate_of_project_id = p_project_id THEN RETURN QUERY SELECT FALSE, 'self_reference'::TEXT; RETURN; END IF;
-  IF p_notes IS NULL OR length(trim(p_notes)) = 0 THEN RETURN QUERY SELECT FALSE, 'notes_required'::TEXT; RETURN; END IF;
+  IF p_project_a_id = p_project_b_id THEN RETURN QUERY SELECT FALSE, 'self_reference'::TEXT, NULL::UUID, NULL::UUID, 0, 0; RETURN; END IF;
+  IF p_notes IS NULL OR length(trim(p_notes)) = 0 THEN RETURN QUERY SELECT FALSE, 'notes_required'::TEXT, NULL::UUID, NULL::UUID, 0, 0; RETURN; END IF;
 
-  INSERT INTO project_review_audit(project_id, decision, duplicate_of_project_id, notes, made_by)
-  VALUES (p_project_id, 'duplicate', p_duplicate_of_project_id, p_notes, p_made_by);
+  SELECT * INTO v_a FROM projects WHERE id = p_project_a_id AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND THEN RETURN QUERY SELECT FALSE, 'a_not_found'::TEXT, NULL::UUID, NULL::UUID, 0, 0; RETURN; END IF;
+  SELECT * INTO v_b FROM projects WHERE id = p_project_b_id AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND THEN RETURN QUERY SELECT FALSE, 'b_not_found'::TEXT, NULL::UUID, NULL::UUID, 0, 0; RETURN; END IF;
 
-  UPDATE projects SET
-    review_status = 'duplicate',
-    deleted_at = NOW()
-  WHERE id = p_project_id;
+  v_score_a := score_project_data_richness(p_project_a_id);
+  v_score_b := score_project_data_richness(p_project_b_id);
 
-  RETURN QUERY SELECT TRUE, 'ok'::TEXT;
+  -- Pick canonical: higher score wins; tie → older created_at wins
+  IF v_score_a > v_score_b OR (v_score_a = v_score_b AND v_a.created_at <= v_b.created_at) THEN
+    v_kept_id := p_project_a_id; v_deleted_id := p_project_b_id;
+    v_kept_score := v_score_a; v_deleted_score := v_score_b;
+  ELSE
+    v_kept_id := p_project_b_id; v_deleted_id := p_project_a_id;
+    v_kept_score := v_score_b; v_deleted_score := v_score_a;
+  END IF;
+
+  -- Audit both rows so the kept project's history shows the merge too
+  INSERT INTO project_review_audit(project_id, decision, duplicate_of_project_id, losing_score, winning_score, notes, made_by)
+  VALUES (v_deleted_id, 'duplicate', v_kept_id, v_deleted_score, v_kept_score, p_notes, p_made_by);
+
+  UPDATE projects SET review_status = 'duplicate', deleted_at = NOW() WHERE id = v_deleted_id;
+  -- The kept project flips from pending to confirmed — the duplicate-merge counts as a review
+  UPDATE projects SET review_status = 'confirmed' WHERE id = v_kept_id AND review_status = 'pending';
+
+  RETURN QUERY SELECT TRUE, 'ok'::TEXT, v_kept_id, v_deleted_id, v_kept_score, v_deleted_score;
 END;
 $$;
 
--- defer_project_review + undo similar shape; details in implementation plan
+-- undo_project_review: reverses the most-recent decision for a project
+-- (details in implementation plan)
 ```
 
 ## Server side
 
 - **Queries** in `apps/erp/src/lib/data-review-queries.ts` — read functions (paginated `listProjectsForReview`, `getProjectReviewAudit`, `searchProjectsByCustomerOrPv`, `getProjectReviewCounts`).
-- **Actions** in `apps/erp/src/lib/data-review-actions.ts` (`'use server'`) — mutation functions (`confirmProject`, `markDuplicate`, `deferProject`, `undoLastDecision`). All return `ActionResult<T>` per NEVER-DO #19. They wrap the SQL helpers above.
+- **Actions** in `apps/erp/src/lib/data-review-actions.ts` (`'use server'`) — mutation functions (`confirmProject`, `markDuplicate`, `undoLastDecision`). All return `ActionResult<T>` per NEVER-DO #19. They wrap the SQL helpers above.
 - **Page** at `apps/erp/src/app/(erp)/data-review/projects/page.tsx` — server-rendered with role guard, hands off to a client `<DataReviewShell>`.
 
 ## Components
@@ -302,7 +340,8 @@ Auto-hides when `needs_review === 0`.
 - **Concurrent edit:** two users open the same project → both click [Save & Confirm]. The second hits `code='already_triaged'` from the SQL helper; the UI shows a toast and refetches the row.
 - **Project has no proposal:** historical / Drive-imported projects without a `proposal_id` exist. `[Save & Confirm]` skips the proposal cascade; the kWp + ₹ live only on the project row. Banner clearing is a no-op there (no proposal to clear).
 - **Project has no flags but is `pending`:** these end up in "All" but not "Needs Review". A `[Confirm — no change]` is still allowed, moving them to "Confirmed".
-- **`[Mark Duplicate]` when the canonical project has different financials:** we don't try to merge the audit/financial trails. The duplicate just gets soft-deleted; its lead/proposal/customer_payments retain their FK pointers (lead.id stays, proposal.id stays, payments still tag the old project_id but that project is `deleted_at IS NOT NULL`). Cash-position trigger already filters by `deleted_at IS NULL`.
+- **`[Mark Duplicate]` when the canonical project has different financials:** the SQL helper picks based on data-richness score, so the project with more attached transactions wins. We don't try to merge the audit/financial trails — the lower-scored project gets soft-deleted; its lead/proposal/customer_payments retain their FK pointers (lead.id stays, proposal.id stays, payments still tag the old project_id but that project is `deleted_at IS NOT NULL`). Cash-position trigger already filters by `deleted_at IS NULL`. If the user pairs two projects that genuinely shouldn't be merged (false-positive duplicate), [Undo] from the audit tab restores both.
+- **Both projects have score 0 (no transactions attached):** ties resolved by older `created_at`. This handles the `[Likely-Duplicate-Reconcile]` cases — the older Drive-imported project will typically have transactions; if it doesn't, age decides.
 
 ## Testing
 
