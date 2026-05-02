@@ -20,26 +20,16 @@ export function normalizeZohoName(s: string | null | undefined): string {
   return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
-/** Format a Decimal as Indian-style number string with 2 decimal places. */
-function formatIndian(d: Decimal): string {
-  const [intPart, decPart] = d.toFixed(2).split('.');
-  // Indian grouping: last 3 digits, then groups of 2
-  const intStr = intPart.replace(/\B(?=(\d{2})+(?!\d)(\d{3})$)|(?<=\d)(?=(\d{3})$)/g, ',');
-  // Use Intl for correctness
-  const num = parseFloat(d.toFixed(2));
-  const formatted = num.toLocaleString('en-IN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return formatted;
-}
-
 export function summarizeLinkedPayments(payments: Array<{ amount: string | number }>): string {
   if (payments.length === 0) return 'No linked payments';
   const total = payments.reduce(
     (acc, p) => acc.plus(new Decimal(p.amount ?? 0)),
     new Decimal(0),
   );
-  const formatted = formatIndian(total);
+  // Indian comma grouping (en-IN locale: lakhs/crores).
+  const formatted = parseFloat(total.toFixed(2)).toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   return `${payments.length} payment${payments.length === 1 ? '' : 's'} · ₹${formatted}`;
 }
