@@ -36161,6 +36161,23 @@ export type Database = {
           scheduled_count: number
         }[]
       }
+      get_candidate_projects_for_zoho_customer: {
+        Args: { p_zoho_name: string }
+        Returns: {
+          actual_end_date: string
+          actual_start_date: string
+          contracted_value: number
+          customer_name: string
+          net_cash_position: number
+          project_id: string
+          project_number: string
+          status: string
+          system_size_kwp: number
+          system_type: string
+          total_invoiced: number
+          total_received: number
+        }[]
+      }
       get_company_cash_summary: {
         Args: never
         Returns: {
@@ -36268,6 +36285,29 @@ export type Database = {
       get_my_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_orphan_counts: {
+        Args: never
+        Returns: {
+          deferred_count: number
+          excluded_count: number
+          excluded_total: number
+          pending_invoice_count: number
+          pending_invoice_total: number
+          pending_payment_count: number
+          pending_payment_total: number
+        }[]
+      }
+      get_orphan_zoho_customer_summary: {
+        Args: never
+        Returns: {
+          candidate_project_count: number
+          invoice_count: number
+          invoice_total: number
+          payment_count: number
+          payment_total: number
+          zoho_customer_name: string
+        }[]
       }
       get_payment_tracker_rows: {
         Args: never
