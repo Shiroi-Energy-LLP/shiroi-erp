@@ -10,6 +10,8 @@ import { InvoicesPane } from './invoices-pane';
 import { CandidatesPane } from './candidates-pane';
 import { AuditLogTable } from './audit-log-table';
 import { TriageProvider } from './triage-context';
+import { DeferredTab } from './deferred-tab';
+import { ExcludedTab } from './excluded-tab';
 
 interface Props {
   counts: OrphanCounts;
@@ -139,10 +141,3 @@ function EmptyDone() {
   );
 }
 
-// Placeholders — Tasks 19 (deferred-tab), 19 (excluded-tab) will replace these.
-function DeferredTab() {
-  return <Card><CardContent className="py-12 text-center text-[#7C818E]">Deferred tab — coming in Task 19</CardContent></Card>;
-}
-function ExcludedTab() {
-  return <Card><CardContent className="py-12 text-center text-[#7C818E]">Excluded tab — coming in Task 19</CardContent></Card>;
-}
