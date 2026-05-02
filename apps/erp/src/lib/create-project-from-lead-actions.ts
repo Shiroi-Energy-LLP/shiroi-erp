@@ -6,15 +6,20 @@ import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 /**
  * Manual fallback when the won → proposal-accepted → project cascade
- * doesn't fire (e.g. lead was bulk-imported as 'won' with no in-play
- * proposal, or the proposal was inserted as 'accepted' already).
+ * doesn't fire (e.g. lead bulk-imported as 'won' with the proposal
+ * already 'accepted', so the lead trigger no-ops).
  *
- * Inserts a project row for the lead. The BEFORE INSERT trigger
- * trg_default_project_manager_on_insert (mig 102) fills
+ * Inserts a project row mirroring create_project_from_accepted_proposal
+ * (migs 063/064/094). The BEFORE INSERT trigger
+ * trg_default_project_manager_on_insert (mig 104) fills
  * project_manager_id with the latest active PM (Manivel today).
  *
  * Idempotent: if a non-deleted project already exists for this lead,
  * returns its id unchanged.
+ *
+ * Requires a proposal — projects.proposal_id is NOT NULL. If the lead
+ * has no proposal yet, return an error so the user creates a quote
+ * first.
  */
 export async function createProjectFromLead(
   leadId: string,
@@ -47,17 +52,17 @@ export async function createProjectFromLead(
     .select('id, project_number')
     .eq('lead_id', leadId)
     .is('deleted_at', null)
-    .limit(1);
+    .maybeSingle();
   if (existingErr) {
     console.error(`${op} existing-project lookup failed`, { leadId, error: existingErr });
     return err(existingErr.message, existingErr.code);
   }
-  if (existing && existing.length > 0) {
+  if (existing) {
     console.log(`${op} idempotent — project already exists`, {
       leadId,
-      projectId: existing[0].id,
+      projectId: existing.id,
     });
-    return ok({ projectId: existing[0].id, projectNumber: existing[0].project_number });
+    return ok({ projectId: existing.id, projectNumber: existing.project_number });
   }
 
   const { data: proposal, error: proposalErr } = await supabase
@@ -68,12 +73,17 @@ export async function createProjectFromLead(
     .eq('lead_id', leadId)
     .order('is_budgetary', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
-    .limit(1);
+    .limit(1)
+    .maybeSingle();
   if (proposalErr) {
     console.error(`${op} proposal lookup failed`, { leadId, error: proposalErr });
     return err(proposalErr.message, proposalErr.code);
   }
-  const p = proposal && proposal.length > 0 ? proposal[0] : null;
+  if (!proposal) {
+    return err(
+      'No proposal found for this lead. Create a quote first, then retry "Create project".',
+    );
+  }
 
   const { data: docNum, error: docNumErr } = await supabase.rpc('generate_doc_number', {
     doc_type: 'PROJ',
@@ -87,29 +97,29 @@ export async function createProjectFromLead(
     .from('projects')
     .insert({
       lead_id: leadId,
-      proposal_id: p?.id ?? null,
+      proposal_id: proposal.id,
       project_number: docNum,
       customer_name: lead.customer_name,
       customer_phone: lead.phone,
       customer_email: lead.email,
-      site_address_line1: lead.address_line1 ?? lead.city ?? null,
-      site_city: lead.city,
-      site_state: lead.state,
+      site_address_line1: lead.address_line1 ?? lead.city ?? 'Address pending',
+      site_city: lead.city ?? 'Chennai',
+      site_state: lead.state ?? 'Tamil Nadu',
       site_pincode: lead.pincode,
-      location_map_link: lead.map_link ?? null,
-      system_type: p?.system_type ?? 'on_grid',
-      system_size_kwp: p?.system_size_kwp ?? null,
-      panel_brand: p?.panel_brand ?? null,
-      panel_model: p?.panel_model ?? null,
-      panel_wattage: p?.panel_wattage ?? null,
-      panel_count: p?.panel_count ?? 0,
-      inverter_brand: p?.inverter_brand ?? null,
-      inverter_model: p?.inverter_model ?? null,
-      inverter_capacity_kw: p?.inverter_capacity_kw ?? null,
-      battery_brand: p?.battery_brand ?? null,
-      battery_model: p?.battery_model ?? null,
-      battery_capacity_kwh: p?.battery_capacity_kwh ?? null,
-      contracted_value: p?.total_after_discount ?? 0,
+      location_map_link: lead.map_link,
+      system_type: proposal.system_type,
+      system_size_kwp: proposal.system_size_kwp ?? 0,
+      panel_brand: proposal.panel_brand,
+      panel_model: proposal.panel_model,
+      panel_wattage: proposal.panel_wattage,
+      panel_count: proposal.panel_count ?? 0,
+      inverter_brand: proposal.inverter_brand,
+      inverter_model: proposal.inverter_model,
+      inverter_capacity_kw: proposal.inverter_capacity_kw,
+      battery_brand: proposal.battery_brand,
+      battery_model: proposal.battery_model,
+      battery_capacity_kwh: proposal.battery_capacity_kwh,
+      contracted_value: proposal.total_after_discount ?? 0,
       advance_amount: 0,
       advance_received_at: new Date().toISOString().slice(0, 10),
       status: 'order_received',

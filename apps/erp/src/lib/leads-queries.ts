@@ -116,6 +116,33 @@ export async function getLeadActivities(leadId: string) {
   return data ?? [];
 }
 
+/**
+ * Returns true if the given lead already has a non-deleted project.
+ * Used by the lead detail layout to decide whether to render the
+ * manual `CreateProjectFromLeadButton` fallback for won leads where
+ * the cascade missed.
+ */
+export async function leadHasProject(leadId: string): Promise<boolean> {
+  const op = '[leadHasProject]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('lead_id', leadId)
+    .is('deleted_at', null)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error(`${op} query failed:`, {
+      code: error.code,
+      message: error.message,
+      leadId,
+    });
+    throw new Error(`Failed to check project existence: ${error.message}`);
+  }
+  return !!data;
+}
+
 export async function getSalesEngineers() {
   const op = '[getSalesEngineers]';
   const supabase = await createClient();

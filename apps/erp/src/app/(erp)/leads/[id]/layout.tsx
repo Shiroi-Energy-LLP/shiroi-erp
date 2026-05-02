@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getLead } from '@/lib/leads-queries';
-import { createClient } from '@repo/supabase/server';
+import { getLead, leadHasProject } from '@/lib/leads-queries';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import { LeadTabs } from '@/components/leads/lead-tabs';
 import { StatusChange } from '@/components/leads/status-change';
@@ -36,17 +35,7 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
   // Won leads should always have a project. If the cascade missed (bulk
   // import, no in-play proposal at won-time), surface a manual fallback so
   // ops isn't stuck. Hidden once a project exists.
-  let hasProjectForLead = true;
-  if (lead.status === 'won') {
-    const supabase = await createClient();
-    const { data: existingProject } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('lead_id', id)
-      .is('deleted_at', null)
-      .limit(1);
-    hasProjectForLead = !!(existingProject && existingProject.length > 0);
-  }
+  const hasProjectForLead = lead.status === 'won' ? await leadHasProject(id) : true;
 
   return (
     <div className="space-y-6">
