@@ -24,6 +24,7 @@ import { OverdueReports } from './overdue-reports';
 import { ClosureApprovalsPanel } from '@/components/sales/closure-approvals-panel';
 import { ExpectedOrdersCard } from '@/components/dashboard/expected-orders-card';
 import { ExpectedPaymentsCard } from '@/components/dashboard/expected-payments-card';
+import { DataReviewBanner } from '@/components/dashboard/data-review-banner';
 import {
   getExpectedOrders,
   getExpectedPayments,
@@ -80,6 +81,7 @@ export async function FounderDashboard() {
     <div className="space-y-6">
       <Eyebrow className="mb-1">DASHBOARD</Eyebrow>
       <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Good morning, {firstName}</h1>
+      <DataReviewBanner />
       {payrollDays >= 0 && payrollDays <= 5 && (
         <div className="rounded-md bg-[#FFFBEB] border border-[#FACB01] px-4 py-2 text-sm font-medium text-[#92400E]">
           Payroll export due in {payrollDays} day{payrollDays !== 1 ? 's' : ''}

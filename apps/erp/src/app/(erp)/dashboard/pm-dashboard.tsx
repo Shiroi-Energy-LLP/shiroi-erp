@@ -5,6 +5,7 @@ import { MyTasks } from '@/components/my-tasks';
 import { PMDonutChart } from '@/components/dashboard/pm-donut-chart';
 import { OperationsWidget } from '@/components/dashboard/operations-widget';
 import { TodayPriorities } from '@/components/dashboard/today-priorities';
+import { DataReviewBanner } from '@/components/dashboard/data-review-banner';
 import { shortINR } from '@repo/ui/formatters';
 
 function getGreeting(): string {
@@ -32,6 +33,8 @@ export async function PMDashboard() {
       <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
         {greeting}, {firstName}
       </h1>
+
+      <DataReviewBanner />
 
       <div className="grid grid-cols-4 gap-4">
         <KpiCard
