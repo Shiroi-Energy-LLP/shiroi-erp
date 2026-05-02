@@ -1,0 +1,24 @@
+# /etc/cron.d/n8n-backup — daily backup of n8n volume to Supabase Storage.
+#
+# Time: 20:30 UTC = 02:00 IST (India Standard Time, droplet's logical TZ
+# even though the host cron daemon runs in UTC).
+#
+# Install:
+#   sudo cp infrastructure/n8n/backup/n8n-backup.cron /etc/cron.d/n8n-backup
+#   sudo chmod 644 /etc/cron.d/n8n-backup
+#   sudo cp infrastructure/n8n/backup/n8n-backup.sh /opt/shiroi-automation/n8n-backup.sh
+#   sudo chmod 755 /opt/shiroi-automation/n8n-backup.sh
+#   sudo systemctl reload cron
+#
+# Verify:
+#   sudo cat /etc/cron.d/n8n-backup
+#   sudo /opt/shiroi-automation/n8n-backup.sh   # one-off manual run
+#   sudo tail -1 /var/log/n8n-backup.log
+
+# Use bash (not /bin/sh dash) so `set -o pipefail` works inside the script
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=""
+
+# minute hour dom month dow user command
+30 20 * * * root /opt/shiroi-automation/n8n-backup.sh >> /var/log/n8n-backup.log 2>&1

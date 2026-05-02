@@ -119,7 +119,7 @@ Each digest has the same 4-node shape: `scheduleTrigger → httpRequest (Supabas
 |------|---------|---------|-----------|
 | `55-global-error-handler.json` | `errorTrigger` | Any workflow error → Gmail Vivek (see above) | ✅ Active (Gmail OAuth completed 2026-05-02) |
 | `56-droplet-health.json` (renamed `56 — Droplet heartbeat`) | Cron daily 9 AM IST | Sends "n8n heartbeat — alive" WhatsApp to Vivek + Vinodh. Original 15-min CPU/RAM/disk check used `executeCommand` which n8n removed for security in current version. For metric thresholds, use DO's built-in monitoring (Droplets → shiroi-erp → Insights → Alerts) — free, integrated. | ❌ (active when Meta template approved) |
-| `57-n8n-backup.json` | Cron daily 2:00 IST | tar ~/.n8n → Supabase Storage `n8n-backups/YYYY-MM-DD.tar.gz` with sha256 | ❌ (Supabase bucket `n8n-backups` not yet created) |
+| `57-n8n-backup.json` | (retired) | Original `executeCommand`-based backup didn't work (n8n removed that node). **Replaced by host-side cron** at `infrastructure/n8n/backup/n8n-backup.{sh,cron}` — installed at `/opt/shiroi-automation/n8n-backup.sh` + `/etc/cron.d/n8n-backup`. Tars the n8n Docker volume directly, computes sha256, uploads to Supabase Storage via curl. Daily 02:00 IST (= 20:30 UTC cron). | ⏳ Cron disabled until backup destination decided (PROD project paused; DEV bucket pending) |
 | `58-sentry-forwarder.json` | Webhook `/webhook/sentry-alert` | Sentry POSTs P0/P1 via WhatsApp to Vivek + Vinodh; lower severities logged + dropped | ❌ (Sentry alert rule not yet pointed at this webhook) |
 
 Pre-reqs for Tier 6:
