@@ -11962,6 +11962,7 @@ export type Database = {
           is_archived: boolean | null
           is_qualified: boolean
           last_contacted_at: string | null
+          map_link: string | null
           next_followup_date: string | null
           notes: string | null
           phone: string
@@ -12009,6 +12010,7 @@ export type Database = {
           is_archived?: boolean | null
           is_qualified?: boolean
           last_contacted_at?: string | null
+          map_link?: string | null
           next_followup_date?: string | null
           notes?: string | null
           phone: string
@@ -12056,6 +12058,7 @@ export type Database = {
           is_archived?: boolean | null
           is_qualified?: boolean
           last_contacted_at?: string | null
+          map_link?: string | null
           next_followup_date?: string | null
           notes?: string | null
           phone?: string
@@ -35021,6 +35024,267 @@ export type Database = {
         }
         Relationships: []
       }
+      zoho_attribution_audit: {
+        Row: {
+          decision: string
+          entity_id: string
+          entity_type: string
+          from_project_id: string | null
+          id: string
+          made_at: string
+          made_by: string
+          notes: string | null
+          to_project_id: string | null
+        }
+        Insert: {
+          decision: string
+          entity_id: string
+          entity_type: string
+          from_project_id?: string | null
+          id?: string
+          made_at?: string
+          made_by: string
+          notes?: string | null
+          to_project_id?: string | null
+        }
+        Update: {
+          decision?: string
+          entity_id?: string
+          entity_type?: string
+          from_project_id?: string | null
+          id?: string
+          made_at?: string
+          made_by?: string
+          notes?: string | null
+          to_project_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zoho_attribution_audit_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_invoices_due_7d"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_milestones_overdue"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_om_tickets_open_48h"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_pos_pending_approval"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_projects_installs_today"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_projects_overdue_commissioning"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_vendor_payments_due_7d"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_employees_birthday_today"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_expenses_pending_approval"
+            referencedColumns: ["manager_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_expenses_pending_approval"
+            referencedColumns: ["submitter_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_invoices_due_7d"
+            referencedColumns: ["sales_person_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_invoices_overdue_15d"
+            referencedColumns: ["sales_person_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_leads_new_24h"
+            referencedColumns: ["assigned_employee_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_leads_stale_24h"
+            referencedColumns: ["assigned_employee_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_leave_pending"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_leave_pending"
+            referencedColumns: ["manager_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_milestones_overdue"
+            referencedColumns: ["project_manager_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_om_tickets_open_48h"
+            referencedColumns: ["assignee_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_pos_pending_approval"
+            referencedColumns: ["prepared_by_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_proposals_design_backlog"
+            referencedColumns: ["prepared_by_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_proposals_silent_3d"
+            referencedColumns: ["prepared_by_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_made_by_fkey"
+            columns: ["made_by"]
+            isOneToOne: false
+            referencedRelation: "v_digest_proposals_silent_3d"
+            referencedColumns: ["sales_person_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_invoices_due_7d"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_milestones_overdue"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_om_tickets_open_48h"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_pos_pending_approval"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_projects_installs_today"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_projects_overdue_commissioning"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "zoho_attribution_audit_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "v_digest_vendor_payments_due_7d"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       zoho_invoice_line_items: {
         Row: {
           amount: number | null
@@ -35819,6 +36083,19 @@ export type Database = {
     }
     Functions: {
       ack_sync_batch: { Args: { p_results: Json }; Returns: undefined }
+      assign_orphan_invoice: {
+        Args: {
+          p_invoice_id: string
+          p_made_by: string
+          p_notes: string
+          p_project_id: string
+        }
+        Returns: {
+          cascaded_payment_count: number
+          code: string
+          success: boolean
+        }[]
+      }
       claim_next_sync_batch: {
         Args: { p_batch_size?: number; p_entity_type: string }
         Returns: {
@@ -35853,6 +36130,14 @@ export type Database = {
           p_entity_type: Database["public"]["Enums"]["zoho_sync_entity_type"]
         }
         Returns: undefined
+      }
+      exclude_orphan_invoice: {
+        Args: { p_invoice_id: string; p_made_by: string; p_notes: string }
+        Returns: {
+          cascaded_payment_count: number
+          code: string
+          success: boolean
+        }[]
       }
       fn_cascade_po_approval_to_boq: {
         Args: { p_po_id: string }
@@ -35904,6 +36189,33 @@ export type Database = {
           resolved_flags: number
           total_flags: number
           unresolved_flags: number
+        }[]
+      }
+      get_expected_orders: {
+        Args: { window_days: number }
+        Returns: {
+          base_quote_price: number
+          close_probability: number
+          customer_name: string
+          days_until: number
+          derived_value: number
+          estimated_size_kwp: number
+          expected_close_date: string
+          lead_id: string
+          status: Database["public"]["Enums"]["lead_status"]
+        }[]
+      }
+      get_expected_payments: {
+        Args: { window_days: number }
+        Returns: {
+          amount: number
+          customer_name: string
+          days_until: number
+          expected_payment_date: string
+          milestone_name: string
+          milestone_order: number
+          project_id: string
+          project_number: string
         }[]
       }
       get_expense_kpis: {
@@ -36031,6 +36343,19 @@ export type Database = {
       plant_monitoring_detect_brand: {
         Args: { portal_url: string }
         Returns: string
+      }
+      reassign_orphan_invoice: {
+        Args: {
+          p_invoice_id: string
+          p_made_by: string
+          p_new_project_id: string
+          p_notes: string
+        }
+        Returns: {
+          cascaded_payment_count: number
+          code: string
+          success: boolean
+        }[]
       }
       recalc_vendor_bill_totals: {
         Args: { p_bill_id: string }
