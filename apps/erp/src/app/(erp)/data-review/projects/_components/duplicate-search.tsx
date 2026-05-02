@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // apps/erp/src/app/(erp)/data-review/projects/_components/duplicate-search.tsx
 // Modal typeahead: search for the canonical project this one duplicates.
@@ -7,7 +7,7 @@
 import { useState, useEffect, useTransition } from 'react';
 import { Button, Input } from '@repo/ui';
 import { Loader2, X, Trophy } from 'lucide-react';
-import { searchProjectsForDuplicate, getProjectScoreForDuplicateConfirm } from '@/lib/data-review-queries';
+import { fetchDuplicateCandidates, fetchProjectScore } from './_client-fetchers';
 
 interface SearchResult {
   id: string;
@@ -41,13 +41,13 @@ export function DuplicateSearch({
 
   // Fetch current project score on mount
   useEffect(() => {
-    getProjectScoreForDuplicateConfirm(currentProjectId).then(setScoreA);
+    fetchProjectScore(currentProjectId).then(setScoreA);
   }, [currentProjectId]);
 
   // Fetch selected project score when selection changes
   useEffect(() => {
     if (!selected) { setScoreB(null); return; }
-    getProjectScoreForDuplicateConfirm(selected.id).then(setScoreB);
+    fetchProjectScore(selected.id).then(setScoreB);
   }, [selected]);
 
   // Debounced search
@@ -60,7 +60,7 @@ export function DuplicateSearch({
       setTimeout(async () => {
         setSearching(true);
         try {
-          const r = await searchProjectsForDuplicate(value.trim(), currentProjectId);
+          const r = await fetchDuplicateCandidates(value.trim(), currentProjectId);
           setResults(r);
         } finally {
           setSearching(false);
@@ -76,7 +76,7 @@ export function DuplicateSearch({
     });
   };
 
-  // Determine which is suggested canonical (higher score or older — we show score hint)
+  // Determine which is suggested canonical (higher score or older â€” we show score hint)
   const canonicalHint =
     scoreA !== null && scoreB !== null
       ? scoreA >= scoreB
@@ -108,7 +108,7 @@ export function DuplicateSearch({
         {/* Search input */}
         <div className="relative mb-3">
           <Input
-            placeholder="Search by customer name or project #…"
+            placeholder="Search by customer name or project #â€¦"
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             className="pr-8"
@@ -182,7 +182,7 @@ export function DuplicateSearch({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Same customer, same site — HubSpot import created a duplicate of the Zoho-imported project"
+              placeholder="e.g. Same customer, same site â€” HubSpot import created a duplicate of the Zoho-imported project"
             />
           </div>
         )}

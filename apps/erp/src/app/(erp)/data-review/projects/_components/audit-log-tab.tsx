@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // apps/erp/src/app/(erp)/data-review/projects/_components/audit-log-tab.tsx
 // Audit log with [Undo] button (founder + marketing_manager only).
@@ -9,7 +9,7 @@ import { Badge, Button, Card, CardContent, useToast } from '@repo/ui';
 import { Loader2 } from 'lucide-react';
 import { formatINR } from '@repo/ui/formatters';
 import type { ProjectReviewAuditRow } from '@/lib/data-review-queries';
-import { getProjectReviewAudit } from '@/lib/data-review-queries';
+import { fetchAuditLog } from './_client-fetchers';
 import { undoLastDecision } from '@/lib/data-review-actions';
 
 const PAGE_SIZE = 30;
@@ -26,7 +26,7 @@ export function AuditLogTab() {
   const load = async (p: number) => {
     setLoading(true);
     try {
-      const result = await getProjectReviewAudit({ page: p, pageSize: PAGE_SIZE });
+      const result = await fetchAuditLog({ page: p, pageSize: PAGE_SIZE });
       setRows(result.rows);
       setTotalRows(result.totalRows);
     } finally {
@@ -53,7 +53,7 @@ export function AuditLogTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-sm text-[#7C818E]">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading audit log…
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading audit logâ€¦
       </div>
     );
   }
@@ -108,24 +108,24 @@ export function AuditLogTab() {
               {row.decision === 'confirmed' && (
                 <p className="text-[10px] text-[#7C818E]">
                   {row.prev_size_kwp !== row.new_size_kwp && (
-                    <span>kWp: {row.prev_size_kwp} → {row.new_size_kwp} · </span>
+                    <span>kWp: {row.prev_size_kwp} â†’ {row.new_size_kwp} Â· </span>
                   )}
                   {row.prev_contracted_value !== row.new_contracted_value && row.new_contracted_value !== null && (
-                    <span>₹: {formatINR(row.prev_contracted_value ?? 0)} → {formatINR(row.new_contracted_value)}</span>
+                    <span>â‚¹: {formatINR(row.prev_contracted_value ?? 0)} â†’ {formatINR(row.new_contracted_value)}</span>
                   )}
                 </p>
               )}
               {row.decision === 'duplicate' && (
                 <p className="text-[10px] text-[#7C818E]">
                   Score: {row.losing_score} (this) vs {row.winning_score} (kept)
-                  {row.notes && ` · ${row.notes}`}
+                  {row.notes && ` Â· ${row.notes}`}
                 </p>
               )}
             </div>
 
             {/* Made by (UUID short) */}
             <span className="font-mono text-[10px] text-[#7C818E]">
-              {row.made_by.slice(0, 8)}…
+              {row.made_by.slice(0, 8)}â€¦
             </span>
 
             {/* Undo */}
