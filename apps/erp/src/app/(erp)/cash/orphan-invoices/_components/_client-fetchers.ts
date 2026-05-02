@@ -38,3 +38,9 @@ export async function fetchByStatus(status: 'deferred' | 'excluded') {
     payments: pay.data ?? [],
   };
 }
+
+import { getAttributionAudit } from '@/lib/orphan-triage-queries';
+
+export async function fetchAuditClient(opts: { page: number; decision?: string }) {
+  return getAttributionAudit(opts);
+}
