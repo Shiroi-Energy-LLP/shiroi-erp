@@ -80,6 +80,7 @@ const ITEMS = {
   bomReview:      { label: 'BOM Review',        href: '/bom-review',         icon: 'ListChecks' },
   expenses:       { label: 'Expenses',          href: '/expenses',           icon: 'Receipt' },
   vendorBills:    { label: 'Vendor Bills',      href: '/vendor-bills',       icon: 'FileText' },
+  salesTeamTasks: { label: 'Team Tasks',        href: '/sales/tasks',        icon: 'ClipboardList' },
 } as const satisfies Record<string, NavItem>;
 
 // ---------------------------------------------------------------------------
@@ -88,7 +89,7 @@ const ITEMS = {
 const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   founder: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
-    { label: 'Sales',        items: [ITEMS.sales, ITEMS.partners, ITEMS.liaison] },
+    { label: 'Sales',        items: [ITEMS.sales, ITEMS.salesTeamTasks, ITEMS.partners, ITEMS.liaison] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
@@ -101,7 +102,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   ],
   marketing_manager: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
-    { label: 'Sales',        items: [ITEMS.sales, ITEMS.partners] },
+    { label: 'Sales',        items: [ITEMS.sales, ITEMS.salesTeamTasks, ITEMS.partners] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Liaison',      items: [ITEMS.liaison, ITEMS.netMetering] },
     { label: 'Payments',     items: [ITEMS.payments] },

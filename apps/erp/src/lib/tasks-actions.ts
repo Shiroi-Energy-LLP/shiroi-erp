@@ -46,6 +46,8 @@ export async function createTask(input: {
 
   if (!employee) return err('Employee profile not found');
 
+  if (!input.assignedTo) return err('Tasks must have an assignee');
+
   const today = new Date().toISOString().split('T')[0]!;
 
   const insert: TaskInsert = {
@@ -56,7 +58,7 @@ export async function createTask(input: {
     project_id: input.projectId || null,
     priority: input.priority,
     due_date: input.dueDate || null,
-    assigned_to: input.assignedTo || null,
+    assigned_to: input.assignedTo,
     created_by: employee.id,
     category: input.category || null,
     remarks: input.remarks || null,
@@ -106,7 +108,10 @@ export async function updateTask(input: {
   if (input.category !== undefined) updateData.category = input.category || null;
   if (input.priority !== undefined) updateData.priority = input.priority;
   if (input.dueDate !== undefined) updateData.due_date = input.dueDate || null;
-  if (input.assignedTo !== undefined) updateData.assigned_to = input.assignedTo || null;
+  if (input.assignedTo !== undefined) {
+    if (!input.assignedTo) return err('Cannot clear task assignee — every task must have an assignee');
+    updateData.assigned_to = input.assignedTo;
+  }
   if (input.remarks !== undefined) updateData.remarks = input.remarks || null;
   if (input.projectId !== undefined) updateData.project_id = input.projectId || null;
   if (input.milestoneId !== undefined) updateData.milestone_id = input.milestoneId || null;
