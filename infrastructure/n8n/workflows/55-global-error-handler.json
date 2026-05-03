@@ -7,7 +7,10 @@
       "name": "Error Trigger",
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -63,7 +66,10 @@
       "name": "Normalize error payload",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -76,7 +82,10 @@
       "name": "Email Vivek",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [500, 300],
+      "position": [
+        500,
+        300
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "REPLACE_WITH_GMAIL_OAUTH_CRED_ID",
@@ -117,12 +126,19 @@
     "saveExecutionProgress": true,
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all"
+    "saveDataSuccessExecution": "all",
+    "timezone": "Asia/Kolkata"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-6" },
-    { "name": "meta" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-6"
+    },
+    {
+      "name": "meta"
+    }
   ],
   "meta": {
     "description": "Fires when any workflow in this n8n instance errors (via errorWorkflow setting). Composes an IST-timestamped summary and emails Vivek. When WABA is live, prepend a WhatsApp branch and keep email as fallback."

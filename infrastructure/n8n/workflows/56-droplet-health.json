@@ -177,7 +177,8 @@
     "saveExecutionProgress": true,
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "none"
+    "saveDataSuccessExecution": "none",
+    "timezone": "Asia/Kolkata"
   },
   "tags": [
     {

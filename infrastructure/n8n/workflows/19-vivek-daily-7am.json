@@ -226,7 +226,7 @@
     }
   ],
   "connections": {
-    "Daily 7:00 IST (01:30 UTC)": {
+    "Daily 7:00 IST": {
       "main": [
         [
           {
@@ -277,7 +277,8 @@
     "saveExecutionProgress": true,
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all"
+    "saveDataSuccessExecution": "all",
+    "timezone": "Asia/Kolkata"
   },
   "tags": [
     {
