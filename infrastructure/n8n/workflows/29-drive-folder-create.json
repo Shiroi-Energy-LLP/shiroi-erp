@@ -1,0 +1,168 @@
+{
+  "name": "29 — Drive folder create (scaffold)",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "lead_id",
+              "value": "={{ $json.body.payload.lead_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "customer_name",
+              "value": "={{ $json.body.payload.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "fy",
+              "value": "={{ $json.body.payload.fy }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "trigger",
+              "value": "={{ $json.body.payload.trigger }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "lead_short_id",
+              "value": "={{ $json.body.payload.lead_id.substring(0, 8) }}",
+              "type": "string"
+            },
+            {
+              "id": "f6",
+              "name": "customer_name_safe",
+              "value": "={{ $json.body.payload.customer_name.replace(/[\\\\/:*?\"<>|]/g, '').substring(0, 60) }}",
+              "type": "string"
+            },
+            {
+              "id": "f7",
+              "name": "folder_name",
+              "value": "=L-{{ $json.body.payload.lead_id.substring(0, 8) }} — {{ $json.body.payload.customer_name.replace(/[\\\\/:*?\"<>|]/g, '').substring(0, 60) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Scaffold — wiring needed before activation\n\nThis workflow receives `lead.drive_folder_requested` and `lead.quick_quote_sent` events. To make it actually create Drive folders, wire the following nodes (all in this branch, replacing the placeholder Set node below):\n\n1. **Google Drive — Create Folder** (parent: \"Shiroi Customers / {{ $json.fy }}\" — create the year folder once and store its ID, or look it up by name each run). Folder name = `{{ $json.folder_name }}`. Save the returned `id` and `webViewLink`.\n2. **Google Drive — Create Folder × 5** (parents = the folder created in step 1). Names: `01-design`, `02-proposals`, `03-execution`, `04-handover`, `05-om`.\n3. **HTTP Request — PATCH `{{ $env.SUPABASE_URL }}/rest/v1/leads?id=eq.{{ $json.lead_id }}`** with body `{\"drive_folder_id\":\"<id>\",\"drive_folder_url\":\"<webViewLink>\"}`, headers `apikey: {{ $env.SUPABASE_SECRET_KEY }}`, `Authorization: Bearer {{ $env.SUPABASE_SECRET_KEY }}`, `Content-Type: application/json`, `Prefer: return=minimal`.\n\nUntil wired, this workflow logs the request and returns success — the manual button on the lead detail page will appear to succeed but no Drive folder will be created. That is intentional for phase 1; activation happens once the Google service-account credential is configured in n8n.",
+        "height": 320,
+        "width": 480
+      },
+      "id": "node-doc",
+      "name": "Wiring instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        500,
+        50
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "log1",
+              "name": "drive_folder_id",
+              "value": "PENDING_WIRING",
+              "type": "string"
+            },
+            {
+              "id": "log2",
+              "name": "drive_folder_url",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "log3",
+              "name": "log_message",
+              "value": "=Drive folder request received for lead {{ $json.lead_id }} ({{ $json.customer_name }}, FY {{ $json.fy }}, trigger={{ $json.trigger }}). Folder name: {{ $json.folder_name }}. Status: pending wiring of Google Drive nodes — see sticky note above.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-placeholder",
+      "name": "Placeholder (replace with Drive nodes)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        500,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "When called by router": {
+      "main": [
+        [
+          {
+            "node": "Extract fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract fields": {
+      "main": [
+        [
+          {
+            "node": "Placeholder (replace with Drive nodes)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata"
+  },
+  "tags": [
+    {
+      "name": "scaffold"
+    },
+    {
+      "name": "drive"
+    },
+    {
+      "name": "lead"
+    }
+  ],
+  "active": false,
+  "pinData": {}
+}

@@ -25,6 +25,8 @@ export type ErpEventName =
   | 'lead.created'
   | 'lead.stage_changed'
   | 'lead.stale_24h'
+  | 'lead.quick_quote_sent'
+  | 'lead.drive_folder_requested'
   // Design / proposals
   | 'proposal.requested'
   | 'proposal.submitted'
