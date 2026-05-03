@@ -106,9 +106,25 @@ async function main() {
     .map((entry) => entry.name);
   console.log(`[indexer] Found ${leadIds.length} lead directories in proposal-files/`);
 
-  // 2. Fetch existing lead IDs to validate (skip orphan files)
-  const { data: validLeads } = await supabase.from('leads').select('id');
-  const validLeadSet = new Set((validLeads ?? []).map((l: { id: string }) => l.id));
+  // 2. Fetch all existing lead IDs to validate (skip orphan files)
+  // Paginate — Supabase default limit is 1000.
+  const validLeadSet = new Set<string>();
+  const PAGE = 1000;
+  let offset = 0;
+  while (true) {
+    const { data: page, error: pageErr } = await supabase
+      .from('leads')
+      .select('id')
+      .range(offset, offset + PAGE - 1);
+    if (pageErr) {
+      console.error('[indexer] Lead pagination failed', pageErr);
+      break;
+    }
+    if (!page || page.length === 0) break;
+    for (const row of page as { id: string }[]) validLeadSet.add(row.id);
+    if (page.length < PAGE) break;
+    offset += PAGE;
+  }
   console.log(`[indexer] ${validLeadSet.size} valid lead rows in DB`);
 
   // 3. Fetch existing documents (lead_id, storage_path) tuples for dedup
