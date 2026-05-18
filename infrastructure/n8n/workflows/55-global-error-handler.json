@@ -7,10 +7,7 @@
       "name": "Error Trigger",
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [
-        0,
-        300
-      ]
+      "position": [0, 300]
     },
     {
       "parameters": {
@@ -43,7 +40,7 @@
             {
               "id": "a5",
               "name": "error_message",
-              "value": "={{ $json.execution.error?.message || 'unknown' }}",
+              "value": "={{ ($json.execution.error?.message || 'unknown').toString().slice(0, 300) }}",
               "type": "string"
             },
             {
@@ -57,6 +54,18 @@
               "name": "timestamp_ist",
               "value": "={{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST",
               "type": "string"
+            },
+            {
+              "id": "a8",
+              "name": "title_param",
+              "value": "=🚨 *n8n workflow failed* — {{ $json.workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a9",
+              "name": "body_param",
+              "value": "=Node: {{ $json.execution.error?.node?.name || 'unknown' }} · Error: {{ ($json.execution.error?.message || 'unknown').toString().replace(/[\\n\\t]+/g,' ').replace(/ {4,}/g,' ').slice(0, 500) }} · Time: {{ DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd HH:mm:ss') }} IST · Open: {{ $json.execution.url }}",
+              "type": "string"
             }
           ]
         },
@@ -66,56 +75,86 @@
       "name": "Normalize error payload",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        250,
-        300
-      ]
+      "position": [250, 300]
     },
     {
       "parameters": {
-        "sendTo": "vivek@shiroienergy.com",
-        "subject": "=[n8n ERROR] {{ $json.workflow_name }}",
-        "emailType": "text",
-        "message": "=Workflow errored in n8n.\n\nWorkflow: {{ $json.workflow_name }}\nNode: {{ $json.error_node }}\nError: {{ $json.error_message }}\nTime: {{ $json.timestamp_ist }}\n\nExecution: {{ $json.execution_url }}\n\n---\nThis is the global error handler (workflow 55). Every other workflow in this n8n instance is configured with errorWorkflow=this one. Acknowledge and investigate in the n8n UI."
-      },
-      "id": "node-email-vivek",
-      "name": "Email Vivek",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.1,
-      "position": [
-        500,
-        300
-      ],
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "REPLACE_WITH_GMAIL_OAUTH_CRED_ID",
-          "name": "Gmail (Vivek)"
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $env.VIVEK_WHATSAPP }}",
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  { "type": "text", "text": "={{ $json.title_param }}" },
+                  { "type": "text", "text": "={{ $json.body_param }}" }
+                ]
+              }
+            }
+          ]
         }
       },
-      "continueOnFail": true,
-      "notes": "Placeholder channel. Swap to WhatsApp node once WABA is live; keep Gmail as a fallback branch."
+      "id": "node-whatsapp-vivek",
+      "name": "Send WhatsApp to Vivek",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [500, 200],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  { "type": "text", "text": "={{ $json.title_param }}" },
+                  { "type": "text", "text": "={{ $json.body_param }}" }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-whatsapp-vinodh",
+      "name": "Send WhatsApp to Vinodh",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [500, 400],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      },
+      "continueOnFail": true
     }
   ],
   "connections": {
     "Error Trigger": {
-      "main": [
-        [
-          {
-            "node": "Normalize error payload",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Normalize error payload", "type": "main", "index": 0 }]]
     },
     "Normalize error payload": {
       "main": [
         [
-          {
-            "node": "Email Vivek",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send WhatsApp to Vivek", "type": "main", "index": 0 },
+          { "node": "Send WhatsApp to Vinodh", "type": "main", "index": 0 }
         ]
       ]
     }
@@ -130,18 +169,12 @@
     "timezone": "Asia/Kolkata"
   },
   "tags": [
-    {
-      "name": "erp"
-    },
-    {
-      "name": "tier-6"
-    },
-    {
-      "name": "meta"
-    }
+    { "name": "erp" },
+    { "name": "tier-6" },
+    { "name": "meta" }
   ],
   "meta": {
-    "description": "Fires when any workflow in this n8n instance errors (via errorWorkflow setting). Composes an IST-timestamped summary and emails Vivek. When WABA is live, prepend a WhatsApp branch and keep email as fallback."
+    "description": "Fires when any workflow in this n8n instance errors (via errorWorkflow setting). Sends an erp_alert template WhatsApp to Vivek + Vinodh with workflow name, failed node, error message (capped at 500 chars), and the execution URL. Replaces the prior Gmail node (2026-05-02 OAuth token expired after Google's 7-day testing-mode policy). All ops alerts on WhatsApp = one channel to monitor, no further Gmail-OAuth maintenance. Sridhar (Chairman) intentionally NOT cc'd here — chairman gets reports, not ops errors."
   },
   "pinData": {}
 }

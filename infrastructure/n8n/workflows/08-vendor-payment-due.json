@@ -5,10 +5,7 @@
       "parameters": {
         "rule": {
           "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "0 0 9 * * *"
-            }
+            { "field": "cronExpression", "expression": "0 0 9 * * *" }
           ]
         }
       },
@@ -16,10 +13,7 @@
       "name": "Daily 9:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        0,
-        300
-      ]
+      "position": [0, 300]
     },
     {
       "parameters": {
@@ -30,32 +24,17 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
           ]
         },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
+        "options": { "response": { "response": { "responseFormat": "json" } } }
       },
       "id": "node-http",
       "name": "Fetch payments due",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        250,
-        300
-      ],
+      "position": [250, 300],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -65,77 +44,20 @@
     },
     {
       "parameters": {
-        "fieldToSplitOut": "data",
-        "options": {}
+        "jsCode": "// Aggregate all vendor payments due into ONE digest message.\n// Replaces the per-PO splitOut that fanned out into ~4 sends per PO\n// (Finance / Vinodh / Sridhar / Vivek-high-value-cc) — easily hundreds\n// of messages on a busy day, blowing Meta's burst rate-limit.\nconst rows = $input.first().json;\nconst pos = Array.isArray(rows) ? rows : (rows.data ?? []);\nif (!pos.length) {\n  // Empty array — output nothing so downstream Send nodes don't fire.\n  return [];\n}\n\nconst total = pos.length;\nconst totalOutstanding = pos.reduce((s, p) => s + Number(p.amount_outstanding || 0), 0);\nconst totalLakhs = (totalOutstanding / 100000).toFixed(1);\n\nconst HIGH_VALUE_THRESHOLD = 500000;\nconst highValuePos = pos.filter(p => Number(p.amount_outstanding || 0) >= HIGH_VALUE_THRESHOLD);\nconst msmePos = pos.filter(p => p.vendor_is_msme);\n\nconst formatPo = (p) => {\n  const vendor = (p.vendor_name || 'Unknown').slice(0, 25);\n  const amt = (Number(p.amount_outstanding || 0) / 100000).toFixed(1);\n  const due = (p.payment_due_date || '').slice(5); // MM-DD\n  const flags = [\n    Number(p.amount_outstanding || 0) >= HIGH_VALUE_THRESHOLD ? '🚨' : '',\n    p.vendor_is_msme ? 'MSME' : '',\n  ].filter(Boolean).join(' ');\n  return `${vendor} ₹${amt}L (${due}${flags ? ` ${flags}` : ''})`;\n};\n\nconst MAX_INLINE = 8;\nconst inline = pos.slice(0, MAX_INLINE).map(formatPo).join(' · ');\nconst more = total > MAX_INLINE ? ` · +${total - MAX_INLINE} more` : '';\n\nconst flagsLine = [\n  highValuePos.length > 0 ? `🚨 ${highValuePos.length} high-value (>₹5L)` : '',\n  msmePos.length > 0 ? `🔔 ${msmePos.length} MSME (45-day window)` : '',\n].filter(Boolean).join(' · ');\n\nconst title = `💸 *Vendor payments due (7d)* — ${total} PO${total === 1 ? '' : 's'} · ₹${totalLakhs}L outstanding`;\nconst body = `${inline}${more}${flagsLine ? ` · ${flagsLine}` : ''} · Open ERP /purchase to schedule.`;\n\nreturn [{\n  json: {\n    to_phone_finance: process.env.FINANCE_HEAD_WHATSAPP || '',\n    to_phone_vinodh: process.env.VINODH_WHATSAPP || '',\n    to_phone_sridhar: process.env.SRIDHAR_WHATSAPP || '',\n    title,\n    body: body.slice(0, 900),\n    total_count: total,\n    high_value_count: highValuePos.length,\n  },\n}];\n"
       },
-      "id": "node-split",
-      "name": "One item per PO",
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        500,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "m1",
-              "name": "message",
-              "value": "=💸 *Vendor payment due* — {{ $json.vendor_name }}\n\nPO: {{ $json.po_number }}\nTotal: ₹{{ $json.total_amount }}\nPaid: ₹{{ $json.amount_paid }}\nOutstanding: ₹{{ $json.amount_outstanding }}\nDue: {{ $json.payment_due_date }} (in {{ $json.days_until_due }} day{{ $json.days_until_due === 1 ? '' : 's' }}){{ $json.vendor_is_msme ? '\\n🔔 MSME — 45-day statutory payment window applies.' : '' }}{{ Number($json.amount_outstanding) > 500000 ? '\\n🚨 High value (>₹5L) — Vivek cc\\'d.' : '' }}\nProject: {{ $json.project_number || '—' }} ({{ $json.customer_name || '—' }})\nVendor contact: {{ $json.vendor_contact_person || '—' }} · {{ $json.vendor_phone || '—' }}\n\nPlease schedule payment or flag if disputed.",
-              "type": "string"
-            },
-            {
-              "id": "m2",
-              "name": "to_phone_finance",
-              "value": "={{ $env.FINANCE_HEAD_WHATSAPP }}",
-              "type": "string"
-            },
-            {
-              "id": "m3",
-              "name": "to_phone_vivek",
-              "value": "={{ Number($json.amount_outstanding) > 500000 ? $env.VIVEK_WHATSAPP : '' }}",
-              "type": "string"
-            },
-            {
-              "id": "m3v",
-              "name": "to_phone_vinodh",
-              "value": "={{ Number($json.amount_outstanding) > 500000 ? $env.VINODH_WHATSAPP : '' }}",
-              "type": "string"
-            },
-            {
-              "id": "m4",
-              "name": "is_high_value",
-              "value": "={{ Number($json.amount_outstanding) > 500000 }}",
-              "type": "boolean"
-            },
-            {
-              "id": "m5",
-              "name": "channel",
-              "value": "whatsapp",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "node-compose",
-      "name": "Compose WhatsApp per payment",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        750,
-        300
-      ]
+      "id": "node-aggregate",
+      "name": "Aggregate digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
     },
     {
       "parameters": {
         "resource": "message",
         "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
-        "recipientPhoneNumber": "={{ $json.to_phone_finance }}",
+        "recipientPhoneNumber": "={{ $env.FINANCE_HEAD_WHATSAPP }}",
         "template": "erp_alert|en",
         "components": {
           "component": [
@@ -143,14 +65,8 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
@@ -158,19 +74,17 @@
         }
       },
       "id": "node-whatsapp-finance",
-      "name": "Send to Finance (always)",
+      "name": "Send to Finance head",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        900,
-        250
-      ],
+      "position": [750, 200],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -185,152 +99,26 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
           ]
         }
       },
-      "id": "node-whatsapp-vinodh-always",
-      "name": "Send to Vinodh (always)",
+      "id": "node-whatsapp-vinodh",
+      "name": "Send to Vinodh",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        900,
-        100
-      ],
+      "position": [750, 300],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "combinator": "and",
-          "conditions": [
-            {
-              "id": "cond-1",
-              "leftValue": "={{ $json.is_high_value }}",
-              "rightValue": "true",
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ]
-        },
-        "options": {
-          "fallbackOutput": "no-value"
-        }
       },
-      "id": "node-if-high-value",
-      "name": "Is high value (>₹5L)?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        900,
-        450
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "operation": "sendTemplate",
-        "phoneNumberId": "1140448799143790",
-        "recipientPhoneNumber": "={{ $json.to_phone_vivek }}",
-        "template": "erp_alert|en",
-        "components": {
-          "component": [
-            {
-              "type": "body",
-              "bodyParameters": {
-                "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "id": "node-whatsapp-vivek",
-      "name": "Send to Vivek (cc high-value only)",
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
-      "position": [
-        1100,
-        450
-      ],
-      "credentials": {
-        "whatsAppApi": {
-          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
-          "name": "WhatsApp (Shiroi)"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "operation": "sendTemplate",
-        "phoneNumberId": "1140448799143790",
-        "recipientPhoneNumber": "={{ $json.to_phone_vinodh }}",
-        "template": "erp_alert|en",
-        "components": {
-          "component": [
-            {
-              "type": "body",
-              "bodyParameters": {
-                "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "id": "node-whatsapp-vinodh-gufpc0",
-      "name": "Send to Vinodh (cc high-value only)",
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
-      "position": [
-        1300,
-        600
-      ],
-      "credentials": {
-        "whatsAppApi": {
-          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
-          "name": "WhatsApp (Shiroi)"
-        }
-      }
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -345,109 +133,37 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
           ]
         }
       },
-      "id": "node-whatsapp-sridhar-qvs1b9",
-      "name": "Send to Sridhar (always)",
+      "id": "node-whatsapp-sridhar",
+      "name": "Send to Sridhar",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        900,
-        0
-      ],
+      "position": [750, 400],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
-      }
+      },
+      "continueOnFail": true
     }
   ],
   "connections": {
-    "Daily 9:00 IST": {
+    "Daily 9:00 IST": { "main": [[{ "node": "Fetch payments due", "type": "main", "index": 0 }]] },
+    "Fetch payments due": { "main": [[{ "node": "Aggregate digest", "type": "main", "index": 0 }]] },
+    "Aggregate digest": {
       "main": [
         [
-          {
-            "node": "Fetch payments due",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch payments due": {
-      "main": [
-        [
-          {
-            "node": "One item per PO",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "One item per PO": {
-      "main": [
-        [
-          {
-            "node": "Compose WhatsApp per payment",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Compose WhatsApp per payment": {
-      "main": [
-        [
-          {
-            "node": "Send to Finance (always)",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send to Vinodh (always)",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Is high value (>₹5L)?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send to Sridhar (always)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Is high value (>₹5L)?": {
-      "main": [
-        [
-          {
-            "node": "Send to Vivek (cc high-value only)",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send to Vinodh (cc high-value only)",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send to Finance head", "type": "main", "index": 0 },
+          { "node": "Send to Vinodh", "type": "main", "index": 0 },
+          { "node": "Send to Sridhar", "type": "main", "index": 0 }
         ]
       ]
     }
@@ -463,24 +179,14 @@
     "timezone": "Asia/Kolkata"
   },
   "tags": [
-    {
-      "name": "erp"
-    },
-    {
-      "name": "tier-1"
-    },
-    {
-      "name": "finance"
-    },
-    {
-      "name": "procurement"
-    },
-    {
-      "name": "cron"
-    }
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "finance" },
+    { "name": "procurement" },
+    { "name": "cron" }
   ],
   "meta": {
-    "description": "Daily 9:00 IST cron. Queries v_digest_vendor_payments_due_7d (migration 085) and sends one WhatsApp per due PO to Finance head. Payments where amount_outstanding > ₹5,00,000 are cc'd to Vivek (founder). MSME flag triggers inline 45-day statutory reminder. Requires env vars on n8n droplet: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, FINANCE_HEAD_WHATSAPP, VIVEK_WHATSAPP + Supabase service-role HTTP Header Auth credential."
+    "description": "Daily 9 AM IST. Fetches v_digest_vendor_payments_due_7d (mig 085) and aggregates ALL due POs into ONE digest sent to 3 recipients in parallel: Finance head (= Vivek until Finance is hired) + Vinodh + Sridhar. Replaces the prior per-PO splitOut + fan-out that produced 4 sends per PO (hundreds of messages on busy days, blowing Meta's burst rate-limit). Aggregate inlines top 8 POs by ₹ then `+N more`, shows total outstanding ₹L, flags counts of high-value (>₹5L) + MSME POs. Empty result = no messages fire. When real Finance head is hired, FINANCE_HEAD_WHATSAPP env switches and Vivek stops getting these (intentional)."
   },
   "pinData": {}
 }

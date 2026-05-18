@@ -5,10 +5,7 @@
       "parameters": {
         "rule": {
           "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "0 0 9 * * *"
-            }
+            { "field": "cronExpression", "expression": "0 0 9 * * *" }
           ]
         }
       },
@@ -16,10 +13,7 @@
       "name": "Daily 9:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        0,
-        300
-      ]
+      "position": [0, 300]
     },
     {
       "parameters": {
@@ -30,32 +24,17 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
           ]
         },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
+        "options": { "response": { "response": { "responseFormat": "json" } } }
       },
       "id": "node-http",
       "name": "Fetch stale leads",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        250,
-        300
-      ],
+      "position": [250, 300],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -65,52 +44,13 @@
     },
     {
       "parameters": {
-        "fieldToSplitOut": "data",
-        "options": {}
+        "jsCode": "// Group stale leads by assignee. Each output item = one message\n// going to one assignee with all THEIR stale leads listed inline.\n// This collapses what used to be N per-lead messages into M messages\n// where M = unique assignees (typically 2-4 instead of 10-20).\nconst rows = $input.first().json;\nconst leads = Array.isArray(rows) ? rows : (rows.data ?? []);\nif (!leads.length) {\n  return [];\n}\n\nconst byAssignee = new Map();\nfor (const l of leads) {\n  const key = l.assigned_employee_phone || '(no-phone)';\n  if (!byAssignee.has(key)) {\n    byAssignee.set(key, {\n      assignee_phone: l.assigned_employee_phone || '',\n      assignee_name: l.assigned_employee_name || 'Unknown',\n      leads: [],\n    });\n  }\n  byAssignee.get(key).leads.push(l);\n}\n\nconst MAX_INLINE = 8;\nconst out = [];\nfor (const g of byAssignee.values()) {\n  if (!g.assignee_phone) continue; // skip leads without assigned phone\n  const total = g.leads.length;\n  const inline = g.leads.slice(0, MAX_INLINE).map(l => {\n    const hrs = Math.floor(Number(l.hours_since_update) || 0);\n    const name = (l.customer_name || 'Unknown').slice(0, 30);\n    return `${name} (${l.status}, ${hrs}h)`;\n  }).join(' · ');\n  const more = total > MAX_INLINE ? ` · +${total - MAX_INLINE} more` : '';\n  const title = `⏰ *Stale leads >24h* — ${total} lead${total === 1 ? '' : 's'} assigned to ${g.assignee_name}`;\n  const body = `${inline}${more} · Open ERP to advance: call, requalify, or mark lost.`;\n  out.push({\n    json: {\n      to_phone: g.assignee_phone,\n      title,\n      body,\n      lead_count: total,\n    },\n  });\n}\nreturn out;\n"
       },
-      "id": "node-split",
-      "name": "One item per stale lead",
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        500,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "m1",
-              "name": "message",
-              "value": "=⏰ *Lead stuck >24h* — {{ $json.customer_name }}\n\nPhone: {{ $json.phone }}\nStatus: {{ $json.status }}\nStuck: {{ Math.floor($json.hours_since_update) }} hrs\nAssigned: {{ $json.assigned_employee_name }}\n\nPlease move it forward today — either call, requalify, or mark lost.",
-              "type": "string"
-            },
-            {
-              "id": "m2",
-              "name": "to_phone",
-              "value": "={{ $json.assigned_employee_phone }}",
-              "type": "string"
-            },
-            {
-              "id": "m3",
-              "name": "channel",
-              "value": "whatsapp",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "node-compose",
-      "name": "Compose WhatsApp per lead",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        750,
-        300
-      ]
+      "id": "node-batch",
+      "name": "Group by assignee",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
     },
     {
       "parameters": {
@@ -125,81 +65,32 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
           ]
         }
       },
-      "id": "node-whatsapp-0lnscz",
+      "id": "node-whatsapp-send",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        1000,
-        300
-      ],
+      "position": [750, 300],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
-      }
+      },
+      "continueOnFail": true
     }
   ],
   "connections": {
-    "Daily 9:00 IST": {
-      "main": [
-        [
-          {
-            "node": "Fetch stale leads",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch stale leads": {
-      "main": [
-        [
-          {
-            "node": "One item per stale lead",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "One item per stale lead": {
-      "main": [
-        [
-          {
-            "node": "Compose WhatsApp per lead",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Compose WhatsApp per lead": {
-      "main": [
-        [
-          {
-            "node": "Send WhatsApp",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "Daily 9:00 IST": { "main": [[{ "node": "Fetch stale leads", "type": "main", "index": 0 }]] },
+    "Fetch stale leads": { "main": [[{ "node": "Group by assignee", "type": "main", "index": 0 }]] },
+    "Group by assignee": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
   },
   "active": false,
   "settings": {
@@ -212,21 +103,13 @@
     "timezone": "Asia/Kolkata"
   },
   "tags": [
-    {
-      "name": "erp"
-    },
-    {
-      "name": "tier-1"
-    },
-    {
-      "name": "sales"
-    },
-    {
-      "name": "cron"
-    }
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "sales" },
+    { "name": "cron" }
   ],
   "meta": {
-    "description": "Daily 9:00 IST cron. Queries v_digest_leads_stale_24h (created in migration 083) and sends one WhatsApp per stale lead to its assigned salesperson. View handles all filtering (active lead + no status change >24h + not in terminal state) — this workflow is pure orchestration. Requires Supabase service-role HTTP Header Auth credential with SUPABASE_PROJECT_ID + SUPABASE_SECRET_KEY env vars set on the n8n droplet."
+    "description": "Daily 9 AM IST. Fetches stale leads from v_digest_leads_stale_24h (mig 083) and groups them by assignee. ONE WhatsApp message per assignee listing all their stale leads inline (top 8, then +N more). Replaces the prior per-lead splitOut that fan-outed into 10-20 messages per morning — caused Meta rate-limit hits. If no stale leads, no messages fire. Empty result also possible if `assigned_employee_phone` is null on all rows."
   },
   "pinData": {}
 }
