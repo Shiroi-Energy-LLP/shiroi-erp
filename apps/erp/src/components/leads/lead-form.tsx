@@ -58,6 +58,7 @@ export function LeadForm() {
     source: '' as LeadSource | '',
     system_type: '' as SystemType | '',
     estimated_size_kwp: '',
+    expected_close_date: '',
     map_link: '',
     notes: '',
   });
@@ -114,6 +115,7 @@ export function LeadForm() {
       source: form.source as LeadSource,
       system_type: form.system_type ? (form.system_type as SystemType) : null,
       estimated_size_kwp: form.estimated_size_kwp ? parseFloat(form.estimated_size_kwp) : null,
+      expected_close_date: form.expected_close_date || null,
       map_link: trimmedMapLink || null,
       notes: form.notes.trim() || null,
       status: 'new' as const,
@@ -264,7 +266,7 @@ export function LeadForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="estimated_size_kwp">Estimated Size (kWp)</Label>
               <Input
@@ -275,6 +277,16 @@ export function LeadForm() {
                 value={form.estimated_size_kwp}
                 onChange={(e) => updateField('estimated_size_kwp', e.target.value)}
                 placeholder="e.g. 10"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expected_close_date">Expected Close Date <span className="text-n-400 font-normal">(optional)</span></Label>
+              <Input
+                id="expected_close_date"
+                type="date"
+                value={form.expected_close_date}
+                onChange={(e) => updateField('expected_close_date', e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
               />
             </div>
             <div className="space-y-2">

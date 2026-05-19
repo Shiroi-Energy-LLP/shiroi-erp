@@ -492,11 +492,11 @@ export function DataTable({
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
                 <TableRow className="bg-[#F5F6F8]">
                   {/* Checkbox header */}
                   {onSelectionChange && (
-                    <TableHead className="w-10 px-3">
+                    <TableHead className="w-8 border-r border-n-100 px-3">
                       <Checkbox
                         checked={allSelected}
                         indeterminate={someSelected}
@@ -549,22 +549,29 @@ export function DataTable({
                     return (
                       <TableRow
                         key={rowId}
-                        className={isSelected ? 'bg-shiroi-green/5' : 'hover:bg-[#F5F6F8]'}
+                        className={isSelected ? 'bg-shiroi-green/5' : 'hover:bg-n-050'}
                         data-state={isSelected ? 'selected' : undefined}
                       >
                         {onSelectionChange && (
-                          <TableCell className="w-10 px-3">
+                          <TableCell className="w-8 border-r border-n-100 px-3">
                             <Checkbox
                               checked={isSelected}
                               onCheckedChange={() => toggleSelectRow(rowId)}
                             />
                           </TableCell>
                         )}
-                        {visibleColumnDefs.map((col) => (
-                          <TableCell key={col.key} className="py-2.5">
-                            {renderCell(row, col)}
-                          </TableCell>
-                        ))}
+                        {visibleColumnDefs.map((col) => {
+                          // Per-column cell class hooks
+                          let cellClass = 'py-2';
+                          if (col.key === 'customer_name') cellClass += ' font-medium';
+                          if (col.fieldType === 'phone') cellClass += ' tabular-nums';
+                          if (col.fieldType === 'number' || col.format === 'currency') cellClass += ' text-right tabular-nums';
+                          return (
+                            <TableCell key={col.key} className={cellClass}>
+                              {renderCell(row, col)}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     );
                   })

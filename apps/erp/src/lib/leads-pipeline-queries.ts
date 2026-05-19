@@ -28,6 +28,43 @@ export async function getLeadStageCounts(includeArchived = false): Promise<Stage
   }));
 }
 
+export interface PipelineCloseWindow {
+  leadCount: number;
+  totalKwp: number;
+  totalValue: number;
+}
+
+/**
+ * Aggregate count + kWp + ₹ for active (non-terminal) leads closing between two dates.
+ * Calls the get_pipeline_close_window RPC (migration 109).
+ * All aggregation done in SQL — NEVER-DO #12.
+ */
+export async function getPipelineCloseWindow(
+  startDate: string,
+  endDate: string,
+): Promise<PipelineCloseWindow> {
+  const op = '[getPipelineCloseWindow]';
+  console.log(`${op} Starting: ${startDate} to ${endDate}`);
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc('get_pipeline_close_window', {
+    start_date: startDate,
+    end_date: endDate,
+  });
+
+  if (error) {
+    console.error(`${op} RPC failed:`, { code: error.code, message: error.message, startDate, endDate });
+    throw new Error(`Failed to load pipeline close window: ${error.message}`);
+  }
+
+  const row = (data ?? [])[0];
+  return {
+    leadCount: Number(row?.lead_count ?? 0),
+    totalKwp: Number(row?.total_kwp ?? 0),
+    totalValue: Number(row?.total_value ?? 0),
+  };
+}
+
 /**
  * Get leads expected to close within a date range (for "closing this week" view).
  */

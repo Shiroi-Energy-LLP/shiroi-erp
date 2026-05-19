@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { upsertLeadFollowupTask } from '@/lib/leads-task-actions';
 
 /** Map entity types to their database table names */
 const ENTITY_TABLE_MAP: Record<string, string> = {
@@ -93,6 +94,18 @@ export async function updateCellValue(input: {
       timestamp: new Date().toISOString(),
     });
     return { success: false, error: 'Update blocked — permission denied or row missing' };
+  }
+
+  // After successful lead next_followup_date change, upsert a follow-up task (non-fatal)
+  if (entityType === 'leads' && field === 'next_followup_date' && typeof value === 'string' && value) {
+    upsertLeadFollowupTask(rowId, value).catch((e) => {
+      console.error(`${op} upsertLeadFollowupTask failed (non-fatal):`, {
+        rowId,
+        value,
+        error: e,
+        timestamp: new Date().toISOString(),
+      });
+    });
   }
 
   // Revalidate the entity list page

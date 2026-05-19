@@ -89,6 +89,63 @@ export async function getPartner(id: string): Promise<ChannelPartner | null> {
   }
 }
 
+export interface ReferrerOption {
+  id: string;
+  partner_name: string;
+  is_internal: boolean;
+}
+
+/**
+ * Returns all internal referrers (Vivek, Management) — is_internal=TRUE.
+ * Used by the /sales referrer filter to resolve 'internal_all' sentinel.
+ */
+export async function getInternalReferrers(): Promise<ReferrerOption[]> {
+  const op = '[getInternalReferrers]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('channel_partners')
+    .select('id, partner_name, is_internal')
+    .eq('is_internal', true)
+    .eq('is_active', true)
+    .is('deleted_at', null)
+    .order('partner_name');
+  if (error) {
+    console.error(`${op} query failed`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load internal referrers: ${error.message}`);
+  }
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    partner_name: r.partner_name,
+    is_internal: r.is_internal,
+  }));
+}
+
+/**
+ * Returns external referral partners (partner_type='referral', is_internal=FALSE).
+ * Used by the /sales referrer filter dropdown to list external referrers.
+ */
+export async function getReferralPartners(): Promise<ReferrerOption[]> {
+  const op = '[getReferralPartners]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('channel_partners')
+    .select('id, partner_name, is_internal')
+    .eq('partner_type', 'referral')
+    .eq('is_internal', false)
+    .eq('is_active', true)
+    .is('deleted_at', null)
+    .order('partner_name');
+  if (error) {
+    console.error(`${op} query failed`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load referral partners: ${error.message}`);
+  }
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    partner_name: r.partner_name,
+    is_internal: r.is_internal,
+  }));
+}
+
 export interface PartnerLeadsRow {
   id: string;
   customer_name: string;

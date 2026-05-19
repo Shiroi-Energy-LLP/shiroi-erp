@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { getUserProfile } from '@/lib/auth';
 import { getLead, leadHasProject, leadHasProposal } from '@/lib/leads-queries';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import { LeadTabs } from '@/components/leads/lead-tabs';
@@ -7,6 +8,7 @@ import { QuickQuoteButton } from '@/components/proposals/quick-quote-button';
 import { ClosureBandBadge, ClosureBandHelper } from '@/components/sales/closure-band-badge';
 import { AttemptWonButton } from '@/components/sales/attempt-won-button';
 import { CreateProjectFromLeadButton } from '@/components/sales/create-project-from-lead-button';
+import { ProposalGateBypassToggle } from '@/components/sales/proposal-gate-bypass-toggle';
 import { computeMargin } from '@/lib/closure-actions';
 import { Breadcrumb, Card, CardContent } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
@@ -25,6 +27,11 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
   }
 
   const showPayments = lead.status === 'won' || lead.status === 'converted';
+
+  // Resolve caller role for gated UI elements (gate-bypass toggle, skip-margin button).
+  // Fail open visually — role check is enforced server-side in each action.
+  const callerProfile = await getUserProfile();
+  const isGatedRole = callerProfile?.role === 'founder' || callerProfile?.role === 'marketing_manager';
 
   // For closure_soon leads, compute margin + band so the banner shows live
   // numbers (and AttemptWonButton routes through attemptWon server action).
@@ -89,22 +96,44 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
             sizeKwp={lead.estimated_size_kwp}
             segment={lead.segment}
           />
-          <StatusChange leadId={lead.id} currentStatus={lead.status} />
+          <StatusChange
+            leadId={lead.id}
+            currentStatus={lead.status}
+            currentExpectedCloseDate={lead.expected_close_date}
+          />
         </div>
       </div>
 
       {/* No-proposal banner — shows when the lead is in an active (non-terminal)
           stage but has no proposal yet. Mig 107 blocks the won transition
-          server-side; this surfaces the requirement up-front. */}
+          server-side; this surfaces the requirement up-front.
+          B1: founder + marketing_manager can bypass the gate for historical cleanup. */}
       {showNoProposalBanner && (
         <Card className="border-l-4 border-l-amber-500 bg-amber-50/40">
           <CardContent className="py-3">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="text-sm text-n-800">
-                <span className="font-semibold">No proposal yet.</span>{' '}
-                Create a Quick Quote (fast lane) or a detailed proposal before
-                marking this lead Won — the Won transition is blocked otherwise.
+                {lead.proposal_gate_bypassed ? (
+                  <>
+                    <span className="font-semibold text-amber-700">
+                      ⚠ Cleanup mode — Won is allowed without a proposal.
+                    </span>{' '}
+                    Toggle off after cleanup.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold">No proposal yet.</span>{' '}
+                    Create a Quick Quote (fast lane) or a detailed proposal before
+                    marking this lead Won — the Won transition is blocked otherwise.
+                  </>
+                )}
               </div>
+              {isGatedRole && (
+                <ProposalGateBypassToggle
+                  leadId={lead.id}
+                  currentlyBypassed={lead.proposal_gate_bypassed ?? false}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -118,9 +147,14 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
               <div className="space-y-2 flex-1 min-w-[240px]">
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-sm font-semibold text-n-800">Closure Soon</span>
-                  <ClosureBandBadge band={margin.band} grossMargin={margin.grossMargin} size="lg" />
+                  <ClosureBandBadge
+                    band={margin.band}
+                    grossMargin={margin.grossMargin}
+                    dataQuality={margin.dataQuality}
+                    size="lg"
+                  />
                 </div>
-                <ClosureBandHelper band={margin.band} />
+                <ClosureBandHelper band={margin.band} dataQuality={margin.dataQuality} />
                 <div className="text-xs text-n-500 font-mono">
                   Base: ₹{Math.round(margin.basePrice).toLocaleString('en-IN')} · BOM cost: ₹
                   {Math.round(margin.bomCost).toLocaleString('en-IN')} · Site est: ₹
@@ -128,7 +162,11 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
                 </div>
               </div>
               <div>
-                <AttemptWonButton leadId={lead.id} disabled={margin.band === 'red'} />
+                <AttemptWonButton
+                  leadId={lead.id}
+                  disabled={margin.band === 'red'}
+                  canSkipMargin={isGatedRole}
+                />
               </div>
             </div>
           </CardContent>

@@ -7,11 +7,18 @@ type LeadStatus = Database['public']['Enums']['lead_status'];
 export { isValidTransition, normalizePhone, getValidNextStatuses } from './leads-helpers';
 
 export interface LeadFilters {
-  status?: LeadStatus;
+  status?: LeadStatus | LeadStatus[];
   source?: Database['public']['Enums']['lead_source'];
   segment?: string;
   search?: string;
   assignedTo?: string;
+  referrer?: string;
+  /** Resolved list of channel_partner IDs for 'internal_all' sentinel */
+  referrerIds?: string[];
+  kwpMin?: number;
+  kwpMax?: number;
+  closeFrom?: string;
+  closeTo?: string;
   includeConverted?: boolean;
   includeArchived?: boolean;
   archivedOnly?: boolean;
@@ -48,7 +55,11 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
     .order(sortCol, { ascending: sortDir });
 
   if (filters.status) {
-    query = query.eq('status', filters.status);
+    if (Array.isArray(filters.status)) {
+      query = query.in('status', filters.status);
+    } else {
+      query = query.eq('status', filters.status);
+    }
   } else if (!filters.includeConverted) {
     query = query.not('status', 'eq', 'converted');
   }
@@ -56,6 +67,22 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   if (filters.segment) query = query.eq('segment', filters.segment as any);
   if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
   if (filters.search) query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+  if (filters.kwpMin !== undefined) query = query.gte('estimated_size_kwp', filters.kwpMin);
+  if (filters.kwpMax !== undefined) query = query.lte('estimated_size_kwp', filters.kwpMax);
+  if (filters.closeFrom) query = query.gte('expected_close_date', filters.closeFrom);
+  if (filters.closeTo) query = query.lte('expected_close_date', filters.closeTo);
+  if (filters.referrer) {
+    if (filters.referrer === 'internal_all') {
+      // Caller (page) is responsible for resolving internal partner IDs and
+      // passing them via referrerIds. If referrerIds is also provided, that
+      // filter handles it. Otherwise fall through without filtering by partner.
+    } else {
+      query = query.eq('channel_partner_id', filters.referrer);
+    }
+  }
+  if (filters.referrerIds && filters.referrerIds.length > 0) {
+    query = query.in('channel_partner_id', filters.referrerIds);
+  }
 
   // Archive filtering
   if (filters.archivedOnly) {

@@ -1,10 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { Button, Badge, Select, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui';
+import { Button, Badge, Select, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, useToast } from '@repo/ui';
 import { X, Trash2, GitMerge } from 'lucide-react';
 import { bulkAssignLeads, bulkChangeLeadStatus, bulkDeleteLeads } from '@/lib/leads-actions';
 import { MergeLeadsModal } from './merge-leads-modal';
+import { STAGE_LABELS } from '@/lib/leads-helpers';
+import type { Database } from '@repo/types/database';
+
+type LeadStatus = Database['public']['Enums']['lead_status'];
 
 interface Employee {
   id: string;
@@ -26,19 +30,25 @@ interface BulkActionBarProps {
   onActionComplete: () => void;
 }
 
-const BULK_STATUSES = [
-  { value: 'new', label: 'New' },
-  { value: 'contacted', label: 'Contacted' },
-  { value: 'site_survey_scheduled', label: 'Survey Scheduled' },
-  { value: 'site_survey_done', label: 'Survey Done' },
-  { value: 'proposal_sent', label: 'Proposal Sent' },
-  { value: 'design_confirmed', label: 'Design Confirmed' },
-  { value: 'negotiation', label: 'Negotiation' },
-  { value: 'won', label: 'Won' },
-  { value: 'lost', label: 'Lost' },
-  { value: 'on_hold', label: 'On Hold' },
-  { value: 'disqualified', label: 'Disqualified' },
+// Active pipeline stages only — no legacy (proposal_sent) or terminal (won/lost/disqualified/converted)
+const BULK_STATUS_KEYS: LeadStatus[] = [
+  'new',
+  'contacted',
+  'quick_quote_sent',
+  'site_survey_scheduled',
+  'site_survey_done',
+  'design_in_progress',
+  'design_confirmed',
+  'detailed_proposal_sent',
+  'negotiation',
+  'closure_soon',
+  'on_hold',
 ];
+
+const BULK_STATUSES = BULK_STATUS_KEYS.map((value) => ({
+  value,
+  label: STAGE_LABELS[value],
+}));
 
 export function BulkActionBar({
   selectedIds,
@@ -50,21 +60,34 @@ export function BulkActionBar({
   const [loading, setLoading] = React.useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const [showMerge, setShowMerge] = React.useState(false);
+  const { addToast } = useToast();
 
   async function handleAssign(assignedTo: string) {
     if (!assignedTo) return;
     setLoading(true);
     const result = await bulkAssignLeads(selectedIds, assignedTo);
     setLoading(false);
-    if (result.success) onActionComplete();
+    if (result.success) {
+      onActionComplete();
+    } else if (result.error) {
+      addToast({ variant: 'destructive', title: 'Assign failed', description: result.error });
+    }
   }
 
   async function handleStatusChange(status: string) {
     if (!status) return;
     setLoading(true);
-    const result = await bulkChangeLeadStatus(selectedIds, status as any);
+    const result = await bulkChangeLeadStatus(selectedIds, status as LeadStatus);
     setLoading(false);
-    if (result.success) onActionComplete();
+    if (result.success) {
+      // Surface partial-update warning (success=true but error message means some rows were skipped)
+      if (result.error) {
+        addToast({ variant: 'destructive', title: 'Partial update', description: result.error });
+      }
+      onActionComplete();
+    } else if (result.error) {
+      addToast({ variant: 'destructive', title: 'Status change failed', description: result.error });
+    }
   }
 
   async function handleDelete() {

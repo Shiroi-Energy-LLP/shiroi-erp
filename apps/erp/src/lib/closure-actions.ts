@@ -23,6 +23,7 @@
 
 import Decimal from 'decimal.js';
 import { createClient } from '@repo/supabase/server';
+import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
 import {
@@ -153,11 +154,13 @@ export async function attemptWon(
 
     if (snapshot.band === 'red') {
       return err(
-        `Gross margin is ${snapshot.grossMargin}% which is below the ${AMBER_BAND_MIN_PCT}% floor. Cannot flip to won - renegotiate or mark Lost.`,
+        `Gross margin is ${snapshot.grossMargin ?? 0}% which is below the ${AMBER_BAND_MIN_PCT}% floor. Cannot flip to won - renegotiate or mark Lost.`,
       );
     }
 
     if (snapshot.band === 'amber') {
+      // grossMargin is non-null in amber band (dataQuality='ok')
+      const grossMarginValue = snapshot.grossMargin ?? 0;
       // Create pending approval row
       const { data: approval, error: insErr } = await supabase
         .from('lead_closure_approvals')
@@ -165,7 +168,7 @@ export async function attemptWon(
           lead_id: leadId,
           requested_by: employee.id,
           band_at_request: 'amber',
-          gross_margin_at_request: snapshot.grossMargin,
+          gross_margin_at_request: grossMarginValue,
           final_base_price: snapshot.basePrice,
           reason: reason ?? null,
           status: 'pending',
@@ -185,7 +188,7 @@ export async function attemptWon(
         const notifications = founders.map((f) => ({
           recipient_employee_id: f.id,
           title: 'Closure approval requested',
-          body: `Marketing manager requests approval to close lead at ${snapshot.grossMargin}% gross margin (amber band).`,
+          body: `Marketing manager requests approval to close lead at ${grossMarginValue}% gross margin (amber band).`,
           notification_type: 'closure_approval',
           entity_type: 'lead',
           entity_id: leadId,
@@ -214,8 +217,94 @@ export async function attemptWon(
 
     if (updErr) return err(updErr.message, updErr.code);
 
-    console.log(`${op} Lead ${leadId} flipped to won (green band, margin=${snapshot.grossMargin}%)`);
+    console.log(`${op} Lead ${leadId} flipped to won (green band, margin=${snapshot.grossMargin ?? 'n/a (no BOM cost)'}%)`);
     return ok({ outcome: 'won', newStatus: 'won' });
+  } catch (e) {
+    console.error(`${op} threw`, e);
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+/**
+ * Mark a lead Won directly, bypassing the gross-margin check.
+ * Restricted to founder + marketing_manager.
+ * Writes margin_skipped_at + margin_skipped_by for audit trail.
+ * The DB trigger (fn_block_lead_won_without_proposal) still runs — if the
+ * lead has no proposal and proposal_gate_bypassed=FALSE, the UPDATE will fail;
+ * callers must toggle the gate separately.
+ */
+export async function markWonSkipMargin(
+  leadId: string,
+  reason?: string,
+): Promise<ActionResult<{ newStatus: LeadStatus }>> {
+  const op = '[markWonSkipMargin]';
+  try {
+    if (!leadId) return err('Missing leadId');
+
+    const supabase = await createClient();
+
+    // Resolve caller + role check
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return err('Not authenticated');
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (!profile) return err('Profile not found');
+    if (profile.role !== 'founder' && profile.role !== 'marketing_manager') {
+      return err('Only a founder or marketing_manager can skip the margin check');
+    }
+
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('id')
+      .eq('profile_id', user.id)
+      .maybeSingle();
+    if (!employee) return err('Employee record not found');
+
+    // Verify lead is in a valid status
+    const { data: lead, error: leadErr } = await supabase
+      .from('leads')
+      .select('id, status')
+      .eq('id', leadId)
+      .maybeSingle();
+    if (leadErr) return err(leadErr.message, leadErr.code);
+    if (!lead) return err('Lead not found');
+    if (lead.status !== 'negotiation' && lead.status !== 'closure_soon') {
+      return err(
+        `Lead is in '${lead.status}' — must be in negotiation or closure_soon to mark Won.`,
+      );
+    }
+
+    const { error: updErr } = await supabase
+      .from('leads')
+      .update({
+        status: 'won' as LeadStatus,
+        margin_skipped_at: new Date().toISOString(),
+        margin_skipped_by: employee.id,
+        status_updated_at: new Date().toISOString(),
+      })
+      .eq('id', leadId);
+
+    if (updErr) {
+      // Surface the proposal-gate error clearly so the caller knows to toggle it separately
+      console.error(`${op} UPDATE failed`, { leadId, error: updErr, timestamp: new Date().toISOString() });
+      return err(updErr.message, updErr.code);
+    }
+
+    console.log(
+      `${op} Lead ${leadId} marked Won (margin skipped by employee ${employee.id}, reason: ${reason ?? 'none'})`,
+    );
+
+    revalidatePath(`/sales/${leadId}`);
+    revalidatePath('/sales');
+    revalidatePath('/dashboard');
+
+    return ok({ newStatus: 'won' });
   } catch (e) {
     console.error(`${op} threw`, e);
     return err(e instanceof Error ? e.message : 'Unknown error');

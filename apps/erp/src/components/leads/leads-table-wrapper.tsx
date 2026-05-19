@@ -4,6 +4,12 @@ import * as React from 'react';
 import { DataTable } from '@/components/data-table';
 import { LEAD_COLUMNS } from '@/components/data-table/column-config';
 import { updateCellValue } from '@/lib/inline-edit-actions';
+import { BulkActionBar } from '@/components/leads/bulk-action-bar';
+
+interface Employee {
+  id: string;
+  full_name: string;
+}
 
 interface LeadsTableWrapperProps {
   data: any[];
@@ -17,6 +23,7 @@ interface LeadsTableWrapperProps {
   views: any[];
   activeViewId: string | null;
   visibleColumns: string[];
+  employees: Employee[];
 }
 
 export function LeadsTableWrapper({
@@ -31,12 +38,26 @@ export function LeadsTableWrapper({
   views,
   activeViewId,
   visibleColumns,
+  employees,
 }: LeadsTableWrapperProps) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   async function handleCellEdit(rowId: string, field: string, value: string | number | null) {
     return updateCellValue({ entityType: 'leads', rowId, field, value });
   }
+
+  const selectedLeads = React.useMemo(
+    () =>
+      data
+        .filter((row) => selectedIds.includes(row.id))
+        .map((row) => ({
+          id: row.id as string,
+          customer_name: row.customer_name as string,
+          phone: row.phone as string,
+          status: row.status as string,
+        })),
+    [data, selectedIds],
+  );
 
   return (
     <DataTable
@@ -60,9 +81,13 @@ export function LeadsTableWrapper({
       onCellEdit={handleCellEdit}
       bulkActions={
         selectedIds.length > 0 ? (
-          <span className="text-xs text-shiroi-green font-medium ml-2">
-            {selectedIds.length} selected
-          </span>
+          <BulkActionBar
+            selectedIds={selectedIds}
+            selectedLeads={selectedLeads}
+            employees={employees}
+            onClear={() => setSelectedIds([])}
+            onActionComplete={() => setSelectedIds([])}
+          />
         ) : null
       }
     />

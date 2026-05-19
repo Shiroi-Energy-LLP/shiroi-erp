@@ -3,6 +3,7 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
+import { ok, err, type ActionResult } from './types/actions';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
@@ -24,6 +25,7 @@ export async function bulkAssignLeads(leadIds: string[], assignedTo: string): Pr
     return { success: false, error: error.message };
   }
 
+  revalidatePath('/sales');
   revalidatePath('/leads');
   return { success: true };
 }
@@ -51,6 +53,7 @@ export async function bulkChangeLeadStatus(leadIds: string[], status: LeadStatus
   }
 
   const updatedCount = data?.length ?? 0;
+  revalidatePath('/sales');
   revalidatePath('/leads');
 
   if (updatedCount < leadIds.length) {
@@ -81,6 +84,7 @@ export async function bulkDeleteLeads(leadIds: string[]): Promise<{ success: boo
     return { success: false, error: error.message };
   }
 
+  revalidatePath('/sales');
   revalidatePath('/leads');
   return { success: true };
 }
@@ -200,4 +204,54 @@ export async function unarchiveLead(leadId: string): Promise<{ success: boolean;
   }
   revalidatePath('/leads');
   return { success: true };
+}
+
+/**
+ * Toggle the proposal-gate bypass flag on a lead.
+ * Restricted to founder + marketing_manager.
+ * When bypass=true the DB trigger fn_block_lead_won_without_proposal will
+ * allow Won without a proposal (historical cleanup only).
+ */
+export async function toggleProposalGateBypass(
+  leadId: string,
+  bypass: boolean,
+): Promise<ActionResult<null>> {
+  const op = '[toggleProposalGateBypass]';
+  try {
+    if (!leadId) return err('Missing leadId');
+
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return err('Not authenticated');
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (!profile) return err('Profile not found');
+    if (profile.role !== 'founder' && profile.role !== 'marketing_manager') {
+      return err('Only a founder or marketing_manager can toggle the proposal gate bypass');
+    }
+
+    const { error } = await supabase
+      .from('leads')
+      .update({ proposal_gate_bypassed: bypass, updated_at: new Date().toISOString() })
+      .eq('id', leadId);
+
+    if (error) {
+      console.error(`${op} Failed`, { leadId, bypass, error, timestamp: new Date().toISOString() });
+      return err(error.message, error.code);
+    }
+
+    console.log(`${op} Lead ${leadId} proposal_gate_bypassed set to ${bypass}`);
+    revalidatePath(`/sales/${leadId}`);
+    return ok(null);
+  } catch (e) {
+    console.error(`${op} threw`, e);
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
 }

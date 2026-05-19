@@ -105,6 +105,29 @@ export const STAGE_LABELS: Record<LeadStatus, string> = {
   disqualified: 'Disqualified',
 };
 
+/**
+ * Compact labels for status badges where space is constrained (max ~140px).
+ * Full labels live in STAGE_LABELS for dropdowns and other spacious contexts.
+ */
+export const STAGE_LABELS_SHORT: Record<LeadStatus, string> = {
+  new: 'New',
+  contacted: 'Contacted',
+  quick_quote_sent: 'Quick Sent',
+  site_survey_scheduled: 'Survey Sched',
+  site_survey_done: 'Survey Done',
+  design_in_progress: 'Design WIP',
+  design_confirmed: 'Design OK',
+  detailed_proposal_sent: 'Detailed Sent',
+  proposal_sent: 'Proposal Sent',
+  negotiation: 'Negotiation',
+  closure_soon: 'Closure Soon',
+  won: 'Won',
+  converted: 'Converted',
+  lost: 'Lost',
+  on_hold: 'On Hold',
+  disqualified: 'Disqualified',
+};
+
 /** Default close probabilities by stage (can be overridden by user) */
 export const DEFAULT_PROBABILITY: Partial<Record<LeadStatus, number>> = {
   new: 5,

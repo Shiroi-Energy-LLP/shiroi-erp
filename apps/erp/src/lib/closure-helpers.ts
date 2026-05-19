@@ -22,12 +22,23 @@ export const TARGET_MARGIN_PCT = 15;
 
 export type Band = 'green' | 'amber' | 'red';
 
+/**
+ * Describes data-quality when computing the margin snapshot.
+ *   'ok'           — all inputs present; margin is reliable
+ *   'no_bom_cost'  — basePrice > 0 but no BOM cost captured; band forced green,
+ *                    grossMargin is null — do not block Won
+ *   'no_base_price'— bomCost > 0 but no quote price; band forced red
+ *   'no_data'      — both zero; band forced red
+ */
+export type DataQuality = 'ok' | 'no_bom_cost' | 'no_base_price' | 'no_data';
+
 export interface MarginSnapshot {
   basePrice: number;
   bomCost: number;
   siteExpensesEst: number;
-  grossMargin: number; // as percentage, not fraction
+  grossMargin: number | null; // as percentage, not fraction; null when BOM cost unknown
   band: Band;
+  dataQuality: DataQuality;
 }
 
 /**
@@ -43,22 +54,55 @@ export function classifyBand(grossMarginPct: number): Band {
 /**
  * Build a MarginSnapshot from the three inputs. Pure math over Decimal.js.
  * Called by `computeMargin()` in closure-actions.ts to avoid duplication.
+ *
+ * Data-quality rules (B2 closure-band fallback):
+ *   basePrice=0, bomCost=0  → band='red',   dataQuality='no_data'
+ *   basePrice>0, bomCost=0  → band='green',  dataQuality='no_bom_cost'  (no cost data — don't block)
+ *   basePrice=0, bomCost>0  → band='red',    dataQuality='no_base_price'
+ *   both>0                  → normal calc,   dataQuality='ok'
  */
 export function computeSnapshotFromValues(
   basePrice: number,
   bomCost: number,
   siteExpensesEst: number,
 ): ActionResult<MarginSnapshot> {
-  if (basePrice <= 0) {
+  // No price and no cost — genuinely unknown, block.
+  if (basePrice <= 0 && bomCost <= 0) {
+    return ok({
+      basePrice: 0,
+      bomCost: 0,
+      siteExpensesEst,
+      grossMargin: 0,
+      band: 'red',
+      dataQuality: 'no_data',
+    });
+  }
+
+  // Have a price but no BOM cost — can't compute margin; trust the user, go green.
+  if (basePrice > 0 && bomCost <= 0) {
+    return ok({
+      basePrice,
+      bomCost: 0,
+      siteExpensesEst,
+      grossMargin: null,
+      band: 'green',
+      dataQuality: 'no_bom_cost',
+    });
+  }
+
+  // Know cost but no quote price — blocking is correct.
+  if (basePrice <= 0 && bomCost > 0) {
     return ok({
       basePrice: 0,
       bomCost,
       siteExpensesEst,
       grossMargin: 0,
       band: 'red',
+      dataQuality: 'no_base_price',
     });
   }
 
+  // Both present — normal calculation.
   const totalCost = new Decimal(bomCost).add(siteExpensesEst);
   const profit = new Decimal(basePrice).sub(totalCost);
   const grossMargin = profit.div(basePrice).mul(100).toDP(2).toNumber();
@@ -69,5 +113,6 @@ export function computeSnapshotFromValues(
     siteExpensesEst,
     grossMargin,
     band: classifyBand(grossMargin),
+    dataQuality: 'ok',
   });
 }

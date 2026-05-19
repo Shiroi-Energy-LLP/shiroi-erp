@@ -38,7 +38,8 @@ The sales list page has a stage-based pipeline nav (`lead-stage-nav.tsx`) with c
   - green ≥10% margin → `attemptWon` flips lead to `won` immediately
   - amber 8–10% → inserts row into `lead_closure_approvals`, notifies founder; founder approves/rejects via `ClosureApprovalsPanel` on dashboard
   - red <8% → blocked; user must increase quote or reduce BOM cost
-- **Won cascade:** `trg_mark_proposal_accepted_on_lead_won` (migration 055) fires on any `UPDATE leads SET status = 'won'`. It finds the most recent in-play proposal (detailed preferred, most recent wins), marks it `accepted`, which cascades into the existing `create_project_from_accepted_proposal` trigger → project spawns automatically. Works from dropdown, `attemptWon`, `approveClosure`, or raw UPDATE. **Bulk imports bypass this** — they INSERT proposals/projects directly; migration 104's `BEFORE INSERT` trigger on projects backstops the PM lookup so direct-INSERT projects still get assigned to Manivel. **Migration 107 hard-blocks the won transition when no proposal exists** (`fn_block_lead_won_without_proposal`, BEFORE UPDATE on leads, raises `check_violation`) — Path A users must Quick Quote first; the lead layout shows an amber "no proposal" banner on every non-terminal stage to signal this up-front. The **`CreateProjectFromLeadButton`** on `/sales/[id]` (visible only when status=won AND no project) is the manual fallback for the rare case where a proposal exists but the cascade missed (e.g. proposal already 'accepted' from an import).
+- **Won cascade:** `trg_mark_proposal_accepted_on_lead_won` (migration 055) fires on any `UPDATE leads SET status = 'won'`. It finds the most recent in-play proposal (detailed preferred, most recent wins), marks it `accepted`, which cascades into the existing `create_project_from_accepted_proposal` trigger → project spawns automatically. Works from dropdown, `attemptWon`, `approveClosure`, or raw UPDATE. **Bulk imports bypass this** — they INSERT proposals/projects directly; migration 104's `BEFORE INSERT` trigger on projects backstops the PM lookup so direct-INSERT projects still get assigned to Manivel. **Migration 107 blocks the won transition when no proposal exists**, but **migration 109 added the `leads.proposal_gate_bypassed` escape hatch** — when TRUE the trigger skips the check (UI toggle in the no-proposal banner, visible to founder + marketing_manager for historical cleanup). The Path A "must Quick Quote first" UX still holds for new business; the bypass is for legacy data without a proposal row. The **`CreateProjectFromLeadButton`** on `/sales/[id]` (visible only when status=won AND no project) is the manual fallback for the rare case where a proposal exists but the cascade missed (e.g. proposal already 'accepted' from an import).
+- **Closure-band data quality** (mig 109 + `closure-helpers.ts`): `MarginSnapshot` now carries `dataQuality: 'ok' | 'no_bom_cost' | 'no_base_price' | 'no_data'`. When `basePrice > 0` but `bomCost = 0` (common for AI-extracted historical proposals), the band returns `green` with `dataQuality='no_bom_cost'` instead of red-blocking — a ⓘ note renders on the badge instead. The "Mark Won (skip margin)" secondary button on `AttemptWonButton` lets founder + marketing_manager bypass the closure-band entirely; audited via `leads.margin_skipped_at` + `margin_skipped_by`.
 - **Consultant commission:** `fn_lock_consultant_commission_on_partner_assignment` (BEFORE UPDATE on leads, migration 052) computes and locks commission at the moment a channel_partner_id is assigned. `fn_create_consultant_payout_on_customer_payment` (AFTER INSERT on customer_payments) creates a pending payout row per tranche with 5% TDS deducted.
 - **Phone uniqueness:** Partial unique index on `leads.phone` excludes `disqualified` and `lost` statuses, so re-engaging a lost customer doesn't fail.
 - **Payment SLAs:** `proposal_payment_schedule.followup_sla_days` + `escalation_sla_days` drive the `create_payment_followup_tasks` + `enqueue_payment_escalations` triggers. Follow-up tasks are assigned to `marketing_manager` (Prem).
@@ -108,6 +109,34 @@ apps/erp/src/components/
 - **`price_book_id` on BOM lines** is enforced for detailed proposals by `finalizeDetailedProposal` (validates every line has it). Legacy BOM lines can be free-text; `BomPicker` shows an amber chip for them.
 - **FK on `lead_status_history.changed_by`** points to `employees.id`, not `auth.users.id`. Migration 055 fixed the trigger — look up via `profile_id = auth.uid()` with NULL fallback.
 
+## /sales filtering, bulk actions, and dashboard widgets (mig 109)
+
+- **Multi-status filter** — `?status=new,contacted,negotiation` (comma-separated URL param). `getLeads` accepts `LeadStatus | LeadStatus[]`. UI: `FilterMultiSelect` popover with checkboxes, label "All Statuses (N)". Source for options is `STAGE_LABELS` minus terminal/legacy entries (`converted`, `proposal_sent`, `disqualified`).
+- **kWp range filter** — `?kwpMin=5&kwpMax=15`. `FilterRange` component (dual-mode: `type='number'` here, `type='date'` for closure-date range). Indexed by `idx_leads_estimated_size_kwp` (mig 109).
+- **Closure date range filter** — `?closeFrom=2026-05-20&closeTo=2026-06-30`. Same `FilterRange` component, `type='date'`.
+- **Referrer filter** — `?referrer=<channel_partner_id>` or `?referrer=internal_all`. `channel_partners.is_internal` (mig 109) flags in-house referrers; seed includes "Vivek Sridhar (Founder)" + "Management Referral". The `internal_all` sentinel is resolved in the page layer into a `referrerIds: string[]` passed to `getLeads`.
+- **Bulk actions** — `BulkActionBar` is rendered in `LeadsTableWrapper` when `selectedIds.length > 0`. Bulk Assign, Change Status, Merge (when exactly 2), Delete. Status options derived from `STAGE_LABELS` (single source of truth). `bulkChangeLeadStatus` reports partial-update count (RLS-blocked rows) via toast.
+- **PipelineSummary** is a 5-card grid: Active Leads, Weighted Pipeline, **Closing This Week** (Link to `/sales?closeFrom&closeTo`), **Closing This Month** (Link), Won. The two Closing cards show count + total kWp + total ₹, fetched in SQL via `get_pipeline_close_window(start, end)` RPC (mig 109) — never aggregate money in JS (NEVER-DO #12).
+- **Status badge** (`lead-status-badge.tsx`) — 12 distinct Tailwind colour pairs (slate/blue/cyan/amber/indigo/violet/orange/emerald/rose/zinc) keyed by `LeadStatus`. Renders short labels from `STAGE_LABELS_SHORT` (long form `STAGE_LABELS` stays for dropdowns). `max-w-[140px] truncate` clamps any overflow.
+- **Follow-up tasks auto-create** — `upsertLeadFollowupTask(leadId, dueDate)` action in `leads-task-actions.ts` is called from `status-change.tsx` (after a successful status UPDATE) AND from `inline-edit-actions.ts` when `next_followup_date` is edited inline. Idempotent — UPDATEs the open `lead_followup` task if one exists for the lead, INSERTs otherwise. Failure is non-fatal (logged, not surfaced).
+- **`getMyTasks`** filters `is_completed=false` (mig 109 batch); completed tasks visible via `/sales/tasks?show=all`.
+- **`get_expected_orders` widened** — now spans `quick_quote_sent`, `detailed_proposal_sent`, `design_confirmed`, `negotiation`, `closure_soon` (was just `negotiation` + `closure_soon`). The dashboard Expected Orders card now reflects leads that actually might close in the window.
+
+## Quick Quote PDF (mig 109 batch)
+
+The Quick Quote PDF (`apps/erp/src/lib/pdf/budgetary-quote-pdf.tsx`) is now an **8-page branded document** matching the detailed proposal's look:
+
+1. Cover (with "Budgetary Estimate — subject to site survey" disclaimer)
+2. About Shiroi (shared with detailed)
+3. System Overview (kWp, type, structure, indicative generation)
+4. Savings (shared `SavingsPage`)
+5. Investment Summary — high-level cost groups (panels / inverter / BoS / installation / optional liaison / optional civil), NOT line-by-line BOM
+6. Payment Schedule stub — standard 30/40/20/10 with trigger labels (no dates)
+7. Warranty + T&C (shared)
+8. Why Shiroi (shared)
+
+Shared page components extracted to `apps/erp/src/lib/pdf/shared-pages.tsx` so future polish lands in both PDFs at once.
+
 ## Past Decisions & Specs
 
 - `docs/superpowers/specs/2026-04-04-pm-leads-proposals-design.md` — initial leads/proposals redesign
@@ -117,6 +146,7 @@ apps/erp/src/components/
 - **Migration 055** — FK fix on `log_lead_status_change` + won→proposal→project cascade trigger + `employees.is_active` fix
 - **Migration 056** — FK fix on `log_proposal_status_change` (dormant bug surfaced by 055's new trigger); column-config status options reconciled
 - **Migration 088** — `leads_update` RLS expanded to include `sales_engineer` (aligns with `leads_insert` / `leads_read` and documented role access). Closes silent-RLS-failure footgun where unassigned leads appeared to update successfully but did not.
+- **Migration 109** — marketing feedback batch (May 19): `leads.proposal_gate_bypassed` (gate escape hatch), `leads.margin_skipped_at/by` (closure-band audit), `channel_partners.is_internal` flag with Vivek + Management referral seeds, widened `get_expected_orders` status filter, new `get_pipeline_close_window(start, end)` RPC powering clickable Closing-This-Week + This-Month cards, `idx_leads_estimated_size_kwp` for kWp range filter. UI: bulk-select fixed, follow-up tasks auto-create, multi-status/kWp/date/referrer filters, 12-colour status badge palette, multi-page Quick Quote PDF.
 - **Migration 094** — `leads.map_link TEXT NULL` added (optional Google Maps URL, mirrors `projects.location_map_link`); `create_project_from_accepted_proposal` trigger now inherits the link onto the new project; RPCs `get_expected_orders(window_days)` + `get_expected_payments(window_days)` powering the dashboard cards; backfill of `payment_followup`/`payment_escalation` tasks to the oldest active marketing_manager (no-op at apply time but kept as a safety net). (Originally drafted as mig 089 but renumbered after origin/main shipped 088-091 in parallel.)
 - **Migration 017** — Contacts V2 foundation (see `docs/modules/contacts.md`)
 - **Migration 020** — pipeline fields (`expected_close_date`, `close_probability`, `is_archived`)

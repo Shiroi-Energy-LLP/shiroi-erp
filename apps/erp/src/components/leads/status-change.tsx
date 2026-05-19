@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@repo/supabase/client';
 import { Select, Button, Input } from '@repo/ui';
 import { getValidNextStatuses, requiresFollowUp, DEFAULT_PROBABILITY, STAGE_LABELS } from '@/lib/leads-helpers';
+import { upsertLeadFollowupTask } from '@/lib/leads-task-actions';
 import type { Database } from '@repo/types/database';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
@@ -15,13 +16,22 @@ const STATUS_LABEL = STAGE_LABELS;
 interface StatusChangeProps {
   leadId: string;
   currentStatus: LeadStatus;
+  currentExpectedCloseDate?: string | null;
 }
 
-export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
+/** ISO YYYY-MM-DD for today + N days (client-side, no timezone needed) */
+function offsetDate(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0]!;
+}
+
+export function StatusChange({ leadId, currentStatus, currentExpectedCloseDate }: StatusChangeProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedStatus, setSelectedStatus] = useState<LeadStatus | ''>('');
   const [nextFollowupDate, setNextFollowupDate] = useState('');
+  const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const validStatuses = getValidNextStatuses(currentStatus);
@@ -31,6 +41,21 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
   }
 
   const needsFollowup = selectedStatus !== '' && requiresFollowUp(selectedStatus);
+
+  // When the user picks negotiation or closure_soon, default expected_close_date
+  // to today+14 if the lead doesn't already have one.
+  function handleStatusSelect(status: LeadStatus | '') {
+    setSelectedStatus(status);
+    setError(null);
+    if (
+      (status === 'negotiation' || status === 'closure_soon') &&
+      !currentExpectedCloseDate
+    ) {
+      setExpectedCloseDate((prev) => prev || offsetDate(14));
+    } else if (status !== 'negotiation' && status !== 'closure_soon') {
+      setExpectedCloseDate('');
+    }
+  }
 
   async function handleUpdate() {
     const op = '[StatusChange.handleUpdate]';
@@ -54,6 +79,11 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
     // Set follow-up date if provided
     if (nextFollowupDate) {
       updates.next_followup_date = nextFollowupDate;
+    }
+
+    // Include expected_close_date if set/changed
+    if (expectedCloseDate) {
+      updates.expected_close_date = expectedCloseDate;
     }
 
     // Auto-set probability based on stage
@@ -80,21 +110,30 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
       return;
     }
 
+    // Fire-and-forget: upsert follow-up task if a date was set (non-blocking)
+    if (nextFollowupDate) {
+      upsertLeadFollowupTask(leadId, nextFollowupDate).catch((e) => {
+        console.error(`${op} upsertLeadFollowupTask failed:`, { leadId, nextFollowupDate, error: e });
+      });
+    }
+
     setSelectedStatus('');
     setNextFollowupDate('');
+    setExpectedCloseDate('');
     startTransition(() => {
       router.refresh();
     });
   }
 
+  const showExpectedCloseInput =
+    (selectedStatus === 'negotiation' || selectedStatus === 'closure_soon') &&
+    !currentExpectedCloseDate;
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <Select
         value={selectedStatus}
-        onChange={(e) => {
-          setSelectedStatus(e.target.value as LeadStatus | '');
-          setError(null);
-        }}
+        onChange={(e) => handleStatusSelect(e.target.value as LeadStatus | '')}
         className="w-48"
       >
         <option value="">Move to...</option>
@@ -118,6 +157,19 @@ export function StatusChange({ leadId, currentStatus }: StatusChangeProps) {
             min={new Date().toISOString().split('T')[0]}
             className="w-36 h-8 text-sm"
             required
+          />
+        </div>
+      )}
+
+      {showExpectedCloseInput && (
+        <div className="flex items-center gap-1">
+          <label className="text-xs text-n-500 whitespace-nowrap">Exp. close:</label>
+          <Input
+            type="date"
+            value={expectedCloseDate}
+            onChange={(e) => setExpectedCloseDate(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+            className="w-36 h-8 text-sm"
           />
         </div>
       )}

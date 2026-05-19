@@ -24,6 +24,7 @@ export async function getMyTasks(employeeId: string): Promise<TaskItem[]> {
     .from('tasks')
     .select('id, title, description, entity_type, entity_id, project_id, due_date, priority, is_completed')
     .eq('assigned_to', employeeId)
+    .eq('is_completed', false)
     .is('deleted_at', null)
     .order('is_completed', { ascending: true })
     .order('due_date', { ascending: true, nullsFirst: false })

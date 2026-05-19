@@ -523,6 +523,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_internal: boolean
           leads_converted_count: number
           leads_referred_count: number
           pan_number: string | null
@@ -547,6 +548,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_internal?: boolean
           leads_converted_count?: number
           leads_referred_count?: number
           pan_number?: string | null
@@ -571,6 +573,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_internal?: boolean
           leads_converted_count?: number
           leads_referred_count?: number
           pan_number?: string | null
@@ -1747,6 +1750,113 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      documents: {
+        Row: {
+          ai_summary: string | null
+          category: string
+          created_at: string
+          deleted_at: string | null
+          embedding: string | null
+          external_id: string | null
+          external_url: string | null
+          extracted_text: string | null
+          id: string
+          lead_id: string | null
+          mime_type: string | null
+          name: string
+          parent_folder_id: string | null
+          project_id: string | null
+          proposal_id: string | null
+          size_bytes: number | null
+          storage_backend: string
+          storage_path: string | null
+          subcategory: string | null
+          tags: string[]
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          category: string
+          created_at?: string
+          deleted_at?: string | null
+          embedding?: string | null
+          external_id?: string | null
+          external_url?: string | null
+          extracted_text?: string | null
+          id?: string
+          lead_id?: string | null
+          mime_type?: string | null
+          name: string
+          parent_folder_id?: string | null
+          project_id?: string | null
+          proposal_id?: string | null
+          size_bytes?: number | null
+          storage_backend: string
+          storage_path?: string | null
+          subcategory?: string | null
+          tags?: string[]
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          ai_summary?: string | null
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          embedding?: string | null
+          external_id?: string | null
+          external_url?: string | null
+          extracted_text?: string | null
+          id?: string
+          lead_id?: string | null
+          mime_type?: string | null
+          name?: string
+          parent_folder_id?: string | null
+          project_id?: string | null
+          proposal_id?: string | null
+          size_bytes?: number | null
+          storage_backend?: string
+          storage_path?: string | null
+          subcategory?: string | null
+          tags?: string[]
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           }
           ]
@@ -5030,6 +5140,8 @@ export type Database = {
           design_notes: string | null
           disqualification_reason: string | null
           draft_proposal_id: string | null
+          drive_folder_id: string | null
+          drive_folder_url: string | null
           electricity_bill_number: string | null
           email: string | null
           estimated_size_kwp: number | null
@@ -5040,10 +5152,13 @@ export type Database = {
           is_qualified: boolean
           last_contacted_at: string | null
           map_link: string | null
+          margin_skipped_at: string | null
+          margin_skipped_by: string | null
           next_followup_date: string | null
           notes: string | null
           phone: string
           pincode: string | null
+          proposal_gate_bypassed: boolean
           segment: Database["public"]["Enums"]["customer_segment"]
           source: Database["public"]["Enums"]["lead_source"]
           state: string
@@ -5078,6 +5193,8 @@ export type Database = {
           design_notes?: string | null
           disqualification_reason?: string | null
           draft_proposal_id?: string | null
+          drive_folder_id?: string | null
+          drive_folder_url?: string | null
           electricity_bill_number?: string | null
           email?: string | null
           estimated_size_kwp?: number | null
@@ -5088,10 +5205,13 @@ export type Database = {
           is_qualified?: boolean
           last_contacted_at?: string | null
           map_link?: string | null
+          margin_skipped_at?: string | null
+          margin_skipped_by?: string | null
           next_followup_date?: string | null
           notes?: string | null
           phone: string
           pincode?: string | null
+          proposal_gate_bypassed?: boolean
           segment: Database["public"]["Enums"]["customer_segment"]
           source: Database["public"]["Enums"]["lead_source"]
           state?: string
@@ -5126,6 +5246,8 @@ export type Database = {
           design_notes?: string | null
           disqualification_reason?: string | null
           draft_proposal_id?: string | null
+          drive_folder_id?: string | null
+          drive_folder_url?: string | null
           electricity_bill_number?: string | null
           email?: string | null
           estimated_size_kwp?: number | null
@@ -5136,10 +5258,13 @@ export type Database = {
           is_qualified?: boolean
           last_contacted_at?: string | null
           map_link?: string | null
+          margin_skipped_at?: string | null
+          margin_skipped_by?: string | null
           next_followup_date?: string | null
           notes?: string | null
           phone?: string
           pincode?: string | null
+          proposal_gate_bypassed?: boolean
           segment?: Database["public"]["Enums"]["customer_segment"]
           source?: Database["public"]["Enums"]["lead_source"]
           state?: string
@@ -5180,6 +5305,13 @@ export type Database = {
           {
             foreignKeyName: "leads_design_confirmed_by_fkey"
             columns: ["design_confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_margin_skipped_by_fkey"
+            columns: ["margin_skipped_by"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
@@ -12536,7 +12668,7 @@ export type Database = {
       tasks: {
         Row: {
           assigned_date: string | null
-          assigned_to: string | null
+          assigned_to: string
           category: string | null
           completed_at: string | null
           completed_by: string | null
@@ -12558,7 +12690,7 @@ export type Database = {
         }
         Insert: {
           assigned_date?: string | null
-          assigned_to?: string | null
+          assigned_to: string
           category?: string | null
           completed_at?: string | null
           completed_by?: string | null
@@ -12580,7 +12712,7 @@ export type Database = {
         }
         Update: {
           assigned_date?: string | null
-          assigned_to?: string | null
+          assigned_to?: string
           category?: string | null
           completed_at?: string | null
           completed_by?: string | null
@@ -14851,6 +14983,14 @@ export type Database = {
           total_invoice_sent: number
           total_invoiced: number
           total_received: number
+        }[]
+      }
+      get_pipeline_close_window: {
+        Args: { end_date: string; start_date: string }
+        Returns: {
+          lead_count: number
+          total_kwp: number
+          total_value: number
         }[]
       }
       get_pipeline_summary: {
