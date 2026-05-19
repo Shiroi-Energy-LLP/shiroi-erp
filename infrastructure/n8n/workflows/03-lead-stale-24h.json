@@ -5,15 +5,22 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 0 9 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 0 9 * * *"
+            }
           ]
-        }
+        },
+        "timezone": "Asia/Kolkata"
       },
       "id": "node-cron",
       "name": "Daily 9:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -24,17 +31,32 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
-        "options": { "response": { "response": { "responseFormat": "json" } } }
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
       },
       "id": "node-http",
       "name": "Fetch stale leads",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -50,7 +72,10 @@
       "name": "Group by assignee",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
@@ -65,8 +90,14 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  { "type": "text", "text": "={{ $json.title }}" },
-                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
+                  {
+                    "type": "text",
+                    "text": "={{ $json.title }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.body || ' ').slice(0, 900) }}"
+                  }
                 ]
               }
             }
@@ -77,7 +108,10 @@
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [750, 300],
+      "position": [
+        750,
+        300
+      ],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
@@ -88,9 +122,39 @@
     }
   ],
   "connections": {
-    "Daily 9:00 IST": { "main": [[{ "node": "Fetch stale leads", "type": "main", "index": 0 }]] },
-    "Fetch stale leads": { "main": [[{ "node": "Group by assignee", "type": "main", "index": 0 }]] },
-    "Group by assignee": { "main": [[{ "node": "Send WhatsApp", "type": "main", "index": 0 }]] }
+    "Daily 9:00 IST": {
+      "main": [
+        [
+          {
+            "node": "Fetch stale leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch stale leads": {
+      "main": [
+        [
+          {
+            "node": "Group by assignee",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by assignee": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {
@@ -103,10 +167,18 @@
     "timezone": "Asia/Kolkata"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-1" },
-    { "name": "sales" },
-    { "name": "cron" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-1"
+    },
+    {
+      "name": "sales"
+    },
+    {
+      "name": "cron"
+    }
   ],
   "meta": {
     "description": "Daily 9 AM IST. Fetches stale leads from v_digest_leads_stale_24h (mig 083) and groups them by assignee. ONE WhatsApp message per assignee listing all their stale leads inline (top 8, then +N more). Replaces the prior per-lead splitOut that fan-outed into 10-20 messages per morning — caused Meta rate-limit hits. If no stale leads, no messages fire. Empty result also possible if `assigned_employee_phone` is null on all rows."

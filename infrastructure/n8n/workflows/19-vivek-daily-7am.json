@@ -10,7 +10,8 @@
               "expression": "0 0 7 * * *"
             }
           ]
-        }
+        },
+        "timezone": "Asia/Kolkata"
       },
       "id": "node-cron",
       "name": "Daily 7:00 IST",
