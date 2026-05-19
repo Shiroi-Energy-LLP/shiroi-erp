@@ -251,9 +251,11 @@ A helper script lives at `/tmp/oauth.sh` on the droplet during the OAuth flow (d
 
 The original bug-report workflow tested on 2026-04-19 used its own webhook URL (`N8N_BUG_REPORT_WEBHOOK_URL`). ERP's `notifyBugReport` now fires through the event bus router (`bug_report.submitted` → `01 — Bug report`) whenever `N8N_EVENT_BUS_URL` is set, and only falls back to the legacy URL when it isn't. The standalone workflow can be retired once the router is activated in n8n AND the public-internet route to it is restored (DigitalOcean ports 80/443) — until then, leave `N8N_BUG_REPORT_WEBHOOK_URL` set as a safety net for local dev.
 
-## DigitalOcean port-block status (2026-04-25 → ongoing)
+## DigitalOcean port-block status (2026-04-25 → RESTORED 2026-05-19)
 
-On 2026-04-25, DigitalOcean's Trust & Safety automated system blocked **ports 80/443/8080** on the droplet in response to a Netcraft alert that flagged n8n's `executeCommand` node and webhook ingestion as "potential malware infrastructure." Detailed abuse responses were sent to tickets #12078644 and #12078645 explaining the legitimate use case; both tickets auto-closed without human review and ports remained blocked. A regular Support ticket was filed under Networking/Firewall on 2026-05-01 requesting manual port restoration — pending response.
+On 2026-04-25, DigitalOcean's Trust & Safety automated system blocked **ports 80/443/8080** on the droplet in response to a Netcraft alert that flagged n8n's `executeCommand` node and webhook ingestion as "potential malware infrastructure." Detailed abuse responses were sent to tickets #12078644 and #12078645 explaining the legitimate use case; both tickets auto-closed without human review and ports remained blocked. After a second escalation email on 2026-05-19, DO Trust & Safety manually reviewed and **restored ports 80 + 443 on 2026-05-19**. Port 8080 stays blocked — we don't use it (Caddy serves 80/443 → n8n internal 5678; leaving 8080 sealed reduces re-flag risk from any future Netcraft scan).
+
+Verified post-restoration: `POST https://n8n.shiroienergy.com/webhook/erp-event-bus` (no SSH tunnel) successfully invoked router → `#01` → both founder phones. Public path fully working.
 
 **While ports are blocked:**
 - Port 22 (SSH) is still open. All n8n management uses an SSH tunnel: `ssh -N -L 5679:172.18.0.2:5678 root@68.183.91.111` then point n8n REST API tooling and the editor UI at `http://localhost:5679/`.
@@ -261,7 +263,38 @@ On 2026-04-25, DigitalOcean's Trust & Safety automated system blocked **ports 80
 - WhatsApp Send works fine — it's outbound traffic to Meta's servers, not affected by the inbound port block.
 - Gmail send works fine for the same reason (outbound to Google).
 
-**When ports are restored:**
-- Wire `N8N_EVENT_BUS_URL=https://n8n.shiroienergy.com/webhook/event-bus` into Vercel env so ERP starts firing real events into the router.
-- Configure Sentry alert rule to webhook `https://n8n.shiroienergy.com/webhook/sentry-alert` with `x-webhook-secret` header.
-- Retire the legacy standalone bug-report webhook.
+**Ports restored 2026-05-19 — follow-up checklist:**
+
+- ✅ Retired legacy "My workflow" standalone bug-report webhook (now redundant with router + `#01`).
+- ⏳ Add `N8N_EVENT_BUS_URL=https://n8n.shiroienergy.com/webhook/erp-event-bus` to Vercel production env + redeploy. Until done, ERP's `emitErpEvent()` is a silent no-op in prod.
+- ⏳ Configure Sentry alert rule webhook → `https://n8n.shiroienergy.com/webhook/sentry-alert` with `x-webhook-secret` header.
+
+### Vercel env setup (one-time)
+
+1. Open https://vercel.com/dashboard → select the Shiroi ERP project → **Settings → Environment Variables**
+2. Confirm `N8N_WEBHOOK_SECRET` is set (should already be there from the original Apr-19 bug-report webhook deployment). If missing: add value matching the droplet's `N8N_WEBHOOK_SECRET` (the 32-char value in `.env.local`).
+3. **Add new env var:**
+   - Name: `N8N_EVENT_BUS_URL`
+   - Value: `https://n8n.shiroienergy.com/webhook/erp-event-bus`
+   - Environments: tick Production + Preview (skip Development unless you want local→prod n8n routing)
+4. **Trigger a redeploy** so the new env var loads:
+   - **Deployments** tab → top entry → **⋯** menu → **Redeploy** → confirm
+5. After ~2 min, ERP starts firing events into n8n. Test by submitting a bug report from `https://erp.shiroienergy.com/settings?tab=feedback` — should land on Vivek + Vinodh's WhatsApp via `#01`.
+
+### Sentry alert rule setup
+
+1. Open https://shiroi-energy-llp.sentry.io/alerts/rules/ → pick project `javascript-nextjs`
+2. **Create Alert** → **Issue Alert** (NOT Metric Alert)
+3. **WHEN:** "An issue is first seen"
+4. **IF:** Filter "The issue's level is one of: `error`, `fatal`"
+5. **THEN:** Add Action → look for "Webhook" or "Internal Integration" option. If unavailable, set up an Internal Integration first:
+   - Sentry Settings → Custom Integrations → Create New Integration
+   - Webhook URL: `https://n8n.shiroienergy.com/webhook/sentry-alert`
+   - Request method: POST
+   - Custom header: `x-webhook-secret` = (value from `.env.local` `N8N_WEBHOOK_SECRET`)
+   - Save → now appears as an action option in alert rules
+6. **Action interval:** 30 minutes (don't spam if same issue keeps firing)
+7. **Rule name:** `n8n WhatsApp forwarder — P0/P1`
+8. Save
+9. Test: from any terminal with `SENTRY_DSN` env set, `sentry-cli send-event -m "Pipeline test" --level error` — within 30 sec you should see a WhatsApp on Vivek + Vinodh.
+10. Activate `#58 Sentry P0/P1 forwarder` in n8n once test passes.
