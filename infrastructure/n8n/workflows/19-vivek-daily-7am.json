@@ -139,7 +139,8 @@
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
-      }
+      },
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -181,7 +182,8 @@
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
-      }
+      },
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -223,7 +225,8 @@
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
-      }
+      },
+      "executeOnce": true
     }
   ],
   "connections": {

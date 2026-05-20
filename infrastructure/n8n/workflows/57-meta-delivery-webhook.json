@@ -1,0 +1,124 @@
+{
+  "name": "57 — Meta WhatsApp delivery webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "meta-delivery",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-get",
+      "name": "Meta GET verify",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "webhookId": "meta-delivery-get"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meta-delivery",
+        "responseMode": "onReceived",
+        "responseData": "noData",
+        "options": {}
+      },
+      "id": "node-webhook-post",
+      "name": "Meta POST events",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ],
+      "webhookId": "meta-delivery-post"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verify Meta's GET challenge.\n// Meta sends: ?hub.mode=subscribe&hub.verify_token=X&hub.challenge=Y\n// We respond with Y as plain text 200 only if X matches our shared secret.\n// NOTE: n8n's task-runner sandbox blocks `process` — use `$env.VAR` instead.\nconst query = $input.first().json.query || {};\nconst mode = query['hub.mode'];\nconst token = query['hub.verify_token'];\nconst challenge = query['hub.challenge'];\nconst expectedToken = $env.META_WEBHOOK_VERIFY_TOKEN || '';\n\nif (mode === 'subscribe' && token && expectedToken && token === expectedToken) {\n  return [{ json: { ok: true, body: String(challenge || '') } }];\n}\n\nreturn [{ json: { ok: false, body: 'Forbidden', status: 403 } }];"
+      },
+      "id": "node-verify",
+      "name": "Validate verify_token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.status || 200 }}"
+        }
+      },
+      "id": "node-respond",
+      "name": "Respond to Meta GET",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Meta delivery status payload and emit one item per status event.\n// Payload shape:\n//   { object: 'whatsapp_business_account',\n//     entry: [{ id, changes: [{ value: { statuses: [{ id (wamid), status, timestamp, recipient_id, errors? }], messages: [...] }, field: 'messages' }] }] }\n//\n// Statuses: sent, delivered, read, failed.\n// We log each one — this is the visibility we previously lacked when Meta\n// silently throttled our sends (May 17-20 2026 incident).\nconst body = $input.first().json.body || {};\nconst out = [];\n\nfor (const entry of body.entry || []) {\n  for (const change of entry.changes || []) {\n    if (change.field !== 'messages') continue;\n    const value = change.value || {};\n    for (const status of value.statuses || []) {\n      out.push({\n        json: {\n          wamid: status.id,\n          status: status.status,\n          timestamp: status.timestamp,\n          recipient: status.recipient_id,\n          conversation_id: status.conversation?.id,\n          category: status.conversation?.origin?.type,\n          pricing_category: status.pricing?.category,\n          billable: status.pricing?.billable,\n          errors: status.errors,\n        },\n      });\n    }\n    // Also log inbound messages (replies from recipients) for completeness.\n    for (const msg of value.messages || []) {\n      out.push({\n        json: {\n          inbound: true,\n          from: msg.from,\n          type: msg.type,\n          text: msg.text?.body,\n          timestamp: msg.timestamp,\n        },\n      });\n    }\n  }\n}\n\nreturn out.length > 0 ? out : [{ json: { note: 'no statuses or messages in payload', body } }];"
+      },
+      "id": "node-parse",
+      "name": "Parse delivery statuses",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Meta GET verify": {
+      "main": [
+        [
+          {
+            "node": "Validate verify_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate verify_token": {
+      "main": [
+        [
+          {
+            "node": "Respond to Meta GET",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta POST events": {
+      "main": [
+        [
+          {
+            "node": "Parse delivery statuses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

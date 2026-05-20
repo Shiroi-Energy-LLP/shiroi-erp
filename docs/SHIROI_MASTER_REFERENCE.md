@@ -237,6 +237,33 @@ Any table taking >1k writes/day sustained (inverter telemetry, IoT, audit stream
 
 Code answers *what* already. Comments earn their keep by answering *why this and not the obvious alternative*. "Recompute only the affected project's cash position, not all 500+ active ones — full portfolio recomputation takes ~25 seconds at scale" teaches the next reader something; "// update cash position" doesn't.
 
+### 4.12 Logs-first debugging — strict rule (May 20, 2026)
+
+**When a user reports "X doesn't work" / "Y didn't happen" / "Z is broken", the FIRST action is to read the relevant logs — not the source code, not the configuration, not your assumptions.**
+
+**Concretely for Shiroi:**
+
+| Symptom | Read first |
+|---------|------------|
+| "Cron didn't fire" | `~/.n8n/n8nEventLog*.log` on the droplet, then `execution_entity` in the n8n SQLite DB |
+| "n8n workflow failed" | `execution_data.data` for that executionId (contains node-by-node payloads, errors, Meta responses) |
+| "Server action returned wrong data" | Sentry trace for that op + Supabase Studio Logs panel |
+| "WhatsApp message didn't arrive" | n8n execution log for the wamid first, then Meta Graph API `health_status` |
+| "Edge function error" | Supabase Studio → Functions → Logs |
+| "Build broken in Vercel" | Vercel deployment log + the failing CI step's raw output |
+| "Migration failed in prod" | Supabase Studio → SQL Editor history, then logs panel |
+
+**Why this rule exists.** The n8n cron-timezone debacle (May 17–20 2026) — four attempted "fixes" across three days touching every layer of n8n's scheduler — all wrong because the cron WAS firing the whole time. Thirty seconds of `cat n8nEventLog.log | grep 08:00` on day one would have shown `n8n.workflow.success` for every morning at 08:00 IST and ended the investigation. The real bug was elsewhere (Send WhatsApp node looping per-item, flooding Meta's 80-msgs/second rate limit, triggering anti-spam silent throttle). Three days lost.
+
+**The rule:**
+- Reading code before reading logs is a debugging failure. If you catch yourself doing it, stop and switch.
+- "I wrote the code yesterday, I know what it does" — you know what it *should* do. Logs show what it *did do*. Read them.
+- Even simple reports like "the button didn't work" — DevTools console + network tab first, source code second.
+- Sentry is the first stop for any production exception, before grepping the code.
+- For n8n specifically: the SQLite DB at `/var/lib/docker/volumes/shiroi-automation_n8n_data/_data/database.sqlite` has every execution's full payload in `execution_data.data` (JSON). Always query that before reading workflow JSONs.
+
+This rule is enforced via the global `superpowers:systematic-debugging` skill (Phase 1, Step 0 — non-negotiable). Violating it is what caused 3 days of wasted work in May 2026.
+
 ---
 
 ## 5. Database
