@@ -13,17 +13,26 @@ import type { ProposalPDFData } from './proposal-pdf-data';
 
 const TOTAL_PAGES = 4;
 
+// NB: do NOT place `{/* JSX comments */}` between Document children.
+// Under React 19 + @react-pdf/renderer 4.x + Next.js SWC, those comment
+// slots survive compilation as `undefined`/`null` entries in the children
+// array, and react-pdf's reconciler dereferences `.props` on them, throwing
+// "Cannot read properties of null (reading 'props')" only inside Next's
+// runtime (esbuild/tsx strip the comments cleanly, which is why the
+// standalone repro at scripts/repro-pdf-error.ts succeeded).
+//
+// Comments describing each page now live as JS comments OUTSIDE the JSX,
+// or inline above the component call — never as `{/* ... */}` slots.
+
 export function BudgetaryQuotePDF({ data }: { data: ProposalPDFData }) {
+  // Page 1: Cover · Page 2: BOM table · Page 3: Pricing · Page 4: Account Details
   return (
     <Document
       title={`Budgetary Proposal — ${data.customerName} — ${data.systemSizeKwp}kWp`}
       author="Shiroi Energy LLP"
       subject={`Proposal ${data.proposalNumber}`}
     >
-      {/* Page 1: Cover */}
       <CoverPage data={data} mode="quick" />
-
-      {/* Page 2: Technical Specification (BOM) */}
       <Page size="A4" style={styles.page}>
         <BomTable data={data} mode="quick" />
         <BrandFooter
@@ -32,15 +41,11 @@ export function BudgetaryQuotePDF({ data }: { data: ProposalPDFData }) {
           totalPages={TOTAL_PAGES}
         />
       </Page>
-
-      {/* Page 3: Pricing */}
       <PricingPage
         data={data}
         pageNum={3}
         totalPages={TOTAL_PAGES}
       />
-
-      {/* Page 4: Note + Account Details */}
       <NoteAndAccountPage
         data={data}
         pageNum={4}

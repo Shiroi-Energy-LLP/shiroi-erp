@@ -17,31 +17,30 @@ import type { ProposalPDFData } from './proposal-pdf-data';
 
 const TOTAL_PAGES = 7;
 
+// NB: keep this JSX free of `{/* ... */}` comment slots — see
+// budgetary-quote-pdf.tsx for the React 19 + react-pdf 4 + SWC interaction
+// that crashes the renderer at runtime when those slots are present.
+
 export function DetailedProposalPDF({ data }: { data: ProposalPDFData }) {
+  // Page 1: Cover · 2: Executed Projects · 3: System Sizing · 4: BOM table
+  // 5: Scope of Work · 6: Terms & Conditions · 7: Documents Needed
   return (
     <Document
       title={`Solar Proposal — ${data.customerName} — ${data.systemSizeKwp}kWp`}
       author="Shiroi Energy LLP"
       subject={`Proposal ${data.proposalNumber}`}
     >
-      {/* Page 1: Cover */}
       <CoverPage data={data} mode="detailed" />
-
-      {/* Page 2: Executed Projects */}
       <ExecutedProjectsPage
         data={data}
         pageNum={2}
         totalPages={TOTAL_PAGES}
       />
-
-      {/* Page 3: System Sizing and Production */}
       <SystemSizingPage
         data={data}
         pageNum={3}
         totalPages={TOTAL_PAGES}
       />
-
-      {/* Page 4: Technical Specification (BOM) */}
       <Page size="A4" style={styles.page}>
         <BomTable data={data} mode="detailed" />
         <BrandFooter
@@ -50,22 +49,16 @@ export function DetailedProposalPDF({ data }: { data: ProposalPDFData }) {
           totalPages={TOTAL_PAGES}
         />
       </Page>
-
-      {/* Page 5: Scope of Work */}
       <ScopeOfWorkPage
         data={data}
         pageNum={5}
         totalPages={TOTAL_PAGES}
       />
-
-      {/* Page 6: Terms and Condition */}
       <TermsAndConditionPage
         data={data}
         pageNum={6}
         totalPages={TOTAL_PAGES}
       />
-
-      {/* Page 7: Documents Needed */}
       <DocumentsNeededPage
         data={data}
         pageNum={7}
