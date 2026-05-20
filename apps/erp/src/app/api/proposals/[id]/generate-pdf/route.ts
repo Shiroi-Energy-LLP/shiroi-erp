@@ -132,11 +132,22 @@ export async function POST(
       // Non-fatal — PDF was generated successfully
     }
 
+    // Sign a 1-hour download URL so the caller can open the PDF immediately.
+    // Storage policy: proposal-files bucket is private; signed URL is the
+    // only way to read it without an authenticated server-side handle.
+    const { data: signed, error: signErr } = await admin.storage
+      .from('proposal-files')
+      .createSignedUrl(storagePath, 60 * 60);
+    if (signErr) {
+      console.error(`${op} createSignedUrl failed:`, signErr.message);
+    }
+
     console.log(`${op} PDF generated and stored: ${storagePath}`);
     return NextResponse.json({
       success: true,
       storagePath,
       fileName,
+      signedUrl: signed?.signedUrl ?? null,
     });
 
   } catch (error) {

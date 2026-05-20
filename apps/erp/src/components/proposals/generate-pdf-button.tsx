@@ -22,11 +22,16 @@ export function GeneratePDFButton({ proposalId }: GeneratePDFButtonProps) {
         method: 'POST',
       });
 
-      const data = await res.json();
+      const data: { error?: string; signedUrl?: string | null } = await res.json();
       if (!res.ok) {
         setError(data.error ?? 'Failed to generate PDF');
       } else {
         setSuccess(true);
+        // Open the PDF in a new tab so the user sees it immediately.
+        // The signed URL is valid for 1 hour (route signs it on success).
+        if (data.signedUrl) {
+          window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+        }
         // Auto-dismiss success after 3s
         setTimeout(() => setSuccess(false), 3000);
       }
