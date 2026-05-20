@@ -1,5 +1,6 @@
 import { getUserProfile } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { ProposalGateBanner } from '@/components/proposal-gate-banner';
 import { FounderDashboard } from './founder-dashboard';
 import { PMDashboard } from './pm-dashboard';
 import { SalesDashboard } from './sales-dashboard';
@@ -23,25 +24,41 @@ export default async function DashboardPage({
     ? params.view_as
     : profile.role;
 
+  let dashboard: React.ReactNode;
   switch (effectiveRole) {
     case 'founder':
-      return <FounderDashboard />;
+      dashboard = <FounderDashboard />;
+      break;
     case 'project_manager':
     case 'om_technician':
-      return <PMDashboard />;
+      dashboard = <PMDashboard />;
+      break;
     case 'site_supervisor':
-      return <SupervisorDashboard />;
+      dashboard = <SupervisorDashboard />;
+      break;
     case 'sales_engineer':
-      return <SalesDashboard />;
+      dashboard = <SalesDashboard />;
+      break;
     case 'designer':
-      return <DesignerDashboard />;
+      dashboard = <DesignerDashboard />;
+      break;
     case 'purchase_officer':
-      return <PurchaseDashboard />;
+      dashboard = <PurchaseDashboard />;
+      break;
     case 'finance':
-      return <FinanceDashboard />;
+      dashboard = <FinanceDashboard />;
+      break;
     case 'hr_manager':
-      return <HRDashboard />;
+      dashboard = <HRDashboard />;
+      break;
     default:
-      return <FounderDashboard />;
+      dashboard = <FounderDashboard />;
   }
+
+  return (
+    <div className="space-y-4">
+      <ProposalGateBanner />
+      {dashboard}
+    </div>
+  );
 }

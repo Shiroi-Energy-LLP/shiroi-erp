@@ -9,6 +9,7 @@ import { ClosureBandBadge, ClosureBandHelper } from '@/components/sales/closure-
 import { AttemptWonButton } from '@/components/sales/attempt-won-button';
 import { CreateProjectFromLeadButton } from '@/components/sales/create-project-from-lead-button';
 import { ProposalGateBypassToggle } from '@/components/sales/proposal-gate-bypass-toggle';
+import { ProposalGateBanner } from '@/components/proposal-gate-banner';
 import { computeMargin } from '@/lib/closure-actions';
 import { Breadcrumb, Card, CardContent } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
@@ -53,6 +54,9 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
 
   return (
     <div className="space-y-6">
+      {/* Org-wide proposal gate disabled banner — renders only when gate is off. */}
+      <ProposalGateBanner />
+
       {/* Breadcrumb - middleware redirects /leads -> /sales so this always
           renders under /sales URL space post-revamp. */}
       <Breadcrumb

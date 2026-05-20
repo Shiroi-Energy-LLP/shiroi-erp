@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ProposalGateBanner } from '@/components/proposal-gate-banner';
 import { getLeads, getSalesEngineers } from '@/lib/leads-queries';
 import type { LeadFilters } from '@/lib/leads-queries';
 import {
@@ -177,6 +178,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
 
   return (
     <div className="space-y-4">
+      <ProposalGateBanner />
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">SALES PIPELINE</Eyebrow>
