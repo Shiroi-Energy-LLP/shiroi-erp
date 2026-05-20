@@ -79,6 +79,7 @@ const ITEMS = {
   dataQuality:    { label: 'Data Quality',      href: '/data-quality',       icon: 'Flag' },
   bomReview:      { label: 'BOM Review',        href: '/bom-review',         icon: 'ListChecks' },
   expenses:       { label: 'Expenses',          href: '/expenses',           icon: 'Receipt' },
+  settings:       { label: 'Settings',          href: '/settings',           icon: 'Settings' },
   vendorBills:    { label: 'Vendor Bills',      href: '/vendor-bills',       icon: 'FileText' },
   salesTeamTasks: { label: 'Team Tasks',        href: '/sales/tasks',        icon: 'ClipboardList' },
 } as const satisfies Record<string, NavItem>;
@@ -99,6 +100,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
     { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality, ITEMS.bomReview] },
+    { label: 'Account',      items: [ITEMS.settings] },
   ],
   marketing_manager: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
@@ -110,6 +112,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Reference',    items: [ITEMS.priceBook] },
     { label: 'Contacts',     items: [ITEMS.contacts, ITEMS.companies] },
+    { label: 'Account',      items: [ITEMS.settings] },
   ],
   project_manager: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
@@ -122,22 +125,26 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     // Liaison step embedded in /projects/[id] detail, no top-level link.
     { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule, ITEMS.plantMonitoring] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
+    { label: 'Account',     items: [ITEMS.settings] },
   ],
   om_technician: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
+    { label: 'Account',      items: [ITEMS.settings] },
   ],
   site_supervisor: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
     { label: 'My Work',      items: [ITEMS.myReports, ITEMS.myTasks, ITEMS.expenses] },
     { label: 'Projects',     items: [ITEMS.projects] },
+    { label: 'Account',      items: [ITEMS.settings] },
   ],
   sales_engineer: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Sales',        items: [ITEMS.sales] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
+    { label: 'Account',      items: [ITEMS.settings] },
   ],
   designer: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
@@ -147,6 +154,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     // Read-only windows onto sales + projects so designers have context
     { label: 'Sales (R/O)',  items: [ITEMS.sales] },
     { label: 'Projects (R/O)', items: [ITEMS.projects] },
+    { label: 'Account',      items: [ITEMS.settings] },
   ],
   purchase_officer: [
     { label: 'Overview',         items: [ITEMS.dashboard] },
@@ -155,6 +163,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Vendor Management', items: [ITEMS.vendors, ITEMS.priceBook] },
     { label: 'Contacts',         items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'Admin',            items: [ITEMS.waImportQueue, ITEMS.dataQuality] },
+    { label: 'Account',          items: [ITEMS.settings] },
   ],
   finance: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
@@ -165,6 +174,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Analysis',     items: [ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality] },
+    { label: 'Account',      items: [ITEMS.settings] },
   ],
   hr_manager: [
     { label: 'Overview',            items: [ITEMS.dashboard] },
@@ -173,6 +183,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Leave & Attendance',  items: [ITEMS.leave] },
     { label: 'Payroll',             items: [ITEMS.payroll] },
     { label: 'Development',         items: [ITEMS.training, ITEMS.certifications] },
+    { label: 'Account',             items: [ITEMS.settings] },
   ],
   customer: [],
 };
