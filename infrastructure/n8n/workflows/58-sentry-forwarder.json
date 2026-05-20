@@ -5,7 +5,6 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "sentry-alert",
-        "authentication": "headerAuth",
         "options": {
           "responseMode": "onReceived",
           "responseCode": 200,
@@ -21,13 +20,20 @@
         300
       ],
       "webhookId": "sentry-alert",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_WITH_HEADER_AUTH_CRED_ID",
-          "name": "x-webhook-secret"
-        }
+      "notes": "Sentry's legacy Webhooks plugin doesn't support custom headers, so we authenticate via query parameter: ?secret=<N8N_WEBHOOK_SECRET>. Workflow responds 200 immediately, then the 'Validate secret' node drops unauthenticated requests silently before any downstream WhatsApp send. URL: https://n8n.shiroienergy.com/webhook/sentry-alert?secret=<N8N_WEBHOOK_SECRET value>"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate the URL-embedded secret. Sentry's legacy Webhooks plugin can't\n// add custom headers, so we put the shared secret in a query parameter.\n// If it doesn't match $env.N8N_WEBHOOK_SECRET we emit zero items, which\n// short-circuits the downstream WhatsApp sends silently.\n// (We've already responded 200 to Sentry via webhook's onReceived mode.)\nconst query = $input.first().json.query || {};\nconst provided = String(query.secret || '');\nconst expected = $env.N8N_WEBHOOK_SECRET || '';\n\nif (expected && provided && provided === expected) {\n  return $input.all();\n}\n\n// Bad/missing secret → drop. Returning [] means no downstream execution.\nreturn [];"
       },
-      "notes": "Sentry integrations → Alerts → Add Action → 'Send a notification via an integration' → generic webhook. URL: https://n8n.shiroienergy.com/webhook/sentry-alert. Configure Sentry to send only P0/P1 (fatal + error) — the Switch below double-filters in case Sentry's alert rule is broad."
+      "id": "node-validate-secret",
+      "name": "Validate secret",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        125,
+        300
+      ]
     },
     {
       "parameters": {
@@ -302,6 +308,17 @@
   ],
   "connections": {
     "Sentry webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate secret": {
       "main": [
         [
           {
