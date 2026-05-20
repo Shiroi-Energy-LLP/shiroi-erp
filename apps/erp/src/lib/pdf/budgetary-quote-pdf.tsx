@@ -25,7 +25,6 @@ const TOTAL_PAGES = 4;
 // or inline above the component call — never as `{/* ... */}` slots.
 
 export function BudgetaryQuotePDF({ data }: { data: ProposalPDFData }) {
-  // Page 1: Cover · Page 2: BOM table · Page 3: Pricing · Page 4: Account Details
   return (
     <Document
       title={`Budgetary Proposal — ${data.customerName} — ${data.systemSizeKwp}kWp`}
