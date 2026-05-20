@@ -53,28 +53,38 @@ export function QuickQuoteModal({ leadId, defaultSystemType, defaultSizeKwp, def
     setSubmitting(true);
     setError(null);
 
-    const result = await createBudgetaryQuoteAction({
-      leadId,
-      systemSizeKwp: size,
-      systemType: systemType as 'on_grid' | 'hybrid' | 'off_grid',
-      segment,
-      structureType,
-      includeLiaison,
-      includeCivil,
-    });
+    try {
+      const result = await createBudgetaryQuoteAction({
+        leadId,
+        systemSizeKwp: size,
+        systemType: systemType as 'on_grid' | 'hybrid' | 'off_grid',
+        segment,
+        structureType,
+        includeLiaison,
+        includeCivil,
+      });
 
-    if (result.error) {
-      setError(result.error);
+      if (result.error) {
+        setError(result.error);
+        setSubmitting(false);
+      } else if (result.proposalId) {
+        // /proposals/[id] was removed in the Marketing + Design revamp — the
+        // quote now lives inside the lead's Quote tab on the sales URL space.
+        // Land the user there so they see the newly created BOM + totals
+        // without leaving the lead.
+        onClose();
+        router.push(`/sales/${leadId}/proposal`);
+        router.refresh();
+      }
+    } finally {
+      // Defensive reset: ensures submitting clears even if createBudgetaryQuoteAction
+      // throws synchronously (e.g. dynamic import of price-book-queries fails).
+      // The error branch already calls setSubmitting(false) explicitly above;
+      // this finally runs after, which is harmless — if we navigated, the modal
+      // is closing anyway.
       setSubmitting(false);
-    } else if (result.proposalId) {
-      // /proposals/[id] was removed in the Marketing + Design revamp — the
-      // quote now lives inside the lead's Quote tab on the sales URL space.
-      // Land the user there so they see the newly created BOM + totals
-      // without leaving the lead.
-      router.push(`/sales/${leadId}/proposal`);
-      router.refresh();
     }
-  }, [leadId, systemSizeKwp, systemType, segment, structureType, includeLiaison, includeCivil, router]);
+  }, [leadId, systemSizeKwp, systemType, segment, structureType, includeLiaison, includeCivil, onClose, router]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>

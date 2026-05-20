@@ -158,13 +158,32 @@ NEXT_PUBLIC_SENTRY_DSN + SENTRY_DSN + SENTRY_ORG + SENTRY_PROJECT
 ## WORKFLOW
 
 1. Claude writes code → Vivek reviews → `git add` / `git commit` / `git push`.
-2. SQL migrations: paste into Supabase SQL Editor (**dev first, then prod**) → save as numbered `.sql` in `supabase/migrations/` → regenerate `packages/types/database.ts`.
+2. SQL migrations: paste into Supabase SQL Editor (**dev first, then prod**) → save as numbered `.sql` in `supabase/migrations/` → regenerate `packages/types/database.ts` (see "Regenerating database.ts" below).
 3. **End-of-task sequence — strict order, no skipping, no reordering:**
    1. **CI test locally first.** Run `pnpm check-types && pnpm lint && bash scripts/ci/check-forbidden-patterns.sh` (the exact set `.github/workflows/ci.yml` runs). If anything fails, fix it locally before moving on — never push a red branch and rely on remote CI to catch it.
    2. **Update docs only after CI is green.** Append one line to `docs/CHANGELOG.md`; update `docs/CURRENT_STATUS.md` if in-flight work changed; update the relevant `docs/modules/<module>.md` if the module gained a capability, a new table, or a significant decision. **Do not grow CLAUDE.md** — if something feels like it belongs here, it probably belongs in the master reference or a module doc.
    3. **Push to main, and always push to the git remote — not just commit locally.** `git add` → `git commit` → `git push origin main`. A local commit that hasn't reached the remote isn't done.
 
 ---
+
+## Regenerating `packages/types/database.ts`
+
+There is no `pnpm typegen` script. The personal Supabase CLI under Vivek's account cannot pull project types — `supabase gen types typescript --project-id <ref>` returns 403 ("Your account does not have the necessary privileges to access this endpoint"). The only reliable path is through the Supabase MCP server.
+
+The flow:
+
+1. Use the MCP tool `mcp__<supabase>__generate_typescript_types` against the dev project id (`actqtzoxjilqnldnacqz`). Its response is JSON-wrapped (`{"types": "..."}`) and is large enough that it lands in the tool-results file rather than the conversation. The path is reported in the error message.
+2. Extract the `types` field and write to `packages/types/database.ts`. One-liner that works for the JSON wrapper:
+   ```bash
+   node -e "const fs=require('fs'); const obj=JSON.parse(fs.readFileSync('packages/types/database.ts','utf8')); fs.writeFileSync('packages/types/database.ts', obj.types);"
+   ```
+   (Easier if you copy the tool-results file to `packages/types/database.ts` first.)
+3. Run `node scripts/strip-view-fk-entries.mjs` — required. The generator emits FK-target entries for every view that exposes a candidate column, which blows the type past `tsc`'s recursion limit. The script trims that down by ~60%.
+4. `pnpm check-types` — must pass before the regen is considered done. If a column rename or constraint change broke a query, fix it in the same commit (NEVER-DO #20).
+
+If you ever see "Type instantiation excessively deep" (TS2589) after a regen, you forgot the strip step.
+
+The supabase CLI gap is tracked but not fixable from this repo — it's an account-permissions issue on Supabase's side.
 
 ## HOW TO WORK IN THIS REPO
 

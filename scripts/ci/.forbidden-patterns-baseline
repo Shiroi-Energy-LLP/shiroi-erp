@@ -39,7 +39,6 @@ R15|apps/erp/src/components/design/lead-files-panel.tsx:23:import { createClient
 R15|apps/erp/src/components/expenses/document-upload.tsx:4:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/expenses/documents-list.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/components/hr/leave-request-form.tsx:5:import { createClient } from '@repo/supabase/client';
-R15|apps/erp/src/components/leads/add-activity-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/lead-files-list.tsx:4:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/lead-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/status-change.tsx:5:import { createClient } from '@repo/supabase/client';

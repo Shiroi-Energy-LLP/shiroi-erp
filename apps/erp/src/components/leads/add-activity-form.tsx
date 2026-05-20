@@ -2,11 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@repo/supabase/client';
 import { Button, Input, Label, Select, useToast } from '@repo/ui';
+import { addLeadActivity, type AddLeadActivityInput } from '@/lib/leads-activity-actions';
 
 const ACTIVITY_TYPES = [
-  'phone_call',
+  'call',
   'email',
   'site_visit',
   'whatsapp',
@@ -16,7 +16,7 @@ const ACTIVITY_TYPES = [
 ] as const;
 
 const ACTIVITY_LABELS: Record<string, string> = {
-  phone_call: 'Phone Call',
+  call: 'Phone Call',
   email: 'Email',
   site_visit: 'Site Visit',
   whatsapp: 'WhatsApp',
@@ -51,7 +51,6 @@ export function AddActivityForm({ leadId }: AddActivityFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const op = '[AddActivityForm.handleSubmit]';
 
     if (!form.activity_type || !form.summary) {
       setError('Activity type and summary are required.');
@@ -64,66 +63,39 @@ export function AddActivityForm({ leadId }: AddActivityFormProps) {
     }
 
     setError(null);
-    const supabase = createClient();
 
-    // Get current user's employee ID
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setError('You must be logged in to add activities.');
-      return;
-    }
-    const { data: employee } = await supabase
-      .from('employees')
-      .select('id')
-      .eq('profile_id', user.id)
-      .single();
-    if (!employee) {
-      setError('Employee record not found.');
-      return;
-    }
+    startTransition(async () => {
+      const result = await addLeadActivity({
+        leadId,
+        activityType: form.activity_type as AddLeadActivityInput['activityType'],
+        summary: form.summary,
+        outcome: form.outcome.trim() || null,
+        nextAction: form.next_action.trim() || null,
+        nextActionDate: form.next_action_date || null,
+        durationMinutes: form.duration_minutes ? parseInt(form.duration_minutes, 10) : null,
+      });
 
-    const { error: insertError } = await supabase.from('lead_activities').insert({
-      id: crypto.randomUUID(),
-      lead_id: leadId,
-      activity_type: form.activity_type,
-      summary: form.summary.trim(),
-      outcome: form.outcome.trim() || null,
-      activity_date: new Date().toISOString(),
-      performed_by: employee.id,
-      next_action: form.next_action.trim() || null,
-      next_action_date: form.next_action_date || null,
-      duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes, 10) : null,
-    });
+      if (!result.success) {
+        setError(`Failed to add activity: ${result.error}`);
+        addToast({ variant: 'destructive', title: 'Failed to add activity', description: result.error });
+        return;
+      }
 
-    if (insertError) {
-      console.error(`${op} Insert failed:`, { code: insertError.code, message: insertError.message });
-      setError(`Failed to add activity: ${insertError.message}`);
-      addToast({ variant: 'destructive', title: 'Failed to add activity', description: insertError.message });
-      return;
-    }
+      addToast({
+        variant: 'success',
+        title: 'Activity added',
+        description: `${ACTIVITY_LABELS[form.activity_type] ?? 'Activity'} logged successfully.`,
+      });
 
-    addToast({ variant: 'success', title: 'Activity added', description: `${ACTIVITY_LABELS[form.activity_type] ?? 'Activity'} logged successfully.` });
+      setForm({
+        activity_type: '',
+        summary: '',
+        outcome: '',
+        next_action: '',
+        next_action_date: '',
+        duration_minutes: '',
+      });
 
-    // Update lead: last contacted + next follow-up date
-    await supabase
-      .from('leads')
-      .update({
-        last_contacted_at: new Date().toISOString(),
-        next_followup_date: form.next_action_date || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', leadId);
-
-    setForm({
-      activity_type: '',
-      summary: '',
-      outcome: '',
-      next_action: '',
-      next_action_date: '',
-      duration_minutes: '',
-    });
-
-    startTransition(() => {
       router.refresh();
     });
   }
