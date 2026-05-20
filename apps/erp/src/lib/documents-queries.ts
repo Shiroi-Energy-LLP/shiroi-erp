@@ -86,6 +86,58 @@ export type DocumentInsert = {
 
 export type DocumentUpdate = Partial<DocumentRow>;
 
+/**
+ * DocumentRow + a `signed_url` field that resolves to either:
+ *   - `external_url` for Drive-backed docs (already publicly addressable), or
+ *   - a 1-hour Supabase Storage signed URL for supabase-backed docs (private
+ *     bucket — only way to reach the blob without a server-side handle).
+ *
+ * Used by the Files tab to render a single "Open" link regardless of where
+ * the file actually lives.
+ */
+export type DocumentRowWithUrl = DocumentRow & { signed_url: string | null };
+
+/**
+ * Resolve open-URLs for a batch of documents. Signs Supabase Storage paths
+ * in parallel, falls back to external_url for Drive-backed rows.
+ * Bucket inference: proposal_pdf + supabase → proposal-files. Other
+ * supabase-backed categories will be added as we wire them up.
+ */
+export async function attachOpenUrls(documents: DocumentRow[]): Promise<DocumentRowWithUrl[]> {
+  const op = '[attachOpenUrls]';
+  const supabase = await createClient();
+
+  const SIGNED_URL_TTL = 60 * 60; // 1 hour
+
+  return Promise.all(
+    documents.map(async (doc): Promise<DocumentRowWithUrl> => {
+      if (doc.storage_backend === 'drive') {
+        return { ...doc, signed_url: doc.external_url };
+      }
+      if (doc.storage_backend === 'supabase' && doc.storage_path) {
+        // Pick bucket by category. proposal_pdf → proposal-files. Extend as we
+        // wire other upload paths.
+        const bucket = doc.category === 'proposal_pdf' ? 'proposal-files' : null;
+        if (!bucket) return { ...doc, signed_url: null };
+
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(doc.storage_path, SIGNED_URL_TTL);
+        if (error) {
+          console.error(`${op} signed-url failed for ${doc.id}`, {
+            code: error.name,
+            message: error.message,
+            timestamp: new Date().toISOString(),
+          });
+          return { ...doc, signed_url: null };
+        }
+        return { ...doc, signed_url: data?.signedUrl ?? null };
+      }
+      return { ...doc, signed_url: null };
+    }),
+  );
+}
+
 type DocsDatabase = {
   public: {
     Tables: {

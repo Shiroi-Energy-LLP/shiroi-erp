@@ -86,11 +86,26 @@ export async function POST(
       );
     }
 
-    // Step 3: Upload to Supabase Storage
+    // Step 3: Upload to Supabase Storage.
+    //
+    // Storage path uses lead_id (not proposal_id) so the legacy
+    // proposal-files bucket listing on /sales/[id]/files (which lists by
+    // lead_id prefix) finds the file alongside the canonical documents-table
+    // row inserted below.
     const admin = createAdminClient();
+
+    const { data: propRow } = await admin
+      .from('proposals')
+      .select('lead_id')
+      .eq('id', proposalId)
+      .single();
+    const leadId = propRow?.lead_id ?? null;
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `${pdfData.proposalNumber.replace(/\//g, '-')}_${timestamp}.pdf`;
-    const storagePath = `${proposalId}/${fileName}`;
+    // Prefer leadId-scoped path so the bucket listing on the Files tab works.
+    // Fallback to proposalId if leadId is missing (shouldn't happen but defensive).
+    const storagePath = `${leadId ?? proposalId}/${fileName}`;
 
     const { error: uploadErr } = await admin.storage
       .from('proposal-files')
@@ -114,22 +129,26 @@ export async function POST(
       console.error(`${op} Proposal update failed:`, updateErr.message);
     }
 
-    // Register in generated_documents
-    const { error: docErr } = await admin
-      .from('generated_documents')
-      .insert({
-        entity_type: 'proposal',
-        entity_id: proposalId,
-        document_type: pdfData.isBudgetary ? 'budgetary_quote' : 'detailed_proposal',
-        storage_path: storagePath,
-        file_name: fileName,
-        generated_by: isN8NCall ? null : undefined, // n8n calls have no user context
-        version: 1,
-      });
-
-    if (docErr) {
-      console.error(`${op} Document registration failed:`, docErr.message);
-      // Non-fatal — PDF was generated successfully
+    // Register in the canonical documents index (mig 109) so the file shows
+    // up in /sales/[id]/files Documents section. Polymorphic — both lead_id
+    // and proposal_id are populated so the document follows the journey.
+    if (leadId) {
+      const { error: docErr } = await admin
+        .from('documents')
+        .insert({
+          lead_id: leadId,
+          proposal_id: proposalId,
+          category: 'proposal_pdf',
+          storage_backend: 'supabase',
+          storage_path: storagePath,
+          name: fileName,
+          mime_type: 'application/pdf',
+          size_bytes: pdfBuffer.length,
+        });
+      if (docErr) {
+        console.error(`${op} documents index insert failed:`, docErr.message);
+        // Non-fatal — PDF was generated successfully
+      }
     }
 
     // Sign a 1-hour download URL so the caller can open the PDF immediately.

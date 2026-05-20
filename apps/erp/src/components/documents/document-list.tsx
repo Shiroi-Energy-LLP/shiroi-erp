@@ -1,5 +1,6 @@
 import {
   type DocumentRow,
+  type DocumentRowWithUrl,
   DOCUMENT_CATEGORY_LABELS,
 } from '@/lib/documents-queries';
 import { Badge } from '@repo/ui';
@@ -26,7 +27,15 @@ function categoryIcon(category: string) {
 }
 
 interface DocumentListProps {
-  documents: DocumentRow[];
+  // Accept both shapes: rows with a pre-signed open URL (from attachOpenUrls)
+  // and bare rows. Backwards-compatible with existing callers.
+  documents: Array<DocumentRow | DocumentRowWithUrl>;
+}
+
+function openHref(doc: DocumentRow | DocumentRowWithUrl): string | null {
+  if ('signed_url' in doc && doc.signed_url) return doc.signed_url;
+  if (doc.external_url) return doc.external_url;
+  return null;
 }
 
 export function DocumentList({ documents }: DocumentListProps) {
@@ -69,16 +78,20 @@ export function DocumentList({ documents }: DocumentListProps) {
               </div>
             </div>
           </div>
-          {doc.external_url && (
-            <a
-              href={doc.external_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-p-600 hover:underline flex items-center gap-1 shrink-0"
-            >
-              Open <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
+          {(() => {
+            const href = openHref(doc);
+            if (!href) return null;
+            return (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-p-600 hover:underline flex items-center gap-1 shrink-0"
+              >
+                Open <ExternalLink className="h-3 w-3" />
+              </a>
+            );
+          })()}
         </div>
       ))}
     </div>

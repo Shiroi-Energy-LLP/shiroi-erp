@@ -10,12 +10,22 @@ interface GeneratePDFButtonProps {
 export function GeneratePDFButton({ proposalId }: GeneratePDFButtonProps) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const handleGenerate = async () => {
+    // Open a placeholder tab synchronously *inside* the click handler.
+    // Browsers (Chrome/Edge/Safari) block window.open() called from async
+    // continuations because the call no longer maps to a user gesture, but
+    // a tab opened during the click handler is allowed even if we set its
+    // location afterwards. The tab navigates to the signed URL once the
+    // POST resolves.
+    const placeholderTab = typeof window !== 'undefined'
+      ? window.open('about:blank', '_blank', 'noopener,noreferrer')
+      : null;
+
     setGenerating(true);
     setError(null);
-    setSuccess(false);
+    setPdfUrl(null);
 
     try {
       const res = await fetch(`/api/proposals/${proposalId}/generate-pdf`, {
@@ -24,18 +34,22 @@ export function GeneratePDFButton({ proposalId }: GeneratePDFButtonProps) {
 
       const data: { error?: string; signedUrl?: string | null } = await res.json();
       if (!res.ok) {
+        placeholderTab?.close();
         setError(data.error ?? 'Failed to generate PDF');
-      } else {
-        setSuccess(true);
-        // Open the PDF in a new tab so the user sees it immediately.
-        // The signed URL is valid for 1 hour (route signs it on success).
-        if (data.signedUrl) {
-          window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      if (data.signedUrl) {
+        if (placeholderTab && !placeholderTab.closed) {
+          placeholderTab.location.href = data.signedUrl;
         }
-        // Auto-dismiss success after 3s
-        setTimeout(() => setSuccess(false), 3000);
+        // Always surface the link in-place too — covers the popup-blocked case
+        // and gives the user a re-open affordance for ~30s.
+        setPdfUrl(data.signedUrl);
+        setTimeout(() => setPdfUrl(null), 30000);
       }
     } catch (err) {
+      placeholderTab?.close();
       setError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setGenerating(false);
@@ -55,8 +69,15 @@ export function GeneratePDFButton({ proposalId }: GeneratePDFButtonProps) {
       {error && (
         <span className="text-xs text-status-error-text">{error}</span>
       )}
-      {success && (
-        <span className="text-xs text-status-success-text">PDF generated!</span>
+      {pdfUrl && (
+        <a
+          href={pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-shiroi-green underline hover:no-underline"
+        >
+          Open PDF ↗
+        </a>
       )}
     </div>
   );

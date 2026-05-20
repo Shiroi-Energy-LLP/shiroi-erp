@@ -6,6 +6,7 @@ import { LeadFilesList } from '@/components/leads/lead-files-list';
 import { DriveFolderButton } from '@/components/leads/drive-folder-button';
 import { DocumentList } from '@/components/documents/document-list';
 import {
+  attachOpenUrls,
   getDocumentsForLead,
   getLeadDriveFolder,
 } from '@/lib/documents-queries';
@@ -35,7 +36,9 @@ export default async function FilesTab({ params }: FilesTabProps) {
   // Drive folder + indexed documents (mig 109) — single source of truth for the journey.
   const driveFolder = await getLeadDriveFolder(id);
   const docsResult = await getDocumentsForLead(id);
-  const documents = docsResult.success ? docsResult.data : [];
+  // Sign Supabase URLs / pass through Drive URLs so DocumentList can render
+  // a working Open link for every row.
+  const documents = docsResult.success ? await attachOpenUrls(docsResult.data) : [];
 
   // Legacy: files from proposal-files bucket (kept until phase 2 backfill).
   const { data: proposalFiles } = await supabase.storage
