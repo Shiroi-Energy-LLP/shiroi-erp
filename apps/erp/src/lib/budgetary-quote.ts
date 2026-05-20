@@ -54,6 +54,23 @@ const DEFAULT_PANEL_WATTAGE = 540;
 const DEFAULT_BATTERY_KWH_PER_KWP = 2; // 2 kWh per kWp for hybrid
 
 /**
+ * Balance-of-System (Misc) lumpsum per kWp.
+ *
+ * The price_book has 4 buckets that the per-category generator doesn't
+ * itemise — AC cabling (43 rows), earthing (10 rows), conduits (24 rows),
+ * miscellaneous fasteners/lugs (14 rows), and safety accessories (4 rows).
+ * Picking the "cheapest" from each is meaningless (a ₹1 screw, a ₹40 wire).
+ * Industry norm for BoS on rooftop solar is 8–12% of system cost; for
+ * Shiroi's price points (~₹40-55K/kWp total) that maps to roughly
+ * ₹3,500–₹5,500/kWp depending on segment. We pick a flat ₹4,000/kWp
+ * lumpsum and emit it as a single "Misc / BoS" line. Adjustable later if
+ * a per-segment refinement is needed.
+ */
+const MISC_BOS_PER_KWP = 4000;
+const MISC_BOS_DESCRIPTION =
+  'Balance of System — AC cabling, earthing, conduits, safety & misc accessories';
+
+/**
  * Logical → price_book category mapping.
  *
  * The Quick Quote BOM generator reasons in "logical" category names (panel,
@@ -347,6 +364,35 @@ export function generateBudgetaryBOM(
       lines.push(makeLine(civilItem, size, Number(civilItem.base_price), cf));
     }
   }
+
+  // 9. Misc / Balance of System — synthetic lumpsum per kWp covering AC
+  //    cabling, earthing, conduits, safety, and miscellaneous fasteners.
+  //    These buckets exist in price_book but their unit/quantity model
+  //    doesn't lend itself to "cheapest row × size" — emitting them as a
+  //    single per-kWp lumpsum is the convention. No price_book_id since
+  //    the line is generator-synthesised; correction factor doesn't apply.
+  const miscQty = size;
+  const miscTotal = new Decimal(miscQty).mul(MISC_BOS_PER_KWP).toNumber();
+  const miscGst = new Decimal(miscTotal).mul('0.18').toNumber();
+  lines.push({
+    item_category: 'miscellaneous',
+    item_description: MISC_BOS_DESCRIPTION,
+    brand: null,
+    model: null,
+    hsn_code: null,
+    quantity: miscQty,
+    unit: 'kw',
+    unit_price: MISC_BOS_PER_KWP,
+    total_price: miscTotal,
+    gst_type: 'works_contract',
+    gst_rate: 18,
+    gst_amount: miscGst,
+    scope_owner: 'shiroi',
+    raw_estimated_cost: miscTotal,
+    correction_factor: 1.0,
+    corrected_cost: miscTotal,
+    price_book_id: null,
+  });
 
   return lines;
 }
