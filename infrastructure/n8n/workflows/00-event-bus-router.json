@@ -200,6 +200,29 @@
                 },
                 "conditions": [
                   {
+                    "id": "cond-proposal-sent-to-customer",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "proposal.sent_to_customer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "proposal.sent_to_customer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
                     "id": "cond-po-approved",
                     "leftValue": "={{ $json.body.event }}",
                     "rightValue": "purchase_order.approved",

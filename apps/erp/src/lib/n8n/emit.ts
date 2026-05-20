@@ -30,6 +30,7 @@ export type ErpEventName =
   // Design / proposals
   | 'proposal.requested'
   | 'proposal.submitted'
+  | 'proposal.sent_to_customer'
   | 'proposal.approved'
   | 'proposal.rejected'
   // Projects

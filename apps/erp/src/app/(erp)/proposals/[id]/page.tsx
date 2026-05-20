@@ -9,6 +9,7 @@ import { BOMTable } from '@/components/proposals/bom-table';
 import { PaymentSchedule } from '@/components/proposals/payment-schedule';
 import { ProposalFiles } from '@/components/proposals/proposal-files';
 import { GeneratePDFButton } from '@/components/proposals/generate-pdf-button';
+import { SendProposalButton } from '@/components/proposals/send-proposal-button';
 import { ProposalDataQualityBanner } from '@/components/proposal-data-quality-banner';
 import { formatINR, toIST } from '@repo/ui/formatters';
 import { calcMarginPct } from '@/lib/proposal-calc';
@@ -99,8 +100,12 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
             <Badge variant="success">Margin Approved</Badge>
           )}
           <GeneratePDFButton proposalId={proposal.id} />
-          {proposal.status === 'draft' && (
-            <Button variant="outline" size="sm">Send Proposal</Button>
+          {(proposal.status === 'draft' || proposal.status === 'sent') && (
+            <SendProposalButton
+              proposalId={proposal.id}
+              customerName={proposal.leads?.customer_name ?? 'Customer'}
+              customerEmail={proposal.leads?.email ?? null}
+            />
           )}
         </div>
       </div>

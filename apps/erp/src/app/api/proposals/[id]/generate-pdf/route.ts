@@ -35,22 +35,58 @@ export async function POST(
       }
     }
 
-    // Assemble PDF data
-    const pdfData = await assembleProposalPDFData(proposalId);
-
-    // Render the correct PDF type
-    let pdfBuffer: Buffer;
-    if (pdfData.isBudgetary) {
-      pdfBuffer = await renderToBuffer(
-        React.createElement(BudgetaryQuotePDF, { data: pdfData }) as any
-      );
-    } else {
-      pdfBuffer = await renderToBuffer(
-        React.createElement(DetailedProposalPDF, { data: pdfData }) as any
+    // Step 1: Assemble PDF data (joined query + reshape)
+    let pdfData;
+    try {
+      pdfData = await assembleProposalPDFData(proposalId);
+      console.log(`${op} step=assemble OK`, {
+        proposalId,
+        isBudgetary: pdfData.isBudgetary,
+        bomLineCount: pdfData.bomLines?.length,
+        milestoneCount: pdfData.milestones?.length,
+        customerName: pdfData.customerName,
+      });
+    } catch (e: any) {
+      console.error(`${op} step=assemble FAILED`, {
+        proposalId,
+        message: e?.message,
+        stack: e?.stack,
+        timestamp: new Date().toISOString(),
+      });
+      return NextResponse.json(
+        { error: `[assemble] ${e?.message ?? 'unknown'}` },
+        { status: 500 }
       );
     }
 
-    // Upload to Supabase Storage
+    // Step 2: Render React-PDF tree to buffer
+    let pdfBuffer: Buffer;
+    try {
+      if (pdfData.isBudgetary) {
+        pdfBuffer = await renderToBuffer(
+          React.createElement(BudgetaryQuotePDF, { data: pdfData }) as any
+        );
+      } else {
+        pdfBuffer = await renderToBuffer(
+          React.createElement(DetailedProposalPDF, { data: pdfData }) as any
+        );
+      }
+      console.log(`${op} step=render OK`, { bytes: pdfBuffer.length });
+    } catch (e: any) {
+      console.error(`${op} step=render FAILED`, {
+        proposalId,
+        isBudgetary: pdfData.isBudgetary,
+        message: e?.message,
+        stack: e?.stack,
+        timestamp: new Date().toISOString(),
+      });
+      return NextResponse.json(
+        { error: `[render] ${e?.message ?? 'unknown'}` },
+        { status: 500 }
+      );
+    }
+
+    // Step 3: Upload to Supabase Storage
     const admin = createAdminClient();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `${pdfData.proposalNumber.replace(/\//g, '-')}_${timestamp}.pdf`;

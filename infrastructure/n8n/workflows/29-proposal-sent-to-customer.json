@@ -1,0 +1,118 @@
+{
+  "name": "29 — Proposal sent to customer (Gmail to client, cc founder)",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "proposal_id",          "value": "={{ $json.body.payload.proposal_id }}",          "type": "string" },
+            { "id": "f2", "name": "proposal_number",      "value": "={{ $json.body.payload.proposal_number }}",      "type": "string" },
+            { "id": "f3", "name": "customer_name",        "value": "={{ $json.body.payload.customer_name }}",        "type": "string" },
+            { "id": "f4", "name": "customer_email",       "value": "={{ $json.body.payload.customer_email }}",       "type": "string" },
+            { "id": "f5", "name": "segment",              "value": "={{ $json.body.payload.segment }}",              "type": "string" },
+            { "id": "f6", "name": "system_size_kwp",      "value": "={{ $json.body.payload.system_size_kwp }}",      "type": "string" },
+            { "id": "f7", "name": "total_after_discount", "value": "={{ $json.body.payload.total_after_discount }}", "type": "string" },
+            { "id": "f8", "name": "pdf_signed_url",       "value": "={{ $json.body.payload.pdf_signed_url }}",       "type": "string" },
+            { "id": "f9", "name": "from_email",           "value": "={{ $json.body.payload.from_email }}",           "type": "string" },
+            { "id": "f10","name": "cc_email",             "value": "={{ $json.body.payload.cc_email }}",             "type": "string" },
+            { "id": "f11","name": "sent_by_name",         "value": "={{ $json.body.payload.sent_by_name }}",         "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.pdf_signed_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "node-fetch-pdf",
+      "name": "Download PDF from signed URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Extract fields').item.json.customer_email }}",
+        "ccList": "={{ $('Extract fields').item.json.cc_email }}",
+        "subject": "=Solar Proposal from Shiroi Energy — {{ $('Extract fields').item.json.customer_name }}",
+        "emailType": "html",
+        "message": "=<div style=\"font-family: Arial, sans-serif; color: #1A1D24; max-width: 640px; line-height: 1.55;\"><p>Dear {{ $('Extract fields').item.json.customer_name }},</p><p>Thank you for considering Shiroi Energy LLP for your solar PV system. Please find attached our proposal <b>{{ $('Extract fields').item.json.proposal_number }}</b> for your review.</p><table style=\"border-collapse: collapse; margin: 16px 0;\"><tr><td style=\"padding: 4px 16px 4px 0; color: #6B7280;\">System size</td><td style=\"padding: 4px 0; font-weight: 600;\">{{ $('Extract fields').item.json.system_size_kwp }} kWp</td></tr><tr><td style=\"padding: 4px 16px 4px 0; color: #6B7280;\">Estimated investment</td><td style=\"padding: 4px 0; font-weight: 600;\">₹{{ Math.round($('Extract fields').item.json.total_after_discount).toLocaleString('en-IN') }} (incl. GST)</td></tr></table><p>The detailed scope of work, technical specifications, payment milestones, and warranty terms are all in the attached PDF. The quote is valid for 30 days.</p><p>I'll follow up with you shortly to walk through the proposal and address any questions. You're also welcome to call me directly on <b>+91 94440 60787</b> or reply to this email.</p><p>Warm regards,<br/>Premkumar<br/>Marketing Head, Shiroi Energy LLP<br/>prem@shiroienergy.com · +91 94440 60787</p><p style=\"margin-top: 24px; padding-top: 12px; border-top: 1px solid #DFE2E8; color: #6B7280; font-size: 12px;\">SHIROI ENERGY LLP · 75/34, Rangeela Apartments, Third Main Road, Kasturba Nagar, Adyar, Chennai – 600 020, INDIA</p></div>",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "data"
+              }
+            ]
+          },
+          "senderName": "Premkumar — Shiroi Energy"
+        }
+      },
+      "id": "node-gmail-send",
+      "name": "Send Gmail to customer (cc founder)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [750, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_OAUTH_CRED_ID",
+          "name": "Gmail (Prem)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When called by router": {
+      "main": [[ { "node": "Extract fields", "type": "main", "index": 0 } ]]
+    },
+    "Extract fields": {
+      "main": [[ { "node": "Download PDF from signed URL", "type": "main", "index": 0 } ]]
+    },
+    "Download PDF from signed URL": {
+      "main": [[ { "node": "Send Gmail to customer (cc founder)", "type": "main", "index": 0 } ]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "Asia/Kolkata"
+  },
+  "tags": [
+    { "name": "erp" },
+    { "name": "tier-1" },
+    { "name": "sales" }
+  ],
+  "meta": {
+    "description": "Triggered by router on proposal.sent_to_customer. Payload: {proposal_id, proposal_number, customer_name, customer_email, segment, system_size_kwp, total_after_discount, pdf_signed_url, from_email, cc_email, sent_by_name, sent_by_role, sent_at}. Downloads the PDF from the Supabase signed URL and emails it from prem@shiroienergy.com to the customer, with svivek.88@gmail.com CC'd. The Gmail OAuth credential must be authorised against prem@shiroienergy.com (or against a workspace account with 'Send As' delegation to prem). Activate after the canary phase per docs/n8n-workflow-audit-2026-05-20.md."
+  },
+  "pinData": {}
+}
