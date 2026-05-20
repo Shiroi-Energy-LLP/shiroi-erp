@@ -1,20 +1,25 @@
 // apps/erp/src/lib/pdf/pdf-styles.ts
+// Role: Design-system-aligned brand tokens and shared StyleSheet.
+//       All PDF components import BRAND and styles from here.
+//       COMPANY is re-exported from proposal/quote-constants for convenience.
 import { StyleSheet } from '@react-pdf/renderer';
 
-// Shiroi brand colors
 export const BRAND = {
-  green: '#00B050',
-  greenDark: '#008A3E',
+  green:     '#00B050',   // matches design-system.md --brand
+  greenDark: '#007A38',   // matches --brand-dark
+  black:     '#111318',   // matches --n950
+  gray900:   '#1A1D24',
+  gray700:   '#3F424D',   // body text on white
+  gray500:   '#6B7280',   // secondary labels
+  gray300:   '#DFE2E8',
+  gray100:   '#F1F3F5',
+  gray50:    '#F8FAFC',
+  white:     '#FFFFFF',
+  solar:     '#F0B429',   // optional CTA accent on payment milestone callouts
+  // Legacy tokens — kept for non-proposal PDFs (project-report, survey-report, etc.)
   greenLight: '#ECFDF5',
-  black: '#1A1D24',
-  gray700: '#3E3E3E',
-  gray500: '#6B7280',
-  gray300: '#D1D5DB',
-  gray100: '#F3F4F6',
-  gray50: '#F9FAFB',
-  white: '#FFFFFF',
-  red: '#991B1B',
-  amber: '#B45309',
+  amber:      '#B45309',
+  red:        '#991B1B',
 } as const;
 
 export const styles = StyleSheet.create({
@@ -23,9 +28,9 @@ export const styles = StyleSheet.create({
     fontSize: 10,
     color: BRAND.black,
     paddingTop: 40,
-    paddingBottom: 40,
-    paddingLeft: 50,
-    paddingRight: 50,
+    paddingBottom: 60,
+    paddingLeft: 40,
+    paddingRight: 40,
   },
   coverPage: {
     fontFamily: 'Helvetica',
@@ -105,15 +110,15 @@ export const styles = StyleSheet.create({
   footer: {
     position: 'absolute',
     bottom: 20,
-    left: 50,
-    right: 50,
+    left: 40,
+    right: 40,
     fontSize: 8,
     color: BRAND.gray500,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   kpiCard: {
-    backgroundColor: BRAND.greenLight,
+    backgroundColor: BRAND.gray50,
     padding: 12,
     borderRadius: 4,
     width: '23%',
