@@ -14,14 +14,17 @@ export const COMPANY = {
   email:      'prem@shiroienergy.com',
 } as const;
 
-// TODO: move to settings/company table once the /settings/company UI exists.
+// Real bank + GSTIN values confirmed by Vivek 2026-05-20.
+// TODO: move to settings/company table once the /settings/company UI exists
+// so non-engineers can update them without a code deploy.
 export const BANK = {
-  name:          'ICICI Bank',
-  accountName:   'SHIROI ENERGY LLP',
-  accountNumber: 'PLACEHOLDER', // TODO: replace with real a/c
-  ifsc:          'ICIC0000000', // TODO: replace with real IFSC
-  branch:        'Adyar Chennai',
-  gstin:         '33XXXXX0000XXX1', // TODO: replace with real GSTIN
+  name:          'UCO Bank',
+  accountName:   'Shiroi Energy LLP',
+  accountNumber: '01580510000908',
+  ifsc:          'UCBA0000158',
+  branch:        'Adyar Branch',
+  accountType:   'Cash Credit',
+  gstin:         '33ACPFS4398J1ZE',
 } as const;
 
 // Hardcoded executed-project lists per sector (text-only chips for v1).

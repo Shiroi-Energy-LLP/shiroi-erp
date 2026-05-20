@@ -88,10 +88,11 @@ export function NoteAndAccountPage({ data, pageNum, totalPages }: NoteAndAccount
         }}
       >
         <AccountRow label="Account Name"   value={BANK.accountName} />
-        <AccountRow label="Bank"           value={BANK.name} />
+        <AccountRow label="Bank Name"      value={BANK.name} />
+        <AccountRow label="Branch"         value={BANK.branch} />
+        <AccountRow label="Account Type"   value={BANK.accountType} />
         <AccountRow label="Account Number" value={BANK.accountNumber} />
         <AccountRow label="IFSC"           value={BANK.ifsc} />
-        <AccountRow label="Branch"         value={BANK.branch} />
         <AccountRow label="GSTIN"          value={BANK.gstin} />
       </View>
 
