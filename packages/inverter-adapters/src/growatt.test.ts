@@ -76,18 +76,16 @@ const DEVICE_LIST_BODY = JSON.stringify({
 });
 
 /** Build a mock Response with Set-Cookie headers. */
-function loginResponse(): Response {
-  return new Response(LOGIN_SUCCESS_BODY, {
+function loginResponse(body: object = JSON.parse(LOGIN_SUCCESS_BODY)): Response {
+  return new Response(JSON.stringify(body), {
     status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Set-Cookie': [
-        'JSESSIONID=ABC123; Path=/; HttpOnly',
-        'SERVERID=server1; Path=/',
-        'SERVERCORSID=cors1; Path=/',
-        'acw_tc=tc_value; Path=/',
-      ].join(', '),
-    },
+    headers: [
+      ['Content-Type', 'application/json'],
+      ['Set-Cookie', 'JSESSIONID=ABC123; Path=/; HttpOnly'],
+      ['Set-Cookie', 'SERVERID=server1; Path=/'],
+      ['Set-Cookie', 'SERVERCORSID=cors1; Path=/'],
+      ['Set-Cookie', 'acw_tc=tc_value; Path=/'],
+    ],
   });
 }
 
@@ -223,13 +221,21 @@ describe('growattAdapter', () => {
 
       await growattAdapter.fetchReadings(VALID_INPUT);
 
-      // The 2nd call (plant list) must include Cookie header
-      const secondCallHeaders = mockFetch.mock.calls[1]![1]?.headers as Record<string, string>;
-      expect(secondCallHeaders?.['Cookie']).toContain('JSESSIONID=ABC123');
+      // The 2nd call (plant list) must include all four Cookie values
+      const call2Headers = mockFetch.mock.calls[1]![1]?.headers as Record<string, string>;
+      const cookieHeader2 = call2Headers?.['Cookie'];
+      expect(cookieHeader2).toContain('JSESSIONID=ABC123');
+      expect(cookieHeader2).toContain('SERVERID=server1');
+      expect(cookieHeader2).toContain('SERVERCORSID=cors1');
+      expect(cookieHeader2).toContain('acw_tc=tc_value');
 
-      // The 3rd call (device list) must also include Cookie header
-      const thirdCallHeaders = mockFetch.mock.calls[2]![1]?.headers as Record<string, string>;
-      expect(thirdCallHeaders?.['Cookie']).toContain('JSESSIONID=ABC123');
+      // The 3rd call (device list) must also include all four Cookie values
+      const call3Headers = mockFetch.mock.calls[2]![1]?.headers as Record<string, string>;
+      const cookieHeader3 = call3Headers?.['Cookie'];
+      expect(cookieHeader3).toContain('JSESSIONID=ABC123');
+      expect(cookieHeader3).toContain('SERVERID=server1');
+      expect(cookieHeader3).toContain('SERVERCORSID=cors1');
+      expect(cookieHeader3).toContain('acw_tc=tc_value');
     });
 
     it('hashes the password with MD5 + growatt c-substitution before sending', async () => {
@@ -290,19 +296,67 @@ describe('growattAdapter', () => {
     });
   });
 
-  // ── 5. healthCheck ─────────────────────────────────────────────────────
+  // ── 5. Unhappy paths ───────────────────────────────────────────────────
+
+  describe('fetchReadings — unhappy paths', () => {
+    it('throws AdapterError when device SN not found in plant device list', async () => {
+      vi.stubGlobal('fetch', vi.fn()
+        .mockResolvedValueOnce(loginResponse({ back: { success: true, user: { id: 3563822, accountName: 'Block - C' } } }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({
+          back: { success: true, data: [{ id: 10467582, plantName: 'Block - C' }] },
+        }), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({
+          deviceList: [{ deviceSn: 'DIFFERENT_SN', deviceStatus: 1 }],
+        }), { status: 200 })));
+
+      await expect(growattAdapter.fetchReadings({
+        credentials: { username: 'Block - C', password: 'Fl0ur1sh@2026' },
+        monitoring_site_id: '10467582',
+        monitoring_device_id: 'VJHRE4U03K',
+        since: null,
+      })).rejects.toBeInstanceOf(AdapterError);
+    });
+
+    it('throws AdapterError when network rejects mid-flow', async () => {
+      vi.stubGlobal('fetch', vi.fn()
+        .mockResolvedValueOnce(loginResponse({ back: { success: true, user: { id: 3563822 } } }))
+        .mockRejectedValueOnce(new TypeError('fetch failed')));
+
+      await expect(growattAdapter.fetchReadings({
+        credentials: { username: 'Block - C', password: 'Fl0ur1sh@2026' },
+        monitoring_site_id: '10467582',
+        monitoring_device_id: 'VJHRE4U03K',
+        since: null,
+      })).rejects.toBeInstanceOf(AdapterError);
+    });
+
+    it('throws AdapterError when login response is malformed (success=true but no user object)', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(
+        loginResponse({ back: { success: true } }), // no user object!
+      ));
+
+      await expect(growattAdapter.fetchReadings({
+        credentials: { username: 'Block - C', password: 'Fl0ur1sh@2026' },
+        monitoring_site_id: '10467582',
+        monitoring_device_id: 'VJHRE4U03K',
+        since: null,
+      })).rejects.toBeInstanceOf(AdapterError);
+    });
+  });
+
+  // ── 6. healthCheck ─────────────────────────────────────────────────────
 
   describe('healthCheck', () => {
     it('returns ok=false with message if username missing', async () => {
       const result = await growattAdapter.healthCheck({ password: 'pass' });
       expect(result.ok).toBe(false);
-      expect(result.message).toMatch(/username/i);
+      expect(result.message).toBe('Missing username');
     });
 
     it('returns ok=false with message if password missing', async () => {
       const result = await growattAdapter.healthCheck({ username: 'user' });
       expect(result.ok).toBe(false);
-      expect(result.message).toMatch(/password/i);
+      expect(result.message).toBe('Missing password');
     });
 
     it('returns ok=true with plant count when login succeeds', async () => {

@@ -110,7 +110,8 @@ function hashGrowattPassword(password: string): string {
  * portion before the first ';'.
  *
  * Falls back to parsing the combined 'set-cookie' header string if
- * getSetCookie() is not available (Node <18.14).
+ * getSetCookie() is not available. Deno (Supabase Edge Functions) and Node
+ * 18.14+ both support headers.getSetCookie() natively.
  */
 function extractCookies(headers: Headers): string {
   const cookies: string[] = [];
@@ -122,8 +123,9 @@ function extractCookies(headers: Headers): string {
       if (pair) cookies.push(pair);
     }
   } else {
-    // Fallback: parse the combined set-cookie header value
-    // In vitest's mock, headers may return all Set-Cookie joined with ', '
+    // Fallback for the vitest test harness or any runtime where Set-Cookie headers
+    // arrive joined into a single string. Deno (Supabase Edge Functions) and Node
+    // 18.14+ both support headers.getSetCookie() natively.
     const raw = headers.get('set-cookie') ?? headers.get('Set-Cookie') ?? '';
     if (raw) {
       // Split on ', ' between cookie entries (crude but adequate for our cookies)
@@ -145,7 +147,7 @@ interface GrowattLoginResult {
 }
 
 async function growattLogin(username: string, password: string): Promise<GrowattLoginResult> {
-  const op = '[growattAdapter.login]';
+  const op = '[growattLogin]';
   const hashedPassword = hashGrowattPassword(password);
 
   const body = new URLSearchParams();
@@ -171,7 +173,11 @@ async function growattLogin(username: string, password: string): Promise<Growatt
     throw new AdapterError('growatt', `Growatt login failed: ${errMsg}`);
   }
 
-  const userId = back.user!.id;
+  if (!back.user || typeof back.user.id !== 'number') {
+    console.error(`${op} malformed login response — success=true but user object missing`, { username, timestamp: new Date().toISOString() });
+    throw new AdapterError('growatt', 'Login succeeded but response missing user object');
+  }
+  const userId = back.user.id;
   return { userId, cookieHeader };
 }
 
@@ -181,6 +187,7 @@ interface GrowattPlantSummary {
 }
 
 async function growattGetPlantList(userId: number, cookieHeader: string): Promise<GrowattPlantSummary[]> {
+  const op = '[growattGetPlantList]';
   const response = await fetch(`${BASE_URL}PlantListAPI.do?userId=${userId}`, {
     method: 'GET',
     headers: {
@@ -189,6 +196,9 @@ async function growattGetPlantList(userId: number, cookieHeader: string): Promis
   });
 
   const json = await response.json() as { back: { success: boolean; data?: GrowattPlantSummary[] } };
+  if (!json.back?.success) {
+    console.error(`${op} plant list response indicated failure`, { userId, timestamp: new Date().toISOString() });
+  }
   return json.back?.data ?? [];
 }
 
@@ -204,6 +214,7 @@ interface GrowattDevice {
 }
 
 async function growattGetDeviceList(plantId: string, cookieHeader: string): Promise<GrowattDevice[]> {
+  const op = '[growattGetDeviceList]';
   const url = `${BASE_URL}newTwoPlantAPI.do?op=getAllDeviceList&plantId=${plantId}&language=1`;
   const response = await fetch(url, {
     method: 'GET',
@@ -213,6 +224,9 @@ async function growattGetDeviceList(plantId: string, cookieHeader: string): Prom
   });
 
   const json = await response.json() as { deviceList?: GrowattDevice[] };
+  if (!json.deviceList) {
+    console.error(`${op} device list missing from response`, { plantId, timestamp: new Date().toISOString() });
+  }
   return json.deviceList ?? [];
 }
 
@@ -248,79 +262,94 @@ export const growattAdapter: InverterAdapter = {
       };
     }
 
-    // ── 3. Login (per-customer auth) ───────────────────────────────────
-    // NOTE: See TODO(phase-8-session-cache) at the top of this file.
-    // Each call does a fresh login. Phase 8 will cache cookies per username.
-    const { userId, cookieHeader } = await growattLogin(
-      input.credentials.username,
-      input.credentials.password,
-    );
-
-    // ── 4. Plant list sanity check ─────────────────────────────────────
-    const plants = await growattGetPlantList(userId, cookieHeader);
-    const plantIds = plants.map(p => p.plantId);
-    if (!plantIds.includes(input.monitoring_site_id)) {
-      // Log but don't fail — the plant may still be accessible
-      console.warn(
-        `${op} requested plant ${input.monitoring_site_id} not in plant list [${plantIds.join(', ')}]`,
-        { username: input.credentials.username, timestamp: new Date().toISOString() },
+    // ── 3–6. Real API flow (login → plant list → device list → normalize) ──
+    try {
+      // NOTE: See TODO(phase-8-session-cache) at the top of this file.
+      // Each call does a fresh login. Phase 8 will cache cookies per username.
+      const { userId, cookieHeader } = await growattLogin(
+        input.credentials.username,
+        input.credentials.password,
       );
+
+      // ── 4. Plant list sanity check ───────────────────────────────────
+      const plants = await growattGetPlantList(userId, cookieHeader);
+      const plantIds = plants.map(p => p.plantId);
+      if (!plantIds.includes(input.monitoring_site_id)) {
+        // Log but don't fail — the plant may still be accessible
+        console.warn(
+          `${op} requested plant ${input.monitoring_site_id} not in plant list [${plantIds.join(', ')}]`,
+          { username: input.credentials.username, timestamp: new Date().toISOString() },
+        );
+      }
+
+      // ── 5. Device list for the plant ────────────────────────────────
+      const devices = await growattGetDeviceList(input.monitoring_site_id, cookieHeader);
+
+      const device = devices.find(d => d.deviceSn === input.monitoring_device_id);
+      if (!device) {
+        console.error(
+          `${op} device ${input.monitoring_device_id} not found in plant ${input.monitoring_site_id}`,
+          {
+            availableDevices: devices.map(d => d.deviceSn),
+            timestamp: new Date().toISOString(),
+          },
+        );
+        throw new AdapterError(
+          'growatt',
+          `Device ${input.monitoring_device_id} not found in plant ${input.monitoring_site_id}`,
+        );
+      }
+
+      // ── 6. Normalize ─────────────────────────────────────────────────
+      // power: string of watts (e.g., '500' = 500W = 0.5kW). '0' when offline.
+      const acPowerKw = parseFloat(device.power) / 1000;
+      // eToday: already in kWh as a string (e.g., '5.2')
+      const energyTodayKwh = parseFloat(device.eToday);
+      // energy: total lifetime energy in kWh as a string (e.g., '12225.9')
+      const energyTotalKwh = parseFloat(device.energy);
+      // deviceStatus: integer (1=active, 3=fault, 5=offline)
+      const status = mapGrowattStatus(device.deviceStatus);
+
+      const reading = {
+        recorded_at: new Date().toISOString(),
+        ac_power_kw: isNaN(acPowerKw) ? null : acPowerKw,
+        dc_power_kw: null, // not exposed by the legacy API
+        ac_voltage_v: null, // not exposed by this endpoint
+        ac_current_a: null, // not exposed by this endpoint
+        ac_frequency_hz: null, // not exposed by this endpoint
+        temperature_c: null, // not exposed by this endpoint
+        energy_today_kwh: isNaN(energyTodayKwh) ? null : energyTodayKwh,
+        energy_total_kwh: isNaN(energyTotalKwh) ? null : energyTotalKwh,
+        status,
+        error_code: null,
+        raw_payload: device as Record<string, unknown>,
+      };
+
+      return { readings: [reading], string_readings: [] };
+    } catch (e) {
+      if (e instanceof AdapterError || e instanceof InvalidCredentialsError) {
+        throw e; // already typed
+      }
+      const message = e instanceof Error ? e.message : String(e);
+      console.error(`${op} fetch failed`, {
+        username: input.credentials.username,
+        plant_id: input.monitoring_site_id,
+        device_sn: input.monitoring_device_id,
+        error: message,
+        timestamp: new Date().toISOString(),
+      });
+      throw new AdapterError('growatt', `Network or parsing error: ${message}`);
     }
-
-    // ── 5. Device list for the plant ──────────────────────────────────
-    const devices = await growattGetDeviceList(input.monitoring_site_id, cookieHeader);
-
-    const device = devices.find(d => d.deviceSn === input.monitoring_device_id);
-    if (!device) {
-      console.error(
-        `${op} device ${input.monitoring_device_id} not found in plant ${input.monitoring_site_id}`,
-        {
-          availableDevices: devices.map(d => d.deviceSn),
-          timestamp: new Date().toISOString(),
-        },
-      );
-      throw new AdapterError(
-        'growatt',
-        `Device ${input.monitoring_device_id} not found in plant ${input.monitoring_site_id}`,
-      );
-    }
-
-    // ── 6. Normalize ───────────────────────────────────────────────────
-    // power: string of watts (e.g., '500' = 500W = 0.5kW). '0' when offline.
-    const acPowerKw = parseFloat(device.power) / 1000;
-    // eToday: already in kWh as a string (e.g., '5.2')
-    const energyTodayKwh = parseFloat(device.eToday);
-    // energy: total lifetime energy in kWh as a string (e.g., '12225.9')
-    const energyTotalKwh = parseFloat(device.energy);
-    // deviceStatus: integer (1=active, 3=fault, 5=offline)
-    const status = mapGrowattStatus(device.deviceStatus);
-
-    const reading = {
-      recorded_at: new Date().toISOString(),
-      ac_power_kw: isNaN(acPowerKw) ? null : acPowerKw,
-      dc_power_kw: null, // not exposed by the legacy API
-      ac_voltage_v: null, // not exposed by this endpoint
-      ac_current_a: null, // not exposed by this endpoint
-      ac_frequency_hz: null, // not exposed by this endpoint
-      temperature_c: null, // not exposed by this endpoint
-      energy_today_kwh: isNaN(energyTodayKwh) ? null : energyTodayKwh,
-      energy_total_kwh: isNaN(energyTotalKwh) ? null : energyTotalKwh,
-      status,
-      error_code: null,
-      raw_payload: device as unknown as Record<string, unknown>,
-    };
-
-    return { readings: [reading], string_readings: [] };
   },
 
   async healthCheck(credentials: AdapterCredentials): Promise<AdapterHealthCheckResult> {
     const op = '[growattAdapter.healthCheck]';
 
     if (!credentials.username) {
-      return { ok: false, message: 'Missing username or password' };
+      return { ok: false, message: 'Missing username' };
     }
     if (!credentials.password) {
-      return { ok: false, message: 'Missing username or password' };
+      return { ok: false, message: 'Missing password' };
     }
 
     if (process.env.SYNTHETIC_INVERTER_READINGS === '1') {
