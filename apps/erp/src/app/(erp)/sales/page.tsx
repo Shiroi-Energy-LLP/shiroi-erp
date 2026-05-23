@@ -177,7 +177,8 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     ? viewCols
     : getDefaultColumns('leads');
 
-  // Build referrer dropdown options
+  // Build referrer FILTER dropdown options (used by the filter chip at top
+  // of the table; includes "All Sources" + "internal_all" sentinel choices).
   const referrerOptions: { value: string; label: string; disabled?: boolean }[] = [
     { value: '', label: 'All Sources' },
     { value: 'internal_all', label: 'All Internal (Vivek / Mgmt)' },
@@ -185,6 +186,16 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     ...(externalReferrers.length > 0
       ? [{ value: '__divider__', label: '── External Partners ──', disabled: true }]
       : []),
+    ...externalReferrers.map((r) => ({ value: r.id, label: r.partner_name })),
+  ];
+
+  // Build referrer CELL-EDIT dropdown options (used by the inline-edit select
+  // in the Referrer column on each row). No sentinel values — just a "no
+  // referrer" empty choice, then VIP-prefixed internal partners, then
+  // external ones. Translates to channel_partner_id on save in the wrapper.
+  const partnerCellOptions: { value: string; label: string }[] = [
+    { value: '', label: '— No referrer —' },
+    ...internalReferrers.map((r) => ({ value: r.id, label: `[VIP] ${r.partner_name}` })),
     ...externalReferrers.map((r) => ({ value: r.id, label: r.partner_name })),
   ];
 
@@ -330,6 +341,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
         activeViewId={params.view ?? activeView?.id ?? null}
         visibleColumns={visibleColumns}
         employees={employees}
+        partnerOptions={partnerCellOptions}
       />
     </div>
   );

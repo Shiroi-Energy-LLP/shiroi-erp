@@ -45,8 +45,11 @@ export const LEAD_COLUMNS: ColumnDef[] = [
       { value: 'cold_call', label: 'Cold Call' }, { value: 'exhibition', label: 'Exhibition' },
       { value: 'social_media', label: 'Social Media' }, { value: 'walkin', label: 'Walk-in' },
     ] },
-  // Referrer: flattened from channel_partners embed; custom renderer in data-table.tsx handles VIP badge
-  { key: 'referrer', label: 'Referrer', sortKey: 'referrer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
+  // Referrer: flattened from channel_partners embed. Custom renderer in
+  // data-table.tsx handles VIP badge. Inline-edit options are injected at
+  // runtime via DataTable's `dynamicOptions` prop (the partners list isn't
+  // static so it can't live in column-config).
+  { key: 'referrer', label: 'Referrer', sortKey: 'referrer_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'select' },
   // Lead status options must stay in sync with the stage-bar nav
   // (lead-stage-nav.tsx STAGE_ORDER) and leads-helpers.ts STAGE_LABELS.
   // Legacy/terminal values (proposal_sent, converted, disqualified) are

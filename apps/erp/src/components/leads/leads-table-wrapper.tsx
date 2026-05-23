@@ -24,6 +24,14 @@ interface LeadsTableWrapperProps {
   activeViewId: string | null;
   visibleColumns: string[];
   employees: Employee[];
+  /**
+   * Channel-partner options for the Referrer column's inline select. Loaded
+   * server-side on the /sales page so the dropdown opens instantly without
+   * a client-side round-trip. Empty string value = "no referrer". Optional
+   * because the legacy /leads page doesn't pre-fetch partners (it falls
+   * back to a single "—" option — referrer-edit there is best-effort).
+   */
+  partnerOptions?: { value: string; label: string }[];
 }
 
 export function LeadsTableWrapper({
@@ -39,10 +47,18 @@ export function LeadsTableWrapper({
   activeViewId,
   visibleColumns,
   employees,
+  partnerOptions = [],
 }: LeadsTableWrapperProps) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   async function handleCellEdit(rowId: string, field: string, value: string | number | null) {
+    // The Referrer column shows a joined display string; its underlying DB
+    // column is channel_partner_id. Translate before writing. Empty-string
+    // "no referrer" choice maps to NULL.
+    if (field === 'referrer') {
+      const normalized = value === '' ? null : value;
+      return updateCellValue({ entityType: 'leads', rowId, field: 'channel_partner_id', value: normalized });
+    }
     return updateCellValue({ entityType: 'leads', rowId, field, value });
   }
 
@@ -79,6 +95,7 @@ export function LeadsTableWrapper({
       onSelectionChange={setSelectedIds}
       selectedIds={selectedIds}
       onCellEdit={handleCellEdit}
+      dynamicOptions={{ referrer: partnerOptions }}
       bulkActions={
         selectedIds.length > 0 ? (
           <BulkActionBar

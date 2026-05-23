@@ -211,6 +211,13 @@ interface DataTableProps {
   selectedIds?: string[];
   /** Callback for inline cell editing. If not provided, inline editing is disabled. */
   onCellEdit?: (rowId: string, field: string, value: string | number | null) => Promise<{ success: boolean; error?: string }>;
+  /**
+   * Per-column runtime options for select-style inline edits whose option list
+   * isn't known at column-config time (e.g. the referrer column, where the
+   * choices come from the channel_partners table). When set for a column, it
+   * overrides whatever the column's static `options` prop says.
+   */
+  dynamicOptions?: Record<string, { value: string; label: string }[]>;
 }
 
 export function DataTable({
@@ -234,6 +241,7 @@ export function DataTable({
   onSelectionChange,
   selectedIds = [],
   onCellEdit,
+  dynamicOptions,
 }: DataTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -352,12 +360,19 @@ export function DataTable({
 
     // Check if this cell is being edited
     if (editingCell?.rowId === rowId && editingCell?.columnKey === col.key) {
-      const rawVal = val != null ? String(val) : '';
+      // Referrer cell uses the raw channel_partner_id, not the joined display
+      // string. Same for any other "derived display" columns we add later —
+      // they should expose the underlying foreign-key value via a parallel
+      // `${col.key}_id` field on the row.
+      const editKey = col.key === 'referrer' ? 'channel_partner_id' : col.key;
+      const rawEditVal = row[editKey];
+      const rawVal = rawEditVal != null ? String(rawEditVal) : '';
+      const effectiveOptions = dynamicOptions?.[col.key] ?? col.options;
       return (
         <InlineEditInput
           value={rawVal}
           fieldType={col.fieldType}
-          options={col.options}
+          options={effectiveOptions}
           onSave={(newVal) => handleCellSave(rowId, col.key, newVal)}
           onCancel={() => setEditingCell(null)}
         />
@@ -375,20 +390,26 @@ export function DataTable({
       : {};
 
     // Referrer column — shows VIP badge for internal partners, "+ Set" when
-    // null. Double-click anywhere on the cell (empty or populated) navigates
-    // to the lead detail page where the inline picker lives. The cell is
-    // wrapped in a shared button surface so the hover affordance is obvious.
+    // null. Double-click anywhere on the cell opens an inline select populated
+    // with the partner list (passed in via DataTable's `dynamicOptions` prop).
+    // The save handler in leads-table-wrapper translates the column key
+    // 'referrer' → DB column 'channel_partner_id'.
     if (col.key === 'referrer') {
       const referrerName = row['referrer_name'] as string | null;
       const isInternal = row['referrer_is_internal'] as boolean | null;
-      const openLead = () => router.push(`${linkPrefix}/${rowId}`);
-      const cellClasses = 'inline-flex items-center gap-1.5 rounded px-1 -mx-1 cursor-pointer hover:bg-shiroi-green/[0.08] transition-colors';
+      const canEdit = !!onCellEdit && col.editable;
+      const editProps = canEdit
+        ? {
+            onDoubleClick: () => handleCellClick(rowId, col),
+            className: 'cursor-text hover:bg-shiroi-green/[0.08] rounded px-1 -mx-1 transition-colors',
+            title: 'Double-click to change referrer',
+          }
+        : {};
       if (!referrerName) {
         return (
           <span
-            className={`${cellClasses} text-xs text-shiroi-green/70 hover:text-shiroi-green`}
-            onDoubleClick={openLead}
-            title="Double-click to set a referrer"
+            {...editProps}
+            className={`${editProps.className ?? ''} inline-flex items-center text-xs text-shiroi-green/70 hover:text-shiroi-green`}
           >
             + Set referrer
           </span>
@@ -396,22 +417,14 @@ export function DataTable({
       }
       if (isInternal) {
         return (
-          <span
-            className={cellClasses}
-            onDoubleClick={openLead}
-            title="Double-click to change referrer"
-          >
+          <span {...editProps} className={`${editProps.className ?? ''} inline-flex items-center gap-1.5`}>
             <span className="inline-flex items-center rounded-full border border-transparent bg-status-success-bg px-1.5 py-0 text-[10px] font-bold text-status-success-text">VIP</span>
             <span className="text-sm font-medium text-n-900">{referrerName}</span>
           </span>
         );
       }
       return (
-        <span
-          className={`${cellClasses} text-sm text-n-700`}
-          onDoubleClick={openLead}
-          title="Double-click to change referrer"
-        >
+        <span {...editProps} className={`${editProps.className ?? ''} text-sm text-n-700`}>
           {referrerName}
         </span>
       );
