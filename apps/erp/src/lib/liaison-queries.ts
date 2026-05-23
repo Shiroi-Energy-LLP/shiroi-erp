@@ -55,9 +55,15 @@ export async function getLiaisonObjections(projectId: string) {
   return data ?? [];
 }
 
+export type LiaisonFilter =
+  | 'all'
+  | 'awaiting_client'
+  | 'ceig_pending'
+  | 'ceig_in_process'
+  | 'tneb_active';
+
 export async function getAllNetMeteringApplications(filters: {
-  ceigStatus?: string;
-  discomStatus?: string;
+  filter?: LiaisonFilter;
   search?: string;
 } = {}) {
   const op = '[getAllNetMeteringApplications]';
@@ -66,14 +72,34 @@ export async function getAllNetMeteringApplications(filters: {
 
   let query = supabase
     .from('net_metering_applications')
-    .select('*, projects(id, project_number, customer_name, system_size_kwp, system_type, site_city, ceig_required)')
+    .select(
+      '*, projects(id, project_number, customer_name, system_size_kwp, system_type, site_city, ceig_required)',
+    )
     .order('created_at', { ascending: false });
 
-  if (filters.ceigStatus) {
-    query = query.eq('ceig_status', filters.ceigStatus);
-  }
-  if (filters.discomStatus) {
-    query = query.eq('discom_status', filters.discomStatus);
+  switch (filters.filter) {
+    case 'awaiting_client':
+      query = query.eq('awaiting_client_details', true);
+      break;
+    case 'ceig_pending':
+      query = query.eq('ceig_required', true).eq('ceig_status', 'pending');
+      break;
+    case 'ceig_in_process':
+      query = query
+        .eq('ceig_required', true)
+        .in('ceig_status', ['applied', 'inspection_scheduled']);
+      break;
+    case 'tneb_active':
+      query = query.in('discom_status', [
+        'applied',
+        'tneb_verified',
+        'tneb_inspected',
+        'tneb_estimated',
+        'installation_completed',
+      ]);
+      break;
+    default:
+      break;
   }
 
   const { data, error } = await query;
@@ -84,13 +110,13 @@ export async function getAllNetMeteringApplications(filters: {
 
   let results = data ?? [];
 
-  // Client-side search on project name/number (join filter not supported well in Supabase)
   if (filters.search) {
     const s = filters.search.toLowerCase();
-    results = results.filter((app: any) =>
-      app.projects?.customer_name?.toLowerCase().includes(s) ||
-      app.projects?.project_number?.toLowerCase().includes(s) ||
-      app.discom_application_number?.toLowerCase().includes(s)
+    results = results.filter(
+      (app: any) =>
+        app.projects?.customer_name?.toLowerCase().includes(s) ||
+        app.projects?.project_number?.toLowerCase().includes(s) ||
+        app.discom_application_number?.toLowerCase().includes(s),
     );
   }
 
