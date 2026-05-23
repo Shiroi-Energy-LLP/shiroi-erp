@@ -64,7 +64,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
 
   let query = supabase
     .from('leads')
-    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, close_probability, is_archived, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name), channel_partners!leads_channel_partner_id_fkey(name, is_internal)', { count: 'estimated' })
+    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, close_probability, is_archived, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name), channel_partners!leads_channel_partner_id_fkey(partner_name, is_internal)', { count: 'estimated' })
     .is('deleted_at', null)
     .order(sortCol, { ascending: sortDir });
 
@@ -156,12 +156,12 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   // Flatten joined relations for DataTable
   const rows = (data ?? []).map((lead) => {
     const emp = lead.employees as { full_name: string } | null;
-    const cp = lead.channel_partners as { name: string; is_internal: boolean } | null;
+    const cp = lead.channel_partners as { partner_name: string; is_internal: boolean } | null;
     return {
       ...lead,
       assigned_to_name: emp?.full_name ?? '—',
       weighted_value: (lead.estimated_size_kwp ?? 0) * 60000 * (lead.close_probability ?? 0) / 100,
-      referrer_name: cp?.name ?? null,
+      referrer_name: cp?.partner_name ?? null,
       referrer_is_internal: cp != null ? !!cp.is_internal : null,
     };
   });
