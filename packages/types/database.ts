@@ -14684,6 +14684,21 @@ export type Database = {
         }
         Relationships: []
       }
+      v_digest_projects_active_for_pm: {
+        Row: {
+          customer_name: string | null
+          days_in_status: number | null
+          project_id: string | null
+          project_manager_id: string | null
+          project_manager_name: string | null
+          project_manager_whatsapp_number: string | null
+          project_number: string | null
+          status: Database["public"]["Enums"]["project_status"] | null
+          status_sort_order: number | null
+          system_size_kwp: number | null
+        }
+        Relationships: []
+      }
       v_digest_projects_installs_today: {
         Row: {
           customer_name: string | null
