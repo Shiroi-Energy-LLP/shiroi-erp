@@ -1,10 +1,10 @@
--- Migration 0113: Active-project queue digest view for projects manager (Manivel)
+-- Migration 114: Active-project queue digest view for projects manager (Manivel)
 --
 -- Surfaces projects in yet_to_start | in_progress | holding_shiroi status with
 -- their PM and time-in-stage. Drives workflow #22 (renamed to "Active project
 -- queue"). Follows the v_digest_milestones_overdue pattern from migration 083.
 
-CREATE OR REPLACE VIEW public.v_digest_projects_active_for_pm AS
+CREATE OR REPLACE VIEW v_digest_projects_active_for_pm AS
 SELECT
   p.id AS project_id,
   p.project_number,
@@ -18,7 +18,7 @@ SELECT
     WHEN 'holding_shiroi' THEN 2
   END AS status_sort_order,
   -- How long the project has been in its current status (days)
-  GREATEST(0, (CURRENT_DATE - COALESCE(p.status_updated_at::date, p.created_at::date))) AS days_in_status,
+  GREATEST(0, (CURRENT_DATE - p.status_updated_at::date)) AS days_in_status,
   pm.id AS project_manager_id,
   pm.full_name AS project_manager_name,
   pm.whatsapp_number AS project_manager_whatsapp_number
@@ -28,5 +28,7 @@ WHERE p.deleted_at IS NULL
   AND p.status IN ('yet_to_start','in_progress','holding_shiroi')
 ORDER BY status_sort_order, days_in_status DESC;
 
-COMMENT ON VIEW public.v_digest_projects_active_for_pm IS
+COMMENT ON VIEW v_digest_projects_active_for_pm IS
   'Active-project queue for the projects manager (Manivel). Excludes order_received (still in handoff), holding_client (not actionable for PM), waiting_net_metering (liaison concern), and completed. Ordered: yet_to_start first, then in_progress, then holding_shiroi; within group by days_in_status desc. Drives n8n workflow #22.';
+
+GRANT SELECT ON public.v_digest_projects_active_for_pm TO authenticated, service_role;
