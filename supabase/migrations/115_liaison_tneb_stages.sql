@@ -1,4 +1,4 @@
--- Migration 114: Liaison TNEB stage rename + awaiting-client flag + ceig_scope to projects
+-- Migration 115: Liaison TNEB stage rename + awaiting-client flag + ceig_scope to projects
 
 -- ── 1. Add ceig_scope to projects ──────────────────────────────────────────
 ALTER TABLE projects
