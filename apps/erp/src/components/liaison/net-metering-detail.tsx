@@ -23,10 +23,11 @@ const CEIG_STATUSES = [
 const DISCOM_STATUSES = [
   { value: 'pending', label: 'Pending' },
   { value: 'applied', label: 'Applied' },
-  { value: 'under_review', label: 'Under Review' },
-  { value: 'site_inspection_scheduled', label: 'Site Inspection Scheduled' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'net_meter_installed', label: 'Net Meter Installed' },
+  { value: 'tneb_verified', label: 'Verified' },
+  { value: 'tneb_inspected', label: 'Inspected' },
+  { value: 'tneb_estimated', label: 'Estimated' },
+  { value: 'installation_completed', label: 'Installation Done' },
+  { value: 'service_effected', label: 'Service Effected' },
   { value: 'rejected', label: 'Rejected' },
   { value: 'objection_raised', label: 'Objection Raised' },
 ];
@@ -217,7 +218,7 @@ export function NetMeteringDetail({ projectId, application, ceigRequired }: NetM
               <Zap className="h-4 w-4" />
               {application.discom_name || 'TNEB'} Application
               <Badge variant={
-                application.discom_status === 'approved' || application.discom_status === 'net_meter_installed' ? 'success' :
+                application.discom_status === 'installation_completed' || application.discom_status === 'service_effected' ? 'success' :
                 application.discom_status === 'rejected' || application.discom_status === 'objection_raised' ? 'error' : 'warning'
               } className="capitalize ml-auto">
                 {application.discom_status.replace(/_/g, ' ')}
