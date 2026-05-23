@@ -27,13 +27,30 @@ export async function createNetMeteringApplication(input: {
     return { success: false, error: 'Net metering application already exists for this project.' };
   }
 
+  // Fetch project to auto-determine CEIG requirement
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .select('system_size_kwp, system_type, ceig_scope')
+    .eq('id', input.projectId)
+    .single();
+
+  if (projectError || !project) {
+    console.error(`${op} Could not fetch project:`, { error: projectError?.message });
+    return { success: false, error: 'Could not load project data.' };
+  }
+
+  const ceigRequired =
+    (project as any).ceig_scope === 'shiroi' &&
+    Number((project as any).system_size_kwp ?? 0) >= 10 &&
+    (project as any).system_type !== 'off_grid';
+
   const { error } = await supabase
     .from('net_metering_applications')
     .insert({
       project_id: input.projectId,
       discom_name: input.discomName || 'TANGEDCO',
       discom_status: 'pending',
-      ceig_required: false,
+      ceig_required: ceigRequired,
       followup_count: 0,
     } as any);
 
@@ -42,7 +59,7 @@ export async function createNetMeteringApplication(input: {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/liaison/net-metering`);
+  revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }
@@ -92,7 +109,7 @@ export async function updateCeigStatus(input: {
       .eq('id', input.projectId);
   }
 
-  revalidatePath(`/liaison/net-metering`);
+  revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
 
   if (input.ceigStatus === 'approved') {
@@ -187,7 +204,7 @@ export async function updateDiscomStatus(input: {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/liaison/net-metering`);
+  revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }
@@ -220,7 +237,7 @@ export async function updateNetMeterInstallation(input: {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/liaison/net-metering`);
+  revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }
@@ -262,7 +279,7 @@ export async function recordFollowup(input: {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/liaison/net-metering`);
+  revalidatePath('/liaison');
   return { success: true };
 }
 
@@ -310,7 +327,7 @@ export async function uploadLiaisonDocument(input: {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/liaison/net-metering`);
+  revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }
@@ -381,39 +398,8 @@ export async function updateLiaisonFields(input: {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/liaison/net-metering`);
+  revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
-}
-
-/**
- * Set CEIG scope — whether Shiroi or Client handles the CEIG clearance process.
- */
-export async function updateCeigScope(input: {
-  applicationId: string;
-  scope: 'shiroi' | 'client';
-}): Promise<{ success: boolean; error?: string }> {
-  const op = '[updateCeigScope]';
-  console.log(`${op} Setting CEIG scope to ${input.scope} for application: ${input.applicationId}`);
-
-  const supabase = await createClient();
-
-  const updateData: Record<string, unknown> = {
-    ceig_scope: input.scope,
-    ceig_required: input.scope === 'shiroi',
-  };
-
-  const { error } = await supabase
-    .from('net_metering_applications')
-    .update(updateData as any)
-    .eq('id', input.applicationId);
-
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
-  }
-
-  revalidatePath('/projects');
   return { success: true };
 }
 
@@ -468,6 +454,34 @@ export async function createObjection(input: {
     .update({ discom_status: 'objection_raised' } as any)
     .eq('project_id', input.projectId);
 
-  revalidatePath(`/liaison/net-metering`);
+  revalidatePath('/liaison');
+  return { success: true };
+}
+
+export async function setAwaitingClientDetails(input: {
+  projectId: string;
+  awaiting: boolean;
+  note?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[setAwaitingClientDetails]';
+  console.log(`${op} Setting awaiting=${input.awaiting} for project: ${input.projectId}`);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('net_metering_applications')
+    .update({
+      awaiting_client_details: input.awaiting,
+      awaiting_client_since: input.awaiting ? new Date().toISOString() : null,
+      awaiting_client_note: input.note ?? null,
+    } as any)
+    .eq('project_id', input.projectId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message, projectId: input.projectId });
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/liaison');
+  revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }

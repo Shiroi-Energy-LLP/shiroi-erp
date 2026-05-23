@@ -10,7 +10,6 @@ import {
   createNetMeteringApplication,
   updateDiscomStatus,
   updateCeigStatus,
-  updateCeigScope,
   updateNetMeterInstallation,
   recordFollowup,
   uploadLiaisonDocument,
@@ -455,57 +454,6 @@ export function LiaisonDocUpload({
 /* ------------------------------------------------------------------ */
 /*  Activity Log Form                                                  */
 /* ------------------------------------------------------------------ */
-
-/* ------------------------------------------------------------------ */
-/*  CEIG Scope Toggle (Shiroi / Client)                               */
-/* ------------------------------------------------------------------ */
-
-export function CeigScopeToggle({
-  applicationId,
-  currentScope,
-}: {
-  applicationId: string;
-  currentScope: string | null;
-}) {
-  const router = useRouter();
-  const [saving, setSaving] = React.useState(false);
-
-  async function handleChange(scope: 'shiroi' | 'client') {
-    if (currentScope === scope) return;
-    setSaving(true);
-    const result = await updateCeigScope({ applicationId, scope });
-    setSaving(false);
-    if (result.success) router.refresh();
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs font-medium text-n-500">CEIG Scope:</span>
-      <button
-        onClick={() => handleChange('shiroi')}
-        disabled={saving}
-        className={`px-3 py-1 text-xs rounded-l-md border ${
-          currentScope === 'shiroi' || currentScope === null
-            ? 'bg-green-50 border-green-300 text-green-700 font-medium'
-            : 'bg-white border-n-200 text-n-500 hover:bg-n-50'
-        }`}
-      >
-        Shiroi
-      </button>
-      <button
-        onClick={() => handleChange('client')}
-        disabled={saving}
-        className={`px-3 py-1 text-xs rounded-r-md border-y border-r ${
-          currentScope === 'client'
-            ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium'
-            : 'bg-white border-n-200 text-n-500 hover:bg-n-50'
-        }`}
-      >
-        Client
-      </button>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Activity Log Form                                                  */

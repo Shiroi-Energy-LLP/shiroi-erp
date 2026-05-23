@@ -6,7 +6,6 @@ import {
   LiaisonCreateButton,
   DiscomStatusForm,
   CeigStatusForm,
-  CeigScopeToggle,
   NetMeterForm,
   FollowupForm,
   LiaisonFieldEditor,
@@ -273,10 +272,6 @@ export async function StepLiaison({ projectId, readOnly = false }: StepLiaisonPr
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">CEIG Clearance</CardTitle>
                 <div className="flex items-center gap-3">
-                  <CeigScopeToggle
-                    applicationId={application.id}
-                    currentScope={(application as any).ceig_scope ?? null}
-                  />
                   {(application as any).ceig_scope !== 'client' && (
                     <CeigStatusForm projectId={projectId} currentStatus={application.ceig_status} />
                   )}
