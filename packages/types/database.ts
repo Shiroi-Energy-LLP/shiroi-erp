@@ -3546,6 +3546,48 @@ export type Database = {
           }
         ]
       }
+      inverter_oauth_states: {
+        Row: {
+          brand: string
+          consumed_at: string | null
+          created_at: string
+          created_by: string | null
+          credentials_id: string
+          state_token: string
+        }
+        Insert: {
+          brand: string
+          consumed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          credentials_id: string
+          state_token: string
+        }
+        Update: {
+          brand?: string
+          consumed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          credentials_id?: string
+          state_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inverter_oauth_states_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inverter_oauth_states_credentials_id_fkey"
+            columns: ["credentials_id"]
+            isOneToOne: false
+            referencedRelation: "inverter_monitoring_credentials"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       inverter_poll_failures: {
         Row: {
           attempted_at: string
@@ -14853,6 +14895,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       current_employee_id: { Args: never; Returns: string }
+      drop_expired_inverter_oauth_states: { Args: never; Returns: number }
       drop_old_inverter_partitions: { Args: never; Returns: undefined }
       enqueue_payment_escalations: { Args: never; Returns: number }
       enqueue_zoho_sync: {
