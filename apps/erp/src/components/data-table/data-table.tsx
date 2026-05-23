@@ -15,6 +15,8 @@ import {
 import { ColumnPicker } from './column-picker';
 import { ViewTabs } from './view-tabs';
 import type { ColumnDef } from './column-config';
+import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
+import type { Database } from '@repo/types/database';
 
 // ── Formatters ──
 
@@ -405,15 +407,24 @@ export function DataTable({
       );
     }
 
-    // Badge field (status)
+    // Badge field (status). For LEADS this delegates to LeadStatusBadge so the
+    // table shares the same palette + pill shape as the lead detail page.
+    // For other entities we keep the generic STATUS_COLORS pill.
     if (col.fieldType === 'badge' && val) {
       const strVal = String(val);
+      if (entityType === 'leads' && col.key === 'status') {
+        return (
+          <span {...editableProps}>
+            <LeadStatusBadge status={strVal as Database['public']['Enums']['lead_status']} />
+          </span>
+        );
+      }
       const colors = STATUS_COLORS[strVal] ?? { bg: '#F5F6F8', text: '#7C818E', border: '#DFE2E8' };
       const label = col.options?.find((o) => o.value === strVal)?.label ?? strVal.replace(/_/g, ' ');
       return (
         <span {...editableProps}>
           <span
-            className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize border"
+            className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] min-w-[88px] border"
             style={{ backgroundColor: colors.bg, color: colors.text, borderColor: colors.border }}
           >
             {label}
@@ -511,7 +522,7 @@ export function DataTable({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
-                <TableRow className={entityType === 'leads' ? 'bg-n-50 border-b-2 border-n-200' : 'bg-[#F5F6F8]'}>
+                <TableRow className={entityType === 'leads' ? 'bg-gradient-to-b from-n-50 to-white border-b-2 border-n-200 [&_th]:text-[10px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.08em] [&_th]:text-n-600 [&_th]:h-11' : 'bg-[#F5F6F8]'}>
                   {/* Checkbox header */}
                   {onSelectionChange && (
                     <TableHead className="w-8 border-r border-n-100 px-3">
@@ -566,15 +577,24 @@ export function DataTable({
 
                     const leadsRowClass = entityType === 'leads'
                       ? (isSelected
-                          ? 'h-10 bg-shiroi-green/5'
-                          : 'h-10 even:bg-n-50/30 hover:bg-[rgba(0,176,80,0.04)]')
+                          ? 'h-12 bg-shiroi-green/[0.08] border-l-2 border-l-shiroi-green cursor-pointer'
+                          : 'h-12 hover:bg-shiroi-green/[0.06] border-l-2 border-l-transparent cursor-pointer transition-colors')
                       : (isSelected ? 'bg-shiroi-green/5' : 'hover:bg-n-050');
+
+                    // Double-click row to open the lead detail page. Single
+                    // click stays for cell-edit / link navigation, so this
+                    // is purely additive — power-users get a faster path.
+                    const rowDblClickHandler = entityType === 'leads'
+                      ? () => router.push(`${linkPrefix}/${rowId}`)
+                      : undefined;
 
                     return (
                       <TableRow
                         key={rowId}
                         className={leadsRowClass}
                         data-state={isSelected ? 'selected' : undefined}
+                        onDoubleClick={rowDblClickHandler}
+                        title={entityType === 'leads' ? 'Double-click to open lead' : undefined}
                       >
                         {onSelectionChange && (
                           <TableCell className="w-8 border-r border-n-100 px-3">

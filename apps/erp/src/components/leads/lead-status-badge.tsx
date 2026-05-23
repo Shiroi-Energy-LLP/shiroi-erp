@@ -32,7 +32,7 @@ export function LeadStatusBadge({ status }: { status: LeadStatus }) {
   const { bg, text } = STATUS_PALETTE[status];
   return (
     <span
-      className="inline-flex items-center rounded-full h-5 px-2 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap"
+      className="inline-flex items-center justify-center rounded-full h-6 min-w-[104px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] whitespace-nowrap"
       style={{ backgroundColor: bg, color: text }}
     >
       {STAGE_LABELS_SHORT[status]}
