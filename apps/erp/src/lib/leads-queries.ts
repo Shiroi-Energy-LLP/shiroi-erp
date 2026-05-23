@@ -15,10 +15,24 @@ export interface LeadFilters {
   referrer?: string;
   /** Resolved list of channel_partner IDs for 'internal_all' sentinel */
   referrerIds?: string[];
+  /**
+   * "Referred by Clients" filter: source='referral' AND channel_partner_id IS NOT NULL
+   * AND that partner has is_internal=FALSE. Callers must pass externalPartnerIds
+   * (all is_internal=FALSE partner IDs) when referredBy='clients'.
+   */
+  referredBy?: 'clients' | 'internal' | 'any';
+  /** Resolved list of external (is_internal=FALSE) channel_partner IDs for referredBy='clients' */
+  externalPartnerIds?: string[];
   kwpMin?: number;
   kwpMax?: number;
   closeFrom?: string;
   closeTo?: string;
+  /**
+   * Convenience filter for KPI card drill-down. When set, restricts
+   * expected_close_date to the current week (Mon–Sun) or current month
+   * (first to last day), computed in IST, and excludes terminal statuses.
+   */
+  closing?: 'this_week' | 'this_month';
   includeConverted?: boolean;
   includeArchived?: boolean;
   archivedOnly?: boolean;
@@ -50,7 +64,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
 
   let query = supabase
     .from('leads')
-    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, close_probability, is_archived, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name)', { count: 'estimated' })
+    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, close_probability, is_archived, assigned_to, created_at, employees!leads_assigned_to_fkey(full_name), channel_partners!leads_channel_partner_id_fkey(name, is_internal)', { count: 'estimated' })
     .is('deleted_at', null)
     .order(sortCol, { ascending: sortDir });
 
@@ -71,6 +85,39 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   if (filters.kwpMax !== undefined) query = query.lte('estimated_size_kwp', filters.kwpMax);
   if (filters.closeFrom) query = query.gte('expected_close_date', filters.closeFrom);
   if (filters.closeTo) query = query.lte('expected_close_date', filters.closeTo);
+  if (filters.closing) {
+    // Compute date range in IST (UTC+5:30). We use a fixed offset rather than
+    // the Intl API so this stays pure TypeScript with no external deps.
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+    const nowIST = new Date(Date.now() + IST_OFFSET_MS);
+    const toDateStr = (d: Date) => d.toISOString().split('T')[0]!;
+
+    let closingStart: string;
+    let closingEnd: string;
+
+    if (filters.closing === 'this_week') {
+      // Monday–Sunday of the current IST week
+      const dayOfWeek = nowIST.getUTCDay(); // 0=Sun … 6=Sat
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(nowIST);
+      monday.setUTCDate(nowIST.getUTCDate() + mondayOffset);
+      const sunday = new Date(monday);
+      sunday.setUTCDate(monday.getUTCDate() + 6);
+      closingStart = toDateStr(monday);
+      closingEnd = toDateStr(sunday);
+    } else {
+      // First to last day of the current IST month
+      const firstDay = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 1));
+      const lastDay = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth() + 1, 0));
+      closingStart = toDateStr(firstDay);
+      closingEnd = toDateStr(lastDay);
+    }
+
+    query = query
+      .gte('expected_close_date', closingStart)
+      .lte('expected_close_date', closingEnd)
+      .not('status', 'in', '(won,lost,disqualified,converted)');
+  }
   if (filters.referrer) {
     if (filters.referrer === 'internal_all') {
       // Caller (page) is responsible for resolving internal partner IDs and
@@ -82,6 +129,13 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   }
   if (filters.referrerIds && filters.referrerIds.length > 0) {
     query = query.in('channel_partner_id', filters.referrerIds);
+  }
+  if (filters.referredBy === 'clients') {
+    // source='referral' AND channel_partner_id IS NOT NULL AND partner is external
+    query = query.eq('source', 'referral').not('channel_partner_id', 'is', null);
+    if (filters.externalPartnerIds && filters.externalPartnerIds.length > 0) {
+      query = query.in('channel_partner_id', filters.externalPartnerIds);
+    }
   }
 
   // Archive filtering
@@ -99,12 +153,18 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
     throw new Error(`Failed to load leads: ${error.message}`);
   }
 
-  // Flatten employee name for DataTable
-  const rows = (data ?? []).map((lead: any) => ({
-    ...lead,
-    assigned_to_name: lead.employees?.full_name ?? '—',
-    weighted_value: (lead.estimated_size_kwp ?? 0) * 60000 * (lead.close_probability ?? 0) / 100,
-  }));
+  // Flatten joined relations for DataTable
+  const rows = (data ?? []).map((lead) => {
+    const emp = lead.employees as { full_name: string } | null;
+    const cp = lead.channel_partners as { name: string; is_internal: boolean } | null;
+    return {
+      ...lead,
+      assigned_to_name: emp?.full_name ?? '—',
+      weighted_value: (lead.estimated_size_kwp ?? 0) * 60000 * (lead.close_probability ?? 0) / 100,
+      referrer_name: cp?.name ?? null,
+      referrer_is_internal: cp != null ? !!cp.is_internal : null,
+    };
+  });
 
   const total = count ?? 0;
   return { data: rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };

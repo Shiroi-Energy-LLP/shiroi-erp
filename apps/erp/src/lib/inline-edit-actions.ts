@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@repo/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { upsertLeadFollowupTask } from '@/lib/leads-task-actions';
 
 /** Map entity types to their database table names */
@@ -94,6 +94,11 @@ export async function updateCellValue(input: {
       timestamp: new Date().toISOString(),
     });
     return { success: false, error: 'Update blocked — permission denied or row missing' };
+  }
+
+  // Flush the stage-count cache whenever a lead's status changes.
+  if (entityType === 'leads' && field === 'status') {
+    revalidateTag('lead-stage-counts');
   }
 
   // After successful lead next_followup_date change, upsert a follow-up task (non-fatal)

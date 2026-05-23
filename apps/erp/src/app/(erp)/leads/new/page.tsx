@@ -1,10 +1,13 @@
 import { LeadForm } from '@/components/leads/lead-form';
+import { listChannelPartnersForPicker } from '@/lib/partners-queries';
 
-export default function NewLeadPage() {
+export default async function NewLeadPage() {
+  const partners = await listChannelPartnersForPicker();
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-[#1A1D24]">Create New Lead</h1>
-      <LeadForm />
+      <LeadForm partners={partners} />
     </div>
   );
 }

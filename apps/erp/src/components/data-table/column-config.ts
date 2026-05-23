@@ -45,6 +45,8 @@ export const LEAD_COLUMNS: ColumnDef[] = [
       { value: 'cold_call', label: 'Cold Call' }, { value: 'exhibition', label: 'Exhibition' },
       { value: 'social_media', label: 'Social Media' }, { value: 'walkin', label: 'Walk-in' },
     ] },
+  // Referrer: flattened from channel_partners embed; custom renderer in data-table.tsx handles VIP badge
+  { key: 'referrer', label: 'Referrer', sortKey: 'referrer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
   // Lead status options must stay in sync with the stage-bar nav
   // (lead-stage-nav.tsx STAGE_ORDER) and leads-helpers.ts STAGE_LABELS.
   // Legacy/terminal values (proposal_sent, converted, disqualified) are

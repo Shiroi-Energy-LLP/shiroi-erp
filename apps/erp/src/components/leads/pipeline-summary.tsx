@@ -15,15 +15,8 @@ interface PipelineSummaryProps {
   closingThisMonth: PipelineCloseWindow;
 }
 
-/** Statuses shown in the "Closing" filtered view — active non-terminal stages */
-const CLOSING_STATUSES = 'quick_quote_sent,detailed_proposal_sent,design_confirmed,negotiation,closure_soon';
-
 export function PipelineSummary({
   stageCounts,
-  weekStart,
-  weekEnd,
-  monthStart,
-  monthEnd,
   closingThisWeek,
   closingThisMonth,
 }: PipelineSummaryProps) {
@@ -38,8 +31,8 @@ export function PipelineSummary({
   const wonCount = stageCounts.find((s) => s.status === 'won')?.count ?? 0;
   const wonValue = stageCounts.find((s) => s.status === 'won')?.total_value ?? 0;
 
-  const weekUrl = `/sales?closeFrom=${weekStart}&closeTo=${weekEnd}&status=${CLOSING_STATUSES}`;
-  const monthUrl = `/sales?closeFrom=${monthStart}&closeTo=${monthEnd}&status=${CLOSING_STATUSES}`;
+  const weekUrl = '/sales?closing=this_week';
+  const monthUrl = '/sales?closing=this_month';
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">

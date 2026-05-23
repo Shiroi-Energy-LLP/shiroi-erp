@@ -146,6 +146,57 @@ export async function getReferralPartners(): Promise<ReferrerOption[]> {
   }));
 }
 
+export interface PartnerPickerOption {
+  id: string;
+  partner_name: string;
+  is_internal: boolean;
+}
+
+/**
+ * Returns all active channel partners for the referrer combobox, grouped:
+ * internal first (VIP), then external alphabetical.
+ */
+export async function listChannelPartnersForPicker(): Promise<PartnerPickerOption[]> {
+  const op = '[listChannelPartnersForPicker]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('channel_partners')
+    .select('id, partner_name, is_internal')
+    .eq('is_active', true)
+    .is('deleted_at', null)
+    .order('is_internal', { ascending: false }) // internal=TRUE first
+    .order('partner_name', { ascending: true });
+  if (error) {
+    console.error(`${op} query failed`, { code: error.code, message: error.message });
+    throw new Error(`Failed to list channel partners: ${error.message}`);
+  }
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    partner_name: r.partner_name,
+    is_internal: r.is_internal,
+  }));
+}
+
+/**
+ * Returns IDs of all external (is_internal=FALSE) active channel partners.
+ * Used by the "Referred by Clients" filter to scope leads without a SQL migration.
+ */
+export async function getExternalPartnerIds(): Promise<string[]> {
+  const op = '[getExternalPartnerIds]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('channel_partners')
+    .select('id')
+    .eq('is_internal', false)
+    .eq('is_active', true)
+    .is('deleted_at', null);
+  if (error) {
+    console.error(`${op} query failed`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load external partner IDs: ${error.message}`);
+  }
+  return (data ?? []).map((r) => r.id);
+}
+
 export interface PartnerLeadsRow {
   id: string;
   customer_name: string;

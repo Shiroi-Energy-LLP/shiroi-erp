@@ -7,6 +7,7 @@ import {
   getActiveEmployeesLite,
   getProjectFinancials,
 } from '@/lib/project-detail-actions';
+import { RequestSiteDesignButton } from '@/components/projects/request-site-design-button';
 import { FinancialBox } from '@/components/projects/detail/financial-box';
 import { SystemConfigBox } from '@/components/projects/detail/system-config-box';
 import { CustomerInfoBox } from '@/components/projects/detail/customer-info-box';
@@ -79,6 +80,16 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
   }
 
   return (
+    <div className="space-y-6">
+      {/* Site design request button — visible in project header area */}
+      <div className="flex justify-end">
+        <RequestSiteDesignButton
+          projectId={id}
+          needsSiteDesign={(project as any).needs_site_design === true}
+          viewerRole={viewerRole}
+        />
+      </div>
+
     <div className="grid grid-cols-3 gap-6">
       {/* Left / middle — editable boxes */}
       <div className="col-span-2 space-y-6">
@@ -153,6 +164,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
           viewerRole={viewerRole}
         />
       </div>
+    </div>
     </div>
   );
 }

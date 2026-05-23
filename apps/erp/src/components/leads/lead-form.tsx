@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@repo/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label, Select, useToast } from '@repo/ui';
 import { normalizePhone } from '@/lib/leads-helpers';
+import { ReferrerPicker } from '@/components/leads/referrer-picker';
+import type { PartnerPickerOption } from '@/lib/partners-queries';
 import type { Database } from '@repo/types/database';
 
 type CustomerSegment = Database['public']['Enums']['customer_segment'];
@@ -39,7 +41,11 @@ const STATES = [
   'Maharashtra', 'Pondicherry',
 ];
 
-export function LeadForm() {
+interface LeadFormProps {
+  partners?: PartnerPickerOption[];
+}
+
+export function LeadForm({ partners = [] }: LeadFormProps) {
   const router = useRouter();
   const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,6 +67,7 @@ export function LeadForm() {
     expected_close_date: '',
     map_link: '',
     notes: '',
+    channel_partner_id: null as string | null,
   });
 
   function updateField(field: string, value: string) {
@@ -118,6 +125,7 @@ export function LeadForm() {
       expected_close_date: form.expected_close_date || null,
       map_link: trimmedMapLink || null,
       notes: form.notes.trim() || null,
+      channel_partner_id: form.channel_partner_id,
       status: 'new' as const,
     });
 
@@ -238,6 +246,15 @@ export function LeadForm() {
               </Select>
             </div>
           </div>
+
+          {/* Referrer */}
+          {partners.length > 0 && (
+            <ReferrerPicker
+              partners={partners}
+              value={form.channel_partner_id}
+              onChange={(id) => setForm((prev) => ({ ...prev, channel_partner_id: id }))}
+            />
+          )}
 
           {/* Optional fields */}
           <div className="grid grid-cols-2 gap-4">

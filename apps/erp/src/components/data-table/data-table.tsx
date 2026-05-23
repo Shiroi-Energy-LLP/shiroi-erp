@@ -372,6 +372,24 @@ export function DataTable({
         }
       : {};
 
+    // Referrer column — shows VIP badge for internal partners, em-dash when null
+    if (col.key === 'referrer') {
+      const referrerName = row['referrer_name'] as string | null;
+      const isInternal = row['referrer_is_internal'] as boolean | null;
+      if (!referrerName) {
+        return <span className="text-sm text-n-400">—</span>;
+      }
+      if (isInternal) {
+        return (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center rounded-full border border-transparent bg-status-success-bg px-1.5 py-0 text-[10px] font-bold text-status-success-text">VIP</span>
+            <span className="text-sm font-medium text-n-900">{referrerName}</span>
+          </span>
+        );
+      }
+      return <span className="text-sm text-n-700">{referrerName}</span>;
+    }
+
     // Link field — always links to detail page
     if (col.key === linkField) {
       const displayVal = col.key === 'project_number'
@@ -493,7 +511,7 @@ export function DataTable({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
-                <TableRow className="bg-[#F5F6F8]">
+                <TableRow className={entityType === 'leads' ? 'bg-n-50 border-b-2 border-n-200' : 'bg-[#F5F6F8]'}>
                   {/* Checkbox header */}
                   {onSelectionChange && (
                     <TableHead className="w-8 border-r border-n-100 px-3">
@@ -546,10 +564,16 @@ export function DataTable({
                     const rowId = String(row[idField]);
                     const isSelected = selectedIds.includes(rowId);
 
+                    const leadsRowClass = entityType === 'leads'
+                      ? (isSelected
+                          ? 'h-10 bg-shiroi-green/5'
+                          : 'h-10 even:bg-n-50/30 hover:bg-[rgba(0,176,80,0.04)]')
+                      : (isSelected ? 'bg-shiroi-green/5' : 'hover:bg-n-050');
+
                     return (
                       <TableRow
                         key={rowId}
-                        className={isSelected ? 'bg-shiroi-green/5' : 'hover:bg-n-050'}
+                        className={leadsRowClass}
                         data-state={isSelected ? 'selected' : undefined}
                       >
                         {onSelectionChange && (
@@ -562,10 +586,21 @@ export function DataTable({
                         )}
                         {visibleColumnDefs.map((col) => {
                           // Per-column cell class hooks
-                          let cellClass = 'py-2';
-                          if (col.key === 'customer_name') cellClass += ' font-medium';
-                          if (col.fieldType === 'phone') cellClass += ' tabular-nums';
-                          if (col.fieldType === 'number' || col.format === 'currency') cellClass += ' text-right tabular-nums';
+                          let cellClass = entityType === 'leads' ? 'px-3 py-2' : 'py-2';
+                          if (entityType === 'leads') {
+                            if (col.key === 'customer_name') {
+                              cellClass += ' font-medium text-n-900';
+                            } else if (
+                              col.fieldType === 'number' ||
+                              /kwp|value|date/i.test(col.key)
+                            ) {
+                              cellClass += ' font-mono tabular-nums text-right';
+                            }
+                          } else {
+                            if (col.key === 'customer_name') cellClass += ' font-medium';
+                            if (col.fieldType === 'phone') cellClass += ' tabular-nums';
+                            if (col.fieldType === 'number' || col.format === 'currency') cellClass += ' text-right tabular-nums';
+                          }
                           return (
                             <TableCell key={col.key} className={cellClass}>
                               {renderCell(row, col)}

@@ -156,7 +156,11 @@ export const getCachedProjectsWithoutTodayReport = unstable_cache(
 
 // ═══════════════════════════════════════════════════════════════════════
 // getCachedLeadStageCounts
-//   TTL 300s (5 min) — leads pipeline changes throughout sales day.
+//   TTL 30s — stage counts are cheap (one GROUP BY) and must reflect
+//   status changes quickly so the nav bubble stays accurate.
+//   Tag: 'lead-stage-counts' — every place that writes lead.status
+//   calls revalidateTag('lead-stage-counts') so the cache is flushed
+//   immediately on write, not after the TTL elapses.
 //   Accepts p_include_archived so the hook can be reused from both
 //   the stage-nav (exclude archived) and the "all leads" view.
 // ═══════════════════════════════════════════════════════════════════════
@@ -187,5 +191,5 @@ export const getCachedLeadStageCounts = unstable_cache(
     }));
   },
   ['get-cached-lead-stage-counts'],
-  { tags: [DASHBOARD_TAGS.leadStages], revalidate: 300 },
+  { tags: [DASHBOARD_TAGS.leadStages, 'lead-stage-counts'], revalidate: 30 },
 );

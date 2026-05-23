@@ -9446,6 +9446,10 @@ export type Database = {
           inverter_model: string | null
           lead_id: string
           location_map_link: string | null
+          needs_site_design: boolean
+          needs_site_design_note: string | null
+          needs_site_design_requested_at: string | null
+          needs_site_design_requested_by: string | null
           notes: string | null
           order_date: string | null
           panel_brand: string | null
@@ -9532,6 +9536,10 @@ export type Database = {
           inverter_model?: string | null
           lead_id: string
           location_map_link?: string | null
+          needs_site_design?: boolean
+          needs_site_design_note?: string | null
+          needs_site_design_requested_at?: string | null
+          needs_site_design_requested_by?: string | null
           notes?: string | null
           order_date?: string | null
           panel_brand?: string | null
@@ -9618,6 +9626,10 @@ export type Database = {
           inverter_model?: string | null
           lead_id?: string
           location_map_link?: string | null
+          needs_site_design?: boolean
+          needs_site_design_note?: string | null
+          needs_site_design_requested_at?: string | null
+          needs_site_design_requested_by?: string | null
           notes?: string | null
           order_date?: string | null
           panel_brand?: string | null
@@ -9696,6 +9708,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_needs_site_design_requested_by_fkey"
+            columns: ["needs_site_design_requested_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
@@ -10527,6 +10546,7 @@ export type Database = {
           reviewed_by: string | null
           revision_number: number
           sent_at: string | null
+          sent_to_customer_at: string | null
           shiroi_cost: number
           shiroi_revenue: number
           status: Database["public"]["Enums"]["proposal_status"]
@@ -10584,6 +10604,7 @@ export type Database = {
           reviewed_by?: string | null
           revision_number?: number
           sent_at?: string | null
+          sent_to_customer_at?: string | null
           shiroi_cost?: number
           shiroi_revenue?: number
           status?: Database["public"]["Enums"]["proposal_status"]
@@ -10641,6 +10662,7 @@ export type Database = {
           reviewed_by?: string | null
           revision_number?: number
           sent_at?: string | null
+          sent_to_customer_at?: string | null
           shiroi_cost?: number
           shiroi_revenue?: number
           status?: Database["public"]["Enums"]["proposal_status"]

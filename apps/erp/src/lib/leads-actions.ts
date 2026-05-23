@@ -1,11 +1,21 @@
 'use server';
 
 import { createClient } from '@repo/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
+
+/**
+ * Tiny invalidation helper called from client components (e.g. status-change.tsx)
+ * that write lead.status directly via the browser Supabase client.
+ * Those components cannot call revalidateTag themselves — so they call this
+ * server action after a successful write to flush the stage-count cache.
+ */
+export async function invalidateLeadStageCounts(): Promise<void> {
+  revalidateTag('lead-stage-counts');
+}
 
 export async function bulkAssignLeads(leadIds: string[], assignedTo: string): Promise<{ success: boolean; error?: string }> {
   const op = '[bulkAssignLeads]';
@@ -53,6 +63,7 @@ export async function bulkChangeLeadStatus(leadIds: string[], status: LeadStatus
   }
 
   const updatedCount = data?.length ?? 0;
+  revalidateTag('lead-stage-counts');
   revalidatePath('/sales');
   revalidatePath('/leads');
 

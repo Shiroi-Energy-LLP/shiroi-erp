@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation';
 import { getLead } from '@/lib/leads-queries';
 import { getEntityContacts } from '@/lib/contacts-queries';
+import { listChannelPartnersForPicker, getPartner } from '@/lib/partners-queries';
 import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
+import { ReferrerChangeDialog } from '@/components/leads/referrer-change-dialog';
 import { formatDate, toIST } from '@repo/ui/formatters';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 
@@ -20,6 +22,12 @@ export default async function LeadDetailsTab({ params }: LeadDetailPageProps) {
     notFound();
   }
 
+  // Fetch partner info and partner list in parallel (only after we know lead exists)
+  const [currentPartner, partners] = await Promise.all([
+    lead.channel_partner_id ? getPartner(lead.channel_partner_id) : Promise.resolve(null),
+    listChannelPartnersForPicker(),
+  ]);
+
   return (
     <div className="grid grid-cols-3 gap-6">
       {/* Main content */}
@@ -31,6 +39,27 @@ export default async function LeadDetailsTab({ params }: LeadDetailPageProps) {
           <CardContent className="space-y-3">
             <InfoRow label="Segment" value={lead.segment} capitalize />
             <InfoRow label="Source" value={lead.source?.replace(/_/g, ' ')} capitalize />
+            {/* Referrer row */}
+            <div className="flex justify-between text-sm">
+              <span className="text-n-500">Referrer</span>
+              <span className="flex items-center gap-1">
+                {currentPartner ? (
+                  <>
+                    {currentPartner.is_internal && (
+                      <span className="inline-flex items-center rounded-full border border-transparent bg-status-success-bg px-1.5 py-0 text-[10px] font-bold text-status-success-text">VIP</span>
+                    )}
+                    <span className="font-medium text-n-900">{currentPartner.partner_name}</span>
+                  </>
+                ) : (
+                  <span className="text-n-400">—</span>
+                )}
+                <ReferrerChangeDialog
+                  leadId={id}
+                  currentPartnerId={lead.channel_partner_id}
+                  partners={partners}
+                />
+              </span>
+            </div>
             {lead.system_type && (
               <InfoRow label="System Type" value={lead.system_type.replace(/_/g, ' ')} capitalize />
             )}

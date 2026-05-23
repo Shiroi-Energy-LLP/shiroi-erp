@@ -7,7 +7,7 @@ import {
   getLeadsClosingBetween,
   getPipelineCloseWindow,
 } from '@/lib/leads-pipeline-queries';
-import { getInternalReferrers, getReferralPartners } from '@/lib/partners-queries';
+import { getInternalReferrers, getReferralPartners, getExternalPartnerIds } from '@/lib/partners-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { LeadsTableWrapper } from '@/components/leads/leads-table-wrapper';
 import { LeadStageNav } from '@/components/leads/lead-stage-nav';
@@ -51,10 +51,12 @@ interface SalesPageProps {
     search?: string;
     assignedTo?: string;
     referrer?: string;
+    referredBy?: string;
     kwpMin?: string;
     kwpMax?: string;
     closeFrom?: string;
     closeTo?: string;
+    closing?: string;
     page?: string;
     sort?: string;
     dir?: string;
@@ -97,6 +99,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
   const kwpMax = params.kwpMax ? parseFloat(params.kwpMax) : undefined;
 
   const referrerParam = params.referrer;
+  const referredByParam = params.referredBy === 'clients' ? 'clients' as const : undefined;
 
   // Stage 1 — parallel fetches that don't depend on each other
   const [
@@ -108,6 +111,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     externalReferrers,
     closingThisWeekWindow,
     closingThisMonthWindow,
+    externalPartnerIds,
   ] = await Promise.all([
     getMyViews('leads'),
     getLeadStageCounts(),
@@ -117,11 +121,16 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     getReferralPartners(),
     getPipelineCloseWindow(weekStart, weekEnd),
     getPipelineCloseWindow(monthStart, monthEnd),
+    referredByParam === 'clients' ? getExternalPartnerIds() : Promise.resolve([] as string[]),
   ]);
 
   // Resolve internal_all sentinel → IDs
   const referrerIds: string[] | undefined =
     referrerParam === 'internal_all' ? internalReferrers.map((r) => r.id) : undefined;
+
+  const closingParam = params.closing === 'this_week' || params.closing === 'this_month'
+    ? params.closing
+    : undefined;
 
   const leadsFilters: LeadFilters = {
     status: statusFilter,
@@ -131,10 +140,13 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     assignedTo: params.assignedTo || undefined,
     referrer: referrerParam && referrerParam !== 'internal_all' ? referrerParam : undefined,
     referrerIds,
+    referredBy: referredByParam,
+    externalPartnerIds: referredByParam === 'clients' ? externalPartnerIds : undefined,
     kwpMin,
     kwpMax,
     closeFrom: params.closeFrom || undefined,
     closeTo: params.closeTo || undefined,
+    closing: closingParam,
     archivedOnly: isArchived,
     page,
     pageSize: 50,
@@ -211,7 +223,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
         <CardContent className="py-3">
           <FilterBar
             basePath="/sales"
-            filterParams={['search', 'source', 'segment', 'assignedTo', 'status', 'referrer', 'kwpMin', 'kwpMax', 'closeFrom', 'closeTo']}
+            filterParams={['search', 'source', 'segment', 'assignedTo', 'status', 'referrer', 'referredBy', 'kwpMin', 'kwpMax', 'closeFrom', 'closeTo']}
           >
             {/* C1: Multi-status filter */}
             <FilterMultiSelect
@@ -252,6 +264,12 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
               ))}
             </FilterSelect>
 
+            {/* C2: "Referred by Clients" quick-filter chip */}
+            <FilterSelect paramName="referredBy" className="w-44 h-9 text-sm">
+              <option value="">All Referrals</option>
+              <option value="clients">Referred by Clients</option>
+            </FilterSelect>
+
             {/* C2: kWp range filter */}
             <FilterRange
               label="kWp"
@@ -277,6 +295,27 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
           </FilterBar>
         </CardContent>
       </Card>
+
+      {(closingParam || referredByParam) && (
+        <div className="flex items-center gap-2">
+          {closingParam && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-shiroi-green/40 bg-shiroi-green/10 px-3 py-1 text-xs font-medium text-shiroi-green">
+              {closingParam === 'this_week' ? 'Closing this week' : 'Closing this month'}
+              <Link href="/sales" className="ml-1 text-shiroi-green/70 hover:text-shiroi-green" aria-label="Clear filter">
+                ×
+              </Link>
+            </span>
+          )}
+          {referredByParam === 'clients' && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-p-300 bg-p-50 px-3 py-1 text-xs font-medium text-p-700">
+              Referred by Clients
+              <Link href="/sales" className="ml-1 text-p-400 hover:text-p-700" aria-label="Clear filter">
+                ×
+              </Link>
+            </span>
+          )}
+        </div>
+      )}
 
       <LeadsTableWrapper
         data={result.data}

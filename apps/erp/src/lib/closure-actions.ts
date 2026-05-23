@@ -23,7 +23,7 @@
 
 import Decimal from 'decimal.js';
 import { createClient } from '@repo/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
 import {
@@ -217,6 +217,7 @@ export async function attemptWon(
 
     if (updErr) return err(updErr.message, updErr.code);
 
+    revalidateTag('lead-stage-counts');
     console.log(`${op} Lead ${leadId} flipped to won (green band, margin=${snapshot.grossMargin ?? 'n/a (no BOM cost)'}%)`);
     return ok({ outcome: 'won', newStatus: 'won' });
   } catch (e) {
@@ -300,6 +301,7 @@ export async function markWonSkipMargin(
       `${op} Lead ${leadId} marked Won (margin skipped by employee ${employee.id}, reason: ${reason ?? 'none'})`,
     );
 
+    revalidateTag('lead-stage-counts');
     revalidatePath(`/sales/${leadId}`);
     revalidatePath('/sales');
     revalidatePath('/dashboard');
@@ -376,6 +378,7 @@ export async function approveClosure(approvalId: string): Promise<ActionResult<n
       .eq('id', approval.lead_id);
     if (updLeadErr) return err(updLeadErr.message, updLeadErr.code);
 
+    revalidateTag('lead-stage-counts');
     console.log(`${op} Approval ${approvalId} approved, lead ${approval.lead_id} flipped to won`);
     return ok(null);
   } catch (e) {

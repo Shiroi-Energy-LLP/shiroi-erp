@@ -207,6 +207,69 @@ export async function getProjectQCInspections(projectId: string) {
   return data ?? [];
 }
 
+// ── At-Site Design Queue ─────────────────────────────────────────────────────
+
+/**
+ * Returns projects that have been explicitly flagged as needing the design
+ * team's at-site layout work (needs_site_design = TRUE), oldest-first
+ * (FIFO: the PM who waited longest gets served first).
+ */
+export interface ProjectNeedingSiteDesign {
+  id: string;
+  project_number: string;
+  customer_name: string;
+  system_size_kwp: number | null;
+  needs_site_design_requested_at: string | null;
+  needs_site_design_note: string | null;
+  requested_by_name: string | null;
+}
+
+export async function getProjectsNeedingSiteDesign(): Promise<ProjectNeedingSiteDesign[]> {
+  const op = '[getProjectsNeedingSiteDesign]';
+  console.log(`${op} Starting`);
+
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('projects')
+      .select(
+        'id, project_number, customer_name, system_size_kwp, needs_site_design_requested_at, needs_site_design_note, employees!projects_needs_site_design_requested_by_fkey(full_name)',
+      )
+      .eq('needs_site_design', true)
+      .is('deleted_at', null)
+      .order('needs_site_design_requested_at', { ascending: true });
+
+    if (error) {
+      console.error(`${op} Query failed`, {
+        code: error.code,
+        message: error.message,
+        timestamp: new Date().toISOString(),
+      });
+      return [];
+    }
+
+    return (data ?? []).map((row) => {
+      const emp = row.employees as { full_name: string } | null;
+      return {
+        id: row.id,
+        project_number: row.project_number,
+        customer_name: row.customer_name,
+        system_size_kwp: row.system_size_kwp ?? null,
+        needs_site_design_requested_at: row.needs_site_design_requested_at ?? null,
+        needs_site_design_note: row.needs_site_design_note ?? null,
+        requested_by_name: emp?.full_name ?? null,
+      };
+    });
+  } catch (e) {
+    console.error(`${op} Unexpected error`, {
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+    return [];
+  }
+}
+
 type CustomerSegment = Database['public']['Enums']['customer_segment'];
 type SystemType = Database['public']['Enums']['system_type'];
 

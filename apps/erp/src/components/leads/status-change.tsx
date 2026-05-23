@@ -6,6 +6,7 @@ import { createClient } from '@repo/supabase/client';
 import { Select, Button, Input } from '@repo/ui';
 import { getValidNextStatuses, requiresFollowUp, DEFAULT_PROBABILITY, STAGE_LABELS } from '@/lib/leads-helpers';
 import { upsertLeadFollowupTask } from '@/lib/leads-task-actions';
+import { invalidateLeadStageCounts } from '@/lib/leads-actions';
 import type { Database } from '@repo/types/database';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
@@ -109,6 +110,11 @@ export function StatusChange({ leadId, currentStatus, currentExpectedCloseDate }
       setError('Update blocked — you may not have permission, or the lead no longer exists.');
       return;
     }
+
+    // Flush the lead-stage-counts cache (non-blocking — server action).
+    invalidateLeadStageCounts().catch((e) => {
+      console.error(`${op} invalidateLeadStageCounts failed (non-fatal):`, { error: e });
+    });
 
     // Fire-and-forget: upsert follow-up task if a date was set (non-blocking)
     if (nextFollowupDate) {
