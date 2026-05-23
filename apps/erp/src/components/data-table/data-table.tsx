@@ -374,22 +374,47 @@ export function DataTable({
         }
       : {};
 
-    // Referrer column — shows VIP badge for internal partners, em-dash when null
+    // Referrer column — shows VIP badge for internal partners, "+ Set" when
+    // null. Double-click anywhere on the cell (empty or populated) navigates
+    // to the lead detail page where the inline picker lives. The cell is
+    // wrapped in a shared button surface so the hover affordance is obvious.
     if (col.key === 'referrer') {
       const referrerName = row['referrer_name'] as string | null;
       const isInternal = row['referrer_is_internal'] as boolean | null;
+      const openLead = () => router.push(`${linkPrefix}/${rowId}`);
+      const cellClasses = 'inline-flex items-center gap-1.5 rounded px-1 -mx-1 cursor-pointer hover:bg-shiroi-green/[0.08] transition-colors';
       if (!referrerName) {
-        return <span className="text-sm text-n-400">—</span>;
+        return (
+          <span
+            className={`${cellClasses} text-xs text-shiroi-green/70 hover:text-shiroi-green`}
+            onDoubleClick={openLead}
+            title="Double-click to set a referrer"
+          >
+            + Set referrer
+          </span>
+        );
       }
       if (isInternal) {
         return (
-          <span className="inline-flex items-center gap-1.5">
+          <span
+            className={cellClasses}
+            onDoubleClick={openLead}
+            title="Double-click to change referrer"
+          >
             <span className="inline-flex items-center rounded-full border border-transparent bg-status-success-bg px-1.5 py-0 text-[10px] font-bold text-status-success-text">VIP</span>
             <span className="text-sm font-medium text-n-900">{referrerName}</span>
           </span>
         );
       }
-      return <span className="text-sm text-n-700">{referrerName}</span>;
+      return (
+        <span
+          className={`${cellClasses} text-sm text-n-700`}
+          onDoubleClick={openLead}
+          title="Double-click to change referrer"
+        >
+          {referrerName}
+        </span>
+      );
     }
 
     // Link field — always links to detail page
@@ -575,26 +600,23 @@ export function DataTable({
                     const rowId = String(row[idField]);
                     const isSelected = selectedIds.includes(rowId);
 
+                    // No row-level dblclick handler — it conflicted with
+                    // cell-level dblclick inline-editing (the row handler
+                    // fires on event bubbling and navigates away). Per
+                    // Vivek's pushback: cells stay independently editable;
+                    // navigation is the customer-name link and the new
+                    // referrer-cell dblclick handler below.
                     const leadsRowClass = entityType === 'leads'
                       ? (isSelected
-                          ? 'h-12 bg-shiroi-green/[0.08] border-l-2 border-l-shiroi-green cursor-pointer'
-                          : 'h-12 hover:bg-shiroi-green/[0.06] border-l-2 border-l-transparent cursor-pointer transition-colors')
+                          ? 'h-12 bg-shiroi-green/[0.08] border-l-2 border-l-shiroi-green'
+                          : 'h-12 hover:bg-shiroi-green/[0.06] border-l-2 border-l-transparent transition-colors')
                       : (isSelected ? 'bg-shiroi-green/5' : 'hover:bg-n-050');
-
-                    // Double-click row to open the lead detail page. Single
-                    // click stays for cell-edit / link navigation, so this
-                    // is purely additive — power-users get a faster path.
-                    const rowDblClickHandler = entityType === 'leads'
-                      ? () => router.push(`${linkPrefix}/${rowId}`)
-                      : undefined;
 
                     return (
                       <TableRow
                         key={rowId}
                         className={leadsRowClass}
                         data-state={isSelected ? 'selected' : undefined}
-                        onDoubleClick={rowDblClickHandler}
-                        title={entityType === 'leads' ? 'Double-click to open lead' : undefined}
                       >
                         {onSelectionChange && (
                           <TableCell className="w-8 border-r border-n-100 px-3">
