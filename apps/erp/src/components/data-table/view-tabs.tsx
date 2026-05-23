@@ -3,7 +3,15 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { saveView, deleteView, setViewAsDefault } from '@/lib/views-actions';
-import { Button, Input } from '@repo/ui';
+import {
+  Button,
+  Input,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@repo/ui';
 import { Plus, X, Save, MoreHorizontal, Trash2, Star } from 'lucide-react';
 
 interface ViewConfig {
@@ -41,7 +49,6 @@ export function ViewTabs({
   const [showNewForm, setShowNewForm] = React.useState(false);
   const [newName, setNewName] = React.useState('');
   const [saving, setSaving] = React.useState(false);
-  const [menuViewId, setMenuViewId] = React.useState<string | null>(null);
 
   async function handleSaveNew() {
     if (!newName.trim()) return;
@@ -87,7 +94,6 @@ export function ViewTabs({
       isDefault: !view.is_default,
     });
     setSaving(false);
-    setMenuViewId(null);
     router.refresh();
   }
 
@@ -130,38 +136,38 @@ export function ViewTabs({
           </button>
 
           {/* View actions menu */}
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuViewId(menuViewId === view.id ? null : view.id); }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 text-n-400 hover:text-n-900 transition-opacity"
-            >
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </button>
-
-            {menuViewId === view.id && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-n-200 rounded-lg shadow-lg py-1 min-w-[160px]">
-                <button
-                  onClick={() => { handleUpdateView(view); setMenuViewId(null); }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-n-900 hover:bg-[#F5F6F8]"
-                >
-                  <Save className="h-3.5 w-3.5" /> Save changes
-                </button>
-                <button
-                  onClick={() => handleToggleDefault(view)}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-n-900 hover:bg-[#F5F6F8]"
-                >
-                  <Star className={`h-3.5 w-3.5 ${view.is_default ? 'text-amber-500 fill-amber-500' : ''}`} />
-                  {view.is_default ? 'Remove default' : 'Set as default'}
-                </button>
-                <button
-                  onClick={() => { handleDeleteView(view.id); setMenuViewId(null); }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-status-error-text hover:bg-status-error-bg"
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
-                </button>
-              </div>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="opacity-0 group-hover:opacity-100 p-0.5 text-n-400 hover:text-n-900 transition-opacity"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem
+                onClick={() => handleUpdateView(view)}
+                className="gap-2 text-sm"
+              >
+                <Save className="h-3.5 w-3.5" /> Save changes
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleToggleDefault(view)}
+                className="gap-2 text-sm"
+              >
+                <Star className={`h-3.5 w-3.5 ${view.is_default ? 'text-amber-500 fill-amber-500' : ''}`} />
+                {view.is_default ? 'Remove default' : 'Set as default'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => handleDeleteView(view.id)}
+                className="gap-2 text-sm text-status-error-text focus:text-status-error-text focus:bg-status-error-bg"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ))}
 
