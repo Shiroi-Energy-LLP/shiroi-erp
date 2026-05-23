@@ -247,14 +247,17 @@ export function LeadForm({ partners = [] }: LeadFormProps) {
             </div>
           </div>
 
-          {/* Referrer */}
-          {partners.length > 0 && (
-            <ReferrerPicker
-              partners={partners}
-              value={form.channel_partner_id}
-              onChange={(id) => setForm((prev) => ({ ...prev, channel_partner_id: id }))}
-            />
-          )}
+          {/* Referrer — always rendered. If no partners yet, the dropdown
+              shows just "No referrer"; that's better UX than hiding the
+              field entirely (which made users think the feature was missing). */}
+          <ReferrerPicker
+            partners={partners}
+            value={form.channel_partner_id}
+            onChange={(id) => setForm((prev) => ({ ...prev, channel_partner_id: id }))}
+          />
+          <p className="text-xs text-n-500">
+            Optional. Pick &quot;Vivek Sridhar (Founder)&quot; or &quot;Management Referral&quot; for VIP-track leads.
+          </p>
 
           {/* Optional fields */}
           <div className="grid grid-cols-2 gap-4">
