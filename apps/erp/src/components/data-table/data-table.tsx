@@ -415,17 +415,14 @@ export function DataTable({
           </span>
         );
       }
-      if (isInternal) {
-        return (
-          <span {...editProps} className={`${editProps.className ?? ''} inline-flex items-center gap-1.5`}>
-            <span className="inline-flex items-center rounded-full border border-transparent bg-status-success-bg px-1.5 py-0 text-[10px] font-bold text-status-success-text">VIP</span>
-            <span className="text-sm font-medium text-n-900">{referrerName}</span>
-          </span>
-        );
-      }
+      // Compact badge mode (per Vivek): show just "VIP" for internal, "CUSTOMER"
+      // for external. Hover surfaces the full partner name via title.
+      const pillClass = isInternal
+        ? 'inline-flex items-center justify-center rounded-full h-6 min-w-[72px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-status-success-bg text-status-success-text'
+        : 'inline-flex items-center justify-center rounded-full h-6 min-w-[72px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-[#FCE7F3] text-[#9D174D]';
       return (
-        <span {...editProps} className={`${editProps.className ?? ''} text-sm text-n-700`}>
-          {referrerName}
+        <span {...editProps} className={`${editProps.className ?? ''} inline-flex items-center`} title={referrerName}>
+          <span className={pillClass}>{isInternal ? 'VIP' : 'Customer'}</span>
         </span>
       );
     }
