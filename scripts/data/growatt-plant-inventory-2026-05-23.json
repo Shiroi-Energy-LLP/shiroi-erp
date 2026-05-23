@@ -1,0 +1,31 @@
+{
+  "source": "oss.growatt.com installer EEVUWE — Device list pasted by Vivek 2026-05-23",
+  "installer_code": "EEVUWE",
+  "company_name": "Shiroienergy",
+  "total_devices": 22,
+  "total_rated_kw": 447.51,
+  "devices": [
+    {"no": 1, "type": "MAX/MID", "device_sn": "LBLGE6500L", "model": "MAX 100KTL3-X LV", "plant": "ARHSOLAR", "user": "arhsolar", "city": "Chennai", "datalogger_sn": "XGD6CMC31P", "installed": "2024-11-13", "rated_w": 100000, "total_kwh": 106175.3},
+    {"no": 2, "type": "On-grid Inverter", "device_sn": "RFB884407D", "model": "GROWATT 1000-S", "plant": "Sri Sayee School 2", "user": "srisayee", "city": "Chennai", "datalogger_sn": "JPC8CFE09R", "rated_w": 1010, "total_kwh": 7924.1},
+    {"no": 3, "type": "On-grid Inverter", "device_sn": "UWC1902026", "model": "Growatt 15000 TL3-S", "plant": "Sri Sayee School", "user": "srisayee", "city": "Chennai", "datalogger_sn": "JPC7A420PA", "rated_w": 15000, "total_kwh": 89000.1},
+    {"no": 4, "type": "MAX/MID", "device_sn": "CJJ6CEA00Q", "model": "MID 20KTL3-X", "plant": "Krishna Office", "user": "Krishna Office", "city": "Chennai", "datalogger_sn": "XGD6CE621L", "installed": "2023-09-19", "rated_w": 20000, "total_kwh": 30287.2},
+    {"no": 5, "type": "MAX/MID", "device_sn": "VGHJD75050", "model": "MOD 8000TL3-X", "plant": "Chsv junior school", "user": "Chsvsolar", "city": "Chennai", "datalogger_sn": "XGD6D6E1B0", "installed": "2024-09-24", "rated_w": 8000, "total_kwh": 28669.3},
+    {"no": 6, "type": "MAX/MID", "device_sn": "XYGME49001", "model": "MAX 70KTL3 LV", "plant": "Chsvsolar", "user": "Chsvsolar", "city": "Chennai", "datalogger_sn": "XGD6D5502E", "installed": "2025-01-18", "rated_w": 70000, "total_kwh": 87739.8},
+    {"no": 7, "type": "MIN/MIC", "device_sn": "ECEQD7302K", "model": "MIN 4200TL-X", "plant": "Am Raja", "user": "Amraja", "city": "Chennai", "datalogger_sn": "XGD6D5V0MX", "installed": "2024-04-26", "rated_w": 4200, "total_kwh": 11336.4},
+    {"no": 8, "type": "MIN/MIC", "device_sn": "CZGLE2S008", "model": "MIC 3000TL-X", "plant": "swaminathan", "user": "swaminathaan", "city": "Chennai", "datalogger_sn": "XGD6E2S01G", "installed": "2024-05-30", "rated_w": 3000, "total_kwh": 8491.3},
+    {"no": 9, "type": "MIN/MIC", "device_sn": "FUH9CJ10B6", "model": "MIC 2000TL-X", "plant": "Saravanasolar", "user": "RukashJeyaBhava", "city": "Perungalathur", "datalogger_sn": "XGD6CHV2SQ", "installed": "2024-07-05", "rated_w": 2000, "total_kwh": 4596.5},
+    {"no": 10, "type": "MAX/MID", "device_sn": "VAP1E5N023", "model": "MID 50KTL3-X2", "plant": "Block - L Radiance", "user": "Block - C", "city": "Chennai", "datalogger_sn": "XGD6E4U03C", "installed": "2025-09-03", "rated_w": 50000, "total_kwh": 58590.8},
+    {"no": 11, "type": "MAX/MID", "device_sn": "VAP1E5N01N", "model": "MID 50KTL3-X2", "plant": "Block - A Radiance", "user": "Block - C", "city": "Chennai", "datalogger_sn": "XGD6E4U057", "installed": "2025-09-03", "rated_w": 50000, "total_kwh": 49971.2},
+    {"no": 12, "type": "MAX/MID", "device_sn": "CJJKE3J044", "model": "MID 20KTL3-X", "plant": "Block - B Radiance", "user": "Block - C", "city": "Chennai", "datalogger_sn": "XGD6DZR0YE", "installed": "2025-09-03", "rated_w": 20000, "total_kwh": 20843.8},
+    {"no": 13, "type": "MAX/MID", "device_sn": "VJHRE4U02Q", "model": "MOD 10KTL3-X", "plant": "Block - E", "user": "Block - C", "city": "Chennai", "datalogger_sn": "XGD6E3R128", "installed": "2025-09-03", "rated_w": 10000, "total_kwh": 7510.2},
+    {"no": 14, "type": "MAX/MID", "device_sn": "UZP0E4301X", "model": "MID 40KTL3-X2", "plant": "Block - F", "user": "Block - C", "city": "Chennai", "datalogger_sn": "XGD6E3G0WA", "installed": "2025-09-03", "rated_w": 40000, "total_kwh": 41188.2},
+    {"no": 15, "type": "MAX/MID", "device_sn": "VJHRE4U01X", "model": "MOD 10KTL3-X", "plant": "Block - H Radiance", "user": "Block - C", "city": "Chennai", "datalogger_sn": "XGD6E3R0WG", "installed": "2025-09-03", "rated_w": 10000, "total_kwh": 21617.1},
+    {"no": 16, "type": "MAX/MID", "device_sn": "VJHRE4U01T", "model": "MOD 10KTL3-X", "plant": "Block -D Radiance", "user": "Block - C", "city": "Chennai", "datalogger_sn": "XGD6E3R15K", "installed": "2025-09-03", "rated_w": 10000, "total_kwh": 11482.7},
+    {"no": 17, "type": "MAX/MID", "device_sn": "VJHRE4U03K", "model": "MOD 10KTL3-X", "plant": "Block - C", "user": "Block - C", "city": "Chennai", "datalogger_sn": "XGD6E3R159", "installed": "2025-09-03", "rated_w": 10000, "total_kwh": 12225.9},
+    {"no": 18, "type": "MIN/MIC", "device_sn": "0SQQD27V26D8014Y", "model": "MIC 3000TL-X2", "plant": "rajanbabu", "user": "rajanbabut", "city": "Chennai", "datalogger_sn": "XGD6F5E0B7", "installed": "2025-11-20", "rated_w": 3000, "total_kwh": 2922.7},
+    {"no": 19, "type": "MIN/MIC", "device_sn": "0SQQD27V26D801H0", "model": "MIC 3000TL-X2", "plant": "rajanbabu GF", "user": "rajanbabut", "city": "Chennai", "datalogger_sn": "XGD6F5E0GW", "installed": "2025-11-20", "rated_w": 3000, "total_kwh": 2686.3},
+    {"no": 20, "type": "MIN/MIC", "device_sn": "FUHQF5A14V", "model": "MIC 2000TL-X", "plant": "Jeganmoorthy", "user": "Jegan moorthy", "city": "Chennai", "datalogger_sn": "XGD6F4F0LX", "installed": "2025-12-03", "rated_w": 2000, "total_kwh": 1612.0},
+    {"no": 21, "type": "MAX/MID", "device_sn": "0JUQ107V18A8001K", "model": "MOD 6000TL3-X2(Pro)", "plant": "Jeganmoorthy 6 kw", "user": "Jegan moorthy", "city": "Chennai", "datalogger_sn": "XGD6E721J9", "installed": "2025-12-03", "rated_w": 6000, "total_kwh": 3014.7},
+    {"no": 22, "type": "MIN/MIC", "device_sn": "0SRQB17V23K80028", "model": "MIC 3300TL-X2(Pro)", "plant": "Jeganmoorthy 3.3kw", "user": "Jegan moorthy", "city": "Chennai", "datalogger_sn": "XGD6E9C074", "installed": "2025-12-03", "rated_w": 3300, "total_kwh": 2382.8}
+  ]
+}
