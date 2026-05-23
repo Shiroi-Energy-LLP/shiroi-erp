@@ -596,7 +596,7 @@ Design system: Shiroi Brand Guide V6. `packages/ui` holds tokens, shadcn/ui over
 
 ### Three surfaces, three philosophies
 
-- **ERP web:** dense, data-rich, desktop. Sidebar nav. Tables not cards. HubSpot-style DataTable for list pages (column picker, saved views, inline editing).
+- **ERP web:** dense, data-rich, desktop. Sidebar nav. Tables not cards. HubSpot-style DataTable for list pages (column picker, saved views, inline editing). The saved-views tab bar uses `overflow-x-auto`; the three-dots action menu in `view-tabs.tsx` must use Radix `DropdownMenu` (portals to body) — a plain `position: absolute` div would be clipped.
 - **Mobile field app:** minimal, large touch targets, works with gloves. Bottom tab nav. 90-second form rule (§8).
 - **Customer app:** consumer-grade polish. Clean, spacious. No jargon.
 

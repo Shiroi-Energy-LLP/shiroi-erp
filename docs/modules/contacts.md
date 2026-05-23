@@ -109,11 +109,13 @@ apps/erp/src/components/data-table/column-config.ts
 - **Smart name + company splitting.** The Apr 4 backfill used regex detection on free-text customer names — tokens like `Pvt`, `Ltd`, `LLP`, `Industries`, `Enterprises` routed the string to the `companies` table; everything else became a `contacts` row with a best-effort first/last split. Reuse the same helper if you ever re-import from a CSV.
 - **Lifecycle stage is NOT lead status.** `lifecycle_stage` on `contacts` is HubSpot's CRM funnel (subscriber → evangelist). `status` on `leads` is Shiroi's sales pipeline (new → won / lost). They move independently: a contact stays `customer` forever even after their lead closes.
 - **Saved views are per user.** `table_views` (migration 018) stores `visibility` as `private` | `team` | `everyone`. The list pages hydrate columns / filters / sort from the active view — don't hardcode defaults in the page component.
+- **ViewTabs dropdown uses Radix portal, not absolute positioning.** The `overflow-x-auto` scroll container on the tabs bar clips absolutely-positioned descendants that extend below it. `view-tabs.tsx` therefore uses shadcn `DropdownMenu` (Radix UI), which portals its content to `document.body` and is never clipped. Do not replace it with a hand-rolled `position: absolute` div.
 
 ## Recent Changes
 
 - **Apr 4, 2026 — Migration 017 (Contacts V2).** Cleared all backfilled data (names were project names), added `first_name` / `last_name` / `lifecycle_stage` / `secondary_phone` / `owner_id` / `source` on contacts; `pan` / `industry` / `company_size` / `owner_id` on companies; created `activities` + `activity_associations` tables with RLS + the display-name trigger.
 - **Apr 4, 2026 — Migration 018 (`table_views`).** HubSpot-style saved views for list pages (leads, proposals, projects, contacts, companies, vendors, purchase_orders, invoices, tasks).
+- **May 23, 2026 — ViewTabs dropdown fix.** Replaced hand-rolled absolute-positioned div with Radix `DropdownMenu` — overflow clipping fix (see key decisions above).
 - **Apr 4, 2026 — Smart backfill.** Ran the name/company-detection regex over legacy customer strings; rebuilt `contacts` + `companies` + `contact_company_roles` from clean sources.
 - **Apr 4, 2026 — Phone dedup.** 284 duplicate-phone contacts merged; 0 duplicates remain.
 - **Apr 4, 2026 — Contact backfill from leads.** 367 leads had no linked contact; 364 `contacts` rows were created or linked via `entity_contacts`, 3 junk leads were excluded.
