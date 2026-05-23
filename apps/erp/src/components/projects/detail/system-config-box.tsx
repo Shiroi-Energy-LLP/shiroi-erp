@@ -22,6 +22,11 @@ const SCOPE_OPTIONS = [
   { value: 'client', label: 'Client' },
 ];
 
+const CEIG_SCOPE_OPTIONS = [
+  { value: 'shiroi', label: 'Shiroi (us)' },
+  { value: 'client', label: 'Client' },
+];
+
 interface SystemConfigBoxProps {
   projectId: string;
   project: {
@@ -43,6 +48,7 @@ interface SystemConfigBoxProps {
     scope_civil: string | null;
     scope_meter: string | null;
     notes: string | null;
+    ceig_scope: string | null;
   };
 }
 
@@ -154,7 +160,7 @@ export function SystemConfigBox({ projectId, project }: SystemConfigBoxProps) {
         <div className="border-t border-n-100 -mx-6" />
 
         {/* Scopes */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <EditableField
             projectId={projectId}
             field="scope_la"
@@ -178,6 +184,14 @@ export function SystemConfigBox({ projectId, project }: SystemConfigBoxProps) {
             value={project.scope_meter}
             type="select"
             options={SCOPE_OPTIONS}
+          />
+          <EditableField
+            projectId={projectId}
+            field="ceig_scope"
+            label="CEIG Handled By"
+            value={project.ceig_scope}
+            type="select"
+            options={CEIG_SCOPE_OPTIONS}
           />
         </div>
 

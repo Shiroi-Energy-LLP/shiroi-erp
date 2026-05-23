@@ -33,6 +33,7 @@ const EDITABLE_PROJECT_FIELDS = new Set<string>([
   'scope_civil',
   'scope_meter',
   'notes',
+  'ceig_scope',
 
   // Customer info
   'customer_name',

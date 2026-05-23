@@ -114,6 +114,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
             scope_civil: (project as any).scope_civil ?? null,
             scope_meter: (project as any).scope_meter ?? null,
             notes: (project as any).notes ?? null,
+            ceig_scope: (project as any).ceig_scope ?? 'shiroi',
           }}
         />
 
