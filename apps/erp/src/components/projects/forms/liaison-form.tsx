@@ -62,11 +62,11 @@ export function LiaisonCreateButton({ projectId }: { projectId: string }) {
 const DISCOM_STATUSES = [
   { value: 'pending', label: 'Pending' },
   { value: 'applied', label: 'Applied' },
-  { value: 'under_review', label: 'Under Review' },
-  { value: 'site_inspection_scheduled', label: 'Site Inspection Scheduled' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'net_meter_installed', label: 'Net Meter Installed' },
-  { value: 'activated', label: 'Activated' },
+  { value: 'tneb_verified', label: 'Verified' },
+  { value: 'tneb_inspected', label: 'Inspected' },
+  { value: 'tneb_estimated', label: 'Estimated' },
+  { value: 'installation_completed', label: 'Installation Done' },
+  { value: 'service_effected', label: 'Service Effected' },
   { value: 'objection_raised', label: 'Objection Raised' },
   { value: 'rejected', label: 'Rejected' },
 ];
