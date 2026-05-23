@@ -834,14 +834,14 @@ Run via MCP `execute_sql`:
 INSERT INTO inverter_monitoring_credentials (brand, label, vault_secret_ref, config, created_by)
 VALUES (
   'growatt',
-  'Shiroi EEVUWE001 installer (Manivel) + OpenAPI token',
+  'Shiroi EEVUWE installer (Manivel) + OpenAPI token',
   'GROWATT_API_TOKEN',  -- read from env, not Vault for V1
   jsonb_build_object(
-    'installer_code', 'EEVUWE001',
+    'installer_code', 'EEVUWE',
     'username', 'EEVUWE001',
     'api_base', 'https://openapi.growatt.com',
     'legacy_api_base', 'https://server.growatt.com',
-    'notes', 'OpenAPI token in env var GROWATT_API_TOKEN. Plants link via installer code EEVUWE001.'
+    'notes', 'Installer code is EEVUWE; user login is EEVUWE001. OpenAPI token in env var GROWATT_API_TOKEN.'
   ),
   (SELECT id FROM profiles WHERE email = 'svivek.88@gmail.com' LIMIT 1)
 )
