@@ -22,42 +22,31 @@ const CEIG_STAGE_STYLES: Record<string, { bg: string; text: string; label: strin
   reapplied:            { bg: '#FFF7ED', text: '#9A3412', label: 'Reapplied' },
 };
 
+const PILL_CLS = 'inline-flex items-center rounded-full px-2 text-[10px] font-semibold uppercase tracking-wider h-5 whitespace-nowrap';
+
+function BadgePill({ bg, text, label, className = '' }: { bg: string; text: string; label: string; className?: string }) {
+  return (
+    <span className={`${PILL_CLS} ${className}`} style={{ backgroundColor: bg, color: text }}>
+      {label}
+    </span>
+  );
+}
+
 interface BadgeProps {
   status: string;
   className?: string;
 }
 
 export function TnebStageBadge({ status, className = '' }: BadgeProps) {
-  const style = TNEB_STAGE_STYLES[status] ?? { bg: '#F1F3F5', text: '#3F424D', label: status.replace(/_/g, ' ') };
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 text-[10px] font-semibold uppercase tracking-wider h-5 ${className}`}
-      style={{ backgroundColor: style.bg, color: style.text }}
-    >
-      {style.label}
-    </span>
-  );
+  const s = TNEB_STAGE_STYLES[status] ?? { bg: '#F1F3F5', text: '#3F424D', label: status.replace(/_/g, ' ') };
+  return <BadgePill bg={s.bg} text={s.text} label={s.label} className={className} />;
 }
 
 export function CeigStageBadge({ status, className = '' }: BadgeProps) {
-  const style = CEIG_STAGE_STYLES[status] ?? { bg: '#F1F3F5', text: '#3F424D', label: status.replace(/_/g, ' ') };
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 text-[10px] font-semibold uppercase tracking-wider h-5 ${className}`}
-      style={{ backgroundColor: style.bg, color: style.text }}
-    >
-      {style.label}
-    </span>
-  );
+  const s = CEIG_STAGE_STYLES[status] ?? { bg: '#F1F3F5', text: '#3F424D', label: status.replace(/_/g, ' ') };
+  return <BadgePill bg={s.bg} text={s.text} label={s.label} className={className} />;
 }
 
 export function AwaitingClientBadge({ className = '' }: { className?: string }) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 text-[10px] font-semibold uppercase tracking-wider h-5 ${className}`}
-      style={{ backgroundColor: '#FFF7ED', color: '#9A3412' }}
-    >
-      Awaiting Client
-    </span>
-  );
+  return <BadgePill bg="#FFF7ED" text="#9A3412" label="Awaiting Client" className={className} />;
 }
