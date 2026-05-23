@@ -5,10 +5,7 @@
       "parameters": {
         "rule": {
           "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "0 0 7 * * *"
-            }
+            { "field": "cronExpression", "expression": "0 0 7 * * *" }
           ]
         },
         "timezone": "Asia/Kolkata"
@@ -17,10 +14,7 @@
       "name": "Daily 7:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        0,
-        300
-      ]
+      "position": [0, 300]
     },
     {
       "parameters": {
@@ -31,32 +25,17 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
           ]
         },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
+        "options": { "response": { "response": { "responseFormat": "json" } } }
       },
-      "id": "node-http",
+      "id": "node-http-leads",
       "name": "Fetch new leads (24h)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        250,
-        300
-      ],
+      "position": [250, 200],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -66,38 +45,67 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "m1",
-              "name": "message",
-              "value": "=🌅 *Morning summary* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nNew leads (24h): {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '(quiet night — no new leads)' : ($json.data || []).map((l, i) => `${i+1}. ${l.customer_name} · ${l.city || '—'} · ${l.estimated_size_kwp || '—'} kWp · ${l.assigned_employee_name || 'unassigned'}`).join('\\n') }}\n\nOpen: https://erp.shiroienergy.com\n\n_TODO: extend to cover POs, payments, commissionings, escalations._",
-              "type": "string"
-            },
-            {
-              "id": "m2",
-              "name": "to_phone",
-              "value": "={{ $env.VIVEK_WHATSAPP }}",
-              "type": "string"
-            },
-            {
-              "id": "m3",
-              "name": "channel",
-              "value": "whatsapp",
-              "type": "string"
-            }
+        "method": "GET",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_ID }}.supabase.co/rest/v1/tasks?is_completed=eq.true&completed_at=gte.{{ DateTime.now().minus({hours: 24}).toISO() }}&deleted_at=is.null&select=id,title,assigned_to,completed_at,category,entity_type",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
           ]
         },
-        "options": {}
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "node-http-tasks",
+      "name": "Fetch tasks done (24h)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
+          "name": "Supabase service role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_ID }}.supabase.co/rest/v1/lead_activities?created_at=gte.{{ DateTime.now().minus({hours: 24}).toISO() }}&select=id,lead_id,performed_by,activity_type,summary,activity_date",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "node-http-activities",
+      "name": "Fetch lead activities (24h)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
+          "name": "Supabase service role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const all = $input.all();\nconst leads = (all[0]?.json || []);\nconst tasks = (all[1]?.json || []);\nconst activities = (all[2]?.json || []);\n\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nlet body = `🌅 *Vivek's morning* — ${dateLine}\\n`;\n\nbody += `\\n*New leads (24h):* ${leads.length}\\n`;\nif (leads.length === 0) {\n  body += `(quiet night — no new leads)\\n`;\n} else {\n  for (const [i, l] of leads.slice(0, 8).entries()) {\n    body += `${i+1}. ${l.customer_name} · ${l.city || '—'} · ${l.estimated_size_kwp || '—'}kWp · ${l.assigned_employee_name || 'unassigned'}\\n`;\n  }\n  if (leads.length > 8) body += `…+${leads.length - 8} more\\n`;\n}\n\nbody += `\\n*Tasks done (24h):* ${tasks.length}\\n`;\nif (tasks.length === 0) {\n  body += `(none closed)\\n`;\n} else {\n  for (const [i, t] of tasks.slice(0, 8).entries()) {\n    body += `${i+1}. ${t.title}\\n`;\n  }\n  if (tasks.length > 8) body += `…+${tasks.length - 8} more\\n`;\n}\n\nbody += `\\n*Activities logged (24h):* ${activities.length}\\n`;\nif (activities.length === 0) {\n  body += `(none logged)\\n`;\n} else {\n  for (const [i, a] of activities.slice(0, 8).entries()) {\n    body += `${i+1}. ${a.activity_type} — ${(a.summary || '').slice(0, 50)}\\n`;\n  }\n  if (activities.length > 8) body += `…+${activities.length - 8} more\\n`;\n}\n\nbody += `\\nOpen: https://erp.shiroienergy.com`;\n\nconst title = `🌅 Morning summary — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone: $env.VIVEK_WHATSAPP || '',\n  },\n}];"
       },
       "id": "node-compose",
       "name": "Compose digest",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        500,
-        300
-      ]
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
     },
     {
       "parameters": {
@@ -112,197 +120,55 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
           ]
         }
       },
-      "id": "node-whatsapp-send",
-      "name": "Send WhatsApp",
+      "id": "node-whatsapp-vivek",
+      "name": "Send WhatsApp to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        750,
-        300
-      ],
+      "position": [750, 300],
+      "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
-      },
-      "executeOnce": true
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "operation": "sendTemplate",
-        "phoneNumberId": "1140448799143790",
-        "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
-        "template": "erp_alert|en",
-        "components": {
-          "component": [
-            {
-              "type": "body",
-              "bodyParameters": {
-                "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "id": "node-whatsapp-vinodh-qcmw59",
-      "name": "Send WhatsApp to Vinodh",
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
-      "position": [
-        750,
-        450
-      ],
-      "credentials": {
-        "whatsAppApi": {
-          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
-          "name": "WhatsApp (Shiroi)"
-        }
-      },
-      "executeOnce": true
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "operation": "sendTemplate",
-        "phoneNumberId": "1140448799143790",
-        "recipientPhoneNumber": "={{ $env.SRIDHAR_WHATSAPP }}",
-        "template": "erp_alert|en",
-        "components": {
-          "component": [
-            {
-              "type": "body",
-              "bodyParameters": {
-                "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "id": "node-whatsapp-sridhar-n9s21b",
-      "name": "Send WhatsApp to Sridhar",
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
-      "position": [
-        750,
-        600
-      ],
-      "credentials": {
-        "whatsAppApi": {
-          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
-          "name": "WhatsApp (Shiroi)"
-        }
-      },
-      "executeOnce": true
+      }
     }
   ],
   "connections": {
     "Daily 7:00 IST": {
       "main": [
         [
-          {
-            "node": "Fetch new leads (24h)",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Fetch new leads (24h)", "type": "main", "index": 0 },
+          { "node": "Fetch tasks done (24h)", "type": "main", "index": 0 },
+          { "node": "Fetch lead activities (24h)", "type": "main", "index": 0 }
         ]
       ]
     },
     "Fetch new leads (24h)": {
-      "main": [
-        [
-          {
-            "node": "Compose digest",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+    },
+    "Fetch tasks done (24h)": {
+      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+    },
+    "Fetch lead activities (24h)": {
+      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
     },
     "Compose digest": {
-      "main": [
-        [
-          {
-            "node": "Send WhatsApp",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send WhatsApp to Vinodh",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send WhatsApp to Sridhar",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Send WhatsApp to Vivek", "type": "main", "index": 0 }]]
     }
   },
-  "active": false,
   "settings": {
     "executionOrder": "v1",
     "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
-    "saveExecutionProgress": true,
-    "saveManualExecutions": true,
-    "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all",
     "timezone": "Asia/Kolkata"
-  },
-  "tags": [
-    {
-      "name": "erp"
-    },
-    {
-      "name": "tier-2"
-    },
-    {
-      "name": "founder"
-    },
-    {
-      "name": "digest"
-    },
-    {
-      "name": "cron"
-    }
-  ],
-  "meta": {
-    "description": "Daily 7:00 IST — morning summary to Vivek. Currently queries v_digest_leads_new_24h (from migration 083). Future extensions should add PO count, payments received yesterday, commissionings today, and open escalations into a single consolidated message. Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, VIVEK_WHATSAPP."
   },
   "pinData": {}
 }
