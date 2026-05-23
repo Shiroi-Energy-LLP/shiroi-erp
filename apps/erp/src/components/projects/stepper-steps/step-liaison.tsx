@@ -498,15 +498,11 @@ function EditableFieldRow({
 
 function DiscomStatusBadge({ status }: { status: string }) {
   const variant =
-    status === 'approved' || status === 'activated' || status === 'net_meter_installed'
+    status === 'installation_completed' || status === 'service_effected'
       ? 'success'
-      : status === 'rejected'
+      : status === 'rejected' || status === 'objection_raised'
         ? 'destructive'
-        : status === 'objection_raised'
-          ? 'destructive'
-          : status === 'submitted' || status === 'under_review' || status === 'site_inspection_scheduled'
-            ? 'info'
-            : 'warning';
+        : 'warning';
   return (
     <Badge variant={variant} className="text-[10px] capitalize">
       {status.replace(/_/g, ' ')}
