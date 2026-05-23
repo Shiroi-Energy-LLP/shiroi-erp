@@ -21,8 +21,6 @@ R15|apps/erp/src/app/(erp)/leads/[id]/files/page.tsx:3:import { createClient } f
 R15|apps/erp/src/app/(erp)/leads/[id]/payments/page.tsx:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/leads/[id]/proposal/page.tsx:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/leads/[id]/tasks/page.tsx:6:import { createClient } from '@repo/supabase/server';
-R15|apps/erp/src/app/(erp)/liaison/net-metering/page.tsx:2:import { createClient } from '@repo/supabase/server';
-R15|apps/erp/src/app/(erp)/liaison/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/my-reports/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/om/visits/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/projects/[id]/page.tsx:4:import { createClient } from '@repo/supabase/server';
