@@ -6099,6 +6099,9 @@ export type Database = {
       }
       net_metering_applications: {
         Row: {
+          awaiting_client_details: boolean
+          awaiting_client_note: string | null
+          awaiting_client_since: string | null
           ceig_application_date: string | null
           ceig_approval_date: string | null
           ceig_approval_storage_path: string | null
@@ -6106,7 +6109,6 @@ export type Database = {
           ceig_inspection_date: string | null
           ceig_rejection_reason: string | null
           ceig_required: boolean
-          ceig_scope: string | null
           ceig_status: string
           created_at: string
           discom_application_date: string | null
@@ -6127,6 +6129,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          awaiting_client_details?: boolean
+          awaiting_client_note?: string | null
+          awaiting_client_since?: string | null
           ceig_application_date?: string | null
           ceig_approval_date?: string | null
           ceig_approval_storage_path?: string | null
@@ -6134,7 +6139,6 @@ export type Database = {
           ceig_inspection_date?: string | null
           ceig_rejection_reason?: string | null
           ceig_required?: boolean
-          ceig_scope?: string | null
           ceig_status?: string
           created_at?: string
           discom_application_date?: string | null
@@ -6155,6 +6159,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          awaiting_client_details?: boolean
+          awaiting_client_note?: string | null
+          awaiting_client_since?: string | null
           ceig_application_date?: string | null
           ceig_approval_date?: string | null
           ceig_approval_storage_path?: string | null
@@ -6162,7 +6169,6 @@ export type Database = {
           ceig_inspection_date?: string | null
           ceig_rejection_reason?: string | null
           ceig_required?: boolean
-          ceig_scope?: string | null
           ceig_status?: string
           created_at?: string
           discom_application_date?: string | null
@@ -9426,6 +9432,7 @@ export type Database = {
           ceig_cleared: boolean
           ceig_cleared_at: string | null
           ceig_required: boolean
+          ceig_scope: string
           commissioned_date: string | null
           company_id: string | null
           completion_pct: number
@@ -9516,6 +9523,7 @@ export type Database = {
           ceig_cleared?: boolean
           ceig_cleared_at?: string | null
           ceig_required?: boolean
+          ceig_scope?: string
           commissioned_date?: string | null
           company_id?: string | null
           completion_pct?: number
@@ -9606,6 +9614,7 @@ export type Database = {
           ceig_cleared?: boolean
           ceig_cleared_at?: string | null
           ceig_required?: boolean
+          ceig_scope?: string
           commissioned_date?: string | null
           company_id?: string | null
           completion_pct?: number
@@ -14993,6 +15002,16 @@ export type Database = {
           status: Database["public"]["Enums"]["lead_status"]
           total_value: number
           weighted_value: number
+        }[]
+      }
+      get_liaison_summary: {
+        Args: never
+        Returns: {
+          awaiting_client: number
+          ceig_in_process: number
+          ceig_pending: number
+          tneb_active: number
+          total: number
         }[]
       }
       get_msme_aging_summary: {
