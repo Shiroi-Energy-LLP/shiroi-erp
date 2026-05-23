@@ -382,7 +382,7 @@ export async function getStepLiaisonData(projectId: string) {
   const [projectResult, appResult, docsResult] = await Promise.all([
     supabase
       .from('projects')
-      .select('system_size_kwp, system_type, project_number, customer_name')
+      .select('system_size_kwp, system_type, project_number, customer_name, ceig_scope')
       .eq('id', projectId)
       .single(),
     supabase

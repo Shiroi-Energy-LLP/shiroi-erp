@@ -38,15 +38,21 @@ type WorkflowStage = {
 
 function deriveWorkflowStages(app: any, showCeig: boolean): WorkflowStage[] {
   const stages: WorkflowStage[] = [];
+  const d = app.discom_status as string;
 
-  // 1. Application Created
-  stages.push({
-    key: 'created',
-    label: 'Application Created',
-    status: 'done',
-  });
+  const TNEB_ORDERED = [
+    'applied',
+    'tneb_verified',
+    'tneb_inspected',
+    'tneb_estimated',
+    'installation_completed',
+    'service_effected',
+  ] as const;
 
-  // 2. CEIG (if applicable)
+  const discomIdx = TNEB_ORDERED.indexOf(d as any);
+
+  stages.push({ key: 'created', label: 'Application Created', status: 'done' });
+
   if (showCeig) {
     const ceigDone = app.ceig_status === 'approved';
     const ceigActive = ['applied', 'inspection_scheduled', 'pending'].includes(app.ceig_status);
@@ -57,35 +63,21 @@ function deriveWorkflowStages(app: any, showCeig: boolean): WorkflowStage[] {
     });
   }
 
-  // 3. DISCOM Applied
-  const discomApplied = !['pending', 'not_started'].includes(app.discom_status);
-  const discomApproved = ['approved', 'net_meter_installed', 'activated'].includes(app.discom_status);
-  stages.push({
-    key: 'discom_applied',
-    label: 'TNEB Applied',
-    status: discomApplied ? 'done' : 'pending',
-  });
+  const stageLabels: Record<string, string> = {
+    applied: 'Applied',
+    tneb_verified: 'Verified',
+    tneb_inspected: 'Inspected',
+    tneb_estimated: 'Estimated',
+    installation_completed: 'Installation Done',
+    service_effected: 'Service Effected',
+  };
 
-  // 4. DISCOM Approved
-  stages.push({
-    key: 'discom_approved',
-    label: 'TNEB Approved',
-    status: discomApproved ? 'done' : discomApplied && !discomApproved ? 'active' : 'pending',
-  });
-
-  // 5. Net Meter Installed
-  stages.push({
-    key: 'net_meter',
-    label: 'Meter Installed',
-    status: app.net_meter_installed ? 'done' : discomApproved ? 'active' : 'pending',
-  });
-
-  // 6. Activated
-  const activated = app.discom_status === 'activated';
-  stages.push({
-    key: 'activated',
-    label: 'Activated',
-    status: activated ? 'done' : app.net_meter_installed ? 'active' : 'pending',
+  TNEB_ORDERED.forEach((key, idx) => {
+    let status: WorkflowStage['status'];
+    if (discomIdx > idx) status = 'done';
+    else if (discomIdx === idx) status = 'active';
+    else status = 'pending';
+    stages.push({ key, label: stageLabels[key]!, status });
   });
 
   return stages;
@@ -142,8 +134,9 @@ export async function StepLiaison({ projectId, readOnly = false }: StepLiaisonPr
   // TN's regulatory cutoff.)
   const sizeKwp = Number((project as any).system_size_kwp ?? 0);
   const systemType = (project as any).system_type;
+  const ceigScope = (project as any).ceig_scope ?? 'shiroi';
   const showCeig =
-    application.ceig_required || (sizeKwp >= 10 && systemType !== 'off_grid');
+    ceigScope === 'shiroi' && sizeKwp >= 10 && systemType !== 'off_grid';
   const stages = deriveWorkflowStages(application, showCeig);
 
   return (
@@ -272,14 +265,14 @@ export async function StepLiaison({ projectId, readOnly = false }: StepLiaisonPr
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">CEIG Clearance</CardTitle>
                 <div className="flex items-center gap-3">
-                  {(application as any).ceig_scope !== 'client' && (
+                  {ceigScope !== 'client' && (
                     <CeigStatusForm projectId={projectId} currentStatus={application.ceig_status} />
                   )}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              {(application as any).ceig_scope === 'client' ? (
+              {ceigScope === 'client' ? (
                 <div className="flex items-center gap-2 py-3 text-sm text-blue-600">
                   <Building2 className="w-4 h-4 flex-shrink-0" />
                   <div>
