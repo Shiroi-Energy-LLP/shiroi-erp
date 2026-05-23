@@ -39,10 +39,12 @@ describe('navSectionsForRole', () => {
   it('founder returns all sections', () => {
     const sections = navSectionsForRole('founder' as AppRole);
     const sectionLabels = sections.map((s) => s.label);
-    // Expanded by marketing revamp (Approvals, Contacts, Admin) — 11 sections.
+    // Marketing revamp added Contacts/Admin; commit 7d7eb75 swapped the
+    // vouchers section for Expenses; commit a4fae6f added an Account section
+    // (Settings) on every non-customer role — 12 sections total.
     expect(sectionLabels).toEqual([
-      'Overview', 'Sales', 'Design', 'Projects', 'Approvals',
-      'Procurement', 'O&M', 'Finance', 'Contacts', 'HR', 'Admin',
+      'Overview', 'Sales', 'Design', 'Projects', 'Expenses',
+      'Procurement', 'O&M', 'Finance', 'Contacts', 'HR', 'Admin', 'Account',
     ]);
   });
 
@@ -54,13 +56,13 @@ describe('navSectionsForRole', () => {
     expect(overview!.items.map((i) => i.label)).toEqual(['Dashboard', 'My Tasks']);
   });
 
-  it('designer returns Overview + Design + Reference + Sales (R/O) + Projects (R/O)', () => {
+  it('designer returns Overview + Design + Expenses + Reference + Sales (R/O) + Projects (R/O) + Account', () => {
     const sections = navSectionsForRole('designer' as AppRole);
     const labels = sections.map((s) => s.label);
     // Marketing revamp (migration 052 RLS) gave designers read-only windows
-    // onto Sales + Projects for context.
+    // onto Sales + Projects for context. Expenses + Account added later.
     expect(labels).toEqual([
-      'Overview', 'Design', 'Reference', 'Sales (R/O)', 'Projects (R/O)',
+      'Overview', 'Design', 'Expenses', 'Reference', 'Sales (R/O)', 'Projects (R/O)', 'Account',
     ]);
   });
 
@@ -70,11 +72,11 @@ describe('navSectionsForRole', () => {
     expect(design!.items.at(0)?.label).toBe('Design Queue');
   });
 
-  it('purchase_officer returns Overview + Procurement + Vendor Management + Contacts + Admin', () => {
+  it('purchase_officer returns Overview + Procurement + Expenses + Vendor Management + Contacts + Admin + Account', () => {
     const sections = navSectionsForRole('purchase_officer' as AppRole);
     const labels = sections.map((s) => s.label);
     expect(labels).toEqual([
-      'Overview', 'Procurement', 'Vendor Management', 'Contacts', 'Admin',
+      'Overview', 'Procurement', 'Expenses', 'Vendor Management', 'Contacts', 'Admin', 'Account',
     ]);
   });
 
@@ -91,58 +93,62 @@ describe('navSectionsForRole', () => {
     expect(sections).toEqual([]);
   });
 
-  it('om_technician returns Overview + O&M', () => {
+  it('om_technician returns Overview + O&M + Expenses + Account', () => {
     const sections = navSectionsForRole('om_technician' as AppRole);
     const labels = sections.map((s) => s.label);
-    expect(labels).toEqual(['Overview', 'O&M']);
+    expect(labels).toEqual(['Overview', 'O&M', 'Expenses', 'Account']);
   });
 
-  it('project_manager returns 8 sections', () => {
+  it('project_manager returns 9 sections', () => {
     const sections = navSectionsForRole('project_manager' as AppRole);
-    // 8 = previous 5 + Approvals (vouchers) + Reference (priceBook, added by
-    // category standardisation Task 15) + Contacts.
-    expect(sections).toHaveLength(8);
+    // 9 = previous 5 + Expenses (commit 7d7eb75, formerly Approvals/vouchers)
+    // + Reference (priceBook, Task 15) + Contacts + Account.
+    expect(sections).toHaveLength(9);
     expect(sections.map((s) => s.label)).toEqual([
-      'Overview', 'Projects', 'Approvals', 'Execution', 'Procurement',
-      'Reference', 'O&M', 'Contacts',
+      'Overview', 'Projects', 'Expenses', 'Execution', 'Procurement',
+      'Reference', 'O&M', 'Contacts', 'Account',
     ]);
   });
 
-  it('site_supervisor returns Overview + My Work + Projects', () => {
+  it('site_supervisor returns Overview + My Work + Projects + Account', () => {
     const sections = navSectionsForRole('site_supervisor' as AppRole);
-    expect(sections.map((s) => s.label)).toEqual(['Overview', 'My Work', 'Projects']);
+    expect(sections.map((s) => s.label)).toEqual(['Overview', 'My Work', 'Projects', 'Account']);
   });
 
-  it('sales_engineer returns Overview + Sales + Contacts', () => {
+  it('sales_engineer returns Overview + Sales + Expenses + Contacts + Account', () => {
     const sections = navSectionsForRole('sales_engineer' as AppRole);
     // Marketing revamp moved Marketing + Liaison out of sales_engineer into
-    // the new marketing_manager role.
-    expect(sections.map((s) => s.label)).toEqual(['Overview', 'Sales', 'Contacts']);
-  });
-
-  it('finance returns 8 sections', () => {
-    const sections = navSectionsForRole('finance' as AppRole);
-    // 8 = previous 5 + Approvals (vouchers) + Contacts + Admin.
+    // the new marketing_manager role. Expenses + Account added later.
     expect(sections.map((s) => s.label)).toEqual([
-      'Overview', 'Cash', 'Billing', 'Vendor', 'Approvals', 'Analysis',
-      'Contacts', 'Admin',
+      'Overview', 'Sales', 'Expenses', 'Contacts', 'Account',
     ]);
   });
 
-  it('marketing_manager returns 8 sections', () => {
+  it('finance returns 9 sections', () => {
+    const sections = navSectionsForRole('finance' as AppRole);
+    // 9 = previous 5 + Expenses (commit 7d7eb75, formerly Approvals/vouchers)
+    // + Contacts + Admin + Account.
+    expect(sections.map((s) => s.label)).toEqual([
+      'Overview', 'Cash', 'Billing', 'Vendor', 'Expenses', 'Analysis',
+      'Contacts', 'Admin', 'Account',
+    ]);
+  });
+
+  it('marketing_manager returns 10 sections', () => {
     // Role added by migration 051. Sales + Design + Liaison + Payments +
-    // Projects (R/O) + Reference + Contacts.
+    // Projects (R/O) + Expenses + Reference + Contacts + Account.
     const sections = navSectionsForRole('marketing_manager' as AppRole);
     expect(sections.map((s) => s.label)).toEqual([
       'Overview', 'Sales', 'Design', 'Liaison', 'Payments',
-      'Projects (R/O)', 'Reference', 'Contacts',
+      'Projects (R/O)', 'Expenses', 'Reference', 'Contacts', 'Account',
     ]);
   });
 
-  it('hr_manager returns 5 sections', () => {
+  it('hr_manager returns 7 sections', () => {
     const sections = navSectionsForRole('hr_manager' as AppRole);
     expect(sections.map((s) => s.label)).toEqual([
-      'Overview', 'People', 'Leave & Attendance', 'Payroll', 'Development',
+      'Overview', 'People', 'Expenses', 'Leave & Attendance', 'Payroll',
+      'Development', 'Account',
     ]);
   });
 });
