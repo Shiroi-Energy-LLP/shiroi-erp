@@ -19,7 +19,7 @@
 
 | File | Action | Responsibility |
 |---|---|---|
-| `supabase/migrations/114_liaison_tneb_stages.sql` | Create | All DB changes + RPC |
+| `supabase/migrations/115_liaison_tneb_stages.sql` | Create | All DB changes + RPC |
 | `packages/types/database.ts` | Regenerate | Auto-generated types from schema |
 | `apps/erp/src/components/liaison/liaison-status-badge.tsx` | Create | TNEB + CEIG status badge components |
 | `apps/erp/src/components/liaison/awaiting-client-toggle.tsx` | Create | Button to mark/clear awaiting-client flag |
@@ -40,11 +40,11 @@
 ## Task 1: Migration 114 — DB schema changes + RPC
 
 **Files:**
-- Create: `supabase/migrations/114_liaison_tneb_stages.sql`
+- Create: `supabase/migrations/115_liaison_tneb_stages.sql`
 
 - [ ] **Step 1: Write the migration**
 
-Create `supabase/migrations/114_liaison_tneb_stages.sql` with the following content:
+Create `supabase/migrations/115_liaison_tneb_stages.sql` with the following content:
 
 ```sql
 -- Migration 114: Liaison TNEB stage rename + awaiting-client flag + ceig_scope to projects
@@ -160,7 +160,7 @@ Expected: 0 errors. If errors appear, they will be in files referencing old `dis
 - [ ] **Step 5: Commit migration + types**
 
 ```bash
-git add supabase/migrations/114_liaison_tneb_stages.sql packages/types/database.ts
+git add supabase/migrations/115_liaison_tneb_stages.sql packages/types/database.ts
 git commit -m "feat(liaison): migration 114 — TNEB stage rename + awaiting-client + ceig_scope to projects"
 ```
 
