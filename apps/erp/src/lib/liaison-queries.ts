@@ -113,10 +113,10 @@ export async function getAllNetMeteringApplications(filters: {
   if (filters.search) {
     const s = filters.search.toLowerCase();
     results = results.filter(
-      (app: any) =>
-        app.projects?.customer_name?.toLowerCase().includes(s) ||
-        app.projects?.project_number?.toLowerCase().includes(s) ||
-        app.discom_application_number?.toLowerCase().includes(s),
+      (app) =>
+        (app as any).projects?.customer_name?.toLowerCase().includes(s) ||
+        (app as any).projects?.project_number?.toLowerCase().includes(s) ||
+        (app as any).discom_application_number?.toLowerCase().includes(s),
     );
   }
 
