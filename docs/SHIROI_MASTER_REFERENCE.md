@@ -95,7 +95,7 @@ One always-on laptop runs both **n8n** (port 5678, all automation) and the **PVL
 | Cloudflare R2 + CDN | ~₹800/month |
 | Claude API (~500 calls/day) | ~₹2,000–4,000/month |
 | **Phase 1 total** | **~₹9,000–11,000/month** |
-| WhatsApp BSP (Phase 2) | +₹3,000/month |
+| Customer-facing WhatsApp (Phase F1 — direct Meta API via n8n, no BSP needed) | ₹0 extra |
 
 ---
 
@@ -636,7 +636,7 @@ Adapters per brand in `packages/inverter-adapters/` (sungrow, growatt, sma, huaw
 
 ### 12.7 + 12.8 WhatsApp
 
-**Phase 1 (current):** n8n → employee's WhatsApp → employee forwards to customer. Tracked in `message_delivery_log`. Phase 2 toggle per step via `drip_sequence_steps.delivery_method_active`. Phase 2: WATI.io BSP (~₹3,000/month, existing company number, registration in progress).
+**Current:** Direct Meta WhatsApp Business Cloud API via n8n. `erp_alert` template live. Delivery webhook (#57) receiving status callbacks. 6 workflows active (~9 msgs/day to internal team). **No WATI.io** — bypassed by going direct to Meta. Customer-facing drip sequences (Phase F1) will use the same n8n + Meta path. Meta Business Verification pending (Vivek submits docs) to lift messaging tier.
 
 **Historical import:** Rule-based (no LLM) pipeline in `scripts/whatsapp-import/` — `parser.ts` handles Android + iPhone ZIPs + U+202F narrow no-break space + Unicode control chars; `extract-local.ts` pulls payments/contacts/POs/BOQ items/daily reports/activities; `enrich-and-approve.ts` does fuzzy project match + Indian amount parsing + bulk insert. Review queue `whatsapp_import_queue` (migration 025) with SHA-256 dedup on `message_hash` — re-runs are safe. Live Baileys bot deferred — scaffolds in `scripts/whatsapp-import/profiles/`.
 

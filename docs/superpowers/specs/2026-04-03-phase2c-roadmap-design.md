@@ -1,6 +1,6 @@
 # Shiroi ERP — Phase 2C Roadmap & Full Status
 **Date:** April 3, 2026
-**Status:** Approved by Vivek
+**Status:** ⚠️ SUPERSEDED — see `docs/superpowers/plans/2026-05-23-erp-master-plan-revised.md`
 
 ---
 

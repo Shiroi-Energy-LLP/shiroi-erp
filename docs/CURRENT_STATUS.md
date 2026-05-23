@@ -8,8 +8,8 @@
 
 ## Phase
 
-**Phase 3 — Advanced Features + Deployment.**
-Building out final modules before moving to full prod rollout. Still active development — 3 more big modules to ship before employee testing week.
+**Phase B — Marketing Complete (current focus).**
+Revised master plan at `docs/superpowers/plans/2026-05-23-erp-master-plan-revised.md`. Building in dev. Prod gate: data cleanup done (Phase D manual) + marketing complete + operations complete + employee testing week. Phase E/F run in parallel with C and D. Mobile (Phase G) is a separate phase.
 
 ---
 
