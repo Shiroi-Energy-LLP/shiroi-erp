@@ -1,14 +1,11 @@
 {
-  "name": "21 — Design head daily 8AM digest",
+  "name": "21 — In-design queue",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "0 0 8 * * *"
-            }
+            { "field": "cronExpression", "expression": "0 0 8 * * *" }
           ]
         },
         "timezone": "Asia/Kolkata"
@@ -17,10 +14,7 @@
       "name": "Daily 8:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        0,
-        300
-      ]
+      "position": [0, 300]
     },
     {
       "parameters": {
@@ -31,32 +25,17 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
           ]
         },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
+        "options": { "response": { "response": { "responseFormat": "json" } } }
       },
       "id": "node-http",
       "name": "Fetch design backlog",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        250,
-        300
-      ],
+      "position": [250, 300],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -66,45 +45,20 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "m1",
-              "name": "message",
-              "value": "=🎨 *Design digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nProposals stuck in draft >24h: {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ Nothing in backlog — caught up!' : ($json.data || []).slice(0, 15).map((p, i) => `${i+1}. ${p.proposal_number} · ${p.customer_name} · ${p.estimated_size_kwp || '—'} kWp · ${p.hours_in_draft}h · ${p.prepared_by_name || 'unassigned'}`).join('\\n') }}{{ ($json.data || []).length > 15 ? '\\n…and ' + (($json.data || []).length - 15) + ' more.' : '' }}\n\nOpen: https://erp.shiroienergy.com/design\n\n_TODO: add v_digest_proposals_silent_3d for after-send silence._",
-              "type": "string"
-            },
-            {
-              "id": "m2",
-              "name": "to_phone",
-              "value": "={{ $env.DESIGN_HEAD_WHATSAPP }}",
-              "type": "string"
-            },
-            {
-              "id": "m3",
-              "name": "channel",
-              "value": "whatsapp",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "const rows = $input.first()?.json || [];\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nlet body = `🎨 *In-design queue* — ${dateLine}\\n`;\nbody += `\\nProposals in design (>24h old): ${rows.length}\\n`;\nif (rows.length === 0) {\n  body += `✅ caught up — nothing aging in design`;\n} else {\n  for (const [i, p] of rows.slice(0, 15).entries()) {\n    body += `${i+1}. ${p.proposal_number} · ${p.customer_name} · ${p.estimated_size_kwp || '—'}kWp · ${Math.floor(p.hours_in_draft || 0)}h · ${p.prepared_by_name || 'unassigned'}\\n`;\n  }\n  if (rows.length > 15) body += `…+${rows.length - 15} more\\n`;\n}\nbody += `\\nOpen: https://erp.shiroienergy.com/design`;\n\nconst title = `🎨 In-design queue — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone_vivek: $env.VIVEK_WHATSAPP || '',\n    to_phone_shravan: $env.DESIGN_HEAD_WHATSAPP || '',\n  },\n}];"
       },
       "id": "node-compose",
       "name": "Compose digest",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        500,
-        300
-      ]
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
     },
     {
       "parameters": {
         "resource": "message",
         "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
-        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "recipientPhoneNumber": "={{ $json.to_phone_vivek }}",
         "template": "erp_alert|en",
         "components": {
           "component": [
@@ -112,101 +66,82 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
           ]
         }
       },
-      "id": "node-whatsapp-send",
-      "name": "Send WhatsApp",
+      "id": "node-whatsapp-vivek",
+      "name": "Send to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        750,
-        300
-      ],
+      "position": [750, 200],
+      "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
           "name": "WhatsApp (Shiroi)"
         }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $json.to_phone_shravan }}",
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
+                ]
+              }
+            }
+          ]
+        }
       },
-      "executeOnce": true
+      "id": "node-whatsapp-shravan",
+      "name": "Send to Shravan",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [750, 400],
+      "executeOnce": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
     }
   ],
   "connections": {
     "Daily 8:00 IST": {
-      "main": [
-        [
-          {
-            "node": "Fetch design backlog",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Fetch design backlog", "type": "main", "index": 0 }]]
     },
     "Fetch design backlog": {
-      "main": [
-        [
-          {
-            "node": "Compose digest",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
     },
     "Compose digest": {
       "main": [
         [
-          {
-            "node": "Send WhatsApp",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send to Vivek", "type": "main", "index": 0 },
+          { "node": "Send to Shravan", "type": "main", "index": 0 }
         ]
       ]
     }
   },
-  "active": false,
   "settings": {
     "executionOrder": "v1",
     "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
-    "saveExecutionProgress": true,
-    "saveManualExecutions": true,
-    "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all",
     "timezone": "Asia/Kolkata"
-  },
-  "tags": [
-    {
-      "name": "erp"
-    },
-    {
-      "name": "tier-2"
-    },
-    {
-      "name": "design"
-    },
-    {
-      "name": "digest"
-    },
-    {
-      "name": "cron"
-    }
-  ],
-  "meta": {
-    "description": "Daily 8:00 IST — Design head digest. Queries v_digest_proposals_design_backlog (migration 085). Requires env: SUPABASE_PROJECT_ID, SUPABASE_SECRET_KEY, DESIGN_HEAD_WHATSAPP."
   },
   "pinData": {}
 }
