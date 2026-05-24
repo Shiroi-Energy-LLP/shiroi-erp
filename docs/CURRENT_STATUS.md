@@ -8,8 +8,8 @@
 
 ## Phase
 
-**Phase B — Marketing Complete (current focus).**
-Revised master plan at `docs/superpowers/plans/2026-05-23-erp-master-plan-revised.md`. Building in dev. Prod gate: data cleanup done (Phase D manual) + marketing complete + operations complete + employee testing week. Phase E/F run in parallel with C and D. Mobile (Phase G) is a separate phase.
+**Phase B — Marketing Complete. ✅ DONE (2026-05-24).**
+All B1–B7 tasks shipped: payment tracker follow-up columns + RPC (mig 117), `updatePaymentFollowUp` server action, "Payments Expected This Week" KPI card on `/payments` and `/payments/tracker`, Follow-up dialog per milestone in tracker table, `?filter=this_week` filter, BOM generator AC cable/earthing/conduit line items + conduit category fix, Quick Quote PDF note text fix, lead layout "Create Detailed Quote" CTA + amber nudge banner, Detailed Quote PDF segment-aware Scope of Work + GST sub-breakdown + LLP label fix. Revised master plan at `docs/superpowers/plans/2026-05-23-erp-master-plan-revised.md`. Building in dev. Prod gate: data cleanup done (Phase D manual) + marketing complete + operations complete + employee testing week. Phase E/F run in parallel with C and D. Mobile (Phase G) is a separate phase.
 
 ---
 
@@ -56,7 +56,7 @@ Revised master plan at `docs/superpowers/plans/2026-05-23-erp-master-plan-revise
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **111** (system_settings singleton + org-wide proposal-gate toggle + updated `fn_block_lead_won_without_proposal`, May 20 via Supabase MCP). 082–111 tracked. Mig 084 (nullable project_id) DDL is live but was applied outside `supabase_migrations.schema_migrations`; Zoho re-run relied on it. | None |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **117** (payment tracker follow-up columns + `get_payments_expected_this_week()` RPC, May 24 via Supabase MCP). 082–117 tracked. Mig 084 (nullable project_id) DDL is live but was applied outside `supabase_migrations.schema_migrations`; Zoho re-run relied on it. Note: mig 117 was applied in two passes — initial apply + 117c fix to drop-and-recreate the RPC with the `week_total` return column (can't `CREATE OR REPLACE` when return type changes); both passes reflected in the tracked SQL file. | None |
 | **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 111** — 99 migrations waiting on the next prod window. Note: live ERP at `erp.shiroienergy.com` points at **dev** Supabase, so this prod-DB gap doesn't block users today. |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, Zoho Books, and WhatsApp; not all of that needs to move to prod — specifically the Zoho import tables are dev-only for now).
@@ -91,7 +91,7 @@ Running on every PR + push to `main` (`~1 min` total):
 2. `pnpm lint` — 2 lintable packages with `--max-warnings 0`
 3. `scripts/ci/check-forbidden-patterns.sh` — baseline-aware grep for NEVER-DO rules 11/13/15
 
-**Forbidden-pattern baseline:** currently 66 (ratcheted up from 61 on Apr 17 for 5 new expenses-module `createClient` imports — same grandfathered pattern as 54 pre-existing files). Long-term target: ratchet back down after refactoring these page-level imports into `-queries.ts` helpers.
+**Forbidden-pattern baseline:** currently 63 (ratcheted down from 66 after May 20 marketing hotfix refactored `add-activity-form.tsx` into a server action). Long-term target: ratchet further down after refactoring remaining page-level `createClient` imports into `-queries.ts` helpers.
 
 **Playwright smoke tests** exist (`e2e/smoke.spec.ts`, 9 tests — 6 original + 3 Purchase v2 paths) but not wired into CI yet — needs dev Supabase test user + GitHub Actions secrets.
 

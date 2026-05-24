@@ -2,6 +2,7 @@ import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 
 type RpcRow = Database['public']['Functions']['get_payment_tracker_rows']['Returns'][number];
+type PpsRow = Database['public']['Tables']['proposal_payment_schedule']['Row'];
 
 export interface PaymentTrackerRow {
   project_id: string;
@@ -105,12 +106,100 @@ export function computePaymentTrackerSummary(rows: PaymentTrackerRow[]): Payment
 }
 
 /**
+ * Per-milestone follow-up data fetched from proposal_payment_schedule.
+ * Keyed by payment schedule row id.
+ */
+export interface PaymentScheduleFollowUp {
+  id: string;
+  proposal_id: string;
+  milestone_name: string;
+  milestone_order: number;
+  amount: number;
+  follow_up_date: string | null;
+  expected_payment_date: string | null;
+  follow_up_note: string | null;
+  follow_up_count: number;
+  /** project_id is resolved through proposals.lead_id → projects.lead_id */
+  project_id: string | null;
+}
+
+/**
+ * Fetch follow-up tracking data from proposal_payment_schedule for all
+ * accepted proposals that have a linked project.
+ * Used to overlay follow-up state onto the payment tracker table rows.
+ */
+export async function getPaymentScheduleFollowUps(): Promise<PaymentScheduleFollowUp[]> {
+  const op = '[getPaymentScheduleFollowUps]';
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('proposal_payment_schedule')
+    .select(`
+      id,
+      proposal_id,
+      milestone_name,
+      milestone_order,
+      amount,
+      follow_up_date,
+      expected_payment_date,
+      follow_up_note,
+      follow_up_count,
+      proposals!proposal_payment_schedule_proposal_id_fkey(
+        status,
+        lead_id,
+        projects!projects_lead_id_fkey(id)
+      )
+    `)
+    .order('milestone_order', { ascending: true });
+
+  if (error) {
+    console.error(`${op} query failed`, {
+      code: error.code,
+      message: error.message,
+      timestamp: new Date().toISOString(),
+    });
+    throw new Error(`Failed to load payment schedule follow-ups: ${error.message}`);
+  }
+
+  type ProposalJoin = { status: string; lead_id: string; projects: { id: string } | null } | null;
+
+  return (data ?? [])
+    .filter((row) => {
+      // Only include accepted proposals
+      const proposal = row.proposals as unknown as ProposalJoin;
+      return proposal?.status === 'accepted' && proposal?.projects;
+    })
+    .map((row) => {
+      const ppsRow = row as unknown as PpsRow;
+      const proposal = row.proposals as unknown as ProposalJoin;
+      return {
+        id: ppsRow.id,
+        proposal_id: ppsRow.proposal_id,
+        milestone_name: ppsRow.milestone_name,
+        milestone_order: ppsRow.milestone_order,
+        amount: Number(ppsRow.amount),
+        follow_up_date: ppsRow.follow_up_date ?? null,
+        expected_payment_date: ppsRow.expected_payment_date ?? null,
+        follow_up_note: ppsRow.follow_up_note ?? null,
+        follow_up_count: ppsRow.follow_up_count ?? 0,
+        project_id: proposal?.projects?.id ?? null,
+      };
+    });
+}
+
+/**
  * Filter tracker rows by the selected tab.
  * Default (unknown filter) falls through to 'outstanding'.
+ *
+ * @param thisWeekProjectIds Optional set of project IDs that have a payment
+ *   expected this ISO week (from get_payments_expected_this_week RPC).
+ *   Required only when filter='this_week'.
  */
 export function filterPaymentTrackerRows(
   rows: PaymentTrackerRow[],
-  filter: string
+  filter: string,
+  thisWeekProjectIds?: Set<string>,
 ): PaymentTrackerRow[] {
   switch (filter) {
     case 'all':
@@ -127,6 +216,9 @@ export function filterPaymentTrackerRows(
       return rows.filter((r) => r.days_since_order >= 30 && r.remaining > 0);
     case 'order_60d':
       return rows.filter((r) => r.days_since_order >= 60 && r.remaining > 0);
+    case 'this_week':
+      // Show only projects that have a milestone expected_payment_date this ISO week
+      return rows.filter((r) => thisWeekProjectIds?.has(r.project_id) ?? false);
     default:
       return rows.filter((r) => r.remaining > 0);
   }

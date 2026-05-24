@@ -10189,6 +10189,10 @@ export type Database = {
           due_days_after_trigger: number | null
           due_trigger: string
           escalation_sla_days: number
+          expected_payment_date: string | null
+          follow_up_count: number
+          follow_up_date: string | null
+          follow_up_note: string | null
           followup_sla_days: number
           id: string
           invoice_type: string | null
@@ -10206,6 +10210,10 @@ export type Database = {
           due_days_after_trigger?: number | null
           due_trigger: string
           escalation_sla_days?: number
+          expected_payment_date?: string | null
+          follow_up_count?: number
+          follow_up_date?: string | null
+          follow_up_note?: string | null
           followup_sla_days?: number
           id?: string
           invoice_type?: string | null
@@ -10223,6 +10231,10 @@ export type Database = {
           due_days_after_trigger?: number | null
           due_trigger?: string
           escalation_sla_days?: number
+          expected_payment_date?: string | null
+          follow_up_count?: number
+          follow_up_date?: string | null
+          follow_up_note?: string | null
           followup_sla_days?: number
           id?: string
           invoice_type?: string | null
@@ -15111,6 +15123,20 @@ export type Database = {
           total_invoice_sent: number
           total_invoiced: number
           total_received: number
+        }[]
+      }
+      get_payments_expected_this_week: {
+        Args: never
+        Returns: {
+          amount_due: number
+          customer_name: string
+          expected_payment_date: string
+          follow_up_count: number
+          milestone_name: string
+          milestone_order: number
+          project_id: string
+          project_number: string
+          week_total: number
         }[]
       }
       get_pipeline_close_window: {

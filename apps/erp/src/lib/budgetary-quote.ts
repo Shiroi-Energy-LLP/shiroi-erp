@@ -56,19 +56,16 @@ const DEFAULT_BATTERY_KWH_PER_KWP = 2; // 2 kWh per kWp for hybrid
 /**
  * Balance-of-System (Misc) lumpsum per kWp.
  *
- * The price_book has 4 buckets that the per-category generator doesn't
- * itemise — AC cabling (43 rows), earthing (10 rows), conduits (24 rows),
- * miscellaneous fasteners/lugs (14 rows), and safety accessories (4 rows).
- * Picking the "cheapest" from each is meaningless (a ₹1 screw, a ₹40 wire).
- * Industry norm for BoS on rooftop solar is 8–12% of system cost; for
- * Shiroi's price points (~₹40-55K/kWp total) that maps to roughly
- * ₹3,500–₹5,500/kWp depending on segment. We pick a flat ₹4,000/kWp
- * lumpsum and emit it as a single "Misc / BoS" line. Adjustable later if
- * a per-segment refinement is needed.
+ * Covers miscellaneous fasteners/lugs (14 rows) and safety accessories
+ * (4 rows) from the price_book that don't map cleanly to a "cheapest row
+ * × size" quantity model. AC cable, earthing, and conduit are now itemised
+ * individually (steps 5b–5d). The remaining misc/safety bucket is estimated
+ * at a flat ₹1,500/kWp (down from ₹4,000/kWp pre-B4 which included those
+ * three now-itemised categories).
  */
-const MISC_BOS_PER_KWP = 4000;
+const MISC_BOS_PER_KWP = 1500;
 const MISC_BOS_DESCRIPTION =
-  'Balance of System — AC cabling, earthing, conduits, safety & misc accessories';
+  'Balance of System — safety accessories, lugs, fasteners & misc consumables';
 
 /**
  * Logical → price_book category mapping.
@@ -97,6 +94,8 @@ const PRICE_BOOK_CATEGORY: Record<string, readonly string[]> = {
   dc_cable:            ['dc_accessories', 'dc_cable'],
   ac_cable:            ['ac_accessories', 'ac_cable'],
   earthing:            ['earthing_accessories', 'earthing'],
+  // DB uses 'conduits' (plural) — map covers both spellings for resilience
+  conduit:             ['conduits', 'conduit'],
   installation_labour: ['ic', 'installation_labour'],
   net_meter:           ['generation_meter', 'net_meter'],
   civil_work:          ['transport_civil', 'civil_work'],
@@ -319,13 +318,42 @@ export function generateBudgetaryBOM(
     lines.push(makeLine(structureItem, size, adjustedPrice, cf));
   }
 
-  // 5. Electrical + cabling — per kWp. Shiroi's master has separate
-  //    dc_accessories + ac_accessories rows; we pick the cheapest priced
-  //    "per kWp" or per-meter row, treating quantity as system size.
+  // 5a. DC cable — per kWp. Shiroi's master has dc_accessories rows priced per meter;
+  //     for Quick Quote we treat quantity as system size (kWp) which gives a per-kWp
+  //     approximation consistent with the rest of the BOM.
   const electricalItem = findItem(priceBook, 'dc_cable', { preferredBrand: prefs.dc_cable });
   if (electricalItem) {
     const cf = findCorrectionFactor(corrections, 'dc_cable');
     lines.push(makeLine(electricalItem, size, Number(electricalItem.base_price), cf));
+  }
+
+  // 5b. AC cable — picks the cheapest 4sq mm copper wire (per kWp quantity as above).
+  const acCableItem = findItem(priceBook, 'ac_cable', {
+    preferredBrand: prefs.ac_cable,
+    // Prefer rows whose description mentions sq mm (cable rows vs ACDB board items)
+    prefer: (item) => /\d+\s*sq\s*mm/i.test(item.item_description ?? ''),
+  });
+  if (acCableItem) {
+    const cf = findCorrectionFactor(corrections, 'ac_cable');
+    lines.push(makeLine(acCableItem, size, Number(acCableItem.base_price), cf));
+  }
+
+  // 5c. Earthing — per system (quantity 1 for Quick Quote). Picks cheapest
+  //     earth rod/kit from earthing_accessories.
+  const earthingItem = findItem(priceBook, 'earthing', { preferredBrand: prefs.earthing });
+  if (earthingItem) {
+    const cf = findCorrectionFactor(corrections, 'earthing');
+    lines.push(makeLine(earthingItem, 1, Number(earthingItem.base_price), cf));
+  }
+
+  // 5d. Conduit / cable routing — per kWp. Picks cheapest UPVC conduit row.
+  const conduitItem = findItem(priceBook, 'conduit', {
+    preferredBrand: prefs.conduit,
+    prefer: (item) => /upvc|conduit/i.test(item.item_description ?? ''),
+  });
+  if (conduitItem) {
+    const cf = findCorrectionFactor(corrections, 'conduit');
+    lines.push(makeLine(conduitItem, size, Number(conduitItem.base_price), cf));
   }
 
   // 6. Installation labour — per kWp. Segment-aware: Industrial uses the

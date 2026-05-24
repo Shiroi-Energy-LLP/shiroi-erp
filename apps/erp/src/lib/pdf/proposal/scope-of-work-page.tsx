@@ -9,14 +9,29 @@ import { BRAND } from '../pdf-styles';
 import { BrandFooter } from './brand-footer';
 import type { ProposalPDFData } from '../proposal-pdf-data';
 
-const INCLUSIONS = [
+// Base inclusions common across all segments
+const BASE_INCLUSIONS = [
   'Supply of all materials per Technical Specification',
   'Installation, commissioning, and testing',
-  'TNEB net-metering liaison (if applicable)',
-  'CEIG approval support (>10 kWp systems)',
   '1-year free maintenance',
   'Remote monitoring portal setup',
 ] as const;
+
+// Segment-specific inclusion additions
+const SEGMENT_INCLUSIONS: Record<string, readonly string[]> = {
+  residential: [
+    'TNEB net-metering liaison (if applicable)',
+  ],
+  commercial: [
+    'TNEB net-metering / Open-access liaison (if applicable)',
+    'CEIG approval support (>10 kWp systems)',
+  ],
+  industrial: [
+    'TNEB net-metering / Open-access liaison (if applicable)',
+    'CEIG approval support (mandatory for >10 kWp)',
+    'Safety audit and documentation support',
+  ],
+};
 
 const UNIVERSAL_EXCLUSIONS = [
   'Civil works (foundation, watertight roof penetration sealing) unless quoted separately',
@@ -48,6 +63,11 @@ export function ScopeOfWorkPage({ data, pageNum, totalPages }: ScopeOfWorkPagePr
     .map(l => l.description);
 
   const allExclusions = [...clientScopeItems, ...UNIVERSAL_EXCLUSIONS];
+
+  // Build segment-aware inclusions list
+  const segment = (data.segment ?? 'residential').toLowerCase();
+  const segmentAdditions = SEGMENT_INCLUSIONS[segment] ?? SEGMENT_INCLUSIONS.commercial ?? [];
+  const allInclusions: string[] = [...BASE_INCLUSIONS, ...segmentAdditions];
 
   return (
     <Page size="A4" style={{ fontFamily: 'Helvetica', paddingTop: 40, paddingBottom: 60, paddingHorizontal: 40 }}>
@@ -81,7 +101,7 @@ export function ScopeOfWorkPage({ data, pageNum, totalPages }: ScopeOfWorkPagePr
               Inclusions
             </Text>
           </View>
-          {INCLUSIONS.map((item, i) => (
+          {allInclusions.map((item, i) => (
             <BulletRow key={i} text={item} color={BRAND.green} />
           ))}
         </View>

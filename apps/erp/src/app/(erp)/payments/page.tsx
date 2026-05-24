@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getProjectPaymentOverview, computePaymentsSummary } from '@/lib/payments-overview-queries';
 import { getProjectsList } from '@/lib/procurement-queries';
+import { getPaymentsExpectedThisWeek, sumThisWeekAmount } from '@/lib/payments-this-week-queries';
 import { formatINR, shortINR } from '@repo/ui/formatters';
 import {
   Card,
@@ -16,7 +17,7 @@ import {
   TableCell,
   EmptyState,
 } from '@repo/ui';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, CalendarClock } from 'lucide-react';
 import { RecordPaymentDialog } from '@/components/finance/record-payment-dialog';
 import { PaymentFollowupsTable } from '@/components/payments/payment-followups-table';
 import { STATUS_LABEL } from '@/components/payments/payments-helpers';
@@ -31,11 +32,13 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
   const params = await searchParams;
   const filter = params.filter ?? 'active';
 
-  const [allRows, projects] = await Promise.all([
+  const [allRows, projects, thisWeekRows] = await Promise.all([
     getProjectPaymentOverview(),
     getProjectsList(),
+    getPaymentsExpectedThisWeek(),
   ]);
   const summary = computePaymentsSummary(allRows);
+  const thisWeekFollowUpAmount = sumThisWeekAmount(thisWeekRows);
 
   // Filter rows based on selected view
   let filteredRows = allRows;
@@ -94,7 +97,7 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
       </div>
 
       {/* Expected Payments Summary */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Card className="border-l-4 border-l-amber-500">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
@@ -117,6 +120,26 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
             </div>
           </CardContent>
         </Card>
+        {/* Follow-up tracker: milestones Prem has promised-dates for this week */}
+        <Link href="/payments/tracker?filter=this_week">
+          <Card className="border-l-4 border-l-green-500 cursor-pointer hover:bg-n-50 transition-colors">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <CalendarClock className="h-3.5 w-3.5 text-green-600" />
+                <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Follow-Up Expected This Week</div>
+              </div>
+              <div className={`text-2xl font-bold font-mono mt-1 ${thisWeekRows.length > 0 ? 'text-green-700' : 'text-n-400'}`}>
+                {thisWeekRows.length}
+              </div>
+              {thisWeekFollowUpAmount > 0 && (
+                <div className="text-xs text-green-700 font-mono mt-0.5">{shortINR(thisWeekFollowUpAmount)}</div>
+              )}
+              <div className="text-xs text-n-500 mt-0.5">
+                {thisWeekRows.length === 1 ? 'milestone' : 'milestones'} promised this week
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Filter tabs */}

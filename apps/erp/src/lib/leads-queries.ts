@@ -256,6 +256,31 @@ export async function leadHasProposal(leadId: string): Promise<boolean> {
   return !!data;
 }
 
+/**
+ * Returns true when the lead has at least one detailed (non-budgetary) proposal.
+ * Used to decide whether to show the "Create Detailed Quote" nudge in the lead header.
+ */
+export async function leadHasDetailedProposal(leadId: string): Promise<boolean> {
+  const op = '[leadHasDetailedProposal]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('proposals')
+    .select('id')
+    .eq('lead_id', leadId)
+    .eq('is_budgetary', false)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error(`${op} query failed:`, {
+      code: error.code,
+      message: error.message,
+      leadId,
+    });
+    throw new Error(`Failed to check detailed proposal existence: ${error.message}`);
+  }
+  return !!data;
+}
+
 export async function getSalesEngineers() {
   const op = '[getSalesEngineers]';
   const supabase = await createClient();

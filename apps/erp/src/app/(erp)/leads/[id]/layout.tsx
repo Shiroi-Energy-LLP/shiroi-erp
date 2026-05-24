@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getUserProfile } from '@/lib/auth';
-import { getLead, leadHasProject, leadHasProposal } from '@/lib/leads-queries';
+import { getLead, leadHasProject, leadHasProposal, leadHasDetailedProposal } from '@/lib/leads-queries';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import { LeadTabs } from '@/components/leads/lead-tabs';
 import { StatusChange } from '@/components/leads/status-change';
@@ -11,8 +11,9 @@ import { CreateProjectFromLeadButton } from '@/components/sales/create-project-f
 import { ProposalGateBypassToggle } from '@/components/sales/proposal-gate-bypass-toggle';
 import { ProposalGateBanner } from '@/components/proposal-gate-banner';
 import { computeMargin } from '@/lib/closure-actions';
-import { Breadcrumb, Card, CardContent } from '@repo/ui';
+import { Breadcrumb, Card, CardContent, Button } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
+import Link from 'next/link';
 
 interface LeadDetailLayoutProps {
   params: Promise<{ id: string }>;
@@ -49,8 +50,20 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
   // proposal exists. Show a banner on stages where won is the natural next
   // click so the user knows BEFORE hitting the error.
   const TERMINAL = ['won', 'lost', 'on_hold', 'disqualified', 'converted'];
-  const showNoProposalBanner =
-    !TERMINAL.includes(lead.status) && !(await leadHasProposal(id));
+  const hasProposal = await leadHasProposal(id);
+  const showNoProposalBanner = !TERMINAL.includes(lead.status) && !hasProposal;
+
+  // For leads that have a quick quote but no detailed proposal yet, show an
+  // amber nudge if they're in a stage where won is reachable (post-quick-quote stages).
+  const QUICK_QUOTE_SENT_AND_LATER = [
+    'quick_quote_sent', 'site_survey_scheduled', 'site_survey_done',
+    'design_in_progress', 'design_confirmed', 'detailed_proposal_sent',
+    'negotiation', 'closure_soon',
+  ];
+  const needsDetailedProposalNudge =
+    hasProposal &&
+    QUICK_QUOTE_SENT_AND_LATER.includes(lead.status) &&
+    !(await leadHasDetailedProposal(id));
 
   return (
     <div className="space-y-6">
@@ -93,6 +106,14 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
         <div className="flex items-center gap-2">
           {lead.status === 'won' && !hasProjectForLead && (
             <CreateProjectFromLeadButton leadId={lead.id} />
+          )}
+          {/* Detailed quote CTA — prominent when no detailed proposal exists yet */}
+          {needsDetailedProposalNudge && (
+            <Link href={`/leads/${id}/proposal`}>
+              <Button size="sm" className="bg-shiroi-green hover:bg-shiroi-green/90 text-white">
+                Create Detailed Quote
+              </Button>
+            </Link>
           )}
           <QuickQuoteButton
             leadId={lead.id}
@@ -138,6 +159,25 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
                   currentlyBypassed={lead.proposal_gate_bypassed ?? false}
                 />
               )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Detailed proposal nudge — shown when quick quote exists but detailed proposal not yet created */}
+      {needsDetailedProposalNudge && (
+        <Card className="border-l-4 border-l-amber-400 bg-amber-50/30">
+          <CardContent className="py-3">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="text-sm text-n-800">
+                <span className="font-semibold">Detailed proposal not created yet</span>{' '}
+                — needed before this lead can be marked <strong>Won</strong>. Create it now in the Proposal tab.
+              </div>
+              <Link href={`/leads/${id}/proposal`}>
+                <Button size="sm" variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-50">
+                  Go to Proposal tab
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

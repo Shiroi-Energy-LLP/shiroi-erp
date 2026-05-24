@@ -148,6 +148,34 @@ export function SystemSizingPage({ data, pageNum, totalPages }: SystemSizingPage
         </View>
       ))}
 
+      {/* GST sub-breakdown */}
+      <View
+        style={{
+          borderTopWidth: 0.5,
+          borderTopColor: BRAND.gray300,
+          marginTop: 2,
+        }}
+      >
+        {/* Supply subtotal + GST @ 5% */}
+        <View style={{ flexDirection: 'row', paddingVertical: 3, paddingHorizontal: 6, backgroundColor: BRAND.gray50 }}>
+          <Text style={{ fontSize: 8, width: '80%', color: BRAND.gray500 }}>
+            Supply (material) subtotal — GST @ 5%
+          </Text>
+          <Text style={{ fontSize: 8, width: '20%', textAlign: 'right', color: BRAND.gray700 }}>
+            {formatINR(data.subtotalSupply + data.gstSupply)}
+          </Text>
+        </View>
+        {/* Works subtotal + GST @ 18% */}
+        <View style={{ flexDirection: 'row', paddingVertical: 3, paddingHorizontal: 6 }}>
+          <Text style={{ fontSize: 8, width: '80%', color: BRAND.gray500 }}>
+            Works (installation + services) subtotal — GST @ 18%
+          </Text>
+          <Text style={{ fontSize: 8, width: '20%', textAlign: 'right', color: BRAND.gray700 }}>
+            {formatINR(data.subtotalWorks + data.gstWorks)}
+          </Text>
+        </View>
+      </View>
+
       {/* Discount row (if applicable) */}
       {data.discountAmount > 0 && (
         <View
@@ -180,7 +208,7 @@ export function SystemSizingPage({ data, pageNum, totalPages }: SystemSizingPage
         }}
       >
         <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', width: '80%' }}>
-          Total (incl. GST)
+          Grand Total (incl. GST)
         </Text>
         <Text
           style={{

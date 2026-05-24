@@ -13,9 +13,9 @@ const NOTE_TEXT =
   'This is a budgetary estimate based on the system size and segment provided. ' +
   'Final pricing will be confirmed after a detailed site survey. The system specifications ' +
   'listed are indicative and may be revised based on roof type, structural assessment, and ' +
-  'shading analysis. Once accepted, an advance of 50% is required to lock in panel inventory ' +
-  'and start procurement. Subsequent milestones are payable as per the schedule confirmed in ' +
-  'the detailed proposal.';
+  'shading analysis. Once accepted, an advance payment is required to lock in panel inventory ' +
+  'and start procurement. Payment milestones are as per the schedule on this proposal — ' +
+  'final amounts will be confirmed in the detailed proposal after site survey.';
 
 interface NoteAndAccountPageProps {
   data: ProposalPDFData;

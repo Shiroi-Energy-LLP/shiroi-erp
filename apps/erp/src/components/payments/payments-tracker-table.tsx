@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, CalendarClock } from 'lucide-react';
 import { formatINR, shortINR } from '@repo/ui/formatters';
 import {
   Badge,
@@ -13,15 +13,18 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import type { PaymentTrackerRow, PaymentTrackerSummary } from '@/lib/payments-tracker-queries';
+import type { PaymentTrackerRow, PaymentTrackerSummary, PaymentScheduleFollowUp } from '@/lib/payments-tracker-queries';
 import { filterPaymentTrackerRows } from '@/lib/payments-tracker-queries';
 import { STATUS_LABEL } from '@/components/payments/payments-helpers';
+import { FollowUpDialog } from '@/components/payments/follow-up-dialog';
 
 interface Props {
   rows: PaymentTrackerRow[];
   allRows: PaymentTrackerRow[];
   summary: PaymentTrackerSummary;
   filter: string;
+  thisWeekCount?: number;
+  followUpsByProject?: Map<string, PaymentScheduleFollowUp[]>;
 }
 
 const FILTER_TABS = [
@@ -44,11 +47,21 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-export function PaymentsTrackerTable({ rows, allRows, summary, filter }: Props) {
+function formatDateShort(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    timeZone: 'Asia/Kolkata',
+  });
+}
+
+export function PaymentsTrackerTable({ rows, allRows, summary, filter, thisWeekCount = 0, followUpsByProject }: Props) {
   return (
     <div className="space-y-6">
       {/* KPI Strip */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="text-xs font-medium text-n-500 uppercase tracking-wider">
@@ -91,6 +104,23 @@ export function PaymentsTrackerTable({ rows, allRows, summary, filter }: Props) 
             </div>
           </CardContent>
         </Card>
+        {/* This Week card */}
+        <Link href="/payments/tracker?filter=this_week">
+          <Card className={`cursor-pointer transition-colors hover:bg-n-50 ${filter === 'this_week' ? 'border-amber-400 bg-amber-50/40' : ''}`}>
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <CalendarClock className="h-3.5 w-3.5 text-amber-600" />
+                <div className="text-xs font-medium text-n-500 uppercase tracking-wider">
+                  Expected This Week
+                </div>
+              </div>
+              <div className={`text-xl font-bold font-mono mt-1 ${thisWeekCount > 0 ? 'text-amber-700' : 'text-n-400'}`}>
+                {thisWeekCount}
+              </div>
+              <div className="text-[10px] text-n-400 mt-0.5">milestones</div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Filter badges */}
@@ -109,6 +139,15 @@ export function PaymentsTrackerTable({ rows, allRows, summary, filter }: Props) 
             </Link>
           );
         })}
+        {/* This Week badge */}
+        <Link href="/payments/tracker?filter=this_week">
+          <Badge
+            variant={filter === 'this_week' ? 'default' : 'outline'}
+            className="cursor-pointer"
+          >
+            Expected This Week ({thisWeekCount})
+          </Badge>
+        </Link>
       </div>
 
       {/* Main table */}
@@ -128,12 +167,13 @@ export function PaymentsTrackerTable({ rows, allRows, summary, filter }: Props) 
                   <TableHead className="whitespace-nowrap text-right">Received ₹</TableHead>
                   <TableHead className="whitespace-nowrap text-right">Remaining ₹</TableHead>
                   <TableHead className="whitespace-nowrap text-center">Days</TableHead>
+                  <TableHead className="whitespace-nowrap">Follow-Up</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10}>
+                    <TableCell colSpan={11}>
                       <EmptyState
                         icon={<DollarSign className="h-12 w-12" />}
                         title="No projects match this filter"
@@ -149,6 +189,13 @@ export function PaymentsTrackerTable({ rows, allRows, summary, filter }: Props) 
                         : row.days_since_order >= 30
                           ? 'bg-amber-100 text-amber-800'
                           : 'text-n-500';
+
+                    const milestones = followUpsByProject?.get(row.project_id) ?? [];
+
+                    // Show the earliest outstanding milestone with follow-up data
+                    const nextMilestone = milestones
+                      .filter((m) => m.amount > 0)
+                      .sort((a, b) => a.milestone_order - b.milestone_order)[0] ?? null;
 
                     return (
                       <TableRow key={row.project_id}>
@@ -232,6 +279,31 @@ export function PaymentsTrackerTable({ rows, allRows, summary, filter }: Props) 
                           >
                             {row.days_since_order}
                           </span>
+                        </TableCell>
+
+                        {/* Follow-Up column */}
+                        <TableCell>
+                          {nextMilestone ? (
+                            <div className="space-y-1 min-w-[130px]">
+                              <FollowUpDialog
+                                milestone={nextMilestone}
+                                projectCustomerName={row.customer_name}
+                              />
+                              {nextMilestone.expected_payment_date && (
+                                <div className="text-[10px] text-amber-700 font-medium flex items-center gap-0.5">
+                                  <CalendarClock className="h-2.5 w-2.5 inline" />
+                                  {formatDateShort(nextMilestone.expected_payment_date)}
+                                </div>
+                              )}
+                              {nextMilestone.follow_up_count > 0 && !nextMilestone.expected_payment_date && (
+                                <div className="text-[10px] text-n-500">
+                                  {nextMilestone.follow_up_count}× followed up
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-n-400">—</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

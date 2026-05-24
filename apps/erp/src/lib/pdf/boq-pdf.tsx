@@ -81,7 +81,7 @@ export function BoqPdf({ project, items, generatedBy, generatedAt }: BoqPdfProps
         {/* Letterhead */}
         <View style={{ marginBottom: 10 }}>
           <Text style={{ fontSize: 16, fontFamily: 'Helvetica-Bold', color: BRAND.green }}>
-            SHIROI ENERGY PRIVATE LIMITED
+            SHIROI ENERGY LLP
           </Text>
           <Text style={{ fontSize: 8, color: BRAND.gray500, marginTop: 2 }}>
             Solar EPC — Rooftop Solar, Chennai, Tamil Nadu
