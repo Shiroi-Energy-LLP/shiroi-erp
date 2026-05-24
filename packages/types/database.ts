@@ -3116,6 +3116,45 @@ export type Database = {
         }
         Relationships: []
       }
+      executive_briefing_log: {
+        Row: {
+          ai_model: string
+          ai_narrative: string
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          briefing_date: string
+          created_at: string
+          id: string
+          kpi_snapshot: Json
+          recipient_role: string
+          sent_at: string | null
+        }
+        Insert: {
+          ai_model: string
+          ai_narrative: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          briefing_date: string
+          created_at?: string
+          id?: string
+          kpi_snapshot: Json
+          recipient_role: string
+          sent_at?: string | null
+        }
+        Update: {
+          ai_model?: string
+          ai_narrative?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          briefing_date?: string
+          created_at?: string
+          id?: string
+          kpi_snapshot?: Json
+          recipient_role?: string
+          sent_at?: string | null
+        }
+        Relationships: []
+      }
       expense_categories: {
         Row: {
           code: string
@@ -10194,6 +10233,9 @@ export type Database = {
           boq_completed_at: string | null
           boq_sent_to_purchase_at: string | null
           boq_sent_to_purchase_by: string | null
+          boq_variance_narrative: string | null
+          boq_variance_narrative_at: string | null
+          boq_variance_narrative_model: string | null
           builder_civil_cleared: boolean
           builder_civil_cleared_at: string | null
           builder_name: string | null
@@ -10286,6 +10328,9 @@ export type Database = {
           boq_completed_at?: string | null
           boq_sent_to_purchase_at?: string | null
           boq_sent_to_purchase_by?: string | null
+          boq_variance_narrative?: string | null
+          boq_variance_narrative_at?: string | null
+          boq_variance_narrative_model?: string | null
           builder_civil_cleared?: boolean
           builder_civil_cleared_at?: string | null
           builder_name?: string | null
@@ -10378,6 +10423,9 @@ export type Database = {
           boq_completed_at?: string | null
           boq_sent_to_purchase_at?: string | null
           boq_sent_to_purchase_by?: string | null
+          boq_variance_narrative?: string | null
+          boq_variance_narrative_at?: string | null
+          boq_variance_narrative_model?: string | null
           builder_civil_cleared?: boolean
           builder_civil_cleared_at?: string | null
           builder_name?: string | null
@@ -12089,6 +12137,113 @@ export type Database = {
           }
           ]
       }
+      rag_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          content_hash: string
+          created_at: string
+          embedding: string
+          embedding_dim: number
+          embedding_model: string
+          heading_path: string[] | null
+          id: string
+          last_indexed_at: string
+          metadata: Json
+          source_id: string | null
+          source_path: string
+          source_type: string
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          content_hash: string
+          created_at?: string
+          embedding: string
+          embedding_dim?: number
+          embedding_model?: string
+          heading_path?: string[] | null
+          id?: string
+          last_indexed_at?: string
+          metadata?: Json
+          source_id?: string | null
+          source_path: string
+          source_type: string
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          content_hash?: string
+          created_at?: string
+          embedding?: string
+          embedding_dim?: number
+          embedding_model?: string
+          heading_path?: string[] | null
+          id?: string
+          last_indexed_at?: string
+          metadata?: Json
+          source_id?: string | null
+          source_path?: string
+          source_type?: string
+        }
+        Relationships: []
+      }
+      rag_query_log: {
+        Row: {
+          ai_answer: string | null
+          ai_model: string
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          caller_id: string | null
+          caller_role: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          query_text: string
+          retrieved_chunk_ids: string[]
+          thumbs_down_count: number
+          thumbs_up_count: number
+        }
+        Insert: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Update: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text?: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_query_log_caller_id_fkey"
+            columns: ["caller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       reconciliation_discrepancies: {
         Row: {
           difference: number | null
@@ -13623,6 +13778,66 @@ export type Database = {
           }
         ]
       }
+      task_suggestion_queue: {
+        Row: {
+          ai_task_description: string | null
+          ai_task_title: string | null
+          ai_tokens_used: number | null
+          created_at: string
+          created_task_id: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          processed_at: string | null
+          staleness_signal: string
+          status: string
+          suggested_assignee_employee_id: string | null
+        }
+        Insert: {
+          ai_task_description?: string | null
+          ai_task_title?: string | null
+          ai_tokens_used?: number | null
+          created_at?: string
+          created_task_id?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          processed_at?: string | null
+          staleness_signal: string
+          status?: string
+          suggested_assignee_employee_id?: string | null
+        }
+        Update: {
+          ai_task_description?: string | null
+          ai_task_title?: string | null
+          ai_tokens_used?: number | null
+          created_at?: string
+          created_task_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          processed_at?: string | null
+          staleness_signal?: string
+          status?: string
+          suggested_assignee_employee_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_suggestion_queue_created_task_id_fkey"
+            columns: ["created_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_suggestion_queue_suggested_assignee_employee_id_fkey"
+            columns: ["suggested_assignee_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       task_work_logs: {
         Row: {
           created_at: string | null
@@ -14766,6 +14981,94 @@ export type Database = {
           {
             foreignKeyName: "vip_contacts_relationship_owner_fkey"
             columns: ["relationship_owner"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      voice_report_log: {
+        Row: {
+          applied_at: string | null
+          asr_cost_inr: number | null
+          asr_provider: string
+          audio_storage_path: string | null
+          created_at: string
+          daily_site_report_id: string | null
+          detected_actions: Json
+          detected_project_id: string | null
+          error_message: string | null
+          expires_at: string
+          id: string
+          llm_tokens_in: number | null
+          llm_tokens_out: number | null
+          project_match_confidence: number | null
+          raw_transcript: string | null
+          sender_employee_id: string | null
+          sender_phone: string
+          status: string
+          structured_json: Json | null
+        }
+        Insert: {
+          applied_at?: string | null
+          asr_cost_inr?: number | null
+          asr_provider?: string
+          audio_storage_path?: string | null
+          created_at?: string
+          daily_site_report_id?: string | null
+          detected_actions?: Json
+          detected_project_id?: string | null
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          llm_tokens_in?: number | null
+          llm_tokens_out?: number | null
+          project_match_confidence?: number | null
+          raw_transcript?: string | null
+          sender_employee_id?: string | null
+          sender_phone: string
+          status?: string
+          structured_json?: Json | null
+        }
+        Update: {
+          applied_at?: string | null
+          asr_cost_inr?: number | null
+          asr_provider?: string
+          audio_storage_path?: string | null
+          created_at?: string
+          daily_site_report_id?: string | null
+          detected_actions?: Json
+          detected_project_id?: string | null
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          llm_tokens_in?: number | null
+          llm_tokens_out?: number | null
+          project_match_confidence?: number | null
+          raw_transcript?: string | null
+          sender_employee_id?: string | null
+          sender_phone?: string
+          status?: string
+          structured_json?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_report_log_daily_site_report_id_fkey"
+            columns: ["daily_site_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_site_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_report_log_detected_project_id_fkey"
+            columns: ["detected_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_report_log_sender_employee_id_fkey"
+            columns: ["sender_employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
@@ -16276,6 +16579,24 @@ export type Database = {
       plant_monitoring_detect_brand: {
         Args: { portal_url: string }
         Returns: string
+      }
+      rag_search: {
+        Args: {
+          min_sim?: number
+          query_embedding: string
+          source_types?: string[]
+          top_k?: number
+        }
+        Returns: {
+          content: string
+          heading_path: string[]
+          id: string
+          metadata: Json
+          similarity: number
+          source_id: string
+          source_path: string
+          source_type: string
+        }[]
       }
       reassign_orphan_invoice: {
         Args: {

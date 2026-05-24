@@ -2,7 +2,7 @@
  * process-document Edge Function — E6 real implementation
  *
  * Purpose: given a document_id, fetch the file from Supabase Storage,
- * extract text (PDF text-layer only for V1), generate an OpenAI embedding,
+ * extract text (PDF text-layer only for V1), generate a Jina embedding,
  * summarize with Claude, and persist back to documents row.
  *
  * V1 scope:
@@ -12,13 +12,13 @@
  *     for text PDFs and image PDFs. This is the most reliable path.
  *   - Images: Claude vision
  *   - DOCX/XLSX/CSV: treated as binary for now, skipped with status 'skipped'
- *   - Embedding: OpenAI text-embedding-3-small (1536 dims)
+ *   - Embedding: Jina jina-embeddings-v3 (1024 dims) — replaces OpenAI (mig 138)
  *   - Summary: Claude claude-sonnet-4-20250514 (1-2 sentences)
  *   - Idempotent: skip if extraction_status = 'done' (unless force=true)
  *
  * Manual steps (env vars that must be set in Supabase Dashboard > Edge Functions > Secrets):
  *   - ANTHROPIC_API_KEY
- *   - OPENAI_EMBEDDINGS_API_KEY
+ *   - JINA_API_KEY
  *
  * Trigger: HTTP POST. Called by:
  *   - scripts/extract-existing-documents.ts (backfill, runs in batches)
@@ -195,30 +195,37 @@ async function generateSummary(
 }
 
 async function generateEmbedding(
-  openaiKey: string,
+  jinaKey: string,
   text: string,
 ): Promise<number[] | null> {
   const op = '[generateEmbedding]';
+  // Jina max input is ~8192 tokens; truncate conservatively to 8000 chars
   const truncated = text.substring(0, 8000);
   try {
-    const res = await fetch('https://api.openai.com/v1/embeddings', {
+    const res = await fetch('https://api.jina.ai/v1/embeddings', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${openaiKey}`,
+        Authorization: `Bearer ${jinaKey}`,
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: truncated,
-        dimensions: 1536,
+        model: 'jina-embeddings-v3',
+        task: 'retrieval.passage',
+        input: [truncated],
       }),
     });
     if (!res.ok) {
-      console.error(`${op} OpenAI error`, { status: res.status });
+      const body = await res.text().catch(() => '');
+      console.error(`${op} Jina error`, { status: res.status, body: body.substring(0, 200) });
       return null;
     }
     const json = await res.json() as { data: Array<{ embedding: number[] }> };
-    return json.data?.[0]?.embedding ?? null;
+    const embedding = json.data?.[0]?.embedding ?? null;
+    if (embedding && embedding.length !== 1024) {
+      console.error(`${op} Unexpected embedding dimension`, { dim: embedding.length });
+      return null;
+    }
+    return embedding;
   } catch (e) {
     console.error(`${op} threw`, { error: e instanceof Error ? e.message : String(e) });
     return null;
@@ -252,7 +259,7 @@ Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceKey = Deno.env.get('SUPABASE_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
-  const openaiKey = Deno.env.get('OPENAI_EMBEDDINGS_API_KEY');
+  const jinaKey = Deno.env.get('JINA_API_KEY');
 
   if (!supabaseUrl || !serviceKey) {
     console.error(`${op} Missing SUPABASE_URL or service key`);
@@ -398,12 +405,12 @@ Deno.serve(async (req: Request) => {
       ? await generateSummary(anthropicKey, extractedText, document.name)
       : null;
 
-    // Generate embedding (only if text available + OpenAI key configured)
+    // Generate embedding (only if text available + Jina key configured)
     let embedding: number[] | null = null;
-    if (extractedText && openaiKey) {
-      embedding = await generateEmbedding(openaiKey, extractedText);
-    } else if (extractedText && !openaiKey) {
-      console.warn(`${op} OPENAI_EMBEDDINGS_API_KEY not set — skipping embedding. Set in Supabase Dashboard > Edge Functions > Secrets.`);
+    if (extractedText && jinaKey) {
+      embedding = await generateEmbedding(jinaKey, extractedText);
+    } else if (extractedText && !jinaKey) {
+      console.warn(`${op} JINA_API_KEY not set — skipping embedding. Set in Supabase Dashboard > Edge Functions > Secrets.`);
     }
 
     // Persist results
@@ -450,7 +457,7 @@ Deno.serve(async (req: Request) => {
         has_embedding: !!embedding,
         pending_manual_steps: [
           !anthropicKey && 'Set ANTHROPIC_API_KEY in Supabase Dashboard > Edge Functions > Secrets',
-          !openaiKey && 'Set OPENAI_EMBEDDINGS_API_KEY in Supabase Dashboard > Edge Functions > Secrets',
+          !jinaKey && 'Set JINA_API_KEY in Supabase Dashboard > Edge Functions > Secrets',
         ].filter(Boolean),
       }),
       { status: 200, headers: { 'content-type': 'application/json' } },
