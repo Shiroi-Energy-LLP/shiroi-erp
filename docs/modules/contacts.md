@@ -13,13 +13,15 @@ Contacts V2 treats a **person** (`contacts`) and an **organization** (`companies
 /contacts                    ← list (DataTable, CONTACT_COLUMNS, lifecycle-stage filter)
 /contacts/new                ← create contact
 /contacts/[id]               ← contact detail (company roles, linked entities, activity timeline)
-/contacts/[id]/edit          ← edit contact
+/contacts/[id]/edit          ← dedicated edit page (ContactForm pre-populated; back link to detail)
 
 /companies                   ← list (DataTable, COMPANY_COLUMNS, segment filter)
 /companies/new               ← create company
 /companies/[id]              ← company detail (people, linked leads/projects, activity timeline)
-/companies/[id]/edit         ← edit company
+/companies/[id]/edit         ← dedicated edit page (CompanyForm pre-populated; back link to detail)
 ```
+
+> Note: both `/contacts/[id]/edit` and `/companies/[id]/edit` are real, fully-implemented routes confirmed in `apps/erp/src/app/(erp)/contacts/[id]/edit/page.tsx` and `companies/[id]/edit/page.tsx`. Edit is NOT inline on the detail page.
 
 Both list pages use the shared `data-table` component with DB-backed saved views from `table_views` (migration 018) — filter / column-visibility / sort state is persisted per user per entity.
 

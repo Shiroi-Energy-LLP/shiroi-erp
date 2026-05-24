@@ -42,16 +42,26 @@ export async function generateCustomerCheckinsForWeek(): Promise<ActionResult<Cu
 
   // Auth + role gate — admin client bypasses RLS, so we must check ourselves.
   const userClient = await createClient();
-  const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const { data: { user }, error: authErr } = await userClient.auth.getUser();
+  if (authErr || !user) return err('Not authenticated');
 
-  const { data: profile } = await userClient
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (!profile || !ALLOWED_ROLES.has(profile.role)) {
-    return err('Your role cannot generate customer outreach');
+  // Service-role JWTs (used by n8n Monday cron) have no profiles row.
+  // Detect them via app_metadata.role or the top-level role field and skip
+  // the profile lookup — service role is implicitly trusted here because
+  // this action is called from a server-only context with a pre-shared secret.
+  const isServiceRole =
+    (user.app_metadata as Record<string, unknown> | undefined)?.['role'] === 'service_role' ||
+    (user as unknown as Record<string, unknown>)['role'] === 'service_role';
+
+  if (!isServiceRole) {
+    const { data: profile } = await userClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (!profile || !ALLOWED_ROLES.has(profile.role)) {
+      return err('Your role cannot generate customer outreach');
+    }
   }
 
   const supabase = createAdminClient();

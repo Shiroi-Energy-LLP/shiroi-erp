@@ -1454,8 +1454,48 @@ export async function updateMilestoneStatus(input: {
     return { success: false, error: error.message };
   }
 
+  if (input.status === 'completed') {
+    void emitMilestoneComplete(input.projectId, input.milestoneId);
+  }
+
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
+}
+
+async function emitMilestoneComplete(projectId: string, milestoneId: string): Promise<void> {
+  const op = '[emitMilestoneComplete]';
+  try {
+    const supabase = await createClient();
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id, project_number, customer_name, customer_phone')
+      .eq('id', projectId)
+      .maybeSingle();
+    if (!project) return;
+
+    const { data: milestone } = await supabase
+      .from('project_milestones')
+      .select('milestone_name, actual_end_date')
+      .eq('id', milestoneId)
+      .maybeSingle();
+    if (!milestone) return;
+
+    await emitErpEvent('project.milestone_complete', {
+      project_id: project.id,
+      project_number: project.project_number,
+      customer_name: project.customer_name,
+      customer_phone: project.customer_phone,
+      milestone_name: milestone.milestone_name,
+      completed_at: milestone.actual_end_date ?? new Date().toISOString().split('T')[0],
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      projectId,
+      milestoneId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 // ── Quick Task: Create from Execution step ──

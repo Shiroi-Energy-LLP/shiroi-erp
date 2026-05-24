@@ -420,6 +420,374 @@
               },
               "renameOutput": true,
               "outputKey": "employee.created"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-customer-checkin-due",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "customer_checkin.due",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "customer_checkin.due"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-lead-drive-folder-requested",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "lead.drive_folder_requested",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead.drive_folder_requested"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-proposal-accepted-by-customer",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "proposal.accepted_by_customer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "proposal.accepted_by_customer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-lead-won",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "lead.won",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead.won"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-project-milestone-complete",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "project.milestone_complete",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "project.milestone_complete"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-net-metering-application-submitted",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "net_metering.application_submitted",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "net_metering.application_submitted"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-vendor-payment-due",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "vendor_payment.due",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "vendor_payment.due"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-invoice-overdue",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "invoice.overdue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "invoice.overdue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-document-expiring",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "document.expiring",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "document.expiring"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-lead-stale-24h",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "lead.stale_24h",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead.stale_24h"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-lead-stage-changed",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "lead.stage_changed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead.stage_changed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-lead-quick-quote-sent",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "lead.quick_quote_sent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead.quick_quote_sent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-proposal-rejected",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "proposal.rejected",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "proposal.rejected"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-purchase-order-created",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "purchase_order.created",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "purchase_order.created"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-workflow-error",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "workflow.error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "workflow.error"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-om-ticket-resolved",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "om_ticket.resolved",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "om_ticket.resolved"
             }
           ]
         },
@@ -829,6 +1197,320 @@
         700,
         2000
       ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_CUSTOMER_CHECKIN_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-customer-checkin-due",
+      "name": "→ 30 Customer check-in",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 2120]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_DRIVE_FOLDER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-lead-drive-folder-requested",
+      "name": "→ 29 Drive folder create",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 2240]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_PROPOSAL_SENT_TO_CUSTOMER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-proposal-accepted-by-customer",
+      "name": "→ 40 Customer proposal sent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 2360],
+      "notes": "TODO: proposal.accepted_by_customer — route to dedicated workflow when built. Currently pointing to 40 as the closest customer-drip touchpoint."
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_CUSTOMER_ORDER_RECEIVED_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-lead-won",
+      "name": "→ 41 Customer order received",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 2480]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_CUSTOMER_INSTALL_MILESTONE_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-project-milestone-complete",
+      "name": "→ 43 Customer install milestone",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 2600]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_CUSTOMER_NET_METERING_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-net-metering-application-submitted",
+      "name": "→ 42 Customer net metering applied",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 2720]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-vendor-payment-due",
+      "name": "→ 55 Global error handler (vendor_payment.due TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 2840],
+      "notes": "TODO: vendor_payment.due — route to dedicated workflow when built"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-invoice-overdue",
+      "name": "→ 55 Global error handler (invoice.overdue TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 2960],
+      "notes": "TODO: invoice.overdue — route to dedicated workflow when built"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-document-expiring",
+      "name": "→ 55 Global error handler (document.expiring TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 3080],
+      "notes": "TODO: document.expiring — route to dedicated workflow when built"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-lead-stale-24h",
+      "name": "→ 55 Global error handler (lead.stale_24h TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 3200],
+      "notes": "TODO: lead.stale_24h — route to dedicated workflow when built (currently cron-driven; if converted to event, wire here)"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-lead-stage-changed",
+      "name": "→ 55 Global error handler (lead.stage_changed TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 3320],
+      "notes": "TODO: lead.stage_changed — route to dedicated workflow when built"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-lead-quick-quote-sent",
+      "name": "→ 55 Global error handler (lead.quick_quote_sent TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 3440],
+      "notes": "TODO: lead.quick_quote_sent — route to dedicated workflow when built"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-proposal-rejected",
+      "name": "→ 55 Global error handler (proposal.rejected TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 3560],
+      "notes": "TODO: proposal.rejected — route to dedicated workflow when built"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-purchase-order-created",
+      "name": "→ 55 Global error handler (purchase_order.created TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 3680],
+      "notes": "TODO: purchase_order.created — route to dedicated workflow when built"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-workflow-error",
+      "name": "→ 55 Global error handler (workflow.error)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 3800]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-om-ticket-resolved",
+      "name": "→ 55 Global error handler (om_ticket.resolved TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 3920],
+      "notes": "TODO: om_ticket.resolved — route to dedicated workflow when built"
     }
   ],
   "connections": {
@@ -963,6 +1645,118 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "→ 30 Customer check-in",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 29 Drive folder create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 40 Customer proposal sent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 41 Customer order received",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 43 Customer install milestone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 42 Customer net metering applied",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (vendor_payment.due TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (invoice.overdue TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (document.expiring TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (lead.stale_24h TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (lead.stage_changed TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (lead.quick_quote_sent TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (proposal.rejected TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (purchase_order.created TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (workflow.error)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (om_ticket.resolved TODO)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
@@ -989,7 +1783,7 @@
     }
   ],
   "meta": {
-    "description": "Single-ingress router for all ERP → n8n events. Receives POST /webhook/erp-event-bus {event, emitted_at, payload}, routes on body.event to the appropriate sub-workflow. 16 events routed (Tier 1 webhook events + bug_report); unknown events fall through to Log unhandled event for observability. Tier 1 cron workflows (03 lead stale, 08 vendor payment due) are self-triggered — they don't flow through this router."
+    "description": "Single-ingress router for all ERP → n8n events. Receives POST /webhook/erp-event-bus {event, emitted_at, payload}, routes on body.event to the appropriate sub-workflow. 33 events routed (all ErpEventName values); unknown events fall through to Log unhandled event for observability. Cron workflows (03 lead stale, 08 vendor payment due) are self-triggered — they don't flow through this router. Events with no dedicated downstream workflow are routed to 55-global-error-handler with a TODO note."
   },
   "pinData": {}
 }

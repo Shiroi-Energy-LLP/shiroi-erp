@@ -170,7 +170,7 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 ## Phase F additions (May 2026)
 
 ### F3 — GST e-invoice framework (`generateEInvoice`)
-**Migration 130** added GST e-invoice columns to `invoices`: `irn` (Invoice Reference Number from NIC), `ack_number`, `ack_date`, `signed_qr_code`, `e_invoice_status` (`'pending'` / `'generated'` / `'failed'` / `'awaiting_gsp'`). Partial index on `e_invoice_status WHERE NOT NULL` keeps the index slim — vast majority of invoices won't need IRN generation.
+**Migration 130** added GST e-invoice columns to `invoices`: `irn` (Invoice Reference Number from NIC), `ack_number`, `ack_date`, `signed_qr_code`, `e_invoice_status` CHECK `IN ('not_required', 'pending', 'generated', 'cancelled', 'failed')`, `e_invoice_error`. Partial index on `e_invoice_status WHERE NOT NULL` keeps the index slim — vast majority of invoices won't need IRN generation. Note: there is no `'awaiting_gsp'` status value in the actual constraint.
 
 **Pure builder** at `apps/erp/src/lib/gst/einvoice-builder.ts` — `buildEInvoicePayload(invoice, customer, seller, isIntraState)` returns a NIC-compliant JSON object: handles B2B / B2C, supply-only / mixed (supply + works contract), intra-state CGST+SGST vs inter-state IGST split. 15 vitest cases cover tax math edge cases — no DB / network deps. `decimal.js` throughout for money arithmetic.
 

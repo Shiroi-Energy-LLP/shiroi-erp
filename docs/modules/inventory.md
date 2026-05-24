@@ -79,6 +79,7 @@ apps/erp/src/components/inventory/
 - **No BOQ actuals tie-back**: `stock_pieces` does not reference `project_boq_items.id`. Issued-vs-BOQ reconciliation has to go through `project_id` + `item_category` matching, or through the DC/PO path — there is no direct join.
 - **Scrap via prompt()**: the detail page's "Mark as Scrap" button uses browser `prompt()` for the reason. Good enough for now, not ideal UX.
 - **Allocation side-effect**: `allocateToProject` sets `current_location = 'on_site'` unconditionally. Caller must not use it for warehouse reservation — there is no separate "reserved" state.
+- **Known limitation — two independent cut-length systems:** `inventory_cut_records` (mig 121) does not link to `stock_pieces` (mig 006a). There is no FK between them. Site-cut consumption logged by site supervisors via the Materials tab (cable/conduit lengths, quantity of rolls) is recorded in `inventory_cut_records` only — it does not deduct from piece-level `stock_pieces.current_length_m`. The two tables are independent ledgers. Any reconciliation between logged cuts and warehouse stock must be done manually or through a future bridging feature.
 
 ## Recent Changes
 

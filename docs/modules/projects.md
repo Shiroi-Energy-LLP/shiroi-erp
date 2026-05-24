@@ -1,11 +1,11 @@
 # Projects Module
 
-> 12-stage project lifecycle driven by the PM. Covers BOI (multi-version, lockable), BOQ (budget analysis), Delivery Challans, Execution (10 milestones, tasks), Actuals (voucher tracking), QC (7-section structured form), Commissioning (string-level tests, signatures), and Documents.
+> 13-tab project lifecycle driven by the PM. Covers BOI (multi-version, lockable), BOQ (budget analysis), Delivery Challans, Execution (10 milestones, tasks), Actuals (voucher tracking), QC (7-section structured form), Commissioning (string-level tests, signatures), Progress (weighted completion %), Materials (site cut-length log), Certificates (DC digital signatures), and a "More" dropdown for Milestones / Delays / Change Orders / Reports.
 > Related modules: [purchase](./purchase.md) (BOQ → vendor POs), [liaison](./liaison.md) (CEIG step), [finance](./finance.md) (voucher approvals, invoicing). See also master reference §7.
 
 ## Overview
 
-A project is spawned automatically when a proposal is accepted — the `create_project_from_accepted_proposal` trigger fires on `proposals.status = 'accepted'` and writes a new row into `projects`. Winning a lead cascades through `trg_mark_proposal_accepted_on_lead_won` (migration 055) into the same trigger, so Marketing never has to touch projects directly. From that point forward Manivel (the PM) drives a 12-stage stepper: Details → Survey → BOI → BOQ → Delivery → Execution → Actuals → QC → Liaison → Commissioning → Free AMC → Documents. BOI and Actuals are immutable-once-locked (`boi_locked`, `actuals_locked`) to stop post-facto budget drift. The BOQ step hands off to Purchase (`Send to Purchase` bulk-updates BOQ items from `yet_to_finalize` → `yet_to_place`), Liaison owns CEIG + TNEB, Actuals routes vouchers through Finance, and Commissioning triggers a plant-monitoring credential sync. The final Documents tab is the single pane of glass the customer, O&M, and finance all pull from.
+A project is spawned automatically when a proposal is accepted — the `create_project_from_accepted_proposal` trigger fires on `proposals.status = 'accepted'` and writes a new row into `projects`. Winning a lead cascades through `trg_mark_proposal_accepted_on_lead_won` (migration 055) into the same trigger, so Marketing never has to touch projects directly. From that point forward Manivel (the PM) drives a 13-tab workflow: Details → Survey → BOI → BOQ → Delivery → Execution → QC → Liaison → Commissioning → Free AMC → Progress → Materials → Certificates (plus a "More" dropdown housing Milestones, Delays, Change Orders, and Reports). The old "Actuals" tab is now the standalone `/expenses` module (see stage 7 below); it is no longer a primary tab. BOI and Actuals are immutable-once-locked (`boi_locked`, `actuals_locked`) to stop post-facto budget drift. The BOQ step hands off to Purchase (`Send to Purchase` bulk-updates BOQ items from `yet_to_finalize` → `yet_to_place`), Liaison owns CEIG + TNEB, Actuals routes vouchers through Finance, and Commissioning triggers a plant-monitoring credential sync. The final Documents tab is the single pane of glass the customer, O&M, and finance all pull from.
 
 ## Project Status Enum
 
@@ -15,7 +15,7 @@ Migration 031 collapsed 11→8 statuses:
 
 Status is editable in-place in the `ProjectHeader` dropdown. Change is audited through `log_project_status_change` (which looks up `employees.id` via `profile_id = auth.uid()` — see migration 031).
 
-## Stepper (12 stages)
+## Tabs (13 — in order)
 
 ### 1. Details
 
@@ -66,7 +66,7 @@ Milestones come from `execution_milestones_master` (migration 042) — a lookup 
 
 11-col task table per project: Task Name, Milestone, Assigned To, Assigned Date, Status (Open/Closed inline toggle), Priority, Due Date, Notes, Done By, Activity Log (expandable row), Actions. Per-milestone completion % auto-calculated from task completion ratio. Planned / Actual milestone dates editable. Tasks without a `milestone_id` appear in a separate "Other Tasks" group so nothing is invisible.
 
-### 7. Actuals
+### 7. Actuals (read-only; entry via `/expenses`)
 
 **Voucher entry** now happens in the standalone `/expenses` module (migration 066). The Actuals tab embeds a read-only `SiteExpensesReadonly` view filtered to the project. To submit a voucher, go to `/expenses` → `+ Add Expense` and select this project. Vouchers flow through the 3-stage project-linked workflow (submitted → verified → approved).
 
@@ -102,11 +102,27 @@ Multi-string electrical test table (Inverter No / String No / Vmp / Isc / Polari
 
 Status: `draft → submitted → finalized`. `finalized` locks the report.
 
-### 11. Free AMC
+### 11. Progress (tab: `?tab=completion`)
+
+New in migs 121–122. `CompletionChecklist` component — 10 weighted components per project (`project_completion_items`) with `get_project_completion_pct` RPC. See **Known Gotchas** for the `handover` weight bug.
+
+### 12. Free AMC
 
 Auto-creates 3 scheduled visits on first AMC contract of type `free_amc`. Free AMC typically covers months 1 / 6 / 12 post-commissioning. See [om.md](./om.md) for full AMC module (V4, contract-centric table).
 
-### 12. Documents
+### 13. Materials (tab: `?tab=materials`)
+
+New in mig 121. `CutLengthTab` surfaces `inventory_cut_records` per project — site supervisors log cable/conduit cuts by material type, specification, length, and rolls. Summary strip shows total meters per material type via `get_project_cable_summary` RPC. Independent of `stock_pieces` (no FK — see inventory.md).
+
+### 14. Certificates (tab: `?tab=certificates`)
+
+New in mig 122. `DcCertificatesPanel` — records DC certificates (`dc_certificates` table, UNIQUE per project + certificate_type) with typed customer name + phone + notes. `signDcCertificate` action enforces immutability at app level. **DB-level gate added in mig 137**: `dc_certs_update` policy now includes `USING (signed_at IS NULL) WITH CHECK (signed_at IS NULL)` — a signed certificate cannot be overwritten via direct DB update (authenticated role). Service-role is the intended admin escape hatch.
+
+### (More dropdown) — Milestones, Delays, Change Orders, Reports
+
+Auxiliary sub-routes under `/projects/[id]/milestones`, `/delays`, `/change-orders`, `/reports`. Surfaced via the "More ▾" dropdown in the tab bar (Radix `DropdownMenu`).
+
+### Documents
 
 12 category boxes as separate Cards: Customer Documents, Site Photos (auto-rotating slideshow), AutoCAD/Design, Layouts/Designs, Purchase Orders, Invoices, Delivery Challans, Warranty Cards, Excel/Costing, Documents/Approvals, SESAL, General.
 
@@ -131,7 +147,7 @@ Drag-and-drop recategorization uses Supabase Storage `.move()` — which is an U
 ```
 apps/erp/src/app/(erp)/projects/
   page.tsx                    ← list with 8-status filter
-  [id]/page.tsx               ← detail with 12-stage stepper
+  [id]/page.tsx               ← detail with 13-tab workflow
 
 apps/erp/src/components/projects/
   detail/project-stepper.tsx
@@ -188,8 +204,9 @@ API routes:
   - `project_completion_items` (10 components per project with weights summing to 100, weighted RPC `get_project_completion_pct`) + `CompletionChecklist` component on the Progress tab.
   - `inventory_cut_records` (lives in inventory.md but surfaces here via `CutLengthTab` on the Materials tab).
   - `projects.handover_pdf_path` column + `/api/projects/[id]/handover-pdf` route + `generateHandoverPackPdf` server action (3-page react-pdf doc rendered in-process, uploaded to `project-files/handover-packs/`, returns 1-hour signed URL).
-  - `dc_certificates` (UNIQUE per project + certificate_type) + `signDcCertificate` action + `DcCertificatesPanel` on the Certificates tab. Mig 134 added an immutability gate (`signed_at IS NOT NULL` → refuse re-sign) after the 2026-05-24 review found the original upsert pattern silently overwrote signatures.
-- **Migration 134** — review-pass fixes touching this module: DC-certificate immutability, attendance RLS lockdown (HR module but reaches here via leave tracking), `inventory_cut_records` UPDATE policy.
+  - `dc_certificates` (UNIQUE per project + certificate_type) + `signDcCertificate` action + `DcCertificatesPanel` on the Certificates tab. App-level immutability gate added in the 2026-05-24 review (`dc-certificate-actions.ts:50-68` refuses re-sign when `signed_at IS NOT NULL`). **DB-level enforcement added in mig 137** — not mig 134. Mig 134 only added the `inventory_cut_records` UPDATE policy; the DC-cert RLS gate (`USING (signed_at IS NULL) WITH CHECK (signed_at IS NULL)`) arrived in mig 137.
+- **Migration 134** — review-pass fixes: `inventory_cut_records` UPDATE policy (typo corrections), `customer_message_log` RLS, attendance `WITH CHECK` lockdown (HR module).
+- **Migration 137** — DC-cert `dc_certs_update` policy wrapped in `USING (signed_at IS NULL)` — DB-level immutability gate. Also fixed `get_liaison_summary()` role gate and added `proposal_total_sanity` CHECK.
 - **`(public)/p/[token]/pdf/route.ts`** (2026-05-24) — public PDF route for the customer proposal portal (lives in sales.md; cross-referenced here because the same `proposal-files` bucket is used).
 - `docs/archive/projects-dashboard-notes.md` — Manivel's original PM workflow intent and data-model mapping
 - `docs/archive/CLAUDE_MD_2026-04-17_ARCHIVED.md` — historical migration + feature timeline

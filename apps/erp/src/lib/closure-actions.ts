@@ -31,6 +31,7 @@ import {
   computeSnapshotFromValues,
   type MarginSnapshot,
 } from './closure-helpers';
+import { emitErpEvent } from './n8n/emit';
 
 // Re-export type so existing callers that imported types from this file
 // (notably components/sales/closure-band-badge.tsx on the `Band` type)
@@ -219,6 +220,7 @@ export async function attemptWon(
 
     revalidateTag('lead-stage-counts');
     console.log(`${op} Lead ${leadId} flipped to won (green band, margin=${snapshot.grossMargin ?? 'n/a (no BOM cost)'}%)`);
+    void emitLeadWon(leadId);
     return ok({ outcome: 'won', newStatus: 'won' });
   } catch (e) {
     console.error(`${op} threw`, e);
@@ -301,6 +303,7 @@ export async function markWonSkipMargin(
       `${op} Lead ${leadId} marked Won (margin skipped by employee ${employee.id}, reason: ${reason ?? 'none'})`,
     );
 
+    void emitLeadWon(leadId);
     revalidateTag('lead-stage-counts');
     revalidatePath(`/sales/${leadId}`);
     revalidatePath('/sales');
@@ -380,6 +383,7 @@ export async function approveClosure(approvalId: string): Promise<ActionResult<n
 
     revalidateTag('lead-stage-counts');
     console.log(`${op} Approval ${approvalId} approved, lead ${approval.lead_id} flipped to won`);
+    void emitLeadWon(approval.lead_id);
     return ok(null);
   } catch (e) {
     console.error(`${op} threw`, e);
@@ -433,5 +437,46 @@ export async function rejectClosure(
   } catch (e) {
     console.error(`${op} threw`, e);
     return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+/**
+ * Fire-and-forget enrichment: fetch lead + contacts and emit lead.won event.
+ * Called from all three won-transition paths (green-band, skip-margin, founder-approval).
+ */
+async function emitLeadWon(leadId: string): Promise<void> {
+  const op = '[emitLeadWon]';
+  try {
+    const supabase = await createClient();
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('id, customer_name, phone, channel_partner_id')
+      .eq('id', leadId)
+      .maybeSingle();
+    if (!lead) return;
+
+    // Project may not yet exist at the moment of this emit (DB trigger creates it
+    // asynchronously). Look it up non-blocking; pass null if not yet created.
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('lead_id', leadId)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    await emitErpEvent('lead.won', {
+      lead_id: lead.id,
+      customer_name: lead.customer_name,
+      customer_phone: lead.phone,
+      channel_partner_id: lead.channel_partner_id ?? null,
+      won_at: new Date().toISOString(),
+      project_id: project?.id ?? null,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      leadId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
   }
 }

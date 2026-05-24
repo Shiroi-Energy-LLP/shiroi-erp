@@ -59,9 +59,46 @@ export async function createNetMeteringApplication(input: {
     return { success: false, error: error.message };
   }
 
+  void emitNetMeteringApplicationSubmitted(input.projectId);
   revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
+}
+
+async function emitNetMeteringApplicationSubmitted(projectId: string): Promise<void> {
+  const op = '[emitNetMeteringApplicationSubmitted]';
+  try {
+    const supabase = await createClient();
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id, project_number, customer_name, customer_phone, site_city')
+      .eq('id', projectId)
+      .maybeSingle();
+    if (!project) return;
+
+    const { data: nma } = await supabase
+      .from('net_metering_applications')
+      .select('id, discom_name')
+      .eq('project_id', projectId)
+      .maybeSingle();
+    if (!nma) return;
+
+    await emitErpEvent('net_metering.application_submitted', {
+      nma_id: nma.id,
+      project_id: project.id,
+      customer_name: project.customer_name,
+      customer_phone: project.customer_phone,
+      tneb_zone: project.site_city ?? null,
+      discom_name: nma.discom_name,
+      submitted_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      projectId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 /**

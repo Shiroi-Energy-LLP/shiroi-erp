@@ -242,6 +242,66 @@ export async function approveQueueItem(
         break;
       }
 
+      case 'lead': {
+        // Marketing chat extracts prospective solar customers. Map to a leads row.
+        // Note: leads.source is an enum — 'whatsapp_marketing_chat' doesn't exist,
+        // so we use 'social_media' as the closest valid value.
+        const leadPhone = (data['phone'] as string | undefined) ?? null;
+        const leadName = (data['customer_name'] as string | undefined) ??
+          (data['name'] as string | undefined) ??
+          (item.sender_name as string) ??
+          'Unknown';
+
+        if (!leadPhone) {
+          // Without a phone number we can't create a lead or dedupe reliably.
+          // Mark approved with no insert — will surface as a contact instead.
+          break;
+        }
+
+        // Dedupe: check if a lead with this phone already exists.
+        const normalizedPhone = leadPhone.replace(/[\s\-+]/g, '').slice(-10);
+        const { data: existingLead } = await supabase
+          .from('leads')
+          .select('id, customer_name')
+          .ilike('phone', `%${normalizedPhone}`)
+          .limit(1);
+
+        if (existingLead && existingLead.length > 0) {
+          const dup = existingLead[0] as { id: string; customer_name: string };
+          // Surface the duplicate rather than creating another row.
+          insertedTable = 'leads';
+          insertedId = dup.id;
+          break;
+        }
+
+        // Resolve segment — extractor may provide it; default to residential.
+        const rawSegment = data['segment'] as string | undefined;
+        const validSegments = new Set(['residential', 'commercial', 'industrial']);
+        const segment = validSegments.has(rawSegment ?? '')
+          ? (rawSegment as 'residential' | 'commercial' | 'industrial')
+          : 'residential';
+
+        const { data: leadData, error: leadErr } = await supabase
+          .from('leads')
+          .insert({
+            id: crypto.randomUUID(),
+            customer_name: leadName,
+            phone: leadPhone,
+            source: 'social_media', // closest enum value to whatsapp_marketing_chat
+            segment,
+            status: 'new',
+            assigned_to: null,
+            estimated_size_kwp: (data['estimated_size_kwp'] as number | undefined) ?? null,
+            notes: `WhatsApp import (${item.chat_profile as string}). ${(data['notes'] as string | undefined) ?? ''}`.trim(),
+          })
+          .select('id')
+          .single();
+        if (leadErr) throw new Error(leadErr.message);
+        insertedTable = 'leads';
+        insertedId = (leadData as { id: string } | null)?.id ?? null;
+        break;
+      }
+
       // Financial types without direct table insert — mark approved for manual entry
       case 'purchase_order':
       case 'vendor_payment':

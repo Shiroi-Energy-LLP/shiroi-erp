@@ -149,11 +149,13 @@ supabase/functions/inverter-poll/   (Deno Edge Function)
 
 ### E13/E14 — Microlearning Engine (migrations 128)
 
+**E13 (learning_modules) + E14 (onboarding_progress) — schema only; no admin UI; no learner UI; not surfaced anywhere in the app today.** Tables exist (mig 128) + 5 seed modules inserted. Surfacing requires a future build.
+
 - `learning_modules` (title, body_md, category, target_role, difficulty CHECK, onboarding_track CHECK, quiz_questions JSONB, pass_score_pct)
 - `learning_progress` (employee_id, module_id, sent_at, completed_at, quiz_score, passed; UNIQUE per employee+module)
 - `onboarding_progress` (employee_id, onboarding_track, modules_total/completed/passed, completion_pct; UNIQUE per employee+track)
 - 5 seed modules: Solar Panel Safety, Inverter Installation (Tamil), Customer Communication, EHS Emergency Response, Basic Electrical Safety
-- Admin UI for learning modules and onboarding progress: **pending** (tables and seed data exist)
+- No routes exist for E13/E14. No admin can create/edit modules. No employee can view or complete modules. The n8n daily-question WhatsApp delivery (9am) described in `hr.md` uses the older `training_questions` + `employee_question_progress` stack (spaced repetition), which is separate from the `learning_modules` schema here.
 
 ## Phase F additions (May 2026)
 

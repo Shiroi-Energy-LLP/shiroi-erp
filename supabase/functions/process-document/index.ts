@@ -300,11 +300,32 @@ Deno.serve(async (req: Request) => {
 
   const strategy = inferStrategy(document.mime_type);
 
-  // Mark as processing
-  await supabase
+  // CAS: claim the row atomically — only flip pending|skipped|failed → processing.
+  // If another worker (e.g. n8n cron + backfill script running concurrently) already
+  // flipped this row to 'processing', the WHERE clause won't match and data will be [].
+  // That's our signal to exit early and avoid burning duplicate Anthropic + OpenAI quota.
+  const { data: claimedRows, error: claimErr } = await supabase
     .from('documents')
-    .update({ extraction_status: 'processing' })
-    .eq('id', document.id);
+    .update({ extraction_status: 'processing', extracted_at: new Date().toISOString() })
+    .eq('id', document.id)
+    .in('extraction_status', ['pending', 'skipped', 'failed'])
+    .select('id');
+
+  if (claimErr) {
+    console.error(`${op} claim failed`, { documentId: document.id, code: claimErr.code, message: claimErr.message, timestamp: new Date().toISOString() });
+    return new Response(JSON.stringify({ error: 'claim_failed' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  if (!claimedRows || claimedRows.length === 0) {
+    // Another worker already claimed this document — exit cleanly without doing duplicate work.
+    console.log(`${op} already claimed by another worker, skipping`, { documentId: document.id, timestamp: new Date().toISOString() });
+    return new Response(JSON.stringify({ skipped: true, reason: 'already_claimed' }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   // Skip non-text/non-image files
   if (strategy === 'skip') {
