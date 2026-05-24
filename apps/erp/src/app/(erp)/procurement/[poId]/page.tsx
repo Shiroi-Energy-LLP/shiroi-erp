@@ -1,4 +1,5 @@
 import { getPurchaseOrder } from '@/lib/procurement-queries';
+import { getVendorBillsForPO } from '@/lib/material-requisition-queries';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -47,6 +48,7 @@ export default async function PODetailPage({ params }: PageProps) {
   const items = po.purchase_order_items ?? [];
   const deliveryChallans = po.vendor_delivery_challans ?? [];
   const payments = po.vendor_payments ?? [];
+  const linkedBills = await getVendorBillsForPO(poId);
 
   return (
     <div className="space-y-6">
@@ -90,6 +92,14 @@ export default async function PODetailPage({ params }: PageProps) {
                   {po.projects.project_number}
                 </Link>
                 <p className="text-xs text-[#7C818E]">{po.projects.customer_name}</p>
+                {po.project_id && (
+                  <Link
+                    href={`/procurement/reconciliation/${po.project_id}`}
+                    className="text-xs text-p-600 hover:underline"
+                  >
+                    View PO reconciliation →
+                  </Link>
+                )}
               </>
             ) : (
               <p className="text-sm text-gray-400">No project linked</p>
@@ -249,6 +259,64 @@ export default async function PODetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Associated Vendor Bills */}
+      <Card>
+        <CardContent className="pt-4">
+          <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+            Associated Vendor Bills ({linkedBills.length})
+          </h2>
+          {linkedBills.length === 0 ? (
+            <p className="text-xs text-gray-400 py-3">
+              No vendor bills linked to this PO yet. Bills are linked automatically when imported from Zoho, or can be linked manually from the{' '}
+              <Link href="/vendor-bills" className="text-[#00B050] hover:underline">vendor bills page</Link>.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bill #</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Paid</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead>Source</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {linkedBills.map((bill) => (
+                    <TableRow key={bill.id}>
+                      <TableCell>
+                        <Link href={`/vendor-bills/${bill.id}`} className="text-sm font-mono text-[#00B050] hover:underline">
+                          {bill.bill_number}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm">{formatDate(bill.bill_date)}</TableCell>
+                      <TableCell>
+                        <Badge variant={bill.status === 'paid' ? 'default' : bill.status === 'cancelled' ? 'destructive' : 'outline'} className="text-xs">
+                          {bill.status?.replace(/_/g, ' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm font-mono text-right">{formatINR(bill.total_amount)}</TableCell>
+                      <TableCell className="text-sm font-mono text-right text-green-700">{bill.amount_paid ? formatINR(bill.amount_paid) : '—'}</TableCell>
+                      <TableCell className="text-sm font-mono text-right text-amber-700">{formatINR(bill.balance_due)}</TableCell>
+                      <TableCell className="text-xs text-gray-400">
+                        {bill.zoho_bill_id ? (
+                          <Badge variant="outline" className="text-[10px]">Zoho</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">ERP</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Notes */}
       {po.notes && (

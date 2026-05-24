@@ -175,6 +175,44 @@ apps/erp/src/app/api/procurement/[poId]/pdf/route.ts
 - **PO cancel** is a status flip to `cancelled`, not a row delete — `purchase_orders` has no `deleted_at` column. The PO stays in the flat list (`/procurement/orders`) with a cancelled badge for audit.
 - **Vendor assignment on a received item** should be blocked upstream; the BOQ row is effectively locked once it moves past `ordered`.
 
+## C1 Additions (Migration 123, May 2026)
+
+Three gaps closed in the C1 overnight agent pass:
+
+### Material Requisitions
+
+New `material_requisitions` table — quick lightweight requests from site to PM before a formal PO exists:
+
+- Columns: `project_id`, `requested_by` (employee FK), `urgency` (enum: normal/urgent/critical), `status` (enum: pending/approved/converted/rejected), `items` (JSONB array of `{description, quantity, unit, notes?}`), `notes`, `reviewer_id`, `reviewed_at`, `review_notes`, `converted_po_id`.
+- Items are JSONB (not a separate table) because requisitions are quick operational requests, not formal BOQ — rates are set on the PO after conversion.
+- RLS: all authenticated roles read; site_supervisor / pm / purchase_officer / founder insert; pm / purchase_officer / founder approve/convert.
+- Server actions: `submitMaterialRequisition`, `reviewMaterialRequisition`, `convertRequisitionToPO`.
+- `convertRequisitionToPO` creates a draft PO with all items at ₹0 rate. The PM edits rates inline on the PO detail page afterward.
+- `/procurement/requisitions` — inbox page (urgency/status badges, item summary, Approve/Reject/Convert-to-PO actions).
+- `SubmitRequisitionButton` — client dialog for site_supervisor / PM to submit. Max 20 dynamic line items.
+- `RequisitionReviewActions` — client component with Approve, Reject (with mandatory reason), Convert-to-PO (vendor typeahead + payment terms).
+- Nav item `matRequisitions` added to Procurement section for founder, project_manager, purchase_officer, and to a new Procurement section for site_supervisor.
+
+### Vendor Bill Panel on PO Detail
+
+`/procurement/[poId]` now shows an "Associated Vendor Bills" section:
+- `getVendorBillsForPO(poId)` query uses the existing `vendor_bills.purchase_order_id` FK (migration 067) — no schema change needed.
+- Shows: bill_number, bill_date, status badge, total_amount, amount_paid, balance_due, Zoho/ERP source badge.
+- "View PO reconciliation →" link on the PO detail Project card navigates to the per-project reconciliation view.
+
+### Per-Project PO vs Bill Reconciliation
+
+New `fn_get_po_bill_reconciliation(p_project_id UUID)` SQL RPC (STABLE SECURITY DEFINER, migration 123):
+- Returns per-PO: po_id, po_number, vendor_name, vendor_is_msme, po_date, po_total, approval_status, po_status, billed_amount, paid_amount, balance, bill_count, bill_status (unbilled/pending/partial/paid).
+- All monetary aggregation in SQL (NEVER-DO #12 compliant).
+- `/procurement/reconciliation/[projectId]` — page with 4 KPI cards (Total PO Value, Unbilled, Billed, Paid) + table with all columns + footer totals row (when >1 PO).
+- Role gate: founder, finance, project_manager, purchase_officer.
+
+### Queries / Actions File
+
+- `apps/erp/src/lib/material-requisition-queries.ts` — all reads: `getMaterialRequisitionsForProject`, `getPendingMaterialRequisitions`, `getPOBillReconciliation`, `getVendorBillsForPO`, `getProjectBasicInfo`.
+- `apps/erp/src/lib/material-requisition-actions.ts` — all mutations with `'use server'` + `ActionResult<T>`.
+
 ## Past Decisions & Specs
 
 - **Migration 103 (May 2, 2026) — `purchase_orders_status_check` finally allows `'dispatched'`.** v2 (migration 060/065) wired the `draft → dispatched → acknowledged` flow but the legacy CHECK constraint added in migration 041 only listed `('draft','approved','sent','acknowledged','partially_delivered','fully_delivered','closed','cancelled')`. Every `sendPOToVendor` / `markPODispatched` call hit `new row for relation "purchase_orders" violates check constraint "purchase_orders_status_check"`. Migration 103 drops + recreates the constraint with `'dispatched'` added; legacy values retained for backward-compat. Same-day code fixes: `createVendorAdHoc` wrote `vendor_type='supplier'` (not in the enum) → changed to `'other'` (`as any` cast also removed); Download PDF now surfaces server errors inline instead of silently swallowing into `console.error`; Copy-link button removed from PO send dialog (the URL `/procurement/<poId>` is internal-only and sent vendors to login).

@@ -21,6 +21,9 @@ F2: Meta Business Verification — deferred. Manual step: Vivek logs into busine
 **Phase B — Marketing Complete. ✅ DONE (2026-05-24).**
 All B1–B7 tasks shipped: payment tracker follow-up columns + RPC (mig 117), `updatePaymentFollowUp` server action, "Payments Expected This Week" KPI card on `/payments` and `/payments/tracker`, Follow-up dialog per milestone in tracker table, `?filter=this_week` filter, BOM generator AC cable/earthing/conduit line items + conduit category fix, Quick Quote PDF note text fix, lead layout "Create Detailed Quote" CTA + amber nudge banner, Detailed Quote PDF segment-aware Scope of Work + GST sub-breakdown + LLP label fix. Revised master plan at `docs/superpowers/plans/2026-05-23-erp-master-plan-revised.md`. Building in dev. Prod gate: data cleanup done (Phase D manual) + marketing complete + operations complete + employee testing week. Phase E/F run in parallel with C and D. Mobile (Phase G) is a separate phase.
 
+**Phase C-purchase — C1 Complete. ✅ DONE (2026-05-24). Dev migration state: 123.**
+Material requisitions (full workflow: submit → review → convert-to-PO), vendor bill panel on PO detail page, and per-project PO vs Bill reconciliation view. Migration 123 applied to dev.
+
 **Phase C-finance — C2 + C3 + C4 Complete. ✅ DONE (2026-05-24). Dev migration state: 118.**
 C2 (Invoice raising): `raiseProjectInvoice` action, `RaiseInvoiceDialog` on project detail page, `ProjectInvoicesPanel` server component.
 C3 (Payment recording): `recordProjectPayment` action, `RecordProjectPaymentDialog` inline per invoice row.

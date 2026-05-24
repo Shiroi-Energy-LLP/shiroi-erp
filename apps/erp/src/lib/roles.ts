@@ -49,7 +49,8 @@ const ITEMS = {
   tasks:          { label: 'Tasks',             href: '/tasks',            icon: 'ClipboardList' },
   dailyReports:   { label: 'Daily Reports',     href: '/daily-reports',    icon: 'FileCheck' },
   qcGates:        { label: 'QC Gates',          href: '/qc-gates',        icon: 'FileCheck' },
-  purchaseOrders: { label: 'Purchase Orders',   href: '/procurement',      icon: 'ShoppingCart' },
+  purchaseOrders: { label: 'Purchase Orders',   href: '/procurement',              icon: 'ShoppingCart' },
+  matRequisitions: { label: 'Material Requests', href: '/procurement/requisitions', icon: 'ClipboardList' },
   vendors:        { label: 'Vendors',           href: '/vendors',          icon: 'Building2' },
   priceBook:      { label: 'Price Book',        href: '/price-book',       icon: 'BookOpen' },
   deliveries:     { label: 'Deliveries',        href: '/deliveries',       icon: 'Truck' },
@@ -95,7 +96,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
-    { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
+    { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.inverters] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.vendorBills, ITEMS.vendorPayments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
@@ -120,7 +121,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Execution',    items: [ITEMS.qcGates] },
-    { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.inventory] },
+    { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.inventory] },
     { label: 'Reference',    items: [ITEMS.priceBook] },
     // Liaison rehomed to marketing_manager per revamp - PMs see the read-only
     // Liaison step embedded in /projects/[id] detail, no top-level link.
@@ -138,6 +139,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Overview',     items: [ITEMS.dashboard] },
     { label: 'My Work',      items: [ITEMS.myReports, ITEMS.myTasks, ITEMS.expenses] },
     { label: 'Projects',     items: [ITEMS.projects] },
+    { label: 'Procurement',  items: [ITEMS.matRequisitions] },
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   sales_engineer: [
@@ -159,7 +161,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   ],
   purchase_officer: [
     { label: 'Overview',         items: [ITEMS.dashboard] },
-    { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.deliveries, ITEMS.inventory] },
+    { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.deliveries, ITEMS.inventory] },
     { label: 'Expenses',         items: [ITEMS.expenses] },
     { label: 'Vendor Management', items: [ITEMS.vendors, ITEMS.priceBook] },
     { label: 'Contacts',         items: [ITEMS.contacts, ITEMS.companies] },
