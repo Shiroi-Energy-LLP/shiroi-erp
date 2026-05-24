@@ -18,6 +18,8 @@ import { FilterBar } from '@/components/filter-bar';
 import { FilterSelect } from '@/components/filter-select';
 import { SearchInput } from '@/components/search-input';
 import { ProjectFilterCombobox } from '@/components/om/project-filter-combobox';
+import { createClient } from '@repo/supabase/server';
+import { ConnectSungrowButton } from './_components/connect-sungrow-button';
 
 const BRAND_OPTIONS = [
   { value: 'sungrow', label: 'Sungrow' },
@@ -57,19 +59,38 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  const [{ items, total }, filterProjects, allProjects, summary, viewerRole] = await Promise.all([
-    listPlantMonitoringCredentials({
-      project_id: params.project || undefined,
-      brand: params.brand || undefined,
-      search: params.search || undefined,
-      page: currentPage,
-      per_page: perPage,
-    }),
-    getProjectsWithCredentials(),
-    getAllActiveProjects(),
-    getPlantMonitoringSummary(),
-    getCurrentUserRoleForProject(),
-  ]);
+  // Fetch Sungrow master credential to determine current OAuth status.
+  const supabaseServer = await createClient();
+  const sungrowCredPromise = supabaseServer
+    .from('inverter_monitoring_credentials')
+    .select('config')
+    .eq('brand', 'sungrow')
+    .limit(1)
+    .maybeSingle();
+
+  const [{ items, total }, filterProjects, allProjects, summary, viewerRole, sungrowCredResult] =
+    await Promise.all([
+      listPlantMonitoringCredentials({
+        project_id: params.project || undefined,
+        brand: params.brand || undefined,
+        search: params.search || undefined,
+        page: currentPage,
+        per_page: perPage,
+      }),
+      getProjectsWithCredentials(),
+      getAllActiveProjects(),
+      getPlantMonitoringSummary(),
+      getCurrentUserRoleForProject(),
+      sungrowCredPromise,
+    ]);
+
+  // Extract oauth_status from the JSONB config field.
+  const sungrowConfig = sungrowCredResult.data?.config as Record<string, unknown> | null;
+  const sungrowOauthStatus = (sungrowConfig?.['oauth_status'] as string) ?? null;
+
+  // Show the Sungrow button to founder and om_technician.
+  const canConnectSungrow =
+    viewerRole === 'founder' || viewerRole === 'om_technician';
 
   const canEdit = viewerRole === 'founder' || viewerRole === 'project_manager';
   const totalPages = Math.ceil(total / perPage);
@@ -104,7 +125,12 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
             Online portal credentials for every commissioned plant. Auto-synced from commissioning reports.
           </p>
         </div>
-        {canEdit && <CreatePlantMonitoringDialog projects={allProjects} />}
+        <div className="flex items-center gap-2">
+          {canConnectSungrow && (
+            <ConnectSungrowButton oauthStatus={sungrowOauthStatus} />
+          )}
+          {canEdit && <CreatePlantMonitoringDialog projects={allProjects} />}
+        </div>
       </div>
 
       {/* Summary cards */}
