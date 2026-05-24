@@ -1,211 +1,330 @@
-# H3 — AI Roadmap
+# H3 — AI Roadmap (revised)
 
-> Plan date: 2026-05-25
-> Goal: evaluate 8 candidate AI features beyond H1 + H2; recommend a priority order.
-
-Each entry has consistent shape — goal, what's already there, what's new, effort (in 3-hour sessions), AI cost at expected volume, dependencies, risks. Vivek picks the build queue.
-
----
-
-## Feature F1 — Daily/weekly executive briefing on WhatsApp
-
-**Goal:** Push to Vivek (+ optionally Prem + Manivel) every morning at 07:00 IST: yesterday's wins, key numbers, decisions needed today.
-
-**What's already there:**
-- E8 `project-daily-report.ts` AI singleton already wraps Anthropic
-- `ai-caller.ts` provider abstraction
-- n8n morning-digest workflow scaffolding (#19 Vivek 7AM exists, currently data-driven not AI-narrated)
-- All the underlying RPCs: `get_lead_stage_counts`, `get_company_cash_summary_v2`, `get_pipeline_close_window`, `get_payments_expected_this_week`, `get_msme_aging_summary`
-
-**What's new:**
-- New action `generateExecutiveBriefing(date)` — gathers ~8 KPI buckets + serialises into one Haiku prompt
-- One Haiku call per recipient per morning (4 recipients × 30 days = 120 calls/month)
-- Augment existing n8n workflow #19 to call the ERP `/api/briefing/run` endpoint before composing the WhatsApp message
-
-**Effort:** 2 sessions (one for the briefing action + prompt, one for n8n wiring)
-**AI cost:** ~120 calls × 3k tokens = 360k tokens = ~$1.50 / ₹125 per month
-**Dependencies:** None (everything already exists)
-**Risks:** Quality varies if data is sparse on a quiet day. Mitigate: prompt explicitly says "if no major signal, write a 1-sentence 'quiet day' acknowledgement."
+> Plan date: 2026-05-25 (rev 2 — post Vivek's scope cuts + provider migration + RAG addition)
+> Supersedes the 8-candidate v1 draft.
+> Companion spec: `docs/superpowers/specs/2026-05-25-shiroi-rag-design.md`
+> Goal: structured rollout of AI capabilities across the ERP, organised by waves.
 
 ---
 
-## Feature F2 — AI customer message personalisation for F1 drip
+## Decisions baked in (Vivek-approved)
 
-**Goal:** Today's F1 customer drip workflows (#40–47) use fixed Meta templates with variable substitution. Add a per-customer flavor pass that personalises the placeholder copy while staying within Meta's template constraints.
+1. **OpenAI is out.** Replaced everywhere with non-OpenAI providers:
+   - **LLM:** Claude Haiku 4.5 (default) + Claude Sonnet (vision + quality-critical paths)
+   - **Embeddings:** Jina `jina-embeddings-v3` (1024-dim, multilingual including Tamil)
+   - **ASR:** Sarvam `Saaras-v2` (Tamil + Tanglish) with Bhashini as free fallback
+   - **Future local migration path:** F8 `ai-caller.ts` abstraction makes per-feature provider swap a config change
 
-**What's already there:**
-- F1 8 workflows + 8 Meta templates pending approval
-- `customer_message_log` audit table
+2. **Customer-facing AI deferred** to a separate next-phase plan: A1 self-service WA bot, A2 electricity bill OCR, A3 residential calculator. **Exception**: A4 monthly customer performance reports (post-install) is in Wave 2.
 
-**What's new:**
-- Per-message Haiku call to generate the variable values with customer-specific tone (e.g., for the 90-day check-in: rotate between "How's your bill looking?" / "Generation steady?" / "Any maintenance needs?" based on prior interaction history)
-- Audit trail in `customer_outreach_queue.ai_personalisation` JSONB
+3. **Custom Shiroi RAG built early** — Phase 1 (docs only) goes into Wave 1 as foundation. Phase 2 (proposals, tickets, activities) added in Wave 3 when sales-intelligence features need it.
 
-**Effort:** 1 session (after F1 templates are approved + workflows active)
-**AI cost:** ~1000 customer messages/month × 1k tokens = ~$4 / ₹335 per month
-**Dependencies:** F1 must be live first; Meta template approval; F2 Meta Business Verification (already done)
-**Risks:** Meta templates are rigid — too much variation may violate template parameter limits. Constrain prompt to a fixed set of pre-vetted phrasings.
+4. **Local Ollama deferred until needed.** Stay all-Haiku/Sonnet until monthly LLM bill exceeds ~₹10,000 OR a customer contract requires on-prem data residency. F8 abstraction makes the eventual swap trivial.
 
----
+5. **All Tamil voice input goes through Sarvam → Claude Haiku for structuring** (transcribe + translate + extract in two API calls).
 
-## Feature F3 — Vendor bill OCR + GST extraction
+## Wave structure
 
-**Goal:** Extend the existing `process-document` Edge Function to handle vendor bills: extract supplier GSTIN, line items, totals, due date → auto-create `vendor_bills` row pending finance approval.
-
-**What's already there:**
-- `process-document` Edge Function with Anthropic vision for PDF/image extraction (E6, mig 125)
-- `vendor_bills` + `vendor_bill_items` schema (mig 067)
-- `documents` table with category linking
-
-**What's new:**
-- New extraction profile in `process-document` for `category = 'vendor_bill'`
-- Specific prompt template for Indian GST invoice format (GSTIN, HSN, CGST/SGST/IGST split, line items, total, due date)
-- New action `createVendorBillDraftFromDocument(documentId)` that creates `vendor_bills` row in `status='draft'` linked to the document
-- Finance review page lists draft bills awaiting approval
-
-**Effort:** 3 sessions (prompt iteration is hard; needs ~50 real bills for testing)
-**AI cost:** Sonnet (vision better than Haiku for OCR) — ~$15/M tokens output. 500 bills/month × 8k tokens = ~$60 / ₹5000/month. Higher than other features but offsets ~20 hours/month of manual entry.
-**Dependencies:** `ANTHROPIC_API_KEY` for Edge Function (currently unset — same blocker as Tier B re-extraction)
-**Risks:** Indian vendor invoices are highly variable in layout. Sonnet handles most but ~15% will need human review. Build with a confidence-score gate from day 1.
+| Wave | Focus | Sessions | Monthly cost (steady state) |
+|------|-------|----------|------------------------------|
+| **Wave 1** | Foundations: providers + RAG + 5 high-leverage features | 7 | ~₹2,200 |
+| Wave 2 | Customer post-install touch + drip personalization | 3 | +₹600 |
+| Wave 3 | Sales intelligence (needs RAG Phase 2) | 4 | +₹500 |
+| Wave 4 | Operations intelligence (vision-heavy) | 4 | +₹3,500 |
+| **Next-phase plan** (separate spec) | Customer-facing AI (A1, A2, A3) | TBD | TBD |
+| **Deferred** | F3 direct vendor bill OCR, F4 cash forecast, E1/E2/E3 cockpit, F8+ design review, D2 ticket triage, B4 photo gate | — | — |
 
 ---
 
-## Feature F4 — Cash-flow forecast
+## Wave 1 — Foundations + first features (7 sessions, ~₹2,200/mo)
 
-**Goal:** Predict next 30/60/90-day cash position from payment-pattern history. Score each `expected_payment` row's probability based on historical patterns of similar customers/projects.
+### S1 — Provider migration (no OpenAI, add Sarvam + Jina)
 
-**What's already there:**
-- `customer_payments` history
-- `proposal_payment_schedule` with milestone-linked SLAs
-- `payment_followup` + `payment_escalation` tasks
-- `get_company_cash_summary_v2` for current snapshot
+**Goal:** Swap OpenAI embeddings out of the `process-document` Edge Function. Add Sarvam + Jina env infrastructure.
 
-**What's new:**
-- New `cash_flow_forecasts` table with weekly snapshots
-- Python or SQL model (probably SQL with simple weighted moving averages — AI not strictly needed)
-- Founder dashboard widget showing 30/60/90 day projections with confidence band
-- Optional: AI narrative explaining the forecast ("collections likely to dip in early June due to FY-end customer reluctance")
+Tasks:
+- [ ] S1.1 — Add env vars to `turbo.json` globalEnv: `JINA_API_KEY`, `SARVAM_API_KEY`, `BHASHINI_API_KEY` (optional fallback), `COHERE_API_KEY` (optional embed fallback).
+- [ ] S1.2 — Update `process-document` Edge Function: replace OpenAI embeddings client with Jina v3 (1024-dim). Migration 138 changes `documents.embedding` column from `vector(1536)` to `vector(1024)`.
+- [ ] S1.3 — Re-embed all existing `documents` rows that had `extraction_status='done'` — write a one-shot script `scripts/rag/re-embed-documents.ts` that pages through them and re-embeds via Jina.
+- [ ] S1.4 — Write `apps/erp/src/lib/ai/sarvam-client.ts` — calls Sarvam Saaras-v2 for ASR. Same shape as existing `anthropic-client.ts`.
+- [ ] S1.5 — Write `apps/erp/src/lib/ai/jina-client.ts` — embeddings + dimension assertion.
+- [ ] S1.6 — Run `pnpm check-types && pnpm build` — must be green.
+- [ ] S1.7 — Document the new env vars in `CLAUDE.md` env list.
 
-**Effort:** 4 sessions — most of it is data modelling, not AI
-**AI cost:** Minimal (~$2/mo if narrative is added)
-**Dependencies:** Clean payment-pattern data (the 2026-05-24 review flagged 76 unmatched Zoho projects + Tier B/D recovery gaps — those need closing before forecasts will be trustworthy)
-**Risks:** Garbage in / garbage out. Don't ship until D2/D3/D4 data cleanup is done.
+Effort: 3 hours.
+Risk: Re-embedding 7,636+ existing documents will take ~30 min of API time. Run during off-hours.
+
+### S2 — Shiroi RAG Phase 1 (docs only)
+
+**Goal:** Per the spec doc. Build the schema + ingest + retrieve API + debug page.
+
+Tasks:
+- [ ] S2.1 — Migration 138 (append to S1 migration OR mig 139): `rag_chunks` table + HNSW index + RLS per the spec.
+- [ ] S2.2 — Write `scripts/rag/chunk-markdown.ts` — heading-aware splitter using `js-tiktoken`.
+- [ ] S2.3 — Write `scripts/rag/embed.ts` — Jina client with Cohere fallback (uses `jina-client.ts` from S1).
+- [ ] S2.4 — Write `scripts/rag/sources.ts` — glob mapping per the spec (modules, master ref, CLAUDE.md, specs, plans, reviews, changelog).
+- [ ] S2.5 — Write `scripts/rag/ingest-docs.ts` — walks sources, chunks, hashes, diffs, embeds new/changed, upserts. Add `pnpm rag:ingest-docs` script in root package.json.
+- [ ] S2.6 — Initial run: `pnpm rag:ingest-docs` — expect ~50k chunks across all docs. Confirm via SQL.
+- [ ] S2.7 — Write `apps/erp/src/lib/rag/retrieve.ts` — the `retrieve(query, opts)` API per the spec.
+- [ ] S2.8 — Write `apps/erp/src/app/(erp)/admin/rag-debug/page.tsx` (founder-only) — query input + top-5 results with similarity score + 👍/👎 buttons logging to a new `rag_query_log` table.
+- [ ] S2.9 — Founder smoke test: Vivek runs 10 sample questions, eyeballs results, tunes top_k if needed.
+- [ ] S2.10 — Add daily cron via pg_cron at 02:00 IST: pull latest main + run ingest. Need to decide ingest trigger — recommend an n8n workflow (`63-rag-ingest-cron.json`) that SSHes to the droplet OR a GitHub Actions workflow. Vivek picks.
+
+Effort: 4 hours.
+Risk: Jina rate limits during initial bulk ingest. Batch in groups of 100 with 200ms delay.
+
+### S3 — D1 internal knowledge Q&A (the first RAG consumer)
+
+**Goal:** Anyone (Vivek, Prem, Manivel, future hires) can ask "what's our standard payment terms?" / "which MMS brand at industrial?" / "TNEB delay >30 days handling?" via the web OR WhatsApp (once H1 lands) and get a grounded answer with citations.
+
+Tasks:
+- [ ] S3.1 — Write `apps/erp/src/lib/ai/knowledge-qa.ts` — `answerInternalQuestion(question, opts)` calls `retrieve()` → wraps in Haiku prompt → returns `{ answer, citations: RagChunk[] }`.
+- [ ] S3.2 — Prompt template — strict instruction to cite sources by `source_path`, refuse to answer if retrieval comes back empty or low-similarity.
+- [ ] S3.3 — Add `apps/erp/src/app/(erp)/ask/page.tsx` — simple input + answer view with expandable "Sources" section. Open to all authenticated roles (RLS on `rag_chunks` already filters).
+- [ ] S3.4 — Rate limit: 30 questions/user/day (any non-founder). Founder unlimited.
+- [ ] S3.5 — Audit log to `rag_query_log` table (extended schema if needed).
+- [ ] S3.6 — Documentation: append a section to `docs/SHIROI_MASTER_REFERENCE.md` describing the knowledge Q&A.
+
+Effort: 2 hours.
+Risk: Answer quality varies by question type. Iterate the prompt over a week of real questions.
+
+### S4 — F6 smart task suggestions
+
+**Goal:** Daily cron finds stale leads/projects/tickets and auto-creates suggested tasks for the owner.
+
+Tasks:
+- [ ] S4.1 — Migration extension: pg_cron job at 06:00 IST that scans for stale items. Inserts into a `task_suggestion_queue` staging table.
+- [ ] S4.2 — Server-side processor that walks new suggestions, calls Haiku to write a one-sentence task description per item, inserts into `tasks` with `category='lead_followup'` / `category='project_followup'` / etc.
+- [ ] S4.3 — `task_suggestion_queue` row marked processed; tracks AI tokens used.
+- [ ] S4.4 — Cap: 5 AI-suggested tasks per user per day to avoid spam.
+- [ ] S4.5 — Add an "AI suggested" badge to the existing tasks UI so users can distinguish.
+
+Effort: 2 hours.
+AI provider: Haiku.
+
+### S5 — F7 BOQ variance narrative
+
+**Goal:** Per project, after completion: AI summary "DC cable consumed 18% over BOQ — likely cause: longer cable runs in industrial site type. Flag for next project's costing."
+
+Tasks:
+- [ ] S5.1 — Confirm `bom_actual_vs_budgetary` table (mig 128) is populated OR populate from existing BOQ + DC items if empty. If empty, write a one-shot ingest script (this is the gap H3 v1 flagged).
+- [ ] S5.2 — Server action `generateBoqVarianceNarrative(projectId)` — reads variance rows, calls Haiku, writes narrative to a new `bom_variance_narratives` column on `projects` (or a separate table).
+- [ ] S5.3 — Surface on project detail page Profitability subsection.
+- [ ] S5.4 — Nightly cron: run for any project that completed in the last 7 days and doesn't have a narrative yet.
+
+Effort: 2 hours (assuming `bom_actual_vs_budgetary` ingest works — otherwise +2 hours).
+
+### S6 — F1 daily executive briefing (RAG-augmented)
+
+**Goal:** WhatsApp to Vivek at 07:00 IST: yesterday's wins, key numbers, anomalies, decisions needed. With RAG context for "what's normal at Shiroi."
+
+Tasks:
+- [ ] S6.1 — Server action `generateExecutiveBriefing(date, recipientRole)` — gathers 8 KPI buckets (sales won, cash inflow, projects in progress, MSME aging, expected payments, anomalies) via existing RPCs.
+- [ ] S6.2 — RAG context augmentation: call `retrieve("what's a typical day at Shiroi", { source_types: ['module_doc'], top_k: 3 })` to give the AI a baseline.
+- [ ] S6.3 — Haiku prompt with the KPI bundle + RAG context → 3-paragraph narrative.
+- [ ] S6.4 — Modify existing n8n workflow `19-vivek-daily-7am.json` to call ERP `/api/briefing/run` BEFORE composing the WhatsApp message; use the AI narrative as the message body.
+- [ ] S6.5 — Optional secondary recipients (Prem head 8AM, Manivel head 8AM) — flip a flag.
+
+Effort: 3 hours.
+AI provider: Haiku.
+
+### S7 — B1 Tamil voice-to-text site reports
+
+**Goal:** Manivel + site supervisors send 30-sec Tamil voice notes via WhatsApp → AI transcribes + structures + creates `daily_site_reports` row + flags any action items (material shortages, safety issues).
+
+Tasks:
+- [ ] S7.1 — n8n workflow `64-employee-voice-report.json` — listens for inbound WhatsApp **audio** messages from known employee numbers → downloads .ogg → POSTs to ERP `/api/whatsapp/voice-report`.
+- [ ] S7.2 — Server-side handler: validate webhook secret + employee identity → POST audio bytes to Sarvam Saaras-v2 → get Tamil/Tanglish transcript.
+- [ ] S7.3 — Haiku call with the transcript + project lookup + daily_site_reports schema + `material_requisitions` schema. Prompt outputs structured JSON with project_match, report fields, and detected_actions array.
+- [ ] S7.4 — Reply to officer in Tamil + English: "Got it: 12 panels, structure complete. Reply YES to save."
+- [ ] S7.5 — On YES: insert `daily_site_reports` row + create any flagged `material_requisitions` rows.
+- [ ] S7.6 — Save the original .ogg in Supabase Storage `voice-reports/<project_id>/<date>.ogg` for audit.
+- [ ] S7.7 — Audit row in a new `voice_report_log` table (id, sender, transcript, structured_json, applied_at, audio_path).
+- [ ] S7.8 — Cost monitor: alert if Sarvam monthly cost crosses ₹500.
+
+Effort: 4 hours.
+AI providers: Sarvam (ASR), Haiku (structuring).
+
+### Wave 1 monthly cost estimate
+
+| Feature | Provider | Calls/month | Tokens/month | Cost (₹) |
+|---------|----------|-------------|--------------|----------|
+| RAG embeddings (ingest) | Jina v3 | ~6,000 | 5M | 0 (free tier) |
+| RAG query embeddings (D1) | Jina v3 | ~3,000 | 600k | 0 (free tier) |
+| D1 Q&A | Haiku | 1,500 | 2.5M | 250 |
+| F6 task suggestions | Haiku | 1,500 | 600k | 50 |
+| F7 BOQ variance | Haiku | 40 | 80k | 5 |
+| F1 executive briefing | Haiku | 120 | 360k | 125 |
+| B1 voice transcription | Sarvam | 900 (30/day) | 15min/day | 450 |
+| B1 voice structuring | Haiku | 900 | 2.7M | 250 |
+| Existing process-document (Haiku vision) | Sonnet | 200 | 4M | 600 |
+| **Total** | | | | **~₹1,730/mo** |
+
+Round to **~₹2,200/mo** including buffer + spikes. Within budget envelope from earlier discussion.
 
 ---
 
-## Feature F5 — AI lead routing
+## Wave 2 — Post-install customer touch (3 sessions, +₹600/mo)
 
-**Goal:** Inbound lead from website / WhatsApp → AI scores it (residential/commercial, ticket size, geo, urgency) → auto-assigns to the right sales engineer + sets `closure_probability`.
+### S8 — A4 monthly customer performance reports
 
-**What's already there:**
-- `leads.estimated_size_kwp`, `leads.segment`, `leads.city`, `leads.assigned_to`
-- `channel_partners.is_internal` for routing logic
-- Lead creation paths: website (Phase 2C), WhatsApp marketing chat (H1 update path), manual
+**Goal:** Every commissioned customer with inverter credentials gets a monthly WhatsApp: "Your VAF system generated 1,847 kWh in May (₹14,776 saved). 8% better than April. Top day: 15-May."
 
-**What's new:**
-- New action `scoreAndRouteLead(leadId)` that:
-  - Reads lead context (extracted city, message text if from WhatsApp, kWp hint, urgency keywords)
-  - Calls Haiku to extract: segment (residential/commercial/industrial), urgency (low/med/high), territory match
-  - Looks up sales engineer load (active lead count) + territory map
-  - Assigns + sets `closure_probability` per a simple rule + initial follow-up task
+Tasks:
+- [ ] S8.1 — Identify the customer cohort: `projects` with `status='completed'` AND `commissioned_date IS NOT NULL` AND a `plant_monitoring_credentials` row with `status='connected'`. Currently ~5 of 500+; will grow with Phase 7/8 inverter rollout.
+- [ ] S8.2 — Server action `generateMonthlyPerformanceReport(projectId, month)`: pulls inverter rollup data (mig 050 partitions), pulls PVLib expected via the microservice, computes delta, calls Haiku for narrative.
+- [ ] S8.3 — Meta template `monthly_performance` (utility) — submit for approval. 5 variables.
+- [ ] S8.4 — n8n workflow `65-customer-monthly-performance.json` — monthly cron 1st of month 10:00 IST, walks the cohort, fires the Meta template per customer.
+- [ ] S8.5 — Audit in `customer_message_log` with `channel='whatsapp'`, `template_name='monthly_performance'`.
 
-**Effort:** 2 sessions
-**AI cost:** ~30 new leads/day × 600 tokens = 540k tokens/mo = ~$2 / ₹170
-**Dependencies:** Defined territory map (currently informal — need a `sales_territories` table or just a JSON config)
-**Risks:** Auto-assignment can frustrate humans if wrong. Default to AI-suggested-but-human-confirmed for week 1.
+Effort: 3 hours.
+AI provider: Haiku.
+Cost: ~₹250/mo at 500 customers.
 
----
+### S9 — F2 customer drip personalization
 
-## Feature F6 — Smart task suggestions
+**Goal:** Existing F1 customer drip templates (#40–47) use static variable substitution. Add a per-customer flavour pass that personalises within Meta template constraints.
 
-**Goal:** "Mr Kumar lead has been stale for 14 days — suggest follow-up call" auto-creates a task via existing `tasks` table. Today the `sync_lead_followup_task` trigger fires only on `next_followup_date` change.
+Tasks:
+- [ ] S9.1 — For each drip workflow, identify which template variables can be AI-flavoured (vs static).
+- [ ] S9.2 — Server action `personaliseDripMessage(customerId, templateName)` returns the AI-generated variable values.
+- [ ] S9.3 — Modify drip workflows to call ERP for variable values before firing the Meta template.
+- [ ] S9.4 — Add `ai_personalisation` JSONB to `customer_outreach_queue` for audit.
 
-**What's already there:**
-- `tasks` table with `category='lead_followup'`
-- `sync_lead_followup_task` trigger (mig 108)
-- `MyTasks` dashboard widget
+Effort: 2 hours.
+AI provider: Haiku.
+Cost: ~₹350/mo.
 
-**What's new:**
-- New pg_cron job: every morning at 06:00 IST, find leads where:
-  - `status NOT IN ('won','lost','disqualified','converted')`
-  - `updated_at < NOW() - INTERVAL '7 days'` for low-priority OR `>14 days` for any
-  - No open `lead_followup` task already
-- For each: Haiku-generate a 1-sentence task description ("Mr Kumar — quick quote sent 14 days ago, no response. Call to confirm interest.") and insert as a new task assigned to the lead owner.
+### S10 — Wave 2 polish + docs
 
-**Effort:** 2 sessions
-**AI cost:** ~50 suggestions/day × 400 tokens = 600k tokens/mo = ~$2.5 / ₹210
-**Dependencies:** None
-**Risks:** Could spam users with low-quality tasks. Cap at 5 suggestions per user per day. Make easy-dismiss.
+- [ ] Update `docs/modules/om.md` + `sales.md` with new features.
+- [ ] CI gates + commit + push.
+- [ ] Founder smoke test on 5 real commissioned customers.
 
 ---
 
-## Feature F7 — BOQ vs Actual variance narrative
+## Wave 3 — Sales intelligence (RAG Phase 2 + 3 features, 4 sessions, +₹500/mo)
 
-**Goal:** Extends E11 (`bom_actual_vs_budgetary` table — schema-only today) with a narrative summary per project: "DC cable consumed 18% over BOQ — flag to PM for next project's costing".
+### S11 — RAG Phase 2: index structured data (proposals + tickets + activities)
 
-**What's already there:**
-- `bom_actual_vs_budgetary` table with per-project per-category variance rows (mig 128, no UI)
-- E12 `get_om_profitability` for project-level P&L
+- [ ] Write `scripts/rag/ingest-proposals.ts` — per the spec, 1 chunk per proposal with flattened content.
+- [ ] Write `scripts/rag/ingest-service-tickets.ts`.
+- [ ] Write `scripts/rag/ingest-lead-activities.ts`.
+- [ ] Add to nightly cron.
+- [ ] Verify RLS — chunks should only be retrievable if the underlying row is.
 
-**What's new:**
-- New action `generateBoqVarianceNarrative(projectId)` — reads variance rows, calls Haiku to produce 3-sentence summary
-- Surface on project detail page Profitability sub-section
-- Cron: nightly run for projects that closed in the last 30 days
+### S12 — F5 AI lead routing
 
-**Effort:** 1 session (small, isolated)
-**AI cost:** ~10 projects/week × 800 tokens = 32k tokens/mo = trivial (<$0.50 / ₹40)
-**Dependencies:** Needs `bom_actual_vs_budgetary` to actually have data — needs an ingest path (which doesn't exist yet — would need to populate from BOQ items + DC items reconciliation)
-**Risks:** Garbage in (E11 has no ingest yet). Lower priority until E11 data flows.
+- [ ] Auto-score + assign new leads via Haiku on INSERT.
+- [ ] Sales territory map config (new `sales_territories` table OR JSON config).
 
----
+### S13 — C1 lead scoring + C2 win/loss patterns
 
-## Feature F8 — AI proposal generation assist
+- [ ] Lead score per lead via Haiku on INSERT + status change.
+- [ ] Weekly win/loss pattern report (uses RAG Phase 2 for retrieving similar past deals).
 
-**Goal:** Prem describes requirements in plain English; AI drafts the BOM line items. Reuses existing `price_book` + `budgetary-quote.ts` logic — AI just maps customer wording → catalog items.
-
-**What's already there:**
-- `price_book` table with ~600 items + brand + model + unit price
-- `budgetary-quote.ts` generator (rule-based, recently fixed)
-- BomPicker UI component on the proposal page
-
-**What's new:**
-- New action `suggestBomFromDescription(leadId, description)` — Haiku reads description + price_book sample + returns suggested line items with rationale
-- New "AI Suggest" button on the BomPicker that pre-fills the BOM
-- Confidence flag per suggested line; designer reviews before commit
-
-**Effort:** 3 sessions
-**AI cost:** ~30 proposals/month × 2k tokens = 60k tokens = ~$1.50 / ₹125
-**Dependencies:** Vivek's BOM standard (which catalogs to prefer)
-**Risks:** Bad AI suggestions could waste the designer's time more than help. Pilot with a single designer (Shravan?) for 2 weeks before opening to Prem.
+### S14 — Wave 3 polish + docs
 
 ---
 
-## Recommended priority order
+## Wave 4 — Operations intelligence (vision-heavy, 4 sessions, +₹3,500/mo)
 
-| Rank | Feature | Effort | Monthly cost | Why |
-|------|---------|--------|--------------|-----|
-| 1 | **F6 — Smart task suggestions** | 2 sessions | ₹210 | High value, no data dependencies, easy to A/B |
-| 2 | **F7 — BOQ variance narrative** | 1 session | ₹40 | Small build, unblocks E11 — start surfacing the data |
-| 3 | **F1 — Daily executive briefing** | 2 sessions | ₹125 | Compounds with H1 (you're already getting comfy with WA-based AI by then) |
-| 4 | **F5 — AI lead routing** | 2 sessions | ₹170 | Defer until territory map exists + lead volume justifies it |
-| 5 | **F2 — Customer message personalisation** | 1 session | ₹335 | After F1 drip is live + Meta-approved |
-| 6 | **F8 — AI proposal assist** | 3 sessions | ₹125 | Lower urgency; current BOM generator works |
-| 7 | **F3 — Vendor bill OCR** | 3 sessions | ₹5,000 | Highest cost; defer until vendor bill volume + finance complaints justify |
-| 8 | **F4 — Cash-flow forecast** | 4 sessions | ₹165 | Blocked on D2/D3/D4 data cleanup |
+### S15 — B3 plant performance anomaly alerts (uses A4 data + PVLib expected)
 
-## Rationale
+### S16 — B2 photo QC AI (Claude vision on milestone_photos)
 
-- **F6 + F7 + F1 in the first wave** because each is short, cheap, valuable, and uses Haiku.
-- **F5 + F2** in second wave once the foundations from H1/H2/wave 1 stabilise.
-- **F8** later — current BOM generator works fine; this is polish.
-- **F3** defer — the cost is real (~$60/month) and Indian vendor invoice variability is a hard problem. Worth doing once finance complaint volume justifies it.
-- **F4** defer — useless without clean data.
+### S17 — D3 vendor invoice email ingest (Claude vision; same as F3 plan but email-driven)
 
-Combined first-wave AI cost (H1 + H2 + F6 + F7 + F1): **~₹3,500/month** total at expected volumes. Trivial compared to the operational time saved.
+### S18 — Wave 4 polish + docs
 
-## Ready-to-execute checklist (for whichever you pick)
+---
 
-- [ ] `ANTHROPIC_API_KEY` set in `.env.local` + Vercel + Supabase Edge Function env (only F3 needs the last one)
-- [ ] `AI_MODEL` env override path tested (use Haiku for F6/F7/F1/F5/F2/F8; Sonnet for F3)
-- [ ] After build: 1-week pilot with 1 user before opening to others
-- [ ] Founder gets the audit log for any feature that auto-creates DB rows (F6 tasks, F5 routings, F3 vendor bills)
+## Deferred (decide later)
+
+- **F3 vendor bill OCR direct upload path** — D3 (email) covers most of it
+- **F4 cash forecast** — blocked on D2/D3/D4 data cleanup
+- **C3 pricing AI** — uses RAG Phase 2; defer until volume justifies (post-Wave 3)
+- **E1 conversational analytics** — H1 catalog approach is safer for now
+- **E2 proactive anomaly briefing** — folded into F1 once F1 is live
+- **E3 capacity decision support** — manual-for-now
+- **F8+ design review** — needs CAD/sketchup ingest; defer
+- **D2 ticket triage** — needs ticket volume; revisit after Wave 4
+- **B4 missing photo gate** — nice-to-have; revisit after Wave 4
+- **D4 standalone semantic search UI** — RAG Phase 2 ingest makes this trivial later; defer until requested
+
+## Next-phase plan (separate spec file)
+
+Customer-facing AI deferred:
+- A1 customer self-service WA bot
+- A2 electricity bill OCR (customer sends bill via WhatsApp)
+- A3 residential calculator (website/WhatsApp pre-sales)
+
+These deserve their own design spec because they touch customer trust + the customer-facing portal. Write that when Vivek is ready.
+
+---
+
+## Overall execution path
+
+Wave 1 → ~7 sessions of agent work (~21 hours real, 1 overnight if parallelised).
+Wave 1 unlocks immediate value:
+- D1 = you stop being the corporate WhatsApp helpdesk
+- B1 = field officers + Manivel send Tamil voice notes; data quality 10×s
+- F1 = morning briefing that's actually useful
+- F6 = stale leads + projects auto-flagged
+- F7 = first AI-on-Shiroi-data feature (BOQ variance)
+- RAG = unblocks 5+ later features
+
+Wave 2 → 3 sessions; customer-facing post-install touch.
+
+Wave 3 → 4 sessions; sales intelligence depends on RAG Phase 2.
+
+Wave 4 → 4 sessions; vision-heavy ops AI.
+
+**Total to ship all four waves: ~18 sessions across ~3 weeks of overnight runs.**
+
+## Open questions for Vivek before exec
+
+1. **Provider sign-up: Jina + Sarvam — OK to register?** Both free-tier friendly; email + API key. No credit card on Jina at our volume. Sarvam needs a small balance ~₹500 to start.
+2. **Bhashini (free ASR fallback) — set up now or skip?** Setup is government-portal painful. Recommend skip — Sarvam quota is generous.
+3. **B1 audio storage** — save .ogg files to Supabase Storage `voice-reports/` (~5MB/day) or discard after transcript? Recommend save for audit trail; trivial storage cost.
+4. **D1 — open to all roles or founder + managers only?** Recommend all roles initially with per-role rate limits.
+5. **F1 daily briefing — also send to Prem (sales head) + Manivel (PM head) at 08:00?** Or keep founder-only at 07:00? Recommend cascade.
+6. **B1 confirmation step (YES to save)** — keep this gate or auto-save? Recommend gate for v1; remove once trust builds.
+7. **RAG re-index trigger** — pg_cron (in-DB) or n8n workflow (SSH to host)? Recommend n8n — closer to the source-of-truth (git on the droplet host).
+8. **Wave 2 cohort** — start with 1 commissioned customer for testing, then 5, then full? Recommend 1 → 5 → full over 3 weeks.
+9. **Ollama trigger threshold** — auto-migrate at ₹10k/mo combined LLM cost? Or your call always? Recommend auto-flag at ₹10k, you decide.
+
+---
+
+## Ready-to-execute checklist
+
+Once Vivek approves:
+
+### Pre-flight (Vivek must do before agent runs)
+- [ ] Sign up Jina (jina.ai) → `JINA_API_KEY` in `.env.local` + Vercel
+- [ ] Sign up Sarvam (sarvam.ai) → `SARVAM_API_KEY` + ~₹500 balance loaded
+- [ ] Optional: Cohere fallback key
+- [ ] Optional: Bhashini fallback
+- [ ] Confirm `pgvector` extension on dev (`\dx vector` in SQL Editor)
+- [ ] Decide on the open questions above
+
+### Agent execution order (per session)
+1. **Provider migration (S1)** — must complete first; everything else depends on Jina + Sarvam
+2. **RAG Phase 1 (S2)** — runs second; D1 + F1 depend on retrieve()
+3. **D1, F6, F7, F1, B1 (S3–S7)** — can run in parallel after S2
+4. Run discipline gates after each session
+5. Commit + push per session (not big-bang at end) — easier to roll back if any feature breaks
+
+### Per-session done criteria
+- All sub-tasks checked
+- `pnpm check-types` + `pnpm lint` + `pnpm build` + vitest + forbidden-patterns all green
+- Module doc updated (e.g., new section in om.md for B1)
+- CHANGELOG line added
+- Commit + push to main with detailed message
+
+### Wave 1 done criteria
+- Vivek runs 10 real questions through D1 and 8+ get good answers
+- Manivel sends 3 real Tamil voice notes and 3 reports correctly saved
+- F1 fires at 07:00 IST with quality narrative
+- F6 has suggested at least 1 useful task in the first 48h
+- All Wave 1 features documented in module docs + master reference
