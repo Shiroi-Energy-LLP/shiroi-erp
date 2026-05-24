@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  pvlib:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shiroi-pvlib
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5001"  # Only expose on localhost — Caddy proxies externally
+    environment:
+      - LOG_LEVEL=info
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    mem_limit: 512m
+    cpus: 0.5
+
+networks:
+  default:
+    name: shiroi-pvlib-net

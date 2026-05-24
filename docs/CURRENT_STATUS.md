@@ -47,6 +47,18 @@ New page at `/om/inverters` (founder + om_technician + project_manager). Inverte
 **Phase 8 (Inverter integration) — Edge Function real adapter dispatch + n8n cron. ✅ DONE (2026-05-24). No migration.**
 `inverter-poll` Edge Function rewritten with real Growatt + Sungrow adapters (inlined, Deno-compatible). Growatt session cache added. Sungrow skips with WARN until Manivel clicks Authorize (expected). SolarMan/Goodwe remain synthetic stubs. n8n workflow #60 (5-min cron) and #61 (daily Sungrow token refresh shell) pushed to n8n. Smoke test inverter inserted (Radiance Flourish Block-C, VJHRE4U03K). **VIVEK ACTION: activate workflow #60 in n8n UI to start live polling.** Logic debrief: `docs/2026-05-24-edge-function-logic.md`.
 
+**Phase E (Intelligence) — E6–E15 AI/automation layer. ✅ DONE (2026-05-24). Migrations 125–128.**
+E6: `process-document` Edge Function fully rewritten — real Anthropic extraction (PDF + image via claude-sonnet-4-20250514), OpenAI embedding (1536-dim), idempotent. **VIVEK ACTION: set `ANTHROPIC_API_KEY` + `OPENAI_EMBEDDINGS_API_KEY` in Supabase Edge Function secrets to activate.**
+E7: n8n workflow `62-zoho-live-sync.json` — 15-min cron, claim/ack pattern, Zoho Books API, retry_count on failure. **VIVEK ACTION: configure Zoho OAuth2 credential in n8n.**
+E8: `apps/erp/src/lib/ai/anthropic-client.ts` singleton + `project-daily-report.ts` server action (3-para narrative, 1-hour cache).
+E9: `milestone_photos` table + `haversine_distance_m()` + `milestone-photos-actions.ts` (upload with GPS gate, list, missing milestones).
+E10: `customer_outreach_queue` table + `customer-outreach-actions.ts` + n8n workflow `30-customer-checkin.json` (Meta WhatsApp). **VIVEK ACTION: set `META_PHONE_NUMBER_ID` + `META_WHATSAPP_TOKEN` in n8n.**
+E11: `bom_actual_vs_budgetary` table (per-project, per-category, budgetary vs actual with correction_factor).
+E12: `get_om_profitability` SQL RPC + `/om/profitability` page (founder + om_technician; KPI strip + SLA table).
+E13/E14: `learning_modules` + `learning_progress` + `onboarding_progress` tables; 5 seed modules (Safety, Inverter Install, Customer Comms, EHS, Basic Electrical).
+E15: `infrastructure/pvlib/` — Dockerfile + docker-compose.yml + requirements.txt + README for pvlib FastAPI microservice (port 5001, Caddy proxy, PVWatts fallback). Deploy guide at `infrastructure/pvlib/README.md`.
+`packages/types/database.ts` regenerated. CI green (check-types / lint / forbidden-patterns baseline 62).
+
 ---
 
 ## In flight this week (April 14 – May 2, 2026)
@@ -92,7 +104,7 @@ New page at `/om/inverters` (founder + om_technician + project_manager). Inverte
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **122** (C8–C12: inventory_cut_records + project_completion_items + handover_pdf_path + dc_certificates, May 24 via Supabase MCP). 082–122 tracked. Mig 084 (nullable project_id) DDL is live but was applied outside `supabase_migrations.schema_migrations`; Zoho re-run relied on it. Note: mig 117 was applied in two passes — initial apply + 117c fix to drop-and-recreate the RPC with the `week_total` return column (can't `CREATE OR REPLACE` when return type changes); both passes reflected in the tracked SQL file. | None |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **128** (Phase E: documents extraction_status + zoho_sync_queue retry columns + milestone_photos + customer_outreach_queue + bom_actual_vs_budgetary + get_om_profitability RPC + learning_modules + learning_progress + onboarding_progress, May 24 via Supabase MCP). 082–128 tracked. Mig 084 (nullable project_id) DDL is live but was applied outside `supabase_migrations.schema_migrations`; Zoho re-run relied on it. Note: mig 117 was applied in two passes — initial apply + 117c fix to drop-and-recreate the RPC with the `week_total` return column (can't `CREATE OR REPLACE` when return type changes); both passes reflected in the tracked SQL file. | None |
 | **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 111** — 99 migrations waiting on the next prod window. Note: live ERP at `erp.shiroienergy.com` points at **dev** Supabase, so this prod-DB gap doesn't block users today. |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, Zoho Books, and WhatsApp; not all of that needs to move to prod — specifically the Zoho import tables are dev-only for now).

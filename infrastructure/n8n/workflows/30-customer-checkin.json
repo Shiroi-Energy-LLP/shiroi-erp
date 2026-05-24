@@ -1,0 +1,220 @@
+{
+  "name": "30 — Customer Check-in Outreach",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "event-trigger",
+      "name": "ERP Event: customer_checkin.due",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "customer-checkin-due",
+      "notes": "Receives customer_checkin.due events from the ERP event bus (00-event-bus-router.json routes them here). Payload: { project_id, project_number, customer_name, days_since_commissioning, message }"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate the incoming event payload\nconst body = $input.first().json.body ?? $input.first().json;\nconst projectId = body.project_id;\nconst message = body.message;\nconst customerName = body.customer_name;\nconst daysSince = body.days_since_commissioning;\n\nif (!projectId || !message) {\n  throw new Error('Missing required fields: project_id or message');\n}\n\nconsole.log(`[customer-checkin] Processing check-in for ${customerName} (${daysSince} days since commissioning)`);\n\nreturn [{ json: { projectId, message, customerName, daysSince, projectNumber: body.project_number } }];"
+      },
+      "id": "validate-payload",
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/projects?id=eq.{{ $json.projectId }}&select=id,project_number,customer_name,customer_phone",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "fetch-project",
+      "name": "Fetch Project & Customer Phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const project = ($input.first().json ?? [])[0];\nconst payload = $('Validate Payload').first().json;\n\nif (!project) {\n  throw new Error(`Project ${payload.projectId} not found`);\n}\n\nconst customerPhone = project.customer_phone;\nif (!customerPhone) {\n  console.warn(`[customer-checkin] No customer_phone for project ${project.project_number} — skipping WhatsApp send`);\n  return [{ json: { ...payload, skip: true, reason: 'no_phone' } }];\n}\n\n// Format phone for WhatsApp (India: +91...)\nconst phone = customerPhone.startsWith('+') ? customerPhone : `+91${customerPhone.replace(/^0/, '')}`;\n\nreturn [{ json: { ...payload, customerPhone: phone, skip: false } }];"
+      },
+      "id": "extract-phone",
+      "name": "Extract & Format Phone",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "not-skip",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "check-skip",
+      "name": "Has Phone?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.META_WHATSAPP_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.customerPhone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.message }}\"\n  }\n}",
+        "notes": "PENDING MANUAL STEP: Configure META_PHONE_NUMBER_ID and META_WHATSAPP_TOKEN in n8n environment variables."
+      },
+      "id": "send-whatsapp",
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_outreach_queue?project_id=eq.{{ $json.projectId }}&status=eq.message_generated",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"status\": \"sent\", \"whatsapp_sent_at\": \"{{ $now.toISO() }}\" }"
+      },
+      "id": "ack-sent",
+      "name": "Mark as Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_outreach_queue?project_id=eq.{{ $json.projectId }}&status=eq.message_generated",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"status\": \"skipped\" }"
+      },
+      "id": "mark-skipped",
+      "name": "Mark as Skipped (no phone)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 420]
+    }
+  ],
+  "connections": {
+    "ERP Event: customer_checkin.due": {
+      "main": [
+        [{ "node": "Validate Payload", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate Payload": {
+      "main": [
+        [{ "node": "Fetch Project & Customer Phone", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Project & Customer Phone": {
+      "main": [
+        [{ "node": "Extract & Format Phone", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract & Format Phone": {
+      "main": [
+        [{ "node": "Has Phone?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Phone?": {
+      "main": [
+        [{ "node": "Send WhatsApp Message", "type": "main", "index": 0 }],
+        [{ "node": "Mark as Skipped (no phone)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send WhatsApp Message": {
+      "main": [
+        [{ "node": "Mark as Sent", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "notes": "PENDING MANUAL STEPS:\n1. Set META_PHONE_NUMBER_ID and META_WHATSAPP_TOKEN env vars in n8n\n2. Ensure projects table has customer_phone column\n3. The weekly Monday cron (via generateCustomerCheckinsForWeek server action or a separate n8n schedule) populates customer_outreach_queue with status=message_generated\n4. This workflow is triggered per event — the event bus router (workflow 00) must route customer_checkin.due events here"
+  }
+}

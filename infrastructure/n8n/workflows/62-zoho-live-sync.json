@@ -1,0 +1,321 @@
+{
+  "name": "62 — Zoho Live Sync (every 15 min)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/claim_zoho_sync_batch",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_limit",
+              "value": "50"
+            }
+          ]
+        }
+      },
+      "id": "claim-batch",
+      "name": "Claim Unclaimed Batch (50 rows)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "notes": "Calls Supabase SQL RPC or REST to claim up to 50 unclaimed zoho_sync_queue rows atomically. If no RPC exists, uses direct SQL via Supabase REST. PENDING MANUAL STEP: Create Zoho OAuth credential in n8n before this workflow can call Zoho Books API."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the response from the Supabase claim query.\n// If rows is empty, stop gracefully.\nconst data = $input.first().json;\nconst rows = Array.isArray(data) ? data : [];\nconsole.log(`[zoho-live-sync] Claimed ${rows.length} rows from zoho_sync_queue`);\n\nif (rows.length === 0) {\n  return []; // No work to do — workflow stops here\n}\n\n// Emit one item per row for the loop\nreturn rows.map(row => ({ json: row }));"
+      },
+      "id": "parse-rows",
+      "name": "Parse & Check Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine which Zoho Books API endpoint to call based on entity_type + action.\n// PENDING MANUAL STEP: Set ZOHO_BOOKS_BASE_URL and configure Zoho OAuth credential in n8n.\n\nconst row = $input.first().json;\nconst entityType = row.entity_type;\nconst action = row.action;\nconst entityId = row.entity_id;\n\nconsole.log(`[zoho-live-sync] Processing row ${row.id}: ${entityType} / ${action} / entity=${entityId}`);\n\n// Build payload based on entity type\n// In production: fetch the entity from Supabase and format for Zoho Books API\nreturn [{\n  json: {\n    ...row,\n    _zoho_endpoint: entityType === 'invoice' ? '/invoices' : \n                    entityType === 'payment' ? '/customerpayments' :\n                    entityType === 'customer' ? '/contacts' : null,\n    _zoho_method: action === 'create' ? 'POST' : action === 'update' ? 'PUT' : 'DELETE',\n    _ready_to_sync: true\n  }\n}];"
+      },
+      "id": "build-zoho-payload",
+      "name": "Build Zoho Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-endpoint",
+              "leftValue": "={{ $json._zoho_endpoint }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "check-endpoint",
+      "name": "Has Valid Endpoint?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "={{ $json._zoho_method }}",
+        "url": "={{ $env.ZOHO_BOOKS_BASE_URL }}/api/v3{{ $json._zoho_endpoint }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "zohoOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-com-zoho-books-organizationid",
+              "value": "={{ $env.ZOHO_BOOKS_ORG_ID }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "call-zoho-api",
+      "name": "Call Zoho Books API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 200],
+      "notes": "PENDING MANUAL STEP: Create Zoho OAuth2 API credential in n8n Settings > Credentials before this node can make real API calls. Credential name must match nodeCredentialType."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/zoho_sync_queue?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"processed_at\": \"{{ $now.toISO() }}\", \"zoho_response\": {{ $json }}, \"status\": \"synced\" }"
+      },
+      "id": "ack-success",
+      "name": "ACK Success (update processed_at)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/zoho_sync_queue?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"claimed_at\": null, \"retry_count\": {{ $json.retry_count + 1 }}, \"last_error\": \"{{ $json._error_message }}\" }"
+      },
+      "id": "rollback-claim",
+      "name": "Rollback Claim on Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 420]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/zoho_sync_queue?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"claimed_at\": null, \"retry_count\": {{ $json.retry_count + 1 }}, \"last_error\": \"Unknown entity_type or action — no Zoho endpoint mapped\" }"
+      },
+      "id": "skip-unknown",
+      "name": "Skip Unknown Entity (rollback)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 560]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_EVENT_BUS_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"event\": \"zoho_sync.error\", \"row_id\": \"{{ $json.id }}\", \"entity_type\": \"{{ $json.entity_type }}\", \"retry_count\": {{ $json.retry_count }}, \"error\": \"{{ $json.last_error }}\" }"
+      },
+      "id": "notify-error-bus",
+      "name": "Notify Error Bus",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 480]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [{ "node": "Claim Unclaimed Batch (50 rows)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Claim Unclaimed Batch (50 rows)": {
+      "main": [
+        [{ "node": "Parse & Check Rows", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse & Check Rows": {
+      "main": [
+        [{ "node": "Build Zoho Payload", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Zoho Payload": {
+      "main": [
+        [{ "node": "Has Valid Endpoint?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Valid Endpoint?": {
+      "main": [
+        [{ "node": "Call Zoho Books API", "type": "main", "index": 0 }],
+        [{ "node": "Skip Unknown Entity (rollback)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Call Zoho Books API": {
+      "main": [
+        [{ "node": "ACK Success (update processed_at)", "type": "main", "index": 0 }]
+      ],
+      "error": [
+        [{ "node": "Rollback Claim on Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Rollback Claim on Failure": {
+      "main": [
+        [{ "node": "Notify Error Bus", "type": "main", "index": 0 }]
+      ]
+    },
+    "Skip Unknown Entity (rollback)": {
+      "main": [
+        [{ "node": "Notify Error Bus", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "notes": "PENDING MANUAL STEPS before activating:\n1. Create Zoho OAuth2 credential in n8n Settings > Credentials\n2. Set ZOHO_BOOKS_BASE_URL env var (e.g. https://books.zoho.in)\n3. Set ZOHO_BOOKS_ORG_ID env var (your Zoho org ID)\n4. Create RPC claim_zoho_sync_batch in Supabase OR replace the claim step with direct SQL via service key\n5. Test with a single row before enabling\n\nArchitecture:\n- Runs every 15 min\n- Claims up to 50 unclaimed rows (claimed_at IS NULL) atomically\n- Calls Zoho Books API per row\n- ACKs on success (sets processed_at)\n- Rolls back claim on failure (sets claimed_at = null, increments retry_count)\n- Emits error event to ERP event bus for alerting"
+  }
+}

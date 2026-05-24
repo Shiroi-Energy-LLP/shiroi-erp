@@ -117,12 +117,54 @@ supabase/functions/inverter-poll/   (Deno Edge Function)
 - Inverter readings: **never** query `inverter_readings` directly from the frontend. Use `inverter_readings_daily` or `_hourly` rollups. Rule #16 (time-series = partitioning + rollup).
 - Commissioning finalization triggers plant monitoring sync + first AMC contract creation (`free_amc`, auto 3 visits).
 
+## Phase E Intelligence Layer (Migrations 125–128)
+
+### E9 — Milestone Photos (`milestone_photos` table, migration 127)
+
+- `milestone CHECK IN ('panel_install_start','panel_install_complete','inverter_install','commissioning','post_commissioning')`
+- `latitude NUMERIC(10,7)` + `longitude NUMERIC(10,7)` + `location_verified BOOLEAN` + `location_distance_m NUMERIC(10,2)`
+- `haversine_distance_m(lat1, lon1, lat2, lon2) RETURNS NUMERIC` IMMUTABLE SQL function
+- `uploadMilestonePhoto` action: validates GPS via RPC, uploads to `documents` bucket at `milestone-photos/{project_number}/{milestone}/{uuid}.ext`, records verification result
+- `getMissingMilestones`: returns which of the 5 milestones have no photo yet for a project
+
+### E10 — Customer Outreach Queue (`customer_outreach_queue` table, migration 127)
+
+- Tracks AI-generated post-commissioning check-in messages (90/180/270/365 days)
+- `status CHECK IN ('pending','message_generated','sent','failed')`
+- `generateCustomerCheckinsForWeek` server action: queries projects at milestone intervals, generates Claude message, emits `customer_checkin.due` event
+- n8n workflow `30-customer-checkin.json`: event-triggered Meta Graph API WhatsApp dispatch
+- **VIVEK ACTION**: set `META_PHONE_NUMBER_ID` + `META_WHATSAPP_TOKEN` in n8n
+
+### E11 — BOM Actual vs Budgetary (`bom_actual_vs_budgetary` table, migration 128)
+
+- Per-project per-category tracking of budgetary vs actual quantities and costs
+- `category CHECK IN ('panels','inverter','mounting_structure','dc_cable','ac_cable','earthing','la_system','accessories','other')`
+- Separate from the existing `bom_correction_factors` table (that's for org-wide ratios; this is per-project actuals)
+
+### E12 — O&M Profitability (`/om/profitability`, migration 128)
+
+- `get_om_profitability(p_start_date DATE, p_end_date DATE)` SQL RPC — aggregates per-project ticket counts, parts cost, service revenue, SLA compliance
+- `/om/profitability` page: accessible to founder + om_technician; KPI strip (total tickets, revenue, parts cost, net profit, avg SLA); per-project table with profit/loss colour coding and SLA badge
+- Reads via `apps/erp/src/lib/om-profitability-queries.ts` (no R15 violation)
+
+### E13/E14 — Microlearning Engine (migrations 128)
+
+- `learning_modules` (title, body_md, category, target_role, difficulty CHECK, onboarding_track CHECK, quiz_questions JSONB, pass_score_pct)
+- `learning_progress` (employee_id, module_id, sent_at, completed_at, quiz_score, passed; UNIQUE per employee+module)
+- `onboarding_progress` (employee_id, onboarding_track, modules_total/completed/passed, completion_pct; UNIQUE per employee+track)
+- 5 seed modules: Solar Panel Safety, Inverter Installation (Tamil), Customer Communication, EHS Emergency Response, Basic Electrical Safety
+- Admin UI for learning modules and onboarding progress: **pending** (tables and seed data exist)
+
 ## Past Decisions & Specs
 
 - Migration 043 (`service_amount`, `closed_at` on tickets)
 - Migration 044 (`amc_category`, `amc_duration_months`, visit-level fields)
 - Migration 050 (inverter telemetry infrastructure — declarative partitioning + pg_cron + auto-ticket scan)
 - Migration 059 (Plant Monitoring credentials, detection helper, commissioning sync trigger, summary RPC)
+- Migration 125 (`extracted_at` + `extraction_status` on `documents`)
+- Migration 126 (`claimed_at` + `processed_at` + `retry_count` on `zoho_sync_queue`)
+- Migration 127 (`milestone_photos` + `haversine_distance_m()` + `customer_outreach_queue`)
+- Migration 128 (`bom_actual_vs_budgetary` + `get_om_profitability` RPC + `learning_modules` + `learning_progress` + `onboarding_progress`)
 - `docs/superpowers/specs/2026-04-16-plant-monitoring-design.md`
 - `docs/superpowers/plans/2026-04-16-plant-monitoring.md`
 - `docs/superpowers/specs/2026-04-17-plant-monitoring-project-combobox-design.md` (searchable project picker, no migration)
