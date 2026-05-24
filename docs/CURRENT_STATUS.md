@@ -24,6 +24,9 @@ C7 (Attendance): `attendance` table (daily, UNIQUE per employee+date), `markAtte
 **Phase 7 (Inverter integration) — /om/inverters management UI. ✅ DONE (2026-05-24). No migration.**
 New page at `/om/inverters` (founder + om_technician + project_manager). Inverter list + filters, Add/Edit dialogs, per-row healthcheck, recent poll failures footer. `@repo/inverter-adapters` added to ERP deps. Sidebar nav updated (Zap icon).
 
+**Phase 8 (Inverter integration) — Edge Function real adapter dispatch + n8n cron. ✅ DONE (2026-05-24). No migration.**
+`inverter-poll` Edge Function rewritten with real Growatt + Sungrow adapters (inlined, Deno-compatible). Growatt session cache added. Sungrow skips with WARN until Manivel clicks Authorize (expected). SolarMan/Goodwe remain synthetic stubs. n8n workflow #60 (5-min cron) and #61 (daily Sungrow token refresh shell) pushed to n8n. Smoke test inverter inserted (Radiance Flourish Block-C, VJHRE4U03K). **VIVEK ACTION: activate workflow #60 in n8n UI to start live polling.** Logic debrief: `docs/2026-05-24-edge-function-logic.md`.
+
 ---
 
 ## In flight this week (April 14 – May 2, 2026)

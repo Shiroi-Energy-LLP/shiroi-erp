@@ -1,0 +1,57 @@
+{
+  "name": "61 — Sungrow token refresh (daily 04:00 IST)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 4 * * *" }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Daily 04:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/sungrow-refresh-tokens",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 30000
+        }
+      },
+      "id": "node-http-refresh",
+      "name": "POST sungrow-refresh-tokens Edge Function",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
+          "name": "Supabase service role"
+        }
+      },
+      "notes": "TODO(phase-9): implement supabase/functions/sungrow-refresh-tokens/index.ts\nLogic:\n  - SELECT all rows from inverter_monitoring_credentials WHERE brand='sungrow' AND config->>'oauth_status'='authorized'\n  - For each row: if access_token_expires_at - now < 5 days, call iSolarCloud token refresh endpoint\n  - Update config->>'access_token' and config->>'access_token_expires_at'\n  - If refresh fails, set config->>'oauth_status' = 'refresh_failed'\nSungrow refresh endpoint: POST {api_base}/openapi/refreshAccessToken\n  Headers: x-access-key: {SUNGROW_APPKEY}\n  Body: { refresh_token: config->>'refresh_token' }"
+    }
+  ],
+  "connections": {
+    "Daily 04:00 IST": {
+      "main": [
+        [{ "node": "POST sungrow-refresh-tokens Edge Function", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

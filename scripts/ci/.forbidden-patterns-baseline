@@ -15,7 +15,6 @@ R15|apps/erp/src/app/(erp)/expenses/[id]/page.tsx:3:import { createClient } from
 R15|apps/erp/src/app/(erp)/expenses/categories/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/expenses/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/hr/certifications/page.tsx:2:import { createClient } from '@repo/supabase/server';
-R15|apps/erp/src/app/(erp)/hr/leave/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/hr/training/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/leads/[id]/files/page.tsx:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/leads/[id]/payments/page.tsx:3:import { createClient } from '@repo/supabase/server';
