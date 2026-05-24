@@ -1628,6 +1628,66 @@ export type Database = {
         }
         Relationships: []
       }
+      dc_certificates: {
+        Row: {
+          certificate_type: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          notes: string | null
+          otp_verified: boolean
+          pdf_path: string | null
+          project_id: string
+          signed_at: string | null
+          signed_by_customer_name: string | null
+          signed_by_customer_phone: string | null
+          signed_by_employee: string | null
+        }
+        Insert: {
+          certificate_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          otp_verified?: boolean
+          pdf_path?: string | null
+          project_id: string
+          signed_at?: string | null
+          signed_by_customer_name?: string | null
+          signed_by_customer_phone?: string | null
+          signed_by_employee?: string | null
+        }
+        Update: {
+          certificate_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          otp_verified?: boolean
+          pdf_path?: string | null
+          project_id?: string
+          signed_at?: string | null
+          signed_by_customer_name?: string | null
+          signed_by_customer_phone?: string | null
+          signed_by_employee?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dc_certificates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dc_certificates_signed_by_employee_fkey"
+            columns: ["signed_by_employee"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       dc_signatures: {
         Row: {
           created_at: string
@@ -3567,6 +3627,63 @@ export type Database = {
             columns: ["generated_by"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      inventory_cut_records: {
+        Row: {
+          created_at: string | null
+          cut_by: string | null
+          cut_date: string
+          id: string
+          length_meters: number
+          material_type: string
+          notes: string | null
+          project_id: string
+          project_stage: string | null
+          quantity_rolls: number | null
+          specification: string
+        }
+        Insert: {
+          created_at?: string | null
+          cut_by?: string | null
+          cut_date?: string
+          id?: string
+          length_meters: number
+          material_type: string
+          notes?: string | null
+          project_id: string
+          project_stage?: string | null
+          quantity_rolls?: number | null
+          specification: string
+        }
+        Update: {
+          created_at?: string | null
+          cut_by?: string | null
+          cut_date?: string
+          id?: string
+          length_meters?: number
+          material_type?: string
+          notes?: string | null
+          project_id?: string
+          project_stage?: string | null
+          quantity_rolls?: number | null
+          specification?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_cut_records_cut_by_fkey"
+            columns: ["cut_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_cut_records_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           }
           ]
@@ -8887,6 +9004,51 @@ export type Database = {
           }
           ]
       }
+      project_completion_items: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          completed_by: string | null
+          component: string
+          id: string
+          notes: string | null
+          project_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          component: string
+          id?: string
+          notes?: string | null
+          project_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          component?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_completion_items_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_completion_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       project_cost_variances: {
         Row: {
           actual_cost: number
@@ -9560,6 +9722,7 @@ export type Database = {
           data_verified_by: string | null
           deleted_at: string | null
           estimated_site_expenses_budget: number
+          handover_pdf_path: string | null
           has_builder_scope: boolean
           id: string
           inverter_brand: string | null
@@ -9651,6 +9814,7 @@ export type Database = {
           data_verified_by?: string | null
           deleted_at?: string | null
           estimated_site_expenses_budget?: number
+          handover_pdf_path?: string | null
           has_builder_scope?: boolean
           id?: string
           inverter_brand?: string | null
@@ -9742,6 +9906,7 @@ export type Database = {
           data_verified_by?: string | null
           deleted_at?: string | null
           estimated_site_expenses_budget?: number
+          handover_pdf_path?: string | null
           has_builder_scope?: boolean
           id?: string
           inverter_brand?: string | null
@@ -15282,6 +15447,18 @@ export type Database = {
           missing_count: number
           total_count: number
         }[]
+      }
+      get_project_cable_summary: {
+        Args: { p_project_id: string }
+        Returns: {
+          material_type: string
+          record_count: number
+          total_meters: number
+        }[]
+      }
+      get_project_completion_pct: {
+        Args: { p_project_id: string }
+        Returns: number
       }
       get_project_profitability_v2: {
         Args: { p_project_id?: string }

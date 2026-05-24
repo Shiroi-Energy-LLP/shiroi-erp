@@ -30,6 +30,7 @@ R15|apps/erp/src/app/api/procurement/[poId]/pdf/route.ts:4:import { createClient
 R15|apps/erp/src/app/api/projects/[id]/commissioning/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/projects/[id]/dc/[dcId]/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/projects/[id]/generate-pdf/route.ts:3:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/api/projects/[id]/handover-pdf/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/projects/[id]/qc/[inspectionId]/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/projects/[id]/survey/route.ts:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/proposals/[id]/generate-pdf/route.ts:3:import { createClient } from '@repo/supabase/server';

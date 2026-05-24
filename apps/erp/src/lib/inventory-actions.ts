@@ -2,6 +2,118 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import type { Database } from '@repo/types/database';
+import { type ActionResult, ok, err } from '@/lib/types/actions';
+
+type CutRecordInsert = Database['public']['Tables']['inventory_cut_records']['Insert'];
+type MaterialType = Database['public']['Tables']['inventory_cut_records']['Row']['material_type'];
+
+// ---------------------------------------------------------------------------
+// C8: Record cable / wire cut-length consumed on a project
+// ---------------------------------------------------------------------------
+
+interface RecordCutLengthInput {
+  projectId: string;
+  materialType: MaterialType;
+  specification: string;
+  lengthMeters: number;
+  quantityRolls?: number;
+  cutDate: string; // 'YYYY-MM-DD'
+  projectStage?: string;
+  notes?: string;
+}
+
+export async function recordCutLength(
+  input: RecordCutLengthInput,
+): Promise<ActionResult<{ id: string }>> {
+  const op = '[recordCutLength]';
+  console.log(`${op} Starting`, { projectId: input.projectId, materialType: input.materialType, lengthMeters: input.lengthMeters });
+
+  if (!input.projectId) return err('Missing project ID');
+  if (!input.specification.trim()) return err('Specification is required');
+  if (input.lengthMeters <= 0) return err('Length must be greater than zero');
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  // Resolve profile.id → cut_by
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  const insertRow: CutRecordInsert = {
+    project_id: input.projectId,
+    material_type: input.materialType,
+    specification: input.specification.trim(),
+    length_meters: input.lengthMeters,
+    quantity_rolls: input.quantityRolls ?? null,
+    cut_date: input.cutDate,
+    cut_by: profile?.id ?? null,
+    project_stage: input.projectStage ?? null,
+    notes: input.notes?.trim() ?? null,
+  };
+
+  const { data, error } = await supabase
+    .from('inventory_cut_records')
+    .insert(insertRow)
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error(`${op} Failed`, { code: error.code, message: error.message, projectId: input.projectId, timestamp: new Date().toISOString() });
+    return err(error.message, error.code);
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  revalidatePath('/inventory');
+  return ok({ id: data.id });
+}
+
+export async function deleteCutRecord(recordId: string): Promise<ActionResult<void>> {
+  const op = '[deleteCutRecord]';
+  console.log(`${op} Starting`, { recordId });
+
+  if (!recordId) return err('Missing record ID');
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  // Verify caller role (founder or project_manager)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile || !['founder', 'project_manager'].includes(profile.role)) {
+    return err('Only founders and project managers can delete cut records');
+  }
+
+  // Fetch the record to get project_id for revalidation
+  const { data: record } = await supabase
+    .from('inventory_cut_records')
+    .select('project_id')
+    .eq('id', recordId)
+    .maybeSingle();
+
+  const { error } = await supabase
+    .from('inventory_cut_records')
+    .delete()
+    .eq('id', recordId);
+
+  if (error) {
+    console.error(`${op} Failed`, { code: error.code, message: error.message, recordId, timestamp: new Date().toISOString() });
+    return err(error.message, error.code);
+  }
+
+  if (record?.project_id) revalidatePath(`/projects/${record.project_id}`);
+  revalidatePath('/inventory');
+  return ok(undefined);
+}
 
 // ---------------------------------------------------------------------------
 // Update cut-length for a stock piece

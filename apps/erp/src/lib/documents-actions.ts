@@ -6,6 +6,140 @@ import { type ActionResult, ok, err } from '@/lib/types/actions';
 import { emitErpEvent } from '@/lib/n8n/emit';
 import { asDocsClient, type DocumentCategory } from '@/lib/documents-queries';
 
+// ---------------------------------------------------------------------------
+// C10: Upload a project document via drag-drop form
+// ---------------------------------------------------------------------------
+
+const ALLOWED_MIME_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+  'application/octet-stream', // DWG/SKP — no official MIME
+  'image/svg+xml',
+]);
+
+const ALLOWED_EXTENSIONS = new Set([
+  'pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic',
+  'xlsx', 'xls', 'csv',
+  'dwg', 'skp', 'dxf',
+]);
+
+const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+
+/**
+ * Auto-detect a category from file name + mime type.
+ */
+function detectCategory(name: string, mimeType: string): DocumentCategory {
+  const lower = name.toLowerCase();
+  if (lower.includes('bom') || lower.endsWith('.xlsx') || lower.endsWith('.xls') || lower.endsWith('.csv')) {
+    return lower.includes('bom') ? 'bom_excel' : 'costing_sheet';
+  }
+  if (mimeType.startsWith('image/')) return 'site_survey_photo';
+  if (lower.endsWith('.dwg') || lower.endsWith('.dxf')) return 'cad_drawing';
+  if (lower.endsWith('.skp')) return 'sketchup_model';
+  if (mimeType === 'application/pdf') return 'proposal_pdf';
+  return 'misc';
+}
+
+export interface UploadDocumentInput {
+  file: File;
+  entityType: 'lead' | 'project';
+  entityId: string;
+  category?: DocumentCategory;
+}
+
+export async function uploadProjectDocument(
+  formData: FormData,
+): Promise<ActionResult<{ id: string; name: string }>> {
+  const op = '[uploadProjectDocument]';
+
+  const file = formData.get('file') as File | null;
+  const entityType = formData.get('entityType') as 'lead' | 'project' | null;
+  const entityId = formData.get('entityId') as string | null;
+  const categoryOverride = formData.get('category') as DocumentCategory | null;
+
+  if (!file || !(file instanceof File)) return err('No file provided');
+  if (!entityType || !entityId) return err('Missing entity association');
+
+  console.log(`${op} Starting`, { name: file.name, size: file.size, entityType, entityId });
+
+  // --- Validations ---
+  if (file.size > MAX_SIZE_BYTES) {
+    return err(`File too large: max 20 MB (got ${(file.size / 1024 / 1024).toFixed(1)} MB)`);
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+  if (!ALLOWED_EXTENSIONS.has(ext) && !ALLOWED_MIME_TYPES.has(file.type)) {
+    return err(`File type not allowed: .${ext}`);
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .maybeSingle();
+
+  // --- Upload to Storage ---
+  const category = categoryOverride ?? detectCategory(file.name, file.type);
+  // Store under entity-specific path for easy listing
+  const timestamp = Date.now();
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const storagePath = `${entityId}/${timestamp}_${safeName}`;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const uint8 = new Uint8Array(arrayBuffer);
+
+  const { error: uploadError } = await supabase.storage
+    .from('proposal-files')
+    .upload(storagePath, uint8, {
+      contentType: file.type || 'application/octet-stream',
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error(`${op} Storage upload failed`, { message: uploadError.message, timestamp: new Date().toISOString() });
+    return err(`Upload failed: ${uploadError.message}`);
+  }
+
+  // --- Create documents row ---
+  const insertRow = {
+    lead_id: entityType === 'lead' ? entityId : null,
+    project_id: entityType === 'project' ? entityId : null,
+    category,
+    storage_backend: 'supabase' as const,
+    storage_path: storagePath,
+    name: file.name,
+    mime_type: file.type || null,
+    size_bytes: file.size,
+    tags: [] as string[],
+    uploaded_by: employee?.id ?? null,
+  };
+
+  const docs = asDocsClient(supabase);
+  const { data, error: insertError } = await docs
+    .from('documents')
+    .insert(insertRow)
+    .select('id')
+    .single();
+
+  if (insertError) {
+    console.error(`${op} Document insert failed`, { code: insertError.code, message: insertError.message, timestamp: new Date().toISOString() });
+    // Clean up orphaned file
+    await supabase.storage.from('proposal-files').remove([storagePath]);
+    return err(insertError.message, insertError.code);
+  }
+
+  if (entityType === 'lead') revalidatePath(`/leads/${entityId}/files`);
+  if (entityType === 'project') revalidatePath(`/projects/${entityId}`);
+
+  return ok({ id: data.id, name: file.name });
+}
+
 /**
  * Documents mutations + Drive folder lifecycle (mig 109, phase 1).
  *
