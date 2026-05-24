@@ -1,5 +1,27 @@
 import { createClient } from '@repo/supabase/server';
 
+/**
+ * Fetch all invoices for a specific project, ordered newest-first.
+ * Used by the project detail finance tab and raise-invoice panels.
+ */
+export async function getProjectInvoices(projectId: string) {
+  const op = '[getProjectInvoices]';
+  console.log(`${op} Starting for project: ${projectId}`);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('id, invoice_number, invoice_type, milestone_name, total_amount, amount_paid, amount_outstanding, invoice_date, due_date, status, notes, erp_created, description')
+    .eq('project_id', projectId)
+    .neq('status', 'cancelled')
+    .order('invoice_date', { ascending: false })
+    .limit(50);
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, projectId });
+    throw new Error(`Failed to load project invoices: ${error.message}`);
+  }
+  return data ?? [];
+}
+
 export async function getInvoices(filters: { status?: string; search?: string } = {}) {
   const op = '[getInvoices]';
   console.log(`${op} Starting`);

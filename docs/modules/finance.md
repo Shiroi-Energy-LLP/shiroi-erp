@@ -33,6 +33,32 @@ Finance Module V2 shipped overnight. Key additions on top of V1:
 
 The finance module owns every rupee in and out of Shiroi — customer invoicing with GST splits and FY-aware document numbering, Tier-3 immutable customer payment records that cascade consultant commission payouts, vendor payment tracking with MSME 45-day statutory SLA alerts, and a PM-facing site-expense voucher approval queue. Payment follow-up tasks are materialised automatically by DB triggers per proposal milestone SLA, escalated hourly via `pg_cron`, and surfaced as a dedicated tab in `/payments`. All dashboard aggregations run through SQL RPCs (never JS `.reduce()` over money rows) and are wrapped in `unstable_cache` for the founder dashboard hot path.
 
+## Finance Phase C (May 24, 2026)
+
+C2 + C3 + C4 shipped via migration 118.
+
+**Schema additions (migration 118):**
+- `invoices.erp_created BOOLEAN NOT NULL DEFAULT FALSE` — distinguishes ERP-raised from Zoho-imported invoices
+- `invoices.description TEXT` — optional line-item description for ERP-raised simple invoices
+- `invoices.tax_amount NUMERIC(14,2) NOT NULL DEFAULT 0` — consolidated tax amount alternative to gst_supply/gst_works split
+- `customer_payments.erp_recorded BOOLEAN NOT NULL DEFAULT FALSE` — flags ERP-recorded payments
+- `get_receivables_reconciliation()` SQL RPC — per-project receivables summary ordered by outstanding DESC
+
+**New server actions (finance-actions.ts):**
+- `raiseProjectInvoice(...)` → `ActionResult<{ invoiceId, invoiceNumber }>` — project-scoped invoice create, sets `erp_created=true`
+- `recordProjectPayment(...)` → `ActionResult<{ paymentId }>` — project-scoped payment record, sets `erp_recorded=true`, updates invoice status
+
+**New UI:**
+- `raise-invoice-dialog.tsx` — project-scoped invoice dialog (no project picker needed)
+- `record-project-payment-dialog.tsx` — per-invoice payment dialog with pre-filled outstanding amount
+- `project-invoices-panel.tsx` — server component; KPI strip + invoice table with inline "Record payment" trigger; mounted on project detail page (details tab) and accessible via `?tab=finance`
+- `/payments/reconciliation` — KPI strip (outstanding / 60d+ overdue / no-invoice projects) + colour-coded reconciliation table; "Reconciliation" tab added to `PaymentsNav`
+- `/cash` — "Raise Invoice" + "Reconciliation" shortcut links added to header
+
+**New query file:** `receivables-reconciliation-queries.ts` — `getReceivablesReconciliation()` (RPC call) + `computeReconciliationKpis()` (pure JS, sums pre-aggregated SQL rows only).
+
+---
+
 ## Screens / Routes
 
 - `/vendor-bills` — V2 vendor bill list (KPI cards, MSME badge, Zoho-import source badge, status filter). `getVendorBills()` in `vendor-bills-queries.ts`.

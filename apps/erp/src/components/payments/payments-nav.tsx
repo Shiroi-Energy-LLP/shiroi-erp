@@ -8,6 +8,7 @@ const TABS = [
   { label: 'Project Payments', href: '/payments' },
   { label: 'Tracker', href: '/payments/tracker' },
   { label: 'Receipts', href: '/payments/receipts' },
+  { label: 'Reconciliation', href: '/payments/reconciliation' },
 ];
 
 export function PaymentsNav() {

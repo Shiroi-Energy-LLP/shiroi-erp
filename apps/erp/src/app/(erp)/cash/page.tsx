@@ -65,6 +65,21 @@ export default async function CashFlowPage() {
           <Eyebrow className="mb-1">CASH FLOW</Eyebrow>
           <h1 className="text-2xl font-bold text-[#1A1D24]">Cash Flow</h1>
         </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/invoices"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#00B050] px-3 py-2 text-sm font-medium text-white hover:bg-[#009040] transition-colors"
+          >
+            <TrendingUp className="h-4 w-4" />
+            Raise Invoice
+          </Link>
+          <Link
+            href="/payments/reconciliation"
+            className="inline-flex items-center gap-1.5 rounded-md border border-n-200 px-3 py-2 text-sm font-medium text-n-700 hover:bg-n-50 transition-colors"
+          >
+            Reconciliation
+          </Link>
+        </div>
       </div>
 
       <OrphanBanner />

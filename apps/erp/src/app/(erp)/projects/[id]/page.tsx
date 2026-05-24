@@ -23,6 +23,7 @@ import { StepLiaison } from '@/components/projects/stepper-steps/step-liaison';
 import { StepCommissioning } from '@/components/projects/stepper-steps/step-commissioning';
 import { StepAmc } from '@/components/projects/stepper-steps/step-amc';
 import { StepActuals } from '@/components/projects/stepper-steps/step-actuals';
+import { ProjectInvoicesPanel } from '@/components/projects/detail/project-invoices-panel';
 
 interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
@@ -166,6 +167,13 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
         />
       </div>
     </div>
+
+    {/* Invoice panel — full-width, below the grid, for finance/founder/PM roles */}
+    {viewerRole && ['founder', 'finance', 'project_manager', 'marketing_manager'].includes(viewerRole) && (
+      <Suspense fallback={<div className="h-32 bg-n-100 rounded-lg animate-pulse" />}>
+        <ProjectInvoicesPanel projectId={id} />
+      </Suspense>
+    )}
     </div>
   );
 }
@@ -209,6 +217,8 @@ async function TabContent({ projectId, tab }: { projectId: string; tab: string }
         .maybeSingle();
       return <DocumentsTab projectId={projectId} leadId={(data as any)?.lead_id ?? null} />;
     }
+    case 'finance':
+      return <ProjectInvoicesPanel projectId={projectId} />;
     default:
       return null;
   }
