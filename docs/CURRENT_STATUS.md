@@ -9,14 +9,14 @@
 ## Phase
 
 **Phase F — Scale. ✅ F1+F3+F4+F6+F7+F8 DONE (2026-05-24). F2+F5 deferred (manual).**
-F1: Customer WhatsApp drip sequences — 8 n8n workflows (40–47), `customer_message_log` table (migration 129), 8 Meta templates pending Meta Business Verification (F2).
+F1: Customer WhatsApp drip sequences — 8 n8n workflows (40–47), `customer_message_log` table (migration 129), 8 Meta templates ready to submit (F2 verification done). Submit templates → wait Meta approval (~24h) → activate workflows on droplet.
 F3: GST e-invoice framework — `einvoice-builder.ts` pure function + vitest tests, `generateEInvoice` server action (stub — pending GSP onboarding + SHIROI_GSTIN env var). Migration 130 adds irn/ack/qr columns to invoices.
 F4: Referral payout system — `referral_payouts` table, auto-trigger on lead.won, approve/pay/reject server actions, `/referrals` page with KPI strip + 3-tab table + approve/reject/pay dialogs, per-partner subpage `/referrals/partners/[id]`. Migration 131.
 F5: Tamil bilingual content — deferred (manual content creation step outside ERP).
 F6: Salary benchmarking — `salary_benchmarks` table seeded with Chennai 2026 market data (7 roles), `get_salary_benchmark_report` RPC, `/hr/benchmarking` page (founder+hr_manager only). Migration 132.
 F7: Customer proposal portal — `proposal_share_tokens` table, public `/p/[token]` page (no auth, admin client, view counter), `createProposalShareToken` server action, magic-link URL generation. Migration 133.
 F8: OpenRouter AI flexibility — `ai-caller.ts` + `ai-config.ts` + `openrouter-client.ts` abstraction layer, AI_PROVIDER/AI_MODEL/OPENROUTER_API_KEY env vars, `report-ai-actions.ts` refactored to use callAi(). turbo.json updated with 10 new env var declarations.
-F2: Meta Business Verification — deferred. Manual step: Vivek logs into business.facebook.com, submits business verification docs. Required before 8 customer templates can be submitted for Meta approval.
+F2: Meta Business Verification — **✅ DONE 2026-05-24**. Messaging tier now **2,000 msgs/24h** (verified live). Unblocks F1 customer templates — Vivek can now submit the 8 customer templates (in `infrastructure/n8n/templates.md`) for Meta approval, then activate workflows #40–47 on the droplet.
 
 **Phase B — Marketing Complete. ✅ DONE (2026-05-24).**
 All B1–B7 tasks shipped: payment tracker follow-up columns + RPC (mig 117), `updatePaymentFollowUp` server action, "Payments Expected This Week" KPI card on `/payments` and `/payments/tracker`, Follow-up dialog per milestone in tracker table, `?filter=this_week` filter, BOM generator AC cable/earthing/conduit line items + conduit category fix, Quick Quote PDF note text fix, lead layout "Create Detailed Quote" CTA + amber nudge banner, Detailed Quote PDF segment-aware Scope of Work + GST sub-breakdown + LLP label fix. Revised master plan at `docs/superpowers/plans/2026-05-23-erp-master-plan-revised.md`. Building in dev. Prod gate: data cleanup done (Phase D manual) + marketing complete + operations complete + employee testing week. Phase E/F run in parallel with C and D. Mobile (Phase G) is a separate phase.

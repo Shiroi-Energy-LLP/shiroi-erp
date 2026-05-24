@@ -636,7 +636,7 @@ Adapters per brand in `packages/inverter-adapters/` (sungrow, growatt, sma, huaw
 
 ### 12.7 + 12.8 WhatsApp
 
-**Current:** Direct Meta WhatsApp Business Cloud API via n8n. `erp_alert` template live. Delivery webhook (#57) receiving status callbacks. 6 workflows active (~9 msgs/day to internal team). **No WATI.io** — bypassed by going direct to Meta. Customer-facing drip sequences (Phase F1) will use the same n8n + Meta path. Meta Business Verification pending (Vivek submits docs) to lift messaging tier.
+**Current:** Direct Meta WhatsApp Business Cloud API via n8n. `erp_alert` template live. Delivery webhook (#57) receiving status callbacks. 6 internal-team workflows active (~9 msgs/day) + 8 customer-facing drip workflows (#40–47) shipped 2026-05-24, awaiting template approval before activation. **No WATI.io** — bypassed by going direct to Meta. **Meta Business Verification complete; messaging tier currently 2,000 messages/24h** — comfortably above expected ERP volume. Next ceiling lifts to 10k then unlimited based on quality_rating + send volume.
 
 **Historical import:** Rule-based (no LLM) pipeline in `scripts/whatsapp-import/` — `parser.ts` handles Android + iPhone ZIPs + U+202F narrow no-break space + Unicode control chars; `extract-local.ts` pulls payments/contacts/POs/BOQ items/daily reports/activities; `enrich-and-approve.ts` does fuzzy project match + Indian amount parsing + bulk insert. Review queue `whatsapp_import_queue` (migration 025) with SHA-256 dedup on `message_hash` — re-runs are safe. Live Baileys bot deferred — scaffolds in `scripts/whatsapp-import/profiles/`.
 

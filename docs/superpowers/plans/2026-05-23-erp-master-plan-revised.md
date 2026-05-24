@@ -102,7 +102,7 @@ Everything built through the original Phase 1A/2A/2B/2C foundation:
 | ID | Task | Blocked by | Status |
 |----|------|-----------|--------|
 | F1 | Customer-facing WhatsApp drip sequences via n8n + Meta API — proposal sent, project milestones, O&M reminders, payment reminders to customers | — | 🔲 |
-| F2 | Meta Business Verification — submit docs to lift messaging tier (manual: Vivek submits on business.facebook.com) | Manual | 🔲 |
+| F2 | Meta Business Verification — submit docs to lift messaging tier | Manual | ✅ Done 2026-05-24 — currently at 2,000 msgs/24h tier |
 | F3 | GST e-invoicing integration | GST API credentials | 🔲 |
 | F4 | Full referral program — tracking, payout tracking, referrer portal | — | 🔲 |
 | F5 | Bilingual microlearning — Tamil content | Content creation | 🔲 |
@@ -155,7 +155,7 @@ Everything built through the original Phase 1A/2A/2B/2C foundation:
 - F7: Customer portal
 - F8: OpenRouter
 
-*F2/F5 require manual action (Meta verification, Tamil content) — documented but not buildable autonomously.*
+*F2 done (2026-05-24, Meta Business Verification complete, tier at 2k/24h). F5 (Tamil content) still requires manual content creation.*
 
 ---
 
