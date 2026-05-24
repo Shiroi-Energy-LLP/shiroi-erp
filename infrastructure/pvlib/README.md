@@ -1,92 +1,63 @@
 # PVLib Microservice — Deployment Guide
 
-This FastAPI microservice wraps pvlib to provide solar yield simulation as a fallback when PVWatts is unavailable or offline.
+FastAPI microservice that wraps pvlib + PVGIS TMY data to provide solar yield simulation as a fallback when PVWatts is unavailable.
+
+## Live deployment (as of 2026-05-24)
+
+- **URL:** `https://pvlib.shiroienergy.com` (auto-HTTPS via Caddy + Let's Encrypt)
+- **Host:** DO droplet `shiroi-erp` (`68.183.91.111`)
+- **Stack location:** `/opt/shiroi-automation/pvlib/` (alongside n8n + Caddy in the same docker-compose)
+- **Container name:** `shiroi-pvlib`
+- **Internal port:** 5001 (not exposed to host — Caddy proxies via Docker network DNS `pvlib:5001`)
+- **Resources:** 512 MB RAM, 0.5 CPU
+- **API contract matches** `apps/erp/src/lib/pvwatts.ts` exactly — fields `system_capacity`/`lat`/`lon`/`tilt`/`azimuth`/`module_type`/`losses`, response `{monthly_kwh: number[12], annual_kwh: number}`
 
 ## Architecture
 
-- Runs on the DO droplet as a Docker container
-- Listens on `localhost:5001` only (Caddy proxies `pvlib.shiroienergy.com` → `localhost:5001`)
+- Runs as a Docker container in the same `shiroi-automation_shiroi` network as n8n + Caddy
+- Caddy reverse-proxies `pvlib.shiroienergy.com` → `pvlib:5001` via container DNS
 - The ERP sets `PVLIB_MICROSERVICE_URL=https://pvlib.shiroienergy.com` in Vercel env vars
-- The ERP falls back to pvlib when PVWatts returns an error
+- The ERP falls back to pvlib only when PVWatts returns an error or times out (8s)
 
-## Deployment Steps (run as Vivek on the DO droplet)
-
-### 1. SSH into the droplet
+## Re-deployment (after editing `main.py` or dependencies)
 
 ```bash
-ssh root@<droplet-ip>
-```
+# From your local machine:
+scp infrastructure/pvlib/main.py root@68.183.91.111:/opt/shiroi-automation/pvlib/main.py
+# (or scp -r for everything)
+ssh root@68.183.91.111 'cd /opt/shiroi-automation && docker compose up -d --build pvlib'
 
-### 2. Install Docker (if not already installed)
-
-```bash
-curl -fsSL https://get.docker.com | sh
-```
-
-### 3. Clone/copy the pvlib source files
-
-```bash
-mkdir -p /opt/shiroi/pvlib
-# Copy the files from this directory to the droplet
-scp -r infrastructure/pvlib/* root@<droplet-ip>:/opt/shiroi/pvlib/
-```
-
-Make sure `/opt/shiroi/pvlib/main.py` exists (the FastAPI app — implement if not present).
-
-### 4. Build and start the container
-
-```bash
-cd /opt/shiroi/pvlib
-docker compose up -d --build
-```
-
-Verify it's running:
-```bash
-docker compose ps
-curl http://localhost:5001/health
+# Verify:
+curl https://pvlib.shiroienergy.com/health
 # Expected: {"status":"ok","pvlib_version":"0.11.0"}
 ```
 
-### 5. Configure Caddy reverse proxy
+## Initial deployment steps (already done on 2026-05-24)
 
-Add this snippet to `/etc/caddy/Caddyfile`:
+1. `scp -r infrastructure/pvlib root@68.183.91.111:/opt/shiroi-automation/`
+2. Added `pvlib:` service block to `/opt/shiroi-automation/docker-compose.yml` (joins the existing `shiroi` network)
+3. Added `pvlib.shiroienergy.com { reverse_proxy pvlib:5001 }` block to `/opt/shiroi-automation/Caddyfile`
+4. `docker compose up -d --build pvlib`
+5. `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`
+6. Caddy auto-provisioned the Let's Encrypt cert on first request
 
+## Manual step still pending
+
+Add to **Vercel** env vars for `erp.shiroienergy.com`:
+- `PVLIB_MICROSERVICE_URL` = `https://pvlib.shiroienergy.com`
+
+Until this is set, the ERP's `fetchPVLib()` in `pvwatts.ts` will throw "Missing PVLIB_MICROSERVICE_URL" when PVWatts fails. No fallback active until then.
+
+## Auth
+
+No auth on the endpoint. The service is read-only simulation (no secrets, no DB writes). If you want to add basicauth later, the Caddyfile block accepts:
 ```
 pvlib.shiroienergy.com {
-    reverse_proxy localhost:5001
-
-    # Basic auth for the external endpoint (pvlib is internal-only normally)
-    # Remove if ERP calls from Vercel with IP allowlist instead
+    reverse_proxy pvlib:5001
     basicauth * {
-        shiroi $2a$14$<bcrypt-hash-of-api-password>
-    }
-
-    log {
-        output file /var/log/caddy/pvlib.log
+        shiroi <bcrypt-hash>
     }
 }
-```
-
-Reload Caddy:
-```bash
-systemctl reload caddy
-```
-
-### 6. Set Vercel environment variable
-
-In the Vercel dashboard for `erp.shiroienergy.com`:
-- Go to Settings → Environment Variables
-- Add: `PVLIB_MICROSERVICE_URL` = `https://pvlib.shiroienergy.com`
-
-### 7. Set up systemd restart on reboot (if not using Docker's restart policy)
-
-The `docker-compose.yml` already has `restart: unless-stopped`, so Docker will restart the container on reboot automatically.
-
-Verify:
-```bash
-reboot
-# wait 30 seconds
-curl http://localhost:5001/health
 ```
 
 ## Monitoring
