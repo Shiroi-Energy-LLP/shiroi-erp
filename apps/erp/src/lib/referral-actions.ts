@@ -106,16 +106,21 @@ export async function markReferralPaid(
       return err(error.message, error.code);
     }
 
-    // Update lifetime_commission counter on the partner (best-effort)
-    await supabase
-      .from('channel_partners')
-      .update({
-        lifetime_commission: supabase.rpc('increment_partner_commission' as never, {
-          p_partner_id: payout.channel_partner_id,
-          p_amount: payout.commission_amount,
-        }) as never,
-      })
-      .eq('id', payout.channel_partner_id);
+    // Bump lifetime_commission on the partner via the atomic SQL RPC
+    // (mig 134 increment_partner_commission). Best-effort; payout is already marked paid.
+    const { error: bumpErr } = await supabase.rpc('increment_partner_commission', {
+      p_partner_id: payout.channel_partner_id,
+      p_amount: Number(payout.commission_amount),
+    });
+    if (bumpErr) {
+      console.error(`${op} commission counter bump failed (non-fatal)`, {
+        payoutId,
+        partnerId: payout.channel_partner_id,
+        code: bumpErr.code,
+        message: bumpErr.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     revalidatePath('/referrals');
     return ok(null);

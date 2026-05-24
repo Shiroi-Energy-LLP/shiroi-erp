@@ -44,6 +44,29 @@ export async function signDcCertificate(
     return err('Only founders, project managers, and site supervisors can record signatures');
   }
 
+  // Immutability gate: a once-signed certificate cannot be re-signed.
+  // The previous upsert pattern silently overwrote signer name, phone, IP, and
+  // timestamp on every call — defeating the audit-trail intent of C12.
+  const { data: existing, error: existErr } = await supabase
+    .from('dc_certificates')
+    .select('id, signed_at')
+    .eq('project_id', input.projectId)
+    .eq('certificate_type', input.certificateType)
+    .maybeSingle();
+
+  if (existErr) {
+    console.error(`${op} existing-cert lookup failed`, {
+      code: existErr.code,
+      message: existErr.message,
+      timestamp: new Date().toISOString(),
+    });
+    return err(existErr.message, existErr.code);
+  }
+
+  if (existing?.signed_at) {
+    return err('This certificate has already been signed and cannot be re-signed.');
+  }
+
   // Attempt to get caller IP (best-effort in Next.js)
   let ipAddress: string | null = null;
   try {

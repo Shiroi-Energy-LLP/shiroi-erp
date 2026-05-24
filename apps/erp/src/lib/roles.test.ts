@@ -80,11 +80,13 @@ describe('navSectionsForRole', () => {
     ]);
   });
 
-  it('purchase_officer Procurement section contains Purchase Orders, Deliveries, Inventory', () => {
+  it('purchase_officer Procurement section contains Purchase Orders, Material Requests, Deliveries, Inventory', () => {
+    // Material Requests added by C1 purchase work (mig 123) to let purchase_officer
+    // review/convert requisitions to POs.
     const sections = navSectionsForRole('purchase_officer' as AppRole);
     const proc = sections.find((s) => s.label === 'Procurement');
     expect(proc!.items.map((i) => i.label)).toEqual([
-      'Purchase Orders', 'Deliveries', 'Inventory',
+      'Purchase Orders', 'Material Requests', 'Deliveries', 'Inventory',
     ]);
   });
 
@@ -110,9 +112,11 @@ describe('navSectionsForRole', () => {
     ]);
   });
 
-  it('site_supervisor returns Overview + My Work + Projects + Account', () => {
+  it('site_supervisor returns Overview + My Work + Projects + Procurement + Account', () => {
+    // Procurement section added by C1 purchase work (mig 123) so site_supervisors
+    // can submit material requisitions from the field.
     const sections = navSectionsForRole('site_supervisor' as AppRole);
-    expect(sections.map((s) => s.label)).toEqual(['Overview', 'My Work', 'Projects', 'Account']);
+    expect(sections.map((s) => s.label)).toEqual(['Overview', 'My Work', 'Projects', 'Procurement', 'Account']);
   });
 
   it('sales_engineer returns Overview + Sales + Expenses + Contacts + Account', () => {

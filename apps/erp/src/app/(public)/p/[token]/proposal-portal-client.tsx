@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { CheckCircle, Download, MessageCircle, Sun, Zap, Calendar } from 'lucide-react';
-import { Button } from '@repo/ui';
-import { toast } from 'sonner';
+import { Button, useToast } from '@repo/ui';
+import { acceptProposalFromPortal } from '@/lib/proposal-share-actions';
 
 interface ProposalData {
   proposalNumber: string;
@@ -27,6 +27,8 @@ const SHIROI_WHATSAPP = '+919876543210'; // Will be overridden by system setting
 
 export function ProposalPortalClient({ proposal, formatINR, token }: Props) {
   const [accepted, setAccepted] = useState(proposal.status === 'approved');
+  const [isPending, startTransition] = useTransition();
+  const { addToast } = useToast();
 
   const expiryDate = new Date(proposal.expiresAt).toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -45,11 +47,26 @@ export function ProposalPortalClient({ proposal, formatINR, token }: Props) {
   );
   const whatsappUrl = `https://wa.me/${SHIROI_WHATSAPP.replace(/\D/g, '')}?text=${whatsappMessage}`;
 
-  const pdfUrl = `/api/proposals/${token}/pdf`;
+  const pdfUrl = `/p/${token}/pdf`;
 
   function handleAccept() {
-    setAccepted(true);
-    toast.success('Thank you! Our team will reach out to you shortly to proceed.');
+    startTransition(async () => {
+      const result = await acceptProposalFromPortal(token);
+      if (!result.success) {
+        addToast({
+          variant: 'destructive',
+          title: 'Could not record acceptance',
+          description: result.error,
+        });
+        return;
+      }
+      setAccepted(true);
+      addToast({
+        variant: 'success',
+        title: 'Proposal accepted',
+        description: 'Our team will reach out to you shortly to proceed.',
+      });
+    });
   }
 
   return (
@@ -126,8 +143,9 @@ export function ProposalPortalClient({ proposal, formatINR, token }: Props) {
               survey, payment plan, and installation timeline.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="flex-1" onClick={handleAccept}>
-                <CheckCircle className="h-4 w-4 mr-2" /> Accept proposal
+              <Button className="flex-1" onClick={handleAccept} disabled={isPending}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {isPending ? 'Recording…' : 'Accept proposal'}
               </Button>
               <Button variant="outline" className="flex-1" asChild>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">

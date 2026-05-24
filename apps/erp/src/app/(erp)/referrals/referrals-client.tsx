@@ -23,9 +23,9 @@ import {
   DialogTitle,
   DialogFooter,
   Input,
+  useToast,
 } from '@repo/ui';
 import { CheckCircle, XCircle, CreditCard, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   approveReferralPayout,
   rejectReferralPayout,
@@ -128,7 +128,7 @@ function PayoutRow({
       </TableCell>
       <TableCell>
         <p className="text-xs text-muted-foreground">
-          {new Date(payout.created_at).toLocaleDateString('en-IN')}
+          {payout.created_at ? new Date(payout.created_at).toLocaleDateString('en-IN') : '—'}
         </p>
         {payout.paid_at && (
           <p className="text-xs text-muted-foreground">
@@ -168,14 +168,15 @@ export function ReferralPageClient({ kpis, pendingPayouts, approvedPayouts, paid
   const [rejectReason, setRejectReason] = useState('');
   const [payTarget, setPayTarget] = useState<string | null>(null);
   const [payRef, setPayRef] = useState('');
+  const { addToast } = useToast();
 
   function handleApprove(id: string) {
     startTransition(async () => {
       const result = await approveReferralPayout(id);
       if (result.success) {
-        toast.success('Payout approved');
-      } else if (!result.success) {
-        toast.error(result.error);
+        addToast({ variant: 'success', title: 'Payout approved' });
+      } else {
+        addToast({ variant: 'destructive', title: 'Could not approve', description: result.error });
       }
     });
   }
@@ -185,11 +186,11 @@ export function ReferralPageClient({ kpis, pendingPayouts, approvedPayouts, paid
     startTransition(async () => {
       const result = await rejectReferralPayout(rejectTarget, rejectReason);
       if (result.success) {
-        toast.success('Payout rejected');
+        addToast({ variant: 'success', title: 'Payout rejected' });
         setRejectTarget(null);
         setRejectReason('');
-      } else if (!result.success) {
-        toast.error(result.error);
+      } else {
+        addToast({ variant: 'destructive', title: 'Could not reject', description: result.error });
       }
     });
   }
@@ -199,11 +200,11 @@ export function ReferralPageClient({ kpis, pendingPayouts, approvedPayouts, paid
     startTransition(async () => {
       const result = await markReferralPaid(payTarget, payRef);
       if (result.success) {
-        toast.success('Payout marked as paid');
+        addToast({ variant: 'success', title: 'Payout marked as paid' });
         setPayTarget(null);
         setPayRef('');
-      } else if (!result.success) {
-        toast.error(result.error);
+      } else {
+        addToast({ variant: 'destructive', title: 'Could not mark paid', description: result.error });
       }
     });
   }

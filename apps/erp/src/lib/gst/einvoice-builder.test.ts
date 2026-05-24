@@ -112,7 +112,7 @@ describe('buildEInvoicePayload', () => {
   it('produces 1 line item for supply-only invoice', () => {
     const payload = buildEInvoicePayload(MOCK_INVOICE_SUPPLY_ONLY, MOCK_CUSTOMER_B2B, MOCK_SELLER);
     expect(payload.ItemList).toHaveLength(1);
-    expect(payload.ItemList[0].HsnCd).toBe('85414040');
+    expect(payload.ItemList[0]?.HsnCd).toBe('85414040');
   });
 
   it('splits intra-state GST into CGST + SGST (no IGST)', () => {

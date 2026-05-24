@@ -115,10 +115,11 @@ export async function attachOpenUrls(documents: DocumentRow[]): Promise<Document
         return { ...doc, signed_url: doc.external_url };
       }
       if (doc.storage_backend === 'supabase' && doc.storage_path) {
-        // Pick bucket: proposal-files is used for both proposal PDFs and
-        // drag-drop uploads (C10). Extend as we wire other buckets.
-        const bucket = 'proposal-files';
-        if (!bucket) return { ...doc, signed_url: null };
+        // Infer bucket from the row's entity association:
+        //  - project_id set → project-files (broader RLS for field roles)
+        //  - else (lead_id / proposal_id only) → proposal-files
+        // Matches the routing in `uploadProjectDocument` (documents-actions.ts).
+        const bucket = doc.project_id ? 'project-files' : 'proposal-files';
 
         const { data, error } = await supabase.storage
           .from(bucket)

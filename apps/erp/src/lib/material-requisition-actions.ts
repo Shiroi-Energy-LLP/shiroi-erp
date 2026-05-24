@@ -109,10 +109,11 @@ export async function submitMaterialRequisition(input: {
           const urgencyLabel = input.urgency === 'critical' ? 'CRITICAL' : input.urgency === 'urgent' ? 'Urgent' : 'Normal';
           const notifs: NotificationInsert[] = pmEmployees.map((emp) => ({
             recipient_employee_id: emp.id,
-            notification_type: 'material_requisition',
+            notification_type: 'approval_required',
             title: `[${urgencyLabel}] New material request — ${input.items.length} item(s)`,
             body: `A material request has been submitted for your review.`,
-            entity_type: 'material_requisition',
+            // entity_type omitted: 'material_requisition' isn't in the CHECK constraint
+            // (mig 014). The requisition id is preserved in entity_id for deep-linking.
             entity_id: req.id,
           }));
           const { error: notifErr } = await supabase.from('notifications').insert(notifs);
@@ -192,6 +193,12 @@ export async function reviewMaterialRequisition(input: {
       return err(`Requisition is already ${req.status} — cannot re-review`);
     }
 
+    // Block self-review: requester cannot approve/reject their own requisition.
+    // Founder is exempt (founders can override and approve in a pinch).
+    if (employee?.id && req.requested_by === employee.id && role !== 'founder') {
+      return err('You cannot review your own material requisition');
+    }
+
     const newStatus = input.action === 'approve' ? 'approved' : 'rejected';
     const update: MatReqUpdate = {
       status: newStatus,
@@ -214,12 +221,13 @@ export async function reviewMaterialRequisition(input: {
     try {
       const notif: NotificationInsert = {
         recipient_employee_id: req.requested_by,
-        notification_type: 'material_requisition',
+        notification_type: 'info',
         title: `Material request ${newStatus}`,
+        // entity_type stripped: 'material_requisition' is not in the CHECK
+        // constraint (mig 014). The requisition id is preserved as entity_id.
         body: input.reviewNotes?.trim()
           ? `Your material request has been ${newStatus}. Note: ${input.reviewNotes.trim()}`
           : `Your material request has been ${newStatus}.`,
-        entity_type: 'material_requisition',
         entity_id: input.requisitionId,
       };
       await supabase.from('notifications').insert(notif);
@@ -383,7 +391,7 @@ export async function convertRequisitionToPO(input: {
           if (founderEmps && founderEmps.length > 0) {
             const notifs: NotificationInsert[] = founderEmps.map((emp) => ({
               recipient_employee_id: emp.id,
-              notification_type: 'po_pending_approval',
+              notification_type: 'approval_required',
               title: `PO ${poNumber} requires approval`,
               body: `A PO created from a site material request requires your approval.`,
               entity_type: 'purchase_order',

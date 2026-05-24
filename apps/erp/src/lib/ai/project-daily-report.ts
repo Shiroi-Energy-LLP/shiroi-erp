@@ -62,24 +62,25 @@ export async function generateProjectDailyReport(
   // 2. Today's site reports
   const { data: siteReports } = await supabase
     .from('daily_site_reports')
-    .select('report_date, work_completed, panels_installed, inverters_installed, wiring_completed, photos_uploaded, weather, manpower_count, notes')
+    .select('report_date, work_description, panels_installed_today, structure_progress, electrical_progress, weather, workers_count, supervisors_count, issue_summary')
     .eq('project_id', projectId)
     .eq('report_date', today)
     .limit(5);
 
-  // 3. Today's tasks completed
+  // 3. Today's tasks completed (project-scoped tasks only)
   const { data: tasks } = await supabase
-    .from('project_tasks')
-    .select('title, status, completed_at')
+    .from('tasks')
+    .select('title, completed_at')
     .eq('project_id', projectId)
-    .eq('status', 'done')
+    .eq('entity_type', 'project')
+    .eq('is_completed', true)
     .gte('completed_at', today)
     .limit(10);
 
-  // 4. Today's expenses
+  // 4. Today's expenses (join category for label)
   const { data: expenses } = await supabase
     .from('expenses')
-    .select('description, amount, category')
+    .select('description, amount, expense_categories(label)')
     .eq('project_id', projectId)
     .gte('created_at', today)
     .limit(10);
@@ -87,10 +88,10 @@ export async function generateProjectDailyReport(
   // 5. Recent milestones hit
   const { data: milestones } = await supabase
     .from('project_milestones')
-    .select('name, completed_at')
+    .select('milestone_name, actual_end_date')
     .eq('project_id', projectId)
     .eq('status', 'completed')
-    .gte('completed_at', today)
+    .gte('actual_end_date', today)
     .limit(5);
 
   // 6. Photos uploaded today
@@ -114,13 +115,14 @@ export async function generateProjectDailyReport(
   if (siteReports && siteReports.length > 0) {
     contextParts.push('=== Site Report ===');
     for (const r of siteReports) {
-      if (r.work_completed) contextParts.push(`Work completed: ${r.work_completed}`);
-      if (r.panels_installed) contextParts.push(`Panels installed today: ${r.panels_installed}`);
-      if (r.inverters_installed) contextParts.push(`Inverters installed today: ${r.inverters_installed}`);
-      if (r.wiring_completed) contextParts.push(`Wiring: ${r.wiring_completed}`);
-      if (r.manpower_count) contextParts.push(`Manpower: ${r.manpower_count} workers`);
+      if (r.work_description) contextParts.push(`Work: ${r.work_description}`);
+      if (r.panels_installed_today) contextParts.push(`Panels installed today: ${r.panels_installed_today}`);
+      if (r.structure_progress) contextParts.push(`Structure: ${r.structure_progress}`);
+      if (r.electrical_progress) contextParts.push(`Electrical: ${r.electrical_progress}`);
+      const manpower = (r.workers_count ?? 0) + (r.supervisors_count ?? 0);
+      if (manpower > 0) contextParts.push(`Manpower: ${manpower} on site`);
       if (r.weather) contextParts.push(`Weather: ${r.weather}`);
-      if (r.notes) contextParts.push(`Notes: ${r.notes}`);
+      if (r.issue_summary) contextParts.push(`Issues: ${r.issue_summary}`);
     }
     contextParts.push('');
   }
@@ -133,7 +135,7 @@ export async function generateProjectDailyReport(
 
   if (milestones && milestones.length > 0) {
     contextParts.push('=== Milestones Reached Today ===');
-    for (const m of milestones) contextParts.push(`- ${m.name}`);
+    for (const m of milestones) contextParts.push(`- ${m.milestone_name}`);
     contextParts.push('');
   }
 
@@ -145,7 +147,12 @@ export async function generateProjectDailyReport(
 
   if (expenses && expenses.length > 0) {
     contextParts.push('=== Expenses Logged Today ===');
-    for (const e of expenses) contextParts.push(`- ${e.category}: ${e.description} (₹${e.amount})`);
+    for (const e of expenses) {
+      const cat = Array.isArray(e.expense_categories)
+        ? e.expense_categories[0]?.label
+        : (e.expense_categories as { label: string } | null)?.label;
+      contextParts.push(`- ${cat ?? 'Misc'}: ${e.description ?? ''} (₹${e.amount})`);
+    }
     contextParts.push('');
   }
 

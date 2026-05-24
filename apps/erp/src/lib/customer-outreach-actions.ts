@@ -16,9 +16,12 @@ import { createClient } from '@repo/supabase/server';
 import { createAdminClient } from '@repo/supabase/admin';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { generateText } from './ai/anthropic-client';
+import { emitErpEvent } from './n8n/emit';
 
 const CHECKIN_INTERVALS_DAYS = [90, 180, 270, 365];
 const RECONTACT_GAP_DAYS = 90;
+
+const ALLOWED_ROLES = new Set(['founder', 'om_technician']);
 
 export interface CustomerOutreachSummary {
   generated: number;
@@ -28,24 +31,41 @@ export interface CustomerOutreachSummary {
 
 /**
  * Generate outreach queue entries for this week's due check-ins.
+ *
  * Designed to be called from a Monday morning cron via n8n or a script.
- * Uses admin client (service role) to bypass RLS.
+ * Uses the admin client to bypass RLS once the caller's role is verified
+ * — founder + om_technician only. Anonymous or other-role callers are rejected
+ * so this can't be abused to burn Anthropic quota.
  */
 export async function generateCustomerCheckinsForWeek(): Promise<ActionResult<CustomerOutreachSummary>> {
   const op = '[generateCustomerCheckinsForWeek]';
+
+  // Auth + role gate — admin client bypasses RLS, so we must check ourselves.
+  const userClient = await createClient();
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  const { data: profile } = await userClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (!profile || !ALLOWED_ROLES.has(profile.role)) {
+    return err('Your role cannot generate customer outreach');
+  }
 
   const supabase = createAdminClient();
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
-  // Find projects that have been commissioned and are due for check-in
-  // commissioned_at is stored as date TEXT (YYYY-MM-DD) per CLAUDE.md conventions
+  // Find projects that have been commissioned and are due for check-in.
+  // projects.commissioned_date is a DATE column (per 004a_projects_core.sql).
   const { data: projects, error: projErr } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name, system_size_kwp, system_type, site_city, commissioned_at')
-    .not('commissioned_at', 'is', null)
+    .select('id, project_number, customer_name, system_size_kwp, system_type, site_city, commissioned_date')
+    .not('commissioned_date', 'is', null)
     .in('status', ['completed', 'waiting_net_metering', 'meter_client_scope'])
-    .order('commissioned_at', { ascending: false });
+    .order('commissioned_date', { ascending: false });
 
   if (projErr || !projects) {
     console.error(`${op} projects query failed`, { error: projErr?.message, timestamp: new Date().toISOString() });
@@ -57,9 +77,9 @@ export async function generateCustomerCheckinsForWeek(): Promise<ActionResult<Cu
   let errors = 0;
 
   for (const project of projects) {
-    if (!project.commissioned_at) continue;
+    if (!project.commissioned_date) continue;
 
-    const commissionedAt = new Date(project.commissioned_at);
+    const commissionedAt = new Date(project.commissioned_date);
     const daysSinceCommissioning = Math.floor(
       (today.getTime() - commissionedAt.getTime()) / (1000 * 60 * 60 * 24),
     );
@@ -140,30 +160,14 @@ Keep it to 2-3 sentences. Start with a greeting.`;
       continue;
     }
 
-    // Emit event to n8n bus for WhatsApp send
-    const eventBusUrl = process.env.N8N_EVENT_BUS_URL;
-    if (eventBusUrl) {
-      try {
-        await fetch(eventBusUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-webhook-secret': process.env.N8N_WEBHOOK_SECRET ?? '',
-          },
-          body: JSON.stringify({
-            event: 'customer_checkin.due',
-            project_id: project.id,
-            project_number: project.project_number,
-            customer_name: project.customer_name,
-            days_since_commissioning: daysSinceCommissioning,
-            message: aiMessage,
-          }),
-        });
-      } catch (e) {
-        // Event bus failure is non-blocking — row is already in the queue
-        console.warn(`${op} event bus emit failed`, { projectId: project.id, error: e instanceof Error ? e.message : String(e), timestamp: new Date().toISOString() });
-      }
-    }
+    // Emit event to n8n bus for WhatsApp send (best-effort; row is already in queue)
+    await emitErpEvent('customer_checkin.due', {
+      project_id: project.id,
+      project_number: project.project_number,
+      customer_name: project.customer_name,
+      days_since_commissioning: daysSinceCommissioning,
+      message: aiMessage,
+    });
 
     generated++;
   }

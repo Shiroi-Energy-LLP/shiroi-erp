@@ -188,20 +188,23 @@ describe('generateBudgetaryBOM — production price_book vocabulary', () => {
     expect(battery!.quantity).toBe(20); // 10 kWp × 2 kWh/kWp
   });
 
-  it('always emits a Misc / BoS lumpsum line at ₹4,000/kWp', () => {
+  it('always emits a Misc / BoS lumpsum line at ₹1,500/kWp', () => {
+    // ₹1,500/kWp covers fasteners/lugs + safety bucket only; AC cable, earthing,
+    // and conduit are itemised separately (steps 5b–5d in budgetary-quote.ts).
+    // Previous value of ₹4,000/kWp predated that split.
     const result = generateBudgetaryBOM(BASE_INPUT, REAL_PRICE_BOOK, REAL_CORRECTIONS);
     const misc = result.find((l) => l.item_category === 'miscellaneous');
     expect(misc).toBeDefined();
     expect(misc!.unit).toBe('kw');
     expect(misc!.quantity).toBe(10);
-    expect(misc!.unit_price).toBe(4000);
-    expect(misc!.total_price).toBe(40000);
+    expect(misc!.unit_price).toBe(1500);
+    expect(misc!.total_price).toBe(15000);
     expect(misc!.gst_type).toBe('works_contract');
     expect(misc!.price_book_id).toBeNull();
     expect(misc!.item_description).toMatch(/Balance of System/i);
   });
 
-  it('Misc line scales linearly with system size (150 kWp → ₹6 lakhs)', () => {
+  it('Misc line scales linearly with system size (150 kWp → ₹2.25 lakhs)', () => {
     const result = generateBudgetaryBOM(
       { ...BASE_INPUT, systemSizeKwp: 150, segment: 'industrial' },
       REAL_PRICE_BOOK,
@@ -209,7 +212,7 @@ describe('generateBudgetaryBOM — production price_book vocabulary', () => {
     );
     const misc = result.find((l) => l.item_category === 'miscellaneous');
     expect(misc).toBeDefined();
-    expect(misc!.total_price).toBe(600000);
+    expect(misc!.total_price).toBe(225000);
   });
 
   it('150 kWp industrial flush_mount with liaison+civil produces a non-zero quote', () => {

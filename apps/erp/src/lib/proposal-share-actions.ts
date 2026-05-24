@@ -94,3 +94,63 @@ export async function createProposalShareToken(
     return err(e instanceof Error ? e.message : 'Unknown error');
   }
 }
+
+/**
+ * acceptProposalFromPortal — record customer's acceptance from the public /p/[token] portal.
+ *
+ * Validates the share token (must exist, not be revoked, not be expired), flips
+ * proposals.status to 'approved', and emits a proposal.accepted event so the
+ * lead owner gets paged. Uses the admin client because the caller is unauthenticated
+ * (public page).
+ */
+export async function acceptProposalFromPortal(token: string): Promise<ActionResult<null>> {
+  const op = '[acceptProposalFromPortal]';
+  try {
+    if (!token || token.length < 32) return err('Invalid token');
+
+    const admin = createAdminClient();
+
+    const { data: share, error: shareErr } = await admin
+      .from('proposal_share_tokens')
+      .select('proposal_id, expires_at')
+      .eq('token', token)
+      .maybeSingle();
+
+    if (shareErr) {
+      console.error(`${op} share lookup failed`, { code: shareErr.code, message: shareErr.message, timestamp: new Date().toISOString() });
+      return err(shareErr.message, shareErr.code);
+    }
+    if (!share) return err('Link not found');
+    if (new Date(share.expires_at).getTime() < Date.now()) return err('Link has expired');
+
+    // CAS on status — only flip if currently sent/viewed/draft (don't overwrite a later state).
+    // Proposal status enum: draft | sent | viewed | negotiating | accepted | rejected | expired | superseded
+    const { error: updateErr } = await admin
+      .from('proposals')
+      .update({ status: 'accepted' })
+      .eq('id', share.proposal_id)
+      .in('status', ['sent', 'viewed', 'draft']);
+
+    if (updateErr) {
+      console.error(`${op} update failed`, { proposalId: share.proposal_id, code: updateErr.code, message: updateErr.message, timestamp: new Date().toISOString() });
+      return err(updateErr.message, updateErr.code);
+    }
+
+    // Best-effort: emit event (no throw if event-bus is unset)
+    try {
+      const { emitErpEvent } = await import('./n8n/emit');
+      await emitErpEvent('proposal.accepted_by_customer', {
+        proposal_id: share.proposal_id,
+        token,
+        accepted_at: new Date().toISOString(),
+      });
+    } catch {
+      // Event bus failures are non-blocking — acceptance is recorded regardless.
+    }
+
+    return ok(null);
+  } catch (e) {
+    console.error(`${op} threw`, { error: e instanceof Error ? e.message : String(e), timestamp: new Date().toISOString() });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}

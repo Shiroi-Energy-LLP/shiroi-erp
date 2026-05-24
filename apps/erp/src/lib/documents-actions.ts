@@ -91,18 +91,24 @@ export async function uploadProjectDocument(
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const storagePath = `${entityId}/${timestamp}_${safeName}`;
 
+  // Pick the bucket whose RLS permits the caller's role.
+  //  - 'project-files' allows founder + PM + site_supervisor + om_technician.
+  //  - 'proposal-files' is restricted to founder + sales_engineer + designer.
+  // Routing project-scoped uploads to project-files unblocks the actual users.
+  const bucket = entityType === 'project' ? 'project-files' : 'proposal-files';
+
   const arrayBuffer = await file.arrayBuffer();
   const uint8 = new Uint8Array(arrayBuffer);
 
   const { error: uploadError } = await supabase.storage
-    .from('proposal-files')
+    .from(bucket)
     .upload(storagePath, uint8, {
       contentType: file.type || 'application/octet-stream',
       upsert: false,
     });
 
   if (uploadError) {
-    console.error(`${op} Storage upload failed`, { message: uploadError.message, timestamp: new Date().toISOString() });
+    console.error(`${op} Storage upload failed`, { bucket, message: uploadError.message, timestamp: new Date().toISOString() });
     return err(`Upload failed: ${uploadError.message}`);
   }
 
@@ -129,8 +135,8 @@ export async function uploadProjectDocument(
 
   if (insertError) {
     console.error(`${op} Document insert failed`, { code: insertError.code, message: insertError.message, timestamp: new Date().toISOString() });
-    // Clean up orphaned file
-    await supabase.storage.from('proposal-files').remove([storagePath]);
+    // Clean up orphaned file from the same bucket we uploaded to.
+    await supabase.storage.from(bucket).remove([storagePath]);
     return err(insertError.message, insertError.code);
   }
 

@@ -33,6 +33,7 @@ export type ErpEventName =
   | 'proposal.submitted'
   | 'proposal.sent_to_customer'
   | 'proposal.approved'
+  | 'proposal.accepted_by_customer'
   | 'proposal.rejected'
   // Projects
   | 'project.installation_scheduled'
@@ -52,6 +53,7 @@ export type ErpEventName =
   | 'om_ticket.created'
   | 'om_ticket.resolved'
   | 'ceig_approval.received'
+  | 'customer_checkin.due'
   // HR
   | 'expense_claim.submitted'
   | 'leave_request.submitted'

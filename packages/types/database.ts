@@ -16248,6 +16248,10 @@ export type Database = {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
+      increment_partner_commission: {
+        Args: { p_amount: number; p_partner_id: string }
+        Returns: number
+      }
       lock_stale_reports: { Args: never; Returns: undefined }
       mark_project_duplicate: {
         Args: {

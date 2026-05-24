@@ -156,7 +156,7 @@ export default async function PartnerReferralDetailPage({ params }: Props) {
                     </TableCell>
                     <TableCell>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(p.created_at).toLocaleDateString('en-IN')}
+                        {p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN') : '—'}
                       </p>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">

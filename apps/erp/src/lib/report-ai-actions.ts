@@ -32,8 +32,8 @@ export async function generateAINarrative(
   }
 
   // Build the prompt
-  const project = (report as Record<string, unknown>).projects;
-  const prompt = buildNarrativePrompt(report, project);
+  const project = (report as Record<string, unknown>).projects as Record<string, unknown> | null | undefined;
+  const prompt = buildNarrativePrompt(report as Record<string, unknown>, project);
 
   try {
     // Call AI via provider-agnostic helper (anthropic by default; switch to openrouter via AI_PROVIDER env)
@@ -109,12 +109,12 @@ function buildNarrativePrompt(
     `Write a concise 3-5 sentence narrative summarizing the day's work. Use professional but conversational tone. Mention key progress, any issues, and workforce details. Do NOT use bullet points or headers — write flowing prose. Use Indian English conventions.`,
     ``,
     projectInfo,
-    `Date: ${report.report_date}`,
-    `Weather: ${weatherMap[report.weather] ?? report.weather}${report.weather_delay ? ` (caused ${report.weather_delay_hours ?? '?'} hours delay)` : ''}`,
-    `Workforce: ${report.workers_count ?? 0} workers, ${report.supervisors_count ?? 0} supervisors`,
-    `Panels installed today: ${report.panels_installed_today ?? 0} (cumulative: ${report.panels_installed_cumulative ?? 0})`,
-    `Structure progress: ${structureMap[report.structure_progress] ?? report.structure_progress ?? 'not reported'}`,
-    `Electrical progress: ${electricalMap[report.electrical_progress] ?? report.electrical_progress ?? 'not reported'}`,
+    `Date: ${String(report.report_date ?? '')}`,
+    `Weather: ${weatherMap[String(report.weather)] ?? String(report.weather ?? '')}${report.weather_delay ? ` (caused ${String(report.weather_delay_hours ?? '?')} hours delay)` : ''}`,
+    `Workforce: ${Number(report.workers_count ?? 0)} workers, ${Number(report.supervisors_count ?? 0)} supervisors`,
+    `Panels installed today: ${Number(report.panels_installed_today ?? 0)} (cumulative: ${Number(report.panels_installed_cumulative ?? 0)})`,
+    `Structure progress: ${structureMap[String(report.structure_progress)] ?? String(report.structure_progress ?? 'not reported')}`,
+    `Electrical progress: ${electricalMap[String(report.electrical_progress)] ?? String(report.electrical_progress ?? 'not reported')}`,
   ];
 
   if (report.work_description) {
