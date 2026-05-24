@@ -15,6 +15,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@react-pdf/renderer": "^4.5.1",
+    "@repo/inverter-adapters": "workspace:*",
     "@repo/supabase": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",

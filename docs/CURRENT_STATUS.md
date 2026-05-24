@@ -16,6 +16,9 @@ C2 (Invoice raising): `raiseProjectInvoice` action, `RaiseInvoiceDialog` on proj
 C3 (Payment recording): `recordProjectPayment` action, `RecordProjectPaymentDialog` inline per invoice row.
 C4 (Receivables reconciliation): `get_receivables_reconciliation()` SQL RPC, `/payments/reconciliation` page with KPI strip + colour-coded table.
 
+**Phase 7 (Inverter integration) — /om/inverters management UI. ✅ DONE (2026-05-24). No migration.**
+New page at `/om/inverters` (founder + om_technician + project_manager). Inverter list + filters, Add/Edit dialogs, per-row healthcheck, recent poll failures footer. `@repo/inverter-adapters` added to ERP deps. Sidebar nav updated (Zap icon).
+
 ---
 
 ## In flight this week (April 14 – May 2, 2026)
