@@ -17,9 +17,9 @@ import { signDcCertificate } from '@/lib/dc-certificate-actions';
 import {
   CERTIFICATE_TYPE_LABELS,
   CERTIFICATE_TYPE_ORDER,
-  type DcCertificateWithEmployee,
   type CertificateType,
-} from '@/lib/dc-certificate-queries';
+} from '@/lib/dc-certificate-constants';
+import type { DcCertificateWithEmployee } from '@/lib/dc-certificate-queries';
 
 // ---------------------------------------------------------------------------
 // Signature Dialog

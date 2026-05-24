@@ -1,22 +1,11 @@
 import { createClient } from '@repo/supabase/server';
-import type { Database } from '@repo/types/database';
+import type { DcCertificateRow, CertificateType } from './dc-certificate-constants';
 
-type DcCertificateRow = Database['public']['Tables']['dc_certificates']['Row'];
-type CertificateType = DcCertificateRow['certificate_type'];
-
+// Re-export constants + types for any code that imports them from the queries
+// file. New client components should import directly from
+// `./dc-certificate-constants` to keep the server client out of the client bundle.
 export type { DcCertificateRow, CertificateType };
-
-export const CERTIFICATE_TYPE_LABELS: Record<CertificateType, string> = {
-  dc_completion: 'DC Completion Certificate',
-  handing_over: 'Handing Over Certificate',
-  net_metering_submission: 'Net Metering Submission',
-};
-
-export const CERTIFICATE_TYPE_ORDER: CertificateType[] = [
-  'dc_completion',
-  'handing_over',
-  'net_metering_submission',
-];
+export { CERTIFICATE_TYPE_LABELS, CERTIFICATE_TYPE_ORDER } from './dc-certificate-constants';
 
 export interface DcCertificateWithEmployee extends DcCertificateRow {
   profiles: { full_name: string | null } | null;

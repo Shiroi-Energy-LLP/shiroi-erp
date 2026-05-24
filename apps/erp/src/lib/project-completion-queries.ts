@@ -1,48 +1,14 @@
 import { createClient } from '@repo/supabase/server';
-import type { Database } from '@repo/types/database';
+import type { CompletionItemRow, CompletionComponent } from './project-completion-constants';
 
-type CompletionItemRow = Database['public']['Tables']['project_completion_items']['Row'];
-type CompletionComponent = CompletionItemRow['component'];
-
-// Component weights (must match the SQL RPC)
-export const COMPONENT_WEIGHTS: Record<CompletionComponent, number> = {
-  site_preparation: 5,
-  structure_mounting: 20,
-  panel_installation: 25,
-  dc_wiring: 10,
-  inverter_installation: 15,
-  ac_wiring: 10,
-  earthing: 5,
-  net_metering_applied: 5,
-  commissioning: 5,
-  handover: 0, // milestone only, not weighted
-};
-
-export const COMPONENT_LABELS: Record<CompletionComponent, string> = {
-  site_preparation: 'Site Preparation',
-  structure_mounting: 'Structure Mounting',
-  panel_installation: 'Panel Installation',
-  dc_wiring: 'DC Wiring',
-  inverter_installation: 'Inverter Installation',
-  ac_wiring: 'AC Wiring',
-  earthing: 'Earthing',
-  net_metering_applied: 'Net Metering Applied',
-  commissioning: 'Commissioning',
-  handover: 'Handover',
-};
-
-export const COMPONENT_ORDER: CompletionComponent[] = [
-  'site_preparation',
-  'structure_mounting',
-  'panel_installation',
-  'dc_wiring',
-  'inverter_installation',
-  'ac_wiring',
-  'earthing',
-  'net_metering_applied',
-  'commissioning',
-  'handover',
-];
+// Re-export constants + types so server-side code can keep importing from here.
+// Client components must import directly from `./project-completion-constants`.
+export type { CompletionItemRow, CompletionComponent };
+export {
+  COMPONENT_WEIGHTS,
+  COMPONENT_LABELS,
+  COMPONENT_ORDER,
+} from './project-completion-constants';
 
 export interface CompletionItemWithProfile extends CompletionItemRow {
   profiles: { full_name: string | null } | null;

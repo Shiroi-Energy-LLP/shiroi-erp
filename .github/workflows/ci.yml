@@ -45,3 +45,17 @@ jobs:
 
       - name: Forbidden-pattern check (CLAUDE.md rules 11, 13, 15)
         run: bash scripts/ci/check-forbidden-patterns.sh
+
+      # Catches client/server boundary violations and other production-only
+      # errors that `pnpm check-types` misses (e.g. a 'use client' component
+      # transitively importing the server Supabase client). Without this,
+      # bad branches reach Vercel before the failure shows up.
+      - name: Production build (next build)
+        run: pnpm build
+        env:
+          # Build needs envs present so Next can construct config — the values
+          # don't have to be real; they just have to be set. Vercel injects
+          # real values at deploy time.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder
+          SUPABASE_SECRET_KEY: sb_secret_placeholder

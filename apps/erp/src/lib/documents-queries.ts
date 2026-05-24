@@ -2,6 +2,15 @@ import { createClient } from '@repo/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { type ActionResult, ok, err } from '@/lib/types/actions';
 
+// Re-export constants + DocumentCategory type so server-side callers can keep
+// importing them from here. Client components must import directly from
+// `./documents-constants` to keep the server Supabase client out of the
+// client bundle (Next.js production build will otherwise fail with
+// "You're importing a component that needs next/headers").
+export type { DocumentCategory } from './documents-constants';
+export { DOCUMENT_CATEGORY_LABELS } from './documents-constants';
+import type { DocumentCategory } from './documents-constants';
+
 /**
  * Documents — unified file index across the customer journey (mig 109).
  * Files live in either Drive (collab/large) or Supabase Storage
@@ -15,29 +24,6 @@ import { type ActionResult, ok, err } from '@/lib/types/actions';
  * regen issue is fixed, delete this file's local types and use the standard
  * Database['public']['Tables'] types.
  */
-
-export type DocumentCategory =
-  | 'site_survey_photo'
-  | 'site_survey_report'
-  | 'roof_layout'
-  | 'electrical_sld'
-  | 'cad_drawing'
-  | 'sketchup_model'
-  | 'proposal_pdf'
-  | 'costing_sheet'
-  | 'bom_excel'
-  | 'kyc_document'
-  | 'electricity_bill'
-  | 'signed_proposal'
-  | 'purchase_order'
-  | 'invoice'
-  | 'payment_receipt'
-  | 'commissioning_report'
-  | 'liaison_document'
-  | 'as_built_drawing'
-  | 'om_photo'
-  | 'om_report'
-  | 'misc';
 
 export type DocumentRow = {
   id: string;
@@ -267,26 +253,3 @@ export async function getLeadDriveFolder(
   return { id: data.drive_folder_id ?? null, url: data.drive_folder_url ?? null };
 }
 
-export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
-  site_survey_photo: 'Site Photo',
-  site_survey_report: 'Survey Report',
-  roof_layout: 'Roof Layout',
-  electrical_sld: 'Electrical SLD',
-  cad_drawing: 'CAD Drawing',
-  sketchup_model: 'Sketchup',
-  proposal_pdf: 'Proposal PDF',
-  costing_sheet: 'Costing Sheet',
-  bom_excel: 'BOM',
-  kyc_document: 'KYC',
-  electricity_bill: 'Electricity Bill',
-  signed_proposal: 'Signed Proposal',
-  purchase_order: 'Purchase Order',
-  invoice: 'Invoice',
-  payment_receipt: 'Payment Receipt',
-  commissioning_report: 'Commissioning Report',
-  liaison_document: 'Liaison Doc',
-  as_built_drawing: 'As-Built',
-  om_photo: 'O&M Photo',
-  om_report: 'O&M Report',
-  misc: 'Misc',
-};

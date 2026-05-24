@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Upload, X, FileText, Image, Layers, CheckCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@repo/ui';
 import { uploadProjectDocument } from '@/lib/documents-actions';
-import type { DocumentCategory } from '@/lib/documents-queries';
-import { DOCUMENT_CATEGORY_LABELS } from '@/lib/documents-queries';
+import type { DocumentCategory } from '@/lib/documents-constants';
+import { DOCUMENT_CATEGORY_LABELS } from '@/lib/documents-constants';
 
 // ---------------------------------------------------------------------------
 // Types

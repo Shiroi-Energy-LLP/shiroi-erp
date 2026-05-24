@@ -13,8 +13,8 @@ import {
   COMPONENT_LABELS,
   COMPONENT_WEIGHTS,
   COMPONENT_ORDER,
-  type CompletionItemWithProfile,
-} from '@/lib/project-completion-queries';
+} from '@/lib/project-completion-constants';
+import type { CompletionItemWithProfile } from '@/lib/project-completion-queries';
 import type { Database } from '@repo/types/database';
 
 type CompletionComponent = Database['public']['Tables']['project_completion_items']['Row']['component'];
