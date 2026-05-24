@@ -7,13 +7,21 @@ import { sungrowAdapter } from './sungrow';
 import { growattAdapter } from './growatt';
 import { smaAdapter } from './sma';
 import { huaweiAdapter } from './huawei';
+import { solarmanAdapter } from './solarman';
+import { goodweAdapter } from './goodwe';
 
 const ADAPTERS: Record<InverterBrand, InverterAdapter> = {
   sungrow: sungrowAdapter,
   growatt: growattAdapter,
   sma: smaAdapter,
   huawei: huaweiAdapter,
-  fronius: sungrowAdapter, // placeholder — Fronius falls back to Sungrow until we build a dedicated adapter
+  fronius: sungrowAdapter,      // placeholder fallback
+  solarman: solarmanAdapter,
+  goodwe: goodweAdapter,
+  fimer: sungrowAdapter,        // placeholder fallback (skipped — no current install volume)
+  polycab: sungrowAdapter,      // placeholder fallback (skipped — no current install volume)
+  havells: sungrowAdapter,      // placeholder fallback (skipped — no current install volume)
+  flin_energy: sungrowAdapter,  // placeholder fallback (skipped — no current install volume)
 };
 
 export function getAdapter(brand: InverterBrand): InverterAdapter {

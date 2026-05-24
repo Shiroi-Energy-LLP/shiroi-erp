@@ -12,11 +12,14 @@
  * contract and normalization rules.
  *
  * Current implementation status:
- *   - sungrow: STUB (synthetic mode works, live HTTP TODO)
- *   - growatt: STUB (synthetic mode works, live HTTP TODO)
- *   - sma:     STUB (synthetic mode works)
- *   - huawei:  STUB (synthetic mode works)
- *   - fronius: falls back to sungrow stub until dedicated adapter exists
+ *   - sungrow:    STUB (synthetic mode works, live HTTP TODO)
+ *   - growatt:    STUB (synthetic mode works, live HTTP TODO)
+ *   - sma:        STUB (synthetic mode works)
+ *   - huawei:     STUB (synthetic mode works)
+ *   - fronius:    falls back to sungrow stub until dedicated adapter exists
+ *   - solarman:   STUB (synthetic mode works, awaiting App ID + Secret from SolarMan)
+ *   - goodwe:     STUB (synthetic mode works, awaiting SEMS Portal API access from Goodwe India)
+ *   - fimer/polycab/havells/flin_energy: placeholder fallback to sungrow (no current install volume)
  *
  * Synthetic mode: set SYNTHETIC_INVERTER_READINGS=1 in the Edge Function
  * environment. All adapters will return plausible solar-curve data
@@ -30,4 +33,6 @@ export { sungrowAdapter, mapSungrowStatus } from './sungrow';
 export { growattAdapter, mapGrowattStatus } from './growatt';
 export { smaAdapter } from './sma';
 export { huaweiAdapter } from './huawei';
+export { solarmanAdapter } from './solarman';
+export { goodweAdapter } from './goodwe';
 export { getAdapter, allBrands } from './factory';

@@ -27,7 +27,13 @@ export type InverterBrand =
   | 'growatt'
   | 'sma'
   | 'huawei'
-  | 'fronius';
+  | 'fronius'
+  | 'solarman'
+  | 'goodwe'
+  | 'fimer'
+  | 'polycab'
+  | 'havells'
+  | 'flin_energy';
 
 /**
  * Normalized inverter status — every adapter translates its vendor
