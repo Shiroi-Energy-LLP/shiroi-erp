@@ -24,6 +24,15 @@ import { StepCommissioning } from '@/components/projects/stepper-steps/step-comm
 import { StepAmc } from '@/components/projects/stepper-steps/step-amc';
 import { StepActuals } from '@/components/projects/stepper-steps/step-actuals';
 import { ProjectInvoicesPanel } from '@/components/projects/detail/project-invoices-panel';
+// C8 — Materials / cut-length
+import { CutLengthTab } from '@/components/projects/cut-length/cut-length-tab';
+import { getCutRecordsForProject, getProjectCableSummary } from '@/lib/inventory-queries';
+// C9 — Completion checklist
+import { CompletionChecklist } from '@/components/projects/completion/completion-checklist';
+import { getProjectCompletionItems, getProjectCompletionPct } from '@/lib/project-completion-queries';
+// C12 — DC Certificates
+import { DcCertificatesPanel } from '@/components/projects/certificates/dc-certificates-panel';
+import { getDcCertificatesForProject } from '@/lib/dc-certificate-queries';
 
 interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
@@ -219,6 +228,55 @@ async function TabContent({ projectId, tab }: { projectId: string; tab: string }
     }
     case 'finance':
       return <ProjectInvoicesPanel projectId={projectId} />;
+
+    // ── C8: Materials / cut-length log ───────────────────────────────────
+    case 'materials': {
+      const viewerRole = await getCurrentUserRoleForProject();
+      const [records, summary] = await Promise.all([
+        getCutRecordsForProject(projectId),
+        getProjectCableSummary(projectId),
+      ]);
+      const canDelete = !!viewerRole && ['founder', 'project_manager'].includes(viewerRole);
+      return (
+        <CutLengthTab
+          projectId={projectId}
+          records={records}
+          summary={summary}
+          canDelete={canDelete}
+        />
+      );
+    }
+
+    // ── C9: Completion checklist ─────────────────────────────────────────
+    case 'completion': {
+      const viewerRole = await getCurrentUserRoleForProject();
+      const [items, completionPct] = await Promise.all([
+        getProjectCompletionItems(projectId),
+        getProjectCompletionPct(projectId),
+      ]);
+      return (
+        <CompletionChecklist
+          projectId={projectId}
+          items={items}
+          completionPct={completionPct}
+          viewerRole={viewerRole}
+        />
+      );
+    }
+
+    // ── C12: DC certificates ─────────────────────────────────────────────
+    case 'certificates': {
+      const viewerRole = await getCurrentUserRoleForProject();
+      const certificates = await getDcCertificatesForProject(projectId);
+      return (
+        <DcCertificatesPanel
+          projectId={projectId}
+          certificates={certificates}
+          viewerRole={viewerRole}
+        />
+      );
+    }
+
     default:
       return null;
   }

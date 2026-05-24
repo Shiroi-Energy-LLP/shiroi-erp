@@ -26,6 +26,9 @@ const WORKFLOW_TABS: { label: string; queryTab: string }[] = [
   { label: 'Liaison', queryTab: 'liaison' },
   { label: 'Commissioning', queryTab: 'commissioning' },
   { label: 'Free AMC', queryTab: 'amc' },
+  { label: 'Progress', queryTab: 'completion' },
+  { label: 'Materials', queryTab: 'materials' },
+  { label: 'Certificates', queryTab: 'certificates' },
 ];
 
 export function ProjectTabs({ projectId }: { projectId: string }) {

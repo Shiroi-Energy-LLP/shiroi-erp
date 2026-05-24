@@ -3,6 +3,61 @@ import type { Database } from '@repo/types/database';
 
 type StockPieceRow = Database['public']['Tables']['stock_pieces']['Row'];
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
+type CutRecordRow = Database['public']['Tables']['inventory_cut_records']['Row'];
+
+// ---------------------------------------------------------------------------
+// C8: Cut-length queries
+// ---------------------------------------------------------------------------
+
+export interface CutRecordWithCutter extends CutRecordRow {
+  profiles: { full_name: string | null } | null;
+}
+
+export interface CableSummaryRow {
+  material_type: string;
+  total_meters: number;
+  record_count: number;
+}
+
+/**
+ * List all cut records for a project with the cutter's name.
+ */
+export async function getCutRecordsForProject(projectId: string): Promise<CutRecordWithCutter[]> {
+  const op = '[getCutRecordsForProject]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('inventory_cut_records')
+    .select('*, profiles!inventory_cut_records_cut_by_fkey(full_name)')
+    .eq('project_id', projectId)
+    .order('cut_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error(`${op} Query failed`, { code: error.code, message: error.message, projectId });
+    return [];
+  }
+
+  return (data ?? []) as CutRecordWithCutter[];
+}
+
+/**
+ * Get aggregated cable totals per material type for a project via RPC.
+ */
+export async function getProjectCableSummary(projectId: string): Promise<CableSummaryRow[]> {
+  const op = '[getProjectCableSummary]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .rpc('get_project_cable_summary', { p_project_id: projectId });
+
+  if (error) {
+    console.error(`${op} RPC failed`, { code: error.code, message: error.message, projectId });
+    return [];
+  }
+
+  return (data ?? []) as CableSummaryRow[];
+}
 
 // ---------------------------------------------------------------------------
 // List types

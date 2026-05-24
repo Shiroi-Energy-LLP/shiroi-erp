@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import { LeadFilesList } from '@/components/leads/lead-files-list';
 import { DriveFolderButton } from '@/components/leads/drive-folder-button';
 import { DocumentList } from '@/components/documents/document-list';
+import { DocumentDropZone } from '@/components/documents/document-drop-zone';
 import {
   attachOpenUrls,
   getDocumentsForLead,
@@ -75,7 +76,7 @@ export default async function FilesTab({ params }: FilesTabProps) {
         </CardContent>
       </Card>
 
-      {/* Documents index (mig 109) */}
+      {/* Documents index (mig 109) — with drag-drop upload */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -85,7 +86,8 @@ export default async function FilesTab({ params }: FilesTabProps) {
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <DocumentDropZone entityType="lead" entityId={id} />
           {!docsResult.success && (
             <div className="text-xs text-red-600 mb-2">
               Failed to load documents: {docsResult.error}
