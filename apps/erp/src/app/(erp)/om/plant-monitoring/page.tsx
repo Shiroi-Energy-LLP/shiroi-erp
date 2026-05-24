@@ -8,6 +8,7 @@ import {
   getProjectsWithCredentials,
   getAllActiveProjects,
   getPlantMonitoringSummary,
+  getSungrowOAuthStatus,
 } from '@/lib/plant-monitoring-queries';
 import { getCurrentUserRoleForProject } from '@/lib/project-detail-actions';
 import { PlantMonitoringPasswordCell } from '@/components/om/plant-monitoring-password-cell';
@@ -18,7 +19,6 @@ import { FilterBar } from '@/components/filter-bar';
 import { FilterSelect } from '@/components/filter-select';
 import { SearchInput } from '@/components/search-input';
 import { ProjectFilterCombobox } from '@/components/om/project-filter-combobox';
-import { createClient } from '@repo/supabase/server';
 import { ConnectSungrowButton } from './_components/connect-sungrow-button';
 
 const BRAND_OPTIONS = [
@@ -59,16 +59,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  // Fetch Sungrow master credential to determine current OAuth status.
-  const supabaseServer = await createClient();
-  const sungrowCredPromise = supabaseServer
-    .from('inverter_monitoring_credentials')
-    .select('config')
-    .eq('brand', 'sungrow')
-    .limit(1)
-    .maybeSingle();
-
-  const [{ items, total }, filterProjects, allProjects, summary, viewerRole, sungrowCredResult] =
+  const [{ items, total }, filterProjects, allProjects, summary, viewerRole, sungrowOauthStatus] =
     await Promise.all([
       listPlantMonitoringCredentials({
         project_id: params.project || undefined,
@@ -81,12 +72,8 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
       getAllActiveProjects(),
       getPlantMonitoringSummary(),
       getCurrentUserRoleForProject(),
-      sungrowCredPromise,
+      getSungrowOAuthStatus(),
     ]);
-
-  // Extract oauth_status from the JSONB config field.
-  const sungrowConfig = sungrowCredResult.data?.config as Record<string, unknown> | null;
-  const sungrowOauthStatus = (sungrowConfig?.['oauth_status'] as string) ?? null;
 
   // Show the Sungrow button to founder and om_technician.
   const canConnectSungrow =

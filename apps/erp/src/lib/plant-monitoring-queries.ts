@@ -143,6 +143,44 @@ export async function getAllActiveProjects(): Promise<ProjectLite[]> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// getSungrowOAuthStatus — reads oauth_status from the Sungrow master cred
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Returns the current Sungrow OAuth authorization status by reading the
+ * master inverter_monitoring_credentials row for brand='sungrow'.
+ *
+ * Extracted from plant-monitoring/page.tsx per NEVER-DO #15 — no inline
+ * Supabase calls from page.tsx.
+ */
+export async function getSungrowOAuthStatus(): Promise<'not_authorized' | 'authorized' | 'expired'> {
+  const op = '[getSungrowOAuthStatus]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('inverter_monitoring_credentials')
+    .select('config')
+    .eq('brand', 'sungrow')
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`${op} Failed to read Sungrow credential`, {
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+    return 'not_authorized';
+  }
+
+  const config = data?.config as Record<string, unknown> | null;
+  const status = config?.['oauth_status'] as string | undefined;
+
+  if (status === 'authorized') return 'authorized';
+  if (status === 'expired') return 'expired';
+  return 'not_authorized';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // getPlantMonitoringSummary — wraps the summary RPC
 // ═══════════════════════════════════════════════════════════════════════
 

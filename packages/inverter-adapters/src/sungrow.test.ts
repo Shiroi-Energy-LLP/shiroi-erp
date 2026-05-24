@@ -264,6 +264,30 @@ describe('sungrowAdapter', () => {
       expect(new Date(ts).getTime()).not.toBeNaN();
       expect(ts).toContain('T');
     });
+
+    it('treats update_time as IST (UTC+5:30) and converts to UTC correctly', async () => {
+      // '2026-05-23 12:00:00' in IST (UTC+5:30) → '2026-05-23T06:30:00.000Z' UTC
+      const body = {
+        result_code: '1',
+        result_data: {
+          p_array: [
+            {
+              device_sn: 'SN20001234',
+              update_time: '2026-05-23 12:00:00',
+            },
+          ],
+        },
+      };
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValueOnce(
+          new Response(JSON.stringify(body), { status: 200 }),
+        ),
+      );
+
+      const result = await sungrowAdapter.fetchReadings(VALID_INPUT);
+      expect(result.readings[0]!.recorded_at).toBe('2026-05-23T06:30:00.000Z');
+    });
   });
 
   // ── 4. HTTP error responses ────────────────────────────────────────────

@@ -148,11 +148,14 @@ export const sungrowAdapter: InverterAdapter = {
       if (!row) return { readings: [], string_readings: [] };
 
       // Parse update_time: Sungrow sends "YYYY-MM-DD HH:MM:SS" (local time,
-      // no timezone info). We append 'Z' to interpret as UTC — matches how
-      // Sungrow documents the field.
+      // no timezone info). The timestamp is in the timezone of the registered
+      // plant location. For Shiroi (India) that is IST = UTC+5:30. We append
+      // '+05:30' so JavaScript's Date normalises the offset correctly and
+      // .toISOString() returns UTC. Previously '+Z' was appended which made
+      // recorded_at 5.5 hours behind the real reading time.
       const updateTimeRaw = typeof row['update_time'] === 'string' ? row['update_time'] : null;
       const recordedAt = updateTimeRaw
-        ? new Date(updateTimeRaw.replace(' ', 'T') + 'Z').toISOString()
+        ? new Date(updateTimeRaw.replace(' ', 'T') + '+05:30').toISOString()
         : new Date().toISOString();
 
       const reading: NormalizedReading = {

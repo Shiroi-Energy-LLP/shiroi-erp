@@ -178,6 +178,10 @@ export async function refreshAccessToken(input: RefreshInput): Promise<ExchangeR
   }
 
   if (!res.ok) {
+    console.error(`${op} [refreshAccessToken] HTTP error`, {
+      status: res.status,
+      timestamp: new Date().toISOString(),
+    });
     throw new Error(`${op} [refreshAccessToken] HTTP ${res.status}`);
   }
 

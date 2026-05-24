@@ -22,12 +22,13 @@ export function ConnectSungrowButton({ oauthStatus }: ConnectSungrowButtonProps)
   const isAuthorized = oauthStatus === 'authorized';
 
   return (
-    <a href="/api/integrations/sungrow/authorize">
-      <Button
-        variant={isAuthorized ? 'outline' : 'default'}
-        size="sm"
-        className="h-8 text-xs gap-1.5"
-      >
+    <Button
+      variant={isAuthorized ? 'outline' : 'default'}
+      size="sm"
+      className="h-8 text-xs gap-1.5"
+      asChild
+    >
+      <a href="/api/integrations/sungrow/authorize">
         {isAuthorized ? (
           <>
             <CheckCircle className="h-3.5 w-3.5" />
@@ -39,7 +40,7 @@ export function ConnectSungrowButton({ oauthStatus }: ConnectSungrowButtonProps)
             Authorize Sungrow
           </>
         )}
-      </Button>
-    </a>
+      </a>
+    </Button>
   );
 }

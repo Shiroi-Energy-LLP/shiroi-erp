@@ -1150,6 +1150,7 @@ export type Database = {
           bank_name: string | null
           cheque_date: string | null
           created_at: string
+          erp_recorded: boolean
           excluded_from_cash: boolean
           id: string
           invoice_id: string | null
@@ -1173,6 +1174,7 @@ export type Database = {
           bank_name?: string | null
           cheque_date?: string | null
           created_at?: string
+          erp_recorded?: boolean
           excluded_from_cash?: boolean
           id?: string
           invoice_id?: string | null
@@ -1196,6 +1198,7 @@ export type Database = {
           bank_name?: string | null
           cheque_date?: string | null
           created_at?: string
+          erp_recorded?: boolean
           excluded_from_cash?: boolean
           id?: string
           invoice_id?: string | null
@@ -4170,7 +4173,9 @@ export type Database = {
           amount_paid: number
           attribution_status: string
           created_at: string
+          description: string | null
           due_date: string
+          erp_created: boolean
           escalation_level: number
           excluded_from_cash: boolean
           gst_supply_amount: number
@@ -4196,6 +4201,7 @@ export type Database = {
           status: string
           subtotal_supply: number
           subtotal_works: number
+          tax_amount: number
           total_amount: number
           zoho_customer_gst_treatment: string | null
           zoho_customer_id: string | null
@@ -4207,7 +4213,9 @@ export type Database = {
           amount_paid?: number
           attribution_status?: string
           created_at?: string
+          description?: string | null
           due_date: string
+          erp_created?: boolean
           escalation_level?: number
           excluded_from_cash?: boolean
           gst_supply_amount?: number
@@ -4233,6 +4241,7 @@ export type Database = {
           status?: string
           subtotal_supply?: number
           subtotal_works?: number
+          tax_amount?: number
           total_amount: number
           zoho_customer_gst_treatment?: string | null
           zoho_customer_id?: string | null
@@ -4244,7 +4253,9 @@ export type Database = {
           amount_paid?: number
           attribution_status?: string
           created_at?: string
+          description?: string | null
           due_date?: string
+          erp_created?: boolean
           escalation_level?: number
           excluded_from_cash?: boolean
           gst_supply_amount?: number
@@ -4270,6 +4281,7 @@ export type Database = {
           status?: string
           subtotal_supply?: number
           subtotal_works?: number
+          tax_amount?: number
           total_amount?: number
           zoho_customer_gst_treatment?: string | null
           zoho_customer_id?: string | null
@@ -14894,6 +14906,13 @@ export type Database = {
           success: boolean
         }[]
       }
+      consume_inverter_oauth_state: {
+        Args: { p_brand: string; p_state_token: string }
+        Returns: {
+          created_by: string
+          credentials_id: string
+        }[]
+      }
       create_inverter_partition_for_month: {
         Args: { target_month: string }
         Returns: undefined
@@ -15205,6 +15224,21 @@ export type Database = {
           project_id: string
           project_number: string
           status: Database["public"]["Enums"]["project_status"]
+        }[]
+      }
+      get_receivables_reconciliation: {
+        Args: never
+        Returns: {
+          customer_name: string
+          invoice_count: number
+          last_payment_date: string
+          outstanding: number
+          overdue_count: number
+          project_id: string
+          project_number: string
+          project_status: string
+          total_invoiced: number
+          total_paid: number
         }[]
       }
       lock_stale_reports: { Args: never; Returns: undefined }

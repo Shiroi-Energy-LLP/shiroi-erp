@@ -42,7 +42,7 @@ export async function GET(_request: NextRequest) {
     .select('id, config')
     .eq('brand', 'sungrow')
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (credError || !cred) {
     console.error(`${op} Sungrow credential row not found`, {
