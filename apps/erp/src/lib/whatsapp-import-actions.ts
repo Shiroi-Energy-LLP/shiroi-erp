@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { routeLeadAndAssign } from '@/lib/ai/lead-router';
 
 async function getCurrentUserId(
   supabase: Awaited<ReturnType<typeof createClient>>
@@ -299,6 +300,11 @@ export async function approveQueueItem(
         if (leadErr) throw new Error(leadErr.message);
         insertedTable = 'leads';
         insertedId = (leadData as { id: string } | null)?.id ?? null;
+
+        // Fire-and-forget AI routing — must not block or fail the approval flow.
+        if (insertedId) {
+          void routeLeadAndAssign(insertedId);
+        }
         break;
       }
 

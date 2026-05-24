@@ -6,6 +6,7 @@ import { createClient } from '@repo/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label, Select, useToast } from '@repo/ui';
 import { normalizePhone } from '@/lib/leads-helpers';
 import { ReferrerPicker } from '@/components/leads/referrer-picker';
+import { triggerLeadScore } from '@/lib/ai/trigger-lead-score';
 import type { PartnerPickerOption } from '@/lib/partners-queries';
 import type { Database } from '@repo/types/database';
 
@@ -141,6 +142,10 @@ export function LeadForm({ partners = [] }: LeadFormProps) {
     }
 
     addToast({ variant: 'success', title: 'Lead created', description: `${form.customer_name} has been added.` });
+
+    // C1: Fire-and-forget AI scoring — non-blocking, never delays navigation
+    void triggerLeadScore(newId);
+
     router.push(`/leads/${newId}`);
   }
 

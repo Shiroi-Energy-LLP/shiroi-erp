@@ -4,8 +4,84 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
+import { routeLeadAndAssign } from '@/lib/ai/lead-router';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
+type CustomerSegment = Database['public']['Enums']['customer_segment'];
+type LeadSource = Database['public']['Enums']['lead_source'];
+type SystemType = Database['public']['Enums']['system_type'];
+
+export interface CreateLeadInput {
+  customer_name: string;
+  phone: string;
+  email?: string | null;
+  city: string;
+  state?: string;
+  pincode?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  segment: CustomerSegment;
+  source: LeadSource;
+  system_type?: SystemType | null;
+  estimated_size_kwp?: number | null;
+  expected_close_date?: string | null;
+  map_link?: string | null;
+  notes?: string | null;
+  channel_partner_id?: string | null;
+}
+
+/**
+ * Create a new lead and fire-and-forget AI routing.
+ *
+ * This server action is the preferred path for all lead creation — it ensures
+ * AI routing fires on every new lead regardless of source.
+ */
+export async function createLead(
+  input: CreateLeadInput,
+): Promise<ActionResult<{ id: string }>> {
+  const op = '[createLead]';
+  try {
+    const supabase = await createClient();
+    const newId = crypto.randomUUID();
+
+    const { error: insertError } = await supabase.from('leads').insert({
+      id: newId,
+      customer_name: input.customer_name.trim(),
+      phone: input.phone,
+      email: input.email?.trim() || null,
+      city: input.city.trim(),
+      state: input.state || 'Tamil Nadu',
+      pincode: input.pincode?.trim() || null,
+      address_line1: input.address_line1?.trim() || null,
+      address_line2: input.address_line2?.trim() || null,
+      segment: input.segment,
+      source: input.source,
+      system_type: input.system_type ?? null,
+      estimated_size_kwp: input.estimated_size_kwp ?? null,
+      expected_close_date: input.expected_close_date || null,
+      map_link: input.map_link?.trim() || null,
+      notes: input.notes?.trim() || null,
+      channel_partner_id: input.channel_partner_id ?? null,
+      status: 'new' as const,
+    });
+
+    if (insertError) {
+      console.error(`${op} Insert failed`, { error: insertError, timestamp: new Date().toISOString() });
+      return err(insertError.message, insertError.code);
+    }
+
+    revalidatePath('/leads');
+    revalidatePath('/sales');
+
+    // Fire-and-forget AI routing — must not block or fail lead creation.
+    void routeLeadAndAssign(newId);
+
+    return ok({ id: newId });
+  } catch (e) {
+    console.error(`${op} threw`, { error: e, timestamp: new Date().toISOString() });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
 
 /**
  * Tiny invalidation helper called from client components (e.g. status-change.tsx)

@@ -1,0 +1,415 @@
+'use server';
+
+/**
+ * S15 — B3 Anomaly Narrator + Ticket Creator
+ *
+ * For each RawAnomaly:
+ *  1. Calls Claude Haiku for a 2-line investigation note.
+ *  2. Inserts into plant_anomaly_log (UNIQUE constraint handles idempotency).
+ *  3. If severity threshold is met (deviation < -20% AND ≥3 consecutive days),
+ *     auto-creates an om_service_tickets row and links via ticket_id.
+ *
+ * Model: claude-haiku-4-5-20251001 (per Wave 4 plan cost estimate).
+ */
+
+import { createAdminClient } from '@repo/supabase/admin';
+import type { RawAnomaly } from './anomaly-detector';
+
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001' as const;
+const NARRATOR_MAX_TOKENS = 300;
+
+/** Threshold for auto-ticket creation: deviation worse than -20% for ≥3 days. */
+const AUTO_TICKET_DEVIATION_THRESHOLD = -20;
+const AUTO_TICKET_CONSECUTIVE_DAYS = 3;
+
+// ── Haiku narrative shape ──────────────────────────────────────────────────────
+
+interface AnomalyNarrative {
+  narrative: string;       // ≤140 chars
+  suggested_cause: string; // ≤80 chars
+  suggested_action: string; // ≤80 chars
+}
+
+// ── Ticket number generator ────────────────────────────────────────────────────
+
+async function generateTicketNumber(admin: ReturnType<typeof createAdminClient>): Promise<string> {
+  const op = '[generateTicketNumber]';
+  const { data, error } = await admin
+    .from('om_service_tickets')
+    .select('ticket_number')
+    .like('ticket_number', 'TKT-%')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn(`${op} failed to read last ticket number`, {
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  let nextNum = 1;
+  if (data?.ticket_number) {
+    const parts = data.ticket_number.split('-');
+    const lastNum = parseInt(parts[parts.length - 1] ?? '0', 10);
+    if (!isNaN(lastNum)) nextNum = lastNum + 1;
+  }
+
+  return `TKT-${String(nextNum).padStart(4, '0')}`;
+}
+
+// ── AI narrator ────────────────────────────────────────────────────────────────
+
+async function callHaikuForNarrative(anomaly: RawAnomaly): Promise<AnomalyNarrative | null> {
+  const op = '[callHaikuForNarrative]';
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error(`${op} ANTHROPIC_API_KEY not set`, { timestamp: new Date().toISOString() });
+    return null;
+  }
+
+  const typeLabel = anomaly.anomaly_type.replace(/_/g, ' ');
+  const expectedStr =
+    anomaly.expected_kwh !== null ? `${anomaly.expected_kwh.toFixed(1)} kWh` : 'unknown';
+  const actualStr =
+    anomaly.actual_kwh !== null ? `${anomaly.actual_kwh.toFixed(1)} kWh` : 'no data';
+  const deviationStr = `${anomaly.deviation_pct > 0 ? '+' : ''}${anomaly.deviation_pct.toFixed(1)}%`;
+
+  const systemPrompt =
+    'You write 2-line investigation notes for solar plant anomalies at Shiroi Energy, ' +
+    'a solar EPC company in Chennai, India. Suggest the most likely cause ' +
+    '(panel soiling / shading / inverter fault / electrical / weather / data issue) ' +
+    'and one concrete action. Tone: factual. Use ₹ format for cost references. ' +
+    'Return ONLY valid JSON — no markdown fences, no extra text.';
+
+  const userMessage =
+    `Anomaly: ${typeLabel}. Project: ${anomaly.customer_name}, ` +
+    `${anomaly.system_size_kwp} kWp, ${anomaly.site_city}. ` +
+    `Expected ${expectedStr}, actual ${actualStr} (${deviationStr} deviation). ` +
+    `Persisting for ${anomaly.consecutive_days} day${anomaly.consecutive_days !== 1 ? 's' : ''}.\n\n` +
+    `Return JSON: { "narrative": string (≤140 chars), "suggested_cause": string (≤80 chars), "suggested_action": string (≤80 chars) }`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: HAIKU_MODEL,
+        max_tokens: NARRATOR_MAX_TOKENS,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!resp.ok) {
+      const body = await resp.text();
+      console.error(`${op} Anthropic API error`, {
+        status: resp.status,
+        body: body.slice(0, 200),
+        timestamp: new Date().toISOString(),
+      });
+      return null;
+    }
+
+    const result = await resp.json() as {
+      content?: Array<{ type: string; text: string }>;
+      usage?: { input_tokens: number; output_tokens: number };
+    };
+
+    const text = result.content?.[0]?.text ?? '';
+    try {
+      const parsed = JSON.parse(text) as Partial<AnomalyNarrative>;
+      return {
+        narrative: (parsed.narrative ?? '').slice(0, 140),
+        suggested_cause: (parsed.suggested_cause ?? '').slice(0, 80),
+        suggested_action: (parsed.suggested_action ?? '').slice(0, 80),
+      };
+    } catch {
+      // Try to extract JSON from the text if it's wrapped in prose
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]) as Partial<AnomalyNarrative>;
+          return {
+            narrative: (parsed.narrative ?? '').slice(0, 140),
+            suggested_cause: (parsed.suggested_cause ?? '').slice(0, 80),
+            suggested_action: (parsed.suggested_action ?? '').slice(0, 80),
+          };
+        } catch {
+          // fall through
+        }
+      }
+      console.warn(`${op} failed to parse Haiku JSON response`, {
+        text: text.slice(0, 300),
+        timestamp: new Date().toISOString(),
+      });
+      return null;
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`${op} AI call failed`, { error: msg, timestamp: new Date().toISOString() });
+    return null;
+  }
+}
+
+// ── Token counter helper ───────────────────────────────────────────────────────
+
+async function callHaikuWithTokenCount(anomaly: RawAnomaly): Promise<{
+  narrative: AnomalyNarrative | null;
+  tokens_in: number;
+  tokens_out: number;
+}> {
+  const op = '[callHaikuWithTokenCount]';
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return { narrative: null, tokens_in: 0, tokens_out: 0 };
+
+  const typeLabel = anomaly.anomaly_type.replace(/_/g, ' ');
+  const expectedStr =
+    anomaly.expected_kwh !== null ? `${anomaly.expected_kwh.toFixed(1)} kWh` : 'unknown';
+  const actualStr =
+    anomaly.actual_kwh !== null ? `${anomaly.actual_kwh.toFixed(1)} kWh` : 'no data';
+  const deviationStr = `${anomaly.deviation_pct > 0 ? '+' : ''}${anomaly.deviation_pct.toFixed(1)}%`;
+
+  const systemPrompt =
+    'You write 2-line investigation notes for solar plant anomalies at Shiroi Energy, ' +
+    'a solar EPC company in Chennai, India. Suggest the most likely cause ' +
+    '(panel soiling / shading / inverter fault / electrical / weather / data issue) ' +
+    'and one concrete action. Tone: factual. Use ₹ format for cost references. ' +
+    'Return ONLY valid JSON — no markdown fences, no extra text.';
+
+  const userMessage =
+    `Anomaly: ${typeLabel}. Project: ${anomaly.customer_name}, ` +
+    `${anomaly.system_size_kwp} kWp, ${anomaly.site_city}. ` +
+    `Expected ${expectedStr}, actual ${actualStr} (${deviationStr} deviation). ` +
+    `Persisting for ${anomaly.consecutive_days} day${anomaly.consecutive_days !== 1 ? 's' : ''}.\n\n` +
+    `Return JSON: { "narrative": string (≤140 chars), "suggested_cause": string (≤80 chars), "suggested_action": string (≤80 chars) }`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: HAIKU_MODEL,
+        max_tokens: NARRATOR_MAX_TOKENS,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!resp.ok) {
+      const body = await resp.text();
+      console.error(`${op} Anthropic error ${resp.status}`, {
+        body: body.slice(0, 200),
+        timestamp: new Date().toISOString(),
+      });
+      return { narrative: null, tokens_in: 0, tokens_out: 0 };
+    }
+
+    const result = await resp.json() as {
+      content?: Array<{ type: string; text: string }>;
+      usage?: { input_tokens: number; output_tokens: number };
+    };
+
+    const tokensIn = result.usage?.input_tokens ?? 0;
+    const tokensOut = result.usage?.output_tokens ?? 0;
+    const text = result.content?.[0]?.text ?? '';
+
+    let narrative: AnomalyNarrative | null = null;
+    try {
+      const parsed = JSON.parse(text) as Partial<AnomalyNarrative>;
+      narrative = {
+        narrative: (parsed.narrative ?? '').slice(0, 140),
+        suggested_cause: (parsed.suggested_cause ?? '').slice(0, 80),
+        suggested_action: (parsed.suggested_action ?? '').slice(0, 80),
+      };
+    } catch {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]) as Partial<AnomalyNarrative>;
+          narrative = {
+            narrative: (parsed.narrative ?? '').slice(0, 140),
+            suggested_cause: (parsed.suggested_cause ?? '').slice(0, 80),
+            suggested_action: (parsed.suggested_action ?? '').slice(0, 80),
+          };
+        } catch {
+          console.warn(`${op} JSON parse failed`, { text: text.slice(0, 200) });
+        }
+      }
+    }
+
+    return { narrative, tokens_in: tokensIn, tokens_out: tokensOut };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`${op} fetch failed`, { error: msg, timestamp: new Date().toISOString() });
+    return { narrative: null, tokens_in: 0, tokens_out: 0 };
+  }
+}
+
+// ── Main export ────────────────────────────────────────────────────────────────
+
+export interface NarrateResult {
+  id: string;
+  ticket_id: string | null;
+  ai_tokens_used: number;
+}
+
+/**
+ * narrateAndPersistAnomaly — the core per-anomaly processor.
+ *
+ * Steps:
+ *  1. Call Claude Haiku for narrative JSON.
+ *  2. Insert into plant_anomaly_log (ON CONFLICT DO NOTHING for idempotency).
+ *  3. If critical threshold: auto-create om_service_tickets + link ticket_id.
+ *  4. Return { id, ticket_id, ai_tokens_used }.
+ */
+export async function narrateAndPersistAnomaly(anomaly: RawAnomaly): Promise<NarrateResult> {
+  const op = '[narrateAndPersistAnomaly]';
+  const admin = createAdminClient();
+
+  // ── Step 1: Haiku narrative ────────────────────────────────────────────────
+  const { narrative, tokens_in, tokens_out } = await callHaikuWithTokenCount(anomaly);
+  const aiTokensUsed = tokens_in + tokens_out;
+
+  // ── Step 2: Insert into plant_anomaly_log ─────────────────────────────────
+  const anomalyId = crypto.randomUUID();
+
+  const { data: inserted, error: insertError } = await admin
+    .from('plant_anomaly_log')
+    .insert({
+      id: anomalyId,
+      project_id: anomaly.project_id,
+      anomaly_type: anomaly.anomaly_type,
+      detected_for_date: anomaly.detected_for_date,
+      expected_kwh: anomaly.expected_kwh,
+      actual_kwh: anomaly.actual_kwh,
+      deviation_pct: anomaly.deviation_pct,
+      consecutive_days: anomaly.consecutive_days,
+      ai_narrative: narrative?.narrative ?? null,
+      ai_suggested_cause: narrative?.suggested_cause ?? null,
+      ai_suggested_action: narrative?.suggested_action ?? null,
+      ai_tokens_used: aiTokensUsed,
+      ai_model: HAIKU_MODEL,
+    })
+    .select('id')
+    .single();
+
+  if (insertError) {
+    // Unique constraint violation → already exists, skip silently
+    if (insertError.code === '23505') {
+      console.log(`${op} anomaly already exists (idempotent skip)`, {
+        project_id: anomaly.project_id,
+        anomaly_type: anomaly.anomaly_type,
+        detected_for_date: anomaly.detected_for_date,
+        timestamp: new Date().toISOString(),
+      });
+      return { id: anomalyId, ticket_id: null, ai_tokens_used: 0 };
+    }
+    console.error(`${op} failed to insert anomaly log`, {
+      error: insertError.message,
+      code: insertError.code,
+      project_id: anomaly.project_id,
+      timestamp: new Date().toISOString(),
+    });
+    return { id: anomalyId, ticket_id: null, ai_tokens_used: aiTokensUsed };
+  }
+
+  const persistedId = inserted?.id ?? anomalyId;
+
+  // ── Step 3: Auto-ticket for critical/severe anomalies ────────────────────
+  let ticketId: string | null = null;
+
+  const meetsAutoTicketThreshold =
+    anomaly.deviation_pct < AUTO_TICKET_DEVIATION_THRESHOLD &&
+    anomaly.consecutive_days >= AUTO_TICKET_CONSECUTIVE_DAYS;
+
+  if (meetsAutoTicketThreshold) {
+    // Check if an open ticket already exists for this project in last 7 days
+    const { data: existingTicket } = await admin
+      .from('om_service_tickets')
+      .select('id')
+      .eq('project_id', anomaly.project_id)
+      .in('status', ['open', 'assigned', 'in_progress', 'escalated'])
+      .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      .maybeSingle();
+
+    if (existingTicket) {
+      ticketId = existingTicket.id;
+      console.log(`${op} reusing existing ticket`, {
+        ticket_id: ticketId,
+        project_id: anomaly.project_id,
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      // Create new ticket
+      const ticketNumber = await generateTicketNumber(admin);
+      const typeLabel = anomaly.anomaly_type.replace(/_/g, ' ');
+      const deviationStr = `${anomaly.deviation_pct.toFixed(1)}%`;
+      const ticketId_new = crypto.randomUUID();
+
+      const { data: ticket, error: ticketErr } = await admin
+        .from('om_service_tickets')
+        .insert({
+          id: ticketId_new,
+          project_id: anomaly.project_id,
+          ticket_number: ticketNumber,
+          title: `AI Anomaly: ${typeLabel} — ${anomaly.customer_name}`,
+          description:
+            `Auto-detected by AI anomaly scan. Type: ${typeLabel}. ` +
+            `Deviation: ${deviationStr} for ${anomaly.consecutive_days} consecutive days. ` +
+            `Expected: ${anomaly.expected_kwh != null ? `${anomaly.expected_kwh.toFixed(1)} kWh` : 'unknown'}, ` +
+            `Actual: ${anomaly.actual_kwh != null ? `${anomaly.actual_kwh.toFixed(1)} kWh` : 'no data'}. ` +
+            (narrative?.suggested_cause ? `Likely cause: ${narrative.suggested_cause}. ` : '') +
+            (narrative?.suggested_action ? `Recommended action: ${narrative.suggested_action}.` : ''),
+          issue_type: 'low_generation',
+          severity: anomaly.deviation_pct < -40 ? 'critical' : 'high',
+          status: 'open',
+          sla_hours: anomaly.deviation_pct < -40 ? 24 : 48,
+        })
+        .select('id')
+        .single();
+
+      if (ticketErr) {
+        console.error(`${op} failed to create service ticket`, {
+          error: ticketErr.message,
+          code: ticketErr.code,
+          project_id: anomaly.project_id,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        ticketId = ticket?.id ?? ticketId_new;
+
+        // Link ticket_id back to anomaly log
+        await admin
+          .from('plant_anomaly_log')
+          .update({ ticket_id: ticketId })
+          .eq('id', persistedId);
+
+        console.log(`${op} auto-ticket created`, {
+          ticket_id: ticketId,
+          ticket_number: ticketNumber,
+          project_id: anomaly.project_id,
+          anomaly_type: anomaly.anomaly_type,
+          deviation_pct: anomaly.deviation_pct,
+          consecutive_days: anomaly.consecutive_days,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+  }
+
+  return { id: persistedId, ticket_id: ticketId, ai_tokens_used: aiTokensUsed };
+}

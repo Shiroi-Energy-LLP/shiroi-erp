@@ -85,6 +85,7 @@ export const LEAD_COLUMNS: ColumnDef[] = [
   { key: 'close_probability', label: 'Probability %', sortKey: 'close_probability', defaultVisible: true, sortable: true, editable: true, fieldType: 'number', format: 'percentage' },
   { key: 'weighted_value', label: 'Weighted Value', defaultVisible: false, sortable: false, editable: false, fieldType: 'currency', format: 'currency' },
   { key: 'next_followup_date', label: 'Next Follow-up', sortKey: 'next_followup_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'date', format: 'date' },
+  { key: 'ai_score', label: 'AI Score', sortKey: 'ai_score', defaultVisible: true, sortable: true, editable: false, fieldType: 'badge' },
 ];
 
 // ── Proposals columns ──

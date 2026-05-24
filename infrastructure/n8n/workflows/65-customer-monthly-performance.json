@@ -1,0 +1,290 @@
+{
+  "name": "65 — Customer: Monthly performance report (A4)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 4 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "node-cron",
+      "name": "1st of month 10:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "notes": "Cron: 0 4 1 * * = 04:30 UTC = 10:00 IST on the 1st of every month"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "calc-month",
+              "name": "last_month",
+              "value": "={{ (() => { const d = new Date(); d.setMonth(d.getMonth() - 1); return { year: d.getFullYear(), month: d.getMonth() + 1 }; })() }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-compute-month",
+      "name": "Compute last month",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ERP_URL }}/api/monthly-perf/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type",     "value": "application/json" },
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ year: $json.last_month.year, month: $json.last_month.month }) }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "node-call-erp",
+      "name": "POST /api/monthly-perf/run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "continueOnFail": false
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "reports",
+        "options": {}
+      },
+      "id": "node-split-reports",
+      "name": "Split reports",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-status",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "upserted",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-filter-success",
+      "name": "Only successful reports",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/monthly_performance_reports",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Accept",        "value": "application/json" }
+          ]
+        },
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "project_id",   "value": "=eq.{{ $json.project_id }}" },
+            { "name": "report_year",  "value": "=eq.{{ $('Compute last month').item.json.last_month.year }}" },
+            { "name": "report_month", "value": "=eq.{{ $('Compute last month').item.json.last_month.month }}" },
+            { "name": "select",       "value": "id,project_id,actual_kwh_generated,expected_kwh_pvlib,variance_pct,top_generation_date,top_generation_kwh,estimated_savings_inr,ai_narrative,whatsapp_template" },
+            { "name": "limit",        "value": "1" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-fetch-report-detail",
+      "name": "Fetch report detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "report_id",            "value": "={{ $json[0]?.id ?? null }}",                                                                  "type": "string" },
+            { "id": "f2", "name": "project_id",           "value": "={{ $('Only successful reports').item.json.project_id }}",                                     "type": "string" },
+            { "id": "f3", "name": "project_number",       "value": "={{ $('Only successful reports').item.json.project_number }}",                                  "type": "string" },
+            { "id": "f4", "name": "actual_kwh",           "value": "={{ $json[0]?.actual_kwh_generated ?? $('Only successful reports').item.json.actual_kwh }}",    "type": "number" },
+            { "id": "f5", "name": "estimated_savings_inr","value": "={{ $json[0]?.estimated_savings_inr ?? $('Only successful reports').item.json.estimated_savings_inr }}", "type": "number" },
+            { "id": "f6", "name": "variance_pct",         "value": "={{ $json[0]?.variance_pct ?? null }}",                                                        "type": "number" },
+            { "id": "f7", "name": "top_date",             "value": "={{ $json[0]?.top_generation_date ?? null }}",                                                 "type": "string" },
+            { "id": "f8", "name": "top_kwh",              "value": "={{ $json[0]?.top_generation_kwh ?? null }}",                                                  "type": "number" },
+            { "id": "f9", "name": "ai_narrative",         "value": "={{ $json[0]?.ai_narrative ?? '' }}",                                                          "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract-report",
+      "name": "Extract report fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.META_GRAPH_API_URL }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.META_WHATSAPP_TOKEN }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ (() => { const phone = $('POST /api/monthly-perf/run').item.json.reports?.find(r => r.project_id === $json.project_id)?.customer_phone ?? ''; const report = $json; const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December']; const year = $('Compute last month').item.json.last_month.year; const month = $('Compute last month').item.json.last_month.month; const monthLabel = `${monthNames[month]} ${year}`; const savingsNum = Math.round(report.estimated_savings_inr); const savingsFormatted = savingsNum >= 100000 ? (savingsNum/100000).toFixed(1)+'L' : savingsNum >= 1000 ? new Intl.NumberFormat('en-IN').format(savingsNum) : String(savingsNum); const varLine = report.variance_pct != null ? (report.variance_pct >= 0 ? `+${report.variance_pct}% vs expected. ` : `${report.variance_pct}% vs expected. `) : ''; const topLine = report.top_date ? `Top day: ${report.top_date.slice(8,10)}-${monthNames[parseInt(report.top_date.slice(5,7),10)]?.slice(0,3)}.` : ''; const narrativeSentence = report.ai_narrative ? report.ai_narrative : varLine + topLine; const portalLink = `${$env.ERP_URL ?? 'https://erp.shiroienergy.com'}/monitoring/${report.project_id}`; return JSON.stringify({ messaging_product: 'whatsapp', to: phone, type: 'template', template: { name: 'monthly_performance', language: { code: 'en' }, components: [{ type: 'body', parameters: [ { type: 'text', text: phone }, { type: 'text', text: String($('Fetch report detail').item.json?.[0]?.actual_kwh_generated ?? '') }, { type: 'text', text: String(year) }, { type: 'text', text: String(Math.round(report.actual_kwh)) }, { type: 'text', text: monthLabel }, { type: 'text', text: savingsFormatted }, { type: 'text', text: narrativeSentence.slice(0, 240) }, { type: 'text', text: portalLink } ] }] } }); })() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-send-wa",
+      "name": "Send WhatsApp template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 300],
+      "continueOnFail": true,
+      "notes": "continue-on-fail per recipient — one failed send must not block others"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_message_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" },
+            { "name": "Prefer",        "value": "return=minimal" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ project_id: $('Extract report fields').item.json.project_id, recipient_phone: null, template_name: 'monthly_performance', template_vars: { report_id: $('Extract report fields').item.json.report_id, project_number: $('Extract report fields').item.json.project_number, actual_kwh: $('Extract report fields').item.json.actual_kwh, estimated_savings_inr: $('Extract report fields').item.json.estimated_savings_inr, variance_pct: $('Extract report fields').item.json.variance_pct, ai_narrative: $('Extract report fields').item.json.ai_narrative }, meta_wamid: $json.messages?.[0]?.id || null, channel: 'whatsapp', status: $json.messages?.[0]?.id ? 'sent' : 'failed', sent_at: new Date().toISOString(), failed_reason: $json.error?.message || null }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-log",
+      "name": "Log to customer_message_log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/monthly_performance_reports?id=eq.{{ $('Extract report fields').item.json.report_id }}&select=id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" },
+            { "name": "Prefer",        "value": "return=minimal" }
+          ]
+        },
+        "method": "PATCH",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ whatsapp_message_id: $('Send WhatsApp template').item.json.messages?.[0]?.id || null, sent_at: $('Send WhatsApp template').item.json.messages?.[0]?.id ? new Date().toISOString() : null }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-update-report",
+      "name": "Update report with WA message id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2250, 300],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "1st of month 10:00 IST":         { "main": [[{ "node": "Compute last month",           "type": "main", "index": 0 }]] },
+    "Compute last month":              { "main": [[{ "node": "POST /api/monthly-perf/run",   "type": "main", "index": 0 }]] },
+    "POST /api/monthly-perf/run":      { "main": [[{ "node": "Split reports",                "type": "main", "index": 0 }]] },
+    "Split reports":                   { "main": [[{ "node": "Only successful reports",      "type": "main", "index": 0 }]] },
+    "Only successful reports":         { "main": [[{ "node": "Fetch report detail",          "type": "main", "index": 0 }]] },
+    "Fetch report detail":             { "main": [[{ "node": "Extract report fields",        "type": "main", "index": 0 }]] },
+    "Extract report fields":           { "main": [[{ "node": "Send WhatsApp template",       "type": "main", "index": 0 }]] },
+    "Send WhatsApp template":          { "main": [[{ "node": "Log to customer_message_log",  "type": "main", "index": 0 }]] },
+    "Log to customer_message_log":     { "main": [[{ "node": "Update report with WA message id", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "55-global-error-handler"
+  },
+  "tags": [
+    { "name": "customer-comms" },
+    { "name": "whatsapp" },
+    { "name": "monthly-cron" },
+    { "name": "wave2-a4" }
+  ],
+  "meta": {
+    "event": "customer.monthly_performance_generated",
+    "templateName": "monthly_performance",
+    "schedule": "0 4 1 * * (04:30 UTC = 10:00 IST, 1st of every month)",
+    "batchSize": 50,
+    "notes": "Calls ERP /api/monthly-perf/run for last month's cohort. Splits reports array, fetches detail per project, sends WhatsApp monthly_performance template, logs to customer_message_log, updates monthly_performance_reports.sent_at + whatsapp_message_id. continue-on-fail on every per-recipient node."
+  }
+}

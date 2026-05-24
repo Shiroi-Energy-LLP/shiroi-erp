@@ -1,0 +1,83 @@
+{
+  "name": "70 — QC photo scan cron (every 2h business hours)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 9,11,13,15,17,19 * * *"
+            }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Business hours 2h cron (09:00–19:00 IST)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/qc-photos/scan-recent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": { "responseFormat": "json" }
+          },
+          "timeout": 300000
+        }
+      },
+      "id": "node-http-scan",
+      "name": "Run QC photo scan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_WEBHOOK_SECRET_CRED_ID",
+          "name": "ERP webhook secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first()?.json || {};\nconst scanned = result.photos_scanned ?? 0;\nconst critical = result.findings_critical ?? 0;\nconst warning = result.findings_warning ?? 0;\nconst total = result.findings_total ?? 0;\nconst errors = result.errors ?? 0;\nconst capped = result.capped ?? false;\nconst tokens = result.tokens_used_total ?? 0;\n\nconsole.log(`QC scan: ${scanned} photos analysed, ${total} findings (${critical} critical, ${warning} warning), ${errors} errors, capped=${capped}, tokens=${tokens}`);\n\nif (critical > 0) {\n  console.warn(`CRITICAL QC findings: ${critical} critical issues detected across ${scanned} photos`);\n}\n\nreturn [{ json: result }];"
+      },
+      "id": "node-log",
+      "name": "Log result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Business hours 2h cron (09:00–19:00 IST)": {
+      "main": [
+        [{ "node": "Run QC photo scan", "type": "main", "index": 0 }]
+      ]
+    },
+    "Run QC photo scan": {
+      "main": [
+        [{ "node": "Log result", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

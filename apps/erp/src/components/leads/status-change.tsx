@@ -7,6 +7,7 @@ import { Select, Button, Input } from '@repo/ui';
 import { getValidNextStatuses, requiresFollowUp, DEFAULT_PROBABILITY, STAGE_LABELS } from '@/lib/leads-helpers';
 import { upsertLeadFollowupTask } from '@/lib/leads-task-actions';
 import { invalidateLeadStageCounts } from '@/lib/leads-actions';
+import { triggerLeadScore } from '@/lib/ai/trigger-lead-score';
 import type { Database } from '@repo/types/database';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
@@ -122,6 +123,9 @@ export function StatusChange({ leadId, currentStatus, currentExpectedCloseDate }
         console.error(`${op} upsertLeadFollowupTask failed:`, { leadId, nextFollowupDate, error: e });
       });
     }
+
+    // C1: Fire-and-forget AI re-score on status change — new status affects score
+    void triggerLeadScore(leadId);
 
     setSelectedStatus('');
     setNextFollowupDate('');
