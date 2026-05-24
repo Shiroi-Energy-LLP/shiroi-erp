@@ -206,7 +206,7 @@ Mobile writes hit WatermelonDB first and sync to Supabase in the background. On 
 
 Import `Database['public']['Tables']['x']['Row' | 'Insert' | 'Update']` explicitly. If the generated type is wrong, **regenerate `database.ts`**. Every `as any` compounds schema-drift risk: the audit found that every one of the 576 violations started with "just one cast".
 
-### 4.8 NEVER-DO rules 11–20 — why they exist
+### 4.8 NEVER-DO rules 11–21 — why they exist
 
 CLAUDE.md carries the authoritative list. Each rule is calibrated to a concrete April 14, 2026 audit finding or subsequent incident:
 
@@ -222,8 +222,9 @@ CLAUDE.md carries the authoritative list. Each rule is calibrated to a concrete 
 | 18 | No >5s work in server actions | Vercel function timeout; UX stall |
 | 19 | No throws from server actions | Opaque "An error occurred" in production |
 | 20 | Regenerate types with every schema change | Types out of sync = silent runtime failures |
+| 21 | No runtime imports from `-queries.ts` in `'use client'` components | 2026-05-24 Vercel deploy failed three times in a row — see §4.13 |
 
-Enforcement: CI runs `pnpm check-types` + `pnpm lint` + `scripts/ci/check-forbidden-patterns.sh`. The forbidden-pattern baseline grandfathers existing violations and blocks new ones; it only ratchets down.
+Enforcement: CI runs `pnpm check-types` + `pnpm lint` + `scripts/ci/check-forbidden-patterns.sh` + `pnpm build`. The forbidden-pattern baseline grandfathers existing violations and blocks new ones; it only ratchets down. `pnpm build` (added 2026-05-24) catches every client/server boundary violation that check-types misses — see §4.13.
 
 ### 4.9 Indexes — add with the column, not later
 
@@ -263,6 +264,88 @@ Code answers *what* already. Comments earn their keep by answering *why this and
 - For n8n specifically: the SQLite DB at `/var/lib/docker/volumes/shiroi-automation_n8n_data/_data/database.sqlite` has every execution's full payload in `execution_data.data` (JSON). Always query that before reading workflow JSONs.
 
 This rule is enforced via the global `superpowers:systematic-debugging` skill (Phase 1, Step 0 — non-negotiable). Violating it is what caused 3 days of wasted work in May 2026.
+
+### 4.13 Client/server boundary — `-constants.ts` extraction pattern (May 24, 2026)
+
+**A `'use client'` component must not transitively import `@repo/supabase/server`.** Webpack will fail the production build with:
+
+> You're importing a component that needs `next/headers`. That only works in a Server Component which is not supported in the pages/ directory.
+
+`pnpm check-types` does **not** catch this. Only `pnpm build` does. The 2026-05-24 Vercel deploy failed three times in a row before this rule was formalised:
+
+| File | Bad value-import |
+|------|------------------|
+| `document-drop-zone.tsx` | `DOCUMENT_CATEGORY_LABELS` from `documents-queries.ts` |
+| `dc-certificates-panel.tsx` | `CERTIFICATE_TYPE_LABELS` + `CERTIFICATE_TYPE_ORDER` from `dc-certificate-queries.ts` |
+| `completion-checklist.tsx` | `COMPONENT_WEIGHTS` + `COMPONENT_LABELS` + `COMPONENT_ORDER` from `project-completion-queries.ts` |
+
+Each `-queries.ts` file imports `createClient` from `@repo/supabase/server` at module top → that pulls in `next/headers` → the client bundle fails.
+
+**The pattern (locked):**
+
+When a label map / weight map / enum-order array / type alias is shared between a `'use client'` component and a server-side query, put it in its own `apps/erp/src/lib/<domain>-constants.ts` file with **no server imports**. The queries file can `export { X } from './<domain>-constants'` for backward compatibility. Existing reference implementations:
+
+- `apps/erp/src/lib/documents-constants.ts`
+- `apps/erp/src/lib/dc-certificate-constants.ts`
+- `apps/erp/src/lib/project-completion-constants.ts`
+
+**Safe vs unsafe imports from `-queries.ts` in a `'use client'` file:**
+
+```ts
+// SAFE — TypeScript strips type-only imports at compile time.
+import type { DocumentRow } from '@/lib/documents-queries';
+
+// UNSAFE — pulls the whole module (including the server client).
+import { DOCUMENT_CATEGORY_LABELS } from '@/lib/documents-queries';
+```
+
+**Re-export gotcha:** prefer `export type { Foo } from './source'` over a renamed re-export. The renamed pattern caused a 4th build failure during the same incident — `Record<Foo, …>` lookups downstream got a different type identity than `DOCUMENT_CATEGORY_LABELS` expected:
+
+```ts
+// AVOID — creates a renamed re-export with a separate identity.
+import type { DocumentCategory as DocCatConst } from './documents-constants';
+export type { DocCatConst as DocumentCategory };
+
+// PREFER — direct re-export keeps identity stable.
+export type { DocumentCategory } from './documents-constants';
+```
+
+**Enforcement:** `pnpm build` runs in CI after the three discipline gates. It adds ~4 min per PR but every Next.js production-only error (client/server boundary, dynamic-route mismatch, missing dep) gets caught before Vercel sees the branch.
+
+### 4.14 Schema-first query writing — verify before you query (May 24, 2026)
+
+Before writing `.from('table').select('col_a, col_b')` or `.eq('col', x)`, confirm each table and column actually exists in `supabase/migrations/` or `packages/types/database.ts`. Speculative column names cost a full debug cycle and are caught only by `pnpm check-types` — which is useless if check-types isn't run before push.
+
+**Concrete failures in the 2026-05-24 review:**
+
+| Code wrote | Actual schema | File |
+|------------|---------------|------|
+| `projects.commissioned_at` | `projects.commissioned_date` (`commissioned_at` only exists on `inverters`, mig 050) | `customer-outreach-actions.ts` |
+| `daily_site_reports.work_completed` | `work_description` (mig 004c) | `project-daily-report.ts` |
+| `daily_site_reports.panels_installed` | `panels_installed_today` / `panels_installed_cumulative` | same |
+| `daily_site_reports.inverters_installed` / `wiring_completed` / `manpower_count` | none — use `structure_progress` / `electrical_progress` / `workers_count + supervisors_count` | same |
+| `project_tasks` | `tasks` (renamed in mig 007f) | same |
+| `project_milestones.name` | `milestone_name` | same |
+| `project_milestones.completed_at` | `actual_end_date` | same |
+| `expenses.category` | join through `expense_categories.label` via `category_id` | same |
+
+**The rule:**
+
+- When a requirement is "show project info on day X post-commissioning," first `grep -E "CREATE TABLE.*projects|ADD COLUMN.*commission" supabase/migrations/*.sql` to find the column that holds that date. Don't assume the obvious name.
+- If the column you need doesn't exist, **write the migration first**, apply it via the Supabase MCP, regenerate `database.ts` per §4.7 / the CLAUDE.md "Regenerating database.ts" section, then write the query against the now-typed rows. Never write the query first and hope the column appears at type-check time.
+- Inverse of NEVER-DO #20: schema must lead code, not the other way around.
+
+### 4.15 CI evidence over notifications — read the actual stdout (May 24, 2026)
+
+Background-task notifications can lie about exit codes. The Claude harness reported `exit code 0` for both `pnpm check-types` and `pnpm build` failures during the 2026-05-24 review — the real exit code was 2 in one case and 1 in the other, surfaced only by reading the actual stdout (`ELIFECYCLE Command failed with exit code N` at the tail).
+
+**The rule:** never trust a "completed" notification at face value. Read the captured output of every CI gate command before claiming green. Grep the tail for `error TS`, `Failed:`, `ELIFECYCLE`, or `Build failed because of webpack errors`. Same rule applies to:
+
+- pnpm tasks reported by Turborepo (the wrapper exit code can be 0 even when an inner package fails).
+- n8n REST API responses (`status=success` can ride on a Gmail OAuth refresh-token revocation buried inside the HTTP 200 body — the May 18 outage).
+- Edge Function returns (a 2xx response from `inverter-poll` can still indicate per-inverter failures logged into `inverter_poll_failures`).
+
+Two prior commits (Phase E + Phase F, both 2026-05-24) shipped to main claiming "CI green" when check-types was actually failing with 50+ errors. The downstream cleanup took two full sessions. Read the output, not the wrapper.
 
 ---
 

@@ -141,7 +141,7 @@ NEXT_PUBLIC_ERP_URL                   (base URL for share links; default: https:
 
 ---
 
-## NEVER DO (20 rules — rationale in master reference §4.11)
+## NEVER DO (21 rules — rationale in master reference §4.8 + §4.12–4.15)
 
 1. Never hardcode env variables, API keys, or Supabase project IDs.
 2. Never commit `.env.local`.
@@ -163,6 +163,7 @@ NEXT_PUBLIC_ERP_URL                   (base URL for share links; default: https:
 18. Never queue background work (>5s, polling, retries) inside a Next.js server action.
 19. Never throw from a server action — return `ActionResult<T>`.
 20. Never ship schema changes without regenerating types in the same commit.
+21. Never import runtime values from `-queries.ts` files in a `'use client'` component — `import type` only. Extract shared constants (label maps, enum orders, weight maps) to `<domain>-constants.ts` with no server imports. The queries file re-exports from there. `pnpm check-types` does NOT catch the boundary violation; only `pnpm build` does. (Master ref §4.13.)
 
 ---
 
@@ -170,9 +171,10 @@ NEXT_PUBLIC_ERP_URL                   (base URL for share links; default: https:
 
 1. Claude writes code → Vivek reviews → `git add` / `git commit` / `git push`.
 2. SQL migrations: paste into Supabase SQL Editor (**dev first, then prod**) → save as numbered `.sql` in `supabase/migrations/` → regenerate `packages/types/database.ts` (see "Regenerating database.ts" below).
-3. **End-of-task sequence — strict order, no skipping, no reordering:**
-   1. **CI test locally first.** Run `pnpm check-types && pnpm lint && bash scripts/ci/check-forbidden-patterns.sh` (the exact set `.github/workflows/ci.yml` runs). If anything fails, fix it locally before moving on — never push a red branch and rely on remote CI to catch it.
-   2. **Update docs only after CI is green.** Append one line to `docs/CHANGELOG.md`; update `docs/CURRENT_STATUS.md` if in-flight work changed; update the relevant `docs/modules/<module>.md` if the module gained a capability, a new table, or a significant decision. **Do not grow CLAUDE.md** — if something feels like it belongs here, it probably belongs in the master reference or a module doc.
+3. **Schema lookup before query writing.** Before writing `.from('table').select('col_a, col_b')` or `.eq('col', x)`, confirm each table and column exists in `supabase/migrations/` or `packages/types/database.ts`. Speculative column names cost a debug cycle (NEVER-DO #20 inverse; master ref §4.14).
+4. **End-of-task sequence — strict order, no skipping, no reordering:**
+   1. **Run all four CI gates locally first.** `pnpm check-types && pnpm lint && bash scripts/ci/check-forbidden-patterns.sh && pnpm build` (the exact set `.github/workflows/ci.yml` runs). `pnpm build` was added 2026-05-24 because three Vercel deploys failed in a row — check-types alone misses Next.js client/server boundary violations. **Read the actual stdout of each command** — background-task notifications can report `exit code 0` even when the real exit is non-zero (master ref §4.15). Grep the tail for `error TS`, `Failed:`, `ELIFECYCLE`, or `Build failed`. If anything fails, fix it locally — never push a red branch.
+   2. **Update docs only after all gates are green.** Append one line to `docs/CHANGELOG.md`; update `docs/CURRENT_STATUS.md` if in-flight work changed; update the relevant `docs/modules/<module>.md` if the module gained a capability, a new table, or a significant decision. Multi-area reviews go in `docs/reviews/YYYY-MM-DD-<topic>.md` (not inline in the changelog). **Do not grow CLAUDE.md** — if something feels like it belongs here, it probably belongs in the master reference or a module doc.
    3. **Push to main, and always push to the git remote — not just commit locally.** `git add` → `git commit` → `git push origin main`. A local commit that hasn't reached the remote isn't done.
 
 ---

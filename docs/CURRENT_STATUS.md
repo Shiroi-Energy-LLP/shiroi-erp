@@ -133,11 +133,14 @@ E15: `infrastructure/pvlib/` — Dockerfile + docker-compose.yml + requirements.
 
 ## Active CI / discipline gates
 
-Running on every PR + push to `main` (`~1 min` total):
+Running on every PR + push to `main` (`~5 min` total):
 
-1. `pnpm check-types` — 5 packages, 0 errors required
-2. `pnpm lint` — 2 lintable packages with `--max-warnings 0`
-3. `scripts/ci/check-forbidden-patterns.sh` — baseline-aware grep for NEVER-DO rules 11/13/15
+1. `pnpm check-types` — 5 packages, 0 errors required.
+2. `pnpm lint` — 2 lintable packages with `--max-warnings 0`.
+3. `scripts/ci/check-forbidden-patterns.sh` — baseline-aware grep for NEVER-DO rules 11/13/15.
+4. **`pnpm build`** (added 2026-05-24 after 3 Vercel deploys failed in a row) — runs `next build` to catch client/server boundary violations that `pnpm check-types` misses. The classic failure mode is a `'use client'` component importing a runtime value from `-queries.ts`, which transitively pulls `@repo/supabase/server` → `next/headers` into the client bundle. NEVER-DO #21 and master ref §4.13 cover the extract-to-`-constants.ts` fix pattern. Adds ~4 min per run; the trade-off is no more "green CI → red Vercel" surprises.
+
+**Local discipline equivalent:** `pnpm check-types && pnpm lint && bash scripts/ci/check-forbidden-patterns.sh && pnpm build`. Run this before push, every time. Read the actual stdout — background-task notifications can report `exit code 0` for a failure (master ref §4.15).
 
 **Forbidden-pattern baseline:** currently 62 (updated from 63 after adding the new `/api/projects/[id]/handover-pdf` route, consistent with existing API route grandfathering). Long-term target: ratchet further down after refactoring remaining page-level `createClient` imports into `-queries.ts` helpers.
 
