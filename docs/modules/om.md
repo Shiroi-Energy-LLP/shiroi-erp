@@ -155,6 +155,21 @@ supabase/functions/inverter-poll/   (Deno Edge Function)
 - 5 seed modules: Solar Panel Safety, Inverter Installation (Tamil), Customer Communication, EHS Emergency Response, Basic Electrical Safety
 - Admin UI for learning modules and onboarding progress: **pending** (tables and seed data exist)
 
+## Phase F additions (May 2026)
+
+### F1 — Customer drip sequences (`customer_message_log` + 8 n8n workflows)
+**Migration 129** added `customer_message_log` (id, project_id FK, channel TEXT, template_name TEXT, recipient_phone TEXT, status, failed_reason, sent_at, wamid). The original migration shipped **without RLS**, exposing customer phone numbers + message content. **Mig 134** added the missing policies — read for `founder` / `marketing_manager` / `om_technician`, ALL for `service_role` (n8n inserts via service-role JWT).
+
+Eight n8n workflows (`infrastructure/n8n/workflows/40-customer-proposal-sent.json` through `47-customer-commissioning-complete.json`) wire ERP events to Meta WhatsApp templates. Each Send + Log node has `continueOnFail: true` so a delivery failure still creates an audit row with `status='failed'` and `failed_reason` populated — good observability. Workflows are **inactive on the droplet** until the 8 customer-facing templates in `infrastructure/n8n/templates.md` get Meta approval (F2 verification is now done, unblocking submission).
+
+**Side note from the 2026-05-24 review**: 5 of 8 workflows reference events that aren't in `00-event-bus-router.json` AND that ERP code never emits via `emitErpEvent`. The router needs Switch cases for `lead.won` / `net_metering.application_submitted` / `project.milestone_complete` and the matching `emitErpEvent` call sites need to be wired up before activation. Tracked as a follow-up; not blocking template submission.
+
+## Phase E intelligence-layer review fixes (mig 134, 2026-05-24)
+
+- **`customer-outreach-actions.ts`** was previously callable by any authenticated user — it used `createAdminClient()` directly without a role gate. Now requires `founder` or `om_technician` role before the admin client is reached. Also fixed `projects.commissioned_at` → `projects.commissioned_date` (the actual column name; `commissioned_at` only exists on `inverters` from mig 050). And the inline `fetch(N8N_EVENT_BUS_URL, ...)` was swapped for the canonical `emitErpEvent('customer_checkin.due', ...)` helper to get the 3-second timeout + typed event name (new event added to `ErpEventName` union).
+- **`project-daily-report.ts`** Phase E action was schema-blind — `daily_site_reports.work_completed/panels_installed/inverters_installed/wiring_completed/manpower_count` didn't exist (the real columns are `work_description`, `panels_installed_today`, `structure_progress`, `electrical_progress`, `workers_count + supervisors_count`), `project_tasks` was renamed to `tasks` in mig 007f, `project_milestones.name` should be `milestone_name` and `completed_at` should be `actual_end_date`, and `expenses` needs a join through `expense_categories` for the category label. All rewritten against real schema.
+- **`process-document` Edge Function** at `supabase/functions/process-document/index.ts` — review flagged that the idempotency check rejects only `'done'` but flips to `'processing'` without a worker_id, so concurrent invocations both pass the check and both burn Anthropic + OpenAI quota. **Open** — not fixed in this batch.
+
 ## Past Decisions & Specs
 
 - Migration 043 (`service_amount`, `closed_at` on tickets)

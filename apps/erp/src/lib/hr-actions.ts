@@ -21,121 +21,33 @@ export async function approveLeaveRequest(
   requestId: string,
 ): Promise<ActionResult<void>> {
   const op = '[approveLeaveRequest]';
-  console.log(`${op} Starting for request: ${requestId}`);
 
   if (!requestId) return err('Request ID is required');
 
+  // Auth gate — RPC also enforces role, but reject anon callers early.
   const profile = await getUserProfile();
   if (!profile) return err('Not authenticated');
 
-  const allowedRoles: string[] = ['founder', 'hr_manager'];
-  if (!allowedRoles.includes(profile.role)) {
-    console.warn(`${op} Access denied: role=${profile.role}`);
-    return err('Only HR manager or founder can approve leave requests');
-  }
-
   const supabase = await createClient();
 
-  // Fetch the request
-  const { data: request, error: fetchError } = await supabase
-    .from('leave_requests')
-    .select('id, employee_id, leave_type, days_requested, status, from_date, to_date')
-    .eq('id', requestId)
-    .single();
+  // Atomic: fn_approve_leave_request (mig 136) wraps the 3-step flow
+  // (update request + insert ledger + refresh balance via trigger) in a
+  // single transaction so a partial failure can't corrupt leave state.
+  const { error: rpcErr } = await supabase.rpc('fn_approve_leave_request', {
+    p_request_id: requestId,
+  });
 
-  if (fetchError || !request) {
-    console.error(`${op} Fetch failed:`, { code: fetchError?.code, message: fetchError?.message });
-    return err('Leave request not found');
-  }
-
-  if (request.status !== 'pending') {
-    return err(`Cannot approve a request with status: ${request.status}`);
-  }
-
-  // Resolve approver's employee ID
-  const { data: approverEmployee, error: approverError } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('profile_id', profile.id)
-    .single();
-
-  if (approverError || !approverEmployee) {
-    console.error(`${op} Approver employee lookup failed:`, { code: approverError?.code, message: approverError?.message });
-    return err('Could not resolve approver employee record');
-  }
-
-  const approverEmployeeId = approverEmployee.id;
-
-  // Update leave request status
-  const { error: updateError } = await supabase
-    .from('leave_requests')
-    .update({
-      status: 'approved',
-      approved_by: approverEmployeeId,
-      approved_at: new Date().toISOString(),
-    })
-    .eq('id', requestId)
-    .eq('status', 'pending');
-
-  if (updateError) {
-    console.error(`${op} Update failed:`, { code: updateError.code, message: updateError.message });
-    return err(`Failed to approve leave request: ${updateError.message}`);
-  }
-
-  // Get current balance for this employee + leave type
-  const { data: currentBalance } = await supabase
-    .from('leave_balances')
-    .select('balance_days')
-    .eq('employee_id', request.employee_id)
-    .eq('leave_type', request.leave_type)
-    .single();
-
-  const balanceBefore = Number(currentBalance?.balance_days ?? 0);
-  const daysDebited = Number(request.days_requested);
-  const balanceAfter = balanceBefore - daysDebited;
-
-  // Insert leave ledger debit entry (double-entry model — immutable)
-  const { error: ledgerError } = await supabase
-    .from('leave_ledger')
-    .insert({
-      id: crypto.randomUUID(),
-      employee_id: request.employee_id,
-      leave_request_id: requestId,
-      entry_type: 'debit',
-      leave_type: request.leave_type,
-      days: -daysDebited,
-      balance_after: balanceAfter,
-      description: `${request.leave_type} leave taken ${request.from_date} to ${request.to_date}`,
-      recorded_by: approverEmployeeId,
-      transaction_date: new Date().toISOString().split('T')[0]!,
+  if (rpcErr) {
+    console.error(`${op} RPC failed`, {
+      requestId,
+      code: rpcErr.code,
+      message: rpcErr.message,
+      timestamp: new Date().toISOString(),
     });
-
-  if (ledgerError) {
-    console.error(`${op} Ledger insert failed:`, { code: ledgerError.code, message: ledgerError.message });
-    // Non-fatal: request is approved but ledger entry failed — log for manual fix
-  }
-
-  // Upsert leave_balances
-  const { error: balanceError } = await supabase
-    .from('leave_balances')
-    .upsert(
-      {
-        employee_id: request.employee_id,
-        leave_type: request.leave_type,
-        balance_days: balanceAfter,
-        last_updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'employee_id,leave_type' },
-    );
-
-  if (balanceError) {
-    console.error(`${op} Balance upsert failed:`, { code: balanceError.code, message: balanceError.message });
-    // Non-fatal: ledger is the source of truth
+    return err(rpcErr.message, rpcErr.code);
   }
 
   revalidatePath('/hr/leave');
-  revalidatePath(`/hr/${request.employee_id}`);
-  console.log(`${op} Approved request: ${requestId}`);
   return ok(undefined);
 }
 

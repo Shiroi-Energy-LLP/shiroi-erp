@@ -16,6 +16,7 @@ import {
 } from '@repo/ui/components/table';
 import { Input } from '@repo/ui/components/input';
 import { Badge } from '@repo/ui/components/badge';
+import { formatINR } from '@repo/ui';
 
 interface ProfitabilityRow {
   project_id: string;
@@ -81,19 +82,15 @@ export function OmProfitabilityTable({ rows }: { rows: ProfitabilityRow[] }) {
                 <TableCell className="text-right">{Number(row.system_size_kwp).toFixed(1)}</TableCell>
                 <TableCell className="text-right">{row.ticket_count}</TableCell>
                 <TableCell className="text-right">
-                  {row.ticket_parts_cost > 0
-                    ? `₹${Number(row.ticket_parts_cost).toLocaleString('en-IN')}`
-                    : '—'}
+                  {row.ticket_parts_cost > 0 ? formatINR(Number(row.ticket_parts_cost)) : '—'}
                 </TableCell>
                 <TableCell className="text-right">
-                  {row.ticket_service_amount > 0
-                    ? `₹${Number(row.ticket_service_amount).toLocaleString('en-IN')}`
-                    : '—'}
+                  {row.ticket_service_amount > 0 ? formatINR(Number(row.ticket_service_amount)) : '—'}
                 </TableCell>
                 <TableCell className="text-right">
                   {row.ticket_count > 0 ? (
                     <span className={Number(row.profit_loss) >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                      {Number(row.profit_loss) >= 0 ? '+' : ''}₹{Number(row.profit_loss).toLocaleString('en-IN')}
+                      {Number(row.profit_loss) >= 0 ? '+' : ''}{formatINR(Number(row.profit_loss))}
                     </span>
                   ) : '—'}
                 </TableCell>

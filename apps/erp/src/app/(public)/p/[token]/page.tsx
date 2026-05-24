@@ -15,6 +15,7 @@
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { createAdminClient } from '@repo/supabase/admin';
+import { formatINR } from '@repo/ui';
 import { ProposalPortalClient } from './proposal-portal-client';
 
 interface Props {
@@ -87,14 +88,6 @@ async function getProposalByToken(token: string, ip: string) {
   };
 }
 
-function formatINR(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
 export default async function ProposalPortalPage({ params }: Props) {
   // Get client IP from headers (Vercel forwards X-Forwarded-For)
   const headerList = headers();
@@ -111,9 +104,22 @@ export default async function ProposalPortalPage({ params }: Props) {
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params: _params }: Props) {
+  const title = 'Your Solar Proposal — Shiroi Energy';
+  const description = 'View your personalised solar proposal from Shiroi Energy.';
   return {
-    title: 'Your Solar Proposal — Shiroi Energy',
-    description: 'View your personalised solar proposal from Shiroi Energy.',
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      siteName: 'Shiroi Energy',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
   };
 }

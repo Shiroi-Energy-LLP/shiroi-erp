@@ -23,7 +23,13 @@ interface Props {
   token: string;
 }
 
-const SHIROI_WHATSAPP = '+919876543210'; // Will be overridden by system settings in production
+// Pulled from public env var at build time so we don't hardcode a fake number.
+// Set NEXT_PUBLIC_SHIROI_WHATSAPP in .env.local (e.g. '+919444414087').
+// Falls back to an empty string — the UI hides the WA button when not set.
+const SHIROI_WHATSAPP = process.env.NEXT_PUBLIC_SHIROI_WHATSAPP ?? '';
+const SHIROI_PHONE_DISPLAY = SHIROI_WHATSAPP
+  ? SHIROI_WHATSAPP.replace(/^\+?91/, '+91 ').replace(/(\d{5})(\d{5})/, '$1 $2')
+  : '';
 
 export function ProposalPortalClient({ proposal, formatINR, token }: Props) {
   const [accepted, setAccepted] = useState(proposal.status === 'approved');
@@ -74,8 +80,8 @@ export function ProposalPortalClient({ proposal, formatINR, token }: Props) {
       {/* Header */}
       <header className="border-b bg-white px-6 py-4">
         <div className="mx-auto max-w-3xl flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-amber-400 flex items-center justify-center">
-            <Sun className="h-5 w-5 text-amber-900" />
+          <div className="h-8 w-8 rounded-md bg-[#00B050] flex items-center justify-center text-white">
+            <Sun className="h-5 w-5" />
           </div>
           <span className="font-bold text-lg tracking-tight">Shiroi Energy</span>
           <span className="ml-auto text-xs text-muted-foreground">Solar EPC · Chennai</span>
@@ -147,11 +153,13 @@ export function ProposalPortalClient({ proposal, formatINR, token }: Props) {
                 <CheckCircle className="h-4 w-4 mr-2" />
                 {isPending ? 'Recording…' : 'Accept proposal'}
               </Button>
-              <Button variant="outline" className="flex-1" asChild>
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="h-4 w-4 mr-2" /> Ask a question
-                </a>
-              </Button>
+              {SHIROI_WHATSAPP && (
+                <Button variant="outline" className="flex-1" asChild>
+                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="h-4 w-4 mr-2" /> Ask a question
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -168,8 +176,12 @@ export function ProposalPortalClient({ proposal, formatINR, token }: Props) {
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground pb-6">
           This proposal was prepared by Shiroi Energy LLP · Chennai, Tamil Nadu · shiroienergy.com
-          <br />
-          Questions? WhatsApp us or call +91 98765 43210
+          {SHIROI_PHONE_DISPLAY && (
+            <>
+              <br />
+              Questions? WhatsApp us or call {SHIROI_PHONE_DISPLAY}
+            </>
+          )}
         </p>
       </main>
     </div>

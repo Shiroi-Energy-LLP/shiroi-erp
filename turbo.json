@@ -44,7 +44,8 @@
     "SHIROI_STATE_CODE",
     "SHIROI_PINCODE",
     "SHIROI_ACCOUNTS_EMAIL",
-    "NEXT_PUBLIC_ERP_URL"
+    "NEXT_PUBLIC_ERP_URL",
+    "NEXT_PUBLIC_SHIROI_WHATSAPP"
   ],
   "tasks": {
     "build": {

@@ -12,21 +12,17 @@ import {
   TableHead,
   TableCell,
   Eyebrow,
+  formatINR,
 } from '@repo/ui';
 import { BarChart3, TrendingDown, CheckCircle, TrendingUp } from 'lucide-react';
 import { getSalaryBenchmarkReport, getCallerRole, type BenchmarkRow } from '@/lib/salary-benchmark-queries';
 
-function formatINR(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function recommendationVariant(rec: string | null): 'destructive' | 'success' | 'secondary' {
+// Overpaid is amber (cost-bloat risk), not green. Only Fair earns the success
+// variant. Underpaid is destructive (retention risk).
+function recommendationVariant(rec: string | null): 'destructive' | 'success' | 'warning' | 'secondary' {
   if (rec === 'underpaid') return 'destructive';
-  if (rec === 'overpaid') return 'success';
+  if (rec === 'fair') return 'success';
+  if (rec === 'overpaid') return 'warning';
   return 'secondary';
 }
 
@@ -69,12 +65,12 @@ export default async function SalaryBenchmarkingPage() {
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-destructive">
               <TrendingDown className="h-4 w-4" />
-              <p className="text-sm font-medium">Underpaid (&lt;p25)</p>
+              <p className="text-sm font-medium">Underpaid (below p25)</p>
             </div>
             <p className="text-3xl font-bold mt-1">{underpaid}</p>
           </CardContent>
@@ -90,9 +86,9 @@ export default async function SalaryBenchmarkingPage() {
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex items-center gap-2 text-amber-600">
               <TrendingUp className="h-4 w-4" />
-              <p className="text-sm font-medium">Overpaid (&gt;p75)</p>
+              <p className="text-sm font-medium">Overpaid (above p75)</p>
             </div>
             <p className="text-3xl font-bold mt-1">{overpaid}</p>
           </CardContent>

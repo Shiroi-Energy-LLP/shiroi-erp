@@ -14,26 +14,13 @@ import {
   TableHead,
   TableCell,
   Eyebrow,
+  formatINR,
 } from '@repo/ui';
+import { SensitiveField } from '@/components/hr/sensitive-field';
 import { ArrowLeft, Building2 } from 'lucide-react';
 
 interface Props {
   params: { id: string };
-}
-
-function formatINR(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-/** Mask bank account: show last 4 digits only */
-function maskBankAccount(account: string | null | undefined): string {
-  if (!account) return '—';
-  if (account.length <= 4) return '****';
-  return `${'*'.repeat(account.length - 4)}${account.slice(-4)}`;
 }
 
 export default async function PartnerReferralDetailPage({ params }: Props) {
@@ -105,8 +92,8 @@ export default async function PartnerReferralDetailPage({ params }: Props) {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Account</span>
-              {/* Sensitive: masked — only last 4 digits visible */}
-              <span className="font-mono font-medium">{maskBankAccount(partner.bank_account_number)}</span>
+              {/* Sensitive: masked partial; founder/HR can click eye to reveal & copy */}
+              <SensitiveField value={partner.bank_account_number} maskPartial />
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">IFSC</span>

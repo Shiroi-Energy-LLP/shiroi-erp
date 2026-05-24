@@ -7,6 +7,7 @@
 
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { formatINR } from '@repo/ui';
 import { getCurrentUserRole, getOmProfitability } from '@/lib/om-profitability-queries';
 import { OmProfitabilityTable } from './_components/om-profitability-table';
 
@@ -67,20 +68,16 @@ export default async function OmProfitabilityPage({
         </div>
         <div className="rounded-lg border p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Revenue Collected</p>
-          <p className="text-2xl font-bold mt-1">
-            ₹{totalRevenue.toLocaleString('en-IN')}
-          </p>
+          <p className="text-2xl font-bold mt-1">{formatINR(totalRevenue)}</p>
         </div>
         <div className="rounded-lg border p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Parts Cost</p>
-          <p className="text-2xl font-bold mt-1">
-            ₹{totalCost.toLocaleString('en-IN')}
-          </p>
+          <p className="text-2xl font-bold mt-1">{formatINR(totalCost)}</p>
         </div>
         <div className={`rounded-lg border p-4 ${totalProfit >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Net Profit</p>
           <p className={`text-2xl font-bold mt-1 ${totalProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-            {totalProfit >= 0 ? '+' : ''}₹{totalProfit.toLocaleString('en-IN')}
+            {totalProfit >= 0 ? '+' : ''}{formatINR(totalProfit)}
           </p>
         </div>
       </div>

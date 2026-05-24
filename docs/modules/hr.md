@@ -114,6 +114,20 @@ apps/erp/src/components/hr/
 8. **Temp password is shown once.** `createEmployeeAccount` returns `tempPassword` in the action result. The UI renders it, then it's gone. No retrieval path — HR can trigger a password reset if the founder loses it.
 9. **Payroll export path is role-gated in app code AND SQL.** `getPayrollData` checks `profile.role ∈ {founder, hr_manager}` before querying; `payroll_monthly_inputs` RLS enforces the same. Both layers are load-bearing.
 
+## Phase F additions (May 2026)
+
+### F6 — Salary benchmarking (`/hr/benchmarking`)
+**Migration 132** added `salary_benchmarks` (id, role, city, segment, p25, median, p75, source, captured_at). Seeded with 7 roles' Chennai market data (founder + hr_manager only see this page). RLS gates SELECT to those two roles; INSERT/UPDATE through admin path. Note: review pass (2026-05-24) flagged the two policies as overlapping — `salary_benchmarks_all` already covers founder-SELECT, making `salary_benchmarks_select` redundant for that role (still correct for hr_manager-read). Worth a future RLS cleanup but not load-bearing.
+
+**RPC** `get_salary_benchmark_report()` joins active employees + their `employee_compensation.gross_monthly` (latest active row) to the matching benchmark row by role + city + segment, returning `(employee_id, name, role, gross_monthly, market_p25/median/p75, delta_pct, recommendation)` where `recommendation` is one of `'underpaid'` (< p25), `'fair'` (p25–p75), `'overpaid'` (> p75), or `null`. SECURITY DEFINER with explicit role check inside the function body — defence in depth even if RLS is misconfigured.
+
+**Page** at `apps/erp/src/app/(erp)/hr/benchmarking/page.tsx` — grouped per-role tables with badge variants per recommendation. Color semantics tightened in the 2026-05-24 review: Fair = green (success), Overpaid = amber (warning, cost-bloat risk — *not* green), Underpaid = destructive (retention risk).
+
+## Phase C5 atomicity fix (mig 136, May 2026)
+**`approveLeaveRequest`** was originally three non-atomic writes — update request status + insert ledger + maintain balance. A network drop between steps would corrupt leave state. **Migration 136** added `fn_approve_leave_request(uuid)` RPC that wraps the request update + ledger insert in a single transaction; the existing `refresh_leave_balance` trigger on `leave_ledger` INSERT propagates the balance to `leave_balances` synchronously. `apps/erp/src/lib/hr-actions.ts` now calls the RPC directly; the previous "non-fatal" balance upsert is gone.
+
+**Same migration** locked down `attendance_insert` RLS. The previous policy let an employee self-mark with any status — including `'on_leave'` or `'absent'`, bypassing the `leave_requests` workflow. `WITH CHECK` now restricts self-mark to `'present' / 'work_from_home' / 'half_day'`; HR/founder can still mark anything (correction path).
+
 ## Past Decisions & Migrations
 
 - `120_hr_leave_attendance_profile.sql` — C5+C6+C7 batch. `blood_group` + `bank_name` on employees; `attendance` table with RLS; `get_monthly_attendance_summary` / `get_team_attendance_for_month` / `get_leave_balances_for_employee` / `get_pending_leave_requests` RPCs; indexes `idx_employees_department` + `idx_employees_is_active`.

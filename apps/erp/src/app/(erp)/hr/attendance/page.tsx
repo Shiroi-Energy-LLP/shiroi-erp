@@ -45,6 +45,12 @@ function getDaysInMonth(month: number, year: number): number[] {
   return Array.from({ length: count }, (_, i) => i + 1);
 }
 
+const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
+
+function weekdayLetter(year: number, month: number, day: number): string {
+  return WEEKDAY_LETTERS[new Date(year, month - 1, day).getDay()] ?? '';
+}
+
 function isWeekend(year: number, month: number, day: number): boolean {
   const d = new Date(year, month - 1, day).getDay();
   return d === 0 || d === 6;
@@ -159,12 +165,20 @@ export default async function AttendancePage({ searchParams }: AttendancePagePro
                   </th>
                   {days.map((d) => {
                     const weekend = isWeekend(year, month, d);
+                    const todayIsoDate = new Date().toISOString().slice(0, 10);
+                    const cellIsoDate = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const isToday = cellIsoDate === todayIsoDate;
                     return (
                       <th
                         key={d}
-                        className={`px-1 py-2 text-center font-medium min-w-[32px] ${weekend ? 'text-gray-400 bg-gray-100' : 'text-gray-600'}`}
+                        className={`px-1 py-2 text-center font-medium min-w-[32px] leading-tight ${
+                          weekend ? 'text-gray-400 bg-gray-100' : 'text-gray-600'
+                        } ${isToday ? 'bg-blue-50 text-blue-700' : ''}`}
                       >
-                        {d}
+                        <div className="text-[10px] uppercase tracking-wide opacity-70">
+                          {weekdayLetter(year, month, d)}
+                        </div>
+                        <div className={isToday ? 'font-bold' : ''}>{d}</div>
                       </th>
                     );
                   })}

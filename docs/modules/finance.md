@@ -167,6 +167,17 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 - **`decimal.js` on the client, `NUMERIC(14,2)` in SQL.** Never native JS floats for money (NEVER-DO rule #5).
 - **FK trap on status-history tables:** `lead_status_history.changed_by` and `proposal_status_history.changed_by` are FKs to `employees.id`, not `profiles.id`. Migrations 055 + 056 fixed this for the lead and proposal loggers respectively.
 
+## Phase F additions (May 2026)
+
+### F3 — GST e-invoice framework (`generateEInvoice`)
+**Migration 130** added GST e-invoice columns to `invoices`: `irn` (Invoice Reference Number from NIC), `ack_number`, `ack_date`, `signed_qr_code`, `e_invoice_status` (`'pending'` / `'generated'` / `'failed'` / `'awaiting_gsp'`). Partial index on `e_invoice_status WHERE NOT NULL` keeps the index slim — vast majority of invoices won't need IRN generation.
+
+**Pure builder** at `apps/erp/src/lib/gst/einvoice-builder.ts` — `buildEInvoicePayload(invoice, customer, seller, isIntraState)` returns a NIC-compliant JSON object: handles B2B / B2C, supply-only / mixed (supply + works contract), intra-state CGST+SGST vs inter-state IGST split. 15 vitest cases cover tax math edge cases — no DB / network deps. `decimal.js` throughout for money arithmetic.
+
+**Server action** at `apps/erp/src/lib/finance-actions.ts` — `generateEInvoice(invoiceId)` is a **stub** until GSP onboarding completes. Currently it builds the payload, persists `e_invoice_status='pending'` on the invoice, and returns `err()` — the GSP API call is the missing piece. Vivek must complete GSP signup (e.g. ClearTax, IRISIRP, etc.), set `SHIROI_GSTIN` + seller address env vars, then implement the GSP HTTP call inside the stub.
+
+**Env vars** introduced for e-invoice seller block: `SHIROI_GSTIN`, `SHIROI_ADDRESS_LINE1`, `SHIROI_CITY`, `SHIROI_STATE_CODE` (default `33` = Tamil Nadu), `SHIROI_PINCODE` (default `600002`), `SHIROI_ACCOUNTS_EMAIL`.
+
 ## Past Decisions & Specs
 
 - Migration 021 — initial payment follow-up trigger on project status transitions.

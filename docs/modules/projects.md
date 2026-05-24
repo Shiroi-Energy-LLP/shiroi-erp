@@ -184,6 +184,13 @@ API routes:
 - Migration 045 — `ceig_scope`, `engineer_signature_path`
 - Migration 047 — `project-files` UPDATE RLS policy (fixes drag-drop)
 - Migration 054 — storage RLS perf fix (STABLE helper) + site-photos UPDATE policy
+- **Migrations 121–122 (Phase C-ops, May 24, 2026)** — three new project-detail tabs (**Progress**, **Materials**, **Certificates**) plus the underlying schema:
+  - `project_completion_items` (10 components per project with weights summing to 100, weighted RPC `get_project_completion_pct`) + `CompletionChecklist` component on the Progress tab.
+  - `inventory_cut_records` (lives in inventory.md but surfaces here via `CutLengthTab` on the Materials tab).
+  - `projects.handover_pdf_path` column + `/api/projects/[id]/handover-pdf` route + `generateHandoverPackPdf` server action (3-page react-pdf doc rendered in-process, uploaded to `project-files/handover-packs/`, returns 1-hour signed URL).
+  - `dc_certificates` (UNIQUE per project + certificate_type) + `signDcCertificate` action + `DcCertificatesPanel` on the Certificates tab. Mig 134 added an immutability gate (`signed_at IS NOT NULL` → refuse re-sign) after the 2026-05-24 review found the original upsert pattern silently overwrote signatures.
+- **Migration 134** — review-pass fixes touching this module: DC-certificate immutability, attendance RLS lockdown (HR module but reaches here via leave tracking), `inventory_cut_records` UPDATE policy.
+- **`(public)/p/[token]/pdf/route.ts`** (2026-05-24) — public PDF route for the customer proposal portal (lives in sales.md; cross-referenced here because the same `proposal-files` bucket is used).
 - `docs/archive/projects-dashboard-notes.md` — Manivel's original PM workflow intent and data-model mapping
 - `docs/archive/CLAUDE_MD_2026-04-17_ARCHIVED.md` — historical migration + feature timeline
 - Specs under `docs/superpowers/specs/` — `2026-04-14-manivel-corrections-design.md`, `2026-04-17-purchase-module-v2-design.md`

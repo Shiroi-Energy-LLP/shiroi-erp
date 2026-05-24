@@ -82,11 +82,14 @@ apps/erp/src/components/inventory/
 
 ## Recent Changes
 
-- **Step 67 (archived CLAUDE.md, pre-restructure)** — `/inventory` dashboard + `/inventory/[id]` detail with cut-length gauge, location/scrap management, low-stock alerts. This is the only feature commit on the module — the schema has been in place since migration 006a (2026-03-29) but the UI was built later as Step 67.
+- **C8 (May 24, 2026, mig 121)** — new `inventory_cut_records` table tracking cable + conduit cut lengths at site (material_type, specification, length_meters, quantity_rolls, cut_date, project_stage, notes). Surfaces on the project detail page's new **Materials** tab via the `CutLengthTab` component (summary strip + records table + record/delete dialogs). Cuts are logged by site supervisors during install; founders and PMs can delete via the confirmation dialog (replaces the original `window.confirm()` per 2026-05-24 review). UPDATE policy added in mig 134 so typos can be corrected. RPC `get_project_cable_summary(project_id)` returns total meters per material type. Decoupled from `stock_pieces` (no FK) — cuts are a free-form log of consumption, not a deduction from piece-level inventory.
+- **Step 67 (archived CLAUDE.md, pre-restructure)** — `/inventory` dashboard + `/inventory/[id]` detail with cut-length gauge, location/scrap management, low-stock alerts. The schema has been in place since migration 006a (2026-03-29) but the UI was built later as Step 67.
 
 ## Related Migrations
 
-- **006a_inventory.sql** (2026-03-29) — the only inventory migration. Creates `stock_pieces` (+ indexes + RLS) plus 8 adjacent tables that are schema-only today (warranty registrations + claims, replacement history, price-book accuracy, RFQ requests + responses, subcontractor work orders, letters of intent). RLS: founder / project_manager / site_supervisor write; finance reads.
+- **006a_inventory.sql** (2026-03-29) — original inventory schema. Creates `stock_pieces` (+ indexes + RLS) plus 8 adjacent tables that are schema-only today (warranty registrations + claims, replacement history, price-book accuracy, RFQ requests + responses, subcontractor work orders, letters of intent). RLS: founder / project_manager / site_supervisor write; finance reads.
+- **121_inventory_cut_records_and_project_completion.sql** (2026-05-24) — `inventory_cut_records` table + `get_project_cable_summary` RPC. Sister table `project_completion_items` belongs to the projects module (see `docs/modules/projects.md`).
+- **134_2026-05-24-review-fixes.sql** — added missing UPDATE policy to `inventory_cut_records` (review pass found mig 121 had SELECT/INSERT/DELETE only, leaving typos unfixable).
 
 ## Role Access Summary
 

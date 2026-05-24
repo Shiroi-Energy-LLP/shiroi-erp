@@ -38,7 +38,13 @@ export function SensitiveField({
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       {label && <span className="text-xs text-gray-400 min-w-[80px]">{label}</span>}
-      <span className="font-mono text-sm text-[#1A1D24] select-none">
+      {/*
+        select-none only when masked — revealing the value lets HR copy it
+        into NEFT / IFSC tools, which is the whole reason for the reveal button.
+      */}
+      <span
+        className={`font-mono text-sm text-[#1A1D24] ${revealed ? '' : 'select-none'}`}
+      >
         {displayValue}
       </span>
       {!isEmpty && (

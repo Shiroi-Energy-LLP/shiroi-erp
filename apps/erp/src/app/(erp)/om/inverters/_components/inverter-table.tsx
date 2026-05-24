@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Badge, Card, CardContent } from '@repo/ui';
+import { Badge, Card, CardContent, Select } from '@repo/ui';
 import { Activity, Pencil } from 'lucide-react';
 import type { InverterWithProject, InverterMonitoringCredentialRow } from '@/lib/inverters-queries';
 import { HealthCheckButton } from './healthcheck-button';
@@ -122,50 +122,54 @@ export function InverterTable({ inverters, monitoringCredentials }: InverterTabl
         <CardContent className="py-2">
           <div className="flex items-center gap-3 flex-wrap">
             {/* Brand filter */}
-            <select
+            <Select
               value={filters.brand}
               onChange={(e) => setFilters((f) => ({ ...f, brand: e.target.value }))}
-              className="h-8 rounded-md border border-n-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green w-32"
+              className="w-32"
+              aria-label="Filter by brand"
             >
               <option value="">All Brands</option>
               {BRAND_OPTIONS.map((b) => (
                 <option key={b.value} value={b.value}>{b.label}</option>
               ))}
-            </select>
+            </Select>
 
             {/* Project filter */}
-            <select
+            <Select
               value={filters.project}
               onChange={(e) => setFilters((f) => ({ ...f, project: e.target.value }))}
-              className="h-8 rounded-md border border-n-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green w-44"
+              className="w-44"
+              aria-label="Filter by project"
             >
               <option value="">All Projects</option>
               {projectOptions.map((p) => (
                 <option key={p.id} value={p.id}>{p.label}</option>
               ))}
-            </select>
+            </Select>
 
             {/* Polling enabled filter */}
-            <select
+            <Select
               value={filters.pollingEnabled}
               onChange={(e) => setFilters((f) => ({ ...f, pollingEnabled: e.target.value as FilterState['pollingEnabled'] }))}
-              className="h-8 rounded-md border border-n-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green w-36"
+              className="w-36"
+              aria-label="Filter by polling status"
             >
               <option value="">All Polling</option>
               <option value="true">Polling enabled</option>
               <option value="false">Polling disabled</option>
-            </select>
+            </Select>
 
             {hasFilters && (
               <button
+                type="button"
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs text-n-600 hover:text-n-900 rounded-md hover:bg-n-100"
+                className="h-9 px-3 text-xs text-n-600 hover:text-n-900 rounded-md hover:bg-n-100"
               >
                 Clear
               </button>
             )}
 
-            <span className="ml-auto text-[10px] text-n-400">
+            <span className="ml-auto text-xs text-n-500 tabular-nums">
               {filtered.length} of {inverters.length}
             </span>
           </div>

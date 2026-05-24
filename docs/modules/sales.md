@@ -142,6 +142,29 @@ The Quick Quote PDF (`apps/erp/src/lib/pdf/budgetary-quote-pdf.tsx`) is now an *
 
 Shared page components extracted to `apps/erp/src/lib/pdf/shared-pages.tsx` so future polish lands in both PDFs at once.
 
+## Phase F additions (May 2026)
+
+### F4 — Channel-partner payouts (`/referrals`)
+**Migration 131** introduced full referral payout management. `referral_payouts` table tracks per-deal commission with status (`pending`/`approved`/`paid`/`rejected`). `channel_partners` gained: `default_commission_pct` (defaults to 1%), `bank_account_number` + `bank_ifsc` (sensitive — masked in UI via `SensitiveField`), `portal_token`, `lifetime_referrals`, `lifetime_commission`.
+
+**Trigger:** `fn_auto_create_referral_payout` fires on `leads` UPDATE when `status` transitions to `'won'` and `channel_partner_id` is set. **Important** — mig 134 (2026-05-24 review fixes) repaired this trigger after the original mig 131 shipped doubly broken: it referenced `NEW.stage` (no such column — leads has `status`) and `partner_type = 'internal'` (no such enum value — the canonical flag is `is_internal BOOLEAN` from mig 109). Both fixes landed in mig 134; the trigger now skips internal partners (Vivek seed + Management Referral seed) correctly.
+
+**Server actions** (`apps/erp/src/lib/referral-actions.ts`): `approveReferralPayout` (CAS on status='pending'), `rejectReferralPayout` (with reason), `markReferralPaid` (records `payment_reference`, then calls `increment_partner_commission` RPC added in mig 134 to atomically bump `lifetime_commission`).
+
+**Pages:** `/referrals` (founder + finance + marketing_manager) — KPI strip (pending count + this-month commission + lifetime) + 3-tab table (Pending / Approved / Paid) + per-row Approve/Reject/Pay dialogs. `/referrals/partners/[id]` — per-partner detail with full payout history, bank account masked via `SensitiveField` (founder/HR can click eye icon to reveal & copy for NEFT).
+
+### F7 — Customer proposal portal (`/p/[token]`)
+**Migration 133** introduced `proposal_share_tokens` (id, proposal_id FK, token TEXT UNIQUE, expires_at, viewed_count, last_viewed_at, last_viewed_ip, created_by). RLS added in mig 134 (the original shipped without).
+
+**Public page** at `apps/erp/src/app/(public)/p/[token]/page.tsx` uses the admin client (no auth) to validate the 256-bit hex token, gates on `expires_at > NOW()`, and increments `viewed_count` + logs IP best-effort. The page renders a customer-facing proposal summary (number, system size, total, expiry) — no internal pricing, no employee names.
+
+**Server actions** (`apps/erp/src/lib/proposal-share-actions.ts`): `createProposalShareToken(proposalId, days)` returns a magic link `${NEXT_PUBLIC_ERP_URL}/p/<token>`; `acceptProposalFromPortal(token)` validates the token, CAS-updates `proposals.status='accepted'`, and emits `proposal.accepted_by_customer` so the lead owner can be paged.
+
+**PDF download** at `/p/[token]/pdf` route signs `proposal-files/<current_pdf_storage_path>` for 15 minutes and 302-redirects the browser.
+
+**Customer portal env vars (optional):**
+- `NEXT_PUBLIC_SHIROI_WHATSAPP` — if set, the "Ask a question" button + footer phone shows the real WhatsApp number. Defaults to empty (button hidden) rather than the previous placeholder `+919876543210`.
+
 ## Past Decisions & Specs
 
 - `docs/superpowers/specs/2026-04-04-pm-leads-proposals-design.md` — initial leads/proposals redesign

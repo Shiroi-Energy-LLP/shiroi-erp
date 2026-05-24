@@ -213,6 +213,14 @@ New `fn_get_po_bill_reconciliation(p_project_id UUID)` SQL RPC (STABLE SECURITY 
 - `apps/erp/src/lib/material-requisition-queries.ts` — all reads: `getMaterialRequisitionsForProject`, `getPendingMaterialRequisitions`, `getPOBillReconciliation`, `getVendorBillsForPO`, `getProjectBasicInfo`.
 - `apps/erp/src/lib/material-requisition-actions.ts` — all mutations with `'use server'` + `ActionResult<T>`.
 
+## Review-pass fixes (Migration 135, 2026-05-24)
+
+Findings from `docs/reviews/2026-05-24-comprehensive-review.md`:
+
+- **`fn_get_po_bill_reconciliation` now gates by role** — original mig 123 RPC was `SECURITY DEFINER` with no project access check, meaning any authenticated user could read any project's vendor financials by URL-guessing the `projectId`. Mig 135 wraps the function body with `IF role NOT IN ('founder','finance','project_manager','purchase_officer') THEN RAISE` and adds `SET search_path = public, pg_temp`.
+- **Material requisition notifications no longer silently drop** — `submitMaterialRequisition` / `reviewMaterialRequisition` / `convertRequisitionToPO` were inserting `notification_type='material_requisition'` and `entity_type='material_requisition'`, neither of which exist in the `notifications` CHECK constraint (mig 014). Every insert failed with 23514, silently logged-and-continued. Now using `notification_type='approval_required'` (for PM ping + PO pending approval) / `'info'` (for requester reply) and dropping `entity_type` entirely (`entity_id` still preserves the requisition / PO id for deep-linking).
+- **Reviewer != requester check** — `reviewMaterialRequisition` now rejects an approve/reject attempt if the calling employee is the same one who submitted the requisition. Founder is exempt (override path).
+
 ## Past Decisions & Specs
 
 - **Migration 103 (May 2, 2026) — `purchase_orders_status_check` finally allows `'dispatched'`.** v2 (migration 060/065) wired the `draft → dispatched → acknowledged` flow but the legacy CHECK constraint added in migration 041 only listed `('draft','approved','sent','acknowledged','partially_delivered','fully_delivered','closed','cancelled')`. Every `sendPOToVendor` / `markPODispatched` call hit `new row for relation "purchase_orders" violates check constraint "purchase_orders_status_check"`. Migration 103 drops + recreates the constraint with `'dispatched'` added; legacy values retained for backward-compat. Same-day code fixes: `createVendorAdHoc` wrote `vendor_type='supplier'` (not in the enum) → changed to `'other'` (`as any` cast also removed); Download PDF now surfaces server errors inline instead of silently swallowing into `console.error`; Copy-link button removed from PO send dialog (the URL `/procurement/<poId>` is internal-only and sent vendors to login).

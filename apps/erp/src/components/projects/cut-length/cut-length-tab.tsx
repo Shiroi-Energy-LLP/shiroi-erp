@@ -2,7 +2,16 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Badge } from '@repo/ui';
+import {
+  Button,
+  Badge,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@repo/ui';
 import { Plus, Trash2, Cable, Zap, Layers, Minus } from 'lucide-react';
 import { recordCutLength, deleteCutRecord } from '@/lib/inventory-actions';
 import type { CutRecordWithCutter, CableSummaryRow } from '@/lib/inventory-queries';
@@ -126,9 +135,11 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
-        <h3 className="text-base font-semibold text-n-900 mb-4">Record Cut Length</h3>
+    <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Record Cut Length</DialogTitle>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -223,17 +234,50 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
 
           {error && <p className="text-xs text-red-600">{error}</p>}
 
-          <div className="flex justify-end gap-2 pt-1">
+          <DialogFooter className="pt-1">
             <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={busy}>
               Cancel
             </Button>
             <Button type="submit" size="sm" disabled={busy}>
               {busy ? 'Saving…' : 'Save Record'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Delete confirmation dialog
+// ---------------------------------------------------------------------------
+
+interface ConfirmDeleteDialogProps {
+  open: boolean;
+  busy: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function ConfirmDeleteDialog({ open, busy, onConfirm, onCancel }: ConfirmDeleteDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o && !busy) onCancel(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Delete this cut record?</DialogTitle>
+          <DialogDescription>
+            This permanently removes the cut entry and adjusts the cable-summary total.
+            Only the founder or the project manager who logged it can delete.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={onCancel} disabled={busy}>Cancel</Button>
+          <Button variant="destructive" size="sm" onClick={onConfirm} disabled={busy}>
+            {busy ? 'Deleting…' : 'Delete'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -251,15 +295,17 @@ interface CutLengthTabProps {
 export function CutLengthTab({ projectId, records, summary, canDelete }: CutLengthTabProps) {
   const router = useRouter();
   const [showDialog, setShowDialog] = React.useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
 
-  async function handleDelete(id: string) {
-    if (!confirm('Delete this cut record?')) return;
-    setDeletingId(id);
+  async function performDelete() {
+    if (!pendingDeleteId) return;
+    setDeletingId(pendingDeleteId);
     setDeleteError(null);
-    const res = await deleteCutRecord(id);
+    const res = await deleteCutRecord(pendingDeleteId);
     setDeletingId(null);
+    setPendingDeleteId(null);
     if (!res.success) { setDeleteError(res.error); return; }
     router.refresh();
   }
@@ -327,7 +373,7 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
                   {canDelete && (
                     <td className="px-3 py-2.5 text-right">
                       <button
-                        onClick={() => handleDelete(r.id)}
+                        onClick={() => setPendingDeleteId(r.id)}
                         disabled={deletingId === r.id}
                         className="text-n-400 hover:text-red-500 transition-colors disabled:opacity-40"
                         title="Delete record"
@@ -345,7 +391,7 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
 
       {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
 
-      {/* Dialog */}
+      {/* Dialogs */}
       {showDialog && (
         <RecordDialog
           projectId={projectId}
@@ -353,6 +399,12 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
           onSaved={() => router.refresh()}
         />
       )}
+      <ConfirmDeleteDialog
+        open={pendingDeleteId !== null}
+        busy={deletingId !== null}
+        onConfirm={performDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   );
 }

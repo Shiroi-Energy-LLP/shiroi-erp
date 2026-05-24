@@ -1,17 +1,8 @@
 import { Suspense } from 'react';
 import { getReferralKpis, getReferralPayouts } from '@/lib/referral-queries';
 import { ReferralPageClient } from './referrals-client';
-import { Eyebrow } from '@repo/ui';
+import { Eyebrow, Skeleton, formatINR } from '@repo/ui';
 import { HandCoins } from 'lucide-react';
-import Decimal from 'decimal.js';
-
-function formatINR(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 async function ReferralsContent() {
   const [kpis, pending, approved, paid] = await Promise.all([
@@ -32,6 +23,19 @@ async function ReferralsContent() {
   );
 }
 
+function ReferralsLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-md" />
+        ))}
+      </div>
+      <Skeleton className="h-64 w-full rounded-md" />
+    </div>
+  );
+}
+
 export default function ReferralsPage() {
   return (
     <div className="space-y-6">
@@ -42,7 +46,7 @@ export default function ReferralsPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Referral Payouts</h1>
         </div>
       </div>
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Loading...</div>}>
+      <Suspense fallback={<ReferralsLoading />}>
         <ReferralsContent />
       </Suspense>
     </div>

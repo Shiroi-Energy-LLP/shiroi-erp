@@ -14,7 +14,21 @@
 
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, Badge, Eyebrow, Button } from '@repo/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Badge,
+  Eyebrow,
+  Button,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@repo/ui';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { getPOBillReconciliation, getProjectBasicInfo } from '@/lib/material-requisition-queries';
@@ -122,26 +136,26 @@ export default async function POReconciliationPage({ params }: PageProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-n-200 bg-n-50">
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">PO #</th>
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Vendor</th>
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Date</th>
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">PO Total</th>
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">Billed</th>
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">Paid</th>
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">Balance</th>
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Bills</th>
-                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>PO #</TableHead>
+                    <TableHead>Vendor</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">PO Total</TableHead>
+                    <TableHead className="text-right">Billed</TableHead>
+                    <TableHead className="text-right">Paid</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead>Bills</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {rows.map((row) => {
                     const balanceClass = Number(row.balance) > 0 ? 'text-amber-700' : 'text-green-700';
                     return (
-                      <tr key={row.po_id} className="border-b border-n-100 hover:bg-n-50">
-                        <td className="px-3 py-2 text-[11px]">
+                      <TableRow key={row.po_id}>
+                        <TableCell>
                           <Link
                             href={`/procurement/${row.po_id}`}
                             className="text-p-600 hover:underline font-medium"
@@ -151,76 +165,74 @@ export default async function POReconciliationPage({ params }: PageProps) {
                           {row.vendor_is_msme && (
                             <Badge
                               variant="outline"
-                              className="ml-1 h-4 px-1 text-[9px] border-purple-300 text-purple-700"
+                              className="ml-1.5 border-purple-300 text-purple-700"
                             >
                               MSME
                             </Badge>
                           )}
-                        </td>
-                        <td className="px-3 py-2 text-[11px] text-n-700">{row.vendor_name}</td>
-                        <td className="px-3 py-2 text-[10px] text-n-500">
+                        </TableCell>
+                        <TableCell className="text-n-700">{row.vendor_name}</TableCell>
+                        <TableCell className="text-n-500">
                           {row.po_date ? formatDate(row.po_date) : '—'}
-                        </td>
-                        <td className="px-3 py-2 text-[11px] text-right font-mono">
+                        </TableCell>
+                        <TableCell className="text-right font-mono tabular-nums">
                           {formatINR(Number(row.po_total))}
-                        </td>
-                        <td className="px-3 py-2 text-[11px] text-right font-mono text-n-700">
+                        </TableCell>
+                        <TableCell className="text-right font-mono tabular-nums text-n-700">
                           {Number(row.billed_amount) > 0 ? formatINR(Number(row.billed_amount)) : <span className="text-n-400">—</span>}
-                        </td>
-                        <td className="px-3 py-2 text-[11px] text-right font-mono text-green-700">
+                        </TableCell>
+                        <TableCell className="text-right font-mono tabular-nums text-green-700">
                           {Number(row.paid_amount) > 0 ? formatINR(Number(row.paid_amount)) : <span className="text-n-400">—</span>}
-                        </td>
-                        <td className={`px-3 py-2 text-[11px] text-right font-mono font-medium ${balanceClass}`}>
+                        </TableCell>
+                        <TableCell className={`text-right font-mono tabular-nums font-medium ${balanceClass}`}>
                           {formatINR(Number(row.balance))}
-                        </td>
-                        <td className="px-3 py-2 text-[11px] text-n-600 text-center">
+                        </TableCell>
+                        <TableCell className="text-n-600 text-center">
                           {Number(row.bill_count) > 0 ? (
                             <Link
                               href={`/vendor-bills?po=${row.po_id}`}
                               className="text-p-600 hover:underline"
                             >
-                              {row.bill_count}
+                              View {row.bill_count} bill{row.bill_count === 1 ? '' : 's'}
                             </Link>
                           ) : (
-                            <span className="text-n-400">0</span>
+                            <span className="text-n-400">—</span>
                           )}
-                        </td>
-                        <td className="px-3 py-2">
+                        </TableCell>
+                        <TableCell>
                           <Badge
                             variant="outline"
-                            className={`text-[10px] px-1.5 h-5 ${BILL_STATUS_CLASSES[row.bill_status] ?? ''}`}
+                            className={BILL_STATUS_CLASSES[row.bill_status] ?? ''}
                           >
                             {BILL_STATUS_LABELS[row.bill_status] ?? row.bill_status}
                           </Badge>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-                {/* Totals row */}
-                {rows.length > 1 && (
-                  <tfoot>
-                    <tr className="border-t-2 border-n-300 bg-n-50">
-                      <td colSpan={3} className="px-3 py-2 text-[11px] font-semibold text-n-700">
+                  {/* Totals row */}
+                  {rows.length > 1 && (
+                    <TableRow className="border-t-2 border-n-300 bg-n-50 font-semibold">
+                      <TableCell colSpan={3} className="text-n-700">
                         Total ({rows.length} POs)
-                      </td>
-                      <td className="px-3 py-2 text-[11px] text-right font-mono font-semibold text-n-900">
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums text-n-900">
                         {formatINR(totalPO)}
-                      </td>
-                      <td className="px-3 py-2 text-[11px] text-right font-mono font-semibold text-n-700">
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums text-n-700">
                         {formatINR(totalBilled)}
-                      </td>
-                      <td className="px-3 py-2 text-[11px] text-right font-mono font-semibold text-green-700">
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums text-green-700">
                         {formatINR(totalPaid)}
-                      </td>
-                      <td className="px-3 py-2 text-[11px] text-right font-mono font-semibold text-amber-700">
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums text-amber-700">
                         {formatINR(totalPO - totalPaid)}
-                      </td>
-                      <td colSpan={2} />
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
+                      </TableCell>
+                      <TableCell colSpan={2} />
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>

@@ -2,8 +2,17 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Clock, Pen, X } from 'lucide-react';
-import { Badge, Button } from '@repo/ui';
+import { CheckCircle2, Clock, Pen } from 'lucide-react';
+import {
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@repo/ui';
 import { signDcCertificate } from '@/lib/dc-certificate-actions';
 import {
   CERTIFICATE_TYPE_LABELS,
@@ -53,21 +62,15 @@ function SignDialog({ projectId, certificateType, onClose, onSigned }: SignDialo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-n-900">
-            {CERTIFICATE_TYPE_LABELS[certificateType]}
-          </h3>
-          <button onClick={onClose} className="text-n-400 hover:text-n-700">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <p className="text-xs text-n-500 mb-4">
-          Collect the customer&apos;s name and phone to record their acknowledgement.
-          OTP verification will be added in a future phase.
-        </p>
+    <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{CERTIFICATE_TYPE_LABELS[certificateType]}</DialogTitle>
+          <DialogDescription>
+            Collect the customer&apos;s name and phone to record their acknowledgement.
+            OTP verification will be added in a future phase.
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
@@ -111,17 +114,17 @@ function SignDialog({ projectId, certificateType, onClose, onSigned }: SignDialo
 
           {error && <p className="text-xs text-red-600">{error}</p>}
 
-          <div className="flex justify-end gap-2 pt-1">
+          <DialogFooter className="pt-1">
             <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={busy}>
               Cancel
             </Button>
             <Button type="submit" size="sm" disabled={busy}>
               {busy ? 'Recording…' : 'Record Signature'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

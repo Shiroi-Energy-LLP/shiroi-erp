@@ -15837,6 +15837,10 @@ export type Database = {
           success: boolean
         }[]
       }
+      fn_approve_leave_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       fn_cascade_po_approval_to_boq: {
         Args: { p_po_id: string }
         Returns: undefined

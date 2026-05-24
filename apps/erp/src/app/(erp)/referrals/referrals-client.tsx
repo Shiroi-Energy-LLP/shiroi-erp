@@ -108,8 +108,10 @@ function PayoutRow({
         <p className="text-xs text-muted-foreground">{lead?.city}</p>
       </TableCell>
       <TableCell className="text-right">
-        <span className="text-muted-foreground text-sm">{payout.commission_pct}%</span>
-        <p className="font-medium">{formatINR(Number(payout.commission_amount))}</p>
+        {/* Primary value (₹) on top, % below as a muted subtitle — matches
+            scanning conventions for right-aligned numeric columns. */}
+        <p className="font-medium tabular-nums">{formatINR(Number(payout.commission_amount))}</p>
+        <span className="text-muted-foreground text-xs">{payout.commission_pct}% commission</span>
       </TableCell>
       <TableCell>
         <Badge
