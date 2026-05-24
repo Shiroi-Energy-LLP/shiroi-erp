@@ -951,12 +951,18 @@ git commit -m "data(om): 4 Shiroi master inverter credential rows (env-var refs,
 
 ---
 
-# Phase 4 — Growatt OpenAPI real adapter
+# Phase 4 — Growatt per-customer legacy API adapter
 
-### Task 4.1: Write failing tests for Growatt adapter
+> **ARCHITECTURE CHANGED 2026-05-23.** Original Phase 4 assumed `openapi.growatt.com` V1 token-based auth. That doesn't work because:
+> 1. Our SHIROIENERGYLLP OpenAPI account is effectively read-only — `/v1/plant/add` returns "Plant name is empty (10003)" regardless of input (hidden permission gate).
+> 2. Even if write access were granted, the OpenAPI data plane is separate from `oss.growatt.com`'s; existing installer plants don't bridge.
+>
+> The working architecture, confirmed end-to-end via Python `growattServer` library: **per-customer auth against `server-api.growatt.com`**. Each customer (Block - C, srisayee, rajanbabut, etc.) owns their plants directly. We log in AS each customer using their credentials from `plant_monitoring_credentials` and fetch THEIR plants. See `docs/2026-05-23-growatt-api-architecture.md` for full diagnostic findings.
+
+### Task 4.1: Write failing tests for Growatt adapter (per-customer auth)
 
 **Files:**
-- Create: `packages/inverter-adapters/src/growatt.test.ts`
+- Replace: `packages/inverter-adapters/src/growatt.test.ts` (file currently exists with old OpenAPI test set — rewrite for new architecture)
 
 - [ ] **Step 1: Write the test file**
 

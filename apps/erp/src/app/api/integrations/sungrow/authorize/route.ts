@@ -39,7 +39,7 @@ export async function GET(_request: NextRequest) {
   const supabase = await createClient();
   const { data: cred, error: credError } = await supabase
     .from('inverter_monitoring_credentials')
-    .select('id')
+    .select('id, config')
     .eq('brand', 'sungrow')
     .limit(1)
     .single();
@@ -75,13 +75,17 @@ export async function GET(_request: NextRequest) {
   }
 
   // ── Build authorization URL ──────────────────────────────────────────
-  const authUrl = process.env.SUNGROW_AUTHORIZATION_URL;
+  // Read from the credential row's config JSONB, not from env vars.
+  // This lets per-credential URLs work (e.g. when a second Sungrow app is
+  // registered — only the credential row needs updating, not a redeploy).
+  const authUrl = (cred.config as { authorize_url?: string })?.authorize_url;
   if (!authUrl) {
-    console.error(`${op} SUNGROW_AUTHORIZATION_URL not set`, {
+    console.error(`${op} authorize_url missing from Sungrow credential config`, {
+      credentialsId: cred.id,
       timestamp: new Date().toISOString(),
     });
     return NextResponse.json(
-      { error: 'Sungrow authorization URL not configured' },
+      { error: 'Sungrow authorization URL not configured in credential record — contact administrator' },
       { status: 500 },
     );
   }

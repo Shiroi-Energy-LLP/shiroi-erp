@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
     access_token: tokenResult.access_token,
     refresh_token: tokenResult.refresh_token,
     expires_in: tokenResult.expires_in,
-    expires_at: tokenResult.expires_at,
+    access_token_expires_at: tokenResult.expires_at,
     authorized_at: new Date().toISOString(),
   };
 
