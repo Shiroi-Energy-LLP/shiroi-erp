@@ -4,6 +4,12 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { emitErpEvent } from '@/lib/n8n/emit';
 import { type ActionResult, ok, err } from '@/lib/types/actions';
+import {
+  buildEInvoicePayload,
+  type EInvoiceSourceRow,
+  type EInvoiceCustomer,
+  type EInvoiceSellerConfig,
+} from '@/lib/gst/einvoice-builder';
 
 // ── Create Invoice ──
 
@@ -473,4 +479,178 @@ export async function recordProjectPayment(input: {
   revalidatePath(`/projects/${input.projectId}`);
 
   return ok({ paymentId: data.id });
+}
+
+// ── GST E-Invoice Generation ──
+
+export interface GenerateEInvoiceResult {
+  irn: string;
+  ackNumber: string;
+  ackDate: string;
+  signedQrCode: string;
+}
+
+/**
+ * generateEInvoice — build NIC e-invoice payload and (when GSP is live) call the API.
+ *
+ * STUB: The actual GSP API call is commented out pending:
+ *   1. GSP onboarding (select a licensed GSP from https://einvoice1.gst.gov.in/Others/GSPList)
+ *   2. Taxpayer profile setup on NIC sandbox (test GSTIN, credentials)
+ *   3. Add GSP_API_URL + GSP_CLIENT_ID + GSP_CLIENT_SECRET to .env.local
+ *
+ * Until GSP credentials are available, this action builds the payload,
+ * stores it as e_invoice_status='pending', and returns a stub result.
+ */
+export async function generateEInvoice(
+  invoiceId: string,
+): Promise<ActionResult<GenerateEInvoiceResult>> {
+  const op = '[generateEInvoice]';
+  try {
+    const supabase = await createClient();
+
+    // 1. Load invoice with project + customer context
+    const { data: invoice, error: invErr } = await supabase
+      .from('invoices')
+      .select(`
+        id,
+        invoice_number,
+        invoice_date,
+        invoice_type,
+        subtotal_supply,
+        subtotal_works,
+        gst_supply_amount,
+        gst_works_amount,
+        total_amount,
+        e_invoice_status,
+        projects!invoices_project_id_fkey (
+          customer_name,
+          customer_phone,
+          customer_email,
+          customer_address,
+          customer_gstin,
+          customer_state_code,
+          customer_pincode,
+          customer_city
+        )
+      `)
+      .eq('id', invoiceId)
+      .maybeSingle();
+
+    if (invErr) {
+      console.error(`${op} invoice load failed`, { invoiceId, error: invErr, timestamp: new Date().toISOString() });
+      return err(invErr.message, invErr.code);
+    }
+    if (!invoice) return err('Invoice not found');
+    if (invoice.e_invoice_status === 'generated') return err('IRN already generated for this invoice');
+    if (invoice.e_invoice_status === 'cancelled') return err('Cannot generate IRN for cancelled invoice');
+
+    // 2. Build seller config from env (never hardcode project IDs or credentials)
+    const sellerGstin = process.env.SHIROI_GSTIN;
+    if (!sellerGstin) {
+      return err('SHIROI_GSTIN env var not set — cannot generate e-invoice');
+    }
+
+    const seller: EInvoiceSellerConfig = {
+      gstin: sellerGstin,
+      legal_name: 'Shiroi Energy LLP',
+      trade_name: 'Shiroi Energy',
+      address_line1: process.env.SHIROI_ADDRESS_LINE1 ?? '15 Anna Salai',
+      city: process.env.SHIROI_CITY ?? 'Chennai',
+      state_code: process.env.SHIROI_STATE_CODE ?? '33',
+      pincode: process.env.SHIROI_PINCODE ?? '600002',
+      email: process.env.SHIROI_ACCOUNTS_EMAIL,
+    };
+
+    const project = Array.isArray(invoice.projects) ? invoice.projects[0] : invoice.projects;
+    if (!project) return err('Invoice has no associated project');
+
+    const customer: EInvoiceCustomer = {
+      name: project.customer_name ?? 'Customer',
+      gstin: (project as Record<string, unknown>).customer_gstin as string | null ?? null,
+      address_line1: (project as Record<string, unknown>).customer_address as string ?? '',
+      city: (project as Record<string, unknown>).customer_city as string ?? 'Chennai',
+      state_code: (project as Record<string, unknown>).customer_state_code as string ?? '33',
+      pincode: (project as Record<string, unknown>).customer_pincode as string ?? '600001',
+      phone: project.customer_phone ?? null,
+      email: (project as Record<string, unknown>).customer_email as string | null ?? null,
+    };
+
+    const sourceRow: EInvoiceSourceRow = {
+      invoice_number: invoice.invoice_number,
+      invoice_date: invoice.invoice_date,
+      invoice_type: invoice.invoice_type as EInvoiceSourceRow['invoice_type'],
+      subtotal_supply: invoice.subtotal_supply ?? 0,
+      subtotal_works: invoice.subtotal_works ?? 0,
+      gst_supply_amount: invoice.gst_supply_amount ?? 0,
+      gst_works_amount: invoice.gst_works_amount ?? 0,
+      total_amount: invoice.total_amount ?? 0,
+    };
+
+    // 3. Build payload (pure — no side effects)
+    const payload = buildEInvoicePayload(sourceRow, customer, seller);
+
+    // 4. Mark as pending while we (would) call the GSP
+    const { error: pendingErr } = await supabase
+      .from('invoices')
+      .update({ e_invoice_status: 'pending' })
+      .eq('id', invoiceId);
+    if (pendingErr) {
+      console.error(`${op} status update failed`, { invoiceId, error: pendingErr, timestamp: new Date().toISOString() });
+    }
+
+    // 5. STUB: GSP API call placeholder
+    //    When GSP credentials are ready, replace this block with:
+    //
+    //    const gspUrl = process.env.GSP_API_URL;
+    //    const gspResponse = await fetch(`${gspUrl}/einvoice/type/EINV/version/V1_03/...`, {
+    //      method: 'POST',
+    //      headers: { 'client-id': process.env.GSP_CLIENT_ID!, 'client-secret': process.env.GSP_CLIENT_SECRET!, ... },
+    //      body: JSON.stringify(payload),
+    //    });
+    //    const gspData = await gspResponse.json();
+    //    irn = gspData.Irn; ackNumber = gspData.AckNo; ...
+    //
+    const isStub = true;
+    if (isStub) {
+      console.warn(`${op} GSP credentials not configured — marking e_invoice_status=pending (stub)`, {
+        invoiceId,
+        payloadBuilt: true,
+        payloadDocNo: payload.DocDtls.No,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Store payload for manual submission / GSP integration later
+      const { error: updateErr } = await supabase
+        .from('invoices')
+        .update({
+          e_invoice_status: 'pending',
+          e_invoice_error: 'GSP credentials pending setup — payload built, awaiting GSP onboarding',
+        })
+        .eq('id', invoiceId);
+
+      if (updateErr) {
+        console.error(`${op} final update failed`, { invoiceId, error: updateErr, timestamp: new Date().toISOString() });
+        return err(updateErr.message);
+      }
+
+      revalidatePath('/invoices');
+      revalidatePath(`/invoices/${invoiceId}`);
+
+      return err('GSP API credentials not yet configured. Payload built and stored. Complete GSP onboarding to generate live IRN.');
+    }
+
+    // 6. (Post-GSP) Store IRN + ack details
+    // const { error: irnErr } = await supabase
+    //   .from('invoices')
+    //   .update({ irn, ack_number: ackNumber, ack_date: ackDate, signed_qr_code: signedQr, e_invoice_status: 'generated' })
+    //   .eq('id', invoiceId);
+
+    revalidatePath('/invoices');
+    revalidatePath(`/invoices/${invoiceId}`);
+
+    return ok({ irn: '', ackNumber: '', ackDate: '', signedQrCode: '' });
+  } catch (e) {
+    console.error(`${op} threw`, { invoiceId, error: e instanceof Error ? e.message : String(e), timestamp: new Date().toISOString() });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
 }

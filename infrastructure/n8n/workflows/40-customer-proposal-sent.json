@@ -1,0 +1,102 @@
+{
+  "name": "40 — Customer: Proposal sent WhatsApp",
+  "nodes": [
+    {
+      "parameters": { "inputSource": "passthrough" },
+      "id": "node-trigger",
+      "name": "When called by router",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "project_id",      "value": "={{ $json.body.payload.project_id }}",      "type": "string" },
+            { "id": "f2", "name": "lead_id",          "value": "={{ $json.body.payload.lead_id }}",          "type": "string" },
+            { "id": "f3", "name": "customer_name",    "value": "={{ $json.body.payload.customer_name }}",    "type": "string" },
+            { "id": "f4", "name": "customer_phone",   "value": "={{ $json.body.payload.customer_phone }}",   "type": "string" },
+            { "id": "f5", "name": "system_size_kwp",  "value": "={{ $json.body.payload.system_size_kwp }}",  "type": "string" },
+            { "id": "f6", "name": "proposal_link",    "value": "={{ $json.body.payload.proposal_link }}",    "type": "string" },
+            { "id": "f7", "name": "proposal_number",  "value": "={{ $json.body.payload.proposal_number }}",  "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract",
+      "name": "Extract fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.META_GRAPH_API_URL }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.META_WHATSAPP_TOKEN }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.customer_phone, type: 'template', template: { name: 'shiroi_cust_proposal_ready', language: { code: 'en' }, components: [{ type: 'body', parameters: [{ type: 'text', text: $json.customer_name }, { type: 'text', text: $json.system_size_kwp }, { type: 'text', text: $json.proposal_link }] }] } }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-send-wa",
+      "name": "Send WhatsApp template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_message_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" },
+            { "name": "Prefer",        "value": "return=minimal" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ project_id: $('Extract fields').item.json.project_id || null, lead_id: $('Extract fields').item.json.lead_id || null, recipient_phone: $('Extract fields').item.json.customer_phone, template_name: 'shiroi_cust_proposal_ready', template_vars: { customer_name: $('Extract fields').item.json.customer_name, system_size_kwp: $('Extract fields').item.json.system_size_kwp, proposal_link: $('Extract fields').item.json.proposal_link }, meta_wamid: $json.messages?.[0]?.id || null, status: $json.messages?.[0]?.id ? 'sent' : 'failed', sent_at: new Date().toISOString(), failed_reason: $json.error?.message || null }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-log",
+      "name": "Log to customer_message_log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 300],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "When called by router": { "main": [[{ "node": "Extract fields",           "type": "main", "index": 0 }]] },
+    "Extract fields":         { "main": [[{ "node": "Send WhatsApp template",   "type": "main", "index": 0 }]] },
+    "Send WhatsApp template": { "main": [[{ "node": "Log to customer_message_log", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "customer-comms" }, { "name": "whatsapp" }],
+  "meta": { "event": "proposal.sent_to_customer", "templateName": "shiroi_cust_proposal_ready" }
+}

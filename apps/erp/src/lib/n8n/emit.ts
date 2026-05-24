@@ -27,6 +27,7 @@ export type ErpEventName =
   | 'lead.stale_24h'
   | 'lead.quick_quote_sent'
   | 'lead.drive_folder_requested'
+  | 'lead.won'
   // Design / proposals
   | 'proposal.requested'
   | 'proposal.submitted'
@@ -38,6 +39,8 @@ export type ErpEventName =
   | 'project.installation_complete'
   | 'project.commissioned'
   | 'project.milestone_complete'
+  // Net metering
+  | 'net_metering.application_submitted'
   // Purchase / finance
   | 'purchase_order.created'
   | 'purchase_order.approved'

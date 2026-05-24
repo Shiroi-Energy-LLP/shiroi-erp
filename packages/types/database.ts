@@ -356,6 +356,59 @@ export type Database = {
           }
           ]
       }
+      bom_actual_vs_budgetary: {
+        Row: {
+          actual_qty: number | null
+          actual_total_cost: number | null
+          actual_unit_cost: number | null
+          budgetary_qty: number | null
+          budgetary_total_cost: number | null
+          budgetary_unit_cost: number | null
+          category: string
+          correction_factor: number | null
+          id: string
+          project_id: string
+          recorded_at: string
+          updated_at: string
+        }
+        Insert: {
+          actual_qty?: number | null
+          actual_total_cost?: number | null
+          actual_unit_cost?: number | null
+          budgetary_qty?: number | null
+          budgetary_total_cost?: number | null
+          budgetary_unit_cost?: number | null
+          category: string
+          correction_factor?: number | null
+          id?: string
+          project_id: string
+          recorded_at?: string
+          updated_at?: string
+        }
+        Update: {
+          actual_qty?: number | null
+          actual_total_cost?: number | null
+          actual_unit_cost?: number | null
+          budgetary_qty?: number | null
+          budgetary_total_cost?: number | null
+          budgetary_unit_cost?: number | null
+          category?: string
+          correction_factor?: number | null
+          id?: string
+          project_id?: string
+          recorded_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bom_actual_vs_budgetary_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       bom_correction_factor_updates: {
         Row: {
           correction_factor_id: string
@@ -569,10 +622,13 @@ export type Database = {
           agreement_start_date: string | null
           agreement_storage_path: string | null
           annual_commission_ytd: number
+          bank_account_number: string | null
+          bank_ifsc: string | null
           commission_rate: number
           commission_type: string
           contact_person: string
           created_at: string
+          default_commission_pct: number | null
           deleted_at: string | null
           email: string | null
           id: string
@@ -580,10 +636,13 @@ export type Database = {
           is_internal: boolean
           leads_converted_count: number
           leads_referred_count: number
+          lifetime_commission: number | null
+          lifetime_referrals: number | null
           pan_number: string | null
           partner_name: string
           partner_type: string
           phone: string
+          portal_token: string | null
           tds_applicable: boolean
           total_commission_paid: number
           updated_at: string
@@ -594,10 +653,13 @@ export type Database = {
           agreement_start_date?: string | null
           agreement_storage_path?: string | null
           annual_commission_ytd?: number
+          bank_account_number?: string | null
+          bank_ifsc?: string | null
           commission_rate: number
           commission_type: string
           contact_person: string
           created_at?: string
+          default_commission_pct?: number | null
           deleted_at?: string | null
           email?: string | null
           id?: string
@@ -605,10 +667,13 @@ export type Database = {
           is_internal?: boolean
           leads_converted_count?: number
           leads_referred_count?: number
+          lifetime_commission?: number | null
+          lifetime_referrals?: number | null
           pan_number?: string | null
           partner_name: string
           partner_type: string
           phone: string
+          portal_token?: string | null
           tds_applicable?: boolean
           total_commission_paid?: number
           updated_at?: string
@@ -619,10 +684,13 @@ export type Database = {
           agreement_start_date?: string | null
           agreement_storage_path?: string | null
           annual_commission_ytd?: number
+          bank_account_number?: string | null
+          bank_ifsc?: string | null
           commission_rate?: number
           commission_type?: string
           contact_person?: string
           created_at?: string
+          default_commission_pct?: number | null
           deleted_at?: string | null
           email?: string | null
           id?: string
@@ -630,10 +698,13 @@ export type Database = {
           is_internal?: boolean
           leads_converted_count?: number
           leads_referred_count?: number
+          lifetime_commission?: number | null
+          lifetime_referrals?: number | null
           pan_number?: string | null
           partner_name?: string
           partner_type?: string
           phone?: string
+          portal_token?: string | null
           tds_applicable?: boolean
           total_commission_paid?: number
           updated_at?: string
@@ -1190,6 +1261,122 @@ export type Database = {
           },
           {
             foreignKeyName: "customer_checkins_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      customer_message_log: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          failed_reason: string | null
+          id: string
+          lead_id: string | null
+          meta_wamid: string | null
+          project_id: string | null
+          read_at: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string
+          template_name: string
+          template_vars: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string
+          template_name: string
+          template_vars?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_vars?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_message_log_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_message_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      customer_outreach_queue: {
+        Row: {
+          ai_message: string | null
+          checkin_due: string
+          created_at: string
+          customer_response: string | null
+          days_since_commissioning: number
+          id: string
+          message_generated_at: string | null
+          project_id: string
+          response_received_at: string | null
+          status: string
+          updated_at: string
+          whatsapp_sent_at: string | null
+        }
+        Insert: {
+          ai_message?: string | null
+          checkin_due: string
+          created_at?: string
+          customer_response?: string | null
+          days_since_commissioning: number
+          id?: string
+          message_generated_at?: string | null
+          project_id: string
+          response_received_at?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp_sent_at?: string | null
+        }
+        Update: {
+          ai_message?: string | null
+          checkin_due?: string
+          created_at?: string
+          customer_response?: string | null
+          days_since_commissioning?: number
+          id?: string
+          message_generated_at?: string | null
+          project_id?: string
+          response_received_at?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp_sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_outreach_queue_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -1880,7 +2067,9 @@ export type Database = {
           embedding: string | null
           external_id: string | null
           external_url: string | null
+          extracted_at: string | null
           extracted_text: string | null
+          extraction_status: string | null
           id: string
           lead_id: string | null
           mime_type: string | null
@@ -1905,7 +2094,9 @@ export type Database = {
           embedding?: string | null
           external_id?: string | null
           external_url?: string | null
+          extracted_at?: string | null
           extracted_text?: string | null
+          extraction_status?: string | null
           id?: string
           lead_id?: string | null
           mime_type?: string | null
@@ -1930,7 +2121,9 @@ export type Database = {
           embedding?: string | null
           external_id?: string | null
           external_url?: string | null
+          extracted_at?: string | null
           extracted_text?: string | null
+          extraction_status?: string | null
           id?: string
           lead_id?: string | null
           mime_type?: string | null
@@ -4346,12 +4539,16 @@ export type Database = {
       }
       invoices: {
         Row: {
+          ack_date: string | null
+          ack_number: string | null
           amount_outstanding: number
           amount_paid: number
           attribution_status: string
           created_at: string
           description: string | null
           due_date: string
+          e_invoice_error: string | null
+          e_invoice_status: string | null
           erp_created: boolean
           escalation_level: number
           excluded_from_cash: boolean
@@ -4361,6 +4558,7 @@ export type Database = {
           invoice_date: string
           invoice_number: string
           invoice_type: string
+          irn: string | null
           last_escalated_at: string | null
           legal_flagged: boolean
           legal_flagged_at: string | null
@@ -4374,6 +4572,7 @@ export type Database = {
           raised_by: string
           sent_at: string | null
           sent_via: string | null
+          signed_qr_code: string | null
           source: string
           status: string
           subtotal_supply: number
@@ -4386,12 +4585,16 @@ export type Database = {
           zoho_invoice_id: string | null
         }
         Insert: {
+          ack_date?: string | null
+          ack_number?: string | null
           amount_outstanding?: number
           amount_paid?: number
           attribution_status?: string
           created_at?: string
           description?: string | null
           due_date: string
+          e_invoice_error?: string | null
+          e_invoice_status?: string | null
           erp_created?: boolean
           escalation_level?: number
           excluded_from_cash?: boolean
@@ -4401,6 +4604,7 @@ export type Database = {
           invoice_date?: string
           invoice_number: string
           invoice_type: string
+          irn?: string | null
           last_escalated_at?: string | null
           legal_flagged?: boolean
           legal_flagged_at?: string | null
@@ -4414,6 +4618,7 @@ export type Database = {
           raised_by: string
           sent_at?: string | null
           sent_via?: string | null
+          signed_qr_code?: string | null
           source?: string
           status?: string
           subtotal_supply?: number
@@ -4426,12 +4631,16 @@ export type Database = {
           zoho_invoice_id?: string | null
         }
         Update: {
+          ack_date?: string | null
+          ack_number?: string | null
           amount_outstanding?: number
           amount_paid?: number
           attribution_status?: string
           created_at?: string
           description?: string | null
           due_date?: string
+          e_invoice_error?: string | null
+          e_invoice_status?: string | null
           erp_created?: boolean
           escalation_level?: number
           excluded_from_cash?: boolean
@@ -4441,6 +4650,7 @@ export type Database = {
           invoice_date?: string
           invoice_number?: string
           invoice_type?: string
+          irn?: string | null
           last_escalated_at?: string | null
           legal_flagged?: boolean
           legal_flagged_at?: string | null
@@ -4454,6 +4664,7 @@ export type Database = {
           raised_by?: string
           sent_at?: string | null
           sent_via?: string | null
+          signed_qr_code?: string | null
           source?: string
           status?: string
           subtotal_supply?: number
@@ -5549,6 +5760,105 @@ export type Database = {
           }
           ]
       }
+      learning_modules: {
+        Row: {
+          active: boolean
+          body_md: string
+          category: string
+          created_at: string
+          difficulty: string
+          id: string
+          language: string
+          onboarding_track: string | null
+          pass_score_pct: number
+          quiz_questions: Json | null
+          sequence_order: number | null
+          target_role: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body_md: string
+          category: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          language?: string
+          onboarding_track?: string | null
+          pass_score_pct?: number
+          quiz_questions?: Json | null
+          sequence_order?: number | null
+          target_role: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body_md?: string
+          category?: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          language?: string
+          onboarding_track?: string | null
+          pass_score_pct?: number
+          quiz_questions?: Json | null
+          sequence_order?: number | null
+          target_role?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learning_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          module_id: string
+          passed: boolean | null
+          quiz_score: number | null
+          sent_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          module_id: string
+          passed?: boolean | null
+          quiz_score?: number | null
+          sent_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          module_id?: string
+          passed?: boolean | null
+          quiz_score?: number | null
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_progress_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "learning_modules"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       leave_balances: {
         Row: {
           balance_days: number
@@ -6136,6 +6446,83 @@ export type Database = {
           }
           ]
       }
+      material_requisitions: {
+        Row: {
+          converted_po_id: string | null
+          created_at: string
+          id: string
+          items: Json
+          notes: string | null
+          project_id: string
+          requested_by: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          status: Database["public"]["Enums"]["material_requisition_status"]
+          updated_at: string
+          urgency: Database["public"]["Enums"]["material_requisition_urgency"]
+        }
+        Insert: {
+          converted_po_id?: string | null
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          project_id: string
+          requested_by: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["material_requisition_status"]
+          updated_at?: string
+          urgency?: Database["public"]["Enums"]["material_requisition_urgency"]
+        }
+        Update: {
+          converted_po_id?: string | null
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          project_id?: string
+          requested_by?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["material_requisition_status"]
+          updated_at?: string
+          urgency?: Database["public"]["Enums"]["material_requisition_urgency"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_requisitions_converted_po_id_fkey"
+            columns: ["converted_po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_requisitions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_requisitions_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_requisitions_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       message_delivery_log: {
         Row: {
           campaign_delivery_id: string | null
@@ -6256,6 +6643,66 @@ export type Database = {
             referencedColumns: ["id"]
           }
           ]
+      }
+      milestone_photos: {
+        Row: {
+          created_at: string
+          exif_timestamp: string | null
+          id: string
+          latitude: number | null
+          location_distance_m: number | null
+          location_verified: boolean | null
+          longitude: number | null
+          milestone: string
+          project_id: string
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          exif_timestamp?: string | null
+          id?: string
+          latitude?: number | null
+          location_distance_m?: number | null
+          location_verified?: boolean | null
+          longitude?: number | null
+          milestone: string
+          project_id: string
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          exif_timestamp?: string | null
+          id?: string
+          latitude?: number | null
+          location_distance_m?: number | null
+          location_verified?: boolean | null
+          longitude?: number | null
+          milestone?: string
+          project_id?: string
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_photos_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       monthly_attendance_summary: {
         Row: {
@@ -7286,6 +7733,53 @@ export type Database = {
             referencedColumns: ["id"]
           }
           ]
+      }
+      onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completion_pct: number
+          employee_id: string
+          id: string
+          modules_completed: number
+          modules_passed: number
+          modules_total: number
+          onboarding_track: string
+          started_at: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completion_pct?: number
+          employee_id: string
+          id?: string
+          modules_completed?: number
+          modules_passed?: number
+          modules_total?: number
+          onboarding_track: string
+          started_at?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completion_pct?: number
+          employee_id?: string
+          id?: string
+          modules_completed?: number
+          modules_passed?: number
+          modules_total?: number
+          onboarding_track?: string
+          started_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_progress_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       onboarding_track_assignments: {
         Row: {
@@ -10661,6 +11155,57 @@ export type Database = {
           }
           ]
       }
+      proposal_share_tokens: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string
+          id: string
+          last_viewed_at: string | null
+          last_viewed_ip: string | null
+          proposal_id: string
+          token: string
+          viewed_count: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          last_viewed_at?: string | null
+          last_viewed_ip?: string | null
+          proposal_id: string
+          token: string
+          viewed_count?: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          last_viewed_at?: string | null
+          last_viewed_ip?: string | null
+          proposal_id?: string
+          token?: string
+          viewed_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_share_tokens_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_share_tokens_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       proposal_simulations: {
         Row: {
           annual_kwh: number
@@ -11650,6 +12195,86 @@ export type Database = {
           }
         ]
       }
+      referral_payouts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          base_amount: number
+          channel_partner_id: string
+          commission_amount: number
+          commission_pct: number
+          created_at: string | null
+          id: string
+          lead_id: string
+          notes: string | null
+          paid_at: string | null
+          payment_reference: string | null
+          project_id: string | null
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          base_amount: number
+          channel_partner_id: string
+          commission_amount: number
+          commission_pct?: number
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          project_id?: string | null
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          base_amount?: number
+          channel_partner_id?: string
+          commission_amount?: number
+          commission_pct?: number
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          project_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_payouts_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_payouts_channel_partner_id_fkey"
+            columns: ["channel_partner_id"]
+            isOneToOne: false
+            referencedRelation: "channel_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_payouts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_payouts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       referral_rewards: {
         Row: {
           amount: number
@@ -12234,6 +12859,39 @@ export type Database = {
             referencedColumns: ["id"]
           }
           ]
+      }
+      salary_benchmarks: {
+        Row: {
+          designation: string | null
+          id: string
+          market_median: number
+          market_p25: number | null
+          market_p75: number | null
+          role: string
+          source: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          designation?: string | null
+          id?: string
+          market_median: number
+          market_p25?: number | null
+          market_p75?: number | null
+          role: string
+          source?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          designation?: string | null
+          id?: string
+          market_median?: number
+          market_p25?: number | null
+          market_p75?: number | null
+          role?: string
+          source?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       salary_increment_history: {
         Row: {
@@ -14704,12 +15362,15 @@ export type Database = {
         Row: {
           action: Database["public"]["Enums"]["zoho_sync_action"]
           attempt_count: number
+          claimed_at: string | null
           created_at: string
           entity_id: string
           entity_type: Database["public"]["Enums"]["zoho_sync_entity_type"]
           id: string
           last_attempt_at: string | null
           last_error: string | null
+          processed_at: string | null
+          retry_count: number
           status: Database["public"]["Enums"]["zoho_sync_status"]
           synced_at: string | null
           zoho_response: Json | null
@@ -14717,12 +15378,15 @@ export type Database = {
         Insert: {
           action: Database["public"]["Enums"]["zoho_sync_action"]
           attempt_count?: number
+          claimed_at?: string | null
           created_at?: string
           entity_id: string
           entity_type: Database["public"]["Enums"]["zoho_sync_entity_type"]
           id?: string
           last_attempt_at?: string | null
           last_error?: string | null
+          processed_at?: string | null
+          retry_count?: number
           status?: Database["public"]["Enums"]["zoho_sync_status"]
           synced_at?: string | null
           zoho_response?: Json | null
@@ -14730,12 +15394,15 @@ export type Database = {
         Update: {
           action?: Database["public"]["Enums"]["zoho_sync_action"]
           attempt_count?: number
+          claimed_at?: string | null
           created_at?: string
           entity_id?: string
           entity_type?: Database["public"]["Enums"]["zoho_sync_entity_type"]
           id?: string
           last_attempt_at?: string | null
           last_error?: string | null
+          processed_at?: string | null
+          retry_count?: number
           status?: Database["public"]["Enums"]["zoho_sync_status"]
           synced_at?: string | null
           zoho_response?: Json | null
@@ -15178,6 +15845,24 @@ export type Database = {
         Args: { p_po_id: string }
         Returns: undefined
       }
+      fn_get_po_bill_reconciliation: {
+        Args: { p_project_id: string }
+        Returns: {
+          approval_status: string
+          balance: number
+          bill_count: number
+          bill_status: string
+          billed_amount: number
+          paid_amount: number
+          po_date: string
+          po_id: string
+          po_number: string
+          po_status: string
+          po_total: number
+          vendor_is_msme: boolean
+          vendor_name: string
+        }[]
+      }
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
       generate_rfq_number: { Args: never; Returns: string }
@@ -15347,6 +16032,22 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_om_profitability: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          customer_name: string
+          profit_loss: number
+          project_id: string
+          project_number: string
+          sla_breach_count: number
+          sla_compliance_pct: number
+          sla_compliant_count: number
+          system_size_kwp: number
+          ticket_count: number
+          ticket_parts_cost: number
+          ticket_service_amount: number
+        }[]
+      }
       get_orphan_counts: {
         Args: never
         Returns: {
@@ -15514,6 +16215,21 @@ export type Database = {
           total_paid: number
         }[]
       }
+      get_salary_benchmark_report: {
+        Args: never
+        Returns: {
+          delta_pct: number
+          employee_id: string
+          employee_name: string
+          gross_monthly: number
+          market_median: number
+          market_p25: number
+          market_p75: number
+          recommendation: string
+          role: string
+          source: string
+        }[]
+      }
       get_team_attendance_for_month: {
         Args: { p_month: number; p_year: number }
         Returns: {
@@ -15527,6 +16243,10 @@ export type Database = {
           notes: string
           status: string
         }[]
+      }
+      haversine_distance_m: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
       }
       lock_stale_reports: { Args: never; Returns: undefined }
       mark_project_duplicate: {
@@ -15645,6 +16365,12 @@ export type Database = {
         | "compensatory"
         | "loss_of_pay"
         | "other"
+      material_requisition_status:
+        | "pending"
+        | "approved"
+        | "converted"
+        | "rejected"
+      material_requisition_urgency: "normal" | "urgent" | "critical"
       milestone_status:
         | "pending"
         | "in_progress"
@@ -15904,6 +16630,13 @@ export const Constants = {
         "loss_of_pay",
         "other"
       ],
+      material_requisition_status: [
+        "pending",
+        "approved",
+        "converted",
+        "rejected"
+      ],
+      material_requisition_urgency: ["normal", "urgent", "critical"],
       milestone_status: [
         "pending",
         "in_progress",

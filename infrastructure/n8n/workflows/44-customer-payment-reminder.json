@@ -1,0 +1,120 @@
+{
+  "name": "44 — Customer: Payment due reminder (daily cron)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 9 * * *" }] }
+      },
+      "id": "node-cron",
+      "name": "Daily 9am cron",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/get_payment_due_today",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [{ "name": "body", "value": "{}" }]
+        },
+        "options": {}
+      },
+      "id": "node-query",
+      "name": "Query payments due today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": { "fieldToSplitOut": "body", "options": {} },
+      "id": "node-split",
+      "name": "Split payment rows",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.META_GRAPH_API_URL }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.META_WHATSAPP_TOKEN }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.customer_phone, type: 'template', template: { name: 'shiroi_cust_payment_reminder', language: { code: 'en' }, components: [{ type: 'body', parameters: [{ type: 'text', text: $json.customer_name }, { type: 'text', text: $json.amount_due }, { type: 'text', text: $json.due_date }, { type: 'text', text: $json.project_reference }, { type: 'text', text: $json.payment_link }] }] } }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-send-wa",
+      "name": "Send payment reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_message_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" },
+            { "name": "Prefer",        "value": "return=minimal" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ project_id: $('Split payment rows').item.json.project_id || null, lead_id: null, recipient_phone: $('Split payment rows').item.json.customer_phone, template_name: 'shiroi_cust_payment_reminder', template_vars: { customer_name: $('Split payment rows').item.json.customer_name, amount_due: $('Split payment rows').item.json.amount_due, due_date: $('Split payment rows').item.json.due_date }, meta_wamid: $json.messages?.[0]?.id || null, status: $json.messages?.[0]?.id ? 'sent' : 'failed', sent_at: new Date().toISOString(), failed_reason: $json.error?.message || null }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-log",
+      "name": "Log to customer_message_log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Daily 9am cron":         { "main": [[{ "node": "Query payments due today",    "type": "main", "index": 0 }]] },
+    "Query payments due today":{ "main": [[{ "node": "Split payment rows",          "type": "main", "index": 0 }]] },
+    "Split payment rows":     { "main": [[{ "node": "Send payment reminder",        "type": "main", "index": 0 }]] },
+    "Send payment reminder":  { "main": [[{ "node": "Log to customer_message_log",  "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "customer-comms" }, { "name": "whatsapp" }, { "name": "cron" }],
+  "meta": {
+    "trigger": "cron-daily-0900",
+    "templateName": "shiroi_cust_payment_reminder",
+    "note": "Requires Supabase RPC get_payment_due_today() returning rows with project_id, customer_name, customer_phone, amount_due (formatted INR string), due_date, project_reference, payment_link"
+  }
+}

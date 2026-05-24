@@ -1,0 +1,120 @@
+{
+  "name": "46 — Customer: Annual health check reminder (monthly cron)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 9 1 * *" }] }
+      },
+      "id": "node-cron",
+      "name": "Monthly 1st 9am cron",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/get_projects_annual_checkup_due",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [{ "name": "body", "value": "{}" }]
+        },
+        "options": {}
+      },
+      "id": "node-query",
+      "name": "Query projects 365±15 days post-commissioning",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": { "fieldToSplitOut": "body", "options": {} },
+      "id": "node-split",
+      "name": "Split project rows",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.META_GRAPH_API_URL }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.META_WHATSAPP_TOKEN }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.customer_phone, type: 'template', template: { name: 'shiroi_cust_annual_checkup', language: { code: 'en' }, components: [{ type: 'body', parameters: [{ type: 'text', text: $json.customer_name }, { type: 'text', text: $json.booking_link }] }] } }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-send-wa",
+      "name": "Send annual checkup reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_message_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" },
+            { "name": "Prefer",        "value": "return=minimal" }
+          ]
+        },
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify({ project_id: $('Split project rows').item.json.project_id || null, lead_id: null, recipient_phone: $('Split project rows').item.json.customer_phone, template_name: 'shiroi_cust_annual_checkup', template_vars: { customer_name: $('Split project rows').item.json.customer_name }, meta_wamid: $json.messages?.[0]?.id || null, status: $json.messages?.[0]?.id ? 'sent' : 'failed', sent_at: new Date().toISOString(), failed_reason: $json.error?.message || null }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-log",
+      "name": "Log to customer_message_log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Monthly 1st 9am cron":                     { "main": [[{ "node": "Query projects 365±15 days post-commissioning", "type": "main", "index": 0 }]] },
+    "Query projects 365±15 days post-commissioning": { "main": [[{ "node": "Split project rows",                        "type": "main", "index": 0 }]] },
+    "Split project rows":                        { "main": [[{ "node": "Send annual checkup reminder",                  "type": "main", "index": 0 }]] },
+    "Send annual checkup reminder":              { "main": [[{ "node": "Log to customer_message_log",                   "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "customer-comms" }, { "name": "whatsapp" }, { "name": "cron" }],
+  "meta": {
+    "trigger": "cron-monthly-0900",
+    "templateName": "shiroi_cust_annual_checkup",
+    "note": "Requires Supabase RPC get_projects_annual_checkup_due() returning projects where commissioned_at BETWEEN NOW()-375d AND NOW()-350d. booking_link = 'https://erp.shiroienergy.com/om/book'"
+  }
+}

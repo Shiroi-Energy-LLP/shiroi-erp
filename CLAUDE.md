@@ -105,6 +105,17 @@ N8N_EVENT_BUS_URL                     (single-ingress router webhook: ERP fires 
 N8N_BUG_REPORT_WEBHOOK_URL            (legacy standalone webhook for /settings bug reports — predates event bus; still live)
 N8N_API_KEY                           (n8n REST API key for programmatic workflow push from scripts/push-n8n-workflows.ts)
 NEXT_PUBLIC_SENTRY_DSN + SENTRY_DSN + SENTRY_ORG + SENTRY_PROJECT
+AI_PROVIDER                           (anthropic [default] | openrouter — switches all AI calls)
+AI_MODEL                              (model ID override; default: claude-sonnet-4-20250514 for anthropic, anthropic/claude-sonnet-4-5 for openrouter)
+AI_MAX_TOKENS                         (optional; default 1024)
+OPENROUTER_API_KEY                    (required when AI_PROVIDER=openrouter — get from openrouter.ai)
+SHIROI_GSTIN                          (Shiroi Energy LLP GSTIN — required for e-invoice generation)
+SHIROI_ADDRESS_LINE1                  (registered address line 1 for e-invoice seller details)
+SHIROI_CITY                           (default: Chennai)
+SHIROI_STATE_CODE                     (default: 33 — Tamil Nadu)
+SHIROI_PINCODE                        (default: 600002)
+SHIROI_ACCOUNTS_EMAIL                 (accounts email for e-invoice seller details)
+NEXT_PUBLIC_ERP_URL                   (base URL for share links; default: https://erp.shiroienergy.com)
 ```
 
 **Key format:** new Supabase only. `sb_publishable_` replaces legacy `anon`. `sb_secret_` replaces legacy `service_role`. Never use legacy names.

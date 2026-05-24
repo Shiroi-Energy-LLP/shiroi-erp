@@ -731,3 +731,206 @@ When sending via the WhatsApp Business API (Meta Cloud), the request body looks 
 ```
 
 The position of `{{1}}`, `{{2}}`… in the template body corresponds to the order of `parameters` in the `body` component.
+
+---
+
+## Customer-facing (UTILITY) — Phase F1
+
+> All 8 templates below are **PENDING Meta approval**. Submit to Meta Business Manager → WhatsApp Manager → Message Templates after F2 (Meta Business Verification) is complete.
+
+### `shiroi_cust_proposal_ready`
+
+**Category:** Utility
+**Purpose:** Proposal sent to customer. Fired by n8n workflow 40 on `proposal.sent_to_customer` event.
+**Status:** PENDING APPROVAL
+
+**Body:**
+```
+Hi {{1}}, your solar proposal for {{2}} kWp is ready to view.
+
+Proposal link: {{3}}
+
+Questions? Reply here and we'll get back to you right away.
+```
+
+**Footer:** Shiroi Energy · Chennai
+
+**Example variables:**
+1. Anita Iyer
+2. 8
+3. https://erp.shiroienergy.com/p/abc123token
+
+---
+
+### `shiroi_cust_order_received`
+
+**Category:** Utility
+**Purpose:** Order confirmed / lead won. Welcome message with PM details. Fired by workflow 41 on `lead.won`.
+**Status:** PENDING APPROVAL
+
+**Body:**
+```
+Welcome to the Shiroi family, {{1}}!
+
+Your solar installation begins on {{2}}. Your dedicated Project Manager is {{3}} ({{4}}).
+
+Feel free to reach out to them directly for any on-site queries.
+```
+
+**Footer:** Shiroi Energy · Solar EPC
+
+**Example variables:**
+1. Anita Iyer
+2. 15 Jun 2026
+3. Ravi Kumar
+4. 98765 43210
+
+---
+
+### `shiroi_cust_net_metering_applied`
+
+**Category:** Utility
+**Purpose:** Net metering application submitted to TNEB/DISCOM. Fired by workflow 42 on `net_metering.application_submitted`.
+**Status:** PENDING APPROVAL
+
+**Body:**
+```
+Hi {{1}}, your net metering application has been submitted to the utility.
+
+Typical approval time: 30 days. We'll update you at each milestone — application received, inspection scheduled, meter installation.
+
+No action needed from your side right now.
+```
+
+**Footer:** Shiroi Energy
+
+**Example variables:**
+1. Anita Iyer
+
+---
+
+### `shiroi_cust_install_milestone`
+
+**Category:** Utility
+**Purpose:** Progress update at each installation milestone (panels mounted, inverter installed, commissioning done). Fired by workflow 43 on `project.milestone_complete`.
+**Status:** PENDING APPROVAL
+
+**Body:**
+```
+Hi {{1}}, great progress on your solar project!
+
+Milestone completed: {{2}}
+
+Next step: {{3}}
+
+We'll keep you updated as work progresses.
+```
+
+**Footer:** Shiroi Energy
+
+**Example variables:**
+1. Anita Iyer
+2. Panels mounted
+3. Inverter installation
+
+---
+
+### `shiroi_cust_payment_reminder`
+
+**Category:** Utility
+**Purpose:** Friendly payment due reminder. Daily cron (workflow 44) queries payment_schedule for rows due today.
+**Status:** PENDING APPROVAL
+
+**Body:**
+```
+Hi {{1}}, a friendly reminder that ₹{{2}} is due by {{3}} for your solar project ({{4}}).
+
+Pay securely here: {{5}}
+
+If you've already paid, please ignore this message.
+```
+
+**Footer:** Shiroi Energy · Finance
+
+**Example variables:**
+1. Anita Iyer
+2. 1,50,000
+3. 30 Jun 2026
+4. SHIROI/PRJ/2026/001
+5. https://pay.shiroienergy.com/abc123
+
+---
+
+### `shiroi_cust_om_ticket_created`
+
+**Category:** Utility
+**Purpose:** Service request acknowledgement. Fired by workflow 45 on `om_ticket.created`.
+**Status:** PENDING APPROVAL
+
+**Body:**
+```
+Hi {{1}}, we've received your service request (Ticket {{2}}).
+
+Our technician {{3}} will visit on {{4}}. They'll call before arriving.
+
+Reply here if you need to reschedule.
+```
+
+**Footer:** Shiroi Energy · O&M
+
+**Example variables:**
+1. Anita Iyer
+2. SVC-042
+3. Murugan
+4. 25 Jun 2026
+
+---
+
+### `shiroi_cust_annual_checkup`
+
+**Category:** Utility
+**Purpose:** Annual solar health check reminder. Monthly cron (workflow 46) finds projects 350–375 days post-commissioning.
+**Status:** PENDING APPROVAL
+
+**Body:**
+```
+Hi {{1}}, it's been a year since your solar system was commissioned — congratulations!
+
+Time for your free annual health check. Book a slot here: {{2}}
+
+This ensures your system is running at peak efficiency and any warranty claims are logged on time.
+```
+
+**Footer:** Shiroi Energy · O&M
+
+**Example variables:**
+1. Anita Iyer
+2. https://erp.shiroienergy.com/om/book
+
+---
+
+### `shiroi_cust_commissioning_complete`
+
+**Category:** Utility
+**Purpose:** System commissioned and live. Fired by workflow 47 on `project.commissioned`.
+**Status:** PENDING APPROVAL
+
+**Body:**
+```
+Congratulations, {{1}}! Your {{2}} kWp solar system is now live as of {{3}}.
+
+Track your generation in real time: {{4}}
+
+Thank you for choosing Shiroi Energy. Welcome to clean energy!
+```
+
+**Footer:** Shiroi Energy · Chennai
+
+**Buttons:**
+- URL: `View monitoring` → `https://erp.shiroienergy.com/monitoring/{{1}}`
+
+**Example variables:**
+1. Anita Iyer
+2. 8
+3. 15 Jun 2026
+4. https://erp.shiroienergy.com/monitoring/abc-project-id

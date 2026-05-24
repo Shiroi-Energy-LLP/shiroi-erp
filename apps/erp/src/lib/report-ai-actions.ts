@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { callAi } from '@/lib/ai/ai-caller';
 
 /**
  * Generate an AI narrative summary for a daily site report using Claude API.
@@ -15,12 +16,6 @@ export async function generateAINarrative(
   console.log(`${op} Starting for report: ${reportId}`);
 
   if (!reportId) return { success: false, error: 'Missing report ID' };
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    console.error(`${op} Missing ANTHROPIC_API_KEY`);
-    return { success: false, error: 'AI service not configured' };
-  }
 
   const supabase = await createClient();
 
@@ -37,50 +32,26 @@ export async function generateAINarrative(
   }
 
   // Build the prompt
-  const project = (report as any).projects;
+  const project = (report as Record<string, unknown>).projects;
   const prompt = buildNarrativePrompt(report, project);
 
   try {
-    // Call Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errBody = await response.text();
-      console.error(`${op} Claude API error:`, { status: response.status, body: errBody });
-      return { success: false, error: `AI service error (${response.status})` };
-    }
-
-    const result = await response.json();
-    const narrative = result.content?.[0]?.text?.trim();
+    // Call AI via provider-agnostic helper (anthropic by default; switch to openrouter via AI_PROVIDER env)
+    const narrative = await callAi(prompt, { maxTokens: 500 });
 
     if (!narrative) {
       return { success: false, error: 'AI returned empty response' };
     }
 
-    // Save narrative to the report
+    // Save narrative to the report. Cast required because database.ts types may not yet include
+    // ai_narrative columns if typegen was run before this migration was applied.
+    const updatePayload = {
+      ai_narrative: narrative,
+      ai_narrative_generated_at: new Date().toISOString(),
+    } as Record<string, unknown>;
     const { error: updateErr } = await supabase
       .from('daily_site_reports')
-      .update({
-        ai_narrative: narrative,
-        ai_narrative_generated_at: new Date().toISOString(),
-      } as any)
+      .update(updatePayload)
       .eq('id', reportId);
 
     if (updateErr) {
@@ -100,9 +71,12 @@ export async function generateAINarrative(
   }
 }
 
-function buildNarrativePrompt(report: any, project: any): string {
+function buildNarrativePrompt(
+  report: Record<string, unknown>,
+  project: Record<string, unknown> | null | undefined,
+): string {
   const projectInfo = project
-    ? `Project: ${project.project_number} — ${project.customer_name}, ${project.site_city ?? 'unknown location'}, ${project.system_size_kwp ?? '?'} kWp ${(project.system_type ?? '').replace(/_/g, ' ')} system.`
+    ? `Project: ${String(project.project_number ?? '')} — ${String(project.customer_name ?? '')}, ${String(project.site_city ?? 'unknown location')}, ${String(project.system_size_kwp ?? '?')} kWp ${String(project.system_type ?? '').replace(/_/g, ' ')} system.`
     : 'Project details unavailable.';
 
   const weatherMap: Record<string, string> = {
