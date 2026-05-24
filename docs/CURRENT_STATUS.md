@@ -16,6 +16,11 @@ C2 (Invoice raising): `raiseProjectInvoice` action, `RaiseInvoiceDialog` on proj
 C3 (Payment recording): `recordProjectPayment` action, `RecordProjectPaymentDialog` inline per invoice row.
 C4 (Receivables reconciliation): `get_receivables_reconciliation()` SQL RPC, `/payments/reconciliation` page with KPI strip + colour-coded table.
 
+**Phase C-HR — C5 + C6 + C7 Complete. ✅ DONE (2026-05-24). Dev migration state: 120.**
+C5 (Leave management): approve/reject/cancel actions, leave ledger double-entry, pending-approvals manager view, team calendar, all-requests history, `getLeaveBalances` RPC.
+C6 (Employee profile): `blood_group` + `bank_name` columns, `/hr/employees/[id]` page, `SensitiveField` component (masked reveal), compensation + leave balances in profile.
+C7 (Attendance): `attendance` table (daily, UNIQUE per employee+date), `markAttendance` / `bulkMarkAttendance` actions, `/hr/attendance` monthly grid with click-to-edit cells, bulk-mark toolbar, CSV export (server-action backed).
+
 **Phase 7 (Inverter integration) — /om/inverters management UI. ✅ DONE (2026-05-24). No migration.**
 New page at `/om/inverters` (founder + om_technician + project_manager). Inverter list + filters, Add/Edit dialogs, per-row healthcheck, recent poll failures footer. `@repo/inverter-adapters` added to ERP deps. Sidebar nav updated (Zap icon).
 

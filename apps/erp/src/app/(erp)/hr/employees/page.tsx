@@ -96,7 +96,7 @@ export default async function EmployeesPage() {
                     <TableCell className="font-mono text-sm">{emp.employee_code}</TableCell>
                     <TableCell>
                       <Link
-                        href={`/hr/${emp.id}`}
+                        href={`/hr/employees/${emp.id}`}
                         className="text-[#00B050] hover:underline font-medium"
                       >
                         {emp.full_name}

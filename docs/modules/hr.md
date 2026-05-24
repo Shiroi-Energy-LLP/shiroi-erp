@@ -13,7 +13,10 @@ HR owns the employee lifecycle from auth-user creation through onboarding, leave
 - `/hr/employees` — employee list with `New Employee` button + `DeactivateEmployeeButton` per row (soft deactivate via `is_active = false` + ban auth user).
 - `/hr/employees/new` — auth user + profile + employee triple-insert flow (founder / hr_manager only). Generates 12-char temp password; shown once to the creator.
 - `/hr/[id]` — single employee detail page (certifications + leave history; compensation gated by `getEmployeeCompensation` role check).
-- `/hr/leave` — leave requests list (100 most recent). Status badges: pending / approved / rejected / cancelled.
+- `/hr/leave` — leave management dashboard (C5). Pending approvals table with Approve/Reject buttons; team calendar for current month. HR/founder only.
+- `/hr/leave/all` — full leave request history (200 most recent, all statuses).
+- `/hr/employees/[id]` — full employee profile (C6). Personal info, contact, bank/identity (sensitive fields masked with reveal toggle), leave balances, compensation. HR/founder only.
+- `/hr/attendance` — monthly attendance grid (C7). All employees × all days in selected month; click-to-edit cells; bulk-mark toolbar; CSV export.
 - `/hr/training` — training assessment results (module, score, pass/fail, certificate issued).
 - `/hr/certifications` — all employee certifications with colour-coded expiry (<0d red, ≤90d amber, else green) and `is_expired` flag.
 - `/hr/payroll` — `PayrollExportForm` to generate Zoho CSV for a given year/month. Standard schedule: 25th of every month.
@@ -48,6 +51,7 @@ HR owns the employee lifecycle from auth-user creation through onboarding, leave
 - `employee_documents` — offer letter, ID proof, experience letter, increment letter, F&F settlement etc. Immutable after upload.
 - `employee_lifecycle_events` — joined / probation_confirmed / promoted / transferred / resigned / terminated / contract_renewed / retired / reinstated. Tier 3.
 - `employee_exit_checklists` — 8 gates (projects_handed_over, assets_returned, access_revoked, knowledge_documented, leave_balance_cleared, final_payroll_processed, experience_letter_issued, relieving_letter_issued) that must all clear before `ff_paid = true`.
+- `attendance` — **new in mig 120.** Daily raw attendance per employee (present/absent/half_day/on_leave/holiday/work_from_home). UNIQUE (employee_id, date). Self-mark for present/wfh/half_day; HR marks any status. Source for `get_monthly_attendance_summary` and `get_team_attendance_for_month` RPCs. Distinct from `monthly_attendance_summary` (which is the payroll-locked summary).
 - `monthly_attendance_summary` — `paid_days`, `lop_days`, `is_locked` (locked when payroll export fires). Corrections via `attendance_corrections`.
 - `payroll_monthly_inputs` — **RLS-restricted (salary-level).** Variable pay actual, one-time additions/deductions, computed gross/net for the month. Locked when `payroll_export_files` row is created.
 - `payroll_export_files` — Tier 3. One row per `month_year`, `csv_storage_path`, `uploaded_to_zoho` flag.
@@ -68,11 +72,21 @@ apps/erp/src/app/(erp)/hr/
   payroll/page.tsx               ← PayrollExportForm wrapper
 
 apps/erp/src/lib/
-  hr-queries.ts                  ← getEmployees, getEmployee, getEmployeeCertifications,
-                                   getLeaveRequests, getEmployeeCompensation (role-gated),
-                                   getPayrollData (role-gated)
+  hr-queries.ts                  ← getEmployees, getEmployee (now includes whatsapp_number, blood_group, bank_name),
+                                   getEmployeeCertifications, getLeaveRequests, getEmployeeCompensation (role-gated),
+                                   getPayrollData (role-gated),
+                                   getPendingLeaveRequests (RPC), getLeaveBalances (RPC),
+                                   getLeaveCalendar, getAllLeaveRequests, getMyAttendance,
+                                   getTeamAttendanceForMonth (RPC), getActiveEmployeesForAttendance,
+                                   getAttendanceExportData
   employee-actions.ts            ← createEmployeeAccount (12-char temp password),
                                    deactivateEmployee (soft + auth ban)
+  hr-actions.ts                  ← approveLeaveRequest (+ ledger debit + balance upsert),
+                                   rejectLeaveRequest, cancelLeaveRequest,
+                                   markAttendance, bulkMarkAttendance,
+                                   updateEmployeeProfile (non-sensitive fields),
+                                   updateEmployeeSensitiveFields (bank/Aadhar/PAN — admin client only),
+                                   fetchAttendanceForExport (server action for CSV export)
   hr-helpers.ts                  ← daysUntilPayrollExport, isCertificationExpiringSoon,
                                    certificationExpiryStatus, generatePayrollFilename,
                                    maskSensitiveField
@@ -82,6 +96,10 @@ apps/erp/src/lib/
 
 apps/erp/src/components/hr/
   create-employee-form.tsx, deactivate-employee-button.tsx, payroll-export-form.tsx
+  leave-action-buttons.tsx      ← Approve/Reject (with rejection reason form) / Cancel per request
+  sensitive-field.tsx           ← Masked display with Show/Hide toggle (bank, Aadhar, PAN)
+  attendance-mark-button.tsx    ← AttendanceCell (click-to-edit, HR only) + BulkMarkForm
+  attendance-csv-export.tsx     ← CSV export via fetchAttendanceForExport server action
 ```
 
 ## Known Gotchas
@@ -98,6 +116,7 @@ apps/erp/src/components/hr/
 
 ## Past Decisions & Migrations
 
+- `120_hr_leave_attendance_profile.sql` — C5+C6+C7 batch. `blood_group` + `bank_name` on employees; `attendance` table with RLS; `get_monthly_attendance_summary` / `get_team_attendance_for_month` / `get_leave_balances_for_employee` / `get_pending_leave_requests` RPCs; indexes `idx_employees_department` + `idx_employees_is_active`.
 - `001_foundation.sql` — profiles + employees + role enum (8 initial roles).
 - `005a_hr_master.sql` — compensation (RLS), increment history (RLS), skills, certifications, documents, lifecycle events, exit checklists, system logs.
 - `005b_leave_payroll.sql` — leave requests / ledger / balances, attendance, payroll monthly inputs (RLS), payroll export files, insurance.

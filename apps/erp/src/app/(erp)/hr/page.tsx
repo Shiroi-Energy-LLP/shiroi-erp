@@ -40,6 +40,12 @@ export default async function HRListPage() {
           <h1 className="text-2xl font-bold text-[#1A1D24]">HR Master</h1>
         </div>
         <div className="flex gap-2">
+          <Link href="/hr/leave">
+            <Button variant="outline">Leave</Button>
+          </Link>
+          <Link href="/hr/attendance">
+            <Button variant="outline">Attendance</Button>
+          </Link>
           <Link href="/hr/payroll">
             <Button variant="outline">Payroll Export</Button>
           </Link>

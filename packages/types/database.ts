@@ -93,6 +93,60 @@ export type Database = {
           }
         ]
       }
+      attendance: {
+        Row: {
+          check_in_time: string | null
+          check_out_time: string | null
+          created_at: string
+          date: string
+          employee_id: string
+          id: string
+          marked_by: string | null
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string
+          date: string
+          employee_id: string
+          id?: string
+          marked_by?: string | null
+          notes?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string
+          date?: string
+          employee_id?: string
+          id?: string
+          marked_by?: string | null
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_marked_by_fkey"
+            columns: ["marked_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       attendance_corrections: {
         Row: {
           approved_at: string | null
@@ -2607,6 +2661,8 @@ export type Database = {
           address_line2: string | null
           bank_account_number: string | null
           bank_ifsc: string | null
+          bank_name: string | null
+          blood_group: string | null
           city: string | null
           created_at: string
           date_of_birth: string | null
@@ -2646,6 +2702,8 @@ export type Database = {
           address_line2?: string | null
           bank_account_number?: string | null
           bank_ifsc?: string | null
+          bank_name?: string | null
+          blood_group?: string | null
           city?: string | null
           created_at?: string
           date_of_birth?: string | null
@@ -2685,6 +2743,8 @@ export type Database = {
           address_line2?: string | null
           bank_account_number?: string | null
           bank_ifsc?: string | null
+          bank_name?: string | null
+          blood_group?: string | null
           city?: string | null
           created_at?: string
           date_of_birth?: string | null
@@ -15078,6 +15138,13 @@ export type Database = {
           weighted_value: number
         }[]
       }
+      get_leave_balances_for_employee: {
+        Args: { p_employee_id: string }
+        Returns: {
+          balance_days: number
+          leave_type: Database["public"]["Enums"]["leave_type"]
+        }[]
+      }
       get_liaison_summary: {
         Args: never
         Returns: {
@@ -15086,6 +15153,19 @@ export type Database = {
           ceig_pending: number
           tneb_active: number
           total: number
+        }[]
+      }
+      get_monthly_attendance_summary: {
+        Args: { p_employee_id: string; p_month: number; p_year: number }
+        Returns: {
+          absent_days: number
+          employee_id: string
+          half_days: number
+          holiday_days: number
+          on_leave_days: number
+          present_days: number
+          total_marked_days: number
+          work_from_home_days: number
         }[]
       }
       get_msme_aging_summary: {
@@ -15156,6 +15236,22 @@ export type Database = {
           project_id: string
           project_number: string
           week_total: number
+        }[]
+      }
+      get_pending_leave_requests: {
+        Args: never
+        Returns: {
+          applied_at: string
+          days_requested: number
+          employee_code: string
+          employee_id: string
+          from_date: string
+          full_name: string
+          id: string
+          is_half_day: boolean
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          reason: string
+          to_date: string
         }[]
       }
       get_pipeline_close_window: {
@@ -15239,6 +15335,20 @@ export type Database = {
           project_status: string
           total_invoiced: number
           total_paid: number
+        }[]
+      }
+      get_team_attendance_for_month: {
+        Args: { p_month: number; p_year: number }
+        Returns: {
+          attendance_id: string
+          check_in_time: string
+          check_out_time: string
+          date: string
+          employee_code: string
+          employee_id: string
+          full_name: string
+          notes: string
+          status: string
         }[]
       }
       lock_stale_reports: { Args: never; Returns: undefined }
