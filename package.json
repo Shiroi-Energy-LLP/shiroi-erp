@@ -8,7 +8,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
-    "rag:ingest-docs": "tsx scripts/rag/ingest-docs.ts"
+    "rag:ingest-docs": "tsx scripts/rag/ingest-docs.ts",
+    "rag:ingest-proposals": "tsx scripts/rag/ingest-proposals.ts",
+    "rag:ingest-service-tickets": "tsx scripts/rag/ingest-service-tickets.ts",
+    "rag:ingest-lead-activities": "tsx scripts/rag/ingest-lead-activities.ts",
+    "rag:ingest-price-book": "tsx scripts/rag/ingest-price-book-items.ts",
+    "rag:ingest-all": "tsx scripts/rag/ingest-all.ts",
+    "seed:territories": "tsx scripts/data/seed-sales-territories.ts"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

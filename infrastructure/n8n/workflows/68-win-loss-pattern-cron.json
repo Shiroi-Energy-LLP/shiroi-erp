@@ -1,0 +1,181 @@
+{
+  "name": "68 — Win/loss pattern analysis — weekly Sunday cron",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 17 * * 0" }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Sunday 23:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "notes": "Sunday 23:00 IST = 17:30 UTC (cron: Sun = 0)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/win-loss/run",
+        "sendHeaders": true,
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "segment", "value": "" }
+          ]
+        },
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 120000
+        }
+      },
+      "id": "node-all-segments",
+      "name": "Run — all segments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/win-loss/run",
+        "sendHeaders": true,
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "segment", "value": "residential" }
+          ]
+        },
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 120000
+        }
+      },
+      "id": "node-residential",
+      "name": "Run — residential",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 340]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/win-loss/run",
+        "sendHeaders": true,
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "segment", "value": "commercial" }
+          ]
+        },
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 120000
+        }
+      },
+      "id": "node-commercial",
+      "name": "Run — commercial",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/win-loss/run",
+        "sendHeaders": true,
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "segment", "value": "industrial" }
+          ]
+        },
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 120000
+        }
+      },
+      "id": "node-industrial",
+      "name": "Run — industrial",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 620]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all();\nlet ok = 0;\nlet skipped = 0;\nlet errors = 0;\n\nfor (const item of results) {\n  const r = item.json;\n  if (r && r.id && !r.skipped) ok++;\n  else if (r && r.skipped) skipped++;\n  else if (r && r.error) errors++;\n}\n\nif (errors > 0) {\n  throw new Error(`Win/loss cron: ${errors} segment(s) failed, ${ok} ok, ${skipped} skipped`);\n}\n\nconsole.log(`Win/loss cron complete: ${ok} new, ${skipped} skipped, ${errors} errors`);\nreturn [{ json: { ok, skipped, errors } }];"
+      },
+      "id": "node-check",
+      "name": "Check results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [550, 410]
+    }
+  ],
+  "connections": {
+    "Sunday 23:00 IST": {
+      "main": [
+        [
+          { "node": "Run — all segments", "type": "main", "index": 0 },
+          { "node": "Run — residential", "type": "main", "index": 0 },
+          { "node": "Run — commercial", "type": "main", "index": 0 },
+          { "node": "Run — industrial", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Run — all segments": {
+      "main": [
+        [{ "node": "Check results", "type": "main", "index": 0 }]
+      ]
+    },
+    "Run — residential": {
+      "main": [
+        [{ "node": "Check results", "type": "main", "index": 0 }]
+      ]
+    },
+    "Run — commercial": {
+      "main": [
+        [{ "node": "Check results", "type": "main", "index": 0 }]
+      ]
+    },
+    "Run — industrial": {
+      "main": [
+        [{ "node": "Check results", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,267 @@
+{
+  "name": "71 — Vendor Invoice IMAP Ingest (every 15 min)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "action": "read",
+        "limit": 20,
+        "downloadAttachments": true,
+        "options": {
+          "allowUnauthorizedCerts": false,
+          "markSeen": false
+        },
+        "filters": {
+          "seen": false
+        }
+      },
+      "id": "imap-fetch",
+      "name": "Fetch Unseen Emails",
+      "type": "n8n-nodes-base.imap",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "credentials": {
+        "imap": {
+          "name": "vendor-bills@shiroienergy.com IMAP"
+        }
+      },
+      "notes": "PENDING MANUAL STEP: Create an IMAP credential in n8n Settings > Credentials for vendor-bills@shiroienergy.com. Set host, port (993), TLS enabled, username, and app password. Credential name must match exactly."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter emails that have a PDF attachment and mention invoice/bill in subject.\n// Returns one item per PDF attachment so each is processed independently.\n\nconst items = $input.all();\nconst results = [];\n\nconst INVOICE_KEYWORDS = ['invoice', 'bill', 'receipt', 'tax invoice', 'proforma'];\n\nfor (const item of items) {\n  const email = item.json;\n  const subject = (email.subject || '').toLowerCase();\n  const messageId = email.id || email.messageId || `uid-${Date.now()}-${Math.random().toString(36).slice(2)}`;\n  const senderEmail = email.from?.address || email.from?.text || 'unknown@unknown.com';\n\n  // Check subject keyword match\n  const subjectMatch = INVOICE_KEYWORDS.some(kw => subject.includes(kw));\n\n  // Find PDF attachments\n  const attachments = Array.isArray(email.attachments) ? email.attachments : [];\n  const pdfAttachments = attachments.filter(att => {\n    const ct = (att.contentType || att.type || '').toLowerCase();\n    const fn = (att.filename || att.name || '').toLowerCase();\n    return ct.includes('pdf') || fn.endsWith('.pdf');\n  });\n\n  // Include if: subject matches invoice keywords OR has a PDF attachment\n  if (!subjectMatch && pdfAttachments.length === 0) {\n    console.log(`[vendor-invoice-imap] Skipping email \"${email.subject}\" — no invoice keyword and no PDF`);\n    continue;\n  }\n\n  if (pdfAttachments.length === 0) {\n    console.log(`[vendor-invoice-imap] Skipping email \"${email.subject}\" — invoice keyword found but no PDF attachment`);\n    continue;\n  }\n\n  // Emit one item per PDF attachment\n  for (const att of pdfAttachments) {\n    results.push({\n      json: {\n        email_uid: email.uid || null,\n        message_id: messageId,\n        sender_email: senderEmail,\n        subject: email.subject || '(no subject)',\n        body: (email.text || email.html || '').substring(0, 2000),\n        attachment_filename: att.filename || att.name || 'invoice.pdf',\n        attachment_base64: att.content || att.data || null,\n        attachment_content_type: att.contentType || att.type || 'application/pdf',\n      }\n    });\n  }\n}\n\nconsole.log(`[vendor-invoice-imap] Emitting ${results.length} PDF attachments for ingestion`);\nreturn results;"
+      },
+      "id": "filter-and-flatten",
+      "name": "Filter Invoice Emails & Flatten PDFs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-attachment",
+              "leftValue": "={{ $json.attachment_base64 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "check-has-pdf",
+      "name": "Has PDF Base64?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build a unique source email ID from the message-id + attachment filename.\n// This is stored in vendor_bills.ai_source_email_id for idempotency.\nconst item = $input.first().json;\n\n// Sanitize the message_id for use in storage paths\nconst rawId = item.message_id || `unknown-${Date.now()}`;\nconst safeEmailId = rawId\n  .replace(/[<>]/g, '')\n  .replace(/[^a-zA-Z0-9._@-]/g, '_')\n  .substring(0, 120);\n\nconst safeFilename = (item.attachment_filename || 'invoice.pdf')\n  .replace(/[^a-zA-Z0-9._-]/g, '_');\n\nreturn [{\n  json: {\n    ...item,\n    source_email_id: safeEmailId,\n    safe_filename: safeFilename,\n  }\n}];"
+      },
+      "id": "build-ingest-payload",
+      "name": "Build Ingest Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/vendor-invoices/ingest",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email_id: $json.source_email_id, sender_email: $json.sender_email, subject: $json.subject, body: $json.body, attachments: [{ filename: $json.safe_filename, base64: $json.attachment_base64 }] }) }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "call-ingest-api",
+      "name": "POST to /api/vendor-invoices/ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 180],
+      "notes": "PENDING MANUAL STEP: Set ERP_URL n8n env var to https://erp.shiroienergy.com (or your Vercel preview URL for testing). N8N_WEBHOOK_SECRET must match the env var in Vercel."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check ingest API response. On success, mark the email as read.\n// On failure, log the error but do NOT mark as read (retry on next cron run).\n\nconst response = $input.first().json;\nconst success = response.success === true || response.bill_id != null;\n\nconsole.log(`[vendor-invoice-imap] Ingest response:`, JSON.stringify(response));\n\nif (!success) {\n  console.error(`[vendor-invoice-imap] Extraction failed — leaving email unread for retry.`, {\n    error: response.error,\n    code: response.code,\n    source_email_id: response.source_email_id || '(unknown)',\n    vendor_name_extracted: response.vendor_name_extracted || '(unknown)',\n  });\n  // Return empty to stop this branch (email stays unread)\n  return [];\n}\n\nconsole.log(`[vendor-invoice-imap] Success: bill_id=${response.bill_id}, vendor_matched=${response.vendor_matched}, confidence=${response.confidence_score}`);\n\n// Pass through for the mark-as-read step\nreturn [{ json: { ...response, _ingest_ok: true, email_uid: $('Build Ingest Payload').first().json.email_uid } }];"
+      },
+      "id": "check-ingest-result",
+      "name": "Check Ingest Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 180]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "ingest-ok",
+              "leftValue": "={{ $json._ingest_ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-ingest-ok",
+      "name": "Ingest Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1780, 180]
+    },
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "messageIds": "={{ $json.email_uid }}",
+        "action": "markAsRead",
+        "options": {}
+      },
+      "id": "mark-as-read",
+      "name": "Mark Email as Read",
+      "type": "n8n-nodes-base.imap",
+      "typeVersion": 2,
+      "position": [2000, 120],
+      "credentials": {
+        "imap": {
+          "name": "vendor-bills@shiroienergy.com IMAP"
+        }
+      },
+      "notes": "Marks the email as read only after a successful ingest. If UID is missing (some IMAP servers), this node will be a no-op — the email will be re-ingested on the next run but createDraftFromExtractedInvoice handles idempotency via ai_source_email_id."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraction failed — log and exit silently.\n// The email remains unread and will be retried in 15 minutes.\nconsole.log('[vendor-invoice-imap] Email left unread for retry (extraction failure).');\nreturn [];"
+      },
+      "id": "log-failure",
+      "name": "Log Failure (email stays unread)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// No usable PDF base64 data — skip silently.\nconsole.log('[vendor-invoice-imap] Skipping item — PDF base64 data is empty or null.');\nreturn [];"
+      },
+      "id": "skip-no-pdf",
+      "name": "Skip (no PDF data)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 420]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [{ "node": "Fetch Unseen Emails", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Unseen Emails": {
+      "main": [
+        [{ "node": "Filter Invoice Emails & Flatten PDFs", "type": "main", "index": 0 }]
+      ]
+    },
+    "Filter Invoice Emails & Flatten PDFs": {
+      "main": [
+        [{ "node": "Has PDF Base64?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has PDF Base64?": {
+      "main": [
+        [{ "node": "Build Ingest Payload", "type": "main", "index": 0 }],
+        [{ "node": "Skip (no PDF data)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Ingest Payload": {
+      "main": [
+        [{ "node": "POST to /api/vendor-invoices/ingest", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST to /api/vendor-invoices/ingest": {
+      "main": [
+        [{ "node": "Check Ingest Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Ingest Result": {
+      "main": [
+        [{ "node": "Ingest Succeeded?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ingest Succeeded?": {
+      "main": [
+        [{ "node": "Mark Email as Read", "type": "main", "index": 0 }],
+        [{ "node": "Log Failure (email stays unread)", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "55-global-error-handler"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {},
+  "versionId": "71-vendor-invoice-imap-v1",
+  "triggerCount": 0,
+  "tags": [
+    { "createdAt": "2026-05-25T00:00:00.000Z", "updatedAt": "2026-05-25T00:00:00.000Z", "id": "s17-d3", "name": "S17-D3" }
+  ]
+}

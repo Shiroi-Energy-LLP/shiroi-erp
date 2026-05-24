@@ -1,0 +1,107 @@
+{
+  "name": "72 — RAG ingest cron (nightly 02:00 IST)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 20 * * *" }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Nightly 02:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/rag/ingest-all",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 1800000
+        }
+      },
+      "id": "node-http-ingest",
+      "name": "POST /api/rag/ingest-all",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_WEBHOOK_SECRET_CRED_ID",
+          "name": "x-webhook-secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            {
+              "id": "check-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ]
+        }
+      },
+      "id": "node-check-ok",
+      "name": "All scripts succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $input.first().json;\nconsole.log('[72-rag-ingest-cron] SUCCESS', JSON.stringify({\n  succeeded: s.succeeded,\n  failed: s.failed,\n  durationMs: s.durationMs,\n  completedAt: s.completedAt,\n}));\nreturn $input.all();"
+      },
+      "id": "node-log-ok",
+      "name": "Log success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $input.first().json;\nconsole.error('[72-rag-ingest-cron] PARTIAL FAILURE', JSON.stringify({\n  succeeded: s.succeeded,\n  failed: s.failed,\n  scripts: s.scripts,\n}));\n// Re-throw so n8n marks this execution as failed and fires errorWorkflow\nthrow new Error(`RAG ingest partial failure: ${s.failed} script(s) failed`);"
+      },
+      "id": "node-log-fail",
+      "name": "Log failure + throw",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 400]
+    }
+  ],
+  "connections": {
+    "Nightly 02:00 IST": {
+      "main": [
+        [{ "node": "POST /api/rag/ingest-all", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST /api/rag/ingest-all": {
+      "main": [
+        [{ "node": "All scripts succeeded?", "type": "main", "index": 0 }]
+      ]
+    },
+    "All scripts succeeded?": {
+      "main": [
+        [{ "node": "Log success", "type": "main", "index": 0 }],
+        [{ "node": "Log failure + throw", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

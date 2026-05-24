@@ -1,0 +1,80 @@
+{
+  "name": "69 — Plant anomaly daily scan",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 0 6 * * *" }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Daily 06:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/anomaly/scan-all",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "timeout": 1620000,
+          "response": {
+            "response": { "responseFormat": "json" }
+          }
+        }
+      },
+      "id": "node-http-scan",
+      "name": "Run anomaly scan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_WEBHOOK_SECRET_CRED_ID",
+          "name": "ERP webhook secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first()?.json || {};\nconst scanned = result.projects_scanned ?? 0;\nconst detected = result.anomalies_detected ?? 0;\nconst narrated = result.anomalies_narrated ?? 0;\nconst tickets = result.tickets_auto_created ?? 0;\nconst timedOut = result.timed_out ?? false;\nconst durationS = Math.round((result.duration_ms ?? 0) / 1000);\n\nconsole.log(\n  `Plant anomaly scan: ${scanned} projects scanned, ` +\n  `${detected} anomalies detected, ${narrated} narrated, ` +\n  `${tickets} tickets auto-created, ${durationS}s` +\n  (timedOut ? ' [TIMED OUT]' : '')\n);\n\nreturn [{ json: result }];"
+      },
+      "id": "node-log",
+      "name": "Log result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Daily 06:00 IST": {
+      "main": [
+        [{ "node": "Run anomaly scan", "type": "main", "index": 0 }]
+      ]
+    },
+    "Run anomaly scan": {
+      "main": [
+        [{ "node": "Log result", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

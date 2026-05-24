@@ -2,17 +2,24 @@
  * POST /api/vendor-invoices/ingest — D3 / S17
  *
  * Called by n8n workflow #71 (IMAP vendor invoice poll).
- * Accepts a multipart request with a PDF attachment + metadata,
+ * Accepts a JSON body with base64-encoded PDF attachment + metadata,
  * runs Claude Sonnet vision extraction, and creates a draft vendor_bills row
  * for Vinodh (finance) to approve.
  *
- * Multipart fields:
- *   pdf           — File (PDF attachment from vendor email)
- *   source_email_id — string (unique message-id from the email)
- *   sender_email  — string (from address)
- *   subject       — string (email subject)
+ * JSON body shape (from n8n workflow 71):
+ *   {
+ *     email_id:     string   — unique message-id from the email (for idempotency)
+ *     sender_email: string   — from address
+ *     subject:      string   — email subject
+ *     body:         string   — email body text (first 2000 chars)
+ *     attachments:  Array<{ filename: string; base64: string }>
+ *   }
  *
  * Security: x-webhook-secret header must match N8N_WEBHOOK_SECRET env var.
+ *
+ * Idempotency: if the same email_id + filename is re-ingested, the Storage
+ * upload uses upsert:false and returns "already exists" — the route treats
+ * this as a soft success so n8n won't retry indefinitely.
  *
  * NEVER-DO compliance:
  * - #1: no hardcoded API keys — all from env
@@ -30,6 +37,21 @@ export const dynamic = 'force-dynamic';
 
 const STORAGE_BUCKET = 'vendor-invoices-inbound';
 const MAX_PDF_BYTES = 20 * 1024 * 1024; // 20 MB
+
+// ── JSON body shape sent by n8n workflow 71 ───────────────────────────────────
+
+interface IngestAttachment {
+  filename: string;
+  base64: string;
+}
+
+interface IngestBody {
+  email_id: string;
+  sender_email?: string;
+  subject?: string;
+  body?: string;
+  attachments: IngestAttachment[];
+}
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const op = '[POST /api/vendor-invoices/ingest]';
@@ -57,57 +79,62 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // ── 3. Parse multipart ────────────────────────────────────────────────────
-  let formData: FormData;
+  // ── 3. Parse JSON body ────────────────────────────────────────────────────
+  let body: IngestBody;
   try {
-    formData = await req.formData();
+    body = (await req.json()) as IngestBody;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error(`${op} Failed to parse multipart`, {
+    console.error(`${op} Failed to parse JSON body`, {
       error: msg,
       timestamp: new Date().toISOString(),
     });
-    return NextResponse.json({ error: 'Invalid multipart body' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const pdfFile = formData.get('pdf') as File | null;
-  const sourceEmailId = ((formData.get('source_email_id') as string | null) ?? '').trim();
-  const senderEmail = ((formData.get('sender_email') as string | null) ?? '').trim();
-  const subject = ((formData.get('subject') as string | null) ?? '').trim();
+  const sourceEmailId = (body.email_id ?? '').trim();
+  const senderEmail = (body.sender_email ?? '').trim();
+  const subject = (body.subject ?? '').trim();
 
-  // Required fields
-  if (!pdfFile) {
-    return NextResponse.json({ error: 'Missing required field: pdf' }, { status: 400 });
-  }
   if (!sourceEmailId) {
     return NextResponse.json(
-      { error: 'Missing required field: source_email_id' },
+      { error: 'Missing required field: email_id' },
       { status: 400 },
     );
   }
 
-  // Validate content type
-  const mime = pdfFile.type || 'application/octet-stream';
-  if (mime !== 'application/pdf' && !mime.includes('pdf')) {
+  if (!Array.isArray(body.attachments) || body.attachments.length === 0) {
     return NextResponse.json(
-      { error: `Attachment must be a PDF. Got: ${mime}` },
+      { error: 'Missing required field: attachments (must be a non-empty array)' },
       { status: 400 },
     );
   }
 
-  // ── 4. Read PDF bytes ─────────────────────────────────────────────────────
+  // Process the first attachment (n8n emits one item per PDF)
+  const attachment = body.attachments[0];
+  if (!attachment?.base64) {
+    return NextResponse.json(
+      { error: 'attachments[0].base64 is empty' },
+      { status: 400 },
+    );
+  }
+
+  // ── 4. Decode base64 → Uint8Array ─────────────────────────────────────────
   let pdfBuffer: Uint8Array;
   try {
-    const arrayBuf = await pdfFile.arrayBuffer();
-    pdfBuffer = new Uint8Array(arrayBuf);
+    const binStr = atob(attachment.base64);
+    pdfBuffer = new Uint8Array(binStr.length);
+    for (let i = 0; i < binStr.length; i++) {
+      pdfBuffer[i] = binStr.charCodeAt(i);
+    }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error(`${op} Failed to read PDF bytes`, {
+    console.error(`${op} Failed to decode base64 attachment`, {
       error: msg,
       source_email_id: sourceEmailId,
       timestamp: new Date().toISOString(),
     });
-    return NextResponse.json({ error: 'Could not read PDF attachment' }, { status: 400 });
+    return NextResponse.json({ error: 'Could not decode PDF base64 data' }, { status: 400 });
   }
 
   if (pdfBuffer.length > MAX_PDF_BYTES) {
@@ -120,7 +147,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // ── 5. Upload PDF to Storage ───────────────────────────────────────────────
-  const safeName = (pdfFile.name || 'invoice.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+  const safeName = (attachment.filename || 'invoice.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
   const storagePath = `${sourceEmailId}/${safeName}`;
 
   const supabase = createAdminClient();
@@ -152,6 +179,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     source_email_id: sourceEmailId,
     sender_email: senderEmail,
     subject: subject.substring(0, 100),
+    filename: safeName,
     timestamp: new Date().toISOString(),
   });
 

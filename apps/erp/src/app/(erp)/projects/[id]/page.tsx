@@ -26,6 +26,8 @@ import { StepActuals } from '@/components/projects/stepper-steps/step-actuals';
 import { ProjectInvoicesPanel } from '@/components/projects/detail/project-invoices-panel';
 // C8 — Materials / cut-length
 import { CutLengthTab } from '@/components/projects/cut-length/cut-length-tab';
+// S15 — B3 plant performance anomaly alerts
+import { PerformanceTab } from '@/components/projects/performance/performance-tab';
 import { getCutRecordsForProject, getProjectCableSummary } from '@/lib/inventory-queries';
 // C9 — Completion checklist
 import { CompletionChecklist } from '@/components/projects/completion/completion-checklist';
@@ -287,6 +289,12 @@ async function TabContent({ projectId, tab }: { projectId: string; tab: string }
           viewerRole={viewerRole}
         />
       );
+    }
+
+    // ── S15: Plant performance anomaly alerts ────────────────────────────
+    case 'performance': {
+      const viewerRole = await getCurrentUserRoleForProject();
+      return <PerformanceTab projectId={projectId} viewerRole={viewerRole} />;
     }
 
     default:

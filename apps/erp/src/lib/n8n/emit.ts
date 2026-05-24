@@ -64,9 +64,12 @@ export type ErpEventName =
   | 'customer.monthly_performance_generated'
   | 'lead.scored'
   | 'lead.routed'
+  | 'lead.win_loss_analysed'
   | 'plant.anomaly_detected'
   | 'qc.photo_finding_created'
   | 'vendor.bill_ai_extracted'
+  | 'vendor.bill_ai_approved'
+  | 'vendor.bill_ai_rejected'
   // Meta
   | 'bug_report.submitted'
   | 'workflow.error';

@@ -29,6 +29,8 @@ const WORKFLOW_TABS: { label: string; queryTab: string }[] = [
   { label: 'Progress', queryTab: 'completion' },
   { label: 'Materials', queryTab: 'materials' },
   { label: 'Certificates', queryTab: 'certificates' },
+  // S15 — B3 plant performance anomaly alerts
+  { label: 'Performance', queryTab: 'performance' },
 ];
 
 export function ProjectTabs({ projectId }: { projectId: string }) {

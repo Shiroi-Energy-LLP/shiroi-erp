@@ -11,13 +11,18 @@ describe('isReportLocked', () => {
   });
 
   it('returns false for report less than 48h old', () => {
-    const reportDate = toDateString(new Date(Date.now() - 24 * 60 * 60 * 1000)); // yesterday
-    expect(isReportLocked(reportDate)).toBe(false);
+    // Pin "now" so the test doesn't flake depending on current UTC time vs the IST boundary.
+    // 2026-03-30 06:00 IST = 2026-03-30 00:30 UTC. Yesterday's report (2026-03-29) locks at
+    // 2026-03-29 00:00 IST + 48h = 2026-03-31 00:00 IST. We're well before that.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(isReportLocked('2026-03-29')).toBe(false);
   });
 
   it('returns true for report more than 48h old', () => {
-    const reportDate = toDateString(new Date(Date.now() - 72 * 60 * 60 * 1000)); // 3 days ago
-    expect(isReportLocked(reportDate)).toBe(true);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(isReportLocked('2026-03-27')).toBe(true);
   });
 
   it('returns true for report exactly at 48h boundary', () => {
@@ -33,13 +38,15 @@ describe('isReportLocked', () => {
   });
 
   it('returns true if is_locked flag is true regardless of time', () => {
-    const reportDate = toDateString(new Date()); // today
-    expect(isReportLocked(reportDate, true)).toBe(true);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(isReportLocked('2026-03-30', true)).toBe(true);
   });
 
   it('returns false for today report without is_locked flag', () => {
-    const reportDate = toDateString(new Date()); // today
-    expect(isReportLocked(reportDate, false)).toBe(false);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(isReportLocked('2026-03-30', false)).toBe(false);
   });
 });
 
@@ -49,36 +56,46 @@ describe('hoursUntilLock', () => {
   });
 
   it('returns positive hours for recent report', () => {
-    const reportDate = toDateString(new Date()); // today
-    const hours = hoursUntilLock(reportDate);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    const hours = hoursUntilLock('2026-03-30');
     expect(hours).toBeGreaterThan(0);
     expect(hours).toBeLessThanOrEqual(48);
   });
 
   it('returns 0 for already locked report', () => {
-    const reportDate = toDateString(new Date(Date.now() - 72 * 60 * 60 * 1000));
-    expect(hoursUntilLock(reportDate)).toBe(0);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(hoursUntilLock('2026-03-27')).toBe(0);
   });
 
   it('returns 0 when is_locked flag is true', () => {
-    const reportDate = toDateString(new Date());
-    expect(hoursUntilLock(reportDate, true)).toBe(0);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(hoursUntilLock('2026-03-30', true)).toBe(0);
   });
 });
 
 describe('canEditReport', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('returns true for recent unlocked report', () => {
-    const reportDate = toDateString(new Date());
-    expect(canEditReport(reportDate, false)).toBe(true);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(canEditReport('2026-03-30', false)).toBe(true);
   });
 
   it('returns false for old report', () => {
-    const reportDate = toDateString(new Date(Date.now() - 72 * 60 * 60 * 1000));
-    expect(canEditReport(reportDate, false)).toBe(false);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(canEditReport('2026-03-27', false)).toBe(false);
   });
 
   it('returns false when is_locked is true', () => {
-    const reportDate = toDateString(new Date());
-    expect(canEditReport(reportDate, true)).toBe(false);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-30T00:30:00Z'));
+    expect(canEditReport('2026-03-30', true)).toBe(false);
   });
 });

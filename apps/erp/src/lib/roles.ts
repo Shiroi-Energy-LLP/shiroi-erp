@@ -83,7 +83,10 @@ const ITEMS = {
   expenses:       { label: 'Expenses',          href: '/expenses',           icon: 'Receipt' },
   settings:       { label: 'Settings',          href: '/settings',           icon: 'Settings' },
   vendorBills:    { label: 'Vendor Bills',      href: '/vendor-bills',       icon: 'FileText' },
+  vendorBillsReview: { label: 'AI Bill Review', href: '/vendor-bills/review', icon: 'FileCheck' },
   salesTeamTasks: { label: 'Team Tasks',        href: '/sales/tasks',        icon: 'ClipboardList' },
+  salesPatterns:  { label: 'Win/Loss Patterns', href: '/sales/patterns',     icon: 'BarChart3' },
+  salesTerritories: { label: 'Territories',     href: '/sales/territories',  icon: 'Globe' },
 } as const satisfies Record<string, NavItem>;
 
 // ---------------------------------------------------------------------------
@@ -92,13 +95,13 @@ const ITEMS = {
 const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   founder: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
-    { label: 'Sales',        items: [ITEMS.sales, ITEMS.salesTeamTasks, ITEMS.partners, ITEMS.liaison] },
+    { label: 'Sales',        items: [ITEMS.sales, ITEMS.salesTeamTasks, ITEMS.salesPatterns, ITEMS.salesTerritories, ITEMS.partners, ITEMS.liaison] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.inverters] },
-    { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.vendorBills, ITEMS.vendorPayments, ITEMS.profitability] },
+    { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
     { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality, ITEMS.bomReview] },
@@ -106,7 +109,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   ],
   marketing_manager: [
     { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
-    { label: 'Sales',        items: [ITEMS.sales, ITEMS.salesTeamTasks, ITEMS.partners] },
+    { label: 'Sales',        items: [ITEMS.sales, ITEMS.salesTeamTasks, ITEMS.salesPatterns, ITEMS.salesTerritories, ITEMS.partners] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Liaison',      items: [ITEMS.liaison, ITEMS.netMetering] },
     { label: 'Payments',     items: [ITEMS.payments] },
@@ -172,7 +175,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Overview',     items: [ITEMS.dashboard] },
     { label: 'Cash',          items: [ITEMS.cashFlow] },
     { label: 'Billing',      items: [ITEMS.invoices, ITEMS.payments] },
-    { label: 'Vendor',       items: [ITEMS.vendorBills, ITEMS.vendorPayments, ITEMS.msmeCompliance] },
+    { label: 'Vendor',       items: [ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.msmeCompliance] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Analysis',     items: [ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
