@@ -56,7 +56,7 @@ interface RowProps {
 function ComponentRow({ item, component, projectId, canEdit, canRollback, onChanged }: RowProps) {
   const [busy, setBusy] = React.useState(false);
   const isComplete = item?.completed ?? false;
-  const weight = COMPONENT_WEIGHTS[component];
+  const weight = COMPONENT_WEIGHTS[component] ?? 0;
 
   async function toggle() {
     if (busy) return;

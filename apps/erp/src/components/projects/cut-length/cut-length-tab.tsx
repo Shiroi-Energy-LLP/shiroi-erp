@@ -69,7 +69,7 @@ function CableSummaryStrip({ summary }: { summary: CableSummaryRow[] }) {
       {visible.map((key) => (
         <div key={key} className="flex items-center gap-2 rounded-lg border border-n-200 bg-n-50 px-3 py-2 text-sm">
           {materialIcon(key)}
-          <span className="font-medium text-n-700">{summaryMap[key].toFixed(1)} m</span>
+          <span className="font-medium text-n-700">{(summaryMap[key] ?? 0).toFixed(1)} m</span>
           <span className="text-n-500 text-xs">{MATERIAL_LABELS[key]}</span>
         </div>
       ))}

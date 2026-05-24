@@ -2,14 +2,21 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { renderToBuffer } from '@react-pdf/renderer';
 import { type ActionResult, ok, err } from '@/lib/types/actions';
+import { HandoverPackPdf, type HandoverPdfData } from '@/lib/pdf/handover/handover-pack-pdf';
+import React from 'react';
+import type { Database } from '@repo/types/database';
+
+type ProjectRow = Database['public']['Tables']['projects']['Row'];
 
 /**
  * Generate the Handover Pack PDF for a project (C11):
- *  1. Calls the internal API route to render the PDF.
- *  2. Uploads the PDF bytes to Supabase Storage (project-files bucket).
- *  3. Records the storage path in projects.handover_pdf_path.
- *  4. Returns a signed download URL (valid 1 hour).
+ *  1. Fetches project data server-side.
+ *  2. Renders the PDF in-process via renderToBuffer.
+ *  3. Uploads to Supabase Storage (project-files bucket).
+ *  4. Records the storage path in projects.handover_pdf_path.
+ *  5. Returns a signed download URL (valid 1 hour).
  */
 export async function generateHandoverPackPdf(
   projectId: string,
@@ -34,10 +41,10 @@ export async function generateHandoverPackPdf(
     return err('Only founders and project managers can generate handover packs');
   }
 
-  // Fetch project_number for a sensible filename
+  // Fetch project data
   const { data: project, error: projErr } = await supabase
     .from('projects')
-    .select('project_number')
+    .select('project_number, customer_name, site_address_line1, site_address_line2, site_city, site_state, site_pincode, system_size_kwp, system_type, commissioned_date, panel_brand, panel_model, panel_count, panel_wattage, inverter_brand, inverter_model, structure_type, project_manager_id')
     .eq('id', projectId)
     .single();
 
@@ -46,38 +53,57 @@ export async function generateHandoverPackPdf(
     return err('Project not found');
   }
 
-  // Build the URL for the internal API route — use the request origin or env
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    ? `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}`
-    : 'http://localhost:3000';
+  // Fetch PM name
+  let pmName: string | null = null;
+  if (project.project_manager_id) {
+    const { data: pmProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', project.project_manager_id)
+      .maybeSingle();
+    pmName = pmProfile?.full_name ?? null;
+  }
 
-  // Call the internal route to get the PDF bytes
-  // We pass the user's auth cookie implicitly (this is a server-to-server call
-  // on the same origin) — but to be safe, pass the service key as a header so
-  // the route can authenticate without cookies.
+  const siteAddress = [
+    project.site_address_line1,
+    project.site_address_line2,
+    project.site_city,
+    project.site_state,
+    project.site_pincode,
+  ].filter(Boolean).join(', ');
+
+  const pdfData: HandoverPdfData = {
+    projectNumber: project.project_number,
+    customerName: project.customer_name,
+    siteAddress,
+    systemSizeKwp: project.system_size_kwp ?? 0,
+    systemType: (project.system_type as string) ?? 'on_grid',
+    commissionedDate: project.commissioned_date ?? new Date().toISOString().slice(0, 10),
+    projectManagerName: pmName,
+    panelBrand: project.panel_brand ?? null,
+    panelModel: project.panel_model ?? null,
+    panelCount: project.panel_count ?? null,
+    panelWattage: project.panel_wattage ?? null,
+    inverterBrand: project.inverter_brand ?? null,
+    inverterModel: project.inverter_model ?? null,
+    structureType: (project.structure_type as ProjectRow['structure_type']) ?? null,
+  };
+
+  // Render PDF in-process
   let pdfBytes: Uint8Array;
   try {
-    const resp = await fetch(`${baseUrl}/api/projects/${projectId}/handover-pdf`, {
-      method: 'GET',
-      headers: {
-        // Cookie-less internal call — the route will use createClient() which
-        // reads cookies, so we need to pass them. This pattern works in Next.js
-        // server actions since cookies() is available.
-        Cookie: ``, // cookies forwarded by Next.js automatically in same-process calls
-      },
-    });
-
-    if (!resp.ok) {
-      const body = await resp.text().catch(() => '');
-      console.error(`${op} API route error`, { status: resp.status, body, timestamp: new Date().toISOString() });
-      return err(`PDF generation failed (status ${resp.status})`);
-    }
-
-    const buffer = await resp.arrayBuffer();
+    const element = React.createElement(HandoverPackPdf, { data: pdfData });
+    const buffer = await renderToBuffer(
+      element as unknown as React.ReactElement<import('@react-pdf/renderer').DocumentProps>,
+    );
     pdfBytes = new Uint8Array(buffer);
-  } catch (fetchErr) {
-    console.error(`${op} Fetch failed`, { error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr), timestamp: new Date().toISOString() });
-    return err('Failed to reach PDF generation service');
+  } catch (renderErr) {
+    console.error(`${op} Render failed`, {
+      error: renderErr instanceof Error ? renderErr.message : String(renderErr),
+      projectId,
+      timestamp: new Date().toISOString(),
+    });
+    return err('PDF rendering failed');
   }
 
   // Upload to project-files bucket
@@ -104,7 +130,7 @@ export async function generateHandoverPackPdf(
 
   if (updateErr) {
     console.error(`${op} Update failed`, { code: updateErr.code, message: updateErr.message, timestamp: new Date().toISOString() });
-    // Non-fatal — the file is uploaded; we can still return the URL
+    // Non-fatal — file is uploaded; continue
   }
 
   // Generate a 1-hour signed URL

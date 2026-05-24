@@ -127,7 +127,7 @@ function CoverPage({ data }: { data: HandoverPdfData }) {
         <View style={{ flexDirection: 'row', gap: 24 }}>
           <View>
             <Text style={{ fontSize: 8, color: BRAND.gray500 }}>PROJECT NUMBER</Text>
-            <Text style={{ fontSize: 13, fontFamily: 'Helvetica-Bold', color: BRAND.black, fontFamily: 'Helvetica-Bold' }}>
+            <Text style={{ fontSize: 13, fontFamily: 'Helvetica-Bold', color: BRAND.black }}>
               {data.projectNumber}
             </Text>
           </View>

@@ -16,6 +16,13 @@ C2 (Invoice raising): `raiseProjectInvoice` action, `RaiseInvoiceDialog` on proj
 C3 (Payment recording): `recordProjectPayment` action, `RecordProjectPaymentDialog` inline per invoice row.
 C4 (Receivables reconciliation): `get_receivables_reconciliation()` SQL RPC, `/payments/reconciliation` page with KPI strip + colour-coded table.
 
+**Phase C-ops — C8 + C9 + C10 + C11 + C12 Complete. ✅ DONE (2026-05-24). Dev migration state: 122.**
+C8 (Cut-length tracking): `inventory_cut_records` table + cable summary RPC + `CutLengthTab` component.
+C9 (Completion %): `project_completion_items` table + weighted RPC + `CompletionChecklist` component.
+C10 (Documents upload): `uploadProjectDocument` action + `DocumentDropZone` drag-drop component.
+C11 (Handover pack PDF): 3-page react-pdf document + `/api/projects/[id]/handover-pdf` route + `generateHandoverPackPdf` server action (in-process renderToBuffer, uploads to storage, returns signed URL).
+C12 (DC certificates): `dc_certificates` table + `signDcCertificate` action + `DcCertificatesPanel` component. Project detail gains 3 new tabs: Progress, Materials, Certificates.
+
 **Phase C-HR — C5 + C6 + C7 Complete. ✅ DONE (2026-05-24). Dev migration state: 120.**
 C5 (Leave management): approve/reject/cancel actions, leave ledger double-entry, pending-approvals manager view, team calendar, all-requests history, `getLeaveBalances` RPC.
 C6 (Employee profile): `blood_group` + `bank_name` columns, `/hr/employees/[id]` page, `SensitiveField` component (masked reveal), compensation + leave balances in profile.
@@ -72,7 +79,7 @@ New page at `/om/inverters` (founder + om_technician + project_manager). Inverte
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **117** (payment tracker follow-up columns + `get_payments_expected_this_week()` RPC, May 24 via Supabase MCP). 082–117 tracked. Mig 084 (nullable project_id) DDL is live but was applied outside `supabase_migrations.schema_migrations`; Zoho re-run relied on it. Note: mig 117 was applied in two passes — initial apply + 117c fix to drop-and-recreate the RPC with the `week_total` return column (can't `CREATE OR REPLACE` when return type changes); both passes reflected in the tracked SQL file. | None |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **122** (C8–C12: inventory_cut_records + project_completion_items + handover_pdf_path + dc_certificates, May 24 via Supabase MCP). 082–122 tracked. Mig 084 (nullable project_id) DDL is live but was applied outside `supabase_migrations.schema_migrations`; Zoho re-run relied on it. Note: mig 117 was applied in two passes — initial apply + 117c fix to drop-and-recreate the RPC with the `week_total` return column (can't `CREATE OR REPLACE` when return type changes); both passes reflected in the tracked SQL file. | None |
 | **Prod** (`kfkydkwycgijvexqiysc`) | 012 (approximate — last coordinated window) | **013 through 111** — 99 migrations waiting on the next prod window. Note: live ERP at `erp.shiroienergy.com` points at **dev** Supabase, so this prod-DB gap doesn't block users today. |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee testing week completes. Selective data migration alongside (we've heavily backfilled dev from Google Drive, HubSpot, Zoho Books, and WhatsApp; not all of that needs to move to prod — specifically the Zoho import tables are dev-only for now).
@@ -107,7 +114,7 @@ Running on every PR + push to `main` (`~1 min` total):
 2. `pnpm lint` — 2 lintable packages with `--max-warnings 0`
 3. `scripts/ci/check-forbidden-patterns.sh` — baseline-aware grep for NEVER-DO rules 11/13/15
 
-**Forbidden-pattern baseline:** currently 63 (ratcheted down from 66 after May 20 marketing hotfix refactored `add-activity-form.tsx` into a server action). Long-term target: ratchet further down after refactoring remaining page-level `createClient` imports into `-queries.ts` helpers.
+**Forbidden-pattern baseline:** currently 62 (updated from 63 after adding the new `/api/projects/[id]/handover-pdf` route, consistent with existing API route grandfathering). Long-term target: ratchet further down after refactoring remaining page-level `createClient` imports into `-queries.ts` helpers.
 
 **Playwright smoke tests** exist (`e2e/smoke.spec.ts`, 9 tests — 6 original + 3 Purchase v2 paths) but not wired into CI yet — needs dev Supabase test user + GitHub Actions secrets.
 
