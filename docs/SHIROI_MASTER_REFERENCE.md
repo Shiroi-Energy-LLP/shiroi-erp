@@ -347,6 +347,30 @@ Background-task notifications can lie about exit codes. The Claude harness repor
 
 Two prior commits (Phase E + Phase F, both 2026-05-24) shipped to main claiming "CI green" when check-types was actually failing with 50+ errors. The downstream cleanup took two full sessions. Read the output, not the wrapper.
 
+### §4.16 Internal knowledge Q&A — `/ask` (D1, May 2026)
+
+Anyone authenticated can ask the Shiroi knowledge base via `/ask`. Answers
+come from RAG-retrieved chunks of `docs/*` (master reference, module docs,
+specs, plans, reviews, CHANGELOG). The LLM (Haiku) is instructed to refuse
+if the retrieved chunks don't contain the answer — no hallucinated facts.
+
+Rate limit: 30 questions/day per non-founder. Founder unlimited.
+
+Use this BEFORE pinging Vivek with routine questions. Examples:
+- "what's our standard payment terms for industrial?"
+- "which MMS brand at industrial sites in 2025?"
+- "TNEB delay >30 days handling?"
+- "when did we ship Phase E?"
+
+If the answer is wrong or stale, thumbs-down and update the source doc
+— Q&A quality is bounded by doc quality. Re-index happens nightly.
+
+Key files:
+- `apps/erp/src/lib/ai/knowledge-qa.ts` — RAG retrieval + Haiku synthesis
+- `apps/erp/src/lib/ai/knowledge-qa-rate-limit.ts` — 30 q/day rate limiter
+- `apps/erp/src/lib/ai/ask-action.ts` — server action wrapper + audit log
+- `apps/erp/src/app/(erp)/ask/page.tsx` + `_client/ask-form.tsx` — UI
+
 ---
 
 ## 5. Database

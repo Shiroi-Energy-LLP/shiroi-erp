@@ -83,7 +83,16 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
 
               {/* Task Name */}
               <td className="px-2 py-1.5 text-[11px] font-medium text-n-900">
-                <span title={task.title}>{task.title}</span>
+                <span className="flex items-center gap-1.5 flex-wrap">
+                  {typeof task.title === 'string' && task.title.startsWith('[AI] ') && (
+                    <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700 shrink-0">AI</Badge>
+                  )}
+                  <span title={task.title}>
+                    {typeof task.title === 'string' && task.title.startsWith('[AI] ')
+                      ? task.title.slice(5)
+                      : task.title}
+                  </span>
+                </span>
               </td>
 
               {/* Assigned To */}

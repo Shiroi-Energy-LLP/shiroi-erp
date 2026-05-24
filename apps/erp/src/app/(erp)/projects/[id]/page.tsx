@@ -33,6 +33,8 @@ import { getProjectCompletionItems, getProjectCompletionPct } from '@/lib/projec
 // C12 — DC Certificates
 import { DcCertificatesPanel } from '@/components/projects/certificates/dc-certificates-panel';
 import { getDcCertificatesForProject } from '@/lib/dc-certificate-queries';
+// S5 — F7 BOQ variance narrative
+import { BoqVarianceCard } from '@/components/projects/detail/boq-variance-card';
 
 interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
@@ -174,6 +176,16 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
           marginPct={financials.marginPct}
           viewerRole={viewerRole}
         />
+        {/* S5 — BOQ variance narrative (finance / founder / PM only) */}
+        {viewerRole && ['founder', 'finance', 'project_manager'].includes(viewerRole) && (
+          <BoqVarianceCard
+            projectId={id}
+            narrative={(project as any).boq_variance_narrative ?? null}
+            narrativeAt={(project as any).boq_variance_narrative_at ?? null}
+            narrativeModel={(project as any).boq_variance_narrative_model ?? null}
+            viewerRole={viewerRole}
+          />
+        )}
       </div>
     </div>
 

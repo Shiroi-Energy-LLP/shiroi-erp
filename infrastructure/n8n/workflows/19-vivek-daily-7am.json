@@ -18,6 +18,32 @@
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_ERP_URL }}/api/briefing/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"recipient_role\": \"founder\" }",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 90000
+        }
+      },
+      "id": "node-ai-briefing",
+      "name": "AI Briefing — founder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
         "method": "GET",
         "url": "=https://{{ $env.SUPABASE_PROJECT_ID }}.supabase.co/rest/v1/v_digest_leads_new_24h",
         "authentication": "genericCredentialType",
@@ -35,7 +61,7 @@
       "name": "Fetch new leads (24h)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 200],
+      "position": [250, 180],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -89,7 +115,7 @@
       "name": "Fetch lead activities (24h)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 400],
+      "position": [250, 420],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -99,13 +125,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const all = $input.all();\nconst leads = (all[0]?.json || []);\nconst tasks = (all[1]?.json || []);\nconst activities = (all[2]?.json || []);\n\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nlet body = `🌅 *Vivek's morning* — ${dateLine}\\n`;\n\nbody += `\\n*New leads (24h):* ${leads.length}\\n`;\nif (leads.length === 0) {\n  body += `(quiet night — no new leads)\\n`;\n} else {\n  for (const [i, l] of leads.slice(0, 8).entries()) {\n    body += `${i+1}. ${l.customer_name} · ${l.city || '—'} · ${l.estimated_size_kwp || '—'}kWp · ${l.assigned_employee_name || 'unassigned'}\\n`;\n  }\n  if (leads.length > 8) body += `…+${leads.length - 8} more\\n`;\n}\n\nbody += `\\n*Tasks done (24h):* ${tasks.length}\\n`;\nif (tasks.length === 0) {\n  body += `(none closed)\\n`;\n} else {\n  for (const [i, t] of tasks.slice(0, 8).entries()) {\n    body += `${i+1}. ${t.title}\\n`;\n  }\n  if (tasks.length > 8) body += `…+${tasks.length - 8} more\\n`;\n}\n\nbody += `\\n*Activities logged (24h):* ${activities.length}\\n`;\nif (activities.length === 0) {\n  body += `(none logged)\\n`;\n} else {\n  for (const [i, a] of activities.slice(0, 8).entries()) {\n    body += `${i+1}. ${a.activity_type} — ${(a.summary || '').slice(0, 50)}\\n`;\n  }\n  if (activities.length > 8) body += `…+${activities.length - 8} more\\n`;\n}\n\nbody += `\\nOpen: https://erp.shiroienergy.com`;\n\nconst title = `🌅 Morning summary — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone: $env.VIVEK_WHATSAPP || '',\n  },\n}];"
+        "jsCode": "// AI Briefing result is in $('AI Briefing — founder').item.json\n// Fallback data is in the three Fetch nodes (merged via the merge node)\nconst all = $input.all();\n\n// Try the AI briefing whatsapp_short first (from the merged output)\n// The merge node outputs all 4 inputs; AI briefing is index 3 (last)\nconst aiResult = $('AI Briefing — founder').item?.json;\nconst aiShort = aiResult?.whatsapp_short;\n\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nif (aiShort && typeof aiShort === 'string' && aiShort.length > 10) {\n  // AI briefing available — use it\n  return [{\n    json: {\n      title: `🌅 Morning briefing — ${dateLine}`,\n      body: aiShort.slice(0, 900),\n      to_phone: $env.VIVEK_WHATSAPP || '',\n      source: 'ai',\n    },\n  }];\n}\n\n// Fallback: static data-driven compose (original logic)\nconst leads = (all[0]?.json || []);\nconst tasks = (all[1]?.json || []);\nconst activities = (all[2]?.json || []);\n\nlet body = `🌅 *Vivek's morning* — ${dateLine}\\n`;\n\nbody += `\\n*New leads (24h):* ${leads.length}\\n`;\nif (leads.length === 0) {\n  body += `(quiet night — no new leads)\\n`;\n} else {\n  for (const [i, l] of leads.slice(0, 8).entries()) {\n    body += `${i+1}. ${l.customer_name} · ${l.city || '—'} · ${l.estimated_size_kwp || '—'}kWp · ${l.assigned_employee_name || 'unassigned'}\\n`;\n  }\n  if (leads.length > 8) body += `…+${leads.length - 8} more\\n`;\n}\n\nbody += `\\n*Tasks done (24h):* ${tasks.length}\\n`;\nif (tasks.length === 0) {\n  body += `(none closed)\\n`;\n} else {\n  for (const [i, t] of tasks.slice(0, 8).entries()) {\n    body += `${i+1}. ${t.title}\\n`;\n  }\n  if (tasks.length > 8) body += `…+${tasks.length - 8} more\\n`;\n}\n\nbody += `\\n*Activities logged (24h):* ${activities.length}\\n`;\nif (activities.length === 0) {\n  body += `(none logged)\\n`;\n} else {\n  for (const [i, a] of activities.slice(0, 8).entries()) {\n    body += `${i+1}. ${a.activity_type} — ${(a.summary || '').slice(0, 50)}\\n`;\n  }\n  if (activities.length > 8) body += `…+${activities.length - 8} more\\n`;\n}\n\nbody += `\\nOpen: https://erp.shiroienergy.com`;\n\nconst title = `🌅 Morning summary — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone: $env.VIVEK_WHATSAPP || '',\n    source: 'fallback',\n  },\n}];"
       },
       "id": "node-compose",
-      "name": "Compose digest",
+      "name": "Compose digest (AI or fallback)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [500, 300]
+      "position": [550, 300]
     },
     {
       "parameters": {
@@ -132,7 +158,7 @@
       "name": "Send WhatsApp to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [750, 300],
+      "position": [800, 300],
       "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
@@ -146,22 +172,26 @@
     "Daily 7:00 IST": {
       "main": [
         [
+          { "node": "AI Briefing — founder", "type": "main", "index": 0 },
           { "node": "Fetch new leads (24h)", "type": "main", "index": 0 },
           { "node": "Fetch tasks done (24h)", "type": "main", "index": 0 },
           { "node": "Fetch lead activities (24h)", "type": "main", "index": 0 }
         ]
       ]
     },
+    "AI Briefing — founder": {
+      "main": [[{ "node": "Compose digest (AI or fallback)", "type": "main", "index": 0 }]]
+    },
     "Fetch new leads (24h)": {
-      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Compose digest (AI or fallback)", "type": "main", "index": 0 }]]
     },
     "Fetch tasks done (24h)": {
-      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Compose digest (AI or fallback)", "type": "main", "index": 0 }]]
     },
     "Fetch lead activities (24h)": {
-      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Compose digest (AI or fallback)", "type": "main", "index": 0 }]]
     },
-    "Compose digest": {
+    "Compose digest (AI or fallback)": {
       "main": [[{ "node": "Send WhatsApp to Vivek", "type": "main", "index": 0 }]]
     }
   },

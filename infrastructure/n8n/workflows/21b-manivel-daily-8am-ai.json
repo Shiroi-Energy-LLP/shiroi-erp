@@ -1,0 +1,109 @@
+{
+  "name": "21b — Manivel daily 8AM AI briefing (PM head)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 0 8 * * *" }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Daily 8:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_ERP_URL }}/api/briefing/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"recipient_role\": \"project_manager\" }",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 90000
+        }
+      },
+      "id": "node-ai-briefing",
+      "name": "AI Briefing — project_manager",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiResult = $('AI Briefing — project_manager').item?.json;\nconst aiShort = aiResult?.whatsapp_short;\n\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nif (aiShort && typeof aiShort === 'string' && aiShort.length > 10) {\n  return [{\n    json: {\n      title: `🏗️ Projects briefing — ${dateLine}`,\n      body: aiShort.slice(0, 900),\n      to_phone: $env.PROJECTS_HEAD_WHATSAPP || '',\n      source: 'ai',\n    },\n  }];\n}\n\n// Fallback if AI briefing failed\nreturn [{\n  json: {\n    title: `🏗️ Projects briefing — ${dateLine}`,\n    body: `AI briefing unavailable. Check ERP: https://erp.shiroienergy.com/projects`,\n    to_phone: $env.PROJECTS_HEAD_WHATSAPP || '',\n    source: 'fallback',\n  },\n}];"
+      },
+      "id": "node-compose",
+      "name": "Compose (AI or fallback)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "1140448799143790",
+        "recipientPhoneNumber": "={{ $json.to_phone }}",
+        "template": "erp_alert|en",
+        "components": {
+          "component": [
+            {
+              "type": "body",
+              "bodyParameters": {
+                "parameter": [
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-whatsapp-manivel",
+      "name": "Send WhatsApp to Manivel",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [750, 300],
+      "executeOnce": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
+          "name": "WhatsApp (Shiroi)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 8:00 IST": {
+      "main": [
+        [{ "node": "AI Briefing — project_manager", "type": "main", "index": 0 }]
+      ]
+    },
+    "AI Briefing — project_manager": {
+      "main": [[{ "node": "Compose (AI or fallback)", "type": "main", "index": 0 }]]
+    },
+    "Compose (AI or fallback)": {
+      "main": [[{ "node": "Send WhatsApp to Manivel", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

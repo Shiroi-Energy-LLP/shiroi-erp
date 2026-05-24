@@ -51,6 +51,35 @@ DC PDF via `@react-pdf/renderer` at `GET /api/projects/[id]/dc/[dcId]` — Shiro
 
 ### 6. Execution (10 milestones + tasks)
 
+#### Tamil voice-to-text site reports (B1, May 2026)
+
+Site supervisors + PMs can send 30-sec voice notes in Tamil / Tanglish
+via WhatsApp instead of typing the daily site report. Flow:
+
+1. Voice note arrives on the registered employee WhatsApp number → Meta webhook → n8n workflow #64 → ERP `/api/whatsapp/voice-report`
+2. Sarvam Saaras-v2 ASR transcribes (Tamil + Tanglish supported)
+3. Claude Haiku structures the transcript against `daily_site_reports` schema + detects material requisitions
+4. Reply in Tamil + English: "Got it (Project SHR-124): 12 panels, structure complete. Reply YES to save."
+5. On YES: `daily_site_reports` row inserted + any flagged `material_requisitions` created
+6. Original .ogg audio saved to `voice-reports/` Storage bucket for audit
+
+Setup:
+- Employee's `whatsapp_number` column in `employees` must be populated
+- `SARVAM_API_KEY` set in `.env.local` and Vercel env vars
+- n8n workflow #64 active (`infrastructure/n8n/workflows/64-employee-voice-report.json`)
+- `META_ACCESS_TOKEN` + `META_PHONE_NUMBER_ID` env vars set in n8n
+
+Audit: `voice_report_log` table (mig 138) tracks every voice note from transcript
+to applied report — status flow: `transcribing → awaiting_confirmation → confirmed_applied | rejected | error`.
+Founder + the sender can SELECT (RLS).
+
+If SARVAM_API_KEY is unset the API returns a 503 with a graceful WA reply directing the employee to type the report on the web.
+
+Files:
+- `apps/erp/src/app/api/whatsapp/voice-report/route.ts` — API handler (audio + YES/NO)
+- `apps/erp/src/lib/ai/voice-report-structurer.ts` — Haiku structuring call
+- `apps/erp/src/lib/ai/sarvam-client.ts` — Sarvam ASR client
+
 Milestones come from `execution_milestones_master` (migration 042) — a lookup table replacing the old CHECK constraint:
 
 1. Material Delivery

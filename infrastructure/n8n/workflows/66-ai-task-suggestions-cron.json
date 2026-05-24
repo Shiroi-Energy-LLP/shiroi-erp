@@ -1,0 +1,79 @@
+{
+  "name": "66 — AI task suggestions cron",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 0 6 * * *" }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Daily 06:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/task-suggestions/run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-webhook-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": { "responseFormat": "json" }
+          }
+        }
+      },
+      "id": "node-http-run",
+      "name": "Run task suggestions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_WEBHOOK_SECRET_CRED_ID",
+          "name": "ERP webhook secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first()?.json || {};\nconst found = result.stale_found ?? 0;\nconst created = result.suggestions_created ?? 0;\nconst capped = result.capped ?? 0;\nconst errors = result.errors ?? 0;\n\nconsole.log(`AI task suggestions: ${found} stale items found, ${created} tasks created, ${capped} capped, ${errors} errors`);\n\nreturn [{ json: result }];"
+      },
+      "id": "node-log",
+      "name": "Log result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Daily 06:00 IST": {
+      "main": [
+        [{ "node": "Run task suggestions", "type": "main", "index": 0 }]
+      ]
+    },
+    "Run task suggestions": {
+      "main": [
+        [{ "node": "Log result", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,358 @@
+{
+  "name": "64 — Employee Tamil voice site report (B1)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "employee-voice-report",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-get",
+      "name": "Meta GET verify",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 200],
+      "webhookId": "employee-voice-report-get"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "employee-voice-report",
+        "responseMode": "onReceived",
+        "responseData": "noData",
+        "options": {}
+      },
+      "id": "node-webhook-post",
+      "name": "Meta POST inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 400],
+      "webhookId": "employee-voice-report-post"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verify Meta's GET challenge.\n// Meta sends: ?hub.mode=subscribe&hub.verify_token=X&hub.challenge=Y\n// We respond with Y as plain text 200 only if X matches our shared secret.\nconst query = $input.first().json.query || {};\nconst mode = query['hub.mode'];\nconst token = query['hub.verify_token'];\nconst challenge = query['hub.challenge'];\nconst expectedToken = $env.META_WEBHOOK_VERIFY_TOKEN || '';\n\nif (mode === 'subscribe' && token && expectedToken && token === expectedToken) {\n  return [{ json: { ok: true, body: String(challenge || '') } }];\n}\n\nreturn [{ json: { ok: false, body: 'Forbidden', status: 403 } }];"
+      },
+      "id": "node-verify",
+      "name": "Validate verify_token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.status || 200 }}"
+        }
+      },
+      "id": "node-respond-get",
+      "name": "Respond to Meta GET",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the first message from a Meta WhatsApp inbound payload.\n// Payload: { object, entry: [{ id, changes: [{ value: { messages: [...], contacts: [...] }, field }] }] }\nconst body = $input.first().json.body || {};\nconst entry = (body.entry || [])[0];\nconst change = (entry?.changes || [])[0];\nconst value = change?.value || {};\nconst messages = value.messages || [];\nconst contacts = value.contacts || [];\n\nif (messages.length === 0) {\n  // No messages — ack and stop\n  return [{ json: { skip: true, reason: 'no_messages' } }];\n}\n\nconst msg = messages[0];\nconst contact = contacts[0] || {};\nconst phone = msg.from || '';\nconst msgType = msg.type || 'unknown';\nconst timestamp = msg.timestamp || '';\nconst messageId = msg.id || '';\n\n// For text replies (YES/NO)\nconst textBody = msg.text?.body || '';\n\n// For audio messages\nconst audioMediaId = msg.audio?.id || '';\nconst audioMimeType = msg.audio?.mime_type || 'audio/ogg';\n\nreturn [{\n  json: {\n    phone,\n    msgType,\n    timestamp,\n    messageId,\n    textBody,\n    audioMediaId,\n    audioMimeType,\n    skip: false,\n  }\n}];"
+      },
+      "id": "node-extract",
+      "name": "Extract message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "node-skip-check",
+      "name": "Skip if no messages",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.msgType }}",
+              "rightValue": "audio",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "node-type-check",
+      "name": "Is audio message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Download the Meta audio file in two steps:\n// Step 1: GET https://graph.facebook.com/v18.0/{media_id} → returns { url: '...' }\n// Step 2: GET that URL with Authorization: Bearer {token} → raw audio bytes\n//\n// We use the n8n HTTP nodes below for the actual HTTP calls.\n// This code node just prepares the URL for step 1.\nconst mediaId = $json.audioMediaId || '';\nconst graphBase = 'https://graph.facebook.com/v18.0';\n\nif (!mediaId) {\n  throw new Error('No audioMediaId in message');\n}\n\nreturn [{\n  json: {\n    ...$json,\n    mediaLookupUrl: `${graphBase}/${mediaId}`,\n  }\n}];"
+      },
+      "id": "node-prepare-download",
+      "name": "Prepare media URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.mediaLookupUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.META_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-get-media-url",
+      "name": "Get Meta media URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the download URL from the Meta graph response.\n// Response shape: { url: 'https://lookaside.fbsbx.com/...', mime_type: 'audio/ogg', ...  }\nconst mediaResp = $input.first().json || {};\nconst downloadUrl = mediaResp.url || '';\nif (!downloadUrl) {\n  throw new Error('Meta did not return a download URL: ' + JSON.stringify(mediaResp).slice(0,200));\n}\n\n// Carry forward fields from the original message item (stored in $('Extract message').item)\nconst msgItem = $('Extract message').first().json;\n\nreturn [{\n  json: {\n    ...msgItem,\n    downloadUrl,\n  }\n}];"
+      },
+      "id": "node-extract-url",
+      "name": "Extract download URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.downloadUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.META_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "node-download-audio",
+      "name": "Download audio file",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build multipart form-data for the ERP voice-report endpoint.\n// n8n binary data from the download node is available as $binary.\n// We pass it through to the HTTP Request node via sendBody: 'multipart-form-data'.\nconst msgItem = $('Extract download URL').first().json;\n\nreturn [{\n  json: {\n    sender_phone: msgItem.phone,\n    message_id: msgItem.messageId,\n    timestamp: msgItem.timestamp,\n    audioMimeType: msgItem.audioMimeType || 'audio/ogg',\n  },\n  binary: $input.first().binary || {},\n}];"
+      },
+      "id": "node-prep-erp-audio",
+      "name": "Prepare ERP audio payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ERP_URL }}/api/whatsapp/voice-report",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            { "parameterType": "formData", "name": "sender_phone", "value": "={{ $json.sender_phone }}" },
+            { "parameterType": "formData", "name": "message_id",   "value": "={{ $json.message_id }}" },
+            { "parameterType": "formData", "name": "timestamp",    "value": "={{ $json.timestamp }}" },
+            { "parameterType": "formBinaryData", "name": "audio",  "inputDataFieldName": "data" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-post-erp-audio",
+      "name": "POST audio to ERP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ERP_URL }}/api/whatsapp/voice-report",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            { "parameterType": "formData", "name": "sender_phone", "value": "={{ $('Extract message').first().json.phone }}" },
+            { "parameterType": "formData", "name": "message_id",   "value": "={{ $('Extract message').first().json.messageId }}" },
+            { "parameterType": "formData", "name": "timestamp",    "value": "={{ $('Extract message').first().json.timestamp }}" },
+            { "parameterType": "formData", "name": "text_body",    "value": "={{ $('Extract message').first().json.textBody }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-post-erp-text",
+      "name": "POST text reply to ERP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge reply_text from whichever branch ran (audio or text).\n// The ERP returns { reply_text: '...' } or { reply_text: null }.\nconst resp = $input.first().json || {};\nconst replyText = resp.reply_text || null;\nconst phone = $('Extract message').first().json.phone || '';\n\nreturn [{ json: { reply_text: replyText, phone } }];"
+      },
+      "id": "node-extract-reply",
+      "name": "Extract ERP reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2500, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.reply_text }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ]
+        }
+      },
+      "id": "node-has-reply",
+      "name": "Has reply text?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2750, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v18.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.META_ACCESS_TOKEN }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.phone, type: 'text', text: { body: $json.reply_text, preview_url: false } }) }}",
+        "options": {}
+      },
+      "id": "node-send-reply",
+      "name": "Send WhatsApp reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3000, 380]
+    }
+  ],
+  "connections": {
+    "Meta GET verify": {
+      "main": [[{ "node": "Validate verify_token", "type": "main", "index": 0 }]]
+    },
+    "Validate verify_token": {
+      "main": [[{ "node": "Respond to Meta GET", "type": "main", "index": 0 }]]
+    },
+    "Meta POST inbound": {
+      "main": [[{ "node": "Extract message", "type": "main", "index": 0 }]]
+    },
+    "Extract message": {
+      "main": [[{ "node": "Skip if no messages", "type": "main", "index": 0 }]]
+    },
+    "Skip if no messages": {
+      "main": [
+        [],
+        [{ "node": "Is audio message?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is audio message?": {
+      "main": [
+        [{ "node": "Prepare media URL", "type": "main", "index": 0 }],
+        [{ "node": "POST text reply to ERP", "type": "main", "index": 0 }]
+      ]
+    },
+    "Prepare media URL": {
+      "main": [[{ "node": "Get Meta media URL", "type": "main", "index": 0 }]]
+    },
+    "Get Meta media URL": {
+      "main": [[{ "node": "Extract download URL", "type": "main", "index": 0 }]]
+    },
+    "Extract download URL": {
+      "main": [[{ "node": "Download audio file", "type": "main", "index": 0 }]]
+    },
+    "Download audio file": {
+      "main": [[{ "node": "Prepare ERP audio payload", "type": "main", "index": 0 }]]
+    },
+    "Prepare ERP audio payload": {
+      "main": [[{ "node": "POST audio to ERP", "type": "main", "index": 0 }]]
+    },
+    "POST audio to ERP": {
+      "main": [[{ "node": "Extract ERP reply", "type": "main", "index": 0 }]]
+    },
+    "POST text reply to ERP": {
+      "main": [[{ "node": "Extract ERP reply", "type": "main", "index": 0 }]]
+    },
+    "Extract ERP reply": {
+      "main": [[{ "node": "Has reply text?", "type": "main", "index": 0 }]]
+    },
+    "Has reply text?": {
+      "main": [
+        [{ "node": "Send WhatsApp reply", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}

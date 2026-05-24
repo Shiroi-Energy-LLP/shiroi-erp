@@ -1,0 +1,81 @@
+{
+  "name": "67 — BOQ variance narrative — nightly cron",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 30 21 * * *" }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Nightly 03:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "notes": "03:00 IST = 21:30 UTC"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_URL }}/api/boq-variance/generate-recent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "node-http-generate",
+      "name": "POST generate-recent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst { processed = 0, succeeded = 0, failed = 0, skipped = 0 } = resp;\nif (failed > 0) {\n  throw new Error(`BOQ variance cron: ${failed} projects failed (${succeeded} ok, ${skipped} skipped, ${processed} total)`);\n}\nreturn [{ json: { processed, succeeded, skipped, ok: true } }];"
+      },
+      "id": "node-check",
+      "name": "Check result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Nightly 03:00 IST": {
+      "main": [
+        [{ "node": "POST generate-recent", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST generate-recent": {
+      "main": [
+        [{ "node": "Check result", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {}
+}
