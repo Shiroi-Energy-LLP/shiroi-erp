@@ -1334,6 +1334,10 @@ export type Database = {
       customer_outreach_queue: {
         Row: {
           ai_message: string | null
+          ai_personalisation: Json | null
+          ai_personalisation_model: string | null
+          ai_personalisation_tokens: number | null
+          ai_personalised_at: string | null
           checkin_due: string
           created_at: string
           customer_response: string | null
@@ -1348,6 +1352,10 @@ export type Database = {
         }
         Insert: {
           ai_message?: string | null
+          ai_personalisation?: Json | null
+          ai_personalisation_model?: string | null
+          ai_personalisation_tokens?: number | null
+          ai_personalised_at?: string | null
           checkin_due: string
           created_at?: string
           customer_response?: string | null
@@ -1362,6 +1370,10 @@ export type Database = {
         }
         Update: {
           ai_message?: string | null
+          ai_personalisation?: Json | null
+          ai_personalisation_model?: string | null
+          ai_personalisation_tokens?: number | null
+          ai_personalised_at?: string | null
           checkin_due?: string
           created_at?: string
           customer_response?: string | null
@@ -5594,10 +5606,68 @@ export type Database = {
           }
           ]
       }
+      lead_win_loss_patterns: {
+        Row: {
+          ai_model: string
+          ai_narrative: string
+          ai_pricing_insight: string | null
+          ai_tokens_used: number | null
+          created_at: string
+          id: string
+          period_end: string
+          period_start: string
+          segment: string | null
+          similar_won_examples: Json
+          top_loss_reasons: Json
+          total_leads_lost: number
+          total_leads_won: number
+          total_value_lost: number
+          total_value_won: number
+        }
+        Insert: {
+          ai_model: string
+          ai_narrative: string
+          ai_pricing_insight?: string | null
+          ai_tokens_used?: number | null
+          created_at?: string
+          id?: string
+          period_end: string
+          period_start: string
+          segment?: string | null
+          similar_won_examples?: Json
+          top_loss_reasons?: Json
+          total_leads_lost?: number
+          total_leads_won?: number
+          total_value_lost?: number
+          total_value_won?: number
+        }
+        Update: {
+          ai_model?: string
+          ai_narrative?: string
+          ai_pricing_insight?: string | null
+          ai_tokens_used?: number | null
+          created_at?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          segment?: string | null
+          similar_won_examples?: Json
+          top_loss_reasons?: Json
+          total_leads_lost?: number
+          total_leads_won?: number
+          total_value_lost?: number
+          total_value_won?: number
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          ai_score: number | null
+          ai_score_reason: string | null
+          ai_scored_at: string | null
+          ai_scored_model: string | null
           assigned_to: string | null
           automation_pause_reason: string | null
           automation_paused: boolean
@@ -5651,6 +5721,10 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          ai_score?: number | null
+          ai_score_reason?: string | null
+          ai_scored_at?: string | null
+          ai_scored_model?: string | null
           assigned_to?: string | null
           automation_pause_reason?: string | null
           automation_paused?: boolean
@@ -5704,6 +5778,10 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          ai_score?: number | null
+          ai_score_reason?: string | null
+          ai_scored_at?: string | null
+          ai_scored_model?: string | null
           assigned_to?: string | null
           automation_pause_reason?: string | null
           automation_paused?: boolean
@@ -6810,6 +6888,77 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      monthly_performance_reports: {
+        Row: {
+          actual_kwh_generated: number
+          ai_model: string
+          ai_narrative: string | null
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          created_at: string
+          estimated_savings_inr: number | null
+          expected_kwh_pvlib: number | null
+          id: string
+          project_id: string
+          report_month: number
+          report_year: number
+          sent_at: string | null
+          top_generation_date: string | null
+          top_generation_kwh: number | null
+          variance_pct: number | null
+          whatsapp_message_id: string | null
+          whatsapp_template: string | null
+        }
+        Insert: {
+          actual_kwh_generated?: number
+          ai_model?: string
+          ai_narrative?: string | null
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          created_at?: string
+          estimated_savings_inr?: number | null
+          expected_kwh_pvlib?: number | null
+          id?: string
+          project_id: string
+          report_month: number
+          report_year: number
+          sent_at?: string | null
+          top_generation_date?: string | null
+          top_generation_kwh?: number | null
+          variance_pct?: number | null
+          whatsapp_message_id?: string | null
+          whatsapp_template?: string | null
+        }
+        Update: {
+          actual_kwh_generated?: number
+          ai_model?: string
+          ai_narrative?: string | null
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          created_at?: string
+          estimated_savings_inr?: number | null
+          expected_kwh_pvlib?: number | null
+          id?: string
+          project_id?: string
+          report_month?: number
+          report_year?: number
+          sent_at?: string | null
+          top_generation_date?: string | null
+          top_generation_kwh?: number | null
+          variance_pct?: number | null
+          whatsapp_message_id?: string | null
+          whatsapp_template?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_performance_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           }
           ]
@@ -8310,6 +8459,84 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      plant_anomaly_log: {
+        Row: {
+          actual_kwh: number | null
+          ai_model: string | null
+          ai_narrative: string | null
+          ai_suggested_action: string | null
+          ai_suggested_cause: string | null
+          ai_tokens_used: number | null
+          anomaly_type: string
+          consecutive_days: number
+          created_at: string
+          detected_for_date: string
+          deviation_pct: number | null
+          expected_kwh: number | null
+          id: string
+          notified_at: string | null
+          project_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          ticket_id: string | null
+        }
+        Insert: {
+          actual_kwh?: number | null
+          ai_model?: string | null
+          ai_narrative?: string | null
+          ai_suggested_action?: string | null
+          ai_suggested_cause?: string | null
+          ai_tokens_used?: number | null
+          anomaly_type: string
+          consecutive_days?: number
+          created_at?: string
+          detected_for_date: string
+          deviation_pct?: number | null
+          expected_kwh?: number | null
+          id?: string
+          notified_at?: string | null
+          project_id: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          ticket_id?: string | null
+        }
+        Update: {
+          actual_kwh?: number | null
+          ai_model?: string | null
+          ai_narrative?: string | null
+          ai_suggested_action?: string | null
+          ai_suggested_cause?: string | null
+          ai_tokens_used?: number | null
+          anomaly_type?: string
+          consecutive_days?: number
+          created_at?: string
+          detected_for_date?: string
+          deviation_pct?: number | null
+          expected_kwh?: number | null
+          id?: string
+          notified_at?: string | null
+          project_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plant_anomaly_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plant_anomaly_log_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "om_service_tickets"
+            referencedColumns: ["id"]
+          }
+          ]
       }
       plant_daily_summaries: {
         Row: {
@@ -12137,6 +12364,82 @@ export type Database = {
           }
           ]
       }
+      qc_photo_findings: {
+        Row: {
+          ai_description: string
+          ai_model: string
+          ai_suggested_action: string | null
+          ai_tokens_used: number | null
+          confidence_score: number
+          created_at: string
+          finding_type: string
+          id: string
+          milestone_photo_id: string
+          pm_decision: string | null
+          pm_notes: string | null
+          pm_reviewed_at: string | null
+          pm_reviewed_by: string | null
+          project_id: string
+          severity: string
+        }
+        Insert: {
+          ai_description: string
+          ai_model: string
+          ai_suggested_action?: string | null
+          ai_tokens_used?: number | null
+          confidence_score: number
+          created_at?: string
+          finding_type: string
+          id?: string
+          milestone_photo_id: string
+          pm_decision?: string | null
+          pm_notes?: string | null
+          pm_reviewed_at?: string | null
+          pm_reviewed_by?: string | null
+          project_id: string
+          severity: string
+        }
+        Update: {
+          ai_description?: string
+          ai_model?: string
+          ai_suggested_action?: string | null
+          ai_tokens_used?: number | null
+          confidence_score?: number
+          created_at?: string
+          finding_type?: string
+          id?: string
+          milestone_photo_id?: string
+          pm_decision?: string | null
+          pm_notes?: string | null
+          pm_reviewed_at?: string | null
+          pm_reviewed_by?: string | null
+          project_id?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qc_photo_findings_milestone_photo_id_fkey"
+            columns: ["milestone_photo_id"]
+            isOneToOne: false
+            referencedRelation: "milestone_photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_photo_findings_pm_reviewed_by_fkey"
+            columns: ["pm_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_photo_findings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       rag_chunks: {
         Row: {
           chunk_index: number
@@ -12185,6 +12488,36 @@ export type Database = {
           source_id?: string | null
           source_path?: string
           source_type?: string
+        }
+        Relationships: []
+      }
+      rag_ingest_state: {
+        Row: {
+          chunks_indexed: number
+          last_error: string | null
+          last_ingested_at: string
+          last_run_status: string
+          last_synced_row_id: string | null
+          source_type: string
+          updated_at: string
+        }
+        Insert: {
+          chunks_indexed?: number
+          last_error?: string | null
+          last_ingested_at?: string
+          last_run_status?: string
+          last_synced_row_id?: string | null
+          source_type: string
+          updated_at?: string
+        }
+        Update: {
+          chunks_indexed?: number
+          last_error?: string | null
+          last_ingested_at?: string
+          last_run_status?: string
+          last_synced_row_id?: string | null
+          source_type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -13124,6 +13457,47 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      sales_territories: {
+        Row: {
+          active: boolean
+          cities: string[]
+          created_at: string
+          default_assignee_employee_id: string | null
+          id: string
+          segment: string | null
+          territory_name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cities?: string[]
+          created_at?: string
+          default_assignee_employee_id?: string | null
+          id?: string
+          segment?: string | null
+          territory_name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cities?: string[]
+          created_at?: string
+          default_assignee_employee_id?: string | null
+          id?: string
+          segment?: string | null
+          territory_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_territories_default_assignee_employee_id_fkey"
+            columns: ["default_assignee_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
       }
       site_photos: {
         Row: {
@@ -14373,6 +14747,13 @@ export type Database = {
       }
       vendor_bills: {
         Row: {
+          ai_confidence_score: number | null
+          ai_extracted_at: string | null
+          ai_extracted_data: Json | null
+          ai_model: string | null
+          ai_source_attachment_path: string | null
+          ai_source_email_id: string | null
+          ai_status: string | null
           amount_paid: number
           balance_due: number | null
           bill_date: string
@@ -14401,6 +14782,13 @@ export type Database = {
           zoho_vendor_gst_treatment: string | null
         }
         Insert: {
+          ai_confidence_score?: number | null
+          ai_extracted_at?: string | null
+          ai_extracted_data?: Json | null
+          ai_model?: string | null
+          ai_source_attachment_path?: string | null
+          ai_source_email_id?: string | null
+          ai_status?: string | null
           amount_paid?: number
           balance_due?: number | null
           bill_date: string
@@ -14429,6 +14817,13 @@ export type Database = {
           zoho_vendor_gst_treatment?: string | null
         }
         Update: {
+          ai_confidence_score?: number | null
+          ai_extracted_at?: string | null
+          ai_extracted_data?: Json | null
+          ai_model?: string | null
+          ai_source_attachment_path?: string | null
+          ai_source_email_id?: string | null
+          ai_status?: string | null
           amount_paid?: number
           balance_due?: number | null
           bill_date?: string

@@ -60,6 +60,13 @@ export type ErpEventName =
   | 'employee.created'
   // Compliance
   | 'document.expiring'
+  // AI / Wave 2-4 features
+  | 'customer.monthly_performance_generated'
+  | 'lead.scored'
+  | 'lead.routed'
+  | 'plant.anomaly_detected'
+  | 'qc.photo_finding_created'
+  | 'vendor.bill_ai_extracted'
   // Meta
   | 'bug_report.submitted'
   | 'workflow.error';
