@@ -36,6 +36,7 @@ const createInverterSchema = z.object({
   serial_number: z.string().min(3, 'Serial number must be at least 3 characters').max(100),
   model: z.string().max(100).optional(),
   rated_capacity_kw: z.coerce.number().positive('Rated capacity must be positive').max(10000),
+  string_count: z.coerce.number().int().min(1).max(40).default(1),
   monitoring_credentials_id: z.string().uuid().nullable().optional(),
   monitoring_site_id: z.string().max(100).nullable().optional(),
   monitoring_device_id: z.string().max(100).nullable().optional(),
@@ -71,6 +72,7 @@ export async function createInverter(
     serial_number: d.serial_number,
     model: d.model ?? null,
     rated_capacity_kw: d.rated_capacity_kw,
+    string_count: d.string_count,
     monitoring_credentials_id: d.monitoring_credentials_id ?? null,
     monitoring_site_id: d.monitoring_site_id ?? null,
     monitoring_device_id: d.monitoring_device_id ?? null,
@@ -123,6 +125,7 @@ export async function updateInverter(
   if (d.serial_number !== undefined) patch.serial_number = d.serial_number;
   if (d.model !== undefined) patch.model = d.model ?? null;
   if (d.rated_capacity_kw !== undefined) patch.rated_capacity_kw = d.rated_capacity_kw;
+  if (d.string_count !== undefined) patch.string_count = d.string_count;
   if (d.monitoring_credentials_id !== undefined) patch.monitoring_credentials_id = d.monitoring_credentials_id ?? null;
   if (d.monitoring_site_id !== undefined) patch.monitoring_site_id = d.monitoring_site_id ?? null;
   if (d.monitoring_device_id !== undefined) patch.monitoring_device_id = d.monitoring_device_id ?? null;

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { redirect } from 'next/navigation';
 import {
   listInverters,
@@ -44,9 +43,7 @@ export default async function InvertersPage() {
         />
       </div>
 
-      <React.Suspense fallback={<div className="text-xs text-n-500 py-4">Loading…</div>}>
-        <InverterTable inverters={inverters} />
-      </React.Suspense>
+      <InverterTable inverters={inverters} monitoringCredentials={monitoringCredentials} />
 
       {failures.length > 0 && <RecentFailures failures={failures} />}
     </div>

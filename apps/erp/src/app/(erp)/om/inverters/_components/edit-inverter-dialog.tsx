@@ -7,7 +7,7 @@ import {
   Button, Input, Label,
 } from '@repo/ui';
 import { updateInverter } from '@/lib/inverters-actions';
-import type { InverterWithProject } from '@/lib/inverters-queries';
+import type { InverterWithProject, InverterMonitoringCredentialRow } from '@/lib/inverters-queries';
 
 const INVERTER_BRANDS = [
   { value: 'sungrow', label: 'Sungrow' },
@@ -28,6 +28,7 @@ interface EditInverterDialogTriggerProps {
   inverter: InverterWithProject;
   open: boolean;
   onClose: () => void;
+  monitoringCredentials: InverterMonitoringCredentialRow[];
 }
 
 /**
@@ -39,14 +40,21 @@ export function EditInverterDialogTrigger({
   inverter,
   open,
   onClose,
+  monitoringCredentials,
 }: EditInverterDialogTriggerProps) {
   const router = useRouter();
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Filter credentials to those matching this inverter's brand
+  const filteredCredentials = React.useMemo(
+    () => monitoringCredentials.filter((c) => c.brand === inverter.brand),
+    [monitoringCredentials, inverter.brand],
+  );
+
   function handleOpenChange(val: boolean) {
-    if (!val) onClose();
     if (!val) {
+      onClose();
       setError(null);
       setSaving(false);
     }
@@ -67,6 +75,7 @@ export function EditInverterDialogTrigger({
       serial_number: String(form.get('serial_number') ?? '').trim(),
       model: String(form.get('model') ?? '').trim() || undefined,
       rated_capacity_kw: String(form.get('rated_capacity_kw') ?? ''),
+      string_count: String(form.get('string_count') ?? '1'),
       monitoring_credentials_id: monCredId || null,
       monitoring_site_id: siteId || null,
       monitoring_device_id: deviceId || null,
@@ -155,17 +164,63 @@ export function EditInverterDialogTrigger({
             />
           </div>
 
-          {/* Monitoring credential ID */}
+          {/* String count */}
           <div>
-            <Label htmlFor="monitoring_credentials_id">Monitoring Credential ID (optional)</Label>
+            <Label htmlFor="string_count">String Count</Label>
             <Input
-              id="monitoring_credentials_id"
-              name="monitoring_credentials_id"
-              defaultValue={inverter.monitoring_credentials_id ?? ''}
-              placeholder="UUID of inverter_monitoring_credentials row"
-              className="h-9 text-sm font-mono"
+              id="string_count"
+              name="string_count"
+              type="number"
+              min={1}
+              max={40}
+              defaultValue={inverter.string_count ?? 1}
+              className="h-9 text-sm"
             />
           </div>
+
+          {/* Monitoring credential picker */}
+          {inverter.brand !== 'growatt' && filteredCredentials.length > 0 && (
+            <div>
+              <Label htmlFor="monitoring_credentials_id">Monitoring Credential (optional)</Label>
+              <select
+                id="monitoring_credentials_id"
+                name="monitoring_credentials_id"
+                defaultValue={inverter.monitoring_credentials_id ?? ''}
+                className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+              >
+                <option value="">None</option>
+                {filteredCredentials.map((c) => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-n-400 mt-0.5">
+                Master API credential for this brand (e.g. Sungrow OAuth token).
+              </p>
+            </div>
+          )}
+          {inverter.brand !== 'growatt' && filteredCredentials.length === 0 && (
+            <div>
+              <Label htmlFor="monitoring_credentials_id">Monitoring Credential (optional)</Label>
+              <select
+                id="monitoring_credentials_id"
+                name="monitoring_credentials_id"
+                disabled
+                className="w-full h-9 rounded-md border border-n-200 bg-n-50 px-2 text-sm text-n-400 cursor-not-allowed"
+              >
+                <option value={inverter.monitoring_credentials_id ?? ''}>
+                  {inverter.monitoring_credentials_id
+                    ? `Current credential (no ${inverter.brand} credentials loaded)`
+                    : `No ${inverter.brand} credentials configured yet`}
+                </option>
+              </select>
+            </div>
+          )}
+          {inverter.brand === 'growatt' && (
+            <p className="text-[10px] text-amber-600 bg-amber-50 rounded p-2">
+              Growatt uses per-customer credentials from Plant Monitoring, not a master token.
+              No credential selection needed here.
+            </p>
+          )}
 
           {/* Monitoring site ID */}
           <div>

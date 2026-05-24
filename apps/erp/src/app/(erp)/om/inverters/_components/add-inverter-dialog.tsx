@@ -78,6 +78,7 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
       serial_number: String(form.get('serial_number') ?? '').trim(),
       model: String(form.get('model') ?? '').trim() || undefined,
       rated_capacity_kw: String(form.get('rated_capacity_kw') ?? ''),
+      string_count: String(form.get('string_count') ?? '1'),
       monitoring_credentials_id: monCredId || null,
       monitoring_site_id: siteId || null,
       monitoring_device_id: deviceId || null,
@@ -178,6 +179,20 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
               max={10000}
               step={0.01}
               placeholder="e.g. 10"
+              className="h-9 text-sm"
+            />
+          </div>
+
+          {/* String count */}
+          <div>
+            <Label htmlFor="string_count">String Count</Label>
+            <Input
+              id="string_count"
+              name="string_count"
+              type="number"
+              min={1}
+              max={40}
+              defaultValue={1}
               className="h-9 text-sm"
             />
           </div>

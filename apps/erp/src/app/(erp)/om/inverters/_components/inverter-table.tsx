@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Badge, Card, CardContent } from '@repo/ui';
 import { Activity, Pencil } from 'lucide-react';
-import type { InverterWithProject } from '@/lib/inverters-queries';
+import type { InverterWithProject, InverterMonitoringCredentialRow } from '@/lib/inverters-queries';
 import { HealthCheckButton } from './healthcheck-button';
 import { EditInverterDialogTrigger } from './edit-inverter-dialog';
 
@@ -70,11 +70,12 @@ const BRAND_OPTIONS = [
 
 interface InverterTableProps {
   inverters: InverterWithProject[];
+  monitoringCredentials: InverterMonitoringCredentialRow[];
 }
 
 // ── Component ─────────────────────────────────────────────────────────
 
-export function InverterTable({ inverters }: InverterTableProps) {
+export function InverterTable({ inverters, monitoringCredentials }: InverterTableProps) {
   const [filters, setFilters] = React.useState<FilterState>({
     brand: '',
     project: '',
@@ -317,6 +318,7 @@ export function InverterTable({ inverters }: InverterTableProps) {
           inverter={editingInverter}
           open={true}
           onClose={() => setEditingInverter(null)}
+          monitoringCredentials={monitoringCredentials}
         />
       )}
     </div>
