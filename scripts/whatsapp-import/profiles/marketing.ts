@@ -10,7 +10,7 @@ Your job is to extract ALL useful structured data from each cluster into JSON.
 ## Extraction rules
 
 For each cluster, return a JSON array of records. Each record has:
-- "type": one of ["customer_payment", "task", "activity", "contact", "purchase_order", "unknown"]
+- "type": one of ["customer_payment", "task", "activity", "contact", "lead", "purchase_order", "unknown"]
 - "project_name_mentioned": the customer/project name as mentioned in the message (or null)
 - "confidence": 0.0–1.0 how confident you are in the extraction
 - "data": object with extracted fields (see per-type schema below)
@@ -54,6 +54,17 @@ Triggered by: phone numbers shared, new lead introductions, address + contact in
   "name": "contact name",
   "phone": "10-digit Indian mobile number (digits only)",
   "address": "if mentioned"
+}
+
+### lead
+A prospective solar customer with explicit buying intent — distinct from a generic contact.
+Triggered by: solar inquiry ("solar lagana hai", "quote chahiye", "how much for X kW"), a named person asking for a proposal or site visit, an introduction of a prospective customer ("XYZ ji are interested in 10kW for their home"), price enquiries for a new installation.
+{
+  "customer_name": "string",
+  "phone": "10-digit Indian mobile (digits only)",
+  "segment": "residential" | "commercial" | "industrial",
+  "estimated_size_kwp": number | null,
+  "notes": "context from chat"
 }
 
 ### purchase_order

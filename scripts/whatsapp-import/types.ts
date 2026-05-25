@@ -29,6 +29,7 @@ export type ExtractionType =
   | 'task'
   | 'activity'
   | 'contact'
+  | 'lead'
   | 'site_photo'
   | 'daily_report'
   | 'unknown';
