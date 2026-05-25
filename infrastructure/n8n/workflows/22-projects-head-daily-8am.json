@@ -32,6 +32,7 @@
         "options": { "response": { "response": { "responseFormat": "json" } } }
       },
       "id": "node-http",
+      "alwaysOutputData": true,
       "name": "Fetch active projects",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -45,7 +46,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = $input.first()?.json || [];\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nconst byStatus = { yet_to_start: [], in_progress: [], holding_shiroi: [] };\nfor (const r of rows) {\n  if (byStatus[r.status]) byStatus[r.status].push(r);\n}\n\nconst section = (label, list, maxRows) => {\n  if (list.length === 0) return `\\n*${label}:* 0\\n(none)\\n`;\n  let out = `\\n*${label}:* ${list.length}\\n`;\n  for (const [i, r] of list.slice(0, maxRows).entries()) {\n    out += `${i+1}. ${r.project_number} · ${r.customer_name} · ${r.system_size_kwp || '—'}kWp · ${r.days_in_status}d in stage\\n`;\n  }\n  if (list.length > maxRows) out += `…+${list.length - maxRows} more\\n`;\n  return out;\n};\n\nlet body = `🏗️ *Active projects* — ${dateLine}\\n`;\nbody += section('Yet to start', byStatus.yet_to_start, 5);\nbody += section('In progress', byStatus.in_progress, 10);\nbody += section('Holding (Shiroi)', byStatus.holding_shiroi, 5);\nbody += `\\nOpen: https://erp.shiroienergy.com/projects`;\n\nconst title = `🏗️ Active projects — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone_vivek: $env.VIVEK_WHATSAPP || '',\n    to_phone_manivel: $env.PROJECTS_HEAD_WHATSAPP || '',\n  },\n}];"
+        "jsCode": "const norm = (items) => items.map(i => i.json).filter(j => j && typeof j === 'object' && Object.keys(j).length > 0);\nconst rows = norm($('Fetch active projects').all());\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nconst byStatus = { yet_to_start: [], in_progress: [], holding_shiroi: [] };\nfor (const r of rows) {\n  if (byStatus[r.status]) byStatus[r.status].push(r);\n}\n\nconst section = (label, list, maxRows) => {\n  if (list.length === 0) return `\\n*${label}:* 0\\n(none)\\n`;\n  let out = `\\n*${label}:* ${list.length}\\n`;\n  for (const [i, r] of list.slice(0, maxRows).entries()) {\n    out += `${i+1}. ${r.project_number} · ${r.customer_name} · ${r.system_size_kwp || '—'}kWp · ${r.days_in_status}d in stage\\n`;\n  }\n  if (list.length > maxRows) out += `…+${list.length - maxRows} more\\n`;\n  return out;\n};\n\nlet body = `🏗️ *Active projects* — ${dateLine}\\n`;\nbody += section('Yet to start', byStatus.yet_to_start, 5);\nbody += section('In progress', byStatus.in_progress, 10);\nbody += section('Holding (Shiroi)', byStatus.holding_shiroi, 5);\nbody += `\\nOpen: https://erp.shiroienergy.com/projects`;\n\nconst title = `🏗️ Active projects — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone_vivek: $env.VIVEK_WHATSAPP || '',\n    to_phone_manivel: $env.PROJECTS_HEAD_WHATSAPP || '',\n  },\n}];"
       },
       "id": "node-compose",
       "name": "Compose digest",

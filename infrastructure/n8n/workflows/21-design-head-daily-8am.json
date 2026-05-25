@@ -32,6 +32,7 @@
         "options": { "response": { "response": { "responseFormat": "json" } } }
       },
       "id": "node-http",
+      "alwaysOutputData": true,
       "name": "Fetch design backlog",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -45,7 +46,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = $input.first()?.json || [];\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nlet body = `🎨 *In-design queue* — ${dateLine}\\n`;\nbody += `\\nProposals in design (>24h old): ${rows.length}\\n`;\nif (rows.length === 0) {\n  body += `✅ caught up — nothing aging in design`;\n} else {\n  for (const [i, p] of rows.slice(0, 15).entries()) {\n    body += `${i+1}. ${p.proposal_number} · ${p.customer_name} · ${p.estimated_size_kwp || '—'}kWp · ${Math.floor(p.hours_in_draft || 0)}h · ${p.prepared_by_name || 'unassigned'}\\n`;\n  }\n  if (rows.length > 15) body += `…+${rows.length - 15} more\\n`;\n}\nbody += `\\nOpen: https://erp.shiroienergy.com/design`;\n\nconst title = `🎨 In-design queue — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone_vivek: $env.VIVEK_WHATSAPP || '',\n    to_phone_shravan: $env.DESIGN_HEAD_WHATSAPP || '',\n  },\n}];"
+        "jsCode": "const norm = (items) => items.map(i => i.json).filter(j => j && typeof j === 'object' && Object.keys(j).length > 0);\nconst rows = norm($('Fetch design backlog').all());\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nlet body = `🎨 *In-design queue* — ${dateLine}\\n`;\nbody += `\\nProposals in design (>24h old): ${rows.length}\\n`;\nif (rows.length === 0) {\n  body += `✅ caught up — nothing aging in design`;\n} else {\n  for (const [i, p] of rows.slice(0, 15).entries()) {\n    body += `${i+1}. ${p.proposal_number} · ${p.customer_name} · ${p.estimated_size_kwp || '—'}kWp · ${Math.floor(p.hours_in_draft || 0)}h · ${p.prepared_by_name || 'unassigned'}\\n`;\n  }\n  if (rows.length > 15) body += `…+${rows.length - 15} more\\n`;\n}\nbody += `\\nOpen: https://erp.shiroienergy.com/design`;\n\nconst title = `🎨 In-design queue — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone_vivek: $env.VIVEK_WHATSAPP || '',\n    to_phone_shravan: $env.DESIGN_HEAD_WHATSAPP || '',\n  },\n}];"
       },
       "id": "node-compose",
       "name": "Compose digest",
