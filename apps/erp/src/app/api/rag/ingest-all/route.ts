@@ -18,10 +18,14 @@ import { spawn } from 'child_process';
 import * as path from 'path';
 
 export const dynamic = 'force-dynamic';
-// 30-minute timeout: Next.js default is 10s for API routes — override via maxDuration
-export const maxDuration = 1800; // seconds (Vercel Pro supports up to 300s; on local dev uncapped)
+// Cap maxDuration at 60s — Vercel Hobby plan limit (Pro: 300s, Enterprise: 900s).
+// Setting >60 here previously caused deploys to fail at the output-upload step.
+// Large ingests should be run directly on the n8n droplet via SSH (`pnpm rag:ingest-all`),
+// NOT via this serverless route — `pnpm` isn't on Vercel's runtime PATH anyway.
+// This route is retained for local-dev triggering + as a "kick" that the droplet can SSH from.
+export const maxDuration = 60;
 
-const INGEST_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const INGEST_TIMEOUT_MS = 50 * 1000; // 50s (under 60s function limit)
 
 /** Resolve the monorepo root from this file's location */
 const repoRoot = path.resolve(process.cwd());
