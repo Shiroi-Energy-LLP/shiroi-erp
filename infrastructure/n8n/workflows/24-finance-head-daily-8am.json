@@ -50,6 +50,7 @@
         }
       },
       "id": "node-http",
+      "alwaysOutputData": true,
       "name": "Fetch overdue invoices",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -66,34 +67,12 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "m1",
-              "name": "message",
-              "value": "=💰 *Finance digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nOverdue invoices (>15d): {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ No invoices overdue — AR is clean.' : ($json.data || []).slice(0, 15).map((i, idx) => `${idx+1}. ${i.invoice_number} · ${i.customer_name} · ₹${i.amount_outstanding} · ${i.days_overdue}d overdue · ${i.sales_person_name || '—'}`).join('\\n') }}{{ ($json.data || []).length > 15 ? '\\n…and ' + (($json.data || []).length - 15) + ' more.' : '' }}\n\nOpen: https://erp.shiroienergy.com/invoices\n\n_TODO: add v_digest_invoices_due_7d (upcoming) + v_digest_vendor_payments_due_7d (payables) for a full AR/AP picture._",
-              "type": "string"
-            },
-            {
-              "id": "m2",
-              "name": "to_phone",
-              "value": "={{ $env.FINANCE_HEAD_WHATSAPP }}",
-              "type": "string"
-            },
-            {
-              "id": "m3",
-              "name": "channel",
-              "value": "whatsapp",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "const norm = (items) => items.map(i => i.json).filter(j => j && typeof j === 'object' && Object.keys(j).length > 0);\nconst rows = norm($('Fetch overdue invoices').all());\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nlet body = `💰 *Finance digest* — ${dateLine}\\n`;\nbody += `\\nOverdue invoices (>15d): ${rows.length}\\n`;\nif (rows.length === 0) {\n  body += `✅ No invoices overdue — AR is clean.`;\n} else {\n  for (const [i, inv] of rows.slice(0, 15).entries()) {\n    body += `${i+1}. ${inv.invoice_number} · ${inv.customer_name} · ₹${inv.amount_outstanding} · ${inv.days_overdue}d overdue · ${inv.sales_person_name || '—'}\\n`;\n  }\n  if (rows.length > 15) body += `…and ${rows.length - 15} more.\\n`;\n}\nbody += `\\nOpen: https://erp.shiroienergy.com/invoices`;\n\nconst title = `💰 Finance digest — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone: ($env.FINANCE_HEAD_WHATSAPP || $env.VIVEK_WHATSAPP) || '',\n    to_phone_vinodh: $env.VINODH_WHATSAPP || '',\n  },\n}];"
       },
       "id": "node-compose",
       "name": "Compose digest",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         500,
         300
@@ -112,14 +91,8 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
@@ -155,14 +128,8 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }

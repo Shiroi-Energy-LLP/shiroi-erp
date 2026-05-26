@@ -50,6 +50,7 @@
         }
       },
       "id": "node-http",
+      "alwaysOutputData": true,
       "name": "Fetch pending POs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -66,34 +67,12 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "m1",
-              "name": "message",
-              "value": "=📦 *Purchase digest* — {{ DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy') }}\n\nPOs awaiting approval: {{ ($json.data || []).length }}\n{{ ($json.data || []).length === 0 ? '✅ No pending approvals.' : ($json.data || []).slice(0, 15).map((p, i) => `${i+1}. ${p.po_number} · ${p.vendor_name}${p.vendor_is_msme ? ' 🔔MSME' : ''} · ₹${p.total_amount} · ${p.days_pending}d · ${p.prepared_by_name || '—'}`).join('\\n') }}{{ ($json.data || []).length > 15 ? '\\n…and ' + (($json.data || []).length - 15) + ' more.' : '' }}\n\nOpen: https://erp.shiroienergy.com/procurement\n\n_TODO: add v_digest_vendor_payments_due_7d + expected deliveries._",
-              "type": "string"
-            },
-            {
-              "id": "m2",
-              "name": "to_phone",
-              "value": "={{ $env.PURCHASE_HEAD_WHATSAPP }}",
-              "type": "string"
-            },
-            {
-              "id": "m3",
-              "name": "channel",
-              "value": "whatsapp",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "const norm = (items) => items.map(i => i.json).filter(j => j && typeof j === 'object' && Object.keys(j).length > 0);\nconst rows = norm($('Fetch pending POs').all());\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nlet body = `📦 *Purchase digest* — ${dateLine}\\n`;\nbody += `\\nPOs awaiting approval: ${rows.length}\\n`;\nif (rows.length === 0) {\n  body += `✅ No pending approvals.`;\n} else {\n  for (const [i, p] of rows.slice(0, 15).entries()) {\n    body += `${i+1}. ${p.po_number} · ${p.vendor_name}${p.vendor_is_msme ? ' 🔔MSME' : ''} · ₹${p.total_amount} · ${p.days_pending}d · ${p.prepared_by_name || '—'}\\n`;\n  }\n  if (rows.length > 15) body += `…and ${rows.length - 15} more.\\n`;\n}\nbody += `\\nOpen: https://erp.shiroienergy.com/procurement`;\n\nconst title = `📦 Purchase digest — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone: $env.PURCHASE_HEAD_WHATSAPP || '',\n  },\n}];"
       },
       "id": "node-compose",
       "name": "Compose digest",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         500,
         300
@@ -112,14 +91,8 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ $json.message.split('\\n')[0] }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ($json.message.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }

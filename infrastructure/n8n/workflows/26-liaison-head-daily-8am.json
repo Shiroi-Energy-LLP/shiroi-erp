@@ -35,7 +35,7 @@
             {
               "id": "m2",
               "name": "to_phone",
-              "value": "={{ $env.LIAISON_HEAD_WHATSAPP }}",
+              "value": "={{ $env.LIAISON_HEAD_WHATSAPP || $env.VIVEK_WHATSAPP }}",
               "type": "string"
             },
             {
