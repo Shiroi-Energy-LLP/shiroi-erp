@@ -61,18 +61,20 @@ async function main() {
 
   const resp = await n8n<{ data: N8nWorkflow[] }>('GET', '/workflows?limit=250');
   const all = resp.data;
-  const active = all.filter((w) => w.active);
 
-  const keepActive = active.filter((w) => KEEP_ACTIVE_PREFIXES.some((p) => w.name.startsWith(p)));
-  const toDeactivate = active.filter((w) => !KEEP_ACTIVE_PREFIXES.some((p) => w.name.startsWith(p)));
+  const keepList = all.filter((w) => KEEP_ACTIVE_PREFIXES.some((p) => w.name.startsWith(p)));
+  const restList = all.filter((w) => !KEEP_ACTIVE_PREFIXES.some((p) => w.name.startsWith(p)));
+
+  const toActivate = keepList.filter((w) => !w.active);
+  const toDeactivate = restList.filter((w) => w.active);
 
   console.log(`Target: ${N8N_BASE_URL}${dryRun ? ' (DRY RUN)' : ''}`);
-  console.log(`${all.length} workflows total · ${active.length} currently active`);
+  console.log(`${all.length} workflows total · ${all.filter((w) => w.active).length} currently active`);
   console.log('');
-  console.log(`KEEP ACTIVE (${keepActive.length}):`);
-  for (const w of keepActive) console.log(`  ✓ ${w.name}`);
+  console.log(`KEEP ACTIVE (${keepList.length} matched, ${toActivate.length} need activation):`);
+  for (const w of keepList) console.log(`  ${w.active ? '✓' : '→'} ${w.name}${w.active ? '' : '  (will activate)'}`);
   console.log('');
-  console.log(`DEACTIVATE (${toDeactivate.length}):`);
+  console.log(`DEACTIVATE (${toDeactivate.length} of ${restList.length} non-whitelisted are currently active):`);
   for (const w of toDeactivate) console.log(`  ✗ ${w.name}`);
   console.log('');
 
@@ -83,6 +85,16 @@ async function main() {
 
   let ok = 0;
   let failed = 0;
+  for (const w of toActivate) {
+    try {
+      await n8n('POST', `/workflows/${w.id}/activate`);
+      ok++;
+      console.log(`  [act  ] ${w.name}`);
+    } catch (e) {
+      failed++;
+      console.error(`  [fail ] activate ${w.name}: ${(e as Error).message}`);
+    }
+  }
   for (const w of toDeactivate) {
     try {
       await n8n('POST', `/workflows/${w.id}/deactivate`);
@@ -90,13 +102,12 @@ async function main() {
       console.log(`  [deact] ${w.name}`);
     } catch (e) {
       failed++;
-      console.error(`  [fail ] ${w.name}: ${(e as Error).message}`);
+      console.error(`  [fail ] deactivate ${w.name}: ${(e as Error).message}`);
     }
   }
 
   console.log('');
-  console.log(`Done. Deactivated ${ok} workflow(s)${failed ? `, ${failed} failed` : ''}.`);
-  console.log('Re-activate via the n8n UI when ready.');
+  console.log(`Done. ${ok} change(s) applied${failed ? `, ${failed} failed` : ''}.`);
 }
 
 main().catch((e) => {
