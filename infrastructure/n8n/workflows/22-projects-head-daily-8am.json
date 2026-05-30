@@ -5,7 +5,10 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 0 8 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 0 8 * * *"
+            }
           ]
         },
         "timezone": "Asia/Kolkata"
@@ -14,7 +17,10 @@
       "name": "Daily 8:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -25,18 +31,33 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
-        "options": { "response": { "response": { "responseFormat": "json" } } }
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
       },
       "id": "node-http",
       "alwaysOutputData": true,
       "name": "Fetch active projects",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -52,7 +73,10 @@
       "name": "Compose digest",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
@@ -67,8 +91,14 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  { "type": "text", "text": "={{ $json.title }}" },
-                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.title || '').replace(/[\\n\\t]+/g, ' | ').replace(/ {4,}/g, ' ').slice(0, 1024) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.body || '').replace(/[\\n\\t]+/g, ' | ').replace(/ {4,}/g, ' ').slice(0, 1024) }}"
+                  }
                 ]
               }
             }
@@ -79,7 +109,10 @@
       "name": "Send to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [750, 200],
+      "position": [
+        750,
+        200
+      ],
       "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
@@ -101,8 +134,14 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  { "type": "text", "text": "={{ $json.title }}" },
-                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.title || '').replace(/[\\n\\t]+/g, ' | ').replace(/ {4,}/g, ' ').slice(0, 1024) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.body || '').replace(/[\\n\\t]+/g, ' | ').replace(/ {4,}/g, ' ').slice(0, 1024) }}"
+                  }
                 ]
               }
             }
@@ -113,7 +152,10 @@
       "name": "Send to Manivel",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [750, 400],
+      "position": [
+        750,
+        400
+      ],
       "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
@@ -125,16 +167,40 @@
   ],
   "connections": {
     "Daily 8:00 IST": {
-      "main": [[{ "node": "Fetch active projects", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Fetch active projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch active projects": {
-      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Compose digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Compose digest": {
       "main": [
         [
-          { "node": "Send to Vivek", "type": "main", "index": 0 },
-          { "node": "Send to Manivel", "type": "main", "index": 0 }
+          {
+            "node": "Send to Vivek",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Manivel",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }

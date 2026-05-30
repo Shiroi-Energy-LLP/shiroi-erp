@@ -5,7 +5,10 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 0 8 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 0 8 * * *"
+            }
           ]
         },
         "timezone": "Asia/Kolkata"
@@ -14,7 +17,10 @@
       "name": "Daily 8:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -25,28 +31,47 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"window_days\": 7}",
-        "options": { "response": { "response": { "responseFormat": "json" } } }
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
       },
       "id": "node-http-orders",
       "alwaysOutputData": true,
       "name": "Fetch expected orders (7d)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 200],
+      "position": [
+        250,
+        200
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
           "name": "Supabase service role"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -57,28 +82,47 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"window_days\": 7}",
-        "options": { "response": { "response": { "responseFormat": "json" } } }
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
       },
       "id": "node-http-payments",
       "alwaysOutputData": true,
       "name": "Fetch expected payments (7d)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [250, 400],
+      "position": [
+        250,
+        400
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
           "name": "Supabase service role"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -88,7 +132,10 @@
       "name": "Compose digest",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
@@ -103,8 +150,14 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  { "type": "text", "text": "={{ $json.title }}" },
-                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.title || '').replace(/[\\n\\t]+/g, ' | ').replace(/ {4,}/g, ' ').slice(0, 1024) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.body || '').replace(/[\\n\\t]+/g, ' | ').replace(/ {4,}/g, ' ').slice(0, 1024) }}"
+                  }
                 ]
               }
             }
@@ -115,7 +168,10 @@
       "name": "Send to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [750, 200],
+      "position": [
+        750,
+        200
+      ],
       "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
@@ -137,8 +193,14 @@
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  { "type": "text", "text": "={{ $json.title }}" },
-                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.title || '').replace(/[\\n\\t]+/g, ' | ').replace(/ {4,}/g, ' ').slice(0, 1024) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ($json.body || '').replace(/[\\n\\t]+/g, ' | ').replace(/ {4,}/g, ' ').slice(0, 1024) }}"
+                  }
                 ]
               }
             }
@@ -149,7 +211,10 @@
       "name": "Send to Prem",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [750, 400],
+      "position": [
+        750,
+        400
+      ],
       "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
@@ -163,22 +228,49 @@
     "Daily 8:00 IST": {
       "main": [
         [
-          { "node": "Fetch expected orders (7d)", "type": "main", "index": 0 },
-          { "node": "Fetch expected payments (7d)", "type": "main", "index": 0 }
+          {
+            "node": "Fetch expected orders (7d)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Fetch expected orders (7d)": {
-      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Fetch expected payments (7d)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch expected payments (7d)": {
-      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Compose digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Compose digest": {
       "main": [
         [
-          { "node": "Send to Vivek", "type": "main", "index": 0 },
-          { "node": "Send to Prem", "type": "main", "index": 0 }
+          {
+            "node": "Send to Vivek",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Prem",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }

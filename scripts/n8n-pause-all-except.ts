@@ -27,15 +27,17 @@ if (!N8N_API_KEY) {
   process.exit(1);
 }
 
-// Match by name prefix (e.g. "19 — " matches "19 — Vivek daily 7AM digest").
-const KEEP_ACTIVE_PREFIXES = [
-  '00 — ', // Event Bus Router
-  '19 — ', // Vivek daily 7AM digest
-  '20 — ', // Orders + Payments this week (Sales head 8AM)
-  '21 — ', // In-design queue (Design head 8AM)
-  '22 — ', // Active project queue (Projects head 8AM)
-  '55 — ', // Global Error Handler
-  '56 — ', // Droplet heartbeat
+// Exact name match — earlier prefix-match would have activated stale duplicate
+// workflows like "20 — Sales head daily 8AM digest" alongside the live
+// "20 — Orders + Payments this week", causing double WhatsApp at 8 AM.
+const KEEP_ACTIVE_NAMES = [
+  '00 — Event Bus Router',
+  '19 — Vivek daily 7AM digest',
+  '20 — Orders + Payments this week',
+  '21 — In-design queue',
+  '22 — Active project queue',
+  '55 — Global Error Handler',
+  '56 — Droplet heartbeat',
 ];
 
 interface N8nWorkflow {
@@ -62,8 +64,8 @@ async function main() {
   const resp = await n8n<{ data: N8nWorkflow[] }>('GET', '/workflows?limit=250');
   const all = resp.data;
 
-  const keepList = all.filter((w) => KEEP_ACTIVE_PREFIXES.some((p) => w.name.startsWith(p)));
-  const restList = all.filter((w) => !KEEP_ACTIVE_PREFIXES.some((p) => w.name.startsWith(p)));
+  const keepList = all.filter((w) => KEEP_ACTIVE_NAMES.includes(w.name));
+  const restList = all.filter((w) => !KEEP_ACTIVE_NAMES.includes(w.name));
 
   const toActivate = keepList.filter((w) => !w.active);
   const toDeactivate = restList.filter((w) => w.active);
