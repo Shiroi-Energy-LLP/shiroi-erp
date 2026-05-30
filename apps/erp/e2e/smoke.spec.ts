@@ -264,3 +264,83 @@ test('feedback form blocks submit under 10 characters', async ({ page }) => {
   await expect(submit).toBeEnabled();
   await expectNoDevErrorOverlay(page);
 });
+
+// ═══════════════════════════════════════════════════════════════════════
+// Phase F / Wave 2-4 pages — added 2026-05-30
+// ═══════════════════════════════════════════════════════════════════════
+
+// Test: /sales/patterns (Wave 2-4 — S13 win/loss analyser, Sunday cron #68)
+test('sales patterns page renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/sales/patterns');
+  await expect(page.locator('body')).toContainText(/pattern|win|loss/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// Test: /sales/territories (Wave 2-4 — F5 AI lead routing)
+test('sales territories page renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/sales/territories');
+  await expect(page.locator('body')).toContainText(/territor/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// Test: /vendor-bills/review (Wave 2-4 — S17 vendor invoice AI extraction)
+test('vendor bills review queue renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/vendor-bills/review');
+  await expect(page.locator('body')).toContainText(/review|vendor/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// Test: /referrals (Phase F — F4 referral payouts)
+test('referrals page renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/referrals');
+  await expect(page.locator('body')).toContainText(/referral/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// Test: /hr/benchmarking (Phase F — F6 salary benchmarking, founder + hr_manager)
+test('hr benchmarking page renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/hr/benchmarking');
+  // Either the report renders OR access is denied (test user might not be
+  // founder/hr_manager). Both render the page chrome — the assertion is
+  // just "no crash".
+  await expect(page.locator('body')).toContainText(/benchmark|hr|access/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// Test: /admin/rag-debug (Wave 2-4 — S11 RAG Phase 2 ingest status, founder)
+test('admin rag debug page renders', async ({ page }) => {
+  const authed = await loginIfCredentialsPresent(page);
+  test.skip(!authed, 'PLAYWRIGHT_LOGIN_EMAIL/_PASSWORD not set');
+
+  await page.goto('/admin/rag-debug');
+  await expect(page.locator('body')).toContainText(/rag|ingest|chunk|admin|access/i);
+  await expectNoDevErrorOverlay(page);
+});
+
+// Test: /p/[token] public proposal portal (Phase F — F7) — bogus token
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Public route, no auth needed. Token format is a random opaque string.
+// We pass a clearly-invalid token and expect a graceful "Invalid link"
+// state rather than a crash.
+test('public proposal portal renders invalid state for unknown token', async ({ page }) => {
+  await page.goto('/p/bogus-token-that-does-not-exist-12345');
+  // Page should render an invalid/expired/not-found state, not crash.
+  await expect(page.locator('body')).toContainText(/invalid|expired|not found|404|link/i);
+  await expectNoDevErrorOverlay(page);
+});
