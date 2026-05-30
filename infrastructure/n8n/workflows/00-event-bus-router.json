@@ -788,6 +788,75 @@
               },
               "renameOutput": true,
               "outputKey": "om_ticket.resolved"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-lead-win-loss-analysed",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "lead.win_loss_analysed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead.win_loss_analysed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-vendor-bill-ai-approved",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "vendor.bill_ai_approved",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "vendor.bill_ai_approved"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-vendor-bill-ai-rejected",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "vendor.bill_ai_rejected",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "vendor.bill_ai_rejected"
             }
           ]
         },
@@ -1511,6 +1580,66 @@
       "typeVersion": 1.2,
       "position": [700, 3920],
       "notes": "TODO: om_ticket.resolved — route to dedicated workflow when built"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-lead-win-loss-analysed",
+      "name": "→ 55 Global error handler (lead.win_loss_analysed TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 4040],
+      "notes": "TODO: lead.win_loss_analysed — emitted by Wave 2-4 S13 win/loss analyser. Route to dedicated workflow when built (e.g. notify marketing head with weekly Sunday digest of patterns)."
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-vendor-bill-ai-approved",
+      "name": "→ 55 Global error handler (vendor.bill_ai_approved TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 4160],
+      "notes": "TODO: vendor.bill_ai_approved — emitted by Wave 2-4 S17 vendor-bill review when human approves an AI-extracted bill. Route to dedicated workflow when built (e.g. notify finance that vendor bill is now official, trigger payment scheduling)."
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        },
+        "options": {}
+      },
+      "id": "node-exec-vendor-bill-ai-rejected",
+      "name": "→ 55 Global error handler (vendor.bill_ai_rejected TODO)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [700, 4280],
+      "notes": "TODO: vendor.bill_ai_rejected — emitted by Wave 2-4 S17 vendor-bill review when human rejects an AI-extracted bill. Route to dedicated workflow when built (e.g. notify finance + log for AI-extraction retraining)."
     }
   ],
   "connections": {
@@ -1754,6 +1883,27 @@
         [
           {
             "node": "→ 55 Global error handler (om_ticket.resolved TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (lead.win_loss_analysed TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (vendor.bill_ai_approved TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "→ 55 Global error handler (vendor.bill_ai_rejected TODO)",
             "type": "main",
             "index": 0
           }
