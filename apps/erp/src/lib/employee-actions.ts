@@ -4,6 +4,7 @@ import { createAdminClient } from '@repo/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from '@/lib/n8n/emit';
+import { requireRole } from '@/lib/auth';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -35,6 +36,13 @@ function generateTempPassword(): string {
 
 export async function createEmployeeAccount(input: CreateEmployeeInput): Promise<CreateEmployeeResult> {
   const op = '[createEmployeeAccount]';
+
+  // Role gate (security review 2026-05-30 #1 — CRITICAL): server actions are
+  // independent HTTP endpoints; the page-level gate at /hr/employees/new
+  // does not protect this action against direct invocation. Without this
+  // check any authenticated user could POST { role: 'founder', ... }.
+  await requireRole(['founder', 'hr_manager']);
+
   console.log(`${op} Starting for: ${input.email}`);
 
   // Validate required fields
@@ -160,6 +168,11 @@ async function emitEmployeeCreated(employeeId: string): Promise<void> {
 
 export async function deactivateEmployee(employeeId: string): Promise<{ success: boolean; error?: string }> {
   const op = '[deactivateEmployee]';
+
+  // Role gate (security review 2026-05-30 #2 — CRITICAL): without this
+  // check any authenticated user could lock the founder out for 100 years.
+  await requireRole(['founder', 'hr_manager']);
+
   console.log(`${op} Starting for employee: ${employeeId}`);
 
   if (!employeeId) return { success: false, error: 'Employee ID is required' };

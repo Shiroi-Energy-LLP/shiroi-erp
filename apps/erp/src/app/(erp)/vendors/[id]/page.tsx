@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getVendorById } from '@/lib/vendor-bills-queries';
 import { formatDate, formatINR } from '@repo/ui/formatters';
+import { maskSensitiveField } from '@/lib/hr-helpers';
 import {
   Card,
   CardContent,
@@ -129,7 +130,8 @@ export default async function VendorDetailPage({ params }: PageProps) {
             {vendor.pan_number && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">PAN</span>
-                <span className="font-mono">{vendor.pan_number}</span>
+                {/* Security review 2026-05-30 #16: PAN is on the sensitive-field list. */}
+                <span className="font-mono">{maskSensitiveField(vendor.pan_number)}</span>
               </div>
             )}
             {vendor.udyam_number && (

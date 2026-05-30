@@ -84,12 +84,26 @@ export async function emitErpEvent(
   const webhookUrl = process.env.N8N_EVENT_BUS_URL;
   if (!webhookUrl) return;
 
+  // Security review 2026-05-30 #19: early-return when URL is set but secret
+  // is missing. Previously this would send the request with an empty secret
+  // header; n8n's Header Auth credential rejects it (good), but the request
+  // still leaves the network (bad — leaks event metadata to whatever sits at
+  // the URL). Refuse to emit and log the misconfiguration loudly.
+  const webhookSecret = process.env.N8N_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error(`${op} N8N_EVENT_BUS_URL is set but N8N_WEBHOOK_SECRET is not — refusing to emit`, {
+      event,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
   try {
     const resp = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-webhook-secret': process.env.N8N_WEBHOOK_SECRET ?? '',
+        'x-webhook-secret': webhookSecret,
       },
       body: JSON.stringify({
         event,

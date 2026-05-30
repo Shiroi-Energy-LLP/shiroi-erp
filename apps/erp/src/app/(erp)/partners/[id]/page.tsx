@@ -6,6 +6,7 @@ import {
   getPartnerPayouts,
   getPartnerSummary,
 } from '@/lib/partners-queries';
+import { maskSensitiveField } from '@/lib/hr-helpers';
 import {
   Card,
   CardContent,
@@ -160,7 +161,9 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
             <Row label="Phone" value={partner.phone} />
             <Row label="Email" value={partner.email ?? '—'} />
             <Row label="WhatsApp" value={partner.whatsapp ?? '—'} />
-            <Row label="PAN" value={partner.pan_number ?? '—'} />
+            {/* Security review 2026-05-30 #15: PAN is on the sensitive-field list (CLAUDE.md).
+                Mask server-side so the unmasked value never reaches the browser. */}
+            <Row label="PAN" value={partner.pan_number ? maskSensitiveField(partner.pan_number) : '—'} />
           </CardContent>
         </Card>
         <Card>

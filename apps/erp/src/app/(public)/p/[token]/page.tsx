@@ -89,6 +89,13 @@ async function getProposalByToken(token: string, ip: string) {
 }
 
 export default async function ProposalPortalPage({ params }: Props) {
+  // Security review 2026-05-30 #9: token length check before DB lookup.
+  // Matches the guard already in /api/proposals/[id]/pdf/route.ts. Without
+  // this, /p/aaa (3 chars) costs a DB round-trip per enumeration attempt.
+  // 32 chars = 128 bits is the minimum entropy we accept; the legitimate
+  // token is 64 hex chars (256 bits).
+  if (!params.token || params.token.length < 32) notFound();
+
   // Get client IP from headers (Vercel forwards X-Forwarded-For)
   const headerList = headers();
   const ip =

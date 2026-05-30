@@ -42,9 +42,14 @@ export async function generateHandoverPack(
     .single();
 
   // Get warranty info from BOM
+  // (Type-safety review 2026-05-30 #2): the actual proposal_bom_lines columns
+  // are item_category, item_description, brand, model — NOT category / item_name.
+  // The wrong column names made every handover pack PDF render "As per BOM" / "—"
+  // for panel + inverter brand/model regardless of what was in the BOM.
+  // Also: item_category for panels is the singular 'panel', not 'panels' (matched in dev DB).
   const bomLines = (proposal as any)?.proposal_bom_lines ?? [];
-  const panelLine = bomLines.find((l: any) => l.category === 'panels' || l.item_name?.toLowerCase().includes('panel'));
-  const inverterLine = bomLines.find((l: any) => l.category === 'inverter' || l.item_name?.toLowerCase().includes('inverter'));
+  const panelLine = bomLines.find((l: any) => l.item_category === 'panel' || l.item_description?.toLowerCase().includes('panel'));
+  const inverterLine = bomLines.find((l: any) => l.item_category === 'inverter' || l.item_description?.toLowerCase().includes('inverter'));
 
   // Build the handover content as structured JSON
   const handoverContent = {
@@ -60,10 +65,10 @@ export async function generateHandoverPack(
     },
     system: {
       panelBrand: panelLine?.brand ?? 'As per BOM',
-      panelModel: panelLine?.item_name ?? '—',
+      panelModel: panelLine?.model ?? panelLine?.item_description ?? '—',
       panelQuantity: panelLine?.quantity ?? 0,
       inverterBrand: inverterLine?.brand ?? 'As per BOM',
-      inverterModel: inverterLine?.item_name ?? '—',
+      inverterModel: inverterLine?.model ?? inverterLine?.item_description ?? '—',
       inverterQuantity: inverterLine?.quantity ?? 1,
     },
     commissioning: (() => {
