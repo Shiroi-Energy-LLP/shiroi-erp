@@ -1,4 +1,5 @@
 import { createClient } from '@repo/supabase/server';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 export async function getPayments(filters: { type?: string; search?: string } = {}) {
   const op = '[getPayments]';
@@ -11,7 +12,10 @@ export async function getPayments(filters: { type?: string; search?: string } = 
     .limit(100);
   if (filters.type === 'advance') query = query.eq('is_advance', true);
   if (filters.type === 'milestone') query = query.eq('is_advance', false);
-  if (filters.search) query = query.or(`payment_reference.ilike.%${filters.search}%,receipt_number.ilike.%${filters.search}%`);
+  if (filters.search) {
+    const safeSearch = sanitizeForOr(filters.search);
+    query = query.or(`payment_reference.ilike.%${safeSearch}%,receipt_number.ilike.%${safeSearch}%`);
+  }
   const { data, error } = await query;
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });

@@ -1,4 +1,5 @@
 import { createClient } from '@repo/supabase/server';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -42,7 +43,8 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
   query = query.order(sortCol, { ascending: sortAsc });
 
   if (filters.search) {
-    query = query.or(`name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+    const safeSearch = sanitizeForOr(filters.search);
+    query = query.or(`name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`);
   }
   if (filters.lifecycleStage) {
     query = query.eq('lifecycle_stage' as any, filters.lifecycleStage);
@@ -119,10 +121,11 @@ export async function searchContacts(query: string) {
   const op = '[searchContacts]';
   const supabase = await createClient();
 
+  const safeQuery = sanitizeForOr(query);
   const { data, error } = await supabase
     .from('contacts')
     .select('id, name, first_name, last_name, phone, email, designation')
-    .or(`name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
+    .or(`name.ilike.%${safeQuery}%,phone.ilike.%${safeQuery}%,email.ilike.%${safeQuery}%`)
     .order('name')
     .limit(20);
 
@@ -165,7 +168,8 @@ export async function getCompanies(filters: CompanyFilters = {}): Promise<Pagina
 
   if (filters.segment) query = query.eq('segment', filters.segment as any);
   if (filters.search) {
-    query = query.or(`name.ilike.%${filters.search}%,city.ilike.%${filters.search}%,gstin.ilike.%${filters.search}%`);
+    const safeSearch = sanitizeForOr(filters.search);
+    query = query.or(`name.ilike.%${safeSearch}%,city.ilike.%${safeSearch}%,gstin.ilike.%${safeSearch}%`);
   }
 
   query = query.range(from, to);

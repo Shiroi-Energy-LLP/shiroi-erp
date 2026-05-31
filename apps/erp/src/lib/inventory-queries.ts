@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type StockPieceRow = Database['public']['Tables']['stock_pieces']['Row'];
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
@@ -116,7 +117,8 @@ export async function getStockPieces(filters: InventoryFilters = {}): Promise<St
     query = query.eq('is_scrap', filters.isScrap);
   }
   if (filters.search) {
-    query = query.or(`item_description.ilike.%${filters.search}%,brand.ilike.%${filters.search}%,serial_number.ilike.%${filters.search}%`);
+    const safeSearch = sanitizeForOr(filters.search);
+    query = query.or(`item_description.ilike.%${safeSearch}%,brand.ilike.%${safeSearch}%,serial_number.ilike.%${safeSearch}%`);
   }
 
   const { data, error } = await query;

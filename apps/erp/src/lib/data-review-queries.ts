@@ -4,6 +4,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
 
@@ -80,7 +81,7 @@ export async function listProjectsForReview(opts: {
       .order('created_at', { ascending: false })
       .range(from, to);
     if (opts.search?.trim()) {
-      const s = opts.search.trim();
+      const s = sanitizeForOr(opts.search.trim());
       q = q.or(`customer_name.ilike.%${s}%,project_number.ilike.%${s}%`);
     }
     const { data, error, count } = await q;
@@ -107,7 +108,7 @@ export async function listProjectsForReview(opts: {
   // 'all' tab: no review_status filter
 
   if (opts.search?.trim()) {
-    const s = opts.search.trim();
+    const s = sanitizeForOr(opts.search.trim());
     q = q.or(`customer_name.ilike.%${s}%,project_number.ilike.%${s}%,notes.ilike.%${s}%`);
   }
 
@@ -159,12 +160,13 @@ export async function searchProjectsForDuplicate(
   if (!query || query.trim().length < 2) return [];
   const op = '[searchProjectsForDuplicate]';
   const supabase = await createClient();
+  const safeQuery = sanitizeForOr(query.trim());
   const { data, error } = await supabase
     .from('projects')
     .select('id, project_number, customer_name, system_size_kwp')
     .neq('id', excludeId)
     .is('deleted_at', null)
-    .or(`customer_name.ilike.%${query.trim()}%,project_number.ilike.%${query.trim()}%`)
+    .or(`customer_name.ilike.%${safeQuery}%,project_number.ilike.%${safeQuery}%`)
     .limit(15);
   if (error) {
     console.error(op, { query, error, timestamp: new Date().toISOString() });

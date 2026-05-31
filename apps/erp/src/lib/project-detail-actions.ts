@@ -4,6 +4,7 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from './n8n/emit';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -407,7 +408,8 @@ export async function searchContactsLite(
     .limit(20);
 
   if (trimmed.length > 0) {
-    q = q.or(`name.ilike.%${trimmed}%,phone.ilike.%${trimmed}%,email.ilike.%${trimmed}%`);
+    const safeSearch = sanitizeForOr(trimmed);
+    q = q.or(`name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`);
   }
 
   const { data, error } = await q;

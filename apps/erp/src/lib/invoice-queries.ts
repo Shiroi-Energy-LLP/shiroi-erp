@@ -1,4 +1,5 @@
 import { createClient } from '@repo/supabase/server';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 /**
  * Fetch all invoices for a specific project, ordered newest-first.
@@ -32,7 +33,10 @@ export async function getInvoices(filters: { status?: string; search?: string } 
     .order('invoice_date', { ascending: false })
     .limit(100);
   if (filters.status) query = query.eq('status', filters.status);
-  if (filters.search) query = query.or(`invoice_number.ilike.%${filters.search}%`);
+  if (filters.search) {
+    const safeSearch = sanitizeForOr(filters.search);
+    query = query.or(`invoice_number.ilike.%${safeSearch}%`);
+  }
   const { data, error } = await query;
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });

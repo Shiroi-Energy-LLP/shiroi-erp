@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type ProposalStatus = Database['public']['Enums']['proposal_status'];
 
@@ -45,7 +46,8 @@ export async function getProposals(filters: ProposalFilters = {}): Promise<Pagin
   if (filters.isBudgetary === 'true') query = query.eq('is_budgetary', true);
   if (filters.isBudgetary === 'false') query = query.eq('is_budgetary', false);
   if (filters.search) {
-    query = query.or(`proposal_number.ilike.%${filters.search}%`);
+    const safeSearch = sanitizeForOr(filters.search);
+    query = query.or(`proposal_number.ilike.%${safeSearch}%`);
   }
 
   query = query.range(from, to);

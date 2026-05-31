@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
@@ -80,7 +81,10 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   if (filters.source) query = query.eq('source', filters.source);
   if (filters.segment) query = query.eq('segment', filters.segment as any);
   if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
-  if (filters.search) query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+  if (filters.search) {
+    const safeSearch = sanitizeForOr(filters.search);
+    query = query.or(`customer_name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%`);
+  }
   if (filters.kwpMin !== undefined) query = query.gte('estimated_size_kwp', filters.kwpMin);
   if (filters.kwpMax !== undefined) query = query.lte('estimated_size_kwp', filters.kwpMax);
   if (filters.closeFrom) query = query.gte('expected_close_date', filters.closeFrom);

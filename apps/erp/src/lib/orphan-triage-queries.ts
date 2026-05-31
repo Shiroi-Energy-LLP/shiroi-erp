@@ -1,6 +1,7 @@
 // apps/erp/src/lib/orphan-triage-queries.ts
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type CustomerPayment = Database['public']['Tables']['customer_payments']['Row'];
@@ -199,10 +200,11 @@ export async function searchAllProjects(query: string): Promise<CandidateProject
   console.log(`${op} Starting`, { query });
   if (!query || query.length < 2) return [];
   const supabase = await createClient();
+  const safeQuery = sanitizeForOr(query);
   const { data, error } = await supabase
     .from('projects')
     .select('id, project_number, customer_name, status, system_size_kwp, system_type, contracted_value, actual_start_date, actual_end_date')
-    .or(`customer_name.ilike.%${query}%,project_number.ilike.%${query}%`)
+    .or(`customer_name.ilike.%${safeQuery}%,project_number.ilike.%${safeQuery}%`)
     .limit(50);
   if (error) {
     console.error(`${op} query failed`, { error });

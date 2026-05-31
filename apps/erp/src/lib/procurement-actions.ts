@@ -7,6 +7,7 @@ import { logProcurementAudit } from '@/lib/procurement-audit';
 import type { VendorSearchResult } from '@/lib/procurement-queries';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from '@/lib/n8n/emit';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -704,7 +705,7 @@ export async function searchVendors(q: string, limit = 10): Promise<VendorSearch
   const op = '[searchVendors]';
   try {
     const supabase = await createClient();
-    const query = q.trim().replace(/[%,()]/g, '');
+    const query = sanitizeForOr(q);
     if (query.length < 2) return [];
     const { data, error } = await supabase
       .from('vendors')

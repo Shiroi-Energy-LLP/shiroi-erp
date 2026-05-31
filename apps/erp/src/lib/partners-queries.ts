@@ -7,6 +7,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 export type ChannelPartner = Database['public']['Tables']['channel_partners']['Row'];
 export type ChannelPartnerType = 'individual_broker' | 'aggregator' | 'ngo' | 'housing_society' | 'corporate' | 'consultant' | 'referral' | 'electrical_contractor' | 'architect' | 'mep_firm' | 'other';
@@ -39,7 +40,7 @@ export async function listPartners(opts: ListPartnersOptions = {}): Promise<List
       .is('deleted_at', null);
 
     if (opts.search && opts.search.trim() !== '') {
-      const q = opts.search.trim();
+      const q = sanitizeForOr(opts.search);
       query = query.or(`partner_name.ilike.%${q}%,contact_person.ilike.%${q}%,phone.ilike.%${q}%`);
     }
     if (opts.partnerType) {

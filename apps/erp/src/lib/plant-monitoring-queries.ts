@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Row types
@@ -55,7 +56,7 @@ export async function listPlantMonitoringCredentials(
   }
 
   if (filters.search && filters.search.trim().length > 0) {
-    const term = filters.search.trim();
+    const term = sanitizeForOr(filters.search);
     // Search username and notes. Project-name search is handled via the
     // project_id filter (user selects a project from the dropdown).
     query = query.or(`username.ilike.%${term}%,notes.ilike.%${term}%`);
