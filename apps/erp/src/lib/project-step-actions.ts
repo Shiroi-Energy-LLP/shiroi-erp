@@ -803,7 +803,7 @@ export async function createVendorDeliveryChallan(input: {
     .single();
   if (!employee) return { success: false, error: 'Employee profile not found' };
 
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from('vendor_delivery_challans')
     .insert({
       project_id: input.projectId,
@@ -813,15 +813,90 @@ export async function createVendorDeliveryChallan(input: {
       vendor_id: input.data.vendor_id,
       received_date: input.data.received_date,
       status: input.data.status || 'pending',
-    } as any);
+    } as any)
+    .select('id')
+    .single();
 
   if (error) {
     console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
     return { success: false, error: error.message };
   }
 
+  if (inserted) {
+    void emitGrnRecorded(inserted.id, input.projectId, employee.id);
+  }
+
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
+}
+
+async function emitGrnRecorded(
+  grnId: string,
+  projectId: string,
+  receivedByEmployeeId: string,
+): Promise<void> {
+  const op = '[emitGrnRecorded]';
+  try {
+    const supabase = await createClient();
+    const { data: grn } = await supabase
+      .from('vendor_delivery_challans')
+      .select('id, vendor_dc_number, vendor_id, received_date')
+      .eq('id', grnId)
+      .maybeSingle();
+    if (!grn) return;
+
+    const { data: project } = await supabase
+      .from('projects')
+      .select('project_number')
+      .eq('id', projectId)
+      .maybeSingle();
+
+    let vendorName: string | null = null;
+    if (grn.vendor_id) {
+      const { data: vendor } = await supabase
+        .from('vendors')
+        .select('company_name')
+        .eq('id', grn.vendor_id)
+        .maybeSingle();
+      vendorName = vendor?.company_name ?? null;
+    }
+
+    let receivedByName: string | null = null;
+    let financeHeadWhatsapp: string | null = null;
+    const { data: receiver } = await supabase
+      .from('employees')
+      .select('full_name')
+      .eq('id', receivedByEmployeeId)
+      .maybeSingle();
+    receivedByName = receiver?.full_name ?? null;
+
+    const { data: finance } = await supabase
+      .from('employees')
+      .select('whatsapp_number, profiles!inner(role)')
+      .eq('profiles.role', 'finance')
+      .limit(1)
+      .maybeSingle();
+    financeHeadWhatsapp = (finance as { whatsapp_number?: string | null } | null)?.whatsapp_number ?? null;
+
+    await emitErpEvent('grn.recorded', {
+      grn_id: grn.id,
+      grn_number: grn.vendor_dc_number,
+      project_id: projectId,
+      project_code: project?.project_number ?? null,
+      vendor_id: grn.vendor_id,
+      vendor_name: vendorName,
+      received_date: grn.received_date,
+      received_by_name: receivedByName,
+      finance_head_whatsapp: financeHeadWhatsapp,
+      erp_url: `https://erp.shiroienergy.com/projects/${projectId}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      grnId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 // ── Helper: Get vendors for delivery form ──

@@ -3,6 +3,7 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
+import { emitErpEvent } from './n8n/emit';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -159,9 +160,134 @@ export async function updateProjectField(input: {
     return { success: false, error: error.message };
   }
 
+  // Fire-and-forget event emits for n8n on installation scheduling /
+  // completion. Both keyed off project-level dates commonly set from the
+  // detail page Timeline section.
+  if (field === 'planned_start_date' && value) {
+    void emitInstallationScheduled(projectId, String(value));
+  }
+  if (field === 'actual_end_date' && value) {
+    void emitInstallationComplete(projectId, String(value));
+  }
+
   revalidatePath(`/projects/${projectId}`);
   revalidatePath('/projects');
   return { success: true };
+}
+
+async function emitInstallationScheduled(
+  projectId: string,
+  plannedStartDate: string,
+): Promise<void> {
+  const op = '[emitInstallationScheduled]';
+  try {
+    const supabase = await createClient();
+    const { data: project } = await supabase
+      .from('projects')
+      .select(
+        'id, project_number, customer_name, customer_phone, site_city, system_size_kwp, project_manager_id, site_supervisor_id',
+      )
+      .eq('id', projectId)
+      .maybeSingle();
+    if (!project) return;
+
+    let projectManagerName: string | null = null;
+    let projectManagerWhatsapp: string | null = null;
+    if (project.project_manager_id) {
+      const { data: pm } = await supabase
+        .from('employees')
+        .select('full_name, whatsapp_number')
+        .eq('id', project.project_manager_id)
+        .maybeSingle();
+      projectManagerName = pm?.full_name ?? null;
+      projectManagerWhatsapp = pm?.whatsapp_number ?? null;
+    }
+
+    let siteSupervisorWhatsapp: string | null = null;
+    if (project.site_supervisor_id) {
+      const { data: ss } = await supabase
+        .from('employees')
+        .select('whatsapp_number')
+        .eq('id', project.site_supervisor_id)
+        .maybeSingle();
+      siteSupervisorWhatsapp = ss?.whatsapp_number ?? null;
+    }
+
+    await emitErpEvent('project.installation_scheduled', {
+      project_id: project.id,
+      project_number: project.project_number,
+      customer_name: project.customer_name,
+      customer_phone: project.customer_phone,
+      site_city: project.site_city,
+      system_size_kwp: project.system_size_kwp,
+      planned_start_date: plannedStartDate,
+      project_manager_name: projectManagerName,
+      project_manager_whatsapp: projectManagerWhatsapp,
+      site_supervisor_whatsapp: siteSupervisorWhatsapp,
+      erp_url: `https://erp.shiroienergy.com/projects/${project.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      projectId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+async function emitInstallationComplete(
+  projectId: string,
+  actualEndDate: string,
+): Promise<void> {
+  const op = '[emitInstallationComplete]';
+  try {
+    const supabase = await createClient();
+    const { data: project } = await supabase
+      .from('projects')
+      .select(
+        'id, project_number, customer_name, customer_phone, system_size_kwp, project_manager_id',
+      )
+      .eq('id', projectId)
+      .maybeSingle();
+    if (!project) return;
+
+    let projectManagerName: string | null = null;
+    if (project.project_manager_id) {
+      const { data: pm } = await supabase
+        .from('employees')
+        .select('full_name')
+        .eq('id', project.project_manager_id)
+        .maybeSingle();
+      projectManagerName = pm?.full_name ?? null;
+    }
+
+    let liaisonLeadWhatsapp: string | null = null;
+    const { data: liaison } = await supabase
+      .from('employees')
+      .select('whatsapp_number, profiles!inner(role)')
+      .eq('profiles.role', 'sales_engineer')
+      .limit(1)
+      .maybeSingle();
+    liaisonLeadWhatsapp = (liaison as { whatsapp_number?: string | null } | null)?.whatsapp_number ?? null;
+
+    await emitErpEvent('project.installation_complete', {
+      project_id: project.id,
+      project_number: project.project_number,
+      customer_name: project.customer_name,
+      customer_phone: project.customer_phone,
+      system_size_kwp: project.system_size_kwp,
+      actual_end_date: actualEndDate,
+      project_manager_name: projectManagerName,
+      liaison_lead_whatsapp: liaisonLeadWhatsapp,
+      erp_url: `https://erp.shiroienergy.com/projects/${project.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      projectId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 /**

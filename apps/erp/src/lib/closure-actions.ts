@@ -221,6 +221,7 @@ export async function attemptWon(
     revalidateTag('lead-stage-counts');
     console.log(`${op} Lead ${leadId} flipped to won (green band, margin=${snapshot.grossMargin ?? 'n/a (no BOM cost)'}%)`);
     void emitLeadWon(leadId);
+    void emitProposalApproved(leadId);
     return ok({ outcome: 'won', newStatus: 'won' });
   } catch (e) {
     console.error(`${op} threw`, e);
@@ -304,6 +305,7 @@ export async function markWonSkipMargin(
     );
 
     void emitLeadWon(leadId);
+    void emitProposalApproved(leadId);
     revalidateTag('lead-stage-counts');
     revalidatePath(`/sales/${leadId}`);
     revalidatePath('/sales');
@@ -384,6 +386,7 @@ export async function approveClosure(approvalId: string): Promise<ActionResult<n
     revalidateTag('lead-stage-counts');
     console.log(`${op} Approval ${approvalId} approved, lead ${approval.lead_id} flipped to won`);
     void emitLeadWon(approval.lead_id);
+    void emitProposalApproved(approval.lead_id);
     return ok(null);
   } catch (e) {
     console.error(`${op} threw`, e);
@@ -422,6 +425,13 @@ export async function rejectClosure(
       .eq('profile_id', user.id)
       .maybeSingle();
 
+    // Capture lead_id before update so we can emit afterwards.
+    const { data: approval } = await supabase
+      .from('lead_closure_approvals')
+      .select('lead_id')
+      .eq('id', approvalId)
+      .maybeSingle();
+
     const { error } = await supabase
       .from('lead_closure_approvals')
       .update({
@@ -433,10 +443,130 @@ export async function rejectClosure(
       .eq('id', approvalId);
 
     if (error) return err(error.message, error.code);
+
+    if (approval?.lead_id) {
+      void emitProposalRejected(approval.lead_id, reason.trim());
+    }
     return ok(null);
   } catch (e) {
     console.error(`${op} threw`, e);
     return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+/**
+ * Fire-and-forget enrichment: fetch lead + proposal and emit proposal.approved.
+ * Fired from won-transition paths so the project manager + finance head get
+ * paged for customer handover.
+ */
+async function emitProposalApproved(leadId: string): Promise<void> {
+  const op = '[emitProposalApproved]';
+  try {
+    const supabase = await createClient();
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('id, customer_name, phone, draft_proposal_id')
+      .eq('id', leadId)
+      .maybeSingle();
+    if (!lead) return;
+
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id, system_size_kwp, contracted_value, project_manager_id')
+      .eq('lead_id', leadId)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    let projectManagerName: string | null = null;
+    let projectManagerWhatsapp: string | null = null;
+    if (project?.project_manager_id) {
+      const { data: pm } = await supabase
+        .from('employees')
+        .select('full_name, whatsapp_number')
+        .eq('id', project.project_manager_id)
+        .maybeSingle();
+      projectManagerName = pm?.full_name ?? null;
+      projectManagerWhatsapp = pm?.whatsapp_number ?? null;
+    }
+
+    let financeHeadWhatsapp: string | null = null;
+    const { data: finance } = await supabase
+      .from('employees')
+      .select('whatsapp_number, profiles!inner(role)')
+      .eq('profiles.role', 'finance')
+      .limit(1)
+      .maybeSingle();
+    financeHeadWhatsapp = (finance as { whatsapp_number?: string | null } | null)?.whatsapp_number ?? null;
+
+    await emitErpEvent('proposal.approved', {
+      proposal_id: lead.draft_proposal_id ?? null,
+      lead_id: lead.id,
+      customer_name: lead.customer_name,
+      customer_phone: lead.phone,
+      system_size_kwp: project?.system_size_kwp ?? null,
+      total_cost_inr: project?.contracted_value ?? null,
+      project_id: project?.id ?? null,
+      project_manager_name: projectManagerName,
+      project_manager_whatsapp: projectManagerWhatsapp,
+      finance_head_whatsapp: financeHeadWhatsapp,
+      erp_url: project?.id
+        ? `https://erp.shiroienergy.com/projects/${project.id}`
+        : `https://erp.shiroienergy.com/sales/${lead.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      leadId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Fire-and-forget enrichment: emit proposal.rejected when the founder rejects
+ * an amber-band closure request. The marketing manager + salesperson are
+ * paged downstream so they can renegotiate.
+ */
+async function emitProposalRejected(leadId: string, reason: string): Promise<void> {
+  const op = '[emitProposalRejected]';
+  try {
+    const supabase = await createClient();
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('id, customer_name, phone, assigned_to, draft_proposal_id')
+      .eq('id', leadId)
+      .maybeSingle();
+    if (!lead) return;
+
+    let salesPersonName: string | null = null;
+    let salesPersonWhatsapp: string | null = null;
+    if (lead.assigned_to) {
+      const { data: sales } = await supabase
+        .from('employees')
+        .select('full_name, whatsapp_number')
+        .eq('id', lead.assigned_to)
+        .maybeSingle();
+      salesPersonName = sales?.full_name ?? null;
+      salesPersonWhatsapp = sales?.whatsapp_number ?? null;
+    }
+
+    await emitErpEvent('proposal.rejected', {
+      lead_id: lead.id,
+      proposal_id: lead.draft_proposal_id ?? null,
+      customer_name: lead.customer_name,
+      customer_phone: lead.phone,
+      reason,
+      sales_person_name: salesPersonName,
+      sales_person_whatsapp: salesPersonWhatsapp,
+      rejected_at: new Date().toISOString(),
+      erp_url: `https://erp.shiroienergy.com/sales/${lead.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      leadId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
   }
 }
 
