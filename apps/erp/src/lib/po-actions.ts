@@ -49,9 +49,14 @@ export async function updatePoLineItemRate(input: {
   }
 
   const qty = Number(item.quantity_ordered);
-  const totalPrice = input.newRate * qty;
+  const lineSubtotal = input.newRate * qty;
   const gstRate = Number(item.gst_rate ?? 18);
-  const gstAmount = totalPrice * (gstRate / 100);
+  const gstAmount = lineSubtotal * (gstRate / 100);
+  // Canonical convention (see procurement-actions.ts createPurchaseOrder /
+  // createPOsFromAssignedItems, rfq-actions.ts award→PO, and migration 151's
+  // CHECK constraint): total_price stores subtotal + GST. Keep the inserter
+  // and the updater aligned — otherwise rows touched by this action drift.
+  const totalPrice = lineSubtotal + gstAmount;
 
   // Update item
   const { error: updateErr } = await supabase
