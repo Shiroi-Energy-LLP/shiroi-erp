@@ -3,6 +3,7 @@
 import { createClient } from '@repo/supabase/server';
 import { redirect } from 'next/navigation';
 import Decimal from 'decimal.js';
+import { emitErpEvent } from './n8n/emit';
 
 type GSTType = 'supply' | 'works_contract';
 type ScopeOwner = 'shiroi' | 'client' | 'builder' | 'excluded';
@@ -484,6 +485,31 @@ export async function createBudgetaryQuoteAction(
         // Don't fail the whole operation — the proposal is created; user can
         // manually advance the lead.
       }
+    }
+
+    // Fire-and-forget event for n8n: quick-quote was generated and (auto-)
+    // attached to the lead. Downstream workflows decide who gets paged.
+    try {
+      const { data: leadEnriched } = await supabase
+        .from('leads')
+        .select('customer_name, phone, email, segment')
+        .eq('id', input.leadId)
+        .maybeSingle();
+
+      void emitErpEvent('lead.quick_quote_sent', {
+        lead_id: input.leadId,
+        proposal_id: proposal.id,
+        proposal_number: docNum,
+        customer_name: leadEnriched?.customer_name ?? null,
+        customer_phone: leadEnriched?.phone ?? null,
+        customer_email: leadEnriched?.email ?? null,
+        segment: leadEnriched?.segment ?? input.segment,
+        system_size_kwp: input.systemSizeKwp,
+        total_after_discount: totalAfterDiscount,
+        erp_url: `https://erp.shiroienergy.com/sales/${input.leadId}`,
+      });
+    } catch (e) {
+      console.error(`${op} lead.quick_quote_sent emit failed (non-blocking):`, e);
     }
 
     console.log(`${op} Created budgetary quote ${docNum} (id: ${proposal.id})`);

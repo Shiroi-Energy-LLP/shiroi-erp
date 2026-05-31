@@ -6,7 +6,7 @@ import { createClient } from '@repo/supabase/client';
 import { Select, Button, Input } from '@repo/ui';
 import { getValidNextStatuses, requiresFollowUp, DEFAULT_PROBABILITY, STAGE_LABELS } from '@/lib/leads-helpers';
 import { upsertLeadFollowupTask } from '@/lib/leads-task-actions';
-import { invalidateLeadStageCounts } from '@/lib/leads-actions';
+import { invalidateLeadStageCounts, notifyLeadStageChanged } from '@/lib/leads-actions';
 import { triggerLeadScore } from '@/lib/ai/trigger-lead-score';
 import type { Database } from '@repo/types/database';
 
@@ -115,6 +115,15 @@ export function StatusChange({ leadId, currentStatus, currentExpectedCloseDate }
     // Flush the lead-stage-counts cache (non-blocking — server action).
     invalidateLeadStageCounts().catch((e) => {
       console.error(`${op} invalidateLeadStageCounts failed (non-fatal):`, { error: e });
+    });
+
+    // Fire-and-forget event bus emit for n8n notification workflows.
+    notifyLeadStageChanged({
+      leadId,
+      newStatus: selectedStatus,
+      previousStatus: currentStatus,
+    }).catch((e) => {
+      console.error(`${op} notifyLeadStageChanged failed (non-fatal):`, { error: e });
     });
 
     // Fire-and-forget: upsert follow-up task if a date was set (non-blocking)

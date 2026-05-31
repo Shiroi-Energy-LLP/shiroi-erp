@@ -14,6 +14,7 @@
 
 import { createAdminClient } from '@repo/supabase/admin';
 import type { RawAnomaly } from './anomaly-detector';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -410,6 +411,29 @@ export async function narrateAndPersistAnomaly(anomaly: RawAnomaly): Promise<Nar
       }
     }
   }
+
+  // Fire-and-forget: emit plant.anomaly_detected so n8n can fan out to
+  // PM/Vivek (severity-gated downstream). Includes ticket_id when the
+  // critical threshold triggered auto-ticket creation.
+  void emitErpEvent('plant.anomaly_detected', {
+    anomaly_id: persistedId,
+    ticket_id: ticketId,
+    project_id: anomaly.project_id,
+    customer_name: anomaly.customer_name,
+    site_city: anomaly.site_city,
+    system_size_kwp: anomaly.system_size_kwp,
+    anomaly_type: anomaly.anomaly_type,
+    detected_for_date: anomaly.detected_for_date,
+    expected_kwh: anomaly.expected_kwh,
+    actual_kwh: anomaly.actual_kwh,
+    deviation_pct: anomaly.deviation_pct,
+    consecutive_days: anomaly.consecutive_days,
+    ai_narrative: narrative?.narrative ?? null,
+    ai_suggested_cause: narrative?.suggested_cause ?? null,
+    ai_suggested_action: narrative?.suggested_action ?? null,
+    auto_ticket_created: meetsAutoTicketThreshold && ticketId !== null,
+    erp_url: `https://erp.shiroienergy.com/projects/${anomaly.project_id}`,
+  });
 
   return { id: persistedId, ticket_id: ticketId, ai_tokens_used: aiTokensUsed };
 }

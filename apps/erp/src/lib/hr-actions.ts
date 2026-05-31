@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { getUserProfile } from '@/lib/auth';
 import { getAttendanceExportData } from '@/lib/hr-queries';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 // ---------------------------------------------------------------------------
 // C5 — Leave Management
@@ -174,6 +175,70 @@ export async function cancelLeaveRequest(
   revalidatePath(`/hr/${request.employee_id}`);
   console.log(`${op} Cancelled request: ${requestId}`);
   return ok(undefined);
+}
+
+/**
+ * Fire the `leave_request.submitted` event to n8n after a client-side
+ * insert from the leave request form. The form writes directly via the
+ * browser Supabase client (preserves existing behaviour) and then calls
+ * this thin server action to fan out the n8n notification.
+ *
+ * Fire-and-forget; never throws.
+ */
+export async function notifyLeaveRequestSubmitted(leaveRequestId: string): Promise<void> {
+  const op = '[notifyLeaveRequestSubmitted]';
+  try {
+    if (!leaveRequestId) return;
+    const supabase = await createClient();
+    const { data: leave } = await supabase
+      .from('leave_requests')
+      .select(
+        'id, leave_type, from_date, to_date, days_requested, reason, employee_id',
+      )
+      .eq('id', leaveRequestId)
+      .maybeSingle();
+    if (!leave) return;
+
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('full_name, employee_code, department, reporting_to_id')
+      .eq('id', leave.employee_id)
+      .maybeSingle();
+
+    let managerName: string | null = null;
+    let managerWhatsapp: string | null = null;
+    if (employee?.reporting_to_id) {
+      const { data: manager } = await supabase
+        .from('employees')
+        .select('full_name, whatsapp_number')
+        .eq('id', employee.reporting_to_id)
+        .maybeSingle();
+      managerName = manager?.full_name ?? null;
+      managerWhatsapp = manager?.whatsapp_number ?? null;
+    }
+
+    void emitErpEvent('leave_request.submitted', {
+      leave_id: leave.id,
+      leave_type: leave.leave_type,
+      from_date: leave.from_date,
+      to_date: leave.to_date,
+      total_days: leave.days_requested,
+      reason: leave.reason,
+      employee_id: leave.employee_id,
+      employee_name: employee?.full_name ?? null,
+      employee_code: employee?.employee_code ?? null,
+      department: employee?.department ?? null,
+      manager_name: managerName,
+      manager_whatsapp: managerWhatsapp,
+      erp_url: `https://erp.shiroienergy.com/hr/leave`,
+    });
+  } catch (e) {
+    console.error(`${op} emit failed (non-blocking)`, {
+      leaveRequestId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------

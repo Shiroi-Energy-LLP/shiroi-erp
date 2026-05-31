@@ -251,8 +251,62 @@ export async function updateTicketStatus(
     return err(error.message, error.code);
   }
 
+  if (newStatus === 'resolved' || newStatus === 'closed') {
+    void emitOmTicketResolved(ticketId);
+  }
+
   revalidatePath('/om/tickets');
   return ok(undefined);
+}
+
+async function emitOmTicketResolved(ticketId: string): Promise<void> {
+  const op = '[emitOmTicketResolved]';
+  try {
+    const supabase = await createClient();
+    const { data: enriched } = await supabase
+      .from('om_service_tickets')
+      .select(`
+        id,
+        ticket_number,
+        title,
+        severity,
+        status,
+        resolution_notes,
+        resolved_at,
+        sla_breached,
+        project:projects!om_service_tickets_project_id_fkey ( project_number, customer_name, customer_phone ),
+        resolver:employees!om_service_tickets_resolved_by_fkey ( full_name, whatsapp_number )
+      `)
+      .eq('id', ticketId)
+      .single();
+    if (!enriched) return;
+
+    const project = Array.isArray(enriched.project) ? enriched.project[0] : enriched.project;
+    const resolver = Array.isArray(enriched.resolver) ? enriched.resolver[0] : enriched.resolver;
+
+    await emitErpEvent('om_ticket.resolved', {
+      ticket_id: enriched.id,
+      ticket_number: enriched.ticket_number,
+      title: enriched.title,
+      severity: enriched.severity,
+      status: enriched.status,
+      resolution_notes: enriched.resolution_notes,
+      resolved_at: enriched.resolved_at,
+      sla_breached: enriched.sla_breached,
+      project_code: project?.project_number ?? null,
+      customer_name: project?.customer_name ?? null,
+      customer_phone: project?.customer_phone ?? null,
+      resolved_by_name: resolver?.full_name ?? null,
+      resolved_by_whatsapp: resolver?.whatsapp_number ?? null,
+      erp_url: `https://erp.shiroienergy.com/om/tickets/${enriched.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} enrichment failed (non-blocking)`, {
+      ticketId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -281,6 +335,8 @@ export async function deleteServiceTicket(ticketId: string): Promise<ActionResul
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return err(error.message, error.code);
   }
+
+  void emitOmTicketResolved(ticketId);
 
   revalidatePath('/om/tickets');
   return ok(undefined);

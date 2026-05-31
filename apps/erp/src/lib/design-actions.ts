@@ -24,6 +24,7 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
+import { emitErpEvent } from './n8n/emit';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
@@ -94,6 +95,60 @@ export async function submitDesignConfirmation(
       })
       .eq('id', leadId);
     if (updErr) return err(updErr.message, updErr.code);
+
+    // Fire-and-forget event for n8n: design is confirmed and the proposal
+    // is ready for the salesperson to review & send to customer.
+    try {
+      const { data: leadEnriched } = await supabase
+        .from('leads')
+        .select('customer_name, phone, assigned_to')
+        .eq('id', leadId)
+        .maybeSingle();
+      const { data: proposal } = await supabase
+        .from('proposals')
+        .select('proposal_number, system_size_kwp, total_after_discount, margin_approval_required, prepared_by')
+        .eq('id', lead.draft_proposal_id)
+        .maybeSingle();
+
+      let preparedByName: string | null = null;
+      let salesPersonName: string | null = null;
+      let salesPersonWhatsApp: string | null = null;
+
+      if (proposal?.prepared_by) {
+        const { data: emp } = await supabase
+          .from('employees')
+          .select('full_name')
+          .eq('id', proposal.prepared_by)
+          .maybeSingle();
+        preparedByName = emp?.full_name ?? null;
+      }
+      if (leadEnriched?.assigned_to) {
+        const { data: salesEmp } = await supabase
+          .from('employees')
+          .select('full_name, whatsapp_number')
+          .eq('id', leadEnriched.assigned_to)
+          .maybeSingle();
+        salesPersonName = salesEmp?.full_name ?? null;
+        salesPersonWhatsApp = salesEmp?.whatsapp_number ?? null;
+      }
+
+      void emitErpEvent('proposal.submitted', {
+        proposal_id: lead.draft_proposal_id,
+        proposal_number: proposal?.proposal_number ?? null,
+        lead_id: leadId,
+        customer_name: leadEnriched?.customer_name ?? null,
+        customer_phone: leadEnriched?.phone ?? null,
+        system_size_kwp: proposal?.system_size_kwp ?? null,
+        total_price: proposal?.total_after_discount ?? null,
+        margin_approval_required: proposal?.margin_approval_required ?? false,
+        sales_person_name: salesPersonName,
+        sales_person_whatsapp: salesPersonWhatsApp,
+        prepared_by_name: preparedByName,
+        erp_url: `https://erp.shiroienergy.com/sales/${leadId}`,
+      });
+    } catch (e) {
+      console.error(`${op} emit failed (non-blocking):`, e);
+    }
 
     console.log(`${op} Lead ${leadId} design confirmed by ${employee.id}`);
     return ok({ proposalId: lead.draft_proposal_id });

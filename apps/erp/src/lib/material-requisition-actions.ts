@@ -14,6 +14,7 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import type { Database } from '@repo/types/database';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 type MatReqInsert = Database['public']['Tables']['material_requisitions']['Insert'];
 type MatReqUpdate = Database['public']['Tables']['material_requisitions']['Update'];
@@ -405,6 +406,49 @@ export async function convertRequisitionToPO(input: {
           error: notifErr instanceof Error ? notifErr.message : String(notifErr),
         });
       }
+    }
+
+    // Fire-and-forget event bus emit so purchase head/digest workflows can
+    // react to the newly created PO.
+    try {
+      const { data: enriched } = await supabase
+        .from('purchase_orders')
+        .select(`
+          id,
+          po_number,
+          total_amount,
+          approval_status,
+          project:projects!purchase_orders_project_id_fkey ( project_number, customer_name ),
+          vendor:vendors!purchase_orders_vendor_id_fkey ( company_name ),
+          preparer:employees!purchase_orders_prepared_by_fkey ( id, full_name, whatsapp_number )
+        `)
+        .eq('id', po.id)
+        .single();
+      if (enriched) {
+        const project = Array.isArray(enriched.project) ? enriched.project[0] : enriched.project;
+        const vendor = Array.isArray(enriched.vendor) ? enriched.vendor[0] : enriched.vendor;
+        const preparer = Array.isArray(enriched.preparer) ? enriched.preparer[0] : enriched.preparer;
+
+        void emitErpEvent('purchase_order.created', {
+          purchase_order_id: enriched.id,
+          po_number: enriched.po_number,
+          vendor_name: vendor?.company_name ?? null,
+          total_amount: enriched.total_amount,
+          project_code: project?.project_number ?? null,
+          customer_name: project?.customer_name ?? null,
+          approval_status: enriched.approval_status,
+          preparer_name: preparer?.full_name ?? null,
+          preparer_whatsapp: preparer?.whatsapp_number ?? null,
+          source: 'material_requisition',
+          requisition_id: input.requisitionId,
+          erp_url: `https://erp.shiroienergy.com/procurement/${enriched.id}`,
+        });
+      }
+    } catch (emitErr) {
+      console.error(`${op} po.created emit failed (non-blocking)`, {
+        poId: po.id,
+        error: emitErr instanceof Error ? emitErr.message : String(emitErr),
+      });
     }
 
     revalidatePath(`/procurement/project/${req.project_id}`);

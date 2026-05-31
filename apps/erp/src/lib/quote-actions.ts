@@ -30,6 +30,7 @@ import Decimal from 'decimal.js';
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
+import { emitErpEvent } from './n8n/emit';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 type Proposal = Database['public']['Tables']['proposals']['Row'];
@@ -129,6 +130,43 @@ export async function createDraftDetailedProposal(
       .update({ draft_proposal_id: proposal.id })
       .eq('id', leadId);
     if (updErr) return err(updErr.message, updErr.code);
+
+    // Fire-and-forget event for n8n: sales requested a detailed proposal —
+    // design head needs to assign a designer.
+    try {
+      const { data: leadEnriched } = await supabase
+        .from('leads')
+        .select('customer_name, phone, city, estimated_size_kwp')
+        .eq('id', leadId)
+        .maybeSingle();
+      const { data: requester } = await supabase
+        .from('employees')
+        .select('full_name')
+        .eq('id', employee.id)
+        .maybeSingle();
+      const { data: designer } = await supabase
+        .from('employees')
+        .select('whatsapp_number, profiles!inner(role)')
+        .eq('profiles.role', 'designer')
+        .limit(1)
+        .maybeSingle();
+      const designHeadWhatsapp = (designer as { whatsapp_number?: string | null } | null)?.whatsapp_number ?? null;
+
+      void emitErpEvent('proposal.requested', {
+        proposal_id: proposal.id,
+        proposal_number: docNum,
+        lead_id: leadId,
+        customer_name: leadEnriched?.customer_name ?? null,
+        customer_phone: leadEnriched?.phone ?? null,
+        city: leadEnriched?.city ?? null,
+        estimated_size_kwp: leadEnriched?.estimated_size_kwp ?? null,
+        requested_by_name: requester?.full_name ?? null,
+        design_head_whatsapp: designHeadWhatsapp,
+        erp_url: `https://erp.shiroienergy.com/design/${leadId}`,
+      });
+    } catch (e) {
+      console.error(`${op} emit failed (non-blocking):`, e);
+    }
 
     console.log(`${op} Created draft detailed proposal ${proposal.id} for lead ${leadId}`);
     return ok({ proposalId: proposal.id });

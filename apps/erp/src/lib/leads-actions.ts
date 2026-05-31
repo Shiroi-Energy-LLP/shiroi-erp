@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
 import { routeLeadAndAssign } from '@/lib/ai/lead-router';
+import { emitErpEvent } from '@/lib/n8n/emit';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 type CustomerSegment = Database['public']['Enums']['customer_segment'];
@@ -76,6 +77,19 @@ export async function createLead(
     // Fire-and-forget AI routing — must not block or fail lead creation.
     void routeLeadAndAssign(newId);
 
+    // Fire-and-forget event bus emit — n8n router fans out to sales head
+    // digest, lead-routed downstream notifications, etc.
+    void emitErpEvent('lead.created', {
+      lead_id: newId,
+      lead_name: input.customer_name.trim(),
+      lead_phone: input.phone,
+      lead_source: input.source,
+      segment: input.segment,
+      city: input.city.trim(),
+      estimated_size_kwp: input.estimated_size_kwp ?? null,
+      erp_url: `https://erp.shiroienergy.com/sales/${newId}`,
+    });
+
     return ok({ id: newId });
   } catch (e) {
     console.error(`${op} threw`, { error: e, timestamp: new Date().toISOString() });
@@ -91,6 +105,45 @@ export async function createLead(
  */
 export async function invalidateLeadStageCounts(): Promise<void> {
   revalidateTag('lead-stage-counts');
+}
+
+/**
+ * Companion to the cache-flush helper above — also fires the
+ * `lead.stage_changed` event so n8n notification workflows can react.
+ * Called from client components after they update lead.status directly.
+ * Fire-and-forget; never throws.
+ */
+export async function notifyLeadStageChanged(input: {
+  leadId: string;
+  newStatus: LeadStatus;
+  previousStatus?: LeadStatus | null;
+}): Promise<void> {
+  const op = '[notifyLeadStageChanged]';
+  try {
+    const supabase = await createClient();
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('id, customer_name, phone, assigned_to')
+      .eq('id', input.leadId)
+      .maybeSingle();
+    if (!lead) return;
+
+    void emitErpEvent('lead.stage_changed', {
+      lead_id: lead.id,
+      lead_name: lead.customer_name,
+      lead_phone: lead.phone,
+      new_status: input.newStatus,
+      previous_status: input.previousStatus ?? null,
+      assigned_to: lead.assigned_to,
+      erp_url: `https://erp.shiroienergy.com/sales/${lead.id}`,
+    });
+  } catch (e) {
+    console.error(`${op} emit failed (non-blocking)`, {
+      leadId: input.leadId,
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 export async function bulkAssignLeads(leadIds: string[], assignedTo: string): Promise<{ success: boolean; error?: string }> {
@@ -142,6 +195,11 @@ export async function bulkChangeLeadStatus(leadIds: string[], status: LeadStatus
   revalidateTag('lead-stage-counts');
   revalidatePath('/sales');
   revalidatePath('/leads');
+
+  // Fire-and-forget per-lead emits for n8n. Don't block the bulk update.
+  for (const row of data ?? []) {
+    void notifyLeadStageChanged({ leadId: row.id, newStatus: status });
+  }
 
   if (updatedCount < leadIds.length) {
     console.warn(`${op} Partial update: ${updatedCount} of ${leadIds.length} leads updated`, { timestamp: new Date().toISOString() });

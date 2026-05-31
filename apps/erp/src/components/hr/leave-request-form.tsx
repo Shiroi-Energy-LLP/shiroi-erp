@@ -15,6 +15,7 @@ import {
   useToast,
 } from '@repo/ui';
 import type { Database } from '@repo/types/database';
+import { notifyLeaveRequestSubmitted } from '@/lib/hr-actions';
 
 type LeaveType = Database['public']['Enums']['leave_type'];
 
@@ -89,9 +90,10 @@ export function LeaveRequestForm({ employeeId }: LeaveRequestFormProps) {
     try {
       const supabase = createClient();
       const daysRequested = calculateDays();
+      const newLeaveId = crypto.randomUUID();
 
       const { error: insertError } = await supabase.from('leave_requests').insert({
-        id: crypto.randomUUID(),
+        id: newLeaveId,
         employee_id: employeeId,
         leave_type: form.leave_type as LeaveType,
         from_date: form.from_date,
@@ -109,6 +111,11 @@ export function LeaveRequestForm({ employeeId }: LeaveRequestFormProps) {
         addToast({ variant: 'destructive', title: 'Failed to submit leave request', description: insertError.message });
         return;
       }
+
+      // Fire-and-forget event bus emit for n8n notification workflow.
+      notifyLeaveRequestSubmitted(newLeaveId).catch((e) => {
+        console.error(`${op} notifyLeaveRequestSubmitted failed (non-fatal):`, { error: e });
+      });
 
       setSuccess(true);
       addToast({ variant: 'success', title: 'Leave request submitted', description: 'Your leave request has been submitted for approval.' });
