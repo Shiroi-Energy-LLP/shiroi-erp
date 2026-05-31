@@ -6,7 +6,7 @@
  * Flow (the simple path):
  *   1. Auth-check (founder + marketing_manager + sales_engineer).
  *   2. Generate / refresh the PDF in proposal-files Storage.
- *   3. Sign a 30-day URL for the PDF.
+ *   3. Sign a 24-hour URL for the PDF (short TTL since customer email is sent immediately).
  *   4. Look up the customer email + segment + amounts from the proposal+lead.
  *   5. Update proposals.sent_to_customer_at + (if draft) status='sent'.
  *   6. Fire `proposal.sent_to_customer` to the n8n event bus — an n8n
@@ -25,7 +25,8 @@ import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { emitErpEvent } from '@/lib/n8n/emit';
 
-const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+// Security review 2026-05-30 #8: 24h TTL — customer email sent at send-time, event-bus URL only needs short window
+const SIGNED_URL_TTL_SECONDS = 24 * 60 * 60; // 24 hours (86400s)
 const ALLOWED_ROLES = new Set(['founder', 'marketing_manager', 'sales_engineer']);
 const CC_EMAIL = 'svivek.88@gmail.com';
 const FROM_EMAIL = 'prem@shiroienergy.com';

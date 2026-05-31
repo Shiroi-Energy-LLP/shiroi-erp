@@ -41,7 +41,40 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
   // independent HTTP endpoints; the page-level gate at /hr/employees/new
   // does not protect this action against direct invocation. Without this
   // check any authenticated user could POST { role: 'founder', ... }.
-  await requireRole(['founder', 'hr_manager']);
+  const caller = await requireRole(['founder', 'hr_manager']);
+
+  // Audit log: every creation attempt (5a — defense-in-depth audit trail).
+  console.log(op, 'attempt', {
+    callerId: caller.id,
+    callerRole: caller.role,
+    targetEmail: input.email,
+    requestedRole: input.role,
+    timestamp: new Date().toISOString(),
+  });
+
+  // 5c: Block non-founder from creating founder-role accounts (privilege escalation prevention).
+  if (input.role === 'founder' && caller.role !== 'founder') {
+    console.log(op, 'rejected', {
+      callerId: caller.id,
+      callerRole: caller.role,
+      targetEmail: input.email,
+      reason: 'non_founder_creating_founder',
+      timestamp: new Date().toISOString(),
+    });
+    return { success: false, error: 'Only an existing founder can create another founder account' };
+  }
+
+  // 5b: Enforce @shiroienergy.com email domain when caller is NOT founder.
+  if (caller.role !== 'founder' && !input.email.trim().toLowerCase().endsWith('@shiroienergy.com')) {
+    console.log(op, 'rejected', {
+      callerId: caller.id,
+      callerRole: caller.role,
+      targetEmail: input.email,
+      reason: 'non_shiroi_domain',
+      timestamp: new Date().toISOString(),
+    });
+    return { success: false, error: 'Non-founder callers may only create accounts with @shiroienergy.com email addresses' };
+  }
 
   console.log(`${op} Starting for: ${input.email}`);
 
@@ -69,6 +102,14 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
 
   if (authError) {
     console.error(`${op} Auth user creation failed:`, { message: authError.message });
+    console.log(op, 'failure', {
+      callerId: caller.id,
+      targetEmail: input.email,
+      requestedRole: input.role,
+      stage: 'auth_user_create',
+      reason: authError.message,
+      timestamp: new Date().toISOString(),
+    });
     if (authError.message.includes('already been registered')) {
       return { success: false, error: 'An account with this email already exists' };
     }
@@ -77,6 +118,13 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
 
   if (!authData.user) {
     console.error(`${op} Auth user creation returned no user`);
+    console.log(op, 'failure', {
+      callerId: caller.id,
+      targetEmail: input.email,
+      requestedRole: input.role,
+      stage: 'auth_user_create_no_user',
+      timestamp: new Date().toISOString(),
+    });
     return { success: false, error: 'Auth user creation failed unexpectedly' };
   }
 
@@ -98,6 +146,14 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
 
   if (profileError) {
     console.error(`${op} Profile update failed:`, { code: profileError.code, message: profileError.message });
+    console.log(op, 'failure', {
+      callerId: caller.id,
+      targetEmail: input.email,
+      requestedRole: input.role,
+      stage: 'profile_update',
+      reason: profileError.message,
+      timestamp: new Date().toISOString(),
+    });
     // Don't fail entirely — auth user exists, profile can be fixed manually
     return { success: false, error: `Auth account created but profile update failed: ${profileError.message}. The user can still log in.` };
   }
@@ -124,10 +180,26 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
 
   if (employeeError || !newEmployee) {
     console.error(`${op} Employee insert failed:`, { code: employeeError?.code, message: employeeError?.message });
+    console.log(op, 'failure', {
+      callerId: caller.id,
+      targetEmail: input.email,
+      requestedRole: input.role,
+      stage: 'employee_insert',
+      reason: employeeError?.message ?? 'unknown',
+      timestamp: new Date().toISOString(),
+    });
     return { success: false, error: `Auth + profile created but employee record failed: ${employeeError?.message ?? 'unknown'}` };
   }
 
   console.log(`${op} Employee record created for: ${input.fullName}`);
+  console.log(op, 'success', {
+    callerId: caller.id,
+    callerRole: caller.role,
+    targetEmail: input.email,
+    targetEmployeeId: newEmployee.id,
+    grantedRole: input.role,
+    timestamp: new Date().toISOString(),
+  });
 
   revalidatePath('/hr/employees');
 
@@ -171,11 +243,28 @@ export async function deactivateEmployee(employeeId: string): Promise<{ success:
 
   // Role gate (security review 2026-05-30 #2 — CRITICAL): without this
   // check any authenticated user could lock the founder out for 100 years.
-  await requireRole(['founder', 'hr_manager']);
+  const caller = await requireRole(['founder', 'hr_manager']);
+
+  // Audit log: every deactivation attempt (5a — defense-in-depth audit trail).
+  console.log(op, 'attempt', {
+    callerId: caller.id,
+    callerRole: caller.role,
+    targetEmployeeId: employeeId,
+    timestamp: new Date().toISOString(),
+  });
 
   console.log(`${op} Starting for employee: ${employeeId}`);
 
-  if (!employeeId) return { success: false, error: 'Employee ID is required' };
+  if (!employeeId) {
+    console.log(op, 'failure', {
+      callerId: caller.id,
+      targetEmployeeId: employeeId,
+      stage: 'validation',
+      reason: 'missing_employee_id',
+      timestamp: new Date().toISOString(),
+    });
+    return { success: false, error: 'Employee ID is required' };
+  }
 
   const adminClient = createAdminClient();
 
@@ -188,6 +277,13 @@ export async function deactivateEmployee(employeeId: string): Promise<{ success:
 
   if (fetchError || !employee) {
     console.error(`${op} Employee not found:`, { code: fetchError?.code, message: fetchError?.message });
+    console.log(op, 'failure', {
+      callerId: caller.id,
+      targetEmployeeId: employeeId,
+      stage: 'employee_fetch',
+      reason: fetchError?.message ?? 'not_found',
+      timestamp: new Date().toISOString(),
+    });
     return { success: false, error: 'Employee not found' };
   }
 
@@ -203,6 +299,14 @@ export async function deactivateEmployee(employeeId: string): Promise<{ success:
 
   if (empError) {
     console.error(`${op} Employee deactivation failed:`, { code: empError.code, message: empError.message });
+    console.log(op, 'failure', {
+      callerId: caller.id,
+      targetEmployeeId: employeeId,
+      targetEmployeeName: employee.full_name,
+      stage: 'employee_update',
+      reason: empError.message,
+      timestamp: new Date().toISOString(),
+    });
     return { success: false, error: `Failed to deactivate employee: ${empError.message}` };
   }
 
@@ -231,6 +335,13 @@ export async function deactivateEmployee(employeeId: string): Promise<{ success:
   }
 
   console.log(`${op} Employee deactivated: ${employee.full_name}`);
+  console.log(op, 'success', {
+    callerId: caller.id,
+    callerRole: caller.role,
+    targetEmployeeId: employeeId,
+    targetEmployeeName: employee.full_name,
+    timestamp: new Date().toISOString(),
+  });
 
   revalidatePath('/hr/employees');
   return { success: true };

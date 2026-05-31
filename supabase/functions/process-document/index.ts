@@ -1,3 +1,4 @@
+// SECURITY: requires service-role JWT bearer — process-document doc 2026-05-30 review #3
 /**
  * process-document Edge Function — E6 real implementation
  *
@@ -239,6 +240,42 @@ Deno.serve(async (req: Request) => {
     return new Response('Method not allowed', { status: 405 });
   }
 
+  // SECURITY: require service-role bearer token. Anyone hitting this URL without
+  // the project's service-role key gets a 401 — prevents anonymous callers from
+  // burning ANTHROPIC_API_KEY + JINA_API_KEY quota by supplying arbitrary
+  // document_ids. We accept either SUPABASE_SECRET_KEY (new naming) or
+  // SUPABASE_SERVICE_ROLE_KEY (legacy / auto-injected by Supabase runtime),
+  // mirroring the fallback below for `serviceKey`.
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
+  const jinaKey = Deno.env.get('JINA_API_KEY');
+
+  if (!supabaseUrl || !serviceKey) {
+    console.error(`${op} Missing SUPABASE_URL or service key`);
+    return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
+  const authHeader = req.headers.get('authorization') ?? req.headers.get('Authorization');
+  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
+    console.warn(`${op} Unauthorized: missing or malformed Authorization header`, { timestamp: new Date().toISOString() });
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  const token = authHeader.slice(7).trim();
+  if (token !== serviceKey) {
+    console.warn(`${op} Unauthorized: token mismatch`, { timestamp: new Date().toISOString() });
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
   let input: ProcessDocumentInput;
   try {
     input = await req.json();
@@ -252,19 +289,6 @@ Deno.serve(async (req: Request) => {
   if (!input.document_id) {
     return new Response(JSON.stringify({ error: 'Missing document_id' }), {
       status: 400,
-      headers: { 'content-type': 'application/json' },
-    });
-  }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const serviceKey = Deno.env.get('SUPABASE_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
-  const jinaKey = Deno.env.get('JINA_API_KEY');
-
-  if (!supabaseUrl || !serviceKey) {
-    console.error(`${op} Missing SUPABASE_URL or service key`);
-    return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
-      status: 500,
       headers: { 'content-type': 'application/json' },
     });
   }
