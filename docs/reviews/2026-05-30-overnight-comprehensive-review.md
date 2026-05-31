@@ -109,7 +109,31 @@ Both indexes applied to dev DB via MCP. Safe additive — no behaviour change.
 - HIGH: 5 new `count: 'exact'` introductions on `tasks`/`rag_query_log` that fall outside the forbidden-patterns baseline.
 
 ### From dead-code review
-*(Status TBD — agent still running. Will append on completion.)*
+
+**Read the per-dimension report [`sections/2026-05-30-dead-code.md`](sections/2026-05-30-dead-code.md) for full 36-finding list.**
+
+**Applied via verify-and-apply workflow (`dead-code-safe-fixes`)** — 7 parallel agents each verified one safe-fix candidate before mutating:
+- Delete `apps/erp/src/lib/pvwatts.ts` (78 LOC, 60+ days dead, zero callers verified)
+- Delete `apps/erp/src/lib/ai/project-daily-report.ts` (zero callers + references nonexistent columns per prior review)
+- Rename `supabase/migrations/115_referrer_consolidation.sql` → `115b_referrer_consolidation.sql` (resolves duplicate prefix with `115_liaison_tneb_stages.sql`; pure filesystem rename since both already applied)
+- Rename `infrastructure/n8n/workflows/29-drive-folder-create.json` → `31-drive-folder-create.json` (resolves duplicate prefix with `29-proposal-sent-to-customer.json`)
+- Remove `@hookform/resolvers` from `apps/erp/package.json` (zero `zodResolver` imports anywhere) + ADD `@anthropic-ai/sdk` (was relying on root-package hoist, fragile)
+- Remove unused `MAX_TOKENS_SHORT` export from `apps/erp/src/lib/ai/anthropic-client.ts`
+- Update stale "STUB (live HTTP TODO)" comment in `packages/inverter-adapters/src/index.ts` to reflect Phase 8 LIVE state
+
+(Workflow result + actual fix list filled in by the post-workflow commit.)
+
+**Larger items NOT auto-fixed (need Vivek's call):**
+- 7 unwired UI components — `LeadScoreBadge`, `PriceOverrideModal`, `ReferrerChangeDialog`, `RescheduleVisitDialog`, `VisitStatusToggle`, `AwaitingClientToggle`, `TaskWorkLog`. Per-component decision: wire into a page or delete.
+- `task_work_logs` table + `addWorkLog`/`getWorkLogs` actions + `TaskWorkLog` component = complete dead feature island. Ship it (~½ day) or drop the whole stack.
+- 19 of 41 declared `ErpEventName` events never emitted from ERP code. The matching n8n workflows wait on events that never fire. Wire the emits OR trim the union + stub the workflows together.
+- ~45 application-unused tables across migrations 002-006 + foundation waves. One-shot schema-sweep migration after a 30-day "anything we missed?" window. Pre-categorise into definitely-dead vs. write-only-audit vs. keep-for-future.
+- Extract `MS_PER_DAY` constant + replace 19+ inline `1000 * 60 * 60 * 24` magic-number sites across `ai/*` and dashboards. Pattern: `apps/erp/src/lib/time-helpers.ts`.
+- Replace 13 local `formatDate(...)` reimplementations with `import { formatDate } from '@repo/ui/formatters'`. Quick wins but multi-file.
+- Move duplicated `PaginatedResult<T>` interface (defined identically in `contacts-queries.ts` + `projects-queries.ts`) to `apps/erp/src/lib/types/pagination.ts`.
+- 14 unused server-action exports (`countPendingClosureApprovals`, `softDeleteDocument`, `listMilestonePhotos`, `listPendingOutreach`, `getTerritory`, `getProjectsWithNoReportToday`, `verifyEntityData`, `cancelRfq`, `disablePartner`/`enablePartner`/`updatePartner`, `updateVendor`, `deleteAmc`, `archiveLead`/`unarchiveLead` pair, `batchApproveQueueItems`/`batchRejectQueueItems`, `createObjection`, `addCostVariance`, `allocateToProject`, `endContactCompanyRole`). Some are half-built features — confirm with Vivek which to wire vs. kill.
+- 8 lib files + 4 component files exceed NEVER-DO #14's 500-LOC limit. Worst: `project-step-actions.ts` at **2522 LOC** (5× limit). Split needed but architecture-level surgery.
+- 103 inline `supabase.auth.getUser()` blocks — extract a `requireAuthUser()` helper that returns `{user} | ActionResult<never>` (existing `requireAuth()` redirects so only works in server components).
 
 ---
 

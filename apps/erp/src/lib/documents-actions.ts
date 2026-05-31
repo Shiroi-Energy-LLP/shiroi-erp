@@ -150,7 +150,7 @@ export async function uploadProjectDocument(
  * Documents mutations + Drive folder lifecycle (mig 109, phase 1).
  *
  * The Drive-folder action fires an n8n event (`lead.drive_folder_requested`).
- * The n8n workflow (`infrastructure/n8n/workflows/29-drive-folder-create.json`)
+ * The n8n workflow (`infrastructure/n8n/workflows/31-drive-folder-create.json`)
  * picks it up, creates the Drive folder, and writes back `drive_folder_id` +
  * `drive_folder_url` to the lead row via Supabase REST. This keeps the Drive
  * service-account credential in n8n only.

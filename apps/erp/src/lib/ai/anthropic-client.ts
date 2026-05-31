@@ -22,9 +22,6 @@ export const CLAUDE_MODEL = 'claude-sonnet-4-20250514' as const;
 /** Max tokens for generation tasks (narrative, summary). */
 export const MAX_TOKENS_GENERATION = 1024;
 
-/** Max tokens for short outputs (subject lines, one-liners). */
-export const MAX_TOKENS_SHORT = 256;
-
 let _client: Anthropic | null = null;
 
 /**

@@ -11,14 +11,14 @@
  * poller has no vendor-specific branching. See base.ts for the
  * contract and normalization rules.
  *
- * Current implementation status:
- *   - sungrow:    STUB (synthetic mode works, live HTTP TODO)
- *   - growatt:    STUB (synthetic mode works, live HTTP TODO)
+ * Current implementation status (Phase 8, 2026-05-24):
+ *   - sungrow:    LIVE (requires manual /api/integrations/sungrow/authorize OAuth click for the access token)
+ *   - growatt:    LIVE with in-process session cache (Phase 8 session-cache fix shipped 2026-05-24)
  *   - sma:        STUB (synthetic mode works)
  *   - huawei:     STUB (synthetic mode works)
  *   - fronius:    falls back to sungrow stub until dedicated adapter exists
- *   - solarman:   STUB (synthetic mode works, awaiting App ID + Secret from SolarMan)
- *   - goodwe:     STUB (synthetic mode works, awaiting SEMS Portal API access from Goodwe India)
+ *   - solarman:   STUB (synthetic stub — registration pending)
+ *   - goodwe:     STUB (synthetic stub — registration pending)
  *   - fimer/polycab/havells/flin_energy: placeholder fallback to sungrow (no current install volume)
  *
  * Synthetic mode: set SYNTHETIC_INVERTER_READINGS=1 in the Edge Function
