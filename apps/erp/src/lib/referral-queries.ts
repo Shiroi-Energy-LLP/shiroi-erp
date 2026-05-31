@@ -16,7 +16,10 @@ export async function getReferralKpis() {
     console.error(`${op} pending count failed`, { error: pendingErr, timestamp: new Date().toISOString() });
   }
 
-  // This month commission (approved + paid, current calendar month) via RPC
+  // This month commission (approved + paid, current IST calendar month) via RPC
+  // (mig 144 get_referral_commission_this_month). RPC returns TABLE(total NUMERIC),
+  // so PostgREST hands back an array with one row.
+  // TODO: drop the cast once packages/types/database.ts is regenerated.
   const { data: monthData, error: monthErr } = await supabase
     .rpc('get_referral_commission_this_month' as never);
 
@@ -24,7 +27,7 @@ export async function getReferralKpis() {
     console.error(`${op} month commission failed`, { error: monthErr, timestamp: new Date().toISOString() });
   }
 
-  // Lifetime commission paid
+  // Lifetime commission paid (mig 144 get_referral_commission_lifetime).
   const { data: lifetimeData, error: lifetimeErr } = await supabase
     .rpc('get_referral_commission_lifetime' as never);
 
@@ -32,10 +35,13 @@ export async function getReferralKpis() {
     console.error(`${op} lifetime commission failed`, { error: lifetimeErr, timestamp: new Date().toISOString() });
   }
 
+  const monthRows = (monthData ?? []) as Array<{ total: number | string | null }>;
+  const lifetimeRows = (lifetimeData ?? []) as Array<{ total: number | string | null }>;
+
   return {
     pendingCount: pendingCount ?? 0,
-    thisMonthCommission: (monthData as { total: number } | null)?.total ?? 0,
-    lifetimeCommission: (lifetimeData as { total: number } | null)?.total ?? 0,
+    thisMonthCommission: Number(monthRows[0]?.total ?? 0),
+    lifetimeCommission: Number(lifetimeRows[0]?.total ?? 0),
   };
 }
 

@@ -727,81 +727,9 @@ export async function deleteBomLine(input: {
 }
 
 // ── BOQ Cost Variance CRUD ──
-
-export async function addCostVariance(input: {
-  projectId: string;
-  data: {
-    item_category: string;
-    estimated_cost: number;
-    actual_cost: number;
-    notes: string | null;
-  };
-}): Promise<{ success: boolean; error?: string }> {
-  const op = '[addCostVariance]';
-  console.log(`${op} Starting for project: ${input.projectId}`);
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
-
-  // Get or create profitability record
-  let profitabilityId: string | null = null;
-  const { data: existing } = await supabase
-    .from('project_profitability')
-    .select('id')
-    .eq('project_id', input.projectId)
-    .maybeSingle();
-
-  if (existing) {
-    profitabilityId = existing.id;
-  } else {
-    // Create profitability record
-    const { data: newProf, error: profError } = await supabase
-      .from('project_profitability')
-      .insert({
-        project_id: input.projectId,
-        contracted_value: 0,
-        total_estimated_cost: 0,
-        total_actual_cost: 0,
-        estimated_margin_pct: 0,
-        actual_margin_pct: 0,
-      } as any)
-      .select('id')
-      .single();
-
-    if (profError) {
-      console.error(`${op} Profitability creation failed:`, { code: profError.code, message: profError.message });
-      return { success: false, error: 'Could not create profitability record' };
-    }
-    profitabilityId = (newProf as any).id;
-  }
-
-  const varianceAmount = input.data.actual_cost - input.data.estimated_cost;
-  const variancePct = input.data.estimated_cost > 0
-    ? (varianceAmount / input.data.estimated_cost) * 100
-    : 0;
-
-  const { error } = await supabase
-    .from('project_cost_variances')
-    .insert({
-      project_id: input.projectId,
-      profitability_id: profitabilityId,
-      item_category: input.data.item_category,
-      estimated_cost: input.data.estimated_cost,
-      actual_cost: input.data.actual_cost,
-      variance_amount: varianceAmount,
-      variance_pct: Math.round(variancePct * 100) / 100,
-      notes: input.data.notes,
-    } as any);
-
-  if (error) {
-    console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
-  }
-
-  revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
-}
+// Note: addCostVariance was removed 2026-05-30 as dead code (zero callers found
+// across apps/, packages/, scripts/). The form path uses updateCostVariance.
+// See docs/reviews/sections/2026-05-30-dead-code.md.
 
 export async function updateCostVariance(input: {
   projectId: string;
@@ -1090,32 +1018,26 @@ export async function createDeliveryChallan(input: {
     return { success: false, error: itemsError.message };
   }
 
-  // Update dispatched_qty on BOQ items
+  // Update dispatched_qty on BOQ items via atomic RPC (migration 143).
+  // Single UPDATE per item avoids the lost-update race that two parallel
+  // challan dispatches would otherwise hit with a read-then-write block.
+  // TODO: drop the `as any` cast on `.rpc` once packages/types/database.ts
+  // is regenerated to include increment_boq_dispatched_qty.
   for (const item of input.items) {
-    await supabase.rpc('increment_boq_dispatched_qty' as any, {
-      p_item_id: item.boqItemId,
-      p_qty: item.quantity,
-    }).then(({ error: rpcError }) => {
-      if (rpcError) {
-        // Fallback: manual update
-        console.warn(`${op} RPC not available, updating manually`);
-      }
-    });
-
-    // Manual fallback — directly update dispatched qty
-    const { data: boqItemRaw } = await supabase
-      .from('project_boq_items')
-      .select('dispatched_qty')
-      .eq('id', item.boqItemId)
-      .single();
-    const boqItem = boqItemRaw as any;
-
-    if (boqItem) {
-      const newQty = (Number(boqItem.dispatched_qty) || 0) + item.quantity;
-      await supabase
-        .from('project_boq_items')
-        .update({ dispatched_qty: newQty } as any)
-        .eq('id', item.boqItemId);
+    const { error: rpcError } = await (supabase.rpc as any)(
+      'increment_boq_dispatched_qty',
+      {
+        p_boq_item_id: item.boqItemId,
+        p_delta: item.quantity,
+      },
+    );
+    if (rpcError) {
+      console.error(`${op} increment_boq_dispatched_qty failed for ${item.boqItemId}:`, {
+        code: rpcError.code,
+        message: rpcError.message,
+      });
+      // Non-fatal: challan + line items already inserted; surface the issue
+      // in logs but don't roll the user's DC creation back.
     }
   }
 

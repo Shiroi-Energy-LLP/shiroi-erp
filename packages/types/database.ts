@@ -16863,6 +16863,28 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: number
       }
+      get_project_payment_overview: {
+        Args: never
+        Returns: {
+          completion_pct: number
+          contracted_value: number
+          customer_name: string
+          expected_payment_date: string
+          next_milestone_amount: number
+          next_milestone_name: string
+          next_milestone_pct: number
+          outstanding: number
+          payment_stage: string
+          pm_name: string
+          project_id: string
+          project_number: string
+          project_pnl: number
+          project_status: Database["public"]["Enums"]["project_status"]
+          total_po_cost: number
+          total_received: number
+          total_site_expenses: number
+        }[]
+      }
       get_project_profitability_v2: {
         Args: { p_project_id?: string }
         Returns: {
@@ -16917,6 +16939,18 @@ export type Database = {
           total_paid: number
         }[]
       }
+      get_referral_commission_lifetime: {
+        Args: never
+        Returns: {
+          total: number
+        }[]
+      }
+      get_referral_commission_this_month: {
+        Args: never
+        Returns: {
+          total: number
+        }[]
+      }
       get_salary_benchmark_report: {
         Args: never
         Returns: {
@@ -16948,6 +16982,10 @@ export type Database = {
       }
       haversine_distance_m: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
+      increment_boq_dispatched_qty: {
+        Args: { p_boq_item_id: string; p_delta: number }
         Returns: number
       }
       increment_partner_commission: {

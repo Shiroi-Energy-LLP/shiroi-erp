@@ -35,145 +35,57 @@ export interface PaymentsSummary {
 /**
  * Get all active projects with payment tracking data.
  * This is the crux query for the Payments page.
+ *
+ * As of migration 145 (2026-05-30) this delegates to the
+ * `get_project_payment_overview()` SQL RPC. The previous
+ * implementation pulled all 328+ contracted projects + 4 batched
+ * IN() queries across customer_payments / purchase_orders /
+ * expenses / proposal_payment_schedule, then did 4 JS reduce
+ * loops to roll up money totals — violating NEVER-DO #12 and
+ * scaling linearly (~10K+ rows on every page load).
+ *
+ * All aggregation now happens server-side in a single round-trip.
+ * Output shape matches the original interface byte-for-byte.
  */
 export async function getProjectPaymentOverview(): Promise<ProjectPaymentRow[]> {
   const op = '[getProjectPaymentOverview]';
   console.log(`${op} Starting`);
   const supabase = await createClient();
 
-  // Get all projects with contracted value (all 8 statuses are valid — show everything with money involved)
-  const { data: projects, error: projError } = await supabase
-    .from('projects')
-    .select('id, project_number, customer_name, status, contracted_value, completion_pct, lead_id, project_manager_id, employees!projects_project_manager_id_fkey(full_name)')
-    .gt('contracted_value', 0)
-    .order('contracted_value', { ascending: false });
+  const { data, error } = await supabase.rpc('get_project_payment_overview');
 
-  if (projError) {
-    console.error(`${op} Projects query failed:`, { code: projError.code, message: projError.message });
-    throw new Error(`Failed to load projects: ${projError.message}`);
+  if (error) {
+    console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load payment overview: ${error.message}`);
   }
 
-  if (!projects || projects.length === 0) return [];
+  if (!data) return [];
 
-  const projectIds = projects.map((p: any) => p.id);
-
-  // Batch-fetch all payments, POs, site expenses
-  const [paymentsResult, posResult, expensesResult, schedulesResult] = await Promise.all([
-    supabase
-      .from('customer_payments')
-      .select('project_id, amount')
-      .in('project_id', projectIds),
-    supabase
-      .from('purchase_orders')
-      .select('project_id, total_amount')
-      .in('project_id', projectIds),
-    supabase
-      .from('expenses')
-      .select('project_id, amount')
-      .in('project_id', projectIds),
-    // Get payment schedules via proposals linked to these projects' leads only
-    supabase
-      .from('proposals')
-      .select('lead_id, proposal_payment_schedule(milestone_name, milestone_order, amount, percentage)')
-      .eq('status', 'accepted')
-      .in('lead_id', projects.map((p: any) => p.lead_id).filter(Boolean)),
-  ]);
-
-  // Build lookup maps
-  const paymentsByProject = new Map<string, number>();
-  for (const p of paymentsResult.data ?? []) {
-    if (!p.project_id) continue;
-    const current = paymentsByProject.get(p.project_id) ?? 0;
-    paymentsByProject.set(p.project_id, current + Number(p.amount));
-  }
-
-  const poCostByProject = new Map<string, number>();
-  for (const po of posResult.data ?? []) {
-    if (!po.project_id) continue;
-    const current = poCostByProject.get(po.project_id) ?? 0;
-    poCostByProject.set(po.project_id, current + Number(po.total_amount));
-  }
-
-  const expensesByProject = new Map<string, number>();
-  for (const exp of expensesResult.data ?? []) {
-    if (!exp.project_id) continue;
-    const current = expensesByProject.get(exp.project_id) ?? 0;
-    expensesByProject.set(exp.project_id, current + Number(exp.amount));
-  }
-
-  // Build schedule lookup by lead_id
-  const scheduleByLead = new Map<string, any[]>();
-  for (const proposal of schedulesResult.data ?? []) {
-    if (proposal.lead_id && proposal.proposal_payment_schedule) {
-      const existing = scheduleByLead.get(proposal.lead_id) ?? [];
-      existing.push(...(proposal.proposal_payment_schedule as any[]));
-      scheduleByLead.set(proposal.lead_id, existing);
-    }
-  }
-
-  // Build rows
-  return projects.map((proj: any) => {
-    const contractedValue = Number(proj.contracted_value);
-    const totalReceived = paymentsByProject.get(proj.id) ?? 0;
-    const totalPoCost = poCostByProject.get(proj.id) ?? 0;
-    const totalSiteExpenses = expensesByProject.get(proj.id) ?? 0;
-    const totalInvested = totalPoCost + totalSiteExpenses;
-    const outstanding = contractedValue - totalReceived;
-
-    // P&L = received - invested (positive = profit so far)
-    const projectPnl = totalReceived - totalInvested;
-
-    // Figure out payment stage and next milestone
-    const schedule = scheduleByLead.get(proj.lead_id) ?? [];
-    const sortedSchedule = [...schedule].sort((a, b) => a.milestone_order - b.milestone_order);
-
-    let paymentStage = 'No schedule';
-    let nextMilestoneName: string | null = null;
-    let nextMilestoneAmount: number | null = null;
-    let nextMilestonePct: number | null = null;
-
-    if (sortedSchedule.length > 0) {
-      // Determine which milestone we're at based on received amount
-      let runningTotal = 0;
-      let currentMilestoneIdx = 0;
-      for (let i = 0; i < sortedSchedule.length; i++) {
-        runningTotal += Number(sortedSchedule[i].amount);
-        if (totalReceived >= runningTotal) {
-          currentMilestoneIdx = i + 1;
-        }
-      }
-
-      if (currentMilestoneIdx >= sortedSchedule.length) {
-        paymentStage = `${sortedSchedule.length}/${sortedSchedule.length} Complete`;
-      } else {
-        paymentStage = `${currentMilestoneIdx}/${sortedSchedule.length} Paid`;
-        const nextMs = sortedSchedule[currentMilestoneIdx];
-        nextMilestoneName = nextMs.milestone_name;
-        nextMilestoneAmount = Number(nextMs.amount);
-        nextMilestonePct = Number(nextMs.percentage);
-      }
-    }
-
-    return {
-      project_id: proj.id,
-      project_number: proj.project_number,
-      customer_name: proj.customer_name,
-      project_status: proj.status,
-      contracted_value: contractedValue,
-      completion_pct: Number(proj.completion_pct),
-      total_received: totalReceived,
-      outstanding,
-      total_po_cost: totalPoCost,
-      total_site_expenses: totalSiteExpenses,
-      project_pnl: projectPnl,
-      next_milestone_name: nextMilestoneName,
-      next_milestone_amount: nextMilestoneAmount,
-      next_milestone_pct: nextMilestonePct,
-      payment_stage: paymentStage,
-      expected_payment_date: null, // Future: link to expected_close_date or trigger dates
-      pm_name: (proj.employees as any)?.full_name ?? null,
-    };
-  });
+  // Numeric columns come back as strings from Supabase (NUMERIC type) —
+  // coerce to number to preserve the original ProjectPaymentRow contract.
+  return data.map((row: Record<string, unknown>) => ({
+    project_id: row.project_id as string,
+    project_number: row.project_number as string,
+    customer_name: row.customer_name as string,
+    project_status: row.project_status as string,
+    contracted_value: Number(row.contracted_value),
+    completion_pct: Number(row.completion_pct),
+    total_received: Number(row.total_received),
+    outstanding: Number(row.outstanding),
+    total_po_cost: Number(row.total_po_cost),
+    total_site_expenses: Number(row.total_site_expenses),
+    project_pnl: Number(row.project_pnl),
+    next_milestone_name: (row.next_milestone_name as string | null) ?? null,
+    next_milestone_amount: row.next_milestone_amount == null
+      ? null
+      : Number(row.next_milestone_amount),
+    next_milestone_pct: row.next_milestone_pct == null
+      ? null
+      : Number(row.next_milestone_pct),
+    payment_stage: row.payment_stage as string,
+    expected_payment_date: (row.expected_payment_date as string | null) ?? null,
+    pm_name: (row.pm_name as string | null) ?? null,
+  }));
 }
 
 /**
