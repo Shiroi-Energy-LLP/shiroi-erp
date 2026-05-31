@@ -8591,71 +8591,6 @@ export type Database = {
           }
         ]
       }
-      plant_data_readings: {
-        Row: {
-          ac_frequency_hz: number | null
-          ac_power_kw: number | null
-          ac_voltage_v: number | null
-          created_at: string
-          data_source: string
-          dc_current_a: number | null
-          dc_power_kw: number | null
-          dc_voltage_v: number | null
-          energy_kwh_today: number | null
-          energy_kwh_total: number | null
-          fault_code: string | null
-          id: string
-          inverter_status: string | null
-          is_estimated: boolean
-          plant_id: string
-          reading_timestamp: string
-        }
-        Insert: {
-          ac_frequency_hz?: number | null
-          ac_power_kw?: number | null
-          ac_voltage_v?: number | null
-          created_at?: string
-          data_source: string
-          dc_current_a?: number | null
-          dc_power_kw?: number | null
-          dc_voltage_v?: number | null
-          energy_kwh_today?: number | null
-          energy_kwh_total?: number | null
-          fault_code?: string | null
-          id?: string
-          inverter_status?: string | null
-          is_estimated?: boolean
-          plant_id: string
-          reading_timestamp: string
-        }
-        Update: {
-          ac_frequency_hz?: number | null
-          ac_power_kw?: number | null
-          ac_voltage_v?: number | null
-          created_at?: string
-          data_source?: string
-          dc_current_a?: number | null
-          dc_power_kw?: number | null
-          dc_voltage_v?: number | null
-          energy_kwh_today?: number | null
-          energy_kwh_total?: number | null
-          fault_code?: string | null
-          id?: string
-          inverter_status?: string | null
-          is_estimated?: boolean
-          plant_id?: string
-          reading_timestamp?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plant_data_readings_plant_id_fkey"
-            columns: ["plant_id"]
-            isOneToOne: false
-            referencedRelation: "plants"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       plant_monitoring_credentials: {
         Row: {
           commissioning_report_id: string | null
@@ -16482,6 +16417,36 @@ export type Database = {
           id: string
           operation: string
           payload: Json
+        }[]
+      }
+      compute_lead_margin_band: {
+        Args: { p_lead_id: string }
+        Returns: {
+          band: string
+          base_price: number
+          bom_cost: number
+          data_quality: string
+          gross_margin: number
+          site_expenses_est: number
+        }[]
+      }
+      compute_po_totals: {
+        Args: { p_po_id: string }
+        Returns: {
+          subtotal: number
+          total_amount: number
+          total_gst: number
+        }[]
+      }
+      compute_project_margin: {
+        Args: { p_project_id: string }
+        Returns: {
+          contract_value: number
+          margin: number
+          margin_pct: number
+          total_boq_cost: number
+          total_expenses: number
+          total_invested: number
         }[]
       }
       confirm_project_review: {
