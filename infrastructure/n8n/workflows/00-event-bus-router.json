@@ -1707,6 +1707,13 @@
         ],
         [
           {
+            "node": "→ 40 Customer proposal sent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "→ 07 PO approved",
             "type": "main",
             "index": 0
@@ -1764,13 +1771,6 @@
         [
           {
             "node": "→ 18 Employee created",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log unhandled event",
             "type": "main",
             "index": 0
           }
@@ -1904,6 +1904,13 @@
         [
           {
             "node": "→ 55 Global error handler (vendor.bill_ai_rejected TODO)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log unhandled event",
             "type": "main",
             "index": 0
           }
