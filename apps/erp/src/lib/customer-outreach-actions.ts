@@ -86,6 +86,16 @@ export async function generateCustomerCheckinsForWeek(): Promise<ActionResult<Cu
   let skipped = 0;
   let errors = 0;
 
+  // ── Phase 1: pre-filter projects that fall within a check-in window ──────────
+  //   (formerly the body of the for-loop; isolated so we can batch the
+  //    customer_outreach_queue lookup over only the due projects)
+  type DueProject = {
+    project: typeof projects[number];
+    daysSinceCommissioning: number;
+    dueInterval: number;
+  };
+
+  const dueProjects: DueProject[] = [];
   for (const project of projects) {
     if (!project.commissioned_date) continue;
 
@@ -105,22 +115,38 @@ export async function generateCustomerCheckinsForWeek(): Promise<ActionResult<Cu
       continue;
     }
 
-    // Check if we've already sent an outreach in the last RECONTACT_GAP_DAYS
-    const { data: recent, error: recentErr } = await supabase
+    dueProjects.push({ project, daysSinceCommissioning, dueInterval });
+  }
+
+  // ── Phase 2: one batched query for all recent outreach across the due set ────
+  //   Eliminates N+1 (formerly: one customer_outreach_queue query per project).
+  const recentlyContactedIds = new Set<string>();
+  if (dueProjects.length > 0) {
+    const dueProjectIds = dueProjects.map((d) => d.project.id);
+    const recentCutoff = new Date(today.getTime() - RECONTACT_GAP_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentRows, error: recentErr } = await supabase
       .from('customer_outreach_queue')
-      .select('id, checkin_due')
-      .eq('project_id', project.id)
+      .select('project_id')
+      .in('project_id', dueProjectIds)
       .in('status', ['message_generated', 'sent', 'responded'])
-      .gte('created_at', new Date(today.getTime() - RECONTACT_GAP_DAYS * 24 * 60 * 60 * 1000).toISOString())
-      .limit(1);
+      .gte('created_at', recentCutoff);
 
     if (recentErr) {
-      console.error(`${op} recent check query failed`, { projectId: project.id, error: recentErr.message, timestamp: new Date().toISOString() });
-      errors++;
-      continue;
+      console.error(`${op} recent batch query failed`, { error: recentErr.message, timestamp: new Date().toISOString() });
+      // Treat batch failure as: assume everyone is recent → skip all to avoid
+      // double-messaging customers. errors counter bumps for the whole due set.
+      errors += dueProjects.length;
+      return ok({ generated, skipped, errors });
     }
 
-    if (recent && recent.length > 0) {
+    for (const row of recentRows ?? []) {
+      if (row.project_id) recentlyContactedIds.add(row.project_id);
+    }
+  }
+
+  // ── Phase 3: generate AI messages and insert for projects not yet contacted ──
+  for (const { project, daysSinceCommissioning, dueInterval } of dueProjects) {
+    if (recentlyContactedIds.has(project.id)) {
       skipped++;
       continue;
     }

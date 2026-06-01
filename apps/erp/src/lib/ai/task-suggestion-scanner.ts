@@ -52,20 +52,30 @@ export async function scanStaleItems(): Promise<StaleItem[]> {
 
   if (ticketError) {
     console.error(`${op} Ticket query failed:`, { error: ticketError, timestamp: new Date().toISOString() });
-  } else if (tickets) {
-    for (const ticket of tickets) {
-      // Check no open service_ticket_followup task exists
-      const { data: existing } = await admin
-        .from('tasks')
-        .select('id')
-        .eq('entity_type', 'service_ticket')
-        .eq('entity_id', ticket.id)
-        .eq('is_completed', false)
-        .is('deleted_at', null)
-        .limit(1)
-        .maybeSingle();
+  } else if (tickets && tickets.length > 0) {
+    // Batch lookup: pull all open tasks for any of these tickets in a single query,
+    // then index by entity_id for O(1) lookup inside the loop.
+    const ticketIds = tickets.map((t) => t.id);
+    const { data: openTaskRows, error: openTaskErr } = await admin
+      .from('tasks')
+      .select('entity_id')
+      .eq('entity_type', 'service_ticket')
+      .in('entity_id', ticketIds)
+      .eq('is_completed', false)
+      .is('deleted_at', null);
 
-      if (existing) continue;
+    if (openTaskErr) {
+      console.error(`${op} Ticket open-task batch query failed:`, { error: openTaskErr, timestamp: new Date().toISOString() });
+    }
+
+    const ticketsWithOpenTask = new Set<string>();
+    for (const row of openTaskRows ?? []) {
+      if (row.entity_id) ticketsWithOpenTask.add(row.entity_id);
+    }
+
+    for (const ticket of tickets) {
+      // Skip if this ticket already has an open service_ticket_followup task
+      if (ticketsWithOpenTask.has(ticket.id)) continue;
 
       const proj = ticket.projects;
       const projectRef = proj ? `${proj.project_number} (${proj.customer_name})` : 'unknown project';
@@ -107,21 +117,30 @@ export async function scanStaleItems(): Promise<StaleItem[]> {
 
   if (projectError) {
     console.error(`${op} Project query failed:`, { error: projectError, timestamp: new Date().toISOString() });
-  } else if (projects) {
-    for (const project of projects) {
-      // Check no open project_followup task exists
-      const { data: existing } = await admin
-        .from('tasks')
-        .select('id')
-        .eq('entity_type', 'project')
-        .eq('entity_id', project.id)
-        .eq('category', 'project_followup')
-        .eq('is_completed', false)
-        .is('deleted_at', null)
-        .limit(1)
-        .maybeSingle();
+  } else if (projects && projects.length > 0) {
+    // Batch lookup: one query for all candidate projects' open project_followup tasks.
+    const projectIds = projects.map((p) => p.id);
+    const { data: openProjectTaskRows, error: openProjectTaskErr } = await admin
+      .from('tasks')
+      .select('entity_id')
+      .eq('entity_type', 'project')
+      .eq('category', 'project_followup')
+      .in('entity_id', projectIds)
+      .eq('is_completed', false)
+      .is('deleted_at', null);
 
-      if (existing) continue;
+    if (openProjectTaskErr) {
+      console.error(`${op} Project open-task batch query failed:`, { error: openProjectTaskErr, timestamp: new Date().toISOString() });
+    }
+
+    const projectsWithOpenTask = new Set<string>();
+    for (const row of openProjectTaskRows ?? []) {
+      if (row.entity_id) projectsWithOpenTask.add(row.entity_id);
+    }
+
+    for (const project of projects) {
+      // Skip if this project already has an open project_followup task
+      if (projectsWithOpenTask.has(project.id)) continue;
 
       const daysSinceUpdate = Math.floor(
         (Date.now() - new Date(project.status_updated_at).getTime()) / (1000 * 60 * 60 * 24),
@@ -163,21 +182,30 @@ export async function scanStaleItems(): Promise<StaleItem[]> {
 
   if (leadError) {
     console.error(`${op} Lead query failed:`, { error: leadError, timestamp: new Date().toISOString() });
-  } else if (leads) {
-    for (const lead of leads) {
-      // Check no open lead_followup task exists
-      const { data: existing } = await admin
-        .from('tasks')
-        .select('id')
-        .eq('entity_type', 'lead')
-        .eq('entity_id', lead.id)
-        .eq('category', 'lead_followup')
-        .eq('is_completed', false)
-        .is('deleted_at', null)
-        .limit(1)
-        .maybeSingle();
+  } else if (leads && leads.length > 0) {
+    // Batch lookup: one query for all candidate leads' open lead_followup tasks.
+    const leadIds = leads.map((l) => l.id);
+    const { data: openLeadTaskRows, error: openLeadTaskErr } = await admin
+      .from('tasks')
+      .select('entity_id')
+      .eq('entity_type', 'lead')
+      .eq('category', 'lead_followup')
+      .in('entity_id', leadIds)
+      .eq('is_completed', false)
+      .is('deleted_at', null);
 
-      if (existing) continue;
+    if (openLeadTaskErr) {
+      console.error(`${op} Lead open-task batch query failed:`, { error: openLeadTaskErr, timestamp: new Date().toISOString() });
+    }
+
+    const leadsWithOpenTask = new Set<string>();
+    for (const row of openLeadTaskRows ?? []) {
+      if (row.entity_id) leadsWithOpenTask.add(row.entity_id);
+    }
+
+    for (const lead of leads) {
+      // Skip if this lead already has an open lead_followup task
+      if (leadsWithOpenTask.has(lead.id)) continue;
 
       const daysSinceActivity = Math.floor(
         (Date.now() - new Date(lead.updated_at).getTime()) / (1000 * 60 * 60 * 24),

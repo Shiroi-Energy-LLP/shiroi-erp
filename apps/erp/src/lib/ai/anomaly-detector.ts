@@ -196,40 +196,53 @@ interface DailyReading {
 }
 
 /**
- * Returns daily kWh for the project across its inverters, aggregated in SQL.
- * The aggregation is done by the rollup table (mig 050); we simply select
- * those rows and sum per day using decimal.js (kWh is physics, not money,
- * but we use decimal for consistency; row count is small: days × inverters).
+ * Batch variant: fetches inverters for all `projectIds` in one query and rollup
+ * rows in a second query, then returns a Map<project_id, DailyReading[]>.
+ *
+ * Replaces the per-project N+1 (2 queries × N projects). Total DB calls drop
+ * from 2N to 2 regardless of cohort size.
  */
-async function getProjectDailyKwh(
-  projectId: string,
+async function getCohortDailyKwh(
+  projectIds: string[],
   fromDate: string,
   toDate: string,
-): Promise<DailyReading[]> {
-  const op = '[getProjectDailyKwh]';
+): Promise<Map<string, DailyReading[]>> {
+  const op = '[getCohortDailyKwh]';
+  const result = new Map<string, DailyReading[]>();
+  if (projectIds.length === 0) return result;
+
   const admin = createAdminClient();
 
-  // 1. Get inverter IDs for this project
+  // 1. Batch: all inverters for the cohort
   const { data: inverters, error: invErr } = await admin
     .from('inverters')
-    .select('id')
-    .eq('project_id', projectId)
+    .select('id, project_id')
+    .in('project_id', projectIds)
     .neq('current_status', 'decommissioned');
 
   if (invErr) {
-    console.error(`${op} inverter fetch failed`, {
+    console.error(`${op} inverter batch fetch failed`, {
       error: invErr.message,
-      projectId,
       timestamp: new Date().toISOString(),
     });
-    return [];
+    return result;
   }
 
-  if (!inverters || inverters.length === 0) return [];
+  if (!inverters || inverters.length === 0) return result;
 
-  const inverterIds = inverters.map((i) => i.id);
+  // Build inverter_id -> project_id map and collect all inverter IDs
+  const inverterToProject = new Map<string, string>();
+  const inverterIds: string[] = [];
+  for (const inv of inverters) {
+    if (inv.project_id) {
+      inverterToProject.set(inv.id, inv.project_id);
+      inverterIds.push(inv.id);
+    }
+  }
 
-  // 2. Pull daily rows from rollup
+  if (inverterIds.length === 0) return result;
+
+  // 2. Batch: all daily rollup rows for those inverters across the window
   const { data: rows, error: rowErr } = await admin
     .from('inverter_readings_daily')
     .select('inverter_id, day, energy_generated_kwh, sample_count')
@@ -238,38 +251,49 @@ async function getProjectDailyKwh(
     .lte('day', toDate);
 
   if (rowErr) {
-    console.error(`${op} daily rollup fetch failed`, {
+    console.error(`${op} daily rollup batch fetch failed`, {
       error: rowErr.message,
-      projectId,
       timestamp: new Date().toISOString(),
     });
-    return [];
+    return result;
   }
 
-  if (!rows) return [];
+  if (!rows) return result;
 
-  // 3. Aggregate per day using decimal.js (NEVER-DO #12 applies to money;
-  //    we use Decimal for precision consistency across the codebase)
-  const byDay = new Map<string, { kwh: Decimal; sampleCount: number }>();
+  // 3. Group rollup rows by project, then aggregate per day with decimal.js.
+  //    Row count is small (days × inverters × cohort), so JS aggregation is fine
+  //    here — kWh is physics, not money (NEVER-DO #12 applies to money).
+  const byProjectDay = new Map<string, Map<string, { kwh: Decimal; sampleCount: number }>>();
   for (const row of rows) {
-    const prev = byDay.get(row.day) ?? { kwh: new Decimal(0), sampleCount: 0 };
-    byDay.set(row.day, {
+    const projId = inverterToProject.get(row.inverter_id);
+    if (!projId) continue;
+
+    let projectMap = byProjectDay.get(projId);
+    if (!projectMap) {
+      projectMap = new Map<string, { kwh: Decimal; sampleCount: number }>();
+      byProjectDay.set(projId, projectMap);
+    }
+
+    const prev = projectMap.get(row.day) ?? { kwh: new Decimal(0), sampleCount: 0 };
+    projectMap.set(row.day, {
       kwh: prev.kwh.plus(row.energy_generated_kwh ?? 0),
       sampleCount: prev.sampleCount + (row.sample_count ?? 0),
     });
   }
 
-  const result: DailyReading[] = [];
-  for (const [day, agg] of byDay.entries()) {
-    result.push({
-      day,
-      kwh: agg.kwh.toDecimalPlaces(3).toNumber(),
-      sample_count: agg.sampleCount,
-    });
+  for (const [projId, dayMap] of byProjectDay.entries()) {
+    const readings: DailyReading[] = [];
+    for (const [day, agg] of dayMap.entries()) {
+      readings.push({
+        day,
+        kwh: agg.kwh.toDecimalPlaces(3).toNumber(),
+        sample_count: agg.sampleCount,
+      });
+    }
+    readings.sort((a, b) => a.day.localeCompare(b.day));
+    result.set(projId, readings);
   }
 
-  // Sort ascending by date
-  result.sort((a, b) => a.day.localeCompare(b.day));
   return result;
 }
 
@@ -367,11 +391,15 @@ export async function detectAnomalies(lookbackDays: number = 7): Promise<RawAnom
   const projectIds = cohort.map((p) => p.project_id);
   const existingKeys = await getExistingAnomalyKeys(projectIds, fromDate);
 
+  // ── 3b. Batch fetch all daily readings for the cohort in 2 DB queries total ──
+  //       (formerly 2 queries per project — N+1 elimination per 2026-05-30 review)
+  const dailyReadingsByProject = await getCohortDailyKwh(projectIds, fromDate, todayUtc);
+
   // ── 4. Scan per project ───────────────────────────────────────────────────────
   const anomalies: RawAnomaly[] = [];
 
   for (const project of cohort) {
-    const dailyReadings = await getProjectDailyKwh(project.project_id, fromDate, todayUtc);
+    const dailyReadings = dailyReadingsByProject.get(project.project_id) ?? [];
 
     // Build lookup: date → reading
     const readingByDate = new Map<string, DailyReading>();
