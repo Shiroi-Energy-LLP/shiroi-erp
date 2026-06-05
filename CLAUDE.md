@@ -116,6 +116,13 @@ SHIROI_STATE_CODE                     (default: 33 — Tamil Nadu)
 SHIROI_PINCODE                        (default: 600002)
 SHIROI_ACCOUNTS_EMAIL                 (accounts email for e-invoice seller details)
 NEXT_PUBLIC_ERP_URL                   (base URL for share links; default: https://erp.shiroienergy.com)
+FIMER_CRED_SHIROIENERGY               (JSON blob for Aurora Vision: {api_key, username, password} — Manivel master account, ~12 plants)
+FIMER_CRED_CHEMFABALKALIS             (same JSON shape, Chemfab Alkalis sub-account, 1 plant)
+FIMER_CRED_HARSHA                     (same JSON shape, Harsha residential 2 kW — EID lookup pending)
+FIMER_CRED_BOSSSHYAM                  (same JSON shape, Baskar residential 2.5 kW — EID lookup pending)
+FIMER_CRED_SIDDHARTH                  (same JSON shape, Siddarth residential 1 kW — EID lookup pending)
+FIMER_CRED_EDISONSCHOOL               (same JSON shape, Edison School 48 kW)
+FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW — EID lookup pending)
 ```
 
 **Key format:** new Supabase only. `sb_publishable_` replaces legacy `anon`. `sb_secret_` replaces legacy `service_role`. Never use legacy names.

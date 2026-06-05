@@ -18,12 +18,15 @@
  *   - SYNTHETIC_INVERTER_READINGS (optional: "1" to force synthetic data)
  *   - SUNGROW_APPKEY (required for Sungrow inverters in real mode)
  *
- * Adapter dispatch (Phase 8 — 2026-05-24):
+ * Adapter dispatch:
  *   - growatt:   per-customer auth via plant_monitoring_credentials.
  *                Session cache shared within a poll cycle to avoid
  *                Growatt login rate limits (~22 logins → ~8 per cycle).
- *   - sungrow:   reads inverter_monitoring_credentials.config.access_token;
- *                skips with warning if oauth_status != 'authorized'.
+ *   - sungrow:   direct-login via SUNGROW_* env. One login per poll cycle.
+ *   - fimer:     per-account auth via inverter_monitoring_credentials.
+ *                Each row's vault_secret_ref names a Deno env var holding
+ *                {api_key, username, password} JSON. 60-min token cache
+ *                per credentials_id for the poll cycle. (live 2026-06-05)
  *   - solarman:  stub (synthetic) — real impl pending paid API plan.
  *   - goodwe:    stub (synthetic) — real impl pending API registration.
  *
@@ -33,6 +36,7 @@
  *
  * // SYNC WITH packages/inverter-adapters/src/growatt.ts
  * // SYNC WITH packages/inverter-adapters/src/sungrow.ts
+ * // SYNC WITH packages/inverter-adapters/src/fimer.ts
  */
 
 // @ts-expect-error — Deno-style URL import, resolved at runtime, not by tsc
@@ -760,6 +764,142 @@ async function fetchSungrowReading(
   };
 }
 
+// ─── FIMER (Aurora Vision) adapter (inlined from packages/inverter-adapters/src/fimer.ts) ─
+// SYNC WITH packages/inverter-adapters/src/fimer.ts
+//
+// Auth model: per-account API key + portal username/password → /authenticate
+// returns a 60-min session token. The Edge Function caches tokens per
+// credentials_id for the poll cycle (same lifetime pattern as Sungrow).
+//
+// Telemetry shape (plant-level, not per-device):
+//   GET /v1/stats/power/aggregated/{eid}/GenerationPower/average?startDate=&endDate=&timeZone=
+//     → { result: { units: "watts", value: 7164.9 } }
+//   GET /v1/plant/{eid}/dailyProduction?startDate=&endDate=
+//     → { result: { dailyValues: [{ date: "YYYYMMDD", value: "95.952" }, ...] } }
+//
+// monitoring_site_id holds the plant entityID; monitoring_device_id is unused.
+
+const FIMER_API_BASE = 'https://api.auroravision.net/api/rest';
+const FIMER_TIMEZONE = 'Asia/Kolkata';
+
+interface FimerCreds {
+  api_key: string;
+  username: string;
+  password: string;
+}
+
+async function fimerAuthenticate(creds: FimerCreds): Promise<string> {
+  const basic = 'Basic ' + btoa(`${creds.username}:${creds.password}`);
+  const res = await fetch(`${FIMER_API_BASE}/authenticate`, {
+    method: 'GET',
+    headers: {
+      Authorization: basic,
+      'X-AuroraVision-ApiKey': creds.api_key,
+      Accept: 'application/json',
+    },
+  });
+  if (!res.ok) throw new Error(`FIMER authenticate failed: HTTP ${res.status}`);
+  const body = await res.json() as { result?: string };
+  if (typeof body.result !== 'string' || body.result.length < 10) {
+    throw new Error('FIMER authenticate: no token in response');
+  }
+  return body.result;
+}
+
+function fimerYyyymmdd(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}${m}${day}`;
+}
+
+async function fimerGet<T>(path: string, apiKey: string, token: string): Promise<{ result?: T }> {
+  const res = await fetch(`${FIMER_API_BASE}${path}`, {
+    headers: {
+      'X-AuroraVision-ApiKey': apiKey,
+      'X-AuroraVision-Token': token,
+      Accept: 'application/json',
+    },
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`FIMER HTTP ${res.status} on ${path}: ${text.slice(0, 120)}`);
+  if (!text) return {};
+  return JSON.parse(text);
+}
+
+async function fetchFimerReading(
+  creds: FimerCreds,
+  token: string,
+  inv: InverterDue,
+): Promise<NormalizedReading> {
+  const op = '[fetchFimerReading]';
+  if (!inv.monitoring_site_id) throw new Error('FIMER: monitoring_site_id (entity_id) required');
+  const eid = inv.monitoring_site_id;
+
+  // Use a 3-day window for both endpoints: a 1-day window returns no value
+  // for today (aggregate not yet finalized). The energy endpoint picks the
+  // most recent day with a numeric value, since today's row is usually empty.
+  const now = new Date();
+  const today = fimerYyyymmdd(now);
+  const start = fimerYyyymmdd(new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000));
+
+  const [pwrResult, energyResult] = await Promise.allSettled([
+    fimerGet<{ units?: string; value?: number }>(
+      `/v1/stats/power/aggregated/${encodeURIComponent(eid)}/GenerationPower/average?startDate=${start}&endDate=${today}&timeZone=${encodeURIComponent(FIMER_TIMEZONE)}`,
+      creds.api_key, token,
+    ),
+    fimerGet<{ dailyValues?: Array<{ date: string; value?: string }> }>(
+      `/v1/plant/${encodeURIComponent(eid)}/dailyProduction?startDate=${start}&endDate=${today}`,
+      creds.api_key, token,
+    ),
+  ]);
+
+  let pwrW: number | null = null;
+  if (pwrResult.status === 'fulfilled') {
+    const v = pwrResult.value.result?.value;
+    if (typeof v === 'number' && Number.isFinite(v)) pwrW = v;
+  } else {
+    console.warn(`${op} power fetch failed for eid=${eid}:`, pwrResult.reason instanceof Error ? pwrResult.reason.message : pwrResult.reason);
+  }
+
+  let energyKwh: number | null = null;
+  if (energyResult.status === 'fulfilled') {
+    const rows = (energyResult.value.result?.dailyValues ?? [])
+      .filter((r) => typeof r.value === 'string' && r.value !== '')
+      .sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
+    for (const row of rows) {
+      const n = Number(row.value);
+      if (Number.isFinite(n)) { energyKwh = n; break; }
+    }
+  } else {
+    console.warn(`${op} energy fetch failed for eid=${eid}:`, energyResult.reason instanceof Error ? energyResult.reason.message : energyResult.reason);
+  }
+
+  const powerKw = pwrW != null ? Number((pwrW / 1000).toFixed(3)) : null;
+  let status: NormalizedStatus | null = null;
+  if (powerKw != null) status = powerKw > 0.05 ? 'active' : 'offline';
+
+  return {
+    recorded_at: now.toISOString(),
+    ac_power_kw: powerKw,
+    dc_power_kw: null,
+    ac_voltage_v: null,
+    ac_current_a: null,
+    ac_frequency_hz: null,
+    temperature_c: null,
+    energy_today_kwh: energyKwh,
+    energy_total_kwh: null,
+    status,
+    error_code: null,
+    raw_payload: {
+      source: 'fimer.auroravision.v1',
+      entity_id: eid,
+      power_watts_avg: pwrW,
+      energy_today_kwh: energyKwh,
+    },
+  };
+}
+
 // ─── SolarMan stub ─────────────────────────────────────────────────────────
 // Real impl pending SolarMan paid API plan. Logs a notice and returns synthetic.
 
@@ -819,6 +959,9 @@ Deno.serve(async (req: Request) => {
   // Lazy-fetched Sungrow session token — populated on first Sungrow inverter
   // in this poll cycle, reused for all subsequent Sungrow inverters.
   let sungrowToken: string | null = null;
+  // FIMER tokens are per-credentials-row (one per Aurora Vision account).
+  // Same lifetime model as Sungrow (60-min idle) — cache for the poll cycle.
+  const fimerTokenCache = new Map<string, string>();
 
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -931,6 +1074,51 @@ Deno.serve(async (req: Request) => {
           console.log(`${op} sungrow logged in: token=${sungrowToken.slice(0, 12)}…`);
         }
         reading = await fetchSungrowReading(sungrowEnv, sungrowToken, inv);
+      } else if (inv.brand === 'fimer') {
+        // Per-account credentials: each FIMER inverter row carries a
+        // monitoring_credentials_id pointing at one of 7 Aurora Vision accounts
+        // (Shiroienergy master + 6 sub-accounts as of 2026-06-05). The credential
+        // row's vault_secret_ref names a Deno env var holding the JSON blob
+        // {api_key, username, password}. Tokens (60-min idle) cached per
+        // credentials_id for the poll cycle.
+        if (!inv.monitoring_credentials_id) {
+          console.warn(`${op} inverter ${inv.id} (fimer): no monitoring_credentials_id; skipping`);
+          continue;
+        }
+        const { data: cred, error: credErr } = await supabase
+          .from('inverter_monitoring_credentials')
+          .select('vault_secret_ref')
+          .eq('id', inv.monitoring_credentials_id)
+          .maybeSingle();
+        if (credErr) throw new Error(`fimer creds query failed: ${credErr.message}`);
+        if (!cred?.vault_secret_ref) {
+          console.warn(`${op} inverter ${inv.id} (fimer): credentials row ${inv.monitoring_credentials_id} has no vault_secret_ref; skipping`);
+          continue;
+        }
+        // @ts-expect-error — Deno.env
+        const rawSecret = Deno.env.get(cred.vault_secret_ref) ?? '';
+        if (!rawSecret) {
+          console.warn(`${op} inverter ${inv.id} (fimer): env var ${cred.vault_secret_ref} not set; skipping`);
+          continue;
+        }
+        let fimerCreds: FimerCreds;
+        try {
+          fimerCreds = JSON.parse(rawSecret) as FimerCreds;
+        } catch {
+          console.error(`${op} inverter ${inv.id} (fimer): env var ${cred.vault_secret_ref} is not valid JSON`);
+          continue;
+        }
+        if (!fimerCreds.api_key || !fimerCreds.username || !fimerCreds.password) {
+          console.error(`${op} inverter ${inv.id} (fimer): env var ${cred.vault_secret_ref} missing required fields`);
+          continue;
+        }
+        let token = fimerTokenCache.get(inv.monitoring_credentials_id);
+        if (!token) {
+          token = await fimerAuthenticate(fimerCreds);
+          fimerTokenCache.set(inv.monitoring_credentials_id, token);
+          console.log(`${op} fimer authenticated for cred ${inv.monitoring_credentials_id}: token=${token.slice(0, 8)}…`);
+        }
+        reading = await fetchFimerReading(fimerCreds, token, inv);
       } else if (inv.brand === 'solarman') {
         reading = await fetchSolarmanReading(inv);
       } else if (inv.brand === 'goodwe') {

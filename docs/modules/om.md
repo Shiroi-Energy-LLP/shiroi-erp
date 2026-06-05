@@ -53,6 +53,27 @@ O&M is the post-handover side of the system — everything that happens after a 
   - `inverter_readings_hourly` + `inverter_readings_daily` (rollup tables — frontend queries these, **never** raw)
   - `inverter_poll_failures` (audit log)
 
+## FIMER / ABB Aurora Vision integration (live 2026-06-05)
+
+- **Auth: per-account API key + portal user/pass.** Aurora Vision REST v1 (`https://api.auroravision.net/api/rest`). `GET /authenticate` with HTTP Basic (portal username:password) + `X-AuroraVision-ApiKey` header → response `{result: "<token>"}`. Token used as `X-AuroraVision-Token` header on subsequent calls; 60-minute idle expiry. Tokens cached per `monitoring_credentials_id` for the poll cycle.
+- **7 master/sub-accounts as of 2026-06-05** (8th `soapplant_solar` deferred — no paired portal password):
+  - `shiroienergy` (master, Manivel) — 12 plants (Chemfab Pondicherry x5, Schangalaya x3, Mountmeru Rwanda x2, Sricity x2). FYI: Mountmeru's EIDs return 403 with this key — the plant is actually owned by a separate `Mountmeru_Solar` account whose key we don't yet have.
+  - `chemfabalkalis` — Chemfab Alkalis SS_110 KWp (separate sub-account, EID 16151321).
+  - `edisonschool` — Edison School_48 KWp (Chidambaram).
+  - `harsha`, `bossshyam`, `siddharth`, `sriramsv` — 4 small residentials (1–4 kW each). Each authenticates but `/v1/device/?serialNumber=` returned no devices for their serials on 2026-06-05; EIDs need manual lookup from the Aurora Vision portal before they can be polled.
+- **Endpoints wired:**
+  - `GET /v1/stats/power/aggregated/{eid}/GenerationPower/average?startDate=&endDate=&timeZone=Asia/Kolkata` → `{result: {units: "watts", value: 7164.9}}` (instantaneous average over the date window).
+  - `GET /v1/plant/{eid}/dailyProduction?startDate=&endDate=` → `{result: {dailyValues: [{date: "YYYYMMDD", value: "95.952"}, ...]}}` (kWh/day).
+  - **3-day window** for both (1-day window returns `{units:"watts"}` with no value because today's aggregate isn't finalized until end-of-day). Energy endpoint picks the most recent day with a numeric value — today's row is usually empty.
+  - `monitoring_site_id` holds the plant entityID; `monitoring_device_id` unused (telemetry is plant-level, not per-device, for the metrics surfaced).
+  - 403 = entity not owned by the authenticated account (NOT 404). That's why a master-account key can't see Mountmeru.
+- **Credential storage:** `inverter_monitoring_credentials.vault_secret_ref = 'FIMER_CRED_<SLUG>'`, which names a Deno env var holding JSON `{api_key, username, password}`. The Edge Function reads `Deno.env.get(vault_secret_ref)`, JSON.parses, and uses it. `config.account_slug` + `config.account_username` are kept on the row for display.
+- **Discovery + seed script:** `scripts/fimer-seed-inverters.ts` reads `scripts/data/fimer-plants-2026-06-05.json` (committable — entity-IDs + serials + locations, no secrets) and `scripts/data/fimer-credentials-2026-06-05.tsv` (gitignored — paired keys + users + passwords); upserts the 7 credential rows; authenticates each account; would discover missing EIDs via `/v1/device/?serialNumber=` (returned nothing for 4 small plants); fuzzy-matches plant names to projects; idempotently upserts into `inverters`. Run with `--dry-run` first, then `--apply`. `--skip-discovery` bypasses the per-serial API calls if rate-limited.
+- **Local smoke:** `pnpm tsx scripts/fimer-poll-once.ts` — end-to-end against live API, same code path as the deployed Edge Function. Confirmed 9 of 14 inverters returning real telemetry on 2026-06-05: Schangalaya_25 7.2 kW, Schakaralaya_50 14.3 kW, Schangalay_50 15.3 kW, Chemfab RO_23 6.6 kW, Chemfab DP_11.5 3.8 kW, Chemfab SP_11.5 3.2 kW, Sricity_110 19.3 kW, Sricity_115 16.5 kW, Edison_48 13.6 kW.
+- **Scheduling:** the existing n8n workflow `60-inverter-poll-cron.json` picks up FIMER automatically (`fimer` is just another branch in `inverter-poll/index.ts`). No new workflow needed.
+- **Secrets:** the Edge Function reads `FIMER_CRED_SHIROIENERGY`, `FIMER_CRED_CHEMFABALKALIS`, `FIMER_CRED_HARSHA`, `FIMER_CRED_BOSSSHYAM`, `FIMER_CRED_SIDDHARTH`, `FIMER_CRED_EDISONSCHOOL`, `FIMER_CRED_SRIRAMSV` from the Supabase Edge Functions secrets store. Must be set via Supabase Dashboard → Edge Functions → Secrets; the local Supabase CLI is 403-locked. Values are JSON blobs already in `.env.local` for local scripts.
+- **Legacy `13.126.111.104` wrapper API: dead.** Old links.docx had a custom Node/Express wrapper at that AWS IP; host unreachable as of 2026-06-05. The direct Aurora Vision REST API replaces it entirely.
+
 ## Sungrow integration (live 2026-06-05, app 2883)
 
 - **Auth: direct login** (`/openapi/login` with username + RSA-encrypted password) — Manivel's `manivel@shiroienergy.com` master account owns all 14 Shiroi-commissioned plants. One login per poll cycle, token reused across all Sungrow inverters in the batch (no token persisted to DB). OAuth redirect flow is still wired (`/api/integrations/sungrow/authorize` + `/callback`) but is for future customer-owned plants, not Shiroi-owned ones.

@@ -9,6 +9,7 @@ import { smaAdapter } from './sma';
 import { huaweiAdapter } from './huawei';
 import { solarmanAdapter } from './solarman';
 import { goodweAdapter } from './goodwe';
+import { fimerAdapter } from './fimer';
 
 const ADAPTERS: Record<InverterBrand, InverterAdapter> = {
   sungrow: sungrowAdapter,
@@ -18,7 +19,7 @@ const ADAPTERS: Record<InverterBrand, InverterAdapter> = {
   fronius: sungrowAdapter,      // placeholder fallback
   solarman: solarmanAdapter,
   goodwe: goodweAdapter,
-  fimer: sungrowAdapter,        // placeholder fallback (skipped — no current install volume)
+  fimer: fimerAdapter,          // real adapter (2026-06-05)
   polycab: sungrowAdapter,      // placeholder fallback (skipped — no current install volume)
   havells: sungrowAdapter,      // placeholder fallback (skipped — no current install volume)
   flin_energy: sungrowAdapter,  // placeholder fallback (skipped — no current install volume)

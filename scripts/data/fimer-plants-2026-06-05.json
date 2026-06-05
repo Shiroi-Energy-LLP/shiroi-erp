@@ -1,0 +1,122 @@
+{
+  "_meta": {
+    "captured_at": "2026-06-05",
+    "source": "Solar Plant ID.xlsx (Vivek's OneDrive) + Aurora Vision API keys pasted in chat",
+    "portal": "Aurora Vision (FIMER/ABB) — https://www.auroravision.net",
+    "api_base": "https://api.auroravision.net/api/rest",
+    "note": "Each account holds its own X-AuroraVision-ApiKey + portal username+password. The Shiroienergy master account covers 17 plants; 6 sub-accounts each cover 1 plant. soapplant_solar key (1ade2cef-…-0c81) is excluded — its portal password is not in the credential dump.",
+    "validation_2026_06_05": "7/7 listed accounts authenticate (GET /api/rest/authenticate → 200 + token). One live telemetry sample at probe time: Schangalaya_25 KWp (eid 20030256) producing 7.16 kW; daily energy 95–102 kWh/day."
+  },
+  "accounts": [
+    {
+      "slug": "shiroienergy",
+      "label": "Shiroi Energy master (Manivel)",
+      "username": "Shiroienergy",
+      "api_key": "fa1d0f38-cf72-4257-95d3-66a13d55cba6-0c81",
+      "env_var": "FIMER_CRED_SHIROIENERGY",
+      "plants": [
+        { "name": "Chemfab Alkalis SS_8.7 KWp",   "entity_id": "20869541", "serial": "1802110945", "location": "Pondicherry",     "capacity_kw": 8.7 },
+        { "name": "Chemfab Alkalis DP_11.5 KWp",  "entity_id": "20867454", "serial": "1913129847", "location": "Pondicherry",     "capacity_kw": 11.5 },
+        { "name": "Chemfab Alkalis SP_11.5 KWp",  "entity_id": "20867069", "serial": "1916131008", "location": "Pondicherry",     "capacity_kw": 11.5 },
+        { "name": "Chemfab Alkalis RO_23 KWp",    "entity_id": "20979461", "serial": "1827135480", "location": "Pondicherry",     "capacity_kw": 23.0 },
+        { "name": "Chemfab Alkalis SS_55 KWp",    "entity_id": "20077688", "serial": "1811121692", "location": "Pondicherry",     "capacity_kw": 55.0 },
+        { "name": "Schangalay_50 KWp",            "entity_id": "20026333", "serial": "1827135244", "location": "Pondicherry",     "capacity_kw": 50.0 },
+        { "name": "Schangalaya_25 KWp",           "entity_id": "20030256", "serial": "1811131561", "location": "Pondicherry",     "capacity_kw": 25.0 },
+        { "name": "Schakaralaya_50 KWp",          "entity_id": "20030021", "serial": "1827135240", "location": "Pondicherry",     "capacity_kw": 50.0 },
+        { "name": "Mountmeru_104 KWp",            "entity_id": "23540714", "serial": "1949101930", "location": "Rwanda",          "capacity_kw": 104.0 },
+        { "name": "Mountmeru_87 KWp",             "entity_id": "23541342", "serial": "1948126837", "location": "Rwanda",          "capacity_kw": 87.0 },
+        { "name": "Chemfab Sricity_110 KWp",      "entity_id": "24130233", "serial": "1926122894", "location": "Sricity, Andhra", "capacity_kw": 110.0 },
+        { "name": "Chemfab Sricity_115 KWp",      "entity_id": "24130232", "serial": "1926122908", "location": "Sricity, Andhra", "capacity_kw": 115.0 }
+      ],
+      "plants_no_eid_yet": [
+        { "name": "Harsha_2 KWp",   "serial": "1741143997", "location": "Trichy",  "capacity_kw": 2.0, "_note": "Excel had username/pass in EID cell — needs API discovery (but in fact Harsha is its OWN account, not master — see harsha account below)" },
+        { "name": "Baskar_2.5 KWp", "serial": "1907135456", "location": "Trichy",  "capacity_kw": 2.5, "_note": "Excel had username/pass in EID cell — needs API discovery (but actually Baskar is its own bossshyam account)" },
+        { "name": "Siddarth_1 KWp", "serial": "1902125288", "location": "Chennai", "capacity_kw": 1.0, "_note": "Excel had username/pass in EID cell — needs API discovery (own siddharth account)" },
+        { "name": "Sriram_4 KWp",   "serial": "1738116753", "location": "Chennai", "capacity_kw": 4.0, "_note": "Excel had username/pass in EID cell — needs API discovery (own sriramsv account)" }
+      ]
+    },
+    {
+      "slug": "chemfabalkalis",
+      "label": "Chemfab Alkalis",
+      "username": "Chemfabalkalis",
+      "api_key": "863ff628-798e-46f4-a6e9-584e4948d071-0c81",
+      "env_var": "FIMER_CRED_CHEMFABALKALIS",
+      "plants": [
+        { "name": "Chemfab Alkalis SS_110 KWp", "entity_id": "16151321", "serial": "1816131681", "location": "Pondicherry", "capacity_kw": 110.0 }
+      ]
+    },
+    {
+      "slug": "harsha",
+      "label": "Harsha",
+      "username": "harsha123",
+      "api_key": "7e930bc5-4ab6-41a9-ba3b-e7bb952db941-0c81",
+      "env_var": "FIMER_CRED_HARSHA",
+      "plants": [
+        { "name": "Harsha_2 KWp", "entity_id": null, "serial": "1741143997", "location": "Trichy", "capacity_kw": 2.0, "_note": "Entity ID will be discovered on first poll via /v1/device/?serialNumber=." }
+      ]
+    },
+    {
+      "slug": "bossshyam",
+      "label": "Boss Shyam (Baskar)",
+      "username": "Bossshyam",
+      "api_key": "c1a68209-40cf-4f85-bea0-20755802f364-0c81",
+      "env_var": "FIMER_CRED_BOSSSHYAM",
+      "plants": [
+        { "name": "Baskar_2.5 KWp", "entity_id": null, "serial": "1907135456", "location": "Trichy", "capacity_kw": 2.5, "_note": "EID via serialNumber lookup on first poll." }
+      ]
+    },
+    {
+      "slug": "siddharth",
+      "label": "Siddharth",
+      "username": "Siddharth",
+      "api_key": "1d4193e5-42d9-49de-bb0c-40d23933176d-0c81",
+      "env_var": "FIMER_CRED_SIDDHARTH",
+      "plants": [
+        { "name": "Siddarth_1 KWp", "entity_id": null, "serial": "1902125288", "location": "Chennai", "capacity_kw": 1.0, "_note": "EID via serialNumber lookup on first poll." }
+      ]
+    },
+    {
+      "slug": "edisonschool",
+      "label": "Edison School",
+      "username": "Edisonschool",
+      "api_key": "3b5befce-2803-4e95-8285-a3c6877a2544-0c81",
+      "env_var": "FIMER_CRED_EDISONSCHOOL",
+      "plants": [
+        { "name": "Edison School_48 KWp", "entity_id": "24213751", "serial": "1929115464", "location": "Chidambaram", "capacity_kw": 48.0 }
+      ]
+    },
+    {
+      "slug": "sriramsv",
+      "label": "Sriram",
+      "username": "Sriramsv",
+      "api_key": "69e43b4b-2e16-46c2-9ac2-152eae981be5-0c81",
+      "env_var": "FIMER_CRED_SRIRAMSV",
+      "plants": [
+        { "name": "Sriram_4 KWp", "entity_id": null, "serial": "1738116753", "location": "Chennai", "capacity_kw": 4.0, "_note": "EID via serialNumber lookup on first poll." }
+      ]
+    }
+  ],
+  "deferred_accounts": [
+    {
+      "slug": "soapplant_solar",
+      "api_key": "1ade2cef-e240-4ff2-8344-560bb1c713a3-0c81",
+      "reason": "Portal username+password not in credential dump. Cannot authenticate without password. Provide password to enable."
+    }
+  ],
+  "additional_fimer_plants_in_credentials_dump_with_no_aurora_key": {
+    "_note": "These FIMER portal logins exist in count-plant-credentials.ts but their X-AuroraVision-ApiKeys were not pasted on 2026-06-05. Without an API key the REST API can't be used — only the web portal. Generate keys via Aurora Vision portal → Account → API to enable telemetry polling for these plants too.",
+    "plants": [
+      "Mountmeru _108KWp (Mountmeru_Solar / Solar@123)",
+      "Mountmeru _103 KWp (Mountmeru_Solar / Solar@123)",
+      "Hindu School Adyar (Hinduschool / Solar@123)",
+      "Hindu School_50 KWp (Hinduschool / Solar@123)",
+      "GGN School _15 KWp (Ggnschool / Solar@123)",
+      "Madurai SLCS College_88 KWp (slcscollege / Admin@123)",
+      "Chemin Enviro System_45KWp (CESZLDS45KW / Ces@7788)",
+      "Chemin Enviro System_2KWp (CESZLDS2KW / Ces@7788)",
+      "Solverminds_81 KWp (Solverminds / Solar@123)",
+      "GVN_Hospital_60KWp (Gvnhospital / Solar@123)",
+      "Dhayanada School_7.8 KWp (Dayananda / Solar@123)"
+    ]
+  }
+}

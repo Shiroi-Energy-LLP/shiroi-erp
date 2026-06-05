@@ -57,3 +57,11 @@ logs/security/
 # Tier B re-extraction: extracted doc texts (large, generated, not needed in git)
 scripts/data/tier-b-doc-texts/
 scripts/data/proposal-samples/
+
+# Growatt credentials (passwords) — input to discover-growatt-plant-ids.ts.
+# The discovery output JSON/MD does NOT contain passwords and is fine to commit.
+scripts/data/growatt-credentials-*.tsv
+
+# FIMER (Aurora Vision) credentials — paired API key + portal user/pass per account.
+# The fimer-plants-*.json discovery output (no secrets) IS fine to commit.
+scripts/data/fimer-credentials-*.tsv
