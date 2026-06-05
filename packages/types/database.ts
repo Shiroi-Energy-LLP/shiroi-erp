@@ -608,6 +608,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "channel_partner_leads_channel_partner_id_fkey"
+            columns: ["channel_partner_id"]
+            isOneToOne: false
+            referencedRelation: "channel_partners_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "channel_partner_leads_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
@@ -1038,6 +1045,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "consultant_commission_payouts_channel_partner_id_fkey"
+            columns: ["channel_partner_id"]
+            isOneToOne: false
+            referencedRelation: "channel_partners_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "consultant_commission_payouts_customer_payment_id_fkey"
             columns: ["customer_payment_id"]
             isOneToOne: false
@@ -1270,6 +1284,117 @@ export type Database = {
       }
       customer_message_log: {
         Row: {
+          created_at: string
+          delivered_at: string | null
+          failed_reason: string | null
+          id: string
+          lead_id: string | null
+          meta_wamid: string | null
+          project_id: string | null
+          read_at: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string
+          template_name: string
+          template_vars: Json | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string
+          template_name: string
+          template_vars?: Json | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_vars?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_message_log_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_message_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      customer_message_log_default: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          failed_reason: string | null
+          id: string
+          lead_id: string | null
+          meta_wamid: string | null
+          project_id: string | null
+          read_at: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string
+          template_name: string
+          template_vars: Json | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string
+          template_name: string
+          template_vars?: Json | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_vars?: Json | null
+        }
+        Relationships: []
+      }
+      customer_message_log_unpartitioned_backup: {
+        Row: {
           created_at: string | null
           delivered_at: string | null
           failed_reason: string | null
@@ -1316,20 +1441,212 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "customer_message_log_lead_id_fkey"
+            foreignKeyName: "customer_message_log_backup_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "customer_message_log_project_id_fkey"
+            foreignKeyName: "customer_message_log_backup_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           }
           ]
+      }
+      customer_message_log_y2026m06: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          failed_reason: string | null
+          id: string
+          lead_id: string | null
+          meta_wamid: string | null
+          project_id: string | null
+          read_at: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string
+          template_name: string
+          template_vars: Json | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string
+          template_name: string
+          template_vars?: Json | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_vars?: Json | null
+        }
+        Relationships: []
+      }
+      customer_message_log_y2026m07: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          failed_reason: string | null
+          id: string
+          lead_id: string | null
+          meta_wamid: string | null
+          project_id: string | null
+          read_at: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string
+          template_name: string
+          template_vars: Json | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string
+          template_name: string
+          template_vars?: Json | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_vars?: Json | null
+        }
+        Relationships: []
+      }
+      customer_message_log_y2026m08: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          failed_reason: string | null
+          id: string
+          lead_id: string | null
+          meta_wamid: string | null
+          project_id: string | null
+          read_at: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string
+          template_name: string
+          template_vars: Json | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string
+          template_name: string
+          template_vars?: Json | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_vars?: Json | null
+        }
+        Relationships: []
+      }
+      customer_message_log_y2026m09: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          failed_reason: string | null
+          id: string
+          lead_id: string | null
+          meta_wamid: string | null
+          project_id: string | null
+          read_at: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string
+          template_name: string
+          template_vars: Json | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string
+          template_name: string
+          template_vars?: Json | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          lead_id?: string | null
+          meta_wamid?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_vars?: Json | null
+        }
+        Relationships: []
       }
       customer_outreach_queue: {
         Row: {
@@ -4452,7 +4769,7 @@ export type Database = {
           monitoring_site_id: string | null
           polling_enabled: boolean
           polling_interval_minutes: number
-          project_id: string
+          project_id: string | null
           rated_capacity_kw: number
           serial_number: string
           string_count: number
@@ -4472,7 +4789,7 @@ export type Database = {
           monitoring_site_id?: string | null
           polling_enabled?: boolean
           polling_interval_minutes?: number
-          project_id: string
+          project_id?: string | null
           rated_capacity_kw: number
           serial_number: string
           string_count?: number
@@ -4492,7 +4809,7 @@ export type Database = {
           monitoring_site_id?: string | null
           polling_enabled?: boolean
           polling_interval_minutes?: number
-          project_id?: string
+          project_id?: string | null
           rated_capacity_kw?: number
           serial_number?: string
           string_count?: number
@@ -4889,6 +5206,276 @@ export type Database = {
             referencedColumns: ["id"]
           }
           ]
+      }
+      lead_activities_2026_04: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string
+          next_action: string | null
+          next_action_date: string | null
+          outcome: string | null
+          performed_by: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_activities_2026_05: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string
+          next_action: string | null
+          next_action_date: string | null
+          outcome: string | null
+          performed_by: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_activities_2026_06: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string
+          next_action: string | null
+          next_action_date: string | null
+          outcome: string | null
+          performed_by: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_activities_2026_07: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string
+          next_action: string | null
+          next_action_date: string | null
+          outcome: string | null
+          performed_by: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_activities_2026_08: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string
+          next_action: string | null
+          next_action_date: string | null
+          outcome: string | null
+          performed_by: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_activities_default: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string
+          next_action: string | null
+          next_action_date: string | null
+          outcome: string | null
+          performed_by: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       lead_assignments: {
         Row: {
@@ -5848,6 +6435,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leads_channel_partner_id_fkey"
+            columns: ["channel_partner_id"]
+            isOneToOne: false
+            referencedRelation: "channel_partners_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "leads_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
@@ -6760,6 +7354,517 @@ export type Database = {
             referencedColumns: ["id"]
           }
           ]
+      }
+      message_delivery_log_default: {
+        Row: {
+          campaign_delivery_id: string | null
+          campaign_id: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_confirmed: boolean
+          delivery_confirmed_at: string | null
+          delivery_method: string
+          drip_sequence_id: string | null
+          drip_step_id: string | null
+          employee_forwarded: boolean
+          employee_phone: string | null
+          enrollment_id: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at: string | null
+          id: string
+          message_type: string
+          n8n_delivery_status: string | null
+          n8n_sent_at: string
+          notes: string | null
+          sent_to_employee_id: string | null
+          wati_message_id: string | null
+        }
+        Insert: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at?: string | null
+          id?: string
+          message_type: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Update: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          forwarded_at?: string | null
+          id?: string
+          message_type?: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Relationships: []
+      }
+      message_delivery_log_unpartitioned_backup: {
+        Row: {
+          campaign_delivery_id: string | null
+          campaign_id: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_confirmed: boolean
+          delivery_confirmed_at: string | null
+          delivery_method: string
+          drip_sequence_id: string | null
+          drip_step_id: string | null
+          employee_forwarded: boolean
+          employee_phone: string | null
+          enrollment_id: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at: string | null
+          id: string
+          message_type: string
+          n8n_delivery_status: string | null
+          n8n_sent_at: string
+          notes: string | null
+          sent_to_employee_id: string | null
+          wati_message_id: string | null
+        }
+        Insert: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at?: string | null
+          id?: string
+          message_type: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Update: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          forwarded_at?: string | null
+          id?: string
+          message_type?: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_delivery_log_ub_campaign_delivery_id_fkey"
+            columns: ["campaign_delivery_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaign_deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_delivery_log_ub_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_delivery_log_ub_drip_sequence_id_fkey"
+            columns: ["drip_sequence_id"]
+            isOneToOne: false
+            referencedRelation: "drip_sequences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_delivery_log_ub_drip_step_id_fkey"
+            columns: ["drip_step_id"]
+            isOneToOne: false
+            referencedRelation: "drip_sequence_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_delivery_log_ub_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "drip_sequence_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_delivery_log_ub_sent_to_employee_id_fkey"
+            columns: ["sent_to_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      message_delivery_log_y2026m06: {
+        Row: {
+          campaign_delivery_id: string | null
+          campaign_id: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_confirmed: boolean
+          delivery_confirmed_at: string | null
+          delivery_method: string
+          drip_sequence_id: string | null
+          drip_step_id: string | null
+          employee_forwarded: boolean
+          employee_phone: string | null
+          enrollment_id: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at: string | null
+          id: string
+          message_type: string
+          n8n_delivery_status: string | null
+          n8n_sent_at: string
+          notes: string | null
+          sent_to_employee_id: string | null
+          wati_message_id: string | null
+        }
+        Insert: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at?: string | null
+          id?: string
+          message_type: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Update: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          forwarded_at?: string | null
+          id?: string
+          message_type?: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Relationships: []
+      }
+      message_delivery_log_y2026m07: {
+        Row: {
+          campaign_delivery_id: string | null
+          campaign_id: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_confirmed: boolean
+          delivery_confirmed_at: string | null
+          delivery_method: string
+          drip_sequence_id: string | null
+          drip_step_id: string | null
+          employee_forwarded: boolean
+          employee_phone: string | null
+          enrollment_id: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at: string | null
+          id: string
+          message_type: string
+          n8n_delivery_status: string | null
+          n8n_sent_at: string
+          notes: string | null
+          sent_to_employee_id: string | null
+          wati_message_id: string | null
+        }
+        Insert: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at?: string | null
+          id?: string
+          message_type: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Update: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          forwarded_at?: string | null
+          id?: string
+          message_type?: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Relationships: []
+      }
+      message_delivery_log_y2026m08: {
+        Row: {
+          campaign_delivery_id: string | null
+          campaign_id: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_confirmed: boolean
+          delivery_confirmed_at: string | null
+          delivery_method: string
+          drip_sequence_id: string | null
+          drip_step_id: string | null
+          employee_forwarded: boolean
+          employee_phone: string | null
+          enrollment_id: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at: string | null
+          id: string
+          message_type: string
+          n8n_delivery_status: string | null
+          n8n_sent_at: string
+          notes: string | null
+          sent_to_employee_id: string | null
+          wati_message_id: string | null
+        }
+        Insert: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at?: string | null
+          id?: string
+          message_type: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Update: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          forwarded_at?: string | null
+          id?: string
+          message_type?: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Relationships: []
+      }
+      message_delivery_log_y2026m09: {
+        Row: {
+          campaign_delivery_id: string | null
+          campaign_id: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_confirmed: boolean
+          delivery_confirmed_at: string | null
+          delivery_method: string
+          drip_sequence_id: string | null
+          drip_step_id: string | null
+          employee_forwarded: boolean
+          employee_phone: string | null
+          enrollment_id: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at: string | null
+          id: string
+          message_type: string
+          n8n_delivery_status: string | null
+          n8n_sent_at: string
+          notes: string | null
+          sent_to_employee_id: string | null
+          wati_message_id: string | null
+        }
+        Insert: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id: string
+          entity_type: string
+          forwarded_at?: string | null
+          id?: string
+          message_type: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Update: {
+          campaign_delivery_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_confirmed?: boolean
+          delivery_confirmed_at?: string | null
+          delivery_method?: string
+          drip_sequence_id?: string | null
+          drip_step_id?: string | null
+          employee_forwarded?: boolean
+          employee_phone?: string | null
+          enrollment_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          forwarded_at?: string | null
+          id?: string
+          message_type?: string
+          n8n_delivery_status?: string | null
+          n8n_sent_at?: string
+          notes?: string | null
+          sent_to_employee_id?: string | null
+          wati_message_id?: string | null
+        }
+        Relationships: []
       }
       milestone_photos: {
         Row: {
@@ -8336,6 +9441,292 @@ export type Database = {
           }
           ]
       }
+      pending_project_imports: {
+        Row: {
+          acdb_sn: string | null
+          actual_cost: number | null
+          address_line1: string | null
+          address_line2: string | null
+          amc_type: string | null
+          amc_visits: Json | null
+          cable_make: string | null
+          category: string | null
+          city: string | null
+          commissioning_date: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          create_amc_contract: boolean
+          created_at: string
+          created_by: string | null
+          datalogger_mac: string | null
+          datalogger_pk: string | null
+          dcdb_sn: string | null
+          folder_link: string | null
+          google_maps_url: string | null
+          id: string
+          import_error: string | null
+          imported_at: string | null
+          imported_project_id: string | null
+          industry: string | null
+          internet_type: string | null
+          inverter_capacity_kw: number | null
+          inverter_make: string | null
+          inverter_model: string | null
+          inverter_power_module_sn: string | null
+          inverter_qty: number | null
+          inverter_serial_number: string | null
+          is_multi_inverter_parent: boolean
+          jio_backup_sim: string | null
+          jio_password_encrypted: string | null
+          jio_primary_sim: string | null
+          la_scope: string | null
+          lifetime_kwh: number | null
+          local_admin_password_encrypted: string | null
+          local_admin_user: string | null
+          local_login_ip: string | null
+          local_user: string | null
+          local_user_password_encrypted: string | null
+          match_confidence: string
+          match_score: number
+          matched_customer_name: string | null
+          matched_project_id: string | null
+          mounting_type: string | null
+          net_meter: string | null
+          normalized_name: string
+          panel_make: string | null
+          panel_model: string | null
+          panel_qty: number | null
+          panel_wattage: number | null
+          parent_import_id: string | null
+          pincode: string | null
+          portal_brand: string | null
+          portal_password_encrypted: string | null
+          portal_url: string | null
+          portal_username: string | null
+          profit_inr: number | null
+          project_cost: number | null
+          project_name: string
+          rejection_reason: string | null
+          remarks: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          rooftop_sqft: number | null
+          source_sheets: Json
+          source_status: string | null
+          source_year: number | null
+          state: string | null
+          status_review: string
+          system_size_kwp: number | null
+          system_type: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          acdb_sn?: string | null
+          actual_cost?: number | null
+          address_line1?: string | null
+          address_line2?: string | null
+          amc_type?: string | null
+          amc_visits?: Json | null
+          cable_make?: string | null
+          category?: string | null
+          city?: string | null
+          commissioning_date?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          create_amc_contract?: boolean
+          created_at?: string
+          created_by?: string | null
+          datalogger_mac?: string | null
+          datalogger_pk?: string | null
+          dcdb_sn?: string | null
+          folder_link?: string | null
+          google_maps_url?: string | null
+          id?: string
+          import_error?: string | null
+          imported_at?: string | null
+          imported_project_id?: string | null
+          industry?: string | null
+          internet_type?: string | null
+          inverter_capacity_kw?: number | null
+          inverter_make?: string | null
+          inverter_model?: string | null
+          inverter_power_module_sn?: string | null
+          inverter_qty?: number | null
+          inverter_serial_number?: string | null
+          is_multi_inverter_parent?: boolean
+          jio_backup_sim?: string | null
+          jio_password_encrypted?: string | null
+          jio_primary_sim?: string | null
+          la_scope?: string | null
+          lifetime_kwh?: number | null
+          local_admin_password_encrypted?: string | null
+          local_admin_user?: string | null
+          local_login_ip?: string | null
+          local_user?: string | null
+          local_user_password_encrypted?: string | null
+          match_confidence?: string
+          match_score?: number
+          matched_customer_name?: string | null
+          matched_project_id?: string | null
+          mounting_type?: string | null
+          net_meter?: string | null
+          normalized_name: string
+          panel_make?: string | null
+          panel_model?: string | null
+          panel_qty?: number | null
+          panel_wattage?: number | null
+          parent_import_id?: string | null
+          pincode?: string | null
+          portal_brand?: string | null
+          portal_password_encrypted?: string | null
+          portal_url?: string | null
+          portal_username?: string | null
+          profit_inr?: number | null
+          project_cost?: number | null
+          project_name: string
+          rejection_reason?: string | null
+          remarks?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          rooftop_sqft?: number | null
+          source_sheets?: Json
+          source_status?: string | null
+          source_year?: number | null
+          state?: string | null
+          status_review?: string
+          system_size_kwp?: number | null
+          system_type?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          acdb_sn?: string | null
+          actual_cost?: number | null
+          address_line1?: string | null
+          address_line2?: string | null
+          amc_type?: string | null
+          amc_visits?: Json | null
+          cable_make?: string | null
+          category?: string | null
+          city?: string | null
+          commissioning_date?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          create_amc_contract?: boolean
+          created_at?: string
+          created_by?: string | null
+          datalogger_mac?: string | null
+          datalogger_pk?: string | null
+          dcdb_sn?: string | null
+          folder_link?: string | null
+          google_maps_url?: string | null
+          id?: string
+          import_error?: string | null
+          imported_at?: string | null
+          imported_project_id?: string | null
+          industry?: string | null
+          internet_type?: string | null
+          inverter_capacity_kw?: number | null
+          inverter_make?: string | null
+          inverter_model?: string | null
+          inverter_power_module_sn?: string | null
+          inverter_qty?: number | null
+          inverter_serial_number?: string | null
+          is_multi_inverter_parent?: boolean
+          jio_backup_sim?: string | null
+          jio_password_encrypted?: string | null
+          jio_primary_sim?: string | null
+          la_scope?: string | null
+          lifetime_kwh?: number | null
+          local_admin_password_encrypted?: string | null
+          local_admin_user?: string | null
+          local_login_ip?: string | null
+          local_user?: string | null
+          local_user_password_encrypted?: string | null
+          match_confidence?: string
+          match_score?: number
+          matched_customer_name?: string | null
+          matched_project_id?: string | null
+          mounting_type?: string | null
+          net_meter?: string | null
+          normalized_name?: string
+          panel_make?: string | null
+          panel_model?: string | null
+          panel_qty?: number | null
+          panel_wattage?: number | null
+          parent_import_id?: string | null
+          pincode?: string | null
+          portal_brand?: string | null
+          portal_password_encrypted?: string | null
+          portal_url?: string | null
+          portal_username?: string | null
+          profit_inr?: number | null
+          project_cost?: number | null
+          project_name?: string
+          rejection_reason?: string | null
+          remarks?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          rooftop_sqft?: number | null
+          source_sheets?: Json
+          source_status?: string | null
+          source_year?: number | null
+          state?: string | null
+          status_review?: string
+          system_size_kwp?: number | null
+          system_type?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_project_imports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_project_imports_imported_project_id_fkey"
+            columns: ["imported_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_project_imports_matched_project_id_fkey"
+            columns: ["matched_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_project_imports_parent_import_id_fkey"
+            columns: ["parent_import_id"]
+            isOneToOne: false
+            referencedRelation: "pending_project_imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_project_imports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_project_imports_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       photo_gate_verifications: {
         Row: {
           completion_component_id: string | null
@@ -8591,6 +9982,110 @@ export type Database = {
           }
         ]
       }
+      plant_local_setup: {
+        Row: {
+          acdb_sn: string | null
+          created_at: string
+          created_by: string | null
+          datalogger_mac: string | null
+          datalogger_pk: string | null
+          dcdb_sn: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          internet_type: string | null
+          jio_backup_sim: string | null
+          jio_password_encrypted: string | null
+          jio_primary_sim: string | null
+          local_admin_password_encrypted: string | null
+          local_admin_user: string | null
+          local_login_ip: string | null
+          local_user: string | null
+          local_user_password_encrypted: string | null
+          notes: string | null
+          project_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          acdb_sn?: string | null
+          created_at?: string
+          created_by?: string | null
+          datalogger_mac?: string | null
+          datalogger_pk?: string | null
+          dcdb_sn?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          internet_type?: string | null
+          jio_backup_sim?: string | null
+          jio_password_encrypted?: string | null
+          jio_primary_sim?: string | null
+          local_admin_password_encrypted?: string | null
+          local_admin_user?: string | null
+          local_login_ip?: string | null
+          local_user?: string | null
+          local_user_password_encrypted?: string | null
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          acdb_sn?: string | null
+          created_at?: string
+          created_by?: string | null
+          datalogger_mac?: string | null
+          datalogger_pk?: string | null
+          dcdb_sn?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          internet_type?: string | null
+          jio_backup_sim?: string | null
+          jio_password_encrypted?: string | null
+          jio_primary_sim?: string | null
+          local_admin_password_encrypted?: string | null
+          local_admin_user?: string | null
+          local_login_ip?: string | null
+          local_user?: string | null
+          local_user_password_encrypted?: string | null
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plant_local_setup_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plant_local_setup_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plant_local_setup_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plant_local_setup_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       plant_monitoring_credentials: {
         Row: {
           commissioning_report_id: string | null
@@ -8601,7 +10096,7 @@ export type Database = {
           id: string
           inverter_brand: string | null
           notes: string | null
-          password: string
+          password_encrypted: string
           portal_url: string
           project_id: string
           updated_at: string
@@ -8617,7 +10112,7 @@ export type Database = {
           id?: string
           inverter_brand?: string | null
           notes?: string | null
-          password: string
+          password_encrypted: string
           portal_url: string
           project_id: string
           updated_at?: string
@@ -8633,7 +10128,7 @@ export type Database = {
           id?: string
           inverter_brand?: string | null
           notes?: string | null
-          password?: string
+          password_encrypted?: string
           portal_url?: string
           project_id?: string
           updated_at?: string
@@ -12512,6 +14007,302 @@ export type Database = {
           }
         ]
       }
+      rag_query_log_default: {
+        Row: {
+          ai_answer: string | null
+          ai_model: string
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          caller_id: string | null
+          caller_role: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          query_text: string
+          retrieved_chunk_ids: string[]
+          thumbs_down_count: number
+          thumbs_up_count: number
+        }
+        Insert: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Update: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text?: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Relationships: []
+      }
+      rag_query_log_unpartitioned_backup: {
+        Row: {
+          ai_answer: string | null
+          ai_model: string
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          caller_id: string | null
+          caller_role: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          query_text: string
+          retrieved_chunk_ids: string[]
+          thumbs_down_count: number
+          thumbs_up_count: number
+        }
+        Insert: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Update: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text?: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_query_log_caller_id_fkey"
+            columns: ["caller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      rag_query_log_y2026m06: {
+        Row: {
+          ai_answer: string | null
+          ai_model: string
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          caller_id: string | null
+          caller_role: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          query_text: string
+          retrieved_chunk_ids: string[]
+          thumbs_down_count: number
+          thumbs_up_count: number
+        }
+        Insert: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Update: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text?: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Relationships: []
+      }
+      rag_query_log_y2026m07: {
+        Row: {
+          ai_answer: string | null
+          ai_model: string
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          caller_id: string | null
+          caller_role: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          query_text: string
+          retrieved_chunk_ids: string[]
+          thumbs_down_count: number
+          thumbs_up_count: number
+        }
+        Insert: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Update: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text?: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Relationships: []
+      }
+      rag_query_log_y2026m08: {
+        Row: {
+          ai_answer: string | null
+          ai_model: string
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          caller_id: string | null
+          caller_role: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          query_text: string
+          retrieved_chunk_ids: string[]
+          thumbs_down_count: number
+          thumbs_up_count: number
+        }
+        Insert: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Update: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text?: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Relationships: []
+      }
+      rag_query_log_y2026m09: {
+        Row: {
+          ai_answer: string | null
+          ai_model: string
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          caller_id: string | null
+          caller_role: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          query_text: string
+          retrieved_chunk_ids: string[]
+          thumbs_down_count: number
+          thumbs_up_count: number
+        }
+        Insert: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Update: {
+          ai_answer?: string | null
+          ai_model?: string
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          caller_id?: string | null
+          caller_role?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          query_text?: string
+          retrieved_chunk_ids?: string[]
+          thumbs_down_count?: number
+          thumbs_up_count?: number
+        }
+        Relationships: []
+      }
       reconciliation_discrepancies: {
         Row: {
           difference: number | null
@@ -12618,6 +14409,266 @@ export type Database = {
           }
         ]
       }
+      record_audit_log_default: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          operation: string
+          previous_values: Json | null
+          record_id: string
+          session_id: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation: string
+          previous_values?: Json | null
+          record_id: string
+          session_id?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation?: string
+          previous_values?: Json | null
+          record_id?: string
+          session_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      record_audit_log_unpartitioned_backup: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          operation: string
+          previous_values: Json | null
+          record_id: string
+          session_id: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation: string
+          previous_values?: Json | null
+          record_id: string
+          session_id?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation?: string
+          previous_values?: Json | null
+          record_id?: string
+          session_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "record_audit_log_unpartitioned_backup_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      record_audit_log_y2026m06: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          operation: string
+          previous_values: Json | null
+          record_id: string
+          session_id: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation: string
+          previous_values?: Json | null
+          record_id: string
+          session_id?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation?: string
+          previous_values?: Json | null
+          record_id?: string
+          session_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      record_audit_log_y2026m07: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          operation: string
+          previous_values: Json | null
+          record_id: string
+          session_id: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation: string
+          previous_values?: Json | null
+          record_id: string
+          session_id?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation?: string
+          previous_values?: Json | null
+          record_id?: string
+          session_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      record_audit_log_y2026m08: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          operation: string
+          previous_values: Json | null
+          record_id: string
+          session_id: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation: string
+          previous_values?: Json | null
+          record_id: string
+          session_id?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation?: string
+          previous_values?: Json | null
+          record_id?: string
+          session_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      record_audit_log_y2026m09: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          operation: string
+          previous_values: Json | null
+          record_id: string
+          session_id: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation: string
+          previous_values?: Json | null
+          record_id: string
+          session_id?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          operation?: string
+          previous_values?: Json | null
+          record_id?: string
+          session_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       referral_payouts: {
         Row: {
           approved_at: string | null
@@ -12680,6 +14731,13 @@ export type Database = {
             columns: ["channel_partner_id"]
             isOneToOne: false
             referencedRelation: "channel_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_payouts_channel_partner_id_fkey"
+            columns: ["channel_partner_id"]
+            isOneToOne: false
+            referencedRelation: "channel_partners_safe"
             referencedColumns: ["id"]
           },
           {
@@ -16071,6 +18129,96 @@ export type Database = {
       }
     }
     Views: {
+      channel_partners_safe: {
+        Row: {
+          agreement_end_date: string | null
+          agreement_start_date: string | null
+          agreement_storage_path: string | null
+          annual_commission_ytd: number | null
+          commission_rate: number | null
+          commission_type: string | null
+          contact_person: string | null
+          created_at: string | null
+          default_commission_pct: number | null
+          deleted_at: string | null
+          email: string | null
+          id: string | null
+          is_active: boolean | null
+          is_internal: boolean | null
+          leads_converted_count: number | null
+          leads_referred_count: number | null
+          lifetime_commission: number | null
+          lifetime_referrals: number | null
+          pan_number: string | null
+          partner_name: string | null
+          partner_type: string | null
+          phone: string | null
+          portal_token: string | null
+          tds_applicable: boolean | null
+          total_commission_paid: number | null
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          agreement_end_date?: string | null
+          agreement_start_date?: string | null
+          agreement_storage_path?: string | null
+          annual_commission_ytd?: number | null
+          commission_rate?: number | null
+          commission_type?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          default_commission_pct?: number | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_internal?: boolean | null
+          leads_converted_count?: number | null
+          leads_referred_count?: number | null
+          lifetime_commission?: number | null
+          lifetime_referrals?: number | null
+          pan_number?: string | null
+          partner_name?: string | null
+          partner_type?: string | null
+          phone?: string | null
+          portal_token?: string | null
+          tds_applicable?: boolean | null
+          total_commission_paid?: number | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          agreement_end_date?: string | null
+          agreement_start_date?: string | null
+          agreement_storage_path?: string | null
+          annual_commission_ytd?: number | null
+          commission_rate?: number | null
+          commission_type?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          default_commission_pct?: number | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_internal?: boolean | null
+          leads_converted_count?: number | null
+          leads_referred_count?: number | null
+          lifetime_commission?: number | null
+          lifetime_referrals?: number | null
+          pan_number?: string | null
+          partner_name?: string | null
+          partner_type?: string | null
+          phone?: string | null
+          portal_token?: string | null
+          tds_applicable?: boolean | null
+          total_commission_paid?: number | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       v_digest_employees_birthday_today: {
         Row: {
           age_today: number | null
@@ -16394,6 +18542,7 @@ export type Database = {
     }
     Functions: {
       ack_sync_batch: { Args: { p_results: Json }; Returns: undefined }
+      approve_pending_import: { Args: { p_id: string }; Returns: string }
       assign_orphan_invoice: {
         Args: {
           p_invoice_id: string
@@ -16472,6 +18621,10 @@ export type Database = {
         Args: { target_month: string }
         Returns: undefined
       }
+      create_lead_activities_partition_for_month: {
+        Args: { target_month: string }
+        Returns: undefined
+      }
       create_service_tickets_from_inverter_alerts: {
         Args: never
         Returns: number
@@ -16530,6 +18683,7 @@ export type Database = {
           vendor_name: string
         }[]
       }
+      fn_plant_creds_key: { Args: never; Returns: string }
       generate_cashflow_snapshot: { Args: never; Returns: undefined }
       generate_doc_number: { Args: { doc_type: string }; Returns: string }
       generate_rfq_number: { Args: never; Returns: string }
@@ -16631,6 +18785,13 @@ export type Database = {
       get_flag_count: {
         Args: { p_entity_id: string; p_entity_type: string }
         Returns: number
+      }
+      get_growatt_creds_for_project: {
+        Args: { p_project_id: string }
+        Returns: {
+          password: string
+          username: string
+        }[]
       }
       get_inverters_due_for_poll: {
         Args: { batch_limit?: number }
@@ -16771,6 +18932,19 @@ export type Database = {
           week_total: number
         }[]
       }
+      get_pending_import_children: {
+        Args: { p_parent_id: string }
+        Returns: {
+          acdb_sn: string
+          dcdb_sn: string
+          id: string
+          inverter_capacity_kw: number
+          inverter_power_module_sn: string
+          inverter_serial_number: string
+          project_name: string
+          system_size_kwp: number
+        }[]
+      }
       get_pending_leave_requests: {
         Args: never
         Returns: {
@@ -16802,13 +18976,40 @@ export type Database = {
           total_value: number
         }[]
       }
+      get_plant_local_setup: {
+        Args: { p_project_id: string }
+        Returns: {
+          acdb_sn: string
+          datalogger_mac: string
+          datalogger_pk: string
+          dcdb_sn: string
+          id: string
+          internet_type: string
+          jio_backup_sim: string
+          jio_password: string
+          jio_primary_sim: string
+          local_admin_password: string
+          local_admin_user: string
+          local_login_ip: string
+          local_user: string
+          local_user_password: string
+          notes: string
+          project_id: string
+        }[]
+      }
       get_plant_monitoring_summary: {
         Args: never
         Returns: {
+          brand_deye: number
+          brand_fimer: number
+          brand_flin_energy: number
           brand_fronius: number
+          brand_goodwe: number
           brand_growatt: number
+          brand_havells: number
           brand_huawei: number
           brand_other: number
+          brand_polycab: number
           brand_sma: number
           brand_solis: number
           brand_sungrow: number
@@ -16957,6 +19158,89 @@ export type Database = {
         Args: { p_amount: number; p_partner_id: string }
         Returns: number
       }
+      list_pending_imports: {
+        Args: {
+          p_limit?: number
+          p_match_confidence?: string
+          p_offset?: number
+          p_portal_brand?: string
+          p_query?: string
+          p_source_status?: string
+          p_source_year?: number
+          p_status_review?: string
+        }
+        Returns: {
+          acdb_sn: string
+          actual_cost: number
+          address_line1: string
+          amc_type: string
+          amc_visits: Json
+          category: string
+          child_count: number
+          city: string
+          commissioning_date: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string
+          create_amc_contract: boolean
+          datalogger_mac: string
+          datalogger_pk: string
+          dcdb_sn: string
+          folder_link: string
+          google_maps_url: string
+          id: string
+          import_error: string
+          imported_project_id: string
+          industry: string
+          internet_type: string
+          inverter_capacity_kw: number
+          inverter_make: string
+          inverter_model: string
+          inverter_power_module_sn: string
+          inverter_qty: number
+          inverter_serial_number: string
+          is_multi_inverter_parent: boolean
+          jio_backup_sim: string
+          jio_password: string
+          jio_primary_sim: string
+          local_admin_password: string
+          local_admin_user: string
+          local_login_ip: string
+          local_user: string
+          local_user_password: string
+          match_confidence: string
+          match_score: number
+          matched_customer_name: string
+          matched_project_id: string
+          mounting_type: string
+          net_meter: string
+          normalized_name: string
+          panel_make: string
+          panel_model: string
+          panel_qty: number
+          panel_wattage: number
+          parent_import_id: string
+          pincode: string
+          portal_brand: string
+          portal_password: string
+          portal_url: string
+          portal_username: string
+          profit_inr: number
+          project_cost: number
+          project_name: string
+          rejection_reason: string
+          remarks: string
+          reviewed_at: string
+          source_sheets: Json
+          source_status: string
+          source_year: number
+          state: string
+          status_review: string
+          system_size_kwp: number
+          system_type: string
+          total_count: number
+        }[]
+      }
       lock_stale_reports: { Args: never; Returns: undefined }
       mark_project_duplicate: {
         Args: {
@@ -17011,6 +19295,10 @@ export type Database = {
       }
       recalc_vendor_bill_totals: {
         Args: { p_bill_id: string }
+        Returns: undefined
+      }
+      reject_pending_import: {
+        Args: { p_id: string; p_reason?: string }
         Returns: undefined
       }
       rollup_inverter_readings_daily: { Args: never; Returns: undefined }
@@ -17405,12 +19693,17 @@ export type Database = {
           phone: string
         }[]
       }
+      seed_pending_project_import: { Args: { p_data: Json }; Returns: string }
       undo_project_review: {
         Args: { p_made_by: string; p_project_id: string }
         Returns: {
           code: string
           success: boolean
         }[]
+      }
+      update_pending_import_field: {
+        Args: { p_field: string; p_id: string; p_value: string }
+        Returns: undefined
       }
       update_storage_mime_type: {
         Args: { p_bucket: string; p_mime: string; p_path: string }

@@ -50,35 +50,23 @@ export async function createPlantMonitoringCredential(input: {
   if (!input.password?.trim()) return err('Password is required');
 
   const supabase = await createClient();
-  const employeeId = await getCurrentEmployeeId();
 
-  // Compute brand server-side via the same helper the trigger uses
-  const { data: brandRow, error: brandErr } = await supabase.rpc(
-    'plant_monitoring_detect_brand',
-    { portal_url: input.portal_url },
+  // Post-mig-158: password is encrypted at rest. Use the RPC that encrypts
+  // server-side and writes via SECURITY DEFINER with role gate.
+  const { data: newId, error } = await (supabase.rpc as any)(
+    'upsert_plant_monitoring_credential',
+    {
+      p_id: null,
+      p_project_id: input.project_id,
+      p_portal_url: input.portal_url.trim(),
+      p_username: input.username.trim(),
+      p_password: input.password,
+      p_notes: input.notes?.trim() || null,
+      p_inverter_brand: null, // server auto-detects from URL
+    },
   );
 
-  // Fall back to 'other' if the RPC returns unexpectedly — the CHECK constraint allows it.
-  const brand = (!brandErr && typeof brandRow === 'string' ? brandRow : 'other') as string;
-
-  const insert: CredInsert = {
-    project_id: input.project_id,
-    portal_url: input.portal_url.trim(),
-    username: input.username.trim(),
-    password: input.password,
-    notes: input.notes?.trim() || null,
-    inverter_brand: brand,
-    created_by: employeeId,
-    updated_by: employeeId,
-  };
-
-  const { data, error } = await supabase
-    .from('plant_monitoring_credentials')
-    .insert(insert)
-    .select()
-    .single();
-
-  if (error || !data) {
+  if (error || !newId) {
     console.error(`${op} Failed:`, { code: error?.code, message: error?.message });
     if (error?.code === '23505') {
       return err('A credential for this project and URL already exists', error.code);
@@ -86,8 +74,15 @@ export async function createPlantMonitoringCredential(input: {
     return err(error?.message ?? 'Failed to create credential', error?.code);
   }
 
+  // Fetch back the inserted row (without password — that comes via search RPC)
+  const { data: row } = await supabase
+    .from('plant_monitoring_credentials')
+    .select('*')
+    .eq('id', newId as string)
+    .single();
+
   revalidatePath('/om/plant-monitoring');
-  return ok(data);
+  return ok((row ?? { id: newId as string }) as CredRow);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -108,51 +103,24 @@ export async function updatePlantMonitoringCredential(
   if (!id) return err('Credential id is required');
 
   const supabase = await createClient();
-  const employeeId = await getCurrentEmployeeId();
 
-  const update: CredUpdate = {
-    updated_by: employeeId,
-  };
+  // Post-mig-158: route through SECURITY DEFINER RPC that encrypts password
+  // and re-detects brand from URL. Pass NULLs for unchanged fields — RPC
+  // uses COALESCE to preserve them.
+  const { error } = await (supabase.rpc as any)(
+    'upsert_plant_monitoring_credential',
+    {
+      p_id: id,
+      p_project_id: null, // not updatable here
+      p_portal_url: patch.portal_url?.trim() ?? null,
+      p_username: patch.username?.trim() ?? null,
+      p_password: patch.password ?? null,
+      p_notes: patch.notes !== undefined ? (patch.notes?.trim() || null) : null,
+      p_inverter_brand: null,
+    },
+  );
 
-  if (patch.portal_url !== undefined) {
-    const trimmed = patch.portal_url.trim();
-    if (!trimmed) return err('Portal URL cannot be empty');
-    update.portal_url = trimmed;
-
-    // Recompute brand when URL changes
-    const { data: brandRow, error: brandErr } = await supabase.rpc(
-      'plant_monitoring_detect_brand',
-      { portal_url: trimmed },
-    );
-    if (!brandErr && typeof brandRow === 'string') {
-      update.inverter_brand = brandRow;
-    }
-  }
-
-  if (patch.username !== undefined) {
-    const trimmed = patch.username.trim();
-    if (!trimmed) return err('Username cannot be empty');
-    update.username = trimmed;
-  }
-
-  if (patch.password !== undefined) {
-    if (!patch.password) return err('Password cannot be empty');
-    update.password = patch.password;
-  }
-
-  if (patch.notes !== undefined) {
-    update.notes = patch.notes?.trim() || null;
-  }
-
-  const { data, error } = await supabase
-    .from('plant_monitoring_credentials')
-    .update(update)
-    .eq('id', id)
-    .is('deleted_at', null)
-    .select()
-    .single();
-
-  if (error || !data) {
+  if (error) {
     console.error(`${op} Failed:`, { id, code: error?.code, message: error?.message });
     if (error?.code === '23505') {
       return err('Another credential for this project already uses this URL', error.code);
@@ -160,8 +128,15 @@ export async function updatePlantMonitoringCredential(
     return err(error?.message ?? 'Failed to update credential', error?.code);
   }
 
+  const { data: row } = await supabase
+    .from('plant_monitoring_credentials')
+    .select('*')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single();
+
   revalidatePath('/om/plant-monitoring');
-  return ok(data);
+  return ok((row ?? { id }) as CredRow);
 }
 
 // ═══════════════════════════════════════════════════════════════════════

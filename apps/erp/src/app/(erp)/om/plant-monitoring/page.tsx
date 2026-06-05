@@ -230,7 +230,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
                           {cred.username}
                         </td>
                         <td className="px-2 py-1.5">
-                          <PlantMonitoringPasswordCell password={cred.password} />
+                          <PlantMonitoringPasswordCell password={cred.password ?? ''} />
                         </td>
                         <td className="px-2 py-1.5">
                           <a
@@ -255,7 +255,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
                                   id: cred.id,
                                   portal_url: cred.portal_url,
                                   username: cred.username,
-                                  password: cred.password,
+                                  password: cred.password ?? '',
                                   notes: cred.notes,
                                 }}
                               />

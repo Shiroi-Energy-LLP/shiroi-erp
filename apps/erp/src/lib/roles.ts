@@ -58,6 +58,7 @@ const ITEMS = {
   serviceTickets: { label: 'Service Tickets',   href: '/om/tickets',       icon: 'Wrench' },
   amcSchedule:    { label: 'AMC Schedule',      href: '/om/amc',           icon: 'CalendarCheck' },
   plantMonitoring: { label: 'Plant Monitoring', href: '/om/plant-monitoring', icon: 'Activity' },
+  importReview:   { label: 'Import Review',     href: '/om/import-review', icon: 'Upload' },
   inverters:      { label: 'Inverters',         href: '/om/inverters',     icon: 'Zap' },
   cashFlow:       { label: 'Cash Flow',         href: '/cash',             icon: 'TrendingUp' },
   invoices:       { label: 'Invoices',          href: '/invoices',         icon: 'DollarSign' },
@@ -100,7 +101,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
-    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.inverters] },
+    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.importReview, ITEMS.inverters] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
@@ -128,13 +129,13 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Reference',    items: [ITEMS.priceBook] },
     // Liaison rehomed to marketing_manager per revamp - PMs see the read-only
     // Liaison step embedded in /projects/[id] detail, no top-level link.
-    { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule, ITEMS.plantMonitoring, ITEMS.inverters] },
+    { label: 'O&M',          items: [ITEMS.serviceTickets, ITEMS.amcSchedule, ITEMS.plantMonitoring, ITEMS.importReview, ITEMS.inverters] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'Account',     items: [ITEMS.settings] },
   ],
   om_technician: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
-    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.inverters] },
+    { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.importReview, ITEMS.inverters] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Account',      items: [ITEMS.settings] },
   ],

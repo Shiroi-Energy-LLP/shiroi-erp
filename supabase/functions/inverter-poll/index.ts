@@ -1043,18 +1043,18 @@ Deno.serve(async (req: Request) => {
         }
 
         if (!usedInstallerToken) {
-          // Per-customer credentials from plant_monitoring_credentials
-          const { data: pc, error: pcErr } = await supabase
-            .from('plant_monitoring_credentials')
-            .select('username, password')
-            .eq('project_id', inv.project_id)
-            .eq('inverter_brand', 'growatt')
-            .is('deleted_at', null)
-            .maybeSingle();
+          // Per-customer credentials from plant_monitoring_credentials.
+          // Migration 158 encrypted the password column; we go through
+          // the SECURITY DEFINER RPC get_growatt_creds_for_project which
+          // returns the decrypted (username, password) pair. service_role
+          // is the only caller authorized via GRANT.
+          const { data: pcRows, error: pcErr } = await supabase
+            .rpc('get_growatt_creds_for_project', { p_project_id: inv.project_id });
           if (pcErr) {
-            throw new Error(`plant_monitoring_credentials query failed: ${pcErr.message}`);
+            throw new Error(`get_growatt_creds_for_project failed: ${pcErr.message}`);
           }
-          if (!pc) {
+          const pc = Array.isArray(pcRows) ? pcRows[0] : pcRows;
+          if (!pc || !pc.username || !pc.password) {
             console.warn(`${op} inverter ${inv.id} (growatt): no installer-token cred AND no plant_monitoring_credentials row; skipping`);
             continue;
           }

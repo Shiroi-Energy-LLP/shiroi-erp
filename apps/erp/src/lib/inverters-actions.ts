@@ -190,16 +190,22 @@ export async function healthCheckInverter(
 
   try {
     if (brand === 'growatt') {
-      // Per-customer architecture: read credentials from plant_monitoring_credentials
-      // matched by project_id (not inverter_monitoring_credentials)
-      const { data: plantCred, error: plantErr } = await supabase
-        .from('plant_monitoring_credentials')
-        .select('username, password')
-        .eq('project_id', inverter.project_id)
-        .eq('inverter_brand', 'growatt')
-        .maybeSingle();
+      // Per-customer architecture: read credentials via SECURITY DEFINER RPC
+      // (post-mig-158 the password column is encrypted; the RPC decrypts it
+      // server-side for service_role callers).
+      if (!inverter.project_id) {
+        return ok({
+          ok: false,
+          message: 'Inverter has no project_id; cannot look up Growatt credential.',
+        });
+      }
+      const { data: credRows, error: plantErr } = await (supabase.rpc as any)(
+        'get_growatt_creds_for_project',
+        { p_project_id: inverter.project_id }
+      );
 
-      if (plantErr || !plantCred) {
+      const plantCred = Array.isArray(credRows) ? credRows[0] : credRows;
+      if (plantErr || !plantCred || !plantCred.username || !plantCred.password) {
         return ok({
           ok: false,
           message: 'No Growatt plant_monitoring_credentials found for this project. Add credentials under Plant Monitoring first.',

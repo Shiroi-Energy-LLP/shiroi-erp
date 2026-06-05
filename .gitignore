@@ -65,3 +65,11 @@ scripts/data/growatt-credentials-*.tsv
 # FIMER (Aurora Vision) credentials — paired API key + portal user/pass per account.
 # The fimer-plants-*.json discovery output (no secrets) IS fine to commit.
 scripts/data/fimer-credentials-*.tsv
+
+# Historical plants import (2026-06-06) — XLSX masters and derived plans
+# carry plaintext portal/local/Jio passwords. Never commit.
+scripts/data/se-master-file-*.xlsx
+scripts/data/master-data-sheet-*.xlsx
+scripts/data/shiroienergy-*.xlsx
+scripts/data/credentials-brand-counts-*.md
+scripts/data/master-projects-import-plan-*.md

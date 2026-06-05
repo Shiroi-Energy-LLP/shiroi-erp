@@ -26,6 +26,18 @@ O&M is the post-handover side of the system — everything that happens after a 
   - Add/Edit/Delete dialogs (founder + project_manager only; om_technician read-only)
   - Add dialog: project picker is a searchable combobox with ↑↓/Enter/Esc keyboard nav, "Create a new project →" link when no match
   - Auto-sync from `commissioning_reports` on status transition via DB trigger
+  - **Encryption (mig 158, 2026-06-06):** `password` column replaced with `password_encrypted BYTEA` encrypted via `extensions.pgp_sym_encrypt` using a Vault-stored AES-256 key `plant_credentials_key`. Reads go through `search_plant_monitoring_credentials` RPC (decrypts server-side, role-gated to founder/PM/om_tech); writes go through `upsert_plant_monitoring_credential` RPC (encrypts server-side). Growatt Edge Function poller reads via `get_growatt_creds_for_project` RPC (service_role only).
+- `/om/import-review` — staging review for historical-plant XLSX backfill (added 2026-06-06)
+  - Tabs: Pending · Approved · Rejected · Imported · Errors
+  - 4 summary cards (Pending review, Already-in-DB exact, Likely fuzzy, Imported)
+  - Sticky filter bar: match confidence × source status × year × portal brand × search
+  - Per-row card: project name + status badge + year + size + match-confidence badge + portal-brand badge + multi-inverter cluster badge + Source breadcrumb
+  - Click-to-expand reveals full detail (hardware, financial, location, portal creds, local LAN, internet+datalogger, AMC schedule, remarks, import error)
+  - Per-row Approve / Reject buttons; multi-select with floating Bulk Approve bar (sequential not parallel — keeps `SHIROI/PROJ/LEGACY/NNNN` sequence safe)
+  - All 4 password fields (portal, local-admin, local-user, jio) shown with 30s reveal pattern (same `PlantMonitoringPasswordCell` UX, but per-row, in-place)
+  - Cluster expansion shows the N sub-inverters that will be created as part of the cascade
+  - **Approval cascade** (founder/PM only, atomic transaction): stub lead → stub proposal (`SHIROI/QT/LEGACY/NNNN`, status='draft') → projects (`SHIROI/PROJ/LEGACY/NNNN`, status='completed', commissioned_date set, completion_pct=100, contracted_value from source) → flip proposal to accepted (existing `trigger_proposal_accepted_create_project` idempotency check skips on existing project for the lead) → parent inverter row + child rows from `parent_import_id` lookup → plant_monitoring_credentials (encrypted) → plant_local_setup (encrypted). EXCEPTION handler marks the row `status_review='error'` with SQLERRM. Imported rows persist in the Imported tab with link to the new project.
+  - **Reject** sets `status_review='rejected'` with optional `rejection_reason`; preserves row for audit.
 
 ## Key Business Rules
 
@@ -45,7 +57,9 @@ O&M is the post-handover side of the system — everything that happens after a 
 - `om_contracts` (`amc_category`, `amc_duration_months`, `annual_value`)
 - `om_visit_schedules` (`scheduled_date`, `visit_number`, `status`)
 - `om_visit_reports` (`work_done`, `issues_identified`, `resolution_details`, `customer_feedback`, `completed_by`, `report_file_paths TEXT[]`)
-- `plant_monitoring_credentials` (multi-entry-per-project, soft delete, partial unique `(project_id, portal_url) WHERE deleted_at IS NULL`)
+- `plant_monitoring_credentials` (multi-entry-per-project, soft delete, partial unique `(project_id, portal_url) WHERE deleted_at IS NULL`; `password_encrypted BYTEA` post-mig-158)
+- `pending_project_imports` (staging — 60+ fields incl. encrypted portal/local/Jio passwords; parent rows + child rows for multi-inverter clusters; status_review enum pending/approved/rejected/imported/error; unique on `normalized_name` for active parents; mig 159)
+- `plant_local_setup` (per-plant operational: LAN admin/user creds encrypted, Jio modem password encrypted + 2 SIMs, data logger MAC + PK, ACDB/DCDB SN; one row per project unique; mig 160)
 - **Inverter telemetry** (migration 050):
   - `inverters` (master: 6-brand CHECK, `polling_interval_minutes`, `current_status`; `project_id` made nullable in mig 157 so monitoring-only inverters discovered via vendor portals can exist before being mapped to a Shiroi project)
   - `inverter_monitoring_credentials` (vault secret refs only, never raw)
