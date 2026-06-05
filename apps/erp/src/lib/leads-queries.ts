@@ -1,6 +1,5 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
@@ -63,6 +62,16 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   const sortCol = filters.sort || 'created_at';
   const sortDir = filters.dir === 'asc';
 
+  // Item 2b — when a text search is present, route through the parameterized
+  // search_leads_by_query RPC instead of building a PostgREST .or() filter
+  // (string interpolation, even with the b92b9e9 sanitizer, is the wrong
+  // structural shape for user-supplied search input). The RPC reproduces every
+  // filter this builder applies; we compute IST 'closing' dates here and pass
+  // them through as p_close_from / p_close_to + a status exclusion list.
+  if (filters.search && filters.search.trim() !== '') {
+    return getLeadsViaSearchRpc(supabase, filters, page, pageSize, sortCol, sortDir);
+  }
+
   let query = supabase
     .from('leads')
     .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, close_probability, is_archived, assigned_to, created_at, ai_score, ai_score_reason, employees!leads_assigned_to_fkey(full_name), channel_partners!leads_channel_partner_id_fkey(partner_name, is_internal)', { count: 'estimated' })
@@ -81,10 +90,9 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   if (filters.source) query = query.eq('source', filters.source);
   if (filters.segment) query = query.eq('segment', filters.segment as any);
   if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
-  if (filters.search) {
-    const safeSearch = sanitizeForOr(filters.search);
-    query = query.or(`customer_name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%`);
-  }
+  // Item 2b — search is now routed through the search_leads_by_query RPC
+  // below when filters.search is non-empty. This builder no longer issues a
+  // .or() string-interpolation for the search term.
   if (filters.kwpMin !== undefined) query = query.gte('estimated_size_kwp', filters.kwpMin);
   if (filters.kwpMax !== undefined) query = query.lte('estimated_size_kwp', filters.kwpMax);
   if (filters.closeFrom) query = query.gte('expected_close_date', filters.closeFrom);
@@ -298,4 +306,129 @@ export async function getSalesEngineers() {
     throw new Error(`Failed to load sales engineers: ${error.message}`);
   }
   return data ?? [];
+}
+
+/**
+ * Item 2b — search branch implementation.
+ * Builds the full filter argument list for search_leads_by_query and post-shapes
+ * the rows to match the JS-flattened contract callers consume downstream.
+ *
+ * IST 'closing' date computation is duplicated here from the main builder
+ * because the SQL RPC takes the resolved date range, not the 'this_week' /
+ * 'this_month' sentinel.
+ */
+async function getLeadsViaSearchRpc(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  filters: LeadFilters,
+  page: number,
+  pageSize: number,
+  sortCol: string,
+  sortDirAsc: boolean,
+): Promise<PaginatedLeads> {
+  const op = '[getLeads:searchRpc]';
+  const offset = (page - 1) * pageSize;
+
+  // Status filter: explicit list (from filters.status) takes precedence; else
+  // the RPC will honour p_exclude_converted.
+  let statuses: string[] | null = null;
+  if (filters.status) {
+    statuses = Array.isArray(filters.status) ? (filters.status as string[]) : [filters.status as string];
+  }
+
+  // closeFrom / closeTo windows. If filters.closing is set, override with
+  // the IST week/month range AND exclude terminal statuses by narrowing
+  // statuses to the explicit non-terminal list (the RPC accepts ANY-list
+  // semantics; we materialize the inverse here).
+  let closeFrom = filters.closeFrom ?? null;
+  let closeTo = filters.closeTo ?? null;
+  if (filters.closing) {
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+    const nowIST = new Date(Date.now() + IST_OFFSET_MS);
+    const toDateStr = (d: Date) => d.toISOString().split('T')[0]!;
+
+    let closingStart: string;
+    let closingEnd: string;
+    if (filters.closing === 'this_week') {
+      const dayOfWeek = nowIST.getUTCDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(nowIST);
+      monday.setUTCDate(nowIST.getUTCDate() + mondayOffset);
+      const sunday = new Date(monday);
+      sunday.setUTCDate(monday.getUTCDate() + 6);
+      closingStart = toDateStr(monday);
+      closingEnd = toDateStr(sunday);
+    } else {
+      const firstDay = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 1));
+      const lastDay = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth() + 1, 0));
+      closingStart = toDateStr(firstDay);
+      closingEnd = toDateStr(lastDay);
+    }
+    closeFrom = closingStart;
+    closeTo = closingEnd;
+
+    // Materialize the non-terminal status list to mirror
+    //   .not('status', 'in', '(won,lost,disqualified,converted)')
+    const terminal = new Set(['won', 'lost', 'disqualified', 'converted']);
+    const allStatuses: string[] = [
+      'new','contacted','quick_quote_sent','site_survey_scheduled','site_survey_done',
+      'design_in_progress','proposal_sent','design_confirmed','detailed_proposal_sent',
+      'negotiation','closure_soon','won','converted','lost','on_hold','disqualified',
+    ];
+    const nonTerminal = allStatuses.filter((s) => !terminal.has(s));
+    if (statuses && statuses.length > 0) {
+      statuses = statuses.filter((s) => !terminal.has(s));
+    } else {
+      statuses = nonTerminal;
+    }
+  }
+
+  // Resolve referrer single-value vs internal_all sentinel. The 'internal_all'
+  // case relies on filters.referrerIds being passed; otherwise the RPC sees
+  // a null referrer_id and the IN-list and falls through (matches old
+  // behaviour).
+  const referrerId =
+    filters.referrer && filters.referrer !== 'internal_all' ? filters.referrer : null;
+  const referrerIds =
+    filters.referrerIds && filters.referrerIds.length > 0 ? filters.referrerIds : null;
+
+  const { data, error } = await (supabase.rpc as any)('search_leads_by_query', {
+    p_query: filters.search ?? null,
+    p_statuses: statuses,
+    p_exclude_converted: !filters.includeConverted,
+    p_source: filters.source ?? null,
+    p_segment: filters.segment ?? null,
+    p_assigned_to: filters.assignedTo ?? null,
+    p_kwp_min: filters.kwpMin ?? null,
+    p_kwp_max: filters.kwpMax ?? null,
+    p_close_from: closeFrom,
+    p_close_to: closeTo,
+    p_referrer_ids: referrerIds,
+    p_referrer_id: referrerId,
+    p_referred_by_clients: filters.referredBy === 'clients',
+    p_external_partner_ids:
+      filters.externalPartnerIds && filters.externalPartnerIds.length > 0
+        ? filters.externalPartnerIds
+        : null,
+    p_archived_only: !!filters.archivedOnly,
+    p_include_archived: !!filters.includeArchived,
+    p_sort: sortCol,
+    p_dir: sortDirAsc ? 'asc' : 'desc',
+    p_limit: pageSize,
+    p_offset: offset,
+  });
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load leads: ${error.message}`);
+  }
+
+  const rows = (data ?? []) as Array<any>;
+  const total = rows.length > 0 ? Number(rows[0].total_count ?? 0) : 0;
+  // assigned_to_name from JS path used '—' default; RPC returns NULL when
+  // no assignee — coerce here for shape parity.
+  const stripped = rows.map(({ total_count: _tc, ...rest }) => ({
+    ...rest,
+    assigned_to_name: rest.assigned_to_name ?? '—',
+  }));
+  return { data: stripped, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }

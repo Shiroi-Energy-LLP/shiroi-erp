@@ -7,7 +7,6 @@ import { logProcurementAudit } from '@/lib/procurement-audit';
 import type { VendorSearchResult } from '@/lib/procurement-queries';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from '@/lib/n8n/emit';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -705,21 +704,26 @@ export async function searchVendors(q: string, limit = 10): Promise<VendorSearch
   const op = '[searchVendors]';
   try {
     const supabase = await createClient();
-    const query = sanitizeForOr(q);
+    // Caller-side early-exit preserved from the previous PostgREST version
+    // to avoid a useless round-trip on 0/1-char inputs (the RPC itself has
+    // no minimum-length guard so it stays reusable).
+    const query = q.trim();
     if (query.length < 2) return [];
-    const { data, error } = await supabase
-      .from('vendors')
-      .select('id, company_name, contact_person, phone, email')
-      .or(`company_name.ilike.%${query}%,contact_person.ilike.%${query}%`)
-      .eq('is_active', true)
-      .is('deleted_at', null)
-      .order('company_name')
-      .limit(limit);
+    // Item 2b — typed RPC replaces the .or() interpolation; parameter binding
+    // makes the search injection-proof without needing sanitizeForOr at the
+    // boundary. (See supabase/migrations/155_2026-05-31-search-rpcs-purchase.sql.)
+    // The `as any` cast on `.rpc()` is a temporary bridge — parent agent
+    // regenerates packages/types/database.ts at the end of this batch, after
+    // which the cast can be removed.
+    const { data, error } = await (supabase.rpc as any)('search_vendors', {
+      p_query: query,
+      p_limit: limit,
+    });
     if (error) {
       console.error(`${op}`, { code: error.code, message: error.message });
       return [];
     }
-    return data ?? [];
+    return (data as VendorSearchResult[] | null) ?? [];
   } catch (e) {
     console.error(`${op} threw`, e);
     return [];

@@ -1,10 +1,17 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type StockPieceRow = Database['public']['Tables']['stock_pieces']['Row'];
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
 type CutRecordRow = Database['public']['Tables']['inventory_cut_records']['Row'];
+
+// Shape returned by search_inventory_stock_pieces RPC — the joined project
+// columns come back inline as project_number / project_customer_name and we
+// reshape them into the projects sub-object the callers expect.
+type SearchStockPieceRow = StockPieceRow & {
+  project_number: string | null;
+  project_customer_name: string | null;
+};
 
 // ---------------------------------------------------------------------------
 // C8: Cut-length queries
@@ -93,42 +100,37 @@ export async function getStockPieces(filters: InventoryFilters = {}): Promise<St
   const op = '[getStockPieces]';
   const supabase = await createClient();
 
-  let query = supabase
-    .from('stock_pieces')
-    .select('*, projects!stock_pieces_project_id_fkey(project_number, customer_name)')
-    .order('updated_at', { ascending: false });
-
-  if (filters.category) {
-    query = query.eq('item_category', filters.category);
-  }
-  if (filters.location) {
-    query = query.eq('current_location', filters.location);
-  }
-  if (filters.condition) {
-    query = query.eq('condition', filters.condition);
-  }
-  if (filters.projectId) {
-    query = query.eq('project_id', filters.projectId);
-  }
-  if (filters.isCutLength !== undefined) {
-    query = query.eq('is_cut_length', filters.isCutLength);
-  }
-  if (filters.isScrap !== undefined) {
-    query = query.eq('is_scrap', filters.isScrap);
-  }
-  if (filters.search) {
-    const safeSearch = sanitizeForOr(filters.search);
-    query = query.or(`item_description.ilike.%${safeSearch}%,brand.ilike.%${safeSearch}%,serial_number.ilike.%${safeSearch}%`);
-  }
-
-  const { data, error } = await query;
+  // Item 2b: parameter-bound RPC replaces .or() interpolation. All scalar
+  // filters and ordering are preserved on the SQL side; the embed columns
+  // come back inline and we reshape them into a projects sub-object.
+  const trimmed = filters.search?.trim();
+  const { data, error } = await (supabase.rpc as any)('search_inventory_stock_pieces', {
+    p_query: trimmed && trimmed.length > 0 ? trimmed : null,
+    p_category: filters.category ?? null,
+    p_location: filters.location ?? null,
+    p_condition: filters.condition ?? null,
+    p_project_id: filters.projectId ?? null,
+    p_is_cut_length: filters.isCutLength ?? null,
+    p_is_scrap: filters.isScrap ?? null,
+    p_limit: 1000,
+    p_offset: 0,
+  });
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     return [];
   }
 
-  return (data ?? []) as StockPieceListItem[];
+  const rows = (data ?? []) as SearchStockPieceRow[];
+  return rows.map((r) => {
+    const { project_number, project_customer_name, ...stockRow } = r;
+    return {
+      ...(stockRow as StockPieceRow),
+      projects: r.project_id
+        ? { project_number, customer_name: project_customer_name }
+        : null,
+    } as StockPieceListItem;
+  });
 }
 
 /**

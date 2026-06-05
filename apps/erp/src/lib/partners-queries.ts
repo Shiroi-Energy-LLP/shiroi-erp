@@ -7,7 +7,6 @@
 
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 export type ChannelPartner = Database['public']['Tables']['channel_partners']['Row'];
 export type ChannelPartnerType = 'individual_broker' | 'aggregator' | 'ngo' | 'housing_society' | 'corporate' | 'consultant' | 'referral' | 'electrical_contractor' | 'architect' | 'mep_firm' | 'other';
@@ -29,39 +28,27 @@ export async function listPartners(opts: ListPartnersOptions = {}): Promise<List
   const op = '[listPartners]';
   const pageSize = opts.pageSize ?? 50;
   const page = Math.max(opts.page ?? 1, 1);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+  const offset = (page - 1) * pageSize;
 
   try {
     const supabase = await createClient();
-    let query = supabase
-      .from('channel_partners')
-      .select('*', { count: 'estimated' })
-      .is('deleted_at', null);
-
-    if (opts.search && opts.search.trim() !== '') {
-      const q = sanitizeForOr(opts.search);
-      query = query.or(`partner_name.ilike.%${q}%,contact_person.ilike.%${q}%,phone.ilike.%${q}%`);
-    }
-    if (opts.partnerType) {
-      query = query.eq('partner_type', opts.partnerType);
-    }
-    if (typeof opts.isActive === 'boolean') {
-      query = query.eq('is_active', opts.isActive);
-    }
-
-    query = query.order('partner_name', { ascending: true }).range(from, to);
-
-    const { data, error, count } = await query;
+    // Item 2b — parameterized search RPC replaces PostgREST .or() interpolation.
+    const { data, error } = await (supabase.rpc as any)('search_partners', {
+      p_query: opts.search && opts.search.trim() !== '' ? opts.search : null,
+      p_partner_type: opts.partnerType ?? null,
+      p_is_active: typeof opts.isActive === 'boolean' ? opts.isActive : null,
+      p_limit: pageSize,
+      p_offset: offset,
+    });
     if (error) {
       console.error(`${op} query failed`, { code: error.code, message: error.message });
       throw new Error(`Failed to list partners: ${error.message}`);
     }
 
-    return {
-      rows: (data ?? []) as ChannelPartner[],
-      total: count ?? 0,
-    };
+    const rows = (data ?? []) as Array<ChannelPartner & { total_count?: number | string }>;
+    const total = rows.length > 0 ? Number(rows[0]!.total_count ?? 0) : 0;
+    const stripped = rows.map(({ total_count: _tc, ...rest }) => rest as ChannelPartner);
+    return { rows: stripped, total };
   } catch (e) {
     console.error(`${op} threw`, e);
     throw e;

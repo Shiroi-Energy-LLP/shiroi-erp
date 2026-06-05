@@ -4,7 +4,6 @@
 
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
 
@@ -67,66 +66,30 @@ export async function listProjectsForReview(opts: {
   const supabase = await createClient();
   const pageSize = opts.pageSize ?? 50;
   const from = opts.page * pageSize;
-  const to = from + pageSize - 1;
 
-  // The "duplicates" tab needs deleted rows — build a separate query for it
-  if (opts.tab === 'duplicates') {
-    let q = supabase
-      .from('projects')
-      .select(
-        'id, project_number, customer_name, system_size_kwp, contracted_value, review_status, created_at, notes, lead_id, proposal_id, proposals(id, financials_invalidated, system_size_uncertain, notes), leads(hubspot_deal_id)',
-        { count: 'estimated' },
-      )
-      .eq('review_status', 'duplicate')
-      .order('created_at', { ascending: false })
-      .range(from, to);
-    if (opts.search?.trim()) {
-      const s = sanitizeForOr(opts.search.trim());
-      q = q.or(`customer_name.ilike.%${s}%,project_number.ilike.%${s}%`);
-    }
-    const { data, error, count } = await q;
-    if (error) {
-      console.error(op, { tab: 'duplicates', error, timestamp: new Date().toISOString() });
-      return { rows: [], totalRows: 0 };
-    }
-    return { rows: (data ?? []).map(rowToReview), totalRows: count ?? 0 };
-  }
-
-  let q = supabase
-    .from('projects')
-    .select(
-      'id, project_number, customer_name, system_size_kwp, contracted_value, review_status, created_at, notes, lead_id, proposal_id, proposals(id, financials_invalidated, system_size_uncertain, notes), leads(hubspot_deal_id)',
-      { count: 'estimated' },
-    )
-    .is('deleted_at', null);
-
-  if (opts.tab === 'needs_review') {
-    q = q.eq('review_status', 'pending');
-  } else if (opts.tab === 'confirmed') {
-    q = q.eq('review_status', 'confirmed');
-  }
-  // 'all' tab: no review_status filter
-
-  if (opts.search?.trim()) {
-    const s = sanitizeForOr(opts.search.trim());
-    q = q.or(`customer_name.ilike.%${s}%,project_number.ilike.%${s}%,notes.ilike.%${s}%`);
-  }
-
-  q = q.order('created_at', { ascending: false }).range(from, to);
-
-  const { data, error, count } = await q;
+  // Item 2b: typed search RPC replaces .or() interpolation. The RPC returns
+  // the joined proposal + lead fields inline and a total_count column on
+  // every row (same value), so pagination needs no second round-trip.
+  // Cast bridge: `search_projects_for_review` lands in database.ts only
+  // after the parent agent regens types at end-of-batch.
+  const { data, error } = await (supabase.rpc as any)('search_projects_for_review', {
+    p_tab: opts.tab,
+    p_query: opts.search?.trim() || null,
+    p_limit: pageSize,
+    p_offset: from,
+  });
   if (error) {
     console.error(op, { tab: opts.tab, error, timestamp: new Date().toISOString() });
     return { rows: [], totalRows: 0 };
   }
-  return { rows: (data ?? []).map(rowToReview), totalRows: count ?? 0 };
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  const totalRows = rows.length > 0 ? Number(rows[0]!.total_count ?? 0) : 0;
+  return { rows: rows.map(rowToReview), totalRows };
 }
 
 function rowToReview(row: Record<string, unknown>): ReviewProjectRow {
-  const proposal = row.proposals as Record<string, unknown> | null;
-  const lead = row.leads as Record<string, unknown> | null;
   const projectNotes = String(row.notes ?? '');
-  const proposalNotes = String((proposal?.notes as string | null) ?? '');
+  const proposalNotes = String((row.proposal_notes as string | null) ?? '');
   const allNotes = `${projectNotes} ${proposalNotes}`;
 
   const pvMatch = allNotes.match(/PV\s*\d+\s*\/\s*\d{2}(?:-\d{2})?/i);
@@ -141,10 +104,10 @@ function rowToReview(row: Record<string, unknown>): ReviewProjectRow {
     review_status: (row.review_status as ProjectRow['review_status']) ?? 'pending',
     created_at: String(row.created_at ?? ''),
     proposal_id: (row.proposal_id as string | null) ?? null,
-    financials_invalidated: Boolean(proposal?.financials_invalidated ?? false),
-    system_size_uncertain: Boolean(proposal?.system_size_uncertain ?? false),
+    financials_invalidated: Boolean(row.proposal_financials_invalidated ?? false),
+    system_size_uncertain: Boolean(row.proposal_system_size_uncertain ?? false),
     proposal_notes: proposalNotes || null,
-    hubspot_deal_id: (lead?.hubspot_deal_id as string | null) ?? null,
+    hubspot_deal_id: (row.hubspot_deal_id as string | null) ?? null,
     pv_ref_in_notes: pvMatch?.[0] ?? null,
     drive_link: driveMatch?.[0] ?? null,
     is_likely_duplicate: allNotes.includes('[Likely-Duplicate-Reconcile]'),
@@ -160,22 +123,21 @@ export async function searchProjectsForDuplicate(
   if (!query || query.trim().length < 2) return [];
   const op = '[searchProjectsForDuplicate]';
   const supabase = await createClient();
-  const safeQuery = sanitizeForOr(query.trim());
-  const { data, error } = await supabase
-    .from('projects')
-    .select('id, project_number, customer_name, system_size_kwp')
-    .neq('id', excludeId)
-    .is('deleted_at', null)
-    .or(`customer_name.ilike.%${safeQuery}%,project_number.ilike.%${safeQuery}%`)
-    .limit(15);
+  // Item 2b: typed search RPC replaces .or() interpolation. Cast bridge
+  // until parent regens database.ts at end-of-batch.
+  const { data, error } = await (supabase.rpc as any)('search_projects_for_duplicate_pick', {
+    p_query: query.trim(),
+    p_exclude_id: excludeId,
+    p_limit: 15,
+  });
   if (error) {
     console.error(op, { query, error, timestamp: new Date().toISOString() });
     return [];
   }
-  return (data ?? []).map((p) => ({
-    id: p.id,
-    project_number: p.project_number,
-    customer_name: p.customer_name,
+  return ((data ?? []) as Array<Record<string, unknown>>).map((p) => ({
+    id: String(p.id),
+    project_number: String(p.project_number ?? ''),
+    customer_name: String(p.customer_name ?? ''),
     system_size_kwp: Number(p.system_size_kwp ?? 0),
   }));
 }

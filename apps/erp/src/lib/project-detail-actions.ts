@@ -4,7 +4,6 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from './n8n/emit';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -399,25 +398,24 @@ export async function searchContactsLite(
   query: string,
 ): Promise<{ id: string; name: string; phone: string | null; email: string | null }[]> {
   const supabase = await createClient();
+  // Item 2b — typed RPC replaces the conditional .or() interpolation. Empty
+  // query falls back to "list all up to limit" inside the RPC (the
+  // `p_query IS NULL` branch). See
+  // supabase/migrations/155_2026-05-31-search-rpcs-purchase.sql.
+  // The `as any` cast is a temporary bridge — parent agent regenerates
+  // packages/types/database.ts at the end of this batch, after which the
+  // cast can be removed.
   const trimmed = query.trim();
-  let q = supabase
-    .from('contacts')
-    .select('id, name, phone, email')
-    .is('deleted_at', null)
-    .order('name', { ascending: true })
-    .limit(20);
+  const { data, error } = await (supabase.rpc as any)('search_contacts_lite', {
+    p_query: trimmed.length > 0 ? trimmed : null,
+    p_limit: 20,
+  });
 
-  if (trimmed.length > 0) {
-    const safeSearch = sanitizeForOr(trimmed);
-    q = q.or(`name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`);
-  }
-
-  const { data, error } = await q;
   if (error) {
     console.error('[searchContactsLite] Failed:', error.message);
     return [];
   }
-  return (data ?? []) as any;
+  return (data ?? []) as { id: string; name: string; phone: string | null; email: string | null }[];
 }
 
 /**

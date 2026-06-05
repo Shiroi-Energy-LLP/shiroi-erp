@@ -1,5 +1,10 @@
 import { createClient } from '@repo/supabase/server';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
+import type { Database } from '@repo/types/database';
+
+type InvoiceRow = Database['public']['Tables']['invoices']['Row'];
+type InvoiceListRow = InvoiceRow & {
+  projects: { project_number: string | null; customer_name: string | null } | null;
+};
 
 /**
  * Fetch all invoices for a specific project, ordered newest-first.
@@ -27,20 +32,31 @@ export async function getInvoices(filters: { status?: string; search?: string } 
   const op = '[getInvoices]';
   console.log(`${op} Starting`);
   const supabase = await createClient();
-  let query = supabase
-    .from('invoices')
-    .select('*, projects!invoices_project_id_fkey(project_number, customer_name)')
-    .order('invoice_date', { ascending: false })
-    .limit(100);
-  if (filters.status) query = query.eq('status', filters.status);
-  if (filters.search) {
-    const safeSearch = sanitizeForOr(filters.search);
-    query = query.or(`invoice_number.ilike.%${safeSearch}%`);
-  }
-  const { data, error } = await query;
+  // Item 2b: typed search RPC replaces .or() interpolation. The RPC returns
+  // every invoice column inline plus project_number + customer_name from
+  // the projects join, so we reshape the flat row back into the `projects`
+  // sub-object shape that /invoices/page.tsx consumes today.
+  // Cast bridge until parent regens database.ts at end-of-batch.
+  const { data, error } = await (supabase.rpc as any)('search_invoices', {
+    p_status: filters.status || null,
+    p_query: filters.search || null,
+    p_limit: 100,
+  });
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load invoices: ${error.message}`);
   }
-  return data ?? [];
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  return rows.map((r): InvoiceListRow => {
+    const { project_number, customer_name, ...invoice } = r;
+    return {
+      ...(invoice as unknown as InvoiceRow),
+      projects: project_number || customer_name
+        ? {
+            project_number: (project_number as string | null) ?? null,
+            customer_name: (customer_name as string | null) ?? null,
+          }
+        : null,
+    };
+  });
 }

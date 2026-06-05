@@ -1,8 +1,30 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type ProposalStatus = Database['public']['Enums']['proposal_status'];
+
+// Row shape returned by search_proposals RPC. The leads embed comes back as
+// lead_customer_name / lead_phone scalars — we reshape into the leads
+// sub-object the page expects.
+type SearchProposalRow = {
+  id: string;
+  proposal_number: string;
+  status: ProposalStatus;
+  system_size_kwp: number | string;
+  system_type: string;
+  total_after_discount: number | string;
+  gross_margin_pct: number | string;
+  created_at: string;
+  valid_until: string | null;
+  lead_id: string;
+  revision_number: number;
+  is_budgetary: boolean;
+  margin_approval_required: boolean;
+  margin_approved_by: string | null;
+  lead_customer_name: string | null;
+  lead_phone: string | null;
+  total_count: number | string;
+};
 
 export interface ProposalFilters {
   status?: ProposalStatus;
@@ -31,43 +53,55 @@ export async function getProposals(filters: ProposalFilters = {}): Promise<Pagin
   const page = filters.page ?? 1;
   const pageSize = filters.pageSize ?? 50;
   const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-  const sortCol = filters.sort || 'created_at';
-  const sortDir = filters.dir === 'asc';
 
-  let query = supabase
-    .from('proposals')
-    .select('id, proposal_number, status, system_size_kwp, system_type, total_after_discount, gross_margin_pct, created_at, valid_until, lead_id, revision_number, is_budgetary, margin_approval_required, margin_approved_by, leads(customer_name, phone)', { count: 'estimated' })
-    .not('lead_id', 'is', null)
-    .order(sortCol, { ascending: sortDir });
+  // Item 2b: parameter-bound RPC replaces .or() interpolation. Sort column
+  // is whitelisted server-side inside the RPC. Total count travels back on
+  // each row as total_count (CROSS JOIN) so we can drop the separate count
+  // query the old .select({ count: 'estimated' }) gave us.
+  const trimmed = filters.search?.trim();
+  const { data, error } = await (supabase.rpc as any)('search_proposals', {
+    p_query: trimmed && trimmed.length > 0 ? trimmed : null,
+    p_status: filters.status ?? null,
+    p_system_type: filters.systemType ?? null,
+    p_is_budgetary:
+      filters.isBudgetary === 'true' ? true : filters.isBudgetary === 'false' ? false : null,
+    p_sort: filters.sort || 'created_at',
+    p_dir: filters.dir === 'asc' ? 'asc' : 'desc',
+    p_limit: pageSize,
+    p_offset: from,
+  });
 
-  if (filters.status) query = query.eq('status', filters.status);
-  if (filters.systemType) query = query.eq('system_type', filters.systemType as any);
-  if (filters.isBudgetary === 'true') query = query.eq('is_budgetary', true);
-  if (filters.isBudgetary === 'false') query = query.eq('is_budgetary', false);
-  if (filters.search) {
-    const safeSearch = sanitizeForOr(filters.search);
-    query = query.or(`proposal_number.ilike.%${safeSearch}%`);
-  }
-
-  query = query.range(from, to);
-
-  const { data, error, count } = await query;
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load proposals: ${error.message}`);
   }
 
-  // Flatten for DataTable
-  const rows = (data ?? []).map((p: any) => ({
-    ...p,
-    customer_name: p.leads?.customer_name ?? '—',
+  const rpcRows = (data ?? []) as SearchProposalRow[];
+  const total = rpcRows.length > 0 ? Number(rpcRows[0]!.total_count ?? 0) : 0;
+
+  // Flatten for DataTable (preserve the exact shape callers consume).
+  const rows = rpcRows.map((p) => ({
+    id: p.id,
+    proposal_number: p.proposal_number,
+    status: p.status,
+    system_size_kwp: p.system_size_kwp,
+    system_type: p.system_type,
+    total_after_discount: p.total_after_discount,
+    gross_margin_pct: p.gross_margin_pct,
+    created_at: p.created_at,
+    valid_until: p.valid_until,
+    lead_id: p.lead_id,
+    revision_number: p.revision_number,
+    is_budgetary: p.is_budgetary,
+    margin_approval_required: p.margin_approval_required,
+    margin_approved_by: p.margin_approved_by,
+    leads: { customer_name: p.lead_customer_name ?? '', phone: p.lead_phone ?? '' },
+    customer_name: p.lead_customer_name ?? '—',
     total_price: p.total_after_discount,
     margin_pct: p.gross_margin_pct,
     proposal_type: p.is_budgetary ? 'budgetary' : 'detailed',
   }));
 
-  const total = count ?? 0;
   return { data: rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 

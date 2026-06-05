@@ -1,7 +1,6 @@
 // apps/erp/src/lib/orphan-triage-queries.ts
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type CustomerPayment = Database['public']['Tables']['customer_payments']['Row'];
@@ -200,17 +199,20 @@ export async function searchAllProjects(query: string): Promise<CandidateProject
   console.log(`${op} Starting`, { query });
   if (!query || query.length < 2) return [];
   const supabase = await createClient();
-  const safeQuery = sanitizeForOr(query);
-  const { data, error } = await supabase
-    .from('projects')
-    .select('id, project_number, customer_name, status, system_size_kwp, system_type, contracted_value, actual_start_date, actual_end_date')
-    .or(`customer_name.ilike.%${safeQuery}%,project_number.ilike.%${safeQuery}%`)
-    .limit(50);
+  // Item 2b: typed search RPC replaces .or() interpolation. The RPC returns
+  // narrow project columns; we still stitch project_cash_positions
+  // afterwards because it's a separate enrichment, not part of the search.
+  // Cast bridge until parent regens database.ts at end-of-batch.
+  const { data, error } = await (supabase.rpc as any)('search_projects_for_orphan_attribution', {
+    p_query: query,
+    p_limit: 50,
+  });
   if (error) {
     console.error(`${op} query failed`, { error });
     throw new Error(`Project search failed: ${error.message}`);
   }
-  const ids = (data ?? []).map((p) => p.id);
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  const ids = rows.map((p) => String(p.id));
   const cashByProj = new Map<string, { invoiced: number; received: number; net: number }>();
   if (ids.length > 0) {
     const { data: cash } = await supabase
@@ -225,21 +227,22 @@ export async function searchAllProjects(query: string): Promise<CandidateProject
       });
     }
   }
-  return (data ?? []).map((p) => {
-    const c = cashByProj.get(p.id) ?? { invoiced: 0, received: 0, net: 0 };
+  return rows.map((p) => {
+    const pid = String(p.id);
+    const c = cashByProj.get(pid) ?? { invoiced: 0, received: 0, net: 0 };
     return {
-      project_id: p.id,
-      project_number: p.project_number,
-      customer_name: p.customer_name,
-      status: p.status,
+      project_id: pid,
+      project_number: String(p.project_number ?? ''),
+      customer_name: String(p.customer_name ?? ''),
+      status: String(p.status ?? ''),
       system_size_kwp: p.system_size_kwp == null ? null : Number(p.system_size_kwp),
-      system_type: p.system_type,
+      system_type: (p.system_type as string | null) ?? null,
       contracted_value: String(p.contracted_value ?? '0'),
       total_invoiced: String(c.invoiced),
       total_received: String(c.received),
       net_cash_position: String(c.net),
-      actual_start_date: p.actual_start_date,
-      actual_end_date: p.actual_end_date,
+      actual_start_date: (p.actual_start_date as string | null) ?? null,
+      actual_end_date: (p.actual_end_date as string | null) ?? null,
     };
   });
 }

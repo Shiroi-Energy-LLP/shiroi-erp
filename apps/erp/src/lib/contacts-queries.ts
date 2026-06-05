@@ -1,5 +1,4 @@
 import { createClient } from '@repo/supabase/server';
-import { sanitizeForOr } from '@/lib/helpers/sanitize-or-filter';
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -27,39 +26,31 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
 
   const page = filters.page ?? 1;
   const pageSize = filters.pageSize ?? 50;
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  let query = supabase
-    .from('contacts')
-    .select(
-      'id, name, first_name, last_name, phone, email, designation, lifecycle_stage, created_at, contact_company_roles(company_id, role_title, is_primary, ended_at, companies(name))',
-      { count: 'estimated' }
-    );
-
-  // Dynamic sort
+  const offset = (page - 1) * pageSize;
   const sortCol = filters.sort ?? 'created_at';
-  const sortAsc = filters.dir === 'asc';
-  query = query.order(sortCol, { ascending: sortAsc });
+  const sortDir = filters.dir === 'asc' ? 'asc' : 'desc';
 
-  if (filters.search) {
-    const safeSearch = sanitizeForOr(filters.search);
-    query = query.or(`name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`);
-  }
-  if (filters.lifecycleStage) {
-    query = query.eq('lifecycle_stage' as any, filters.lifecycleStage);
-  }
-
-  query = query.range(from, to);
-
-  const { data, error, count } = await query;
+  // Item 2b — parameterized search RPC replaces PostgREST .or() interpolation.
+  // The RPC returns nested contact_company_roles via jsonb_agg to preserve the
+  // embed shape callers consume downstream.
+  const { data, error } = await (supabase.rpc as any)('search_contacts', {
+    p_query: filters.search ?? null,
+    p_lifecycle_stage: filters.lifecycleStage ?? null,
+    p_sort: sortCol,
+    p_dir: sortDir,
+    p_limit: pageSize,
+    p_offset: offset,
+  });
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load contacts: ${error.message}`);
   }
 
-  const total = count ?? 0;
-  return { data: data ?? [], total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  const rows = (data ?? []) as Array<any>;
+  const total = rows.length > 0 ? Number(rows[0].total_count ?? 0) : 0;
+  // Strip the per-row total_count window column from the shape callers see.
+  const stripped = rows.map(({ total_count: _tc, ...rest }) => rest);
+  return { data: stripped, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
 export async function getContact(id: string) {
@@ -121,19 +112,25 @@ export async function searchContacts(query: string) {
   const op = '[searchContacts]';
   const supabase = await createClient();
 
-  const safeQuery = sanitizeForOr(query);
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('id, name, first_name, last_name, phone, email, designation')
-    .or(`name.ilike.%${safeQuery}%,phone.ilike.%${safeQuery}%,email.ilike.%${safeQuery}%`)
-    .order('name')
-    .limit(20);
+  // Item 2b — uses search_contacts RPC with name-ascending sort to mirror
+  // the prior .order('name').limit(20) behaviour.
+  const { data, error } = await (supabase.rpc as any)('search_contacts', {
+    p_query: query,
+    p_lifecycle_stage: null,
+    p_sort: 'name',
+    p_dir: 'asc',
+    p_limit: 20,
+    p_offset: 0,
+  });
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to search contacts: ${error.message}`);
   }
-  return data ?? [];
+  const rows = (data ?? []) as Array<any>;
+  return rows.map(({ id, name, first_name, last_name, phone, email, designation }) => ({
+    id, name, first_name, last_name, phone, email, designation,
+  }));
 }
 
 // ── Companies ──
@@ -154,34 +151,29 @@ export async function getCompanies(filters: CompanyFilters = {}): Promise<Pagina
 
   const page = filters.page ?? 1;
   const pageSize = filters.pageSize ?? 50;
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  let query = supabase
-    .from('companies')
-    .select('id, name, segment, gstin, city, state, industry, owner_id, created_at', { count: 'estimated' });
-
-  // Dynamic sort
+  const offset = (page - 1) * pageSize;
   const sortCol = filters.sort ?? 'name';
-  const sortAsc = filters.dir === 'asc' || (!filters.dir && sortCol === 'name');
-  query = query.order(sortCol, { ascending: sortAsc });
+  // Original behaviour: dir=asc OR (no dir + sortCol='name') => ascending.
+  const sortDir = filters.dir === 'asc' || (!filters.dir && sortCol === 'name') ? 'asc' : 'desc';
 
-  if (filters.segment) query = query.eq('segment', filters.segment as any);
-  if (filters.search) {
-    const safeSearch = sanitizeForOr(filters.search);
-    query = query.or(`name.ilike.%${safeSearch}%,city.ilike.%${safeSearch}%,gstin.ilike.%${safeSearch}%`);
-  }
-
-  query = query.range(from, to);
-
-  const { data, error, count } = await query;
+  // Item 2b — parameterized search RPC replaces PostgREST .or() interpolation.
+  const { data, error } = await (supabase.rpc as any)('search_companies', {
+    p_query: filters.search ?? null,
+    p_segment: filters.segment ?? null,
+    p_sort: sortCol,
+    p_dir: sortDir,
+    p_limit: pageSize,
+    p_offset: offset,
+  });
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load companies: ${error.message}`);
   }
 
-  const total = count ?? 0;
-  return { data: data ?? [], total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  const rows = (data ?? []) as Array<any>;
+  const total = rows.length > 0 ? Number(rows[0].total_count ?? 0) : 0;
+  const stripped = rows.map(({ total_count: _tc, ...rest }) => rest);
+  return { data: stripped, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
 export async function getCompany(id: string) {
