@@ -715,7 +715,7 @@ export async function searchVendors(q: string, limit = 10): Promise<VendorSearch
     // The `as any` cast on `.rpc()` is a temporary bridge — parent agent
     // regenerates packages/types/database.ts at the end of this batch, after
     // which the cast can be removed.
-    const { data, error } = await (supabase.rpc as any)('search_vendors', {
+    const { data, error } = await supabase.rpc('search_vendors', {
       p_query: query,
       p_limit: limit,
     });

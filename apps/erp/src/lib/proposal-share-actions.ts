@@ -14,6 +14,27 @@ import { ok, err, type ActionResult } from './types/actions';
 
 const ALLOWED_ROLES = ['founder', 'marketing_manager', 'designer', 'sales_engineer'];
 
+// ── Rate limiter for acceptProposalFromPortal ──────────────────────────────
+// In-process Map keyed by share token. Limits a single token to 5 accept
+// attempts per minute to blunt brute-force or replay abuse against the public
+// portal. Entries are lazily pruned after RATE_LIMIT_PRUNE_MS to keep the map
+// bounded — no background timer needed.
+//
+// Limitations: per-process only (resets on cold start / horizontal scale).
+// Good enough for the threat model since each token is 256 bits of entropy
+// and proposals.status uses a CAS guard, but if abuse becomes a real concern
+// move this to a SQL-backed counter.
+const ACCEPT_RATE_LIMIT_MAX = 5;
+const ACCEPT_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_PRUNE_MS = 5 * 60 * 1000; // 5 minutes
+const acceptAttempts = new Map<string, { count: number; firstAt: number }>();
+
+function pruneAcceptAttempts(now: number): void {
+  for (const [k, v] of acceptAttempts) {
+    if (now - v.firstAt > RATE_LIMIT_PRUNE_MS) acceptAttempts.delete(k);
+  }
+}
+
 function generateSecureToken(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
@@ -107,6 +128,19 @@ export async function acceptProposalFromPortal(token: string): Promise<ActionRes
   const op = '[acceptProposalFromPortal]';
   try {
     if (!token || token.length < 32) return err('Invalid token');
+
+    // Rate-limit accept attempts per token (5 per minute).
+    const now = Date.now();
+    pruneAcceptAttempts(now);
+    const existing = acceptAttempts.get(token);
+    if (existing && now - existing.firstAt < ACCEPT_RATE_LIMIT_WINDOW_MS) {
+      if (existing.count >= ACCEPT_RATE_LIMIT_MAX) {
+        return err('Too many accept attempts; please wait a minute');
+      }
+      existing.count++;
+    } else {
+      acceptAttempts.set(token, { count: 1, firstAt: now });
+    }
 
     const admin = createAdminClient();
 

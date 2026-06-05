@@ -37,9 +37,9 @@ export async function getInvoices(filters: { status?: string; search?: string } 
   // the projects join, so we reshape the flat row back into the `projects`
   // sub-object shape that /invoices/page.tsx consumes today.
   // Cast bridge until parent regens database.ts at end-of-batch.
-  const { data, error } = await (supabase.rpc as any)('search_invoices', {
-    p_status: filters.status || null,
-    p_query: filters.search || null,
+  const { data, error } = await supabase.rpc('search_invoices', {
+    p_status: filters.status || undefined,
+    p_query: filters.search || undefined,
     p_limit: 100,
   });
   if (error) {

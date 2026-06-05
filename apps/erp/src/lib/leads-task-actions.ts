@@ -3,6 +3,12 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import type { Database } from '@repo/types/database';
+
+type TaskRow = Database['public']['Tables']['tasks']['Row'] & {
+  assigned: { full_name: string } | null;
+  creator: { full_name: string } | null;
+};
 
 interface CreateLeadTaskInput {
   leadId: string;
@@ -221,7 +227,9 @@ export async function upsertLeadFollowupTask(
   return ok({ taskId: newTaskId, created: true });
 }
 
-export async function getLeadTasks(leadId: string) {
+export async function getLeadTasks(
+  leadId: string,
+): Promise<ActionResult<TaskRow[]>> {
   const op = '[getLeadTasks]';
   console.log(`${op} Starting for lead: ${leadId}`);
   const supabase = await createClient();
@@ -235,8 +243,13 @@ export async function getLeadTasks(leadId: string) {
     .order('due_date', { ascending: true });
 
   if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
-    throw new Error(`Failed to load lead tasks: ${error.message}`);
+    console.error(`${op} Query failed:`, {
+      leadId,
+      code: error.code,
+      message: error.message,
+      timestamp: new Date().toISOString(),
+    });
+    return err(`Failed to load lead tasks: ${error.message}`, error.code);
   }
-  return data ?? [];
+  return ok((data ?? []) as TaskRow[]);
 }

@@ -59,12 +59,12 @@ export async function getProposals(filters: ProposalFilters = {}): Promise<Pagin
   // each row as total_count (CROSS JOIN) so we can drop the separate count
   // query the old .select({ count: 'estimated' }) gave us.
   const trimmed = filters.search?.trim();
-  const { data, error } = await (supabase.rpc as any)('search_proposals', {
-    p_query: trimmed && trimmed.length > 0 ? trimmed : null,
-    p_status: filters.status ?? null,
-    p_system_type: filters.systemType ?? null,
+  const { data, error } = await supabase.rpc('search_proposals', {
+    p_query: trimmed && trimmed.length > 0 ? trimmed : undefined,
+    p_status: filters.status ?? undefined,
+    p_system_type: filters.systemType ?? undefined,
     p_is_budgetary:
-      filters.isBudgetary === 'true' ? true : filters.isBudgetary === 'false' ? false : null,
+      filters.isBudgetary === 'true' ? true : filters.isBudgetary === 'false' ? false : undefined,
     p_sort: filters.sort || 'created_at',
     p_dir: filters.dir === 'asc' ? 'asc' : 'desc',
     p_limit: pageSize,

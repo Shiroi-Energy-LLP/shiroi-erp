@@ -56,16 +56,17 @@ async function getProposalByToken(token: string, ip: string) {
 
   if (tokenErr || !shareToken) return null;
 
-  // Increment view counter (best-effort, non-blocking)
-  admin
+  // Increment view counter. Awaited so DB blips don't silently drop views;
+  // the update is a single indexed UPDATE and adds negligible latency to the
+  // page render.
+  await admin
     .from('proposal_share_tokens')
     .update({
       viewed_count: (shareToken.viewed_count ?? 0) + 1,
       last_viewed_at: new Date().toISOString(),
       last_viewed_ip: ip,
     })
-    .eq('id', shareToken.id)
-    .then(() => {});
+    .eq('id', shareToken.id);
 
   const proposal = Array.isArray(shareToken.proposals)
     ? shareToken.proposals[0]

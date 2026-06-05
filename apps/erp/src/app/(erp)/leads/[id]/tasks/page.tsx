@@ -21,7 +21,7 @@ export default async function TasksTab({ params }: TasksTabProps) {
     .eq('profile_id', user!.id)
     .single();
 
-  const [lead, tasks, employees] = await Promise.all([
+  const [lead, tasksResult, employees] = await Promise.all([
     getLead(id),
     getLeadTasks(id),
     getSalesEngineers(),
@@ -31,8 +31,13 @@ export default async function TasksTab({ params }: TasksTabProps) {
     notFound();
   }
 
-  const pendingTasks = tasks.filter((t: any) => !t.is_completed);
-  const completedTasks = tasks.filter((t: any) => t.is_completed);
+  if (!tasksResult.success) {
+    throw new Error(tasksResult.error);
+  }
+  const tasks = tasksResult.data;
+
+  const pendingTasks = tasks.filter((t) => !t.is_completed);
+  const completedTasks = tasks.filter((t) => t.is_completed);
 
   return (
     <div className="space-y-6">

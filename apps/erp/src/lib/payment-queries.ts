@@ -32,9 +32,9 @@ export async function getPayments(filters: { type?: string; search?: string } = 
   // and pagination preserved; embed (project_number, customer_name) is
   // re-shaped client-side to match the old .select() embed contract.
   const trimmed = filters.search?.trim();
-  const { data, error } = await (supabase.rpc as any)('search_payments', {
-    p_query: trimmed && trimmed.length > 0 ? trimmed : null,
-    p_type: filters.type ?? null,
+  const { data, error } = await supabase.rpc('search_payments', {
+    p_query: trimmed && trimmed.length > 0 ? trimmed : undefined,
+    p_type: filters.type ?? undefined,
     p_limit: 100,
     p_offset: 0,
   });

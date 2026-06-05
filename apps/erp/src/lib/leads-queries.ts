@@ -330,7 +330,7 @@ async function getLeadsViaSearchRpc(
 
   // Status filter: explicit list (from filters.status) takes precedence; else
   // the RPC will honour p_exclude_converted.
-  let statuses: string[] | null = null;
+  let statuses: string[] | undefined = undefined;
   if (filters.status) {
     statuses = Array.isArray(filters.status) ? (filters.status as string[]) : [filters.status as string];
   }
@@ -339,8 +339,8 @@ async function getLeadsViaSearchRpc(
   // the IST week/month range AND exclude terminal statuses by narrowing
   // statuses to the explicit non-terminal list (the RPC accepts ANY-list
   // semantics; we materialize the inverse here).
-  let closeFrom = filters.closeFrom ?? null;
-  let closeTo = filters.closeTo ?? null;
+  let closeFrom: string | undefined = filters.closeFrom ?? undefined;
+  let closeTo: string | undefined = filters.closeTo ?? undefined;
   if (filters.closing) {
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
     const nowIST = new Date(Date.now() + IST_OFFSET_MS);
@@ -387,19 +387,19 @@ async function getLeadsViaSearchRpc(
   // a null referrer_id and the IN-list and falls through (matches old
   // behaviour).
   const referrerId =
-    filters.referrer && filters.referrer !== 'internal_all' ? filters.referrer : null;
+    filters.referrer && filters.referrer !== 'internal_all' ? filters.referrer : undefined;
   const referrerIds =
-    filters.referrerIds && filters.referrerIds.length > 0 ? filters.referrerIds : null;
+    filters.referrerIds && filters.referrerIds.length > 0 ? filters.referrerIds : undefined;
 
-  const { data, error } = await (supabase.rpc as any)('search_leads_by_query', {
-    p_query: filters.search ?? null,
+  const { data, error } = await supabase.rpc('search_leads_by_query', {
+    p_query: filters.search ?? undefined,
     p_statuses: statuses,
     p_exclude_converted: !filters.includeConverted,
-    p_source: filters.source ?? null,
-    p_segment: filters.segment ?? null,
-    p_assigned_to: filters.assignedTo ?? null,
-    p_kwp_min: filters.kwpMin ?? null,
-    p_kwp_max: filters.kwpMax ?? null,
+    p_source: filters.source ?? undefined,
+    p_segment: filters.segment ?? undefined,
+    p_assigned_to: filters.assignedTo ?? undefined,
+    p_kwp_min: filters.kwpMin ?? undefined,
+    p_kwp_max: filters.kwpMax ?? undefined,
     p_close_from: closeFrom,
     p_close_to: closeTo,
     p_referrer_ids: referrerIds,
@@ -408,7 +408,7 @@ async function getLeadsViaSearchRpc(
     p_external_partner_ids:
       filters.externalPartnerIds && filters.externalPartnerIds.length > 0
         ? filters.externalPartnerIds
-        : null,
+        : undefined,
     p_archived_only: !!filters.archivedOnly,
     p_include_archived: !!filters.includeArchived,
     p_sort: sortCol,

@@ -406,8 +406,8 @@ export async function searchContactsLite(
   // packages/types/database.ts at the end of this batch, after which the
   // cast can be removed.
   const trimmed = query.trim();
-  const { data, error } = await (supabase.rpc as any)('search_contacts_lite', {
-    p_query: trimmed.length > 0 ? trimmed : null,
+  const { data, error } = await supabase.rpc('search_contacts_lite', {
+    p_query: trimmed.length > 0 ? trimmed : undefined,
     p_limit: 20,
   });
 

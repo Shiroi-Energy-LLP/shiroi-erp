@@ -49,10 +49,10 @@ export async function listPlantMonitoringCredentials(
   // om_technician) inside the function body — SECURITY DEFINER bypass of
   // RLS means we cannot rely on policy alone.
   const trimmed = filters.search?.trim();
-  const { data, error } = await (supabase.rpc as any)('search_plant_monitoring_credentials', {
-    p_query: trimmed && trimmed.length > 0 ? trimmed : null,
-    p_project_id: filters.project_id ?? null,
-    p_brand: filters.brand ?? null,
+  const { data, error } = await supabase.rpc('search_plant_monitoring_credentials', {
+    p_query: trimmed && trimmed.length > 0 ? trimmed : undefined,
+    p_project_id: filters.project_id ?? undefined,
+    p_brand: filters.brand ?? undefined,
     p_limit: perPage,
     p_offset: from,
   });

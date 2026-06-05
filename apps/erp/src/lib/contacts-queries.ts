@@ -33,9 +33,9 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
   // Item 2b — parameterized search RPC replaces PostgREST .or() interpolation.
   // The RPC returns nested contact_company_roles via jsonb_agg to preserve the
   // embed shape callers consume downstream.
-  const { data, error } = await (supabase.rpc as any)('search_contacts', {
-    p_query: filters.search ?? null,
-    p_lifecycle_stage: filters.lifecycleStage ?? null,
+  const { data, error } = await supabase.rpc('search_contacts', {
+    p_query: filters.search ?? undefined,
+    p_lifecycle_stage: filters.lifecycleStage ?? undefined,
     p_sort: sortCol,
     p_dir: sortDir,
     p_limit: pageSize,
@@ -114,9 +114,9 @@ export async function searchContacts(query: string) {
 
   // Item 2b — uses search_contacts RPC with name-ascending sort to mirror
   // the prior .order('name').limit(20) behaviour.
-  const { data, error } = await (supabase.rpc as any)('search_contacts', {
+  const { data, error } = await supabase.rpc('search_contacts', {
     p_query: query,
-    p_lifecycle_stage: null,
+    p_lifecycle_stage: undefined,
     p_sort: 'name',
     p_dir: 'asc',
     p_limit: 20,
@@ -157,9 +157,9 @@ export async function getCompanies(filters: CompanyFilters = {}): Promise<Pagina
   const sortDir = filters.dir === 'asc' || (!filters.dir && sortCol === 'name') ? 'asc' : 'desc';
 
   // Item 2b — parameterized search RPC replaces PostgREST .or() interpolation.
-  const { data, error } = await (supabase.rpc as any)('search_companies', {
-    p_query: filters.search ?? null,
-    p_segment: filters.segment ?? null,
+  const { data, error } = await supabase.rpc('search_companies', {
+    p_query: filters.search ?? undefined,
+    p_segment: filters.segment ?? undefined,
     p_sort: sortCol,
     p_dir: sortDir,
     p_limit: pageSize,

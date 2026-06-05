@@ -203,7 +203,7 @@ export async function searchAllProjects(query: string): Promise<CandidateProject
   // narrow project columns; we still stitch project_cash_positions
   // afterwards because it's a separate enrichment, not part of the search.
   // Cast bridge until parent regens database.ts at end-of-batch.
-  const { data, error } = await (supabase.rpc as any)('search_projects_for_orphan_attribution', {
+  const { data, error } = await supabase.rpc('search_projects_for_orphan_attribution', {
     p_query: query,
     p_limit: 50,
   });

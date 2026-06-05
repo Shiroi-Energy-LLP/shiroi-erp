@@ -104,14 +104,14 @@ export async function getStockPieces(filters: InventoryFilters = {}): Promise<St
   // filters and ordering are preserved on the SQL side; the embed columns
   // come back inline and we reshape them into a projects sub-object.
   const trimmed = filters.search?.trim();
-  const { data, error } = await (supabase.rpc as any)('search_inventory_stock_pieces', {
-    p_query: trimmed && trimmed.length > 0 ? trimmed : null,
-    p_category: filters.category ?? null,
-    p_location: filters.location ?? null,
-    p_condition: filters.condition ?? null,
-    p_project_id: filters.projectId ?? null,
-    p_is_cut_length: filters.isCutLength ?? null,
-    p_is_scrap: filters.isScrap ?? null,
+  const { data, error } = await supabase.rpc('search_inventory_stock_pieces', {
+    p_query: trimmed && trimmed.length > 0 ? trimmed : undefined,
+    p_category: filters.category ?? undefined,
+    p_location: filters.location ?? undefined,
+    p_condition: filters.condition ?? undefined,
+    p_project_id: filters.projectId ?? undefined,
+    p_is_cut_length: filters.isCutLength ?? undefined,
+    p_is_scrap: filters.isScrap ?? undefined,
     p_limit: 1000,
     p_offset: 0,
   });

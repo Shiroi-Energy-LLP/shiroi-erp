@@ -14,6 +14,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import { createAdminClient } from '@repo/supabase/admin';
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { generateText } from './ai/anthropic-client';
 import { emitErpEvent } from './n8n/emit';
@@ -49,9 +50,16 @@ export async function generateCustomerCheckinsForWeek(): Promise<ActionResult<Cu
   // Detect them via app_metadata.role or the top-level role field and skip
   // the profile lookup — service role is implicitly trusted here because
   // this action is called from a server-only context with a pre-shared secret.
+  //
+  // N8N_CRON_CONTEXT=1 is an explicit bypass for cron contexts where the
+  // session may not surface a service_role claim on the user object (e.g.
+  // some Edge Function or admin-client invocation paths). Set this env var
+  // only in trusted server-side cron runners — never on the public Next.js
+  // host. Defaults to undefined so production user requests are unaffected.
   const isServiceRole =
     (user.app_metadata as Record<string, unknown> | undefined)?.['role'] === 'service_role' ||
-    (user as unknown as Record<string, unknown>)['role'] === 'service_role';
+    (user as unknown as Record<string, unknown>)['role'] === 'service_role' ||
+    process.env.N8N_CRON_CONTEXT === '1';
 
   if (!isServiceRole) {
     const { data: profile } = await userClient
@@ -101,7 +109,7 @@ export async function generateCustomerCheckinsForWeek(): Promise<ActionResult<Cu
 
     const commissionedAt = new Date(project.commissioned_date);
     const daysSinceCommissioning = Math.floor(
-      (today.getTime() - commissionedAt.getTime()) / (1000 * 60 * 60 * 24),
+      (today.getTime() - commissionedAt.getTime()) / MS_PER_DAY,
     );
 
     // Find the nearest upcoming interval

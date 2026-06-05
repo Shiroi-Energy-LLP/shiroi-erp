@@ -33,10 +33,10 @@ export async function listPartners(opts: ListPartnersOptions = {}): Promise<List
   try {
     const supabase = await createClient();
     // Item 2b — parameterized search RPC replaces PostgREST .or() interpolation.
-    const { data, error } = await (supabase.rpc as any)('search_partners', {
-      p_query: opts.search && opts.search.trim() !== '' ? opts.search : null,
-      p_partner_type: opts.partnerType ?? null,
-      p_is_active: typeof opts.isActive === 'boolean' ? opts.isActive : null,
+    const { data, error } = await supabase.rpc('search_partners', {
+      p_query: opts.search && opts.search.trim() !== '' ? opts.search : undefined,
+      p_partner_type: opts.partnerType ?? undefined,
+      p_is_active: typeof opts.isActive === 'boolean' ? opts.isActive : undefined,
       p_limit: pageSize,
       p_offset: offset,
     });

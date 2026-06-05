@@ -72,9 +72,9 @@ export async function listProjectsForReview(opts: {
   // every row (same value), so pagination needs no second round-trip.
   // Cast bridge: `search_projects_for_review` lands in database.ts only
   // after the parent agent regens types at end-of-batch.
-  const { data, error } = await (supabase.rpc as any)('search_projects_for_review', {
+  const { data, error } = await supabase.rpc('search_projects_for_review', {
     p_tab: opts.tab,
-    p_query: opts.search?.trim() || null,
+    p_query: opts.search?.trim() || undefined,
     p_limit: pageSize,
     p_offset: from,
   });
@@ -125,7 +125,7 @@ export async function searchProjectsForDuplicate(
   const supabase = await createClient();
   // Item 2b: typed search RPC replaces .or() interpolation. Cast bridge
   // until parent regens database.ts at end-of-batch.
-  const { data, error } = await (supabase.rpc as any)('search_projects_for_duplicate_pick', {
+  const { data, error } = await supabase.rpc('search_projects_for_duplicate_pick', {
     p_query: query.trim(),
     p_exclude_id: excludeId,
     p_limit: 15,
