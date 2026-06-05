@@ -3,6 +3,7 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 // ── Allowed roles ─────────────────────────────────────────────────────────────
 
@@ -15,11 +16,9 @@ async function getCallerRoleAndEmployee(): Promise<{
   role: string | null;
   employeeId: string | null;
 }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { role: null, employeeId: null };
+  const authed = await requireAuthUser();
+  if (!authed.success) return { role: null, employeeId: null };
+  const { user, supabase } = authed.data;
 
   const [profileRes, employeeRes] = await Promise.all([
     supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),

@@ -1,9 +1,9 @@
 'use server';
 
-import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { type ActionResult, ok, err } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 import { headers } from 'next/headers';
 
 type CertificateType = Database['public']['Tables']['dc_certificates']['Row']['certificate_type'];
@@ -30,9 +30,9 @@ export async function signDcCertificate(
   if (!input.customerName.trim()) return err('Customer name is required');
   if (!input.customerPhone.trim()) return err('Customer phone is required');
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: profile } = await supabase
     .from('profiles')

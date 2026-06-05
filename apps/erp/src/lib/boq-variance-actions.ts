@@ -8,9 +8,9 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@repo/supabase/server';
 import { generateBoqVarianceNarrative } from './ai/boq-variance-narrative';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 const ALLOWED_ROLES = new Set(['founder', 'project_manager', 'finance']);
 
@@ -24,17 +24,9 @@ export async function generateBoqVarianceForProject(
   }
 
   // 1. Auth check — must be an authenticated user with an allowed role
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
-
-  if (authErr || !user) {
-    console.error(`${op} unauthenticated`, { projectId, timestamp: new Date().toISOString() });
-    return err('Not authenticated');
-  }
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')

@@ -30,7 +30,7 @@ export async function updatePoLineItemRate(input: {
   poId: string;
   itemId: string;
   newRate: number;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updatePoLineItemRate]';
   console.log(`${op} Updating rate for PO item ${input.itemId} to ${input.newRate}`);
 
@@ -45,7 +45,7 @@ export async function updatePoLineItemRate(input: {
 
   if (fetchErr || !item) {
     console.error(`${op} Item fetch failed:`, fetchErr);
-    return { success: false, error: 'Item not found' };
+    return err('Item not found', fetchErr?.code);
   }
 
   const qty = Number(item.quantity_ordered);
@@ -70,7 +70,7 @@ export async function updatePoLineItemRate(input: {
 
   if (updateErr) {
     console.error(`${op} Update failed:`, { code: updateErr.code, message: updateErr.message });
-    return { success: false, error: updateErr.message };
+    return err(updateErr.message, updateErr.code);
   }
 
   // Recalculate PO totals from all items
@@ -98,12 +98,12 @@ export async function updatePoLineItemRate(input: {
   }
 
   revalidatePath(`/procurement/${input.poId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // Note: purchase_orders has no deleted_at column.
 // Soft delete is implemented by setting status to 'cancelled'.
-export async function deletePoSoft(poId: string): Promise<{ success: boolean; error?: string }> {
+export async function deletePoSoft(poId: string): Promise<ActionResult<void>> {
   const op = '[deletePoSoft]';
   console.log(`${op} Soft-deleting PO ${poId}`);
 
@@ -116,11 +116,11 @@ export async function deletePoSoft(poId: string): Promise<{ success: boolean; er
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/procurement');
-  return { success: true };
+  return ok(undefined);
 }
 
 // ═══════════════════════════════════════════════════════════════════════

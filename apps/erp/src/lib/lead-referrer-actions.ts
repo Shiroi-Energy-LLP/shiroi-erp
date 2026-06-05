@@ -1,8 +1,8 @@
 'use server';
 
-import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 const ALLOWED_ROLES = new Set(['founder', 'marketing_manager', 'sales_engineer']);
 
@@ -23,15 +23,12 @@ export async function setLeadReferrer(
     return err('Missing lead ID');
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  const authed = await requireAuthUser();
+  if (!authed.success) {
     console.warn(`${op} Not authenticated`);
-    return err('Not authenticated');
+    return authed;
   }
+  const { user, supabase } = authed.data;
 
   const { data: profile } = await supabase
     .from('profiles')

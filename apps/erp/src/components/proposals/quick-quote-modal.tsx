@@ -64,10 +64,10 @@ export function QuickQuoteModal({ leadId, defaultSystemType, defaultSizeKwp, def
         includeCivil,
       });
 
-      if (result.error) {
+      if (!result.success) {
         setError(result.error);
         setSubmitting(false);
-      } else if (result.proposalId) {
+      } else {
         // /proposals/[id] was removed in the Marketing + Design revamp — the
         // quote now lives inside the lead's Quote tab on the sales URL space.
         // Land the user there so they see the newly created BOM + totals

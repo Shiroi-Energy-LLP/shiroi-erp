@@ -146,12 +146,12 @@ export async function notifyLeadStageChanged(input: {
   }
 }
 
-export async function bulkAssignLeads(leadIds: string[], assignedTo: string): Promise<{ success: boolean; error?: string }> {
+export async function bulkAssignLeads(leadIds: string[], assignedTo: string): Promise<ActionResult<null>> {
   const op = '[bulkAssignLeads]';
   console.log(`${op} Starting for ${leadIds.length} leads`);
 
-  if (leadIds.length === 0) return { success: false, error: 'No leads selected' };
-  if (!assignedTo) return { success: false, error: 'No assignee selected' };
+  if (leadIds.length === 0) return err('No leads selected');
+  if (!assignedTo) return err('No assignee selected');
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -161,19 +161,22 @@ export async function bulkAssignLeads(leadIds: string[], assignedTo: string): Pr
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/sales');
   revalidatePath('/leads');
-  return { success: true };
+  return ok(null);
 }
 
-export async function bulkChangeLeadStatus(leadIds: string[], status: LeadStatus): Promise<{ success: boolean; error?: string }> {
+export async function bulkChangeLeadStatus(
+  leadIds: string[],
+  status: LeadStatus,
+): Promise<ActionResult<{ updatedCount: number; partial: boolean; message?: string }>> {
   const op = '[bulkChangeLeadStatus]';
   console.log(`${op} Starting for ${leadIds.length} leads → ${status}`);
 
-  if (leadIds.length === 0) return { success: false, error: 'No leads selected' };
+  if (leadIds.length === 0) return err('No leads selected');
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -188,7 +191,7 @@ export async function bulkChangeLeadStatus(leadIds: string[], status: LeadStatus
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   const updatedCount = data?.length ?? 0;
@@ -203,20 +206,21 @@ export async function bulkChangeLeadStatus(leadIds: string[], status: LeadStatus
 
   if (updatedCount < leadIds.length) {
     console.warn(`${op} Partial update: ${updatedCount} of ${leadIds.length} leads updated`, { timestamp: new Date().toISOString() });
-    return {
-      success: true,
-      error: `Updated ${updatedCount} of ${leadIds.length} leads — check permissions for the rest`,
-    };
+    return ok({
+      updatedCount,
+      partial: true,
+      message: `Updated ${updatedCount} of ${leadIds.length} leads — check permissions for the rest`,
+    });
   }
 
-  return { success: true };
+  return ok({ updatedCount, partial: false });
 }
 
-export async function bulkDeleteLeads(leadIds: string[]): Promise<{ success: boolean; error?: string }> {
+export async function bulkDeleteLeads(leadIds: string[]): Promise<ActionResult<null>> {
   const op = '[bulkDeleteLeads]';
   console.log(`${op} Starting for ${leadIds.length} leads`);
 
-  if (leadIds.length === 0) return { success: false, error: 'No leads selected' };
+  if (leadIds.length === 0) return err('No leads selected');
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -226,23 +230,23 @@ export async function bulkDeleteLeads(leadIds: string[]): Promise<{ success: boo
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/sales');
   revalidatePath('/leads');
-  return { success: true };
+  return ok(null);
 }
 
 export async function mergeLeads(
   primaryId: string,
   secondaryId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<null>> {
   const op = '[mergeLeads]';
   console.log(`${op} Merging ${secondaryId} into ${primaryId}`);
 
-  if (!primaryId || !secondaryId) return { success: false, error: 'Both lead IDs required' };
-  if (primaryId === secondaryId) return { success: false, error: 'Cannot merge a lead with itself' };
+  if (!primaryId || !secondaryId) return err('Both lead IDs required');
+  if (primaryId === secondaryId) return err('Cannot merge a lead with itself');
 
   const supabase = await createClient();
 
@@ -252,10 +256,10 @@ export async function mergeLeads(
   ]);
 
   if (primaryResult.error || !primaryResult.data) {
-    return { success: false, error: `Primary lead not found: ${primaryResult.error?.message}` };
+    return err(`Primary lead not found: ${primaryResult.error?.message}`);
   }
   if (secondaryResult.error || !secondaryResult.data) {
-    return { success: false, error: `Secondary lead not found: ${secondaryResult.error?.message}` };
+    return err(`Secondary lead not found: ${secondaryResult.error?.message}`);
   }
 
   const primary = primaryResult.data;
@@ -277,7 +281,7 @@ export async function mergeLeads(
       .eq('id', primaryId);
     if (updateError) {
       console.error(`${op} Update primary failed:`, { code: updateError.code, message: updateError.message });
-      return { success: false, error: `Failed to update primary lead: ${updateError.message}` };
+      return err(`Failed to update primary lead: ${updateError.message}`, updateError.code);
     }
   }
 
@@ -288,7 +292,7 @@ export async function mergeLeads(
 
   if (activityError) {
     console.error(`${op} Transfer activities failed:`, { code: activityError.code, message: activityError.message });
-    return { success: false, error: `Failed to transfer activities: ${activityError.message}` };
+    return err(`Failed to transfer activities: ${activityError.message}`, activityError.code);
   }
 
   const { error: proposalError } = await supabase
@@ -298,7 +302,7 @@ export async function mergeLeads(
 
   if (proposalError) {
     console.error(`${op} Transfer proposals failed:`, { code: proposalError.code, message: proposalError.message });
-    return { success: false, error: `Failed to transfer proposals: ${proposalError.message}` };
+    return err(`Failed to transfer proposals: ${proposalError.message}`, proposalError.code);
   }
 
   const { error: deleteError } = await supabase
@@ -312,14 +316,14 @@ export async function mergeLeads(
 
   if (deleteError) {
     console.error(`${op} Delete secondary failed:`, { code: deleteError.code, message: deleteError.message });
-    return { success: false, error: `Failed to delete secondary lead: ${deleteError.message}` };
+    return err(`Failed to delete secondary lead: ${deleteError.message}`, deleteError.code);
   }
 
   revalidatePath('/leads');
-  return { success: true };
+  return ok(null);
 }
 
-export async function archiveLead(leadId: string): Promise<{ success: boolean; error?: string }> {
+export async function archiveLead(leadId: string): Promise<ActionResult<null>> {
   const op = '[archiveLead]';
   console.log(`${op} Starting for: ${leadId}`);
   const supabase = await createClient();
@@ -329,13 +333,13 @@ export async function archiveLead(leadId: string): Promise<{ success: boolean; e
     .eq('id', leadId);
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
   revalidatePath('/leads');
-  return { success: true };
+  return ok(null);
 }
 
-export async function unarchiveLead(leadId: string): Promise<{ success: boolean; error?: string }> {
+export async function unarchiveLead(leadId: string): Promise<ActionResult<null>> {
   const op = '[unarchiveLead]';
   console.log(`${op} Starting for: ${leadId}`);
   const supabase = await createClient();
@@ -345,10 +349,10 @@ export async function unarchiveLead(leadId: string): Promise<{ success: boolean;
     .eq('id', leadId);
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
   revalidatePath('/leads');
-  return { success: true };
+  return ok(null);
 }
 
 /**

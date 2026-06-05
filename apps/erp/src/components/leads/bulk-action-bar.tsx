@@ -69,7 +69,7 @@ export function BulkActionBar({
     setLoading(false);
     if (result.success) {
       onActionComplete();
-    } else if (result.error) {
+    } else {
       addToast({ variant: 'destructive', title: 'Assign failed', description: result.error });
     }
   }
@@ -80,12 +80,12 @@ export function BulkActionBar({
     const result = await bulkChangeLeadStatus(selectedIds, status as LeadStatus);
     setLoading(false);
     if (result.success) {
-      // Surface partial-update warning (success=true but error message means some rows were skipped)
-      if (result.error) {
-        addToast({ variant: 'destructive', title: 'Partial update', description: result.error });
+      // Surface partial-update warning when some rows were skipped
+      if (result.data.partial && result.data.message) {
+        addToast({ variant: 'destructive', title: 'Partial update', description: result.data.message });
       }
       onActionComplete();
-    } else if (result.error) {
+    } else {
       addToast({ variant: 'destructive', title: 'Status change failed', description: result.error });
     }
   }

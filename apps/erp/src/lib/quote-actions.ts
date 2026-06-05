@@ -30,6 +30,7 @@ import Decimal from 'decimal.js';
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from './types/actions';
+import { requireAuthUser } from './auth';
 import { emitErpEvent } from './n8n/emit';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -50,13 +51,10 @@ export async function createDraftDetailedProposal(
   try {
     if (!leadId) return err('Missing leadId');
 
-    const supabase = await createClient();
-
     // Resolve caller's employee id for prepared_by
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return err('Not authenticated');
+    const authed = await requireAuthUser();
+    if (!authed.success) return authed;
+    const { user, supabase } = authed.data;
 
     const { data: employee, error: empErr } = await supabase
       .from('employees')

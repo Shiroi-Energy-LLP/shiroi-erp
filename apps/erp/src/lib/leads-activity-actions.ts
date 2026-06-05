@@ -1,8 +1,8 @@
 'use server';
 
-import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 export interface AddLeadActivityInput {
   leadId: string;
@@ -25,11 +25,10 @@ export async function addLeadActivity(
   if (!input.summary.trim()) return err('Summary is required');
   if (!input.nextActionDate) return err('Next follow-up date is required');
 
-  const supabase = await createClient();
-
   // Resolve caller to employee record
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: employee, error: empError } = await supabase
     .from('employees')

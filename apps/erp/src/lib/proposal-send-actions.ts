@@ -19,10 +19,10 @@
  * as sent. Vivek can re-send manually until n8n is wired up.
  */
 
-import { createClient } from '@repo/supabase/server';
 import { createAdminClient } from '@repo/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 import { emitErpEvent } from '@/lib/n8n/emit';
 
 // Security review 2026-05-30 #8: 24h TTL — customer email sent at send-time, event-bus URL only needs short window
@@ -48,11 +48,10 @@ export async function sendProposalToCustomer(
   try {
     if (!proposalId) return err('Missing proposalId');
 
-    const supabase = await createClient();
-
     // Auth + role check
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return err('Not authenticated');
+    const authed = await requireAuthUser();
+    if (!authed.success) return authed;
+    const { user, supabase } = authed.data;
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -91,12 +90,32 @@ export async function sendProposalToCustomer(
     // Generate / refresh PDF — calls the existing internal route.
     // This is the same route the "Generate PDF" button hits, so we get the
     // SAME exception surface (currently being debugged via instrumented logs).
+    //
+    // Security review 2026-06-06 #S18: previously this sent `cookie: ''` which
+    // dropped the auth context entirely. The route then fell through to its
+    // user-auth branch and returned 401 because there was no session cookie
+    // — which would silently break the send flow. We now present the n8n
+    // webhook secret so the route's server-to-server branch authorises the
+    // call. We have already validated the caller's role above; this internal
+    // hop only needs to prove "this request came from a trusted server", not
+    // re-authorise per-user.
     let pdfStoragePath = proposal.current_pdf_storage_path as string | null;
     if (!pdfStoragePath) {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+      const webhookSecret = process.env.N8N_WEBHOOK_SECRET;
+      if (!webhookSecret) {
+        console.error(`${op} N8N_WEBHOOK_SECRET not set — cannot authorise internal PDF generation`, {
+          proposalId,
+          timestamp: new Date().toISOString(),
+        });
+        return err('Server misconfigured: PDF generation unavailable');
+      }
       const genRes = await fetch(`${baseUrl}/api/proposals/${proposalId}/generate-pdf`, {
         method: 'POST',
-        headers: { cookie: '' }, // internal call; auth re-checked downstream if needed
+        headers: {
+          'X-N8N-Webhook-Secret': webhookSecret,
+          'content-type': 'application/json',
+        },
       });
       if (!genRes.ok) {
         const body = (await genRes.json().catch(() => ({}))) as { error?: string };

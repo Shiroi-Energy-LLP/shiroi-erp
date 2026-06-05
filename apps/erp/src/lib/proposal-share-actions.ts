@@ -8,9 +8,9 @@
  * guessing infeasible even if an attacker knows the pattern.
  */
 
-import { createClient } from '@repo/supabase/server';
 import { createAdminClient } from '@repo/supabase/admin';
 import { ok, err, type ActionResult } from './types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 const ALLOWED_ROLES = ['founder', 'marketing_manager', 'designer', 'sales_engineer'];
 
@@ -63,9 +63,9 @@ export async function createProposalShareToken(
   try {
     if (!proposalId) return err('Missing proposalId');
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return err('Not authenticated');
+    const authed = await requireAuthUser();
+    if (!authed.success) return authed;
+    const { user, supabase } = authed.data;
 
     const { data: profile } = await supabase
       .from('profiles')

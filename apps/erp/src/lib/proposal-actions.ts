@@ -1,9 +1,9 @@
 'use server';
 
 import { createClient } from '@repo/supabase/server';
-import { redirect } from 'next/navigation';
 import Decimal from 'decimal.js';
 import { emitErpEvent } from './n8n/emit';
+import { ok, err, type ActionResult } from './types/actions';
 
 type GSTType = 'supply' | 'works_contract';
 type ScopeOwner = 'shiroi' | 'client' | 'builder' | 'excluded';
@@ -87,7 +87,7 @@ interface CreateProposalInput {
   milestones: MilestoneInput[];
 }
 
-export async function createProposalAction(input: CreateProposalInput): Promise<{ proposalId?: string; error?: string }> {
+export async function createProposalAction(input: CreateProposalInput): Promise<ActionResult<{ proposalId: string }>> {
   const op = '[createProposalAction]';
   console.log(`${op} Starting for lead: ${input.leadId}`);
 
@@ -96,20 +96,20 @@ export async function createProposalAction(input: CreateProposalInput): Promise<
 
     // Get current user's employee record
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Not authenticated' };
+    if (!user) return err('Not authenticated');
 
     const { data: employee } = await supabase
       .from('employees')
       .select('id')
       .eq('profile_id', user.id)
       .single();
-    if (!employee) return { error: 'Employee record not found' };
+    if (!employee) return err('Employee record not found');
 
     // Generate proposal number
     const { data: docNum, error: docErr } = await supabase.rpc('generate_doc_number', { doc_type: 'PROP' });
     if (docErr || !docNum) {
       console.error(`${op} Failed to generate proposal number:`, docErr);
-      return { error: `Failed to generate proposal number: ${docErr?.message}` };
+      return err(`Failed to generate proposal number: ${docErr?.message}`, docErr?.code);
     }
 
     // Compute BOM line totals
@@ -205,7 +205,7 @@ export async function createProposalAction(input: CreateProposalInput): Promise<
 
     if (propErr) {
       console.error(`${op} Proposal insert failed:`, { code: propErr.code, message: propErr.message });
-      return { error: `Failed to create proposal: ${propErr.message}` };
+      return err(`Failed to create proposal: ${propErr.message}`, propErr.code);
     }
 
     // Insert BOM lines
@@ -240,14 +240,14 @@ export async function createProposalAction(input: CreateProposalInput): Promise<
     }
 
     console.log(`${op} Created proposal ${docNum} (id: ${proposal.id})`);
-    return { proposalId: proposal.id };
+    return ok({ proposalId: proposal.id });
 
-  } catch (error) {
+  } catch (e) {
     console.error(`${op} Failed:`, {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+      error: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
     });
-    return { error: error instanceof Error ? error.message : 'Unknown error' };
+    return err(e instanceof Error ? e.message : 'Unknown error');
   }
 }
 
@@ -272,7 +272,7 @@ interface BudgetaryQuoteActionInput {
 
 export async function createBudgetaryQuoteAction(
   input: BudgetaryQuoteActionInput
-): Promise<{ proposalId?: string; error?: string }> {
+): Promise<ActionResult<{ proposalId: string }>> {
   const op = '[createBudgetaryQuoteAction]';
   console.log(`${op} Starting for lead: ${input.leadId}`);
 
@@ -281,14 +281,14 @@ export async function createBudgetaryQuoteAction(
 
     // Get current user's employee record
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Not authenticated' };
+    if (!user) return err('Not authenticated');
 
     const { data: employee } = await supabase
       .from('employees')
       .select('id')
       .eq('profile_id', user.id)
       .single();
-    if (!employee) return { error: 'Employee record not found' };
+    if (!employee) return err('Employee record not found');
 
     // Fetch price book and correction factors
     const { getActivePriceBookItems, getCorrectionFactors } = await import('./price-book-queries');
@@ -298,7 +298,7 @@ export async function createBudgetaryQuoteAction(
     const corrections = await getCorrectionFactors(input.systemType, input.segment);
 
     if (priceBook.length === 0) {
-      return { error: 'Price book is empty. Add items to the price book first.' };
+      return err('Price book is empty. Add items to the price book first.');
     }
 
     // Generate BOM lines
@@ -317,14 +317,14 @@ export async function createBudgetaryQuoteAction(
     );
 
     if (bomLines.length === 0) {
-      return { error: 'Could not generate BOM — no matching price book items found.' };
+      return err('Could not generate BOM — no matching price book items found.');
     }
 
     // Generate proposal number
     const { data: docNum, error: docErr } = await supabase.rpc('generate_doc_number', { doc_type: 'PROP' });
     if (docErr || !docNum) {
       console.error(`${op} Failed to generate proposal number:`, docErr);
-      return { error: `Failed to generate proposal number: ${docErr?.message}` };
+      return err(`Failed to generate proposal number: ${docErr?.message}`, docErr?.code);
     }
 
     // Compute totals from generated BOM lines
@@ -390,7 +390,7 @@ export async function createBudgetaryQuoteAction(
 
     if (propErr) {
       console.error(`${op} Proposal insert failed:`, { code: propErr.code, message: propErr.message });
-      return { error: `Failed to create proposal: ${propErr.message}` };
+      return err(`Failed to create proposal: ${propErr.message}`, propErr.code);
     }
 
     // Insert BOM lines — note price_book_id propagation so Quote -> BOQ -> PO
@@ -513,13 +513,13 @@ export async function createBudgetaryQuoteAction(
     }
 
     console.log(`${op} Created budgetary quote ${docNum} (id: ${proposal.id})`);
-    return { proposalId: proposal.id };
+    return ok({ proposalId: proposal.id });
 
-  } catch (error) {
+  } catch (e) {
     console.error(`${op} Failed:`, {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+      error: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
     });
-    return { error: error instanceof Error ? error.message : 'Unknown error' };
+    return err(e instanceof Error ? e.message : 'Unknown error');
   }
 }

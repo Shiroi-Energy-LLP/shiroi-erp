@@ -4,6 +4,7 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { type ActionResult, ok, err } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 import { HandoverPackPdf, type HandoverPdfData } from '@/lib/pdf/handover/handover-pack-pdf';
 import React from 'react';
 import type { Database } from '@repo/types/database';
@@ -26,9 +27,9 @@ export async function generateHandoverPackPdf(
 
   if (!projectId) return err('Missing project ID');
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   // Role check — only founder + project_manager
   const { data: profile } = await supabase

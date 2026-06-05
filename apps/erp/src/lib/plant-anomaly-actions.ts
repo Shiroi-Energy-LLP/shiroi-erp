@@ -10,15 +10,16 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 // ── Role guard ────────────────────────────────────────────────────────────────
 
 const RESOLVE_ALLOWED_ROLES = new Set(['founder', 'om_technician']);
 
 async function getCallerRole(): Promise<string | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const authed = await requireAuthUser();
+  if (!authed.success) return null;
+  const { user, supabase } = authed.data;
 
   const { data } = await supabase
     .from('profiles')
