@@ -1,4 +1,5 @@
 import { getUserProfile } from '@/lib/auth';
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
 import { getPurchaseDashboardData } from '@/lib/purchase-queries';
 import { KpiCard } from '@/components/kpi-card';
 import { MyTasks } from '@/components/my-tasks';
@@ -150,7 +151,7 @@ export async function PurchaseDashboard() {
                     const daysSince = po.actual_delivery_date
                       ? Math.floor(
                           (Date.now() - new Date(po.actual_delivery_date).getTime()) /
-                            (1000 * 60 * 60 * 24),
+                            MS_PER_DAY,
                         )
                       : 0;
                     return (

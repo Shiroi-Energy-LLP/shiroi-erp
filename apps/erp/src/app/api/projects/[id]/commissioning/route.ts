@@ -2,6 +2,7 @@
 // Commissioning Report PDF generation endpoint
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@repo/supabase/server';
+import { formatDate } from '@repo/ui/formatters';
 import { renderToBuffer } from '@react-pdf/renderer';
 import {
   CommissioningReportPDF,
@@ -76,13 +77,6 @@ export async function GET(
     ]
       .filter(Boolean)
       .join(', ');
-
-    const formatDate = (d: string) =>
-      new Date(d).toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
 
     const r = report as any;
     const irValue = Number(r.insulation_resistance_mohm ?? 0);

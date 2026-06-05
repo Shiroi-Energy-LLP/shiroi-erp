@@ -13,6 +13,7 @@ import {
   DialogDescription,
 } from '@repo/ui';
 import { Plus, Trash2, Cable, Zap, Layers, Minus } from 'lucide-react';
+import { formatDate } from '@repo/ui/formatters';
 import { recordCutLength, deleteCutRecord } from '@/lib/inventory-actions';
 import type { CutRecordWithCutter, CableSummaryRow } from '@/lib/inventory-queries';
 
@@ -47,12 +48,6 @@ function materialIcon(type: MaterialType) {
     case 'conduit_pvc': case 'conduit_gi': return <Layers className="h-3.5 w-3.5 text-n-500" />;
     default: return <Minus className="h-3.5 w-3.5 text-n-400" />;
   }
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  });
 }
 
 // ---------------------------------------------------------------------------

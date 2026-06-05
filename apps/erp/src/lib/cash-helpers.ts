@@ -3,6 +3,8 @@
  * No database access — safe for both server and client use.
  */
 
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
+
 /**
  * Computes the escalation level for an overdue invoice based on days overdue.
  *
@@ -67,7 +69,7 @@ export function calcDaysOverdue(dueDate: string): number {
     now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }),
   );
   const diffMs = istNow.getTime() - due.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return Math.floor(diffMs / MS_PER_DAY);
 }
 
 /**

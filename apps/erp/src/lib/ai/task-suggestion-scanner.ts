@@ -2,6 +2,8 @@
 import { createAdminClient } from '@repo/supabase/admin';
 import type { Database } from '@repo/types/database';
 
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
+
 type LeadRow = Database['public']['Tables']['leads']['Row'];
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
 type TicketRow = Database['public']['Tables']['om_service_tickets']['Row'];
@@ -79,7 +81,7 @@ export async function scanStaleItems(): Promise<StaleItem[]> {
 
       const proj = ticket.projects;
       const projectRef = proj ? `${proj.project_number} (${proj.customer_name})` : 'unknown project';
-      const daysOld = Math.floor((Date.now() - new Date(ticket.created_at).getTime()) / (1000 * 60 * 60 * 24));
+      const daysOld = Math.floor((Date.now() - new Date(ticket.created_at).getTime()) / (MS_PER_DAY));
 
       results.push({
         entity_type: 'service_ticket',
@@ -143,7 +145,7 @@ export async function scanStaleItems(): Promise<StaleItem[]> {
       if (projectsWithOpenTask.has(project.id)) continue;
 
       const daysSinceUpdate = Math.floor(
-        (Date.now() - new Date(project.status_updated_at).getTime()) / (1000 * 60 * 60 * 24),
+        (Date.now() - new Date(project.status_updated_at).getTime()) / (MS_PER_DAY),
       );
 
       results.push({
@@ -208,7 +210,7 @@ export async function scanStaleItems(): Promise<StaleItem[]> {
       if (leadsWithOpenTask.has(lead.id)) continue;
 
       const daysSinceActivity = Math.floor(
-        (Date.now() - new Date(lead.updated_at).getTime()) / (1000 * 60 * 60 * 24),
+        (Date.now() - new Date(lead.updated_at).getTime()) / (MS_PER_DAY),
       );
       const sizeInfo = lead.estimated_size_kwp ? `${lead.estimated_size_kwp}kWp` : 'size unknown';
 

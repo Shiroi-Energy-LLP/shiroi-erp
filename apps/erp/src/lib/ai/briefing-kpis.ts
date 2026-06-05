@@ -12,6 +12,8 @@
 
 import { createAdminClient } from '@repo/supabase/admin';
 
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
+
 export interface BriefingKpis {
   date: string; // YYYY-MM-DD (yesterday)
   recipient_role: 'founder' | 'marketing_manager' | 'project_manager';
@@ -258,7 +260,7 @@ export async function gatherBriefingKpis(
   if (staleLeads.data) {
     for (const lead of staleLeads.data) {
       const updatedAt = new Date(lead.updated_at as string);
-      const staleDays = Math.floor((Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
+      const staleDays = Math.floor((Date.now() - updatedAt.getTime()) / (MS_PER_DAY));
       anomalies.push(
         `Lead "${lead.customer_name}" (${lead.status}) stale for ${staleDays} days — no activity`,
       );
@@ -268,7 +270,7 @@ export async function gatherBriefingKpis(
   if (staleProjects.data) {
     for (const proj of staleProjects.data) {
       const updatedAt = new Date(proj.updated_at as string);
-      const staleDays = Math.floor((Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
+      const staleDays = Math.floor((Date.now() - updatedAt.getTime()) / (MS_PER_DAY));
       anomalies.push(
         `Project ${proj.project_number} (${proj.customer_name}) — no update for ${staleDays} days`,
       );

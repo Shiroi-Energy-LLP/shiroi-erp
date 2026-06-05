@@ -3,13 +3,15 @@
  * No database access — safe for both server and client use.
  */
 
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
+
 /**
  * Returns number of days until the 25th of the current month (payroll export day).
  * Negative if past the 25th. Uses date math for accuracy across month boundaries.
  */
 export function daysUntilPayrollExport(today: Date = new Date()): number {
   const target = new Date(today.getFullYear(), today.getMonth(), 25);
-  const days = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const days = Math.round((target.getTime() - today.getTime()) / MS_PER_DAY);
   return days === 0 ? 0 : days; // avoid -0
 }
 
@@ -25,7 +27,7 @@ export function isCertificationExpiringSoon(
   const expiry = new Date(expiryDate + 'T00:00:00+05:30');
   const todayStart = new Date(today.toISOString().split('T')[0] + 'T00:00:00+05:30');
   const diffMs = expiry.getTime() - todayStart.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = Math.ceil(diffMs / MS_PER_DAY);
   return diffDays < 30;
 }
 
@@ -41,7 +43,7 @@ export function certificationExpiryStatus(
   const expiry = new Date(expiryDate + 'T00:00:00+05:30');
   const todayStart = new Date(today.toISOString().split('T')[0] + 'T00:00:00+05:30');
   const diffMs = expiry.getTime() - todayStart.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = Math.ceil(diffMs / MS_PER_DAY);
   if (diffDays < 30) return 'red';
   if (diffDays < 90) return 'amber';
   return 'green';

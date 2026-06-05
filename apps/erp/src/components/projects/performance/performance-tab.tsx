@@ -8,6 +8,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import { formatDate } from '@repo/ui/formatters';
 import {
   getActiveAnomaliesForProject,
   getResolvedAnomaliesForProject,
@@ -39,17 +40,6 @@ function formatDeviation(pct: number | null): string {
 function formatKwh(kwh: number | null): string {
   if (kwh === null) return 'N/A';
   return `${kwh.toFixed(1)} kWh`;
-}
-
-function formatDate(dateStr: string): string {
-  // YYYY-MM-DD → DD MMM YYYY
-  const d = new Date(dateStr + 'T00:00:00Z');
-  return d.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'Asia/Kolkata',
-  });
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────

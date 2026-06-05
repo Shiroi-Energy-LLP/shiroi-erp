@@ -11,6 +11,8 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
+
 type Task = Database['public']['Tables']['tasks']['Row'];
 
 export interface PaymentFollowupRow {
@@ -75,7 +77,7 @@ export async function getPaymentFollowups(): Promise<PaymentFollowupRow[]> {
         | null;
       const assignedEmp = row.assigned_employee as unknown as { full_name: string } | null;
       const createdAt = new Date(row.created_at).getTime();
-      const daysOld = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+      const daysOld = Math.floor((now - createdAt) / MS_PER_DAY);
 
       return {
         id: row.id,

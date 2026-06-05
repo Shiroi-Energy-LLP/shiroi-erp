@@ -15,6 +15,7 @@ import {
   useToast,
 } from '@repo/ui';
 import type { Database } from '@repo/types/database';
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
 import { notifyLeaveRequestSubmitted } from '@/lib/hr-actions';
 
 type LeaveType = Database['public']['Enums']['leave_type'];
@@ -62,7 +63,7 @@ export function LeaveRequestForm({ employeeId }: LeaveRequestFormProps) {
     const from = new Date(form.from_date);
     const to = new Date(form.to_date);
     const diffMs = to.getTime() - from.getTime();
-    return Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1);
+    return Math.max(1, Math.floor(diffMs / MS_PER_DAY) + 1);
   }
 
   async function handleSubmit(e: React.FormEvent) {

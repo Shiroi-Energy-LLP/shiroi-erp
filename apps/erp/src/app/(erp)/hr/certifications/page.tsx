@@ -15,12 +15,14 @@ import {
 } from '@repo/ui';
 import { Award } from 'lucide-react';
 
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
+
 function expiryStatus(expiryDate: string | null): { label: string; variant: 'default' | 'destructive' | 'outline' } {
   if (!expiryDate) return { label: 'No Expiry', variant: 'outline' };
   const now = new Date();
   const expiry = new Date(expiryDate + 'T00:00:00+05:30');
   const diffMs = expiry.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = Math.ceil(diffMs / MS_PER_DAY);
 
   if (diffDays < 0) return { label: 'Expired', variant: 'destructive' };
   if (diffDays <= 90) return { label: `${diffDays}d left`, variant: 'outline' };
@@ -32,7 +34,7 @@ function expiryClassName(expiryDate: string | null): string {
   const now = new Date();
   const expiry = new Date(expiryDate + 'T00:00:00+05:30');
   const diffMs = expiry.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = Math.ceil(diffMs / MS_PER_DAY);
 
   if (diffDays < 0) return 'text-red-600 font-medium';
   if (diffDays <= 90) return 'text-yellow-600 font-medium';

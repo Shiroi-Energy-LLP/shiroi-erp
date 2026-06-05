@@ -1,4 +1,7 @@
 import { createClient } from '@repo/supabase/server';
+
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
+
 import { getPurchaseOrders, getMSMEAlertPOs } from './procurement-queries';
 import type { POListItem } from './procurement-queries';
 
@@ -49,7 +52,7 @@ export async function getPurchaseDashboardData(profileId: string): Promise<Purch
   const msmeUrgent = msmeAlertPOs.filter((po) => {
     if (!po.actual_delivery_date) return false;
     const deliveryDate = new Date(po.actual_delivery_date);
-    const daysSinceDelivery = Math.floor((today - deliveryDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceDelivery = Math.floor((today - deliveryDate.getTime()) / MS_PER_DAY);
     return daysSinceDelivery >= 40;
   });
 

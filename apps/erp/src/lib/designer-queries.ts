@@ -1,5 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
+
 export interface DesignerDashboardData {
   pendingDesigns: number;
   inProgress: number;
@@ -119,7 +121,7 @@ export async function getDesignerDashboardData(profileId: string): Promise<Desig
   const todayMs = Date.now();
   const designQueue = pendingLeads.map((lead) => {
     const surveyDate = new Date(lead.status_updated_at);
-    const daysWaiting = Math.max(0, Math.floor((todayMs - surveyDate.getTime()) / (1000 * 60 * 60 * 24)));
+    const daysWaiting = Math.max(0, Math.floor((todayMs - surveyDate.getTime()) / MS_PER_DAY));
     return {
       id: lead.id,
       customer_name: lead.customer_name,

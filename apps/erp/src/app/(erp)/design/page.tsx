@@ -15,6 +15,7 @@ import {
   Eyebrow,
 } from '@repo/ui';
 import { Palette, Ruler } from 'lucide-react';
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
 import { getProjectsNeedingSiteDesign } from '@/lib/projects-queries';
 import { getCurrentUserRoleForProject } from '@/lib/project-detail-actions';
 import { MarkSiteDesignCompleteButton } from '@/components/projects/mark-site-design-complete-button';
@@ -31,7 +32,7 @@ function daysWaiting(isoTimestamp: string): number {
   const from = new Date(isoTimestamp);
   const now = new Date();
   const diffMs = now.getTime() - from.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return Math.floor(diffMs / MS_PER_DAY);
 }
 
 function truncateNote(note: string | null, maxLen = 60): string {

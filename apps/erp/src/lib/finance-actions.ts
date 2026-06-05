@@ -3,6 +3,7 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { emitErpEvent } from '@/lib/n8n/emit';
+import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
 import { type ActionResult, ok, err } from '@/lib/types/actions';
 import {
   buildEInvoicePayload,
@@ -271,7 +272,7 @@ export async function recordVendorPayment(input: {
     .single();
 
   const poDate = poData?.po_date ?? input.paymentDate;
-  const daysFromPo = Math.floor((new Date(input.paymentDate).getTime() - new Date(poDate).getTime()) / (1000 * 60 * 60 * 24));
+  const daysFromPo = Math.floor((new Date(input.paymentDate).getTime() - new Date(poDate).getTime()) / MS_PER_DAY);
 
   const { error } = await supabase
     .from('vendor_payments')
