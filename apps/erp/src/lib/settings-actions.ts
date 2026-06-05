@@ -63,11 +63,21 @@ export async function changePassword(
     // skipped — it is the only check that the person at the keyboard
     // actually knows the existing password (vs an unattended session).
     //
-    // NOTE: signInWithPassword issues a fresh session token and writes
-    // new auth cookies on the response. This is equivalent to an
-    // implicit re-login; acceptable for this app because we do not
-    // rely on session-ID-based revocation. If that changes, switch to
-    // supabase.auth.reauthenticate() + verifyOtp instead.
+    // SECURITY LIMITATION (review 2026-06-06 #S17):
+    // signInWithPassword issues a fresh session token and writes new auth
+    // cookies on the response as a side effect. That means a successful
+    // re-auth here is functionally equivalent to silently re-logging in —
+    // any prior session IDs on this device get rotated, and no other active
+    // sessions for this user are invalidated. We accept this because:
+    //   (a) we do not rely on session-ID-based revocation for compliance, and
+    //   (b) the threat being mitigated is "someone walked up to an unlocked
+    //       laptop and changed the password" — the re-auth check defeats that
+    //       even though it leaves a fresh cookie behind.
+    // TODO: switch to supabase.auth.reauthenticate() + verifyOtp once Supabase
+    // ships a non-session-issuing re-auth primitive (tracked upstream — last
+    // checked 2026-06-06: only available in mobile SDKs, not @supabase/supabase-js).
+    // That call sends an OTP to the user's email and lets us confirm presence
+    // without touching the cookie store.
     const { error: reauthError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password: currentPassword,

@@ -30,6 +30,14 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Paginat
   const sortCol = filters.sort ?? 'created_at';
   const sortDir = filters.dir === 'asc' ? 'asc' : 'desc';
 
+  // TODO (security review 2026-06-06 #S10): search_contacts RPC returns the
+  // entire contact row plus joined contact_company_roles + companies. That likely
+  // includes email, phone, designation, and any contact-level address fields
+  // — but the list view only needs id/name/role/company display columns. Audit
+  // every caller of getContacts (and the RPC return shape) and trim the SELECT
+  // server-side to the minimum needed before exposing this to non-founder roles.
+  // Leaving as-is for now to avoid breaking downstream destructures across the
+  // codebase; will need a coordinated change of the RPC signature + callers.
   // Item 2b — parameterized search RPC replaces PostgREST .or() interpolation.
   // The RPC returns nested contact_company_roles via jsonb_agg to preserve the
   // embed shape callers consume downstream.

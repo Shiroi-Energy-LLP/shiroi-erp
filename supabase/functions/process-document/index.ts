@@ -78,6 +78,27 @@ async function downloadFromSupabaseStorage(
   storagePath: string,
 ): Promise<Uint8Array | null> {
   const op = '[downloadFromSupabaseStorage]';
+
+  // Defense-in-depth (security review 2026-06-06 #S20): documents.storage_path
+  // is DB-trusted at write time, but a compromised write path or a future
+  // migration script could land a value that traverses out of the bucket.
+  // Reject anything that contains '..' (parent reference), starts with '/'
+  // (absolute path), or contains a backslash (Windows-style escape). The
+  // Supabase Storage SDK joins these into a URL path against the bucket
+  // root, so any of these would be an unexpected escape attempt.
+  if (
+    !storagePath ||
+    storagePath.includes('..') ||
+    storagePath.startsWith('/') ||
+    storagePath.includes('\\')
+  ) {
+    console.error(`${op} rejected unsafe storage path`, {
+      storagePath,
+      timestamp: new Date().toISOString(),
+    });
+    return null;
+  }
+
   const { data, error } = await supabase.storage
     .from('documents')
     .download(storagePath);
