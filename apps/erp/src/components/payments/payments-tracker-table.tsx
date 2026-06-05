@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { DollarSign, CalendarClock } from 'lucide-react';
-import { formatINR, shortINR } from '@repo/ui/formatters';
+import { formatINR, formatDate, shortINR } from '@repo/ui/formatters';
 import {
   Badge,
   Card,
@@ -35,17 +35,6 @@ const FILTER_TABS = [
   { value: 'order_30d', label: '≥30 Days' },
   { value: 'order_60d', label: '≥60 Days' },
 ] as const;
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '—';
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'Asia/Kolkata',
-  });
-}
 
 function formatDateShort(dateStr: string | null): string {
   if (!dateStr) return '—';
@@ -217,7 +206,7 @@ export function PaymentsTrackerTable({ rows, allRows, summary, filter, thisWeekC
                         {/* Order Date */}
                         <TableCell>
                           <div className="text-sm text-n-900">
-                            {formatDate(row.order_date)}
+                            {row.order_date ? formatDate(row.order_date) : '—'}
                           </div>
                           <div className="text-xs text-n-400">
                             ({row.order_date_source})
@@ -234,7 +223,7 @@ export function PaymentsTrackerTable({ rows, allRows, summary, filter, thisWeekC
 
                         {/* Completed */}
                         <TableCell className="text-sm text-n-600">
-                          {formatDate(row.completed_date)}
+                          {row.completed_date ? formatDate(row.completed_date) : '—'}
                         </TableCell>
 
                         {/* Contract ₹ */}

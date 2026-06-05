@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { createActivity } from '@/lib/contacts-actions';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, Select, Label, Badge } from '@repo/ui';
+import { toIST } from '@repo/ui/formatters';
 import {
   MessageSquare, Phone, Mail, Users, MapPin, MessageCircle,
   CheckSquare, ArrowRight, Plus, Clock, X,
@@ -35,14 +36,6 @@ interface ActivityTimelineProps {
   activities: Activity[];
   entityType: string;
   entityId: string;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
 }
 
 export function ActivityTimeline({ activities, entityType, entityId }: ActivityTimelineProps) {
@@ -178,7 +171,7 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
                         <p className="text-sm text-n-700 mt-1 whitespace-pre-wrap">{act.body}</p>
                       )}
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-xs text-n-400">{formatDate(act.occurred_at)}</span>
+                        <span className="text-xs text-n-400">{toIST(act.occurred_at)}</span>
                         {act.owner && (
                           <span className="text-xs text-n-500">by {act.owner.full_name}</span>
                         )}

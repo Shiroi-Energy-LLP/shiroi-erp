@@ -10,6 +10,7 @@ import { DataFlagButton } from '@/components/data-flag-button';
 import { PoRateInlineEdit } from '@/components/procurement/po-rate-inline-edit';
 import { PoDownloadButton } from '@/components/procurement/po-download-button';
 import { PoDeleteButton } from '@/components/procurement/po-delete-button';
+import { formatDate } from '@repo/ui/formatters';
 
 function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -23,11 +24,6 @@ function statusVariant(status: string): 'default' | 'secondary' | 'destructive' 
 function formatINR(amount: number | null): string {
   if (!amount) return '—';
   return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 interface PageProps {
@@ -113,7 +109,7 @@ export default async function PODetailPage({ params }: PageProps) {
             <div className="flex items-center gap-2">
               <Badge variant={statusVariant(po.status)}>{po.status?.replace(/_/g, ' ')}</Badge>
             </div>
-            <p className="text-sm"><span className="text-[#7C818E]">PO Date:</span> {formatDate(po.po_date)}</p>
+            <p className="text-sm"><span className="text-[#7C818E]">PO Date:</span> {po.po_date ? formatDate(po.po_date) : '—'}</p>
             <p className="text-sm"><span className="text-[#7C818E]">Total:</span> <span className="font-bold">{formatINR(po.total_amount)}</span></p>
             {po.expected_delivery_date && (
               <p className="text-sm"><span className="text-[#7C818E]">Expected Delivery:</span> {formatDate(po.expected_delivery_date)}</p>
@@ -211,7 +207,7 @@ export default async function PODetailPage({ params }: PageProps) {
                 {deliveryChallans.map((dc: any) => (
                   <TableRow key={dc.id}>
                     <TableCell className="font-mono text-sm">{dc.vendor_dc_number ?? dc.dc_number ?? '—'}</TableCell>
-                    <TableCell className="text-sm">{formatDate(dc.dc_date)}</TableCell>
+                    <TableCell className="text-sm">{dc.dc_date ? formatDate(dc.dc_date) : '—'}</TableCell>
                     <TableCell>
                       <Badge variant={dc.status === 'received' ? 'default' : 'outline'}>
                         {dc.status?.replace(/_/g, ' ')}
@@ -247,7 +243,7 @@ export default async function PODetailPage({ params }: PageProps) {
               <TableBody>
                 {payments.map((pmt: any) => (
                   <TableRow key={pmt.id}>
-                    <TableCell className="text-sm">{formatDate(pmt.payment_date)}</TableCell>
+                    <TableCell className="text-sm">{pmt.payment_date ? formatDate(pmt.payment_date) : '—'}</TableCell>
                     <TableCell className="text-sm font-mono font-medium">{formatINR(pmt.amount)}</TableCell>
                     <TableCell className="text-xs text-gray-500">{pmt.payment_mode?.replace(/_/g, ' ') ?? '—'}</TableCell>
                     <TableCell className="text-xs text-gray-500 font-mono">{pmt.reference_number ?? '—'}</TableCell>
@@ -293,7 +289,7 @@ export default async function PODetailPage({ params }: PageProps) {
                           {bill.bill_number}
                         </Link>
                       </TableCell>
-                      <TableCell className="text-sm">{formatDate(bill.bill_date)}</TableCell>
+                      <TableCell className="text-sm">{bill.bill_date ? formatDate(bill.bill_date) : '—'}</TableCell>
                       <TableCell>
                         <Badge variant={bill.status === 'paid' ? 'default' : bill.status === 'cancelled' ? 'destructive' : 'outline'} className="text-xs">
                           {bill.status?.replace(/_/g, ' ')}

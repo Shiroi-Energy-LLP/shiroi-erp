@@ -15,16 +15,8 @@ import {
   Breadcrumb,
   Button,
 } from '@repo/ui';
+import { formatDate } from '@repo/ui/formatters';
 import { STAGE_LABELS } from '@/lib/leads-helpers';
-
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 interface DesignWorkspaceProps {
   params: Promise<{ leadId: string }>;
@@ -110,7 +102,7 @@ export default async function DesignWorkspacePage({ params }: DesignWorkspacePro
         <CardContent>
           {survey ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <InfoField label="Survey Date" value={formatDate(survey.survey_date)} />
+              <InfoField label="Survey Date" value={survey.survey_date ? formatDate(survey.survey_date) : '—'} />
               <InfoField label="Status" value={survey.survey_status ?? '—'} />
               <InfoField label="Contact on site" value={survey.contact_person_name ?? '—'} />
               <InfoField label="Recommended kWp" value={survey.recommended_size_kwp?.toString() ?? '—'} />
