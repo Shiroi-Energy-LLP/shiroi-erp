@@ -47,11 +47,22 @@ O&M is the post-handover side of the system — everything that happens after a 
 - `om_visit_reports` (`work_done`, `issues_identified`, `resolution_details`, `customer_feedback`, `completed_by`, `report_file_paths TEXT[]`)
 - `plant_monitoring_credentials` (multi-entry-per-project, soft delete, partial unique `(project_id, portal_url) WHERE deleted_at IS NULL`)
 - **Inverter telemetry** (migration 050):
-  - `inverters` (master: 6-brand CHECK, `polling_interval_minutes`, `current_status`)
+  - `inverters` (master: 6-brand CHECK, `polling_interval_minutes`, `current_status`; `project_id` made nullable in mig 157 so monitoring-only inverters discovered via vendor portals can exist before being mapped to a Shiroi project)
   - `inverter_monitoring_credentials` (vault secret refs only, never raw)
   - `inverter_readings` + `inverter_string_readings` (**PARTITIONED monthly by `RANGE(recorded_at)`**)
   - `inverter_readings_hourly` + `inverter_readings_daily` (rollup tables — frontend queries these, **never** raw)
   - `inverter_poll_failures` (audit log)
+
+## Sungrow integration (live 2026-06-05, app 2883)
+
+- **Auth: direct login** (`/openapi/login` with username + RSA-encrypted password) — Manivel's `manivel@shiroienergy.com` master account owns all 14 Shiroi-commissioned plants. One login per poll cycle, token reused across all Sungrow inverters in the batch (no token persisted to DB). OAuth redirect flow is still wired (`/api/integrations/sungrow/authorize` + `/callback`) but is for future customer-owned plants, not Shiroi-owned ones.
+- **Sungrow's misleading labels** — in the developer dashboard, "AppKey" goes in the request **body** as `appkey`, but the `x-access-key` HTTP header takes the **SecretKey**. Putting AppKey in the header yields `E912 Illegal x-access-key`. The adapter + Edge Function were both wrong on this from 2026-05-23 through 2026-06-05.
+- **`monitoring_device_id` stores Sungrow's composite `ps_key`** (`{ps_id}_{device_type}_{device_code}_{chnnl_id}`, e.g. `1818786_1_2_1`), not the bare serial number. The adapter detects underscores and routes to `ps_key_list` vs `sn_list` accordingly. The serial number stays in `inverters.serial_number` separately.
+- **Point IDs** wired in the adapter: `p83022` (active power kW), `p83025` (today energy kWh), `p83033` (total energy kWh), `p83020` (DC power kW), `p83036` (grid freq Hz), `p83097` (temperature °C). Our current app tier (2883) returns **metadata + status only** — point values come back empty, so power/energy fields persist as NULL until Sungrow approves a higher tier. The `dev_status` field is populated (mapped to `active`/`fault`/`offline`/`derated`/`unknown`) so fault + offline tickets still fire via `create_service_tickets_from_inverter_alerts()`.
+- **Discovery + seed script:** `scripts/sungrow-seed-inverters.ts` lists all plants + their inverters, fuzzy-matches plant names to existing projects (token-Jaccard + substring affinity, threshold 0.35), and idempotently upserts into `inverters`. Run with `--dry-run` first, then `--apply`. Unmatched plants get `project_id=NULL` for O&M to re-assign later.
+- **Local smoke test:** `pnpm tsx scripts/sungrow-ping.ts` (login + list plants + first device realtime fetch) and `pnpm tsx scripts/sungrow-poll-once.ts` (full poll loop bypassing the Edge Function).
+- **Scheduling:** n8n workflow `60-inverter-poll-cron.json` POSTs to `${SUPABASE_URL}/functions/v1/inverter-poll` every 5 min (Asia/Kolkata).
+- **Secrets:** the Edge Function reads `SUNGROW_APPKEY`, `SUNGROW_SECRET`, `SUNGROW_USERNAME`, `SUNGROW_PASSWORD`, `SUNGROW_RSA_PUBLIC_KEY`, `SUNGROW_BASE_URL` from the Supabase Edge Functions secrets store (not from `.env.local` — those are for local scripts only). Must be set via Supabase Dashboard → Edge Functions → Secrets; the local Supabase CLI is 403-locked on Vivek's account for this op, same as for type-gen.
 
 ## Key Files
 

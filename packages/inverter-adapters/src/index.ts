@@ -29,7 +29,15 @@
  */
 
 export * from './base';
-export { sungrowAdapter, mapSungrowStatus } from './sungrow';
+export {
+  sungrowAdapter,
+  mapSungrowStatus,
+  sungrowDirectLogin,
+  sungrowListPlants,
+  sungrowListDevices,
+} from './sungrow';
+export type { DirectLoginInput, DirectLoginResult, SungrowPlant, SungrowDevice, DiscoveryAuth } from './sungrow';
+export { sungrowRsaEncrypt } from './sungrow-rsa';
 export { growattAdapter, mapGrowattStatus } from './growatt';
 export { smaAdapter } from './sma';
 export { huaweiAdapter } from './huawei';

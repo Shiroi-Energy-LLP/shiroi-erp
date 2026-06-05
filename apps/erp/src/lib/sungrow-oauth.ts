@@ -81,7 +81,10 @@ export async function exchangeCodeForToken(input: ExchangeInput): Promise<Exchan
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-access-key': input.appkey,
+        // Sungrow's `x-access-key` header takes the SecretKey value, NOT the AppKey.
+        // The AppKey identifies the app and goes in the body. Using AppKey here
+        // yields E912 "Illegal x-access-key".
+        'x-access-key': input.secret,
       },
       body: JSON.stringify(body),
     });
@@ -164,7 +167,8 @@ export async function refreshAccessToken(input: RefreshInput): Promise<ExchangeR
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-access-key': input.appkey,
+        // SecretKey, not AppKey — see exchangeCodeForToken comment.
+        'x-access-key': input.secret,
       },
       body: JSON.stringify(body),
     });

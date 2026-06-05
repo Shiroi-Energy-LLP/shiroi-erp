@@ -108,12 +108,18 @@ function syntheticReading(ratedCapacityKw: number): NormalizedReading {
 // ─── Growatt adapter (inlined from packages/inverter-adapters/src/growatt.ts) ─
 // SYNC WITH packages/inverter-adapters/src/growatt.ts
 
-const GROWATT_BASE_URL = 'https://server-api.growatt.com/';
+// 2026-06-05: switched from server-api.growatt.com (now 405) to
+// openapi.growatt.com (same legacy endpoints, still working).
+// See packages/inverter-adapters/src/growatt.ts for the full regression note.
+const GROWATT_BASE_URL = 'https://openapi.growatt.com/';
 
 // Growatt deviceStatus integer → NormalizedStatus.
 // 1=active, 3=fault, 5=offline (confirmed against real API 2026-05-23)
+// 2 also observed on TLX-family inverters; current data point shows producing
+// (power>0, lost=false) so treating as 'active'. Refine if we see contrary cases.
 const GROWATT_STATUS_MAP: Record<number, NormalizedStatus> = {
   1: 'active',
+  2: 'active',
   3: 'fault',
   5: 'offline',
 };
@@ -493,6 +499,14 @@ async function fetchGrowattReading(
 
 // ─── Sungrow adapter (inlined from packages/inverter-adapters/src/sungrow.ts) ─
 // SYNC WITH packages/inverter-adapters/src/sungrow.ts
+//
+// Auth model: direct login via /openapi/login (Shiroi-owned plants under
+// Manivel's iSolarCloud account). Login once per poll cycle and reuse the
+// token for every Sungrow inverter.
+//
+// Header `x-access-key` takes the SecretKey, NOT the AppKey. Using the
+// AppKey here yields E912 "Illegal x-access-key". The AppKey goes in the
+// request BODY as `appkey`.
 
 const SUNGROW_STATUS_MAP: Record<string, NormalizedStatus> = {
   '1': 'active',
@@ -503,83 +517,156 @@ const SUNGROW_STATUS_MAP: Record<string, NormalizedStatus> = {
 };
 
 function mapSungrowStatus(raw: string | null | undefined): NormalizedStatus | null {
-  if (!raw) return null;
+  if (raw == null || raw === '') return null;
   return SUNGROW_STATUS_MAP[String(raw)] ?? null;
 }
 
+// Point IDs (verified against live SG3.3RS-L 2026-06-05).
+const SUNGROW_POINTS = ['p83022', 'p83025', 'p83033', 'p83020', 'p83036', 'p83097'];
+
+// RSA-OAEP encryption of plaintext using SPKI base64 public key.
+// Same impl as packages/inverter-adapters/src/sungrow-rsa.ts.
+async function sungrowRsaEncrypt(plaintext: string, publicKeyBase64: string): Promise<string> {
+  const standard = publicKeyBase64.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(standard);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const publicKey = await crypto.subtle.importKey(
+    'spki', bytes.buffer, { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['encrypt'],
+  );
+  const cipher = await crypto.subtle.encrypt(
+    { name: 'RSA-OAEP' }, publicKey, new TextEncoder().encode(plaintext),
+  );
+  const cipherBytes = new Uint8Array(cipher);
+  let s = '';
+  for (let i = 0; i < cipherBytes.length; i++) {
+    const b = cipherBytes[i];
+    if (b !== undefined) s += String.fromCharCode(b);
+  }
+  return btoa(s);
+}
+
+interface SungrowEnvelope<T> {
+  result_code: string | number;
+  result_msg?: string;
+  result_data?: T;
+}
+
+async function sungrowPost<T>(
+  base: string,
+  path: string,
+  accessKey: string,
+  body: Record<string, unknown>,
+  token?: string,
+): Promise<SungrowEnvelope<T>> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json;charset=UTF-8',
+    'x-access-key': accessKey,
+    sys_code: '901',
+  };
+  if (token) headers.token = token;
+  const res = await fetch(`${base.replace(/\/$/, '')}${path}`, {
+    method: 'POST', headers, body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Sungrow HTTP ${res.status} from ${path}`);
+  return await res.json() as SungrowEnvelope<T>;
+}
+
+interface SungrowEnv {
+  appkey: string;
+  secret: string;       // SecretKey — x-access-key value
+  username: string;
+  password: string;
+  rsaPublicKey: string;
+  apiBase: string;
+}
+
+async function sungrowLogin(env: SungrowEnv): Promise<string> {
+  const op = '[sungrowLogin]';
+  const encryptedPassword = await sungrowRsaEncrypt(env.password, env.rsaPublicKey);
+  const body = await sungrowPost<{ token?: string; user_id?: string | number }>(
+    env.apiBase, '/openapi/login', env.secret,
+    {
+      appkey: env.appkey,
+      user_account: env.username,
+      user_password: encryptedPassword,
+      login_type: '1',
+      sys_code: '901',
+    },
+  );
+  if (String(body.result_code) !== '1') {
+    throw new Error(`${op} ${body.result_msg ?? `result_code=${body.result_code}`}`);
+  }
+  const token = body.result_data?.token;
+  if (!token) throw new Error(`${op} no token in response`);
+  return token;
+}
+
+function parseSungrowDeviceTime(raw: unknown): string {
+  if (typeof raw !== 'string' || raw.length !== 14) return new Date().toISOString();
+  const y = raw.slice(0, 4), mo = raw.slice(4, 6), d = raw.slice(6, 8);
+  const h = raw.slice(8, 10), mi = raw.slice(10, 12), s = raw.slice(12, 14);
+  return new Date(`${y}-${mo}-${d}T${h}:${mi}:${s}+05:30`).toISOString();
+}
+
+function sungrowToNum(v: unknown): number | null {
+  if (v == null || v === '' || v === '--') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 async function fetchSungrowReading(
-  apiKey: string,
-  oauthToken: string,
-  apiBase: string,
+  env: SungrowEnv,
+  token: string,
   inv: InverterDue,
 ): Promise<NormalizedReading> {
   const op = '[fetchSungrowReading]';
+  if (!inv.monitoring_site_id) throw new Error('Sungrow: monitoring_site_id required');
+  if (!inv.monitoring_device_id) throw new Error('Sungrow: monitoring_device_id required');
 
-  if (!inv.monitoring_site_id) {
-    throw new Error('Sungrow: monitoring_site_id (ps_id) is required');
-  }
-  if (!inv.monitoring_device_id) {
-    throw new Error('Sungrow: monitoring_device_id (device_sn) is required');
-  }
-
-  const base = apiBase.replace(/\/$/, '');
-  const url = `${base}/openapi/getDeviceRealTimeData`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-access-key': apiKey,
-      Authorization: `Bearer ${oauthToken}`,
+  // monitoring_device_id stores the ps_key (`{ps_id}_{type}_{code}_{chnnl}`).
+  // Fall back to sn_list for bare serials.
+  const looksLikePsKey = inv.monitoring_device_id.includes('_');
+  const body = await sungrowPost<{
+    device_point_list?: Array<{ device_point?: Record<string, unknown> }>;
+    fail_ps_key_list?: string[];
+  }>(
+    env.apiBase, '/openapi/getDeviceRealTimeData', env.secret,
+    {
+      appkey: env.appkey,
+      token,
+      ps_key_list: looksLikePsKey ? [inv.monitoring_device_id] : undefined,
+      sn_list: looksLikePsKey ? undefined : [inv.monitoring_device_id],
+      device_type: 1,
+      point_id_list: SUNGROW_POINTS,
     },
-    body: JSON.stringify({
-      ps_id: inv.monitoring_site_id,
-      device_sn_list: [inv.monitoring_device_id],
-    }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Sungrow HTTP ${res.status} from getDeviceRealTimeData`);
-  }
-
-  const body = await res.json() as {
-    result_code: string | number;
-    result_msg?: string;
-    result_data?: { p_array?: Array<Record<string, unknown>> };
-  };
+    token,
+  );
 
   if (String(body.result_code) !== '1') {
     throw new Error(`Sungrow API error: ${body.result_msg ?? `result_code=${body.result_code}`}`);
   }
-
-  const arr = body.result_data?.p_array ?? [];
-  const row =
-    arr.find(r => String(r['device_sn']) === inv.monitoring_device_id) ?? arr[0];
-
-  if (!row) {
-    console.warn(`${op} p_array empty for device ${inv.monitoring_device_id} — skipping`);
-    return syntheticReading(inv.rated_capacity_kw); // fallback to synthetic when no data
+  const list = body.result_data?.device_point_list ?? [];
+  const fail = body.result_data?.fail_ps_key_list ?? [];
+  if (list.length === 0 || fail.length > 0) {
+    console.warn(`${op} no data for ${inv.monitoring_device_id}; fail=${JSON.stringify(fail)}`);
+    return syntheticReading(inv.rated_capacity_kw);
   }
 
-  // Sungrow sends "YYYY-MM-DD HH:MM:SS" in IST (no TZ info). Append +05:30.
-  const updateTimeRaw = typeof row['update_time'] === 'string' ? row['update_time'] : null;
-  const recordedAt = updateTimeRaw
-    ? new Date(updateTimeRaw.replace(' ', 'T') + '+05:30').toISOString()
-    : new Date().toISOString();
-
+  const point = list[0]?.device_point ?? {};
   return {
-    recorded_at: recordedAt,
-    ac_power_kw: row['p_kw'] != null ? Number(row['p_kw']) : null,
-    dc_power_kw: row['dc_p_kw'] != null ? Number(row['dc_p_kw']) : null,
-    ac_voltage_v: row['grid_v'] != null ? Number(row['grid_v']) : null,
-    ac_current_a: row['grid_a'] != null ? Number(row['grid_a']) : null,
-    ac_frequency_hz: row['grid_freq'] != null ? Number(row['grid_freq']) : null,
-    temperature_c: row['t_inverter'] != null ? Number(row['t_inverter']) : null,
-    energy_today_kwh: row['today_energy_kwh'] != null ? Number(row['today_energy_kwh']) : null,
-    energy_total_kwh: row['total_energy_kwh'] != null ? Number(row['total_energy_kwh']) : null,
-    status: mapSungrowStatus(row['device_status'] != null ? String(row['device_status']) : undefined),
-    error_code: row['fault_code'] != null ? String(row['fault_code']) : null,
-    raw_payload: row,
+    recorded_at: parseSungrowDeviceTime(point['device_time']),
+    ac_power_kw: sungrowToNum(point['p83022']),
+    dc_power_kw: sungrowToNum(point['p83020']),
+    ac_voltage_v: null,
+    ac_current_a: null,
+    ac_frequency_hz: sungrowToNum(point['p83036']),
+    temperature_c: sungrowToNum(point['p83097']),
+    energy_today_kwh: sungrowToNum(point['p83025']),
+    energy_total_kwh: sungrowToNum(point['p83033']),
+    status: mapSungrowStatus(point['dev_status'] != null ? String(point['dev_status']) : undefined),
+    error_code: point['dev_fault_status'] != null ? String(point['dev_fault_status']) : null,
+    raw_payload: point,
   };
 }
 
@@ -612,8 +699,23 @@ Deno.serve(async (_req: Request) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   // @ts-expect-error — Deno.env
   const syntheticMode = Deno.env.get('SYNTHETIC_INVERTER_READINGS') === '1';
-  // @ts-expect-error — Deno.env
-  const sungrowAppKey = Deno.env.get('SUNGROW_APPKEY') ?? '';
+  const sungrowEnv: SungrowEnv = {
+    // @ts-expect-error — Deno.env
+    appkey: Deno.env.get('SUNGROW_APPKEY') ?? '',
+    // @ts-expect-error — Deno.env
+    secret: Deno.env.get('SUNGROW_SECRET') ?? '',
+    // @ts-expect-error — Deno.env
+    username: Deno.env.get('SUNGROW_USERNAME') ?? '',
+    // @ts-expect-error — Deno.env
+    password: Deno.env.get('SUNGROW_PASSWORD') ?? '',
+    // @ts-expect-error — Deno.env
+    rsaPublicKey: Deno.env.get('SUNGROW_RSA_PUBLIC_KEY') ?? '',
+    // @ts-expect-error — Deno.env
+    apiBase: Deno.env.get('SUNGROW_BASE_URL') ?? 'https://gateway.isolarcloud.com.hk',
+  };
+  // Lazy-fetched Sungrow session token — populated on first Sungrow inverter
+  // in this poll cycle, reused for all subsequent Sungrow inverters.
+  let sungrowToken: string | null = null;
 
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -689,35 +791,19 @@ Deno.serve(async (_req: Request) => {
           growattSessions,
         );
       } else if (inv.brand === 'sungrow') {
-        // Master credentials row with config JSONB containing OAuth token
-        if (!inv.monitoring_credentials_id) {
-          console.warn(`${op} inverter ${inv.id} (sungrow): no monitoring_credentials_id; skipping`);
+        // Direct-login: all 14 Shiroi-owned Sungrow plants live under
+        // Manivel's iSolarCloud account. One /openapi/login per poll cycle
+        // gives us a session token good for hours; cache it in-process and
+        // reuse for every Sungrow inverter in the batch.
+        if (!sungrowEnv.appkey || !sungrowEnv.secret || !sungrowEnv.username) {
+          console.warn(`${op} inverter ${inv.id} (sungrow): SUNGROW_* env vars not configured; skipping`);
           continue;
         }
-        const { data: imc, error: imcErr } = await supabase
-          .from('inverter_monitoring_credentials')
-          .select('config')
-          .eq('id', inv.monitoring_credentials_id)
-          .maybeSingle();
-
-        if (imcErr) {
-          throw new Error(`inverter_monitoring_credentials query failed: ${imcErr.message}`);
+        if (!sungrowToken) {
+          sungrowToken = await sungrowLogin(sungrowEnv);
+          console.log(`${op} sungrow logged in: token=${sungrowToken.slice(0, 12)}…`);
         }
-
-        const config = (imc?.config ?? {}) as Record<string, string | null>;
-        if (config['oauth_status'] !== 'authorized' || !config['access_token']) {
-          console.warn(
-            `${op} inverter ${inv.id} (sungrow): oauth_status=${config['oauth_status'] ?? 'null'} / access_token=${config['access_token'] ? 'present' : 'missing'}; skipping until authorized`,
-          );
-          continue;
-        }
-
-        reading = await fetchSungrowReading(
-          sungrowAppKey,
-          config['access_token'],
-          config['api_base'] ?? 'https://gateway.isolarcloud.com.hk',
-          inv,
-        );
+        reading = await fetchSungrowReading(sungrowEnv, sungrowToken, inv);
       } else if (inv.brand === 'solarman') {
         reading = await fetchSolarmanReading(inv);
       } else if (inv.brand === 'goodwe') {
