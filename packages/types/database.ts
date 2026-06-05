@@ -17019,6 +17019,392 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: number
       }
+      search_companies: {
+        Args: {
+          p_dir?: string
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_segment?: string
+          p_sort?: string
+        }
+        Returns: {
+          city: string
+          created_at: string
+          gstin: string
+          id: string
+          industry: string
+          name: string
+          owner_id: string
+          segment: string
+          state: string
+          total_count: number
+        }[]
+      }
+      search_contacts: {
+        Args: {
+          p_dir?: string
+          p_lifecycle_stage?: string
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_sort?: string
+        }
+        Returns: {
+          contact_company_roles: Json
+          created_at: string
+          designation: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          lifecycle_stage: string
+          name: string
+          phone: string
+          total_count: number
+        }[]
+      }
+      search_contacts_lite: {
+        Args: { p_limit?: number; p_query?: string }
+        Returns: {
+          email: string
+          id: string
+          name: string
+          phone: string
+        }[]
+      }
+      search_inventory_stock_pieces: {
+        Args: {
+          p_category?: string
+          p_condition?: string
+          p_is_cut_length?: boolean
+          p_is_scrap?: boolean
+          p_limit?: number
+          p_location?: string
+          p_offset?: number
+          p_project_id?: string
+          p_query?: string
+        }
+        Returns: {
+          brand: string
+          condition: string
+          created_at: string
+          current_length_m: number
+          current_location: string
+          dc_item_id: string
+          grn_id: string
+          id: string
+          installed_at: string
+          installed_at_project_id: string
+          installed_by: string
+          is_cut_length: boolean
+          is_scrap: boolean
+          item_category: string
+          item_description: string
+          minimum_usable_length_m: number
+          model: string
+          notes: string
+          original_length_m: number
+          project_customer_name: string
+          project_id: string
+          project_number: string
+          purchase_order_id: string
+          scrap_reason: string
+          scrapped_at: string
+          serial_number: string
+          unit_cost: number
+          updated_at: string
+          warehouse_location: string
+        }[]
+      }
+      search_invoices: {
+        Args: { p_limit?: number; p_query?: string; p_status?: string }
+        Returns: {
+          ack_date: string
+          ack_number: string
+          amount_outstanding: number
+          amount_paid: number
+          attribution_status: string
+          created_at: string
+          customer_name: string
+          description: string
+          due_date: string
+          e_invoice_error: string
+          e_invoice_status: string
+          erp_created: boolean
+          escalation_level: number
+          excluded_from_cash: boolean
+          gst_supply_amount: number
+          gst_works_amount: number
+          id: string
+          invoice_date: string
+          invoice_number: string
+          invoice_type: string
+          irn: string
+          last_escalated_at: string
+          legal_flagged: boolean
+          legal_flagged_at: string
+          milestone_name: string
+          notes: string
+          paid_at: string
+          payment_schedule_id: string
+          pdf_storage_path: string
+          project_id: string
+          project_number: string
+          proposal_id: string
+          raised_by: string
+          sent_at: string
+          sent_via: string
+          signed_qr_code: string
+          source: string
+          status: string
+          subtotal_supply: number
+          subtotal_works: number
+          tax_amount: number
+          total_amount: number
+          zoho_customer_gst_treatment: string
+          zoho_customer_id: string
+          zoho_customer_name: string
+          zoho_invoice_id: string
+        }[]
+      }
+      search_leads_by_query: {
+        Args: {
+          p_archived_only?: boolean
+          p_assigned_to?: string
+          p_close_from?: string
+          p_close_to?: string
+          p_dir?: string
+          p_exclude_converted?: boolean
+          p_external_partner_ids?: string[]
+          p_include_archived?: boolean
+          p_kwp_max?: number
+          p_kwp_min?: number
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_referred_by_clients?: boolean
+          p_referrer_id?: string
+          p_referrer_ids?: string[]
+          p_segment?: string
+          p_sort?: string
+          p_source?: string
+          p_statuses?: string[]
+        }
+        Returns: {
+          address_line1: string
+          ai_score: number
+          ai_score_reason: string
+          assigned_to: string
+          assigned_to_name: string
+          city: string
+          close_probability: number
+          created_at: string
+          customer_name: string
+          email: string
+          estimated_size_kwp: number
+          expected_close_date: string
+          id: string
+          is_archived: boolean
+          is_qualified: boolean
+          next_followup_date: string
+          phone: string
+          pincode: string
+          referrer_is_internal: boolean
+          referrer_name: string
+          segment: string
+          source: string
+          state: string
+          status: string
+          total_count: number
+          weighted_value: number
+        }[]
+      }
+      search_partners: {
+        Args: {
+          p_is_active?: boolean
+          p_limit?: number
+          p_offset?: number
+          p_partner_type?: string
+          p_query?: string
+        }
+        Returns: {
+          agreement_end_date: string
+          agreement_start_date: string
+          agreement_storage_path: string
+          annual_commission_ytd: number
+          bank_account_number: string
+          bank_ifsc: string
+          commission_rate: number
+          commission_type: string
+          contact_person: string
+          created_at: string
+          default_commission_pct: number
+          deleted_at: string
+          email: string
+          id: string
+          is_active: boolean
+          is_internal: boolean
+          leads_converted_count: number
+          leads_referred_count: number
+          lifetime_commission: number
+          lifetime_referrals: number
+          pan_number: string
+          partner_name: string
+          partner_type: string
+          phone: string
+          portal_token: string
+          tds_applicable: boolean
+          total_commission_paid: number
+          total_count: number
+          updated_at: string
+          whatsapp: string
+        }[]
+      }
+      search_payments: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_type?: string
+        }
+        Returns: {
+          amount: number
+          bank_name: string
+          cheque_date: string
+          created_at: string
+          customer_name: string
+          id: string
+          invoice_id: string
+          is_advance: boolean
+          notes: string
+          payment_date: string
+          payment_method: string
+          payment_reference: string
+          project_id: string
+          project_number: string
+          receipt_number: string
+          receipt_pdf_path: string
+          recorded_by: string
+        }[]
+      }
+      search_plant_monitoring_credentials: {
+        Args: {
+          p_brand?: string
+          p_limit?: number
+          p_offset?: number
+          p_project_id?: string
+          p_query?: string
+        }
+        Returns: {
+          commissioning_report_id: string
+          created_at: string
+          created_by: string
+          deleted_at: string
+          deleted_by: string
+          id: string
+          inverter_brand: string
+          notes: string
+          password: string
+          portal_url: string
+          project_customer_name: string
+          project_id: string
+          project_number: string
+          total_count: number
+          updated_at: string
+          updated_by: string
+          username: string
+        }[]
+      }
+      search_projects_for_duplicate_pick: {
+        Args: { p_exclude_id: string; p_limit?: number; p_query: string }
+        Returns: {
+          customer_name: string
+          id: string
+          project_number: string
+          system_size_kwp: number
+        }[]
+      }
+      search_projects_for_orphan_attribution: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          actual_end_date: string
+          actual_start_date: string
+          contracted_value: number
+          customer_name: string
+          id: string
+          project_number: string
+          status: Database["public"]["Enums"]["project_status"]
+          system_size_kwp: number
+          system_type: string
+        }[]
+      }
+      search_projects_for_review: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_tab: string
+        }
+        Returns: {
+          contracted_value: number
+          created_at: string
+          customer_name: string
+          hubspot_deal_id: string
+          id: string
+          lead_id: string
+          notes: string
+          project_number: string
+          proposal_financials_invalidated: boolean
+          proposal_id: string
+          proposal_notes: string
+          proposal_system_size_uncertain: boolean
+          review_status: string
+          system_size_kwp: number
+          total_count: number
+        }[]
+      }
+      search_proposals: {
+        Args: {
+          p_dir?: string
+          p_is_budgetary?: boolean
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_sort?: string
+          p_status?: string
+          p_system_type?: string
+        }
+        Returns: {
+          created_at: string
+          gross_margin_pct: number
+          id: string
+          is_budgetary: boolean
+          lead_customer_name: string
+          lead_id: string
+          lead_phone: string
+          margin_approval_required: boolean
+          margin_approved_by: string
+          proposal_number: string
+          revision_number: number
+          status: Database["public"]["Enums"]["proposal_status"]
+          system_size_kwp: number
+          system_type: Database["public"]["Enums"]["system_type"]
+          total_after_discount: number
+          total_count: number
+          valid_until: string
+        }[]
+      }
+      search_vendors: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          company_name: string
+          contact_person: string
+          email: string
+          id: string
+          phone: string
+        }[]
+      }
       undo_project_review: {
         Args: { p_made_by: string; p_project_id: string }
         Returns: {
