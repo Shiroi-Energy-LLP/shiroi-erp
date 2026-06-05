@@ -1,17 +1,17 @@
 {
-  "name": "60 — Inverter poll cron (every 5 min)",
+  "name": "60 — Inverter poll cron (every 5 min, daylight only 05-19 IST)",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "*/5 * * * *" }
+            { "field": "cronExpression", "expression": "*/5 5-19 * * *" }
           ]
         },
         "timezone": "Asia/Kolkata"
       },
       "id": "node-cron",
-      "name": "Every 5 minutes",
+      "name": "Every 5 min (05-19 IST)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [0, 300]
@@ -19,7 +19,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/functions/v1/inverter-poll",
+        "url": "https://actqtzoxjilqnldnacqz.supabase.co/functions/v1/inverter-poll",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {

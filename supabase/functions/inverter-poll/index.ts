@@ -441,6 +441,96 @@ async function growattGetDeviceList(
   return json.deviceList ?? [];
 }
 
+/**
+ * Installer-token polling via Growatt V1 OpenAPI.
+ *
+ * 2026-06-05: Shiroi received a working installer token tied to EEVUWE. The
+ * token sees every plant under the installer (23 plants confirmed end-to-end).
+ *
+ * The polling call is /v1/plant/data?plant_id=X — one call returns aggregate
+ * plant readings (current_power, today_energy, total_energy). Most of our
+ * plants have a single inverter, so the plant-level reading IS the inverter
+ * reading. Multi-inverter plants will require a follow-up to split.
+ *
+ * Rate limit: Growatt returns error_code=10012 (error_frequently_access) when
+ * called too quickly. We sleep 600ms between calls when this branch is hit.
+ *
+ * SYNC WITH packages/inverter-adapters/src/growatt.ts
+ */
+async function fetchGrowattReadingViaInstallerToken(
+  token: string,
+  apiBase: string,
+  inv: InverterDue,
+): Promise<NormalizedReading> {
+  const op = '[fetchGrowattReadingViaInstallerToken]';
+  if (!inv.monitoring_site_id) {
+    throw new Error('Growatt installer-token: monitoring_site_id (plantId) is required');
+  }
+
+  const base = (apiBase || 'https://openapi.growatt.com').replace(/\/$/, '');
+  const url = `${base}/v1/plant/data?plant_id=${encodeURIComponent(inv.monitoring_site_id)}`;
+  const res = await fetch(url, { headers: { token } });
+  if (!res.ok) {
+    throw new Error(`Growatt installer-token HTTP ${res.status} for plant ${inv.monitoring_site_id}`);
+  }
+  const body = (await res.json()) as {
+    error_code?: number;
+    error_msg?: string;
+    data?: {
+      current_power?: number | string;
+      today_energy?: string;
+      total_energy?: string;
+      monthly_energy?: string;
+      yearly_energy?: string;
+      last_update_time?: string;
+      peak_power_actual?: number;
+      carbon_offset?: string;
+    };
+  };
+  if (body.error_code && body.error_code !== 0) {
+    throw new Error(`Growatt installer-token error_code=${body.error_code} msg=${body.error_msg ?? '?'} plant=${inv.monitoring_site_id}`);
+  }
+  const d = body.data ?? {};
+
+  // current_power is returned in kW (numeric or string)
+  const acPowerKw = d.current_power != null ? Number(d.current_power) : NaN;
+  // today_energy and total_energy in kWh as strings
+  const todayKwh = d.today_energy != null ? parseFloat(d.today_energy) : NaN;
+  const totalKwh = d.total_energy != null ? parseFloat(d.total_energy) : NaN;
+
+  // last_update_time is "YYYY-MM-DD HH:MM:SS" in plant's local timezone (IST for us)
+  // — append +05:30 so toISOString yields correct UTC. If absent, use now().
+  let recordedAt = new Date().toISOString();
+  if (typeof d.last_update_time === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(d.last_update_time)) {
+    recordedAt = new Date(d.last_update_time.replace(' ', 'T') + '+05:30').toISOString();
+  }
+
+  // Status: derive from current_power. Real fault/derated detection requires
+  // per-device endpoint; plant-level only distinguishes producing from not.
+  const status: NormalizedStatus | null = isNaN(acPowerKw)
+    ? null
+    : acPowerKw > 0
+      ? 'active'
+      : 'offline';
+
+  console.log(`${op} plant=${inv.monitoring_site_id} ac=${acPowerKw}kW today=${todayKwh}kWh total=${totalKwh}kWh updated=${d.last_update_time ?? '?'}`);
+
+  return {
+    recorded_at: recordedAt,
+    ac_power_kw: isNaN(acPowerKw) ? null : acPowerKw,
+    dc_power_kw: null,
+    ac_voltage_v: null,
+    ac_current_a: null,
+    ac_frequency_hz: null,
+    temperature_c: null,
+    energy_today_kwh: isNaN(todayKwh) ? null : todayKwh,
+    energy_total_kwh: isNaN(totalKwh) ? null : totalKwh,
+    status,
+    error_code: null,
+    raw_payload: d as Record<string, unknown>,
+  };
+}
+
 async function fetchGrowattReading(
   username: string,
   password: string,
@@ -689,7 +779,7 @@ async function fetchGoodweReading(inv: InverterDue): Promise<NormalizedReading> 
 // ─── Main handler ──────────────────────────────────────────────────────────
 
 // @ts-expect-error — Deno global
-Deno.serve(async (_req: Request) => {
+Deno.serve(async (req: Request) => {
   const op = '[inverter-poll]';
   const startedAt = Date.now();
 
@@ -697,6 +787,19 @@ Deno.serve(async (_req: Request) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   // @ts-expect-error — Deno.env
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  // Internal auth: this function is deployed with verify_jwt=false because the
+  // sb_secret_* keys (new Supabase auth) aren't valid JWTs. Instead, require
+  // the caller's Authorization header to match the service role key directly.
+  // Same pattern as process-document Edge Function (CHANGELOG 2026-05-31).
+  const auth = req.headers.get('Authorization') ?? '';
+  if (auth !== `Bearer ${serviceKey}`) {
+    console.warn(`${op} unauthorized call — Authorization header missing or mismatched`);
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   // @ts-expect-error — Deno.env
   const syntheticMode = Deno.env.get('SYNTHETIC_INVERTER_READINGS') === '1';
   const sungrowEnv: SungrowEnv = {
@@ -767,29 +870,53 @@ Deno.serve(async (_req: Request) => {
         // Force synthetic regardless of brand (for testing the pipeline)
         reading = syntheticReading(inv.rated_capacity_kw ?? 5);
       } else if (inv.brand === 'growatt') {
-        // Per-customer credentials from plant_monitoring_credentials
-        const { data: pc, error: pcErr } = await supabase
-          .from('plant_monitoring_credentials')
-          .select('username, password')
-          .eq('project_id', inv.project_id)
-          .eq('inverter_brand', 'growatt')
-          .is('deleted_at', null)
-          .maybeSingle();
-
-        if (pcErr) {
-          throw new Error(`plant_monitoring_credentials query failed: ${pcErr.message}`);
+        // 2026-06-05: Growatt has two parallel modes. We prefer the V1 OpenAPI
+        // installer-token mode when monitoring_credentials_id points at a master
+        // row carrying an installer_token; that covers 16 of 19 current rows
+        // (all EEVUWE-tagged plants). The remaining 3 outliers (Cee bros + AL
+        // Sekhar) fall back to per-customer login against the legacy endpoints.
+        let usedInstallerToken = false;
+        if (inv.monitoring_credentials_id) {
+          const { data: imc, error: imcErr } = await supabase
+            .from('inverter_monitoring_credentials')
+            .select('config')
+            .eq('id', inv.monitoring_credentials_id)
+            .maybeSingle();
+          if (imcErr) {
+            throw new Error(`inverter_monitoring_credentials query failed: ${imcErr.message}`);
+          }
+          const config = (imc?.config ?? {}) as Record<string, string | null>;
+          if (config['auth_mode'] === 'installer_token' && config['installer_token']) {
+            reading = await fetchGrowattReadingViaInstallerToken(
+              config['installer_token'],
+              config['api_base'] ?? 'https://openapi.growatt.com',
+              inv,
+            );
+            usedInstallerToken = true;
+            // Polite gap between installer-token calls to stay below the
+            // V1 OpenAPI rate cap (error_code 10012 — error_frequently_access).
+            await new Promise((r) => setTimeout(r, 600));
+          }
         }
-        if (!pc) {
-          console.warn(`${op} inverter ${inv.id} (growatt): no plant_monitoring_credentials row for project ${inv.project_id}; skipping`);
-          continue;
-        }
 
-        reading = await fetchGrowattReading(
-          pc.username,
-          pc.password,
-          inv,
-          growattSessions,
-        );
+        if (!usedInstallerToken) {
+          // Per-customer credentials from plant_monitoring_credentials
+          const { data: pc, error: pcErr } = await supabase
+            .from('plant_monitoring_credentials')
+            .select('username, password')
+            .eq('project_id', inv.project_id)
+            .eq('inverter_brand', 'growatt')
+            .is('deleted_at', null)
+            .maybeSingle();
+          if (pcErr) {
+            throw new Error(`plant_monitoring_credentials query failed: ${pcErr.message}`);
+          }
+          if (!pc) {
+            console.warn(`${op} inverter ${inv.id} (growatt): no installer-token cred AND no plant_monitoring_credentials row; skipping`);
+            continue;
+          }
+          reading = await fetchGrowattReading(pc.username, pc.password, inv, growattSessions);
+        }
       } else if (inv.brand === 'sungrow') {
         // Direct-login: all 14 Shiroi-owned Sungrow plants live under
         // Manivel's iSolarCloud account. One /openapi/login per poll cycle
