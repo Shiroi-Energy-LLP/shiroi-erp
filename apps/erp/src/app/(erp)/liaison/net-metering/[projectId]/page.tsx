@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getNetMeteringApplication, getLiaisonDocuments, getLiaisonObjections } from '@/lib/liaison-queries';
 import { NetMeteringDetail } from '@/components/liaison/net-metering-detail';
+import { AwaitingClientToggle } from '@/components/liaison/awaiting-client-toggle';
+import { ObjectionForm } from '@/components/liaison/objection-form';
 import { formatDate } from '@repo/ui/formatters';
 import {
   Card, CardHeader, CardTitle, CardContent, Badge, Button,
@@ -39,10 +41,32 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
             {project?.system_size_kwp} kWp {project?.system_type?.replace(/_/g, ' ')} · {project?.site_city}
           </p>
         </div>
-        <Link href={`/projects/${projectId}`}>
-          <Button variant="outline" size="sm">View Project</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <AwaitingClientToggle
+            projectId={projectId}
+            isAwaiting={Boolean((application as any).awaiting_client_details)}
+            currentNote={(application as any).awaiting_client_note ?? null}
+          />
+          <Link href={`/projects/${projectId}`}>
+            <Button variant="outline" size="sm">View Project</Button>
+          </Link>
+        </div>
       </div>
+
+      {/* Awaiting-client banner (visible when flag is on) */}
+      {(application as any).awaiting_client_details && (
+        <div className="flex items-start gap-2 rounded-md border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-sm text-[#92400E]">
+          <span className="font-medium">Awaiting client</span>
+          {(application as any).awaiting_client_note && (
+            <span className="text-[#92400E]/80">— {(application as any).awaiting_client_note}</span>
+          )}
+          {(application as any).awaiting_client_since && (
+            <span className="ml-auto text-xs text-[#92400E]/70">
+              Since {formatDate((application as any).awaiting_client_since)}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Editable status panels */}
       <NetMeteringDetail
@@ -116,6 +140,7 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
               ))}
             </div>
           )}
+          <ObjectionForm projectId={projectId} netMeteringId={(application as any).id} />
         </CardContent>
       </Card>
     </div>
