@@ -41,7 +41,7 @@
     }
   ],
   "connections": {
-    "Every 5 minutes": {
+    "Every 5 min (05-19 IST)": {
       "main": [
         [{ "node": "POST inverter-poll Edge Function", "type": "main", "index": 0 }]
       ]

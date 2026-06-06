@@ -25,4 +25,6 @@ export * from './project-boq-actions';
 export * from './project-boq-pricing-actions';
 export * from './project-boq-procurement-actions';
 export * from './project-commissioning-actions';
+export * from './project-qc-actions';
 export * from './project-dc-actions';
+export * from './project-milestone-actions';
