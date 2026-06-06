@@ -16,6 +16,7 @@ import { ColumnPicker } from './column-picker';
 import { ViewTabs } from './view-tabs';
 import type { ColumnDef } from './column-config';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
+import { LeadScoreBadge } from '@/components/leads/lead-score-badge';
 import type { Database } from '@repo/types/database';
 
 // ── Formatters ──
@@ -418,6 +419,13 @@ export function DataTable({
           <span className={pillClass}>{isInternal ? 'VIP' : 'Customer'}</span>
         </span>
       );
+    }
+
+    // AI lead score — uses LeadScoreBadge (0-30 gray / 31-60 yellow /
+    // 61-85 green / 86-100 red "HOT"). Renders "—" placeholder for null.
+    if (col.key === 'ai_score') {
+      const num = val == null ? null : Number(val);
+      return <LeadScoreBadge score={Number.isFinite(num) ? num : null} />;
     }
 
     // Link field — always links to detail page
