@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { getUserProfile } from '@/lib/auth';
 import { getPMDashboardData } from '@/lib/pm-queries';
+import { getProjectsWithNoReportToday } from '@/lib/dashboard-queries';
 import { KpiCard } from '@/components/kpi-card';
 import { MyTasks } from '@/components/my-tasks';
 import { PMDonutChart } from '@/components/dashboard/pm-donut-chart';
@@ -24,7 +26,10 @@ export async function PMDashboard() {
   const profile = await getUserProfile();
   if (!profile) return null;
 
-  const data = await getPMDashboardData(profile.id);
+  const [data, projectsMissingReport] = await Promise.all([
+    getPMDashboardData(profile.id),
+    getProjectsWithNoReportToday(),
+  ]);
   const firstName = profile.full_name?.split(' ')[0] ?? 'there';
   const greeting = getGreeting();
 
@@ -36,7 +41,7 @@ export async function PMDashboard() {
 
       <DataReviewBanner />
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <KpiCard
           label="Total System Size"
           value={data.totalSystemSizeKwp.toFixed(1)}
@@ -59,6 +64,14 @@ export async function PMDashboard() {
           icon="BarChart3"
           subNote={data.avgProfitPct === 0 ? 'No cost data yet' : undefined}
         />
+        <Link href="/daily-reports" className="block">
+          <KpiCard
+            label="No Report Today"
+            value={projectsMissingReport.length}
+            subNote={projectsMissingReport.length === 0 ? 'All caught up' : 'Active projects'}
+            icon="FileText"
+          />
+        </Link>
       </div>
 
       <div className="grid grid-cols-3 gap-6">

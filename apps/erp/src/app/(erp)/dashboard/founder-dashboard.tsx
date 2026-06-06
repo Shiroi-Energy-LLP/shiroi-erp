@@ -4,6 +4,7 @@ import {
   getZohoSyncHealth,
   daysUntilPayroll,
 } from '@/lib/dashboard-queries';
+import { countPendingClosureApprovals } from '@/lib/closure-queries';
 import {
   getCachedPipelineSummary,
   getCachedCompanyCashSummary,
@@ -49,6 +50,7 @@ export async function FounderDashboard() {
     expectedOrdersMonth,
     expectedPaymentsWeek,
     expectedPaymentsMonth,
+    pendingClosureCount,
   ] = await Promise.all([
     getCashNegativeProjects(),
     getCachedPipelineSummary(),
@@ -62,6 +64,7 @@ export async function FounderDashboard() {
     getExpectedOrders(30),
     getExpectedPayments(7),
     getExpectedPayments(30),
+    countPendingClosureApprovals(),
   ]);
 
   const orders = splitWeekAndMonthOnly(
@@ -89,7 +92,7 @@ export async function FounderDashboard() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <KpiCard
           label="Cash Invested"
           value={shortINR(parseFloat(cashSummary.totalInvestedCapital))}
@@ -114,6 +117,14 @@ export async function FounderDashboard() {
           subNote="Missing today"
           icon="FileText"
         />
+        <Link href="/sales?status=closure_soon" className="block">
+          <KpiCard
+            label="Pending Closure Approvals"
+            value={pendingClosureCount}
+            subNote={pendingClosureCount === 0 ? 'None awaiting' : 'Awaiting founder OK'}
+            icon="CheckCircle"
+          />
+        </Link>
       </div>
 
       {/* Pending amber-band closure approvals - self-hides when empty */}
