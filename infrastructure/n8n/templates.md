@@ -21,6 +21,76 @@ Audiences: `emp` (employee), `cust` (customer), `vendor`, `digest`.
 
 ---
 
+## Generic internal alert carrier (UTILITY)
+
+> **Why a generic carrier?** Meta template quota is finite, so every internal
+> handoff (#01–#18), digest (#19–#28) and infra alert (#55/#56/#58) rides one
+> generic template rather than ~30 bespoke ones. The n8n Send nodes compose the
+> real message text in JS, then split it into the slots below.
+
+### `erp_alert` — DEPRECATED (single-blob, 2 slots)
+
+The original carrier: `Hi from Shiroi Energy\n\n{{1}}\n\n{{2}}\n\nThank you.`
+`{{1}}` = title, `{{2}}` = the entire rest of the message. **Problem:** Meta
+forbids newline/tab/4+ space characters inside parameter VALUES (error
+`#132000`, tightened Jan 2025), so the whole body collapsed onto a single
+` · ` line — unreadable for multi-section digests. Superseded by `erp_alert_v2`.
+Leave it approved/live until every workflow is re-pushed.
+
+### `erp_alert_v2` — multi-paragraph carrier (4 slots)
+
+**Category:** Utility
+**Purpose:** Generic carrier for all internal notifications + digests. Replaces
+`erp_alert`. The blank lines between slots live in the STATIC template body
+(the only place Meta allows line breaks), so each logical section renders as its
+own paragraph.
+**Status:** PENDING Meta approval — submit before re-pushing workflows #01–#58.
+
+**Body:**
+```
+Hi from Shiroi Energy
+
+{{1}}
+
+{{2}}
+
+{{3}}
+
+{{4}}
+
+Thank you.
+```
+
+**Footer:** Shiroi Energy ERP
+
+**Slot mapping (handled automatically by the n8n Send nodes):**
+1. `{{1}}` — title / headline line.
+2. `{{2}}` — body paragraph 1.
+3. `{{3}}` — body paragraph 2.
+4. `{{4}}` — body paragraph 3 (any remaining paragraphs joined with ` · `).
+
+The Send node takes the composed message (or `title` + `body`), splits it on
+blank lines (`\n\n`) into paragraphs, flattens any inner single newlines to
+` · `, and packs the paragraphs into `{{1}}`–`{{4}}`. Empty trailing slots fall
+back to a single space (Meta requires non-empty values).
+
+**Hard limit to remember:** a single parameter value still cannot contain a
+newline, so list ITEMS inside one section stay ` · `-separated on one line.
+Per-item line breaks are only possible with free-form (non-template) messages,
+which deliver only inside a 24-hour reply window — unsuitable for scheduled
+digests. Paragraph-per-section is the best a template can do.
+
+**Example variables (morning digest):**
+1. `🌅 Morning summary — Sat, 06 Jun 2026`
+2. `*New leads (24h):* 4 · 1. Senthan · chennai · 5kWp · 2. Geeyam · chennai · 4kWp`
+3. `*Tasks done (24h):* 3 · 1. site survey · 2. proposal sent · 3. Garima email`
+4. `*Activities logged (24h):* 0 · (none logged) · Open: https://erp.shiroienergy.com`
+
+The transform lives in `scripts/upgrade-n8n-whatsapp-paragraphs.ts` (idempotent;
+re-run after editing any Send node).
+
+---
+
 ## Internal / employee-facing (UTILITY)
 
 ### `shiroi_emp_lead_assigned`
