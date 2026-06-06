@@ -261,7 +261,7 @@ export function LeadForm({ partners = [] }: LeadFormProps) {
             onChange={(id) => setForm((prev) => ({ ...prev, channel_partner_id: id }))}
           />
           <p className="text-xs text-n-500">
-            Optional. Pick &quot;Vivek Sridhar (Founder)&quot; or &quot;Management Referral&quot; for VIP-track leads.
+            Optional. Pick &quot;Vivek Sridhar (Founder)&quot; or &quot;Management Referral&quot; for MGMT REF leads.
           </p>
 
           {/* Optional fields */}

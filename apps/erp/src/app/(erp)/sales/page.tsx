@@ -191,11 +191,11 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
 
   // Build referrer CELL-EDIT dropdown options (used by the inline-edit select
   // in the Referrer column on each row). No sentinel values — just a "no
-  // referrer" empty choice, then VIP-prefixed internal partners, then
+  // referrer" empty choice, then MGMT REF-prefixed internal partners, then
   // external ones. Translates to channel_partner_id on save in the wrapper.
   const partnerCellOptions: { value: string; label: string }[] = [
     { value: '', label: '— No referrer —' },
-    ...internalReferrers.map((r) => ({ value: r.id, label: `[VIP] ${r.partner_name}` })),
+    ...internalReferrers.map((r) => ({ value: r.id, label: `[MGMT REF] ${r.partner_name}` })),
     ...externalReferrers.map((r) => ({ value: r.id, label: r.partner_name })),
   ];
 

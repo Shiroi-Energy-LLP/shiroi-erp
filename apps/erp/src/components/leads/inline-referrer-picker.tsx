@@ -18,8 +18,8 @@ interface InlineReferrerPickerProps {
  * Lead Details card as a compact <select> that fires the server action on
  * change (debounced via a useTransition hook so quick clicks don't double-fire).
  *
- * The label "VIP" is appended inline to internal-partner options so users can
- * see at a glance which choice means Vivek/Management.
+ * The label "MGMT REF" is appended inline to internal-partner options so users
+ * can see at a glance which choice means Vivek/Management.
  */
 export function InlineReferrerPicker({
   leadId,
@@ -68,10 +68,10 @@ export function InlineReferrerPicker({
     >
       <option value="">— No referrer —</option>
       {internal.length > 0 && (
-        <optgroup label="Internal (VIP)">
+        <optgroup label="Internal (MGMT REF)">
           {internal.map((p) => (
             <option key={p.id} value={p.id}>
-              [VIP] {p.partner_name}
+              [MGMT REF] {p.partner_name}
             </option>
           ))}
         </optgroup>
