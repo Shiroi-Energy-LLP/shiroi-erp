@@ -17,8 +17,8 @@ import { InvalidCredentialsError, AdapterError } from './base';
 // ─── Test fixtures ────────────────────────────────────────────────────────
 
 const VALID_CREDENTIALS = {
-  username: 'Block - C',
-  password: 'Fl0ur1sh@2026',
+  username: 'test-account',
+  password: 'TestPass@2026',
 };
 
 const VALID_INPUT = {
@@ -34,7 +34,7 @@ const LOGIN_SUCCESS_BODY = JSON.stringify({
     success: true,
     user: {
       id: 3563822,
-      accountName: 'Block - C',
+      accountName: 'test-account',
       rightlevel: 0,
     },
     msg: '',
@@ -48,7 +48,7 @@ const PLANT_LIST_BODY = JSON.stringify({
     data: [
       {
         plantId: '10467582',
-        plantName: 'Block - C',
+        plantName: 'test-account',
         currentPower: '0 W',
         todayEnergy: '15 kWh',
         totalEnergy: '12225.9 kWh',
@@ -250,11 +250,11 @@ describe('growattAdapter', () => {
       // First call is login: check that the body contains hashed password, not plaintext
       const loginCall = mockFetch.mock.calls[0]!;
       const loginBody = loginCall[1]?.body as string;
-      // 'Fl0ur1sh@2026' → MD5 = 72ea694989c3d2fa5f66ed36c303f918
-      // After c-substitution at even positions: 72ea694989c3d2fa5f66ed36c3c3f918
-      expect(loginBody).toContain('72ea694989c3d2fa5f66ed36c3c3f918');
+      // 'TestPass@2026' → MD5 = bd1a0956986c42ca5d52987cd4158c56
+      // After c-substitution at even positions: bd1ac956986c42ca5d52987cd4158c56
+      expect(loginBody).toContain('bd1ac956986c42ca5d52987cd4158c56');
       // Must NOT contain the plaintext password
-      expect(loginBody).not.toContain('Fl0ur1sh@2026');
+      expect(loginBody).not.toContain('TestPass@2026');
     });
 
     it('calls the login endpoint with POST and form-urlencoded content-type', async () => {
@@ -301,16 +301,16 @@ describe('growattAdapter', () => {
   describe('fetchReadings — unhappy paths', () => {
     it('throws AdapterError when device SN not found in plant device list', async () => {
       vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce(loginResponse({ back: { success: true, user: { id: 3563822, accountName: 'Block - C' } } }))
+        .mockResolvedValueOnce(loginResponse({ back: { success: true, user: { id: 3563822, accountName: 'test-account' } } }))
         .mockResolvedValueOnce(new Response(JSON.stringify({
-          back: { success: true, data: [{ id: 10467582, plantName: 'Block - C' }] },
+          back: { success: true, data: [{ id: 10467582, plantName: 'test-account' }] },
         }), { status: 200 }))
         .mockResolvedValueOnce(new Response(JSON.stringify({
           deviceList: [{ deviceSn: 'DIFFERENT_SN', deviceStatus: 1 }],
         }), { status: 200 })));
 
       await expect(growattAdapter.fetchReadings({
-        credentials: { username: 'Block - C', password: 'Fl0ur1sh@2026' },
+        credentials: { username: 'test-account', password: 'TestPass@2026' },
         monitoring_site_id: '10467582',
         monitoring_device_id: 'VJHRE4U03K',
         since: null,
@@ -323,7 +323,7 @@ describe('growattAdapter', () => {
         .mockRejectedValueOnce(new TypeError('fetch failed')));
 
       await expect(growattAdapter.fetchReadings({
-        credentials: { username: 'Block - C', password: 'Fl0ur1sh@2026' },
+        credentials: { username: 'test-account', password: 'TestPass@2026' },
         monitoring_site_id: '10467582',
         monitoring_device_id: 'VJHRE4U03K',
         since: null,
@@ -336,7 +336,7 @@ describe('growattAdapter', () => {
       ));
 
       await expect(growattAdapter.fetchReadings({
-        credentials: { username: 'Block - C', password: 'Fl0ur1sh@2026' },
+        credentials: { username: 'test-account', password: 'TestPass@2026' },
         monitoring_site_id: '10467582',
         monitoring_device_id: 'VJHRE4U03K',
         since: null,

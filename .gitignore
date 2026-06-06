@@ -73,3 +73,8 @@ scripts/data/master-data-sheet-*.xlsx
 scripts/data/shiroienergy-*.xlsx
 scripts/data/credentials-brand-counts-*.md
 scripts/data/master-projects-import-plan-*.md
+
+# Plant-credentials dump (TSV input to count-plant-credentials.ts) — holds
+# plaintext portal passwords. The script loads it at runtime; never commit it.
+scripts/data/plant-credentials-dump.tsv
+scripts/data/plant-credentials-dump-*.tsv

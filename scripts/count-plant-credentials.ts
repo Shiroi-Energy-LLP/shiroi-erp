@@ -27,13 +27,12 @@
  * Usage: pnpm tsx scripts/count-plant-credentials.ts
  */
 
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 // ─────────────────────────────────────────────────────────────────────────
-// Raw data: from Vivek's paste 2026-06-05
+// Raw data: loaded at runtime from a gitignored TSV (see loadRaw below).
 // Columns: project | brand | username | password | url | created
-// Empty fields are '' — paste-order is preserved.
 // ─────────────────────────────────────────────────────────────────────────
 
 interface RawRow {
@@ -45,219 +44,51 @@ interface RawRow {
   created: string;
 }
 
-const RAW: RawRow[] = [
-  { project: 'GRN Ambili Srinivas', brand: 'Sungrow', username: 'venkatms@rediffmail.com', password: 'Solar123', url: 'https://www.isolarcloud.com.hk/#/login', created: '2025-11-21' },
-  { project: 'Mr Ravi / Tiruvannamalai', brand: 'Deye', username: 'raguramanradha1957@gmail.com', password: 'Solar12345', url: 'https://home.solarmanpv.com/login', created: '2025-12-03' },
-  { project: 'GRN Ambili Srinivas', brand: 'Sungrow', username: 'venkatms@rediffmail.com', password: 'Solar123', url: '', created: '2025-11-20' },
-  { project: 'Mr Sukumaran', brand: 'Deye', username: 'divyakalu@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2025-09-18' },
-  { project: 'Mr Rangachari', brand: 'Deye', username: 'anand.Rangachari@gmail.com', password: 'vedika!123', url: 'https://home.solarmanpv.com/login', created: '2025-10-14' },
-  { project: 'Mr Arjun Prasath', brand: 'Deye', username: 'krithiha.arjun@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2025-11-11' },
-  { project: 'Mr Sivasankar', brand: 'Deye', username: 'assikadusiva@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2025-11-14' },
-  { project: 'Mr Sanjay', brand: 'Havells', username: 'swatantrajaiswal30@gmail.com', password: 'Solar123', url: '', created: '2025-09-02' },
-  { project: 'Mr. Ramesh Babu', brand: 'Deye', username: 'ramesh.babu@hotmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2025-10-30' },
-  { project: 'Sri Ganapathy Ashram, Phase II', brand: 'Deye', username: 'ushasankaran1961@gmail.com', password: 'Solar123#', url: 'https://home.solarmanpv.com/login', created: '2025-08-18' },
-  { project: 'Shiroi Energy', brand: 'Sungrow', username: 'manivel@shiroienergy.com', password: 'shiro@2025', url: 'https://www.isolarcloud.com.hk/#/login', created: '2025-12-01' },
-  { project: 'Shiroi Energy', brand: 'Growatt', username: 'EEVUWE001', password: 'Solar123', url: 'https://server.growatt.com/login', created: '2025-12-01' },
-  { project: 'Mr Venkatraman', brand: '', username: 'bluetbmvs@gmail.com', password: 'Solar123', url: '', created: '2025-12-01' },
-  { project: 'MSM Unit II , Phase II / 400 KWp', brand: '', username: 'mrinalstores_msm@yahoo.com', password: 'Mrinal@123', url: 'https://www.isolarcloud.com.hk/#/login', created: '2025-12-01' },
-  { project: 'Mr Felix Johnson', brand: 'Deye', username: 'nancysweetline@gmail.com', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Dr Ramesh / 5 kWp', brand: 'Deye', username: 'dr.rramesh@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Shiroi Energy', brand: 'Deye', username: 'manivel@shiroienergy.com', password: 'Deye@30#', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Mr Anandan', brand: 'Sungrow', username: 'anandananitha@gmail.com', password: 'Aarthi@1703', url: 'https://www.isolarcloud.com.hk/#/login', created: '' },
-  { project: 'Mr Devadoss / 7 KWp', brand: 'Deye', username: 'sdevadoss1891@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Mr Prabakaran / 3.3 KWp', brand: 'Deye', username: 'spn151202@hotmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Mr Chandraprakash', brand: 'Sungrow', username: 'archandraprakash05@gmail.com', password: 'Solar123', url: 'https://www.isolarcloud.com.hk/#/login', created: '' },
-  { project: 'Enexio Fill Factory', brand: 'Goodwe', username: 'maintenance@enexioindia.com', password: 'Solar123', url: '', created: '' },
-  { project: 'Mr Siva Elango', brand: '', username: 'gsivaelango@yahoo.co.in', password: 'Solar123', url: '', created: '' },
-  { project: 'Hindu School Payalwar street', brand: 'Deye', username: 'hssstrip@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Mr Arjun Prasath', brand: 'Deye', username: 'krithiha.arjun@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Mr Davidson', brand: 'Deye', username: 'sondavid@yahoo.com', password: 'Davidson123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish', brand: 'Growatt', username: 'Block - C', password: 'Fl0ur1sh@2026', url: 'https://server.growatt.com/login', created: '' },
-  { project: 'CM Construction', brand: 'Havells', username: 'sarav_cms@yahoo.co.in', password: 'Solar12', url: '', created: '' },
-  { project: 'Mr Rangachari', brand: 'Deye', username: 'anand.Rangachari@gmail.com', password: 'Vedika!123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Mr Ramaswamy', brand: 'Deye', username: 'sai.chandru2017@gmail.com', password: 'Saisolar123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Mr.Kasinathan', brand: 'Growatt', username: 'kasinathan', password: 'Solar123', url: 'https://server.growatt.com/login', created: '2025-12-06' },
-  { project: 'Sri Sayee School', brand: 'Growatt', username: 'srisayee', password: 'Solar123', url: 'https://server.growatt.com/login', created: '2025-12-15' },
-  { project: 'Mr Jeyakumar', brand: '', username: 'rjkr123@gmail.com', password: 'Solar123', url: '', created: '2025-12-24' },
-  { project: 'Mr Nitin', brand: 'Sungrow', username: 'nitinkadambari@yahoo.co.in', password: 'Solar123', url: 'https://www.isolarcloud.com.hk/#/login', created: '2026-01-04' },
-  { project: 'Mr Ashok', brand: 'Fronious', username: 'panchapakesanashok1@gmail.com', password: 'Ashokp@Solar123 / Solar123', url: '', created: '2025-12-22' },
-  { project: 'Swarnalatha', brand: 'Deye', username: 'vsl_boss@yahoo.co.in', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2026-01-10' },
-  { project: 'Mr Jeyaseelan', brand: '', username: 'jneumarin@gmail.com', password: 'Solar123', url: '', created: '2025-06-20' },
-  { project: 'Arihanth Nahar', brand: 'Deye', username: 'm.arihantnahar@gmail.com', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '2025-11-08' },
-  { project: 'Mr Sundar', brand: '', username: 'hariram1700@ymail.com', password: 'Solar123', url: '', created: '2026-01-23' },
-  { project: 'Oriental Hydraulics Private Limited', brand: 'Goodwe', username: 'mail2@shiori.com', password: 'Solar123', url: '', created: '2026-01-27' },
-  { project: 'Hindu School Adyar', brand: 'Fimer', username: 'Hinduschool', password: 'Solar@123', url: 'https://www.auroravision.net/ums/v1/loginPage', created: '2025-11-04' },
-  { project: 'Mr.Karthikeyan / CM Constructions', brand: '', username: 'jkarthik.nr@gmail.com', password: 'Solar123', url: '', created: '2026-02-10' },
-  { project: 'M/s Latha Ganesh', brand: 'Deye', username: 'latsgana@gmail.com', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '2026-02-19' },
-  { project: 'Ceebros Boulevard', brand: 'Growatt', username: 'Cbfoasolar', password: 'Solar123', url: 'https://server.growatt.com/login', created: '2024-04-17' },
-  { project: 'Solver Minds / 8 KWp', brand: 'Goodwe', username: 'infraadmin@solverminds.com', password: 'Solver123', url: '', created: '2026-02-20' },
-  { project: 'Solver Minds / 81 KWp', brand: 'Fimer', username: 'Solverminds', password: 'Solar@123', url: 'https://www.auroravision.net/ums/v1/loginPage', created: '2026-02-20' },
-  { project: 'GVG Industries Private Ltd', brand: 'Goodwe', username: 'Gvgindustries@gmail.com', password: 'Admin@123', url: '', created: '2026-03-02' },
-  { project: 'Lancor Hiranmayi', brand: '', username: 'ganasa@hotmail.com', password: 'Solar123', url: '', created: '2026-03-03' },
-  { project: 'Mr Koildhass', brand: 'Deye', username: 'kdoss00@yahoo.com', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '2026-03-05' },
-  { project: 'Mr Sairam', brand: 'Deye', username: 'vupputursairam@gmail.com', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '2025-05-30' },
-  { project: 'Alamelu & Arvind', brand: 'Polycab', username: 'Alusolar', password: 'Hamra@466', url: 'https://pv.polycabmonitoring.com/dist/#/login/index', created: '2026-03-25' },
-  { project: 'Mr Sivasankar Home', brand: 'Deye', username: 'sankar_hema@rediffmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2029-03-28' },
-  { project: 'Mr Solai Ayyar', brand: 'Deye', username: 'indraayyar10@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2026-04-02' },
-  { project: 'Mr Sridhar Rajan', brand: 'Deye', username: 'Sridharrajan1989@gmail.com', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '2026-04-18' },
-  { project: 'Mr Deepka Raj', brand: 'Polycab', username: 'Deepakraj', password: 'Solar123', url: 'https://pv.polycabmonitoring.com/dist/#/login/index', created: '2026-04-24' },
-  { project: 'M/s Deepa Balaji', brand: 'Polycab', username: 'Balajissolar', password: 'Solar@123', url: 'https://pv.polycabmonitoring.com/dist/#/login/index', created: '2026-05-01' },
-  { project: 'Mr Pradheep Boopathy', brand: 'Polycab', username: 'Pradheepsolar', password: 'Solar@123', url: 'https://pv.polycabmonitoring.com/dist/#/login/index', created: '2026-05-01' },
-  { project: 'Mr Shanmugam', brand: 'Deye', username: 'spshanmu@gmail.com', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '2026-05-01' },
-  { project: 'Krishnaveni', brand: 'Growatt', username: 'Jegan moorthy', password: 'Solar123', url: 'https://server.growatt.com/login', created: '2025-12-03' },
-  { project: 'Mr Murali', brand: 'Deye', username: 'kmurali020@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2026-05-09' },
-  { project: 'Chettinad Hospital', brand: 'Growatt', username: 'CHETTINADRHC', password: 'Solar123', url: 'https://server.growatt.com/login', created: '2026-05-11' },
-  { project: 'Mr Muthu', brand: 'Flin Energy', username: 'Muthu', password: 'Solar123', url: 'http://power-datacenter.com/cmc/login_system.html', created: '2026-05-12' },
+// Credentials are real customer/portal secrets — NEVER inline them here.
+// They are loaded at runtime from a gitignored TSV (same convention as
+// growatt-credentials-*.tsv / fimer-credentials-*.tsv). Create the file with
+// one row per credential, tab-separated, columns in this exact order:
+//
+//   project<TAB>brand<TAB>username<TAB>password<TAB>url<TAB>created
+//
+// Empty fields stay empty (two consecutive tabs). A header line is optional;
+// if the first line mentions "project" + "password" it is skipped.
+const DUMP_FILE = resolve(__dirname, 'data/plant-credentials-dump.tsv');
 
-  // Radiance Flourish apartments — all Deye on Solarman, all one project
-  { project: 'Radiance Flourish / A/A2 - Mrs Nithiya Ramachandran', brand: 'Deye', username: 'Nithyaram', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / A/A3 - Mrs Asumitha', brand: 'Deye', username: 'Ashmitha', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / A/A4 - Mr Venkatramani', brand: 'Deye', username: 'Venkatramani', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / A/A5 & A/A6 - Mr Ravi', brand: 'Deye', username: 'Ravianju', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / B/A1 - Mrs Jayashree', brand: 'Deye', username: 'Jayashri', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / B/A2 - Mr Ramachandran', brand: 'Deye', username: 'Ckram99', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / B/A3 - Mr Nitin', brand: 'Deye', username: 'NitinkumarB3', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / B/A4 - Mr Manoj', brand: 'Deye', username: 'BManoj', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / B/A5 - Mr Gowtham', brand: 'Deye', username: 'Gautham', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / B/A6 - Mr Unnikrishnan', brand: 'Deye', username: 'Unnivalliyil', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / C/A1 - Mr Jayaraman', brand: 'Deye', username: 'JJayabarthi', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / C/A3 - Mrs Shree Latha', brand: 'Deye', username: '', password: '', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / C/A5 - Mrs Geeth Priya', brand: 'Deye', username: 'Geethapriya', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / D/A1 - Mr Sudharsan', brand: 'Deye', username: 'Sutharsan', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / D/A3', brand: 'Deye', username: 'DA3', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / D/A4 - Mr Shajee', brand: 'Deye', username: 'Phshajee', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / E/A1 - Mr Vanagiri', brand: 'Deye', username: 'EA1vanagiri', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / E/A2 - Mr Sekar', brand: 'Deye', username: 'Shekar', password: 'TN37LP8383', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / E/A3 - Mr Ramachandran', brand: 'Deye', username: 'Ramachandrank', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / E/A4 - Mr Sundar Rajan', brand: 'Deye', username: 'Sundarrajan', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / E/A5 - Mrs Rajalakshmi', brand: 'Deye', username: 'Rajalakshmi', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / E/A6 - Mrs Gomathi', brand: 'Deye', username: 'EA6Gomathi', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / F/A1 - Mrs Sripriya', brand: 'Deye', username: 'kanmani', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / F/A2 - Mr Meenakshi Sundaram', brand: 'Deye', username: 'Seyon', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / F/A3 - Mrs Anuradha Ganeshan', brand: 'Deye', username: 'Anuradhaganesh', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / F/A6 - Mrs Vidiya', brand: 'Deye', username: 'Aksmaniyan', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / F/A7 - Mr Mohan', brand: 'Deye', username: 'kMohan', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / F/A8 - Mrs Sridevi Ashokan', brand: 'Deye', username: 'Sridevi ashok', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / F/A9 - Mr Selvarajan', brand: 'Deye', username: 'Selvarajan', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / G/A1 - Mr Ramasamy Annamalai', brand: 'Deye', username: 'GA1', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / G/A2 - Mr Arun', brand: 'Deye', username: 'Arunnithya', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / H/A2 - Mr Bhadri', brand: 'Deye', username: 'HA2', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / H/A3 - Mr Ramasamy', brand: 'Deye', username: 'Ramasamy', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / H/A6 - Mr Durai Murugan', brand: 'Deye', username: 'Nduraimurugan', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / H/A8 - Mr Selvakumar', brand: 'Deye', username: 'Sselvakumar', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / H/A9 - Mrs Latha Ragu', brand: 'Deye', username: 'Raghuvamsham', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / H/A10 - Mr Baskaran', brand: 'Deye', username: 'Dhanamuthu', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / H/A11 - Mr Kumar', brand: 'Deye', username: 'K.kumar', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A1 - Mr Veerasekar', brand: 'Deye', username: 'Veerasekar', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A2 - Mr Ashok', brand: 'Deye', username: 'Ashokja2', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A3 - Mrs Nivetha', brand: 'Deye', username: 'Nivedhasivakumar', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A4 - Mr Nagasubrish', brand: 'Deye', username: 'Nagasabarish', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A5 - Mr Naresh', brand: 'Deye', username: 'Nareshjoghee', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A6', brand: 'Deye', username: 'Geethabalu', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A7', brand: 'Deye', username: 'SPrabhakar', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A8 - Mr Sudha Srivilasan', brand: 'Deye', username: 'Sudhasri', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
-  { project: 'Radiance Flourish / J/A9 - Mr Suresh', brand: 'Deye', username: 'Smitra', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '' },
+function loadRaw(): RawRow[] {
+  if (!existsSync(DUMP_FILE)) {
+    console.error(
+      `Missing credentials dump: ${DUMP_FILE}\n` +
+        `This file is gitignored (it holds plaintext portal passwords).\n` +
+        `Paste the dump as tab-separated rows: project<TAB>brand<TAB>username<TAB>password<TAB>url<TAB>created`,
+    );
+    process.exit(1);
+  }
+  const lines = readFileSync(DUMP_FILE, 'utf8')
+    .split(/\r?\n/)
+    .filter((l) => l.trim() !== '');
+  if (
+    lines.length > 0 &&
+    lines[0].toLowerCase().includes('project') &&
+    lines[0].toLowerCase().includes('password')
+  ) {
+    lines.shift();
+  }
+  return lines.map((line) => {
+    const [project = '', brand = '', username = '', password = '', url = '', created = ''] =
+      line.split('\t');
+    return {
+      project: project.trim(),
+      brand: brand.trim(),
+      username: username.trim(),
+      password: password.trim(),
+      url: url.trim(),
+      created: created.trim(),
+    };
+  });
+}
 
-  { project: 'A L Sekhar', brand: 'Growatt', username: 'AL Sekhar', password: 'Solar123', url: 'https://server.growatt.com/login', created: '2026-05-16' },
-  { project: 'Mr.Rajan Babu', brand: 'Growatt', username: 'rajanbabut', password: 'Solar123', url: 'https://server.growatt.com/login', created: '2025-11-22' },
-  { project: 'Mr.Sriram Pallikaranai', brand: 'Deye', username: 'balasfinearts@gmail.com', password: 'Solar@123', url: 'https://home.solarmanpv.com/login', created: '2025-10-05' },
-  { project: 'Mr Raja grn gopal street', brand: 'Deye', username: 'Jayanthi.raja1964@gmail.com', password: 'Solar123', url: 'https://home.solarmanpv.com/login', created: '2026-06-05' },
-  { project: 'vanai Panache', brand: 'Deye', username: 'vinaismav@gmail.com', password: 'Solar@123', url: '', created: '' },
-  { project: 'Varun - Besant nagar ( 4.3kw )', brand: 'Deye', username: 'varunp@gmail.com', password: 'Solar@123', url: '', created: '' },
-  { project: 'AM RAJA - Besant nagar ( 3.2 KW )', brand: 'Growatt', username: 'Amraja', password: 'Solar123', url: '', created: '' },
-  { project: 'Shridhar - Tambaram ( 6 kw )', brand: 'Deye', username: 'shridhar1953@gmail.com', password: 'Solar123', url: '', created: '' },
-
-  // Chemfab Alkalis — multiple inverters at one site, separate logins per setup
-  { project: 'Chemfab Alkalis SS_110 KWp', brand: 'Fimer', username: 'Chemfabalkalis', password: 'Solar@123', url: '', created: '' },
-  { project: 'Chemfab Alkalis SS_55 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-  { project: 'Chemfab Alkalis SS_8.7 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-  { project: 'Chemfab Alkalis DP_11.5 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-  { project: 'Chemfab Alkalis SP_11.5 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-  { project: 'Chemfab Alkalis RO_23 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-
-  { project: 'Schangalaya_25 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-  { project: 'Schakaralaya_50 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-  { project: 'Mountmeru _108KWp', brand: 'Fimer', username: 'Mountmeru_Solar', password: 'Solar@123', url: '', created: '' },
-  { project: 'Mountmeru _103 KWp', brand: 'Fimer', username: 'Mountmeru_Solar', password: 'Solar@123', url: '', created: '' },
-  { project: 'Harsha_2 KWp', brand: 'Fimer', username: 'harsha123', password: 'Solar@123', url: '', created: '' },
-  { project: 'Baskar_2.5 KWp', brand: 'Fimer', username: 'Bossshyam', password: 'Solar2019@', url: '', created: '' },
-  { project: 'Ashok_4 KWp', brand: 'Fronius solar web', username: 'mail@shiroienergy.com', password: 'Shiroienergy@04', url: '', created: '' },
-  { project: 'Ashok_2.5 KWp', brand: 'Havells', username: 'shravan@shiroienergy.com', password: 'Solar123', url: '', created: '' },
-  { project: 'Mugundamani_3 KWp', brand: 'Fronious', username: 'mail@shiroienergy.com', password: 'Shiroienergy@04', url: '', created: '' },
-  { project: 'GRN Poes Garden_4 KWp', brand: 'Fronious', username: 'mail@shiroienergy.com', password: 'Shiroienergy@04', url: '', created: '' },
-  { project: 'Siddharth_1 KWp', brand: 'Fimer', username: 'Siddharth', password: 'Solar@123', url: '', created: '' },
-  { project: 'Sriram_4 KWp', brand: 'Fimer', username: 'Sriramsv', password: 'Solar@123', url: '', created: '' },
-  { project: 'Sri Sayee School_16 KWp', brand: 'Growatt', username: 'srisayee', password: 'vivekananda', url: '', created: '' },
-  { project: 'Sri Sayee School_1 KWp', brand: 'Growatt', username: 'SSVV', password: 'ssvv2019', url: '', created: '' },
-  { project: 'Dhayanada School_7.8 KWp', brand: 'Fimer', username: 'Dayananda', password: 'Solar@123', url: '', created: '' },
-  { project: 'Chemfab sricity _110 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-  { project: 'Chemfab sricity _115 KWp', brand: 'Fimer', username: 'Shiroienergy', password: 'Solar@123', url: '', created: '' },
-  { project: 'Edison School _48 KWp', brand: 'Fimer', username: 'Edisonschool', password: 'Generator@123', url: '', created: '' },
-  { project: 'Madurai SLCS College_88 KWp', brand: 'Fimer', username: 'slcscollege', password: 'Admin@123', url: '', created: '' },
-  { project: 'Chemin Enviro System_45KWp', brand: 'Fimer', username: 'CESZLDS45KW', password: 'Ces@7788', url: '', created: '' },
-  { project: 'Chemin Enviro System_2KWp', brand: 'Fimer', username: 'CESZLDS2KW', password: 'Ces@7788', url: '', created: '' },
-  { project: 'GGN School _15 KWp', brand: 'Fimer', username: 'Ggnschool', password: 'Solar@123', url: '', created: '' },
-  { project: 'Hindu School_50 KWp', brand: 'Fimer', username: 'Hinduschool', password: 'Solar@123', url: '', created: '' },
-  { project: 'Solverminds_81 KWp', brand: 'Fimer', username: 'Solverminds', password: 'Solar@123', url: '', created: '' },
-  { project: 'Solverminds_8 KWp', brand: 'Goodwee', username: 'infraadmin@solverminds.com', password: 'Solver123', url: '', created: '' },
-
-  // RKM — 3 inverters at one site
-  { project: 'RKM1_20 KWp', brand: 'Goodwee', username: 'manivel@shiroienergy.com', password: 'Solar@123', url: '', created: '' },
-  { project: 'RKM2_20 KWp', brand: 'Goodwee', username: 'manivel@shiroienergy.com', password: 'Solar@123', url: '', created: '' },
-  { project: 'RKM3_5 KWp', brand: 'Goodwee', username: '', password: 'Solar@123', url: '', created: '' },
-
-  { project: 'GVN_Hospital_60KWp', brand: 'Fimer', username: 'Gvnhospital', password: 'Solar@123', url: '', created: '' },
-
-  // Mrinal Mills — 4 inverters at one site
-  { project: 'Mrinal_mills_507Kwp_Inverter_1(125Kwp)', brand: 'Goodwee', username: 'mrinalstores_msm@yahoo.com', password: 'Mrinal@123', url: '', created: '' },
-  { project: 'Mrinal_mills_507Kwp_Inverter_2(125Kwp)', brand: 'Goodwee', username: 'mrinalstores_msm@yahoo.com', password: 'Mrinal@123', url: '', created: '' },
-  { project: 'Mrinal_mills_507Kwp_Inverter_3(125Kwp)', brand: 'Goodwee', username: 'mrinalstores_msm@yahoo.com', password: 'Mrinal@123', url: '', created: '' },
-  { project: 'Mrinal_mills_507Kwp_Inverter_4(132Kwp)', brand: 'Goodwee', username: 'mrinalstores_msm@yahoo.com', password: 'Mrinal@123', url: '', created: '' },
-
-  { project: 'RWD Lemongras_20Kwp', brand: 'Goodwee', username: 'Maintenance.lemongraz@gmail.com', password: 'Goodwe2018', url: '', created: '' },
-  { project: 'Soori Besant nagar_5Kwp', brand: 'Polycab', username: 'shravan@shiroienergy.com', password: 'Admin123', url: '', created: '' },
-  { project: 'Chemittiya_Palakad_5Kwp', brand: 'Growatt', username: 'chemittiya', password: 'Solar@123', url: '', created: '' },
-  { project: 'Kumaraguru_5kw', brand: 'Growatt', username: 'Kumarguru', password: 'admin123', url: '', created: '' },
-  { project: 'Chandru_5kw', brand: 'Growatt', username: 'Chandru', password: 'admin123', url: '', created: '' },
-
-  // Metal Forms SPK — 2 inverters
-  { project: 'Metal forms-SPK110Kw-Inv-1(165Kw)', brand: 'Goodwee', username: 'Mail2@shiroienergy.com', password: 'Solar123', url: '', created: '' },
-  { project: 'Metal forms-SPK55Kw-Inv-2(165Kw)', brand: 'Goodwee', username: 'Mail2@shiroienergy.com', password: 'Solar123', url: '', created: '' },
-
-  // Metal Forms Redhills — 3 inverters
-  { project: 'Metal forms-Redhills-110Kw-Inv-1(330Kw)', brand: 'Goodwee', username: 'mail2@shiori.com', password: 'Solar123', url: '', created: '' },
-  { project: 'Metal forms-Redhills-110Kw-Inv-2(330Kw)', brand: 'Goodwee', username: 'mail2@shiori.com', password: 'Solar123', url: '', created: '' },
-  { project: 'Metal forms-Redhills-110Kw-Inv-3(330Kw)', brand: 'Goodwee', username: 'mail2@shiori.com', password: 'Solar123', url: '', created: '' },
-
-  // SVA Syntex — 2 inverters
-  { project: 'SVA syntex pvt.ltd-126.5Kw-Inv-1(253Kw)', brand: 'Goodwee', username: 'svafactory@gmail.com', password: 'Goodwe2018', url: '', created: '' },
-  { project: 'SVA syntex pvt.ltd-126.5Kw-Inv-2(253Kw)', brand: 'Goodwee', username: 'svafactory@gmail.com', password: 'Goodwe2018', url: '', created: '' },
-
-  // GVG Industries — 3 inverters
-  { project: 'GVG Industries pvt.ltd-123Kw-Inv-1(370Kw)', brand: 'Goodwee', username: 'gvgindustries@gmail.com', password: 'Admin@123', url: '', created: '' },
-  { project: 'GVG Industries pvt.ltd-123Kw-Inv-2(370Kw)', brand: 'Goodwee', username: 'gvgindustries@gmail.com', password: 'Admin@123', url: '', created: '' },
-  { project: 'GVG Industries pvt.ltd-123Kw-Inv-3(370Kw)', brand: 'Goodwee', username: 'gvgindustries@gmail.com', password: 'Admin@123', url: '', created: '' },
-
-  // SVPB Spinners — 2 inverters
-  { project: 'SVPB Spinners pvt.ltd-123.2Kw-Inv-1(248Kw)', brand: 'Goodwee', username: 'gvgindustries@gmail.com', password: 'Admin@123', url: '', created: '' },
-  { project: 'SVPB Spinners pvt.ltd-125.4Kw-Inv-2(248Kw)', brand: 'Goodwee', username: 'gvgindustries@gmail.com', password: 'Admin@123', url: '', created: '' },
-
-  { project: 'Sri Krishna Sweets-125Kw', brand: 'Goodwee', username: 'tech@srikrishnasweets.net', password: 'Solar@123', url: '', created: '' },
-  { project: 'Premier Tiruvanandapuram-27KW', brand: 'Goodwee', username: 'accounts@premieroffice.in', password: 'Solar@123', url: '', created: '' },
-  { project: 'Shankar narayanan-Plaza-5Kw', brand: 'Growatt', username: 'gtshankar@gmail.com', password: 'Pass@1234', url: '', created: '' },
-
-  // RKM Mylapore — 2 inverters
-  { project: 'RKM-17Kw-(32KW)-Inv-1', brand: 'Growatt', username: 'RKMmylapore', password: 'Solar@123', url: '', created: '' },
-  { project: 'RKM-15Kw-(32KW)-Inv-2', brand: 'Growatt', username: 'RKMmylapore', password: 'Solar@123', url: '', created: '' },
-
-  { project: 'Nebu Olympia Panache (8KW)', brand: 'Goodwee', username: 'achayan@gmail.com', password: 'neenu555', url: '', created: '' },
-  { project: 'Karthick ECR (9.6KW)', brand: 'Deye', username: 'chrome6boy@gmail.com', password: 'Solar@123', url: '', created: '' },
-  { project: 'Suresh Panache (5KW)', brand: 'Deye', username: 'ssuresh2480@gmail.com', password: 'Solar@123', url: '', created: '' },
-  { project: 'Praveen (4KW)', brand: 'Deye', username: 'prajugops@gmail.com', password: 'Solar@123', url: '', created: '' },
-  { project: 'Praveen (2KW)', brand: 'Deye', username: 'prajugops@gmail.com', password: 'Solar@123', url: '', created: '' },
-  { project: 'Ambatore Rotary Hospital (50KW)', brand: 'Growatt', username: 'arhsolar', password: 'Solar123', url: '', created: '' },
-  { project: 'Lavanya Shankar (5 KW)', brand: 'Deye', username: 'shravan@shiroienergy.com', password: 'Solar123', url: '', created: '' },
-];
+const RAW: RawRow[] = loadRaw();
 
 // ─────────────────────────────────────────────────────────────────────────
 // Classifier

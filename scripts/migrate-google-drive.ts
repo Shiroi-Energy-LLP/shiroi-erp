@@ -25,6 +25,7 @@
 import { google, sheets_v4, drive_v3 } from 'googleapis';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { randomUUID } from 'node:crypto';
 import { isDryRun, logMigrationStart, logMigrationEnd, normalizePhone } from './migration-utils';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
@@ -1069,9 +1070,11 @@ async function insertProjects(
     }
 
     if (!migrationUserId) {
+      const migrationPassword =
+        process.env.MIGRATION_USER_PASSWORD ?? `${randomUUID()}Aa1!`;
       const { data: authUser, error: profErr } = await supabase.auth.admin.createUser({
         email: 'migration@shiroi.energy',
-        password: 'Migration2026!Temp',
+        password: migrationPassword,
         email_confirm: true,
         user_metadata: { role: 'founder', full_name: 'Migration System' },
       });
