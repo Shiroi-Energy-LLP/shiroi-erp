@@ -1,8 +1,12 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getVendorById } from '@/lib/vendor-bills-queries';
+import { getUserProfile } from '@/lib/auth';
+import { EditVendorButton } from '@/components/vendors/edit-vendor-dialog';
 import { formatDate, formatINR } from '@repo/ui/formatters';
 import { maskSensitiveField } from '@/lib/hr-helpers';
+
+const VENDOR_WRITE_ROLES = ['founder', 'finance', 'project_manager', 'purchase_officer'] as const;
 import {
   Card,
   CardContent,
@@ -25,10 +29,14 @@ interface PageProps {
 
 export default async function VendorDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const result = await getVendorById(id);
+  const [result, profile] = await Promise.all([getVendorById(id), getUserProfile()]);
   if (!result) notFound();
 
   const { vendor, bills, payments } = result;
+
+  const canEdit = profile?.role
+    ? (VENDOR_WRITE_ROLES as readonly string[]).includes(profile.role)
+    : false;
 
   const totalBilled = bills.reduce((s, b) => s + Number(b.total_amount), 0);
   const totalOutstanding = bills
@@ -62,6 +70,30 @@ export default async function VendorDetailPage({ params }: PageProps) {
             <Badge variant={vendor.is_active ? 'success' : 'neutral'}>
               {vendor.is_active ? 'Active' : 'Inactive'}
             </Badge>
+            {canEdit && (
+              <EditVendorButton
+                vendor={{
+                  id: vendor.id,
+                  company_name: vendor.company_name,
+                  vendor_type: vendor.vendor_type,
+                  contact_person: vendor.contact_person,
+                  phone: vendor.phone,
+                  email: vendor.email,
+                  address_line1: vendor.address_line1,
+                  address_line2: vendor.address_line2,
+                  city: vendor.city,
+                  state: vendor.state,
+                  pincode: vendor.pincode,
+                  gstin: vendor.gstin,
+                  pan_number: vendor.pan_number,
+                  payment_terms_days: vendor.payment_terms_days,
+                  is_msme: vendor.is_msme,
+                  is_preferred: vendor.is_preferred,
+                  is_active: vendor.is_active,
+                  notes: vendor.notes,
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

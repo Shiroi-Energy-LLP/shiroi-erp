@@ -23,6 +23,7 @@ import {
 } from '@repo/ui';
 import { formatDate, formatDateFromTimestamp } from '@repo/ui/formatters';
 import { MarkPayoutPaidButton } from '@/components/partners/mark-payout-paid-button';
+import { PartnerActionMenu } from '@/components/partners/partner-action-menu';
 
 const PARTNER_TYPE_LABELS: Record<string, string> = {
   individual_broker: 'Individual Broker',
@@ -83,7 +84,7 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-n-900">{partner.partner_name}</h1>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
@@ -103,6 +104,24 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
             </span>
           </div>
         </div>
+        <PartnerActionMenu
+          partner={{
+            id: partner.id,
+            partner_name: partner.partner_name,
+            contact_person: partner.contact_person,
+            phone: partner.phone,
+            email: partner.email,
+            whatsapp: partner.whatsapp,
+            partner_type: partner.partner_type,
+            commission_type: partner.commission_type,
+            commission_rate: Number(partner.commission_rate),
+            pan_number: partner.pan_number,
+            tds_applicable: partner.tds_applicable,
+            agreement_start_date: partner.agreement_start_date as string | null,
+            agreement_end_date: partner.agreement_end_date as string | null,
+            is_active: partner.is_active ?? true,
+          }}
+        />
       </div>
 
       {/* Summary cards */}
