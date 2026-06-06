@@ -4,6 +4,7 @@ import type { Database } from '@repo/types/database';
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Row types
@@ -18,9 +19,9 @@ type CredUpdate = Database['public']['Tables']['plant_monitoring_credentials']['
 // ═══════════════════════════════════════════════════════════════════════
 
 async function getCurrentEmployeeId(): Promise<string | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const authed = await requireAuthUser();
+  if (!authed.success) return null;
+  const { user, supabase } = authed.data;
 
   const { data } = await supabase
     .from('employees')

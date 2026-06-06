@@ -3,6 +3,7 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 import type { Database } from '@repo/types/database';
 
 type TaskRow = Database['public']['Tables']['tasks']['Row'] & {
@@ -19,26 +20,25 @@ interface CreateLeadTaskInput {
   priority?: string;
 }
 
-export async function createLeadTask(input: CreateLeadTaskInput): Promise<{ success: boolean; error?: string }> {
+export async function createLeadTask(input: CreateLeadTaskInput): Promise<ActionResult<void>> {
   const op = '[createLeadTask]';
   console.log(`${op} Starting for lead: ${input.leadId}`);
 
-  if (!input.title.trim()) return { success: false, error: 'Title is required' };
-  if (!input.assignedTo) return { success: false, error: 'Assignee is required' };
-  if (!input.dueDate) return { success: false, error: 'Due date is required' };
+  if (!input.title.trim()) return err('Title is required', 'MISSING_TITLE');
+  if (!input.assignedTo) return err('Assignee is required', 'MISSING_ASSIGNEE');
+  if (!input.dueDate) return err('Due date is required', 'MISSING_DUE_DATE');
 
-  const supabase = await createClient();
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   // Get current user's employee record
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
-
   const { data: employee } = await supabase
     .from('employees')
     .select('id')
     .eq('profile_id', user.id)
     .single();
-  if (!employee) return { success: false, error: 'Employee record not found' };
+  if (!employee) return err('Employee record not found', 'EMPLOYEE_MISSING');
 
   const { error } = await supabase.from('tasks').insert({
     id: crypto.randomUUID(),
@@ -55,28 +55,28 @@ export async function createLeadTask(input: CreateLeadTaskInput): Promise<{ succ
 
   if (error) {
     console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/leads/${input.leadId}/tasks`);
   revalidatePath('/my-tasks');
-  return { success: true };
+  return ok(undefined);
 }
 
-export async function completeLeadTask(taskId: string, leadId: string): Promise<{ success: boolean; error?: string }> {
+export async function completeLeadTask(taskId: string, leadId: string): Promise<ActionResult<void>> {
   const op = '[completeLeadTask]';
   console.log(`${op} Starting for task: ${taskId}`);
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: employee } = await supabase
     .from('employees')
     .select('id')
     .eq('profile_id', user.id)
     .single();
-  if (!employee) return { success: false, error: 'Employee record not found' };
+  if (!employee) return err('Employee record not found', 'EMPLOYEE_MISSING');
 
   const { error } = await supabase
     .from('tasks')
@@ -90,12 +90,12 @@ export async function completeLeadTask(taskId: string, leadId: string): Promise<
 
   if (error) {
     console.error(`${op} Update failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/leads/${leadId}/tasks`);
   revalidatePath('/my-tasks');
-  return { success: true };
+  return ok(undefined);
 }
 
 /**
@@ -119,11 +119,10 @@ export async function upsertLeadFollowupTask(
   if (!leadId) return err('leadId is required');
   if (!dueDate) return err('dueDate is required');
 
-  const supabase = await createClient();
-
   // Auth check
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: callerEmployee } = await supabase
     .from('employees')

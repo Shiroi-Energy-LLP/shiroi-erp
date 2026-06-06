@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 export async function getMyViews(entityType: string) {
   const op = '[getMyViews]';
@@ -37,13 +38,13 @@ export async function saveView(input: {
   quickFilters?: string[];
   pageSize?: number;
   isDefault?: boolean;
-}): Promise<{ success: boolean; viewId?: string; error?: string }> {
+}): Promise<ActionResult<{ viewId: string }>> {
   const op = '[saveView]';
   console.log(`${op} Starting: ${input.name}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   const payload = {
     owner_id: user.id,
@@ -68,11 +69,11 @@ export async function saveView(input: {
 
     if (error) {
       console.error(`${op} Update failed:`, { code: error.code, message: error.message });
-      return { success: false, error: error.message };
+      return err(error.message, error.code);
     }
 
     revalidatePath(`/${input.entityType}`);
-    return { success: true, viewId: input.id };
+    return ok({ viewId: input.id });
   } else {
     // Create new view
     const { data, error } = await supabase
@@ -83,11 +84,11 @@ export async function saveView(input: {
 
     if (error) {
       console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
-      return { success: false, error: error.message };
+      return err(error.message, error.code);
     }
 
     revalidatePath(`/${input.entityType}`);
-    return { success: true, viewId: data.id };
+    return ok({ viewId: data.id });
   }
 }
 
@@ -95,13 +96,13 @@ export async function setViewAsDefault(input: {
   viewId: string;
   entityType: string;
   isDefault: boolean;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[setViewAsDefault]';
   console.log(`${op} Setting view ${input.viewId} default=${input.isDefault}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   // If setting as default, first unset any existing default for this entity type
   if (input.isDefault) {
@@ -126,14 +127,14 @@ export async function setViewAsDefault(input: {
 
   if (error) {
     console.error(`${op} Update failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/${input.entityType}`);
-  return { success: true };
+  return ok(undefined);
 }
 
-export async function deleteView(viewId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteView(viewId: string): Promise<ActionResult<void>> {
   const op = '[deleteView]';
   console.log(`${op} Deleting: ${viewId}`);
 
@@ -145,8 +146,8 @@ export async function deleteView(viewId: string): Promise<{ success: boolean; er
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
-  return { success: true };
+  return ok(undefined);
 }

@@ -4,14 +4,15 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 const ALLOWED_ROLES = new Set(['founder', 'marketing_manager', 'project_manager']);
 
 async function requireReviewRole(): Promise<ActionResult<{ userId: string }>> {
   const op = '[requireReviewRole]';
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated', 'unauthenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: profile, error } = await supabase
     .from('profiles')
@@ -127,9 +128,9 @@ export async function undoLastDecision(input: {
   if (!auth.success) return auth;
 
   // Extra role check: undo is only for founder + marketing_manager
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated', 'unauthenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: profile } = await supabase
     .from('profiles')

@@ -26,12 +26,12 @@ export async function createInvoice(input: {
   invoiceDate: string;
   dueDate: string;
   notes?: string;
-}): Promise<{ success: boolean; error?: string; invoiceId?: string }> {
+}): Promise<ActionResult<{ invoiceId: string }>> {
   const op = '[createInvoice]';
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   // Get employee ID for raised_by
   const { data: employee } = await supabase
@@ -40,7 +40,7 @@ export async function createInvoice(input: {
     .eq('profile_id', user.id)
     .single();
 
-  if (!employee) return { success: false, error: 'Employee profile not found' };
+  if (!employee) return err('Employee profile not found', 'EMPLOYEE_MISSING');
 
   // Generate invoice number using DB function
   const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'INV' });
@@ -71,14 +71,14 @@ export async function createInvoice(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/invoices');
   revalidatePath('/cash');
   revalidatePath('/payments/reconciliation');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true, invoiceId: data?.id };
+  return ok({ invoiceId: data?.id ?? '' });
 }
 
 // ── Record Customer Payment ──
@@ -93,12 +93,12 @@ export async function recordPayment(input: {
   bankName?: string;
   isAdvance?: boolean;
   notes?: string;
-}): Promise<{ success: boolean; error?: string; paymentId?: string }> {
+}): Promise<ActionResult<{ paymentId: string }>> {
   const op = '[recordPayment]';
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   const { data: employee } = await supabase
     .from('employees')
@@ -106,7 +106,7 @@ export async function recordPayment(input: {
     .eq('profile_id', user.id)
     .single();
 
-  if (!employee) return { success: false, error: 'Employee profile not found' };
+  if (!employee) return err('Employee profile not found', 'EMPLOYEE_MISSING');
 
   // Generate receipt number
   const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'REC' });
@@ -133,7 +133,7 @@ export async function recordPayment(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   // If linked to an invoice, update the invoice amounts
@@ -168,7 +168,7 @@ export async function recordPayment(input: {
 
   if (data?.id) void emitCustomerPaymentReceived(data.id);
 
-  return { success: true, paymentId: data?.id };
+  return ok({ paymentId: data?.id ?? '' });
 }
 
 async function emitCustomerPaymentReceived(paymentId: string): Promise<void> {
@@ -249,12 +249,12 @@ export async function recordVendorPayment(input: {
   paymentMode: string;
   referenceNumber?: string;
   notes?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[recordVendorPayment]';
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   const { data: employee } = await supabase
     .from('employees')
@@ -262,7 +262,7 @@ export async function recordVendorPayment(input: {
     .eq('profile_id', user.id)
     .single();
 
-  if (!employee) return { success: false, error: 'Employee profile not found' };
+  if (!employee) return err('Employee profile not found', 'EMPLOYEE_MISSING');
 
   // Get PO date for MSME compliance calculation
   const { data: poData } = await supabase
@@ -294,7 +294,7 @@ export async function recordVendorPayment(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   // Update PO outstanding amount
@@ -317,7 +317,7 @@ export async function recordVendorPayment(input: {
 
   revalidatePath('/vendor-payments');
   revalidatePath('/procurement');
-  return { success: true };
+  return ok(undefined);
 }
 
 // ── Project-context: Raise Invoice (ActionResult<T> pattern) ──

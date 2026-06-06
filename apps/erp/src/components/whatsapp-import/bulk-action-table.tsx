@@ -129,11 +129,11 @@ export function BulkActionTable({ items, status }: BulkActionTableProps) {
     setBusy(null);
 
     if (result.success) {
-      setMessage({ kind: 'ok', text: `Approved ${result.approved} item${result.approved === 1 ? '' : 's'}.` });
+      setMessage({ kind: 'ok', text: `Approved ${result.data.approved} item${result.data.approved === 1 ? '' : 's'}.` });
     } else {
       setMessage({
         kind: 'err',
-        text: `Approved ${result.approved}, ${result.failed} failed. First error: ${result.errors[0] ?? '—'}`,
+        text: result.error,
       });
     }
     setSelected(new Set());
@@ -153,9 +153,9 @@ export function BulkActionTable({ items, status }: BulkActionTableProps) {
     setBusy(null);
 
     if (result.success) {
-      setMessage({ kind: 'ok', text: `Rejected ${result.rejected} item${result.rejected === 1 ? '' : 's'}.` });
+      setMessage({ kind: 'ok', text: `Rejected ${result.data.rejected} item${result.data.rejected === 1 ? '' : 's'}.` });
     } else {
-      setMessage({ kind: 'err', text: `Rejection failed (${result.failed} item${result.failed === 1 ? '' : 's'}).` });
+      setMessage({ kind: 'err', text: `Rejection failed: ${result.error}` });
     }
     setSelected(new Set());
     router.refresh();

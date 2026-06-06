@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from '@/lib/n8n/emit';
 import { requireRole } from '@/lib/auth';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -19,12 +20,6 @@ interface CreateEmployeeInput {
   dateOfJoining: string;
 }
 
-interface CreateEmployeeResult {
-  success: boolean;
-  tempPassword?: string;
-  error?: string;
-}
-
 function generateTempPassword(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
   let password = '';
@@ -34,7 +29,7 @@ function generateTempPassword(): string {
   return password;
 }
 
-export async function createEmployeeAccount(input: CreateEmployeeInput): Promise<CreateEmployeeResult> {
+export async function createEmployeeAccount(input: CreateEmployeeInput): Promise<ActionResult<{ tempPassword: string }>> {
   const op = '[createEmployeeAccount]';
 
   // Role gate (security review 2026-05-30 #1 — CRITICAL): server actions are
@@ -61,7 +56,7 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
       reason: 'non_founder_creating_founder',
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: 'Only an existing founder can create another founder account' };
+    return err('Only an existing founder can create another founder account', 'FORBIDDEN_FOUNDER_ROLE');
   }
 
   // 5b: Enforce @shiroienergy.com email domain when caller is NOT founder.
@@ -73,19 +68,19 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
       reason: 'non_shiroi_domain',
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: 'Non-founder callers may only create accounts with @shiroienergy.com email addresses' };
+    return err('Non-founder callers may only create accounts with @shiroienergy.com email addresses', 'INVALID_DOMAIN');
   }
 
   console.log(`${op} Starting for: ${input.email}`);
 
   // Validate required fields
-  if (!input.fullName.trim()) return { success: false, error: 'Full name is required' };
-  if (!input.email.trim()) return { success: false, error: 'Email is required' };
-  if (!input.phone.trim()) return { success: false, error: 'Phone is required' };
-  if (!input.employeeCode.trim()) return { success: false, error: 'Employee code is required' };
-  if (!input.department.trim()) return { success: false, error: 'Department is required' };
-  if (!input.designation.trim()) return { success: false, error: 'Designation is required' };
-  if (!input.dateOfJoining) return { success: false, error: 'Date of joining is required' };
+  if (!input.fullName.trim()) return err('Full name is required', 'MISSING_FIELD');
+  if (!input.email.trim()) return err('Email is required', 'MISSING_FIELD');
+  if (!input.phone.trim()) return err('Phone is required', 'MISSING_FIELD');
+  if (!input.employeeCode.trim()) return err('Employee code is required', 'MISSING_FIELD');
+  if (!input.department.trim()) return err('Department is required', 'MISSING_FIELD');
+  if (!input.designation.trim()) return err('Designation is required', 'MISSING_FIELD');
+  if (!input.dateOfJoining) return err('Date of joining is required', 'MISSING_FIELD');
 
   const adminClient = createAdminClient();
   const tempPassword = generateTempPassword();
@@ -111,9 +106,9 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
       timestamp: new Date().toISOString(),
     });
     if (authError.message.includes('already been registered')) {
-      return { success: false, error: 'An account with this email already exists' };
+      return err('An account with this email already exists', 'EMAIL_EXISTS');
     }
-    return { success: false, error: `Failed to create auth account: ${authError.message}` };
+    return err(`Failed to create auth account: ${authError.message}`, 'AUTH_CREATE_FAILED');
   }
 
   if (!authData.user) {
@@ -125,7 +120,7 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
       stage: 'auth_user_create_no_user',
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: 'Auth user creation failed unexpectedly' };
+    return err('Auth user creation failed unexpectedly', 'AUTH_NO_USER');
   }
 
   const userId = authData.user.id;
@@ -155,7 +150,7 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
       timestamp: new Date().toISOString(),
     });
     // Don't fail entirely — auth user exists, profile can be fixed manually
-    return { success: false, error: `Auth account created but profile update failed: ${profileError.message}. The user can still log in.` };
+    return err(`Auth account created but profile update failed: ${profileError.message}. The user can still log in.`, profileError.code);
   }
 
   console.log(`${op} Profile updated with role: ${input.role}`);
@@ -188,7 +183,7 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
       reason: employeeError?.message ?? 'unknown',
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: `Auth + profile created but employee record failed: ${employeeError?.message ?? 'unknown'}` };
+    return err(`Auth + profile created but employee record failed: ${employeeError?.message ?? 'unknown'}`, employeeError?.code);
   }
 
   console.log(`${op} Employee record created for: ${input.fullName}`);
@@ -205,7 +200,7 @@ export async function createEmployeeAccount(input: CreateEmployeeInput): Promise
 
   void emitEmployeeCreated(newEmployee.id);
 
-  return { success: true, tempPassword };
+  return ok({ tempPassword });
 }
 
 async function emitEmployeeCreated(employeeId: string): Promise<void> {
@@ -238,7 +233,7 @@ async function emitEmployeeCreated(employeeId: string): Promise<void> {
   }
 }
 
-export async function deactivateEmployee(employeeId: string): Promise<{ success: boolean; error?: string }> {
+export async function deactivateEmployee(employeeId: string): Promise<ActionResult<void>> {
   const op = '[deactivateEmployee]';
 
   // Role gate (security review 2026-05-30 #2 — CRITICAL): without this
@@ -263,7 +258,7 @@ export async function deactivateEmployee(employeeId: string): Promise<{ success:
       reason: 'missing_employee_id',
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: 'Employee ID is required' };
+    return err('Employee ID is required', 'MISSING_ID');
   }
 
   const adminClient = createAdminClient();
@@ -284,7 +279,7 @@ export async function deactivateEmployee(employeeId: string): Promise<{ success:
       reason: fetchError?.message ?? 'not_found',
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: 'Employee not found' };
+    return err('Employee not found', fetchError?.code);
   }
 
   // Deactivate employee record
@@ -307,7 +302,7 @@ export async function deactivateEmployee(employeeId: string): Promise<{ success:
       reason: empError.message,
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: `Failed to deactivate employee: ${empError.message}` };
+    return err(`Failed to deactivate employee: ${empError.message}`, empError.code);
   }
 
   // Deactivate profile
@@ -344,5 +339,5 @@ export async function deactivateEmployee(employeeId: string): Promise<{ success:
   });
 
   revalidatePath('/hr/employees');
-  return { success: true };
+  return ok(undefined);
 }

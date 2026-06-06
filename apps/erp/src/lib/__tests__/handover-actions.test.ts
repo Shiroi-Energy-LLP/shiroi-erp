@@ -268,7 +268,7 @@ describe('generateHandoverPack — JSON content snapshot', () => {
     const result = await generateHandoverPack('project-handover-1');
 
     expect(result.success).toBe(true);
-    if (result.success) expect(result.documentId).toBe('doc-handover-1');
+    if (result.success) expect(result.data.documentId).toBe('doc-handover-1');
 
     const insert = state.inserts.find((i) => i.table === 'generated_documents');
     expect(insert).toBeDefined();
