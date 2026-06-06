@@ -7,7 +7,7 @@ import {
   Card, CardContent, Button, Badge, Checkbox, Input,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
-import { formatProjectNumber } from '@repo/ui/formatters';
+import { formatProjectNumber, formatDateFromTimestamp } from '@repo/ui/formatters';
 import {
   ChevronUp, ChevronDown, Columns3,
   ArrowUpDown, Check, X, Loader2,
@@ -19,13 +19,6 @@ import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import type { Database } from '@repo/types/database';
 
 // ── Formatters ──
-
-function formatDate(val: string | null): string {
-  if (!val) return '—';
-  return new Date(val).toLocaleDateString('en-IN', {
-    timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric',
-  });
-}
 
 function formatCurrency(val: number | null): string {
   if (val == null) return '—';
@@ -479,7 +472,7 @@ export function DataTable({
     if (col.format === 'currency') return <span {...editableProps} className={`text-sm font-mono ${editableProps.className ?? ''}`}>{formatCurrency(val as number)}</span>;
 
     // Date
-    if (col.format === 'date') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatDate(val as string)}</span>;
+    if (col.format === 'date') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatDateFromTimestamp(val as string)}</span>;
 
     // Percentage
     if (col.format === 'percentage') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatPercentage(val as number)}</span>;

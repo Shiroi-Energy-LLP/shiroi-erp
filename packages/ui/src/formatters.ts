@@ -34,6 +34,18 @@ export function formatDate(dateString: string): string {
 }
 
 /**
+ * Format an ISO timestamp string (or Date) as Indian date "DD MMM YYYY".
+ * Use this when the input has time/timezone information that would be
+ * corrupted by formatDate's date-only `+T00:00:00+05:30` suffix.
+ */
+export function formatDateFromTimestamp(input: string | Date | null | undefined): string {
+  if (!input) return '—';
+  const d = typeof input === 'string' ? new Date(input) : input;
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+}
+
+/**
  * Strip the "SHIROI/PROJ/" prefix from a project number so the table shows
  * just the year + sequence (e.g. "SHIROI/PROJ/2025-26/0042" → "2025-26/0042").
  * Safe for any other prefix — returns the input unchanged if nothing matches.

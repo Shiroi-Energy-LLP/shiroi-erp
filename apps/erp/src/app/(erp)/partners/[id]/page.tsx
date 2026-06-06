@@ -21,6 +21,7 @@ import {
   TableHead,
   TableCell,
 } from '@repo/ui';
+import { formatDate, formatDateFromTimestamp } from '@repo/ui/formatters';
 import { MarkPayoutPaidButton } from '@/components/partners/mark-payout-paid-button';
 
 const PARTNER_TYPE_LABELS: Record<string, string> = {
@@ -50,15 +51,6 @@ function formatINR(value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
 }
 
 interface PartnerDetailProps {
@@ -177,8 +169,8 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
             />
             <Row label="Rate" value={String(partner.commission_rate)} />
             <Row label="TDS Applicable" value={partner.tds_applicable ? 'Yes (5%)' : 'No'} />
-            <Row label="Agreement Start" value={formatDate(partner.agreement_start_date as string | null)} />
-            <Row label="Agreement End" value={formatDate(partner.agreement_end_date as string | null)} />
+            <Row label="Agreement Start" value={partner.agreement_start_date ? formatDate(partner.agreement_start_date as string) : '—'} />
+            <Row label="Agreement End" value={partner.agreement_end_date ? formatDate(partner.agreement_end_date as string) : '—'} />
             <Row
               label="Total Paid (all time)"
               value={formatINR(Number(partner.total_commission_paid ?? 0))}
@@ -323,7 +315,7 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
                     <TableCell className="text-right tabular-nums text-sm font-medium">
                       {formatINR(Number(p.net_amount))}
                     </TableCell>
-                    <TableCell className="text-xs text-n-500">{formatDate(p.paid_at)}</TableCell>
+                    <TableCell className="text-xs text-n-500">{formatDateFromTimestamp(p.paid_at)}</TableCell>
                     <TableCell className="text-xs text-n-500 font-mono">
                       {p.payment_reference ?? '—'}
                     </TableCell>
