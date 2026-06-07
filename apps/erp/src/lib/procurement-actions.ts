@@ -35,14 +35,14 @@ export async function createPurchaseOrder(input: {
   paymentTermsDays?: number;
   notes?: string;
   lineItems: POLineItem[];
-}): Promise<{ success: boolean; error?: string; poId?: string }> {
+}): Promise<ActionResult<{ poId: string }>> {
   const op = '[createPurchaseOrder]';
 
-  if (!input.lineItems.length) return { success: false, error: 'At least one line item is required' };
+  if (!input.lineItems.length) return err('At least one line item is required', 'NO_ITEMS');
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   const { data: employee } = await supabase
     .from('employees')
@@ -50,7 +50,7 @@ export async function createPurchaseOrder(input: {
     .eq('profile_id', user.id)
     .single();
 
-  if (!employee) return { success: false, error: 'Employee profile not found' };
+  if (!employee) return err('Employee profile not found', 'EMPLOYEE_MISSING');
 
   // Generate PO number
   const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'PO' });
@@ -91,7 +91,7 @@ export async function createPurchaseOrder(input: {
 
   if (poError) {
     console.error(`${op} PO insert failed:`, { code: poError.code, message: poError.message });
-    return { success: false, error: poError.message };
+    return err(poError.message, poError.code);
   }
 
   // Create line items
@@ -122,7 +122,8 @@ export async function createPurchaseOrder(input: {
 
   if (itemsError) {
     console.error(`${op} Line items insert failed:`, { code: itemsError.code, message: itemsError.message });
-    return { success: true, poId: po.id, error: `PO created but line items failed: ${itemsError.message}` };
+    // PO was created but line items failed — surface as error to the caller.
+    return err(`PO created but line items failed: ${itemsError.message}`, itemsError.code);
   }
 
   // Update BOQ items to link to PO and set status
@@ -138,7 +139,7 @@ export async function createPurchaseOrder(input: {
 
   revalidatePath('/procurement');
   revalidatePath(`/procurement/project/${input.projectId}`);
-  return { success: true, poId: po.id };
+  return ok({ poId: po.id });
 }
 
 // ---------------------------------------------------------------------------
@@ -149,13 +150,13 @@ export async function assignVendorToBoqItem(input: {
   boqItemId: string;
   vendorId: string | null;
   projectId: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[assignVendorToBoqItem]';
   console.log(`${op} Starting: item=${input.boqItemId}, vendor=${input.vendorId}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   // Get vendor name for display
   let vendorName: string | null = null;
@@ -178,11 +179,11 @@ export async function assignVendorToBoqItem(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/procurement/project/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -193,13 +194,13 @@ export async function bulkAssignVendor(input: {
   boqItemIds: string[];
   vendorId: string;
   projectId: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[bulkAssignVendor]';
   console.log(`${op} Starting: ${input.boqItemIds.length} items, vendor=${input.vendorId}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   const { data: vendor } = await supabase
     .from('vendors')
@@ -217,11 +218,11 @@ export async function bulkAssignVendor(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/procurement/project/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -231,13 +232,13 @@ export async function bulkAssignVendor(input: {
 export async function createPOsFromAssignedItems(input: {
   projectId: string;
   boqItemIds: string[];
-}): Promise<{ success: boolean; error?: string; poCount?: number }> {
+}): Promise<ActionResult<{ poCount: number }>> {
   const op = '[createPOsFromAssignedItems]';
   console.log(`${op} Starting for project: ${input.projectId}, items: ${input.boqItemIds.length}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   const { data: employee } = await supabase
     .from('employees')
@@ -245,7 +246,7 @@ export async function createPOsFromAssignedItems(input: {
     .eq('profile_id', user.id)
     .single();
 
-  if (!employee) return { success: false, error: 'Employee profile not found' };
+  if (!employee) return err('Employee profile not found', 'EMPLOYEE_MISSING');
 
   // Founders can auto-approve their own quick POs; everyone else routes through
   // pending_approval → approvePO. This mirrors generatePOsFromAwards.
@@ -267,11 +268,11 @@ export async function createPOsFromAssignedItems(input: {
 
   if (fetchError) {
     console.error(`${op} Fetch failed:`, { code: fetchError.code, message: fetchError.message });
-    return { success: false, error: fetchError.message };
+    return err(fetchError.message, fetchError.code);
   }
 
   if (!boqItems || boqItems.length === 0) {
-    return { success: false, error: 'No items with vendor assignments found' };
+    return err('No items with vendor assignments found', 'NO_ITEMS_WITH_VENDOR');
   }
 
   // Group by vendor
@@ -409,7 +410,7 @@ export async function createPOsFromAssignedItems(input: {
   revalidatePath('/procurement');
   revalidatePath(`/procurement/project/${input.projectId}`);
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true, poCount };
+  return ok({ poCount });
 }
 
 // ---------------------------------------------------------------------------
@@ -419,7 +420,7 @@ export async function createPOsFromAssignedItems(input: {
 export async function updateProcurementPriority(input: {
   projectId: string;
   priority: 'high' | 'medium';
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateProcurementPriority]';
 
   const supabase = await createClient();
@@ -430,11 +431,11 @@ export async function updateProcurementPriority(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/procurement');
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -444,13 +445,13 @@ export async function updateProcurementPriority(input: {
 export async function markItemsReceived(input: {
   boqItemIds: string[];
   projectId: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[markItemsReceived]';
   console.log(`${op} Starting: ${input.boqItemIds.length} items`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   const { error } = await supabase
     .from('project_boq_items')
@@ -459,7 +460,7 @@ export async function markItemsReceived(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   // Check if ALL ordered items for this project are received
@@ -516,7 +517,7 @@ export async function markItemsReceived(input: {
   revalidatePath('/procurement');
   revalidatePath(`/procurement/project/${input.projectId}`);
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -526,7 +527,7 @@ export async function markItemsReceived(input: {
 export async function markItemsReadyToDispatch(input: {
   boqItemIds: string[];
   projectId: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[markItemsReadyToDispatch]';
   console.log(`${op} Starting: ${input.boqItemIds.length} items`);
 
@@ -539,12 +540,12 @@ export async function markItemsReadyToDispatch(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/procurement/project/${input.projectId}`);
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -563,20 +564,20 @@ export async function createVendorAdHoc(input: {
   phone?: string;
   email?: string;
   projectId: string; // for revalidation only
-}): Promise<{ success: boolean; error?: string; vendorId?: string }> {
+}): Promise<ActionResult<{ vendorId: string }>> {
   const op = '[createVendorAdHoc]';
   console.log(`${op} Starting: ${input.companyName}`);
 
   if (!input.companyName.trim()) {
-    return { success: false, error: 'Company name is required' };
+    return err('Company name is required', 'MISSING_NAME');
   }
   if (!input.phone?.trim() && !input.email?.trim()) {
-    return { success: false, error: 'Provide at least a phone or email for the vendor' };
+    return err('Provide at least a phone or email for the vendor', 'MISSING_CONTACT');
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return err('Not authenticated', 'UNAUTHENTICATED');
 
   // Generate a short human-friendly vendor_code (DB has unique constraint).
   // SHIROI/VEN/{YEAR}/{6-rand-alphanum}. Uniqueness collision risk is negligible
@@ -606,12 +607,12 @@ export async function createVendorAdHoc(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/procurement/project/${input.projectId}`);
   revalidatePath('/vendors');
-  return { success: true, vendorId: data.id };
+  return ok({ vendorId: data.id });
 }
 
 // ---------------------------------------------------------------------------

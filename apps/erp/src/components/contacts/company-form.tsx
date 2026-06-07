@@ -94,9 +94,9 @@ export function CompanyForm({ company }: CompanyFormProps) {
         notes: form.get('notes') as string,
       });
       setLoading(false);
-      if (res.success && res.companyId) {
+      if (res.success) {
         addToast({ variant: 'success', title: 'Company saved', description: 'The company has been saved successfully.' });
-        router.push(`/companies/${res.companyId}`);
+        router.push(`/companies/${res.data.companyId}`);
       } else {
         const errMsg = res.error ?? 'Failed to create company';
         setError(errMsg);

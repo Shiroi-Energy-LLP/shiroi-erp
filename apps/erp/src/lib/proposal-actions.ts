@@ -1,9 +1,9 @@
 'use server';
 
-import { createClient } from '@repo/supabase/server';
 import Decimal from 'decimal.js';
 import { emitErpEvent } from './n8n/emit';
 import { ok, err, type ActionResult } from './types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 type GSTType = 'supply' | 'works_contract';
 type ScopeOwner = 'shiroi' | 'client' | 'builder' | 'excluded';
@@ -92,12 +92,11 @@ export async function createProposalAction(input: CreateProposalInput): Promise<
   console.log(`${op} Starting for lead: ${input.leadId}`);
 
   try {
-    const supabase = await createClient();
+    const authed = await requireAuthUser();
+    if (!authed.success) return authed;
+    const { user, supabase } = authed.data;
 
     // Get current user's employee record
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return err('Not authenticated');
-
     const { data: employee } = await supabase
       .from('employees')
       .select('id')
@@ -277,12 +276,11 @@ export async function createBudgetaryQuoteAction(
   console.log(`${op} Starting for lead: ${input.leadId}`);
 
   try {
-    const supabase = await createClient();
+    const authed = await requireAuthUser();
+    if (!authed.success) return authed;
+    const { user, supabase } = authed.data;
 
     // Get current user's employee record
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return err('Not authenticated');
-
     const { data: employee } = await supabase
       .from('employees')
       .select('id')

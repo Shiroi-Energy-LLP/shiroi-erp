@@ -1,10 +1,14 @@
 import * as React from 'react';
 import { getAllAmcData, getCommissionedProjects, getAllProjectsForAmc, getProjectsWithAmc } from '@/lib/amc-actions';
 import { getActiveEmployees } from '@/lib/tasks-actions';
+import { getUserProfile } from '@/lib/auth';
 import { formatDate } from '@repo/ui/formatters';
 import { CreateAmcDialog } from '@/components/om/create-amc-dialog';
 import { AmcStatusToggle } from '@/components/om/amc-status-toggle';
 import { AmcVisitTracker } from '@/components/om/amc-visit-tracker';
+import { DeleteAmcButton } from '@/components/om/delete-amc-button';
+
+const AMC_DELETE_ROLES = ['founder', 'om_technician'] as const;
 import {
   Card,
   CardContent,
@@ -26,7 +30,7 @@ interface AmcPageProps {
 export default async function AmcPage({ searchParams }: AmcPageProps) {
   const params = await searchParams;
 
-  const [{ contracts, total }, commissionedProjects, allProjects, employees, filterProjects] = await Promise.all([
+  const [{ contracts, total }, commissionedProjects, allProjects, employees, filterProjects, profile] = await Promise.all([
     getAllAmcData({
       status: params.status || undefined,
       category: params.category || undefined,
@@ -36,7 +40,12 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
     getAllProjectsForAmc(),
     getActiveEmployees(),
     getProjectsWithAmc(),
+    getUserProfile(),
   ]);
+
+  const canDeleteAmc = profile?.role
+    ? (AMC_DELETE_ROLES as readonly string[]).includes(profile.role)
+    : false;
 
   const hasFilters = params.status || params.category || params.project;
 
@@ -230,9 +239,17 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                           )}
                         </td>
 
-                        {/* Actions — contract number as identifier */}
+                        {/* Actions — contract number + per-row delete (founder + om_technician) */}
                         <td className="px-2 py-2 text-[10px]">
-                          <span className="text-[9px] text-n-300 font-mono">{contract.contract_number}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] text-n-300 font-mono">{contract.contract_number}</span>
+                            {canDeleteAmc && (
+                              <DeleteAmcButton
+                                contractId={contract.id}
+                                contractNumber={contract.contract_number}
+                              />
+                            )}
+                          </div>
                         </td>
 
                         {/* Report — per-visit reports are accessible via the visit tracker */}

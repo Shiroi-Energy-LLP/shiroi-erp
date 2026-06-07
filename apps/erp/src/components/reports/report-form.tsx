@@ -133,7 +133,7 @@ export function ReportForm({
           photos: uploadedPhotos,
         });
 
-        if (result.error) {
+        if (!result.success) {
           setError(result.error);
           return;
         }

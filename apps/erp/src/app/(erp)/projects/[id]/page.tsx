@@ -31,6 +31,7 @@ import { PerformanceTab } from '@/components/projects/performance/performance-ta
 import { getCutRecordsForProject, getProjectCableSummary } from '@/lib/inventory-queries';
 // C9 — Completion checklist
 import { CompletionChecklist } from '@/components/projects/completion/completion-checklist';
+import { MilestonePhotosPanel } from '@/components/projects/completion/milestone-photos-panel';
 import { getProjectCompletionItems, getProjectCompletionPct } from '@/lib/project-completion-queries';
 // C12 — DC Certificates
 import { DcCertificatesPanel } from '@/components/projects/certificates/dc-certificates-panel';
@@ -261,7 +262,7 @@ async function TabContent({ projectId, tab }: { projectId: string; tab: string }
       );
     }
 
-    // ── C9: Completion checklist ─────────────────────────────────────────
+    // ── C9: Completion checklist + E9 milestone photos ──────────────────
     case 'completion': {
       const viewerRole = await getCurrentUserRoleForProject();
       const [items, completionPct] = await Promise.all([
@@ -269,12 +270,15 @@ async function TabContent({ projectId, tab }: { projectId: string; tab: string }
         getProjectCompletionPct(projectId),
       ]);
       return (
-        <CompletionChecklist
-          projectId={projectId}
-          items={items}
-          completionPct={completionPct}
-          viewerRole={viewerRole}
-        />
+        <div className="space-y-4">
+          <CompletionChecklist
+            projectId={projectId}
+            items={items}
+            completionPct={completionPct}
+            viewerRole={viewerRole}
+          />
+          <MilestonePhotosPanel projectId={projectId} />
+        </div>
       );
     }
 

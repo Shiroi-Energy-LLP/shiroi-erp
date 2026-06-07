@@ -916,6 +916,25 @@ async function fetchGoodweReading(inv: InverterDue): Promise<NormalizedReading> 
   return syntheticReading(inv.rated_capacity_kw);
 }
 
+// ─── Error message normalizer ───────────────────────────────────────────────
+// Supabase/PostgREST throws plain objects ({ message, details, code }); String()
+// on those yields a useless "[object Object]" in inverter_poll_failures. Prefer
+// .message, fall back to JSON so failures are legible.
+function toErrorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === 'string') return e;
+  if (e && typeof e === 'object') {
+    const m = (e as Record<string, unknown>).message;
+    if (typeof m === 'string' && m.length > 0) return m;
+    try {
+      return JSON.stringify(e);
+    } catch {
+      return String(e);
+    }
+  }
+  return String(e);
+}
+
 // ─── Main handler ──────────────────────────────────────────────────────────
 
 // @ts-expect-error — Deno global
@@ -1148,7 +1167,7 @@ Deno.serve(async (req: Request) => {
       succeeded++;
     } catch (e) {
       failed++;
-      const message = e instanceof Error ? e.message : String(e);
+      const message = toErrorMessage(e);
       console.error(`${op} inverter ${inv.id} (${inv.brand}) failed:`, message);
 
       await supabase.from('inverter_poll_failures').insert({

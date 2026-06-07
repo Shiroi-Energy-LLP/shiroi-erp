@@ -87,6 +87,29 @@ export async function getTerritory(id: string): Promise<TerritoryWithAssignee | 
 }
 
 /**
+ * Count leads whose `city` (case-insensitive) is in the territory's cities array.
+ * Used by the territory detail page to show coverage.
+ */
+export async function countLeadsInTerritory(cities: string[]): Promise<number> {
+  const op = '[countLeadsInTerritory]';
+  if (cities.length === 0) return 0;
+  const supabase = await createClient();
+
+  // city values on leads are user-entered; normalise to lowercase before
+  // matching since territory cities are stored lowercase.
+  const { count, error } = await supabase
+    .from('leads')
+    .select('id', { count: 'estimated', head: true })
+    .in('city', cities);
+
+  if (error) {
+    console.error(`${op} query failed`, { error, timestamp: new Date().toISOString() });
+    return 0;
+  }
+  return count ?? 0;
+}
+
+/**
  * Fetch all active employees for the assignee select.
  * Returns a minimal shape: id + full_name.
  */

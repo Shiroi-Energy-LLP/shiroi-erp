@@ -1,10 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@repo/supabase/server';
 import { type ActionResult, ok, err } from '@/lib/types/actions';
 import { emitErpEvent } from '@/lib/n8n/emit';
 import { asDocsClient, type DocumentCategory } from '@/lib/documents-queries';
+import { requireAuthUser } from '@/lib/auth';
 
 // ---------------------------------------------------------------------------
 // C10: Upload a project document via drag-drop form
@@ -74,9 +74,9 @@ export async function uploadProjectDocument(
     return err(`File type not allowed: .${ext}`);
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: employee } = await supabase
     .from('employees')
@@ -179,11 +179,9 @@ export async function createDocument(
   const op = '[createDocument]';
   console.log(`${op} Starting`, { name: input.name, category: input.category });
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: employee } = await supabase
     .from('employees')
@@ -249,11 +247,9 @@ export async function softDeleteDocument(documentId: string): Promise<ActionResu
   const op = '[softDeleteDocument]';
   console.log(`${op} Starting`, { documentId });
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { supabase } = authed.data;
 
   const docs = asDocsClient(supabase);
   const { error } = await docs
@@ -286,11 +282,9 @@ export async function requestDriveFolderForLead(
   const op = '[requestDriveFolderForLead]';
   console.log(`${op} Starting`, { leadId });
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   // Read lead row + check existing folder
   const docs = asDocsClient(supabase);

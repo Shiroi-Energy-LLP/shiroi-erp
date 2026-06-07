@@ -115,7 +115,7 @@ export function VendorAssignmentTable({
     const result = await createPOsFromAssignedItems({ projectId, boqItemIds: itemsToProcess });
     setCreatingPOs(false);
     if (result.success) {
-      setMessage(`Created ${result.poCount} Purchase Order(s)`);
+      setMessage(`Created ${result.data.poCount} Purchase Order(s)`);
       router.refresh();
     } else {
       setMessage(result.error ?? 'Failed');

@@ -34,11 +34,11 @@ export function AINarrative({ reportId, projectId, existingNarrative, generatedA
     const res = await generateAINarrative(reportId, projectId);
 
     setLoading(false);
-    if (res.success && res.narrative) {
-      setNarrative(res.narrative);
+    if (res.success && res.data.narrative) {
+      setNarrative(res.data.narrative);
       setLastGenerated(new Date().toISOString());
     } else {
-      setError(res.error ?? 'Failed to generate narrative');
+      setError(res.success ? 'Failed to generate narrative' : res.error);
     }
   }
 

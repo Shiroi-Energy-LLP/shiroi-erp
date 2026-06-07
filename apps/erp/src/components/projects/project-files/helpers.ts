@@ -1,5 +1,6 @@
 import { FileText, File, Image, Table2 } from 'lucide-react';
 import { createClient } from '@repo/supabase/client';
+import { formatDateFromTimestamp } from '@repo/ui/formatters';
 
 import type { FileInfo } from './types';
 import { SCAN_FOLDERS, FOLDER_TO_CATEGORY } from './types';
@@ -25,15 +26,12 @@ export function getFileIcon(mimetype?: string) {
   return File;
 }
 
-export function formatDate(iso: string): string {
-  if (!iso) return '';
-  return new Date(iso).toLocaleDateString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
+/**
+ * Re-export of the canonical ISO-timestamp formatter. Kept here under the
+ * old name so existing callers (`./index.tsx`, `./parts-rows.tsx`, etc.)
+ * don't need to update their imports. C4 follow-up 2026-06-06.
+ */
+export const formatDate = formatDateFromTimestamp;
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('en-IN', {

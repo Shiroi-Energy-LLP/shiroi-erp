@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from '@/lib/n8n/emit';
+import { requireAuthUser } from '@/lib/auth';
 
 type ExpenseInsert = Database['public']['Tables']['expenses']['Insert'];
 type ExpenseUpdate = Database['public']['Tables']['expenses']['Update'];
@@ -16,9 +17,9 @@ interface CallerContext {
 }
 
 async function getCaller(): Promise<CallerContext> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { userId: '', role: null, employeeId: null };
+  const authed = await requireAuthUser();
+  if (!authed.success) return { userId: '', role: null, employeeId: null };
+  const { user, supabase } = authed.data;
 
   const [{ data: profile }, { data: employee }] = await Promise.all([
     supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),

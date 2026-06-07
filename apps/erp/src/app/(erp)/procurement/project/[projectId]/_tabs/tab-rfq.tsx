@@ -17,6 +17,7 @@ import type { PurchaseDetailItem } from '@/lib/procurement-queries';
 import type { RfqSummary } from '@/lib/rfq-queries';
 import { SendRfqPanel } from '../_client/send-rfq-panel';
 import { InvitationActionButtons } from '../_client/invitation-action-buttons';
+import { CancelRfqButton } from '../_client/cancel-rfq-button';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -130,6 +131,9 @@ function RfqRow({ rfq, vendors }: { rfq: RfqSummary; vendors: TabRfqProps['vendo
         </td>
         <td className="px-3 py-2 text-[10px] text-n-600">{formatDate(rfq.deadline)}</td>
         <td className="px-3 py-2 text-[10px] text-n-500">{formatDateTime(rfq.created_at)}</td>
+        <td className="px-3 py-2 text-[10px]" onClick={(e) => e.stopPropagation()}>
+          <CancelRfqButton rfqId={rfq.id} rfqNumber={rfq.rfq_number} status={rfq.status} />
+        </td>
       </tr>
 
       {/* Invitation child rows */}
@@ -229,6 +233,7 @@ export function TabRfq({ projectId, items, rfqs, vendors, viewerRole }: TabRfqPr
                     <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-right">Submitted</th>
                     <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Deadline</th>
                     <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left">Created</th>
+                    <th className="px-3 py-2 text-[10px] font-semibold text-n-500 uppercase text-left w-20">Actions</th>
                   </tr>
                 </thead>
                 <tbody>

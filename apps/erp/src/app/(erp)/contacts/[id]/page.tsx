@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getContact, getContactEntities, getEntityActivities } from '@/lib/contacts-queries';
 import { ActivityTimeline } from '@/components/contacts/activity-timeline';
+import { EndRoleButton } from '@/components/contacts/end-role-button';
 import {
   Card, CardHeader, CardTitle, CardContent, Badge, Button,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
@@ -181,11 +182,20 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                         {ccr.companies?.name}
                       </Link>
                       <p className="text-xs text-[#7C818E] mt-0.5">{ccr.role_title}</p>
-                      {ccr.ended_at ? (
-                        <Badge variant="neutral" className="mt-1 text-[9px]">Ended {ccr.ended_at}</Badge>
-                      ) : (
-                        <Badge variant="success" className="mt-1 text-[9px]">Active</Badge>
-                      )}
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        {ccr.ended_at ? (
+                          <Badge variant="neutral" className="text-[9px]">Ended {ccr.ended_at}</Badge>
+                        ) : (
+                          <Badge variant="success" className="text-[9px]">Active</Badge>
+                        )}
+                        {!ccr.ended_at && (
+                          <EndRoleButton
+                            roleId={ccr.id}
+                            roleTitle={ccr.role_title}
+                            companyName={ccr.companies?.name ?? 'this company'}
+                          />
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

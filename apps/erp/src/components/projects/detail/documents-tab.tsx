@@ -1,9 +1,12 @@
 import { createClient } from '@repo/supabase/server';
+import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import { ProjectFiles } from '@/components/projects/project-files';
 import { getHandoverPack } from '@/lib/handover-actions';
 import { DocumentDropZone } from '@/components/documents/document-drop-zone';
+import { DocumentList } from '@/components/documents/document-list';
 import { HandoverPdfButton } from '@/components/projects/handover-pdf-button';
 import { getCurrentUserRoleForProject } from '@/lib/project-detail-actions';
+import { attachOpenUrls, getDocumentsForProject } from '@/lib/documents-queries';
 import {
   getStepDeliveryData,
   getStepQcData,
@@ -17,7 +20,8 @@ interface DocumentsTabProps {
 
 export async function DocumentsTab({ projectId, leadId }: DocumentsTabProps) {
   // Parallel fetch: handover pack + DC + QC + survey + viewer role + project handover_pdf_path
-  const [handoverPack, dcData, qcInspections, surveyData, viewerRole, projectRow] = await Promise.all([
+  //   + indexed documents (mig 109 — used by softDeleteDocument delete buttons).
+  const [handoverPack, dcData, qcInspections, surveyData, viewerRole, projectRow, docsResult] = await Promise.all([
     getHandoverPack(projectId),
     getStepDeliveryData(projectId).catch(() => ({ outgoingChallans: [] as any[], vendorChallans: [] })),
     getStepQcData(projectId).catch(() => [] as any[]),
@@ -32,7 +36,13 @@ export async function DocumentsTab({ projectId, leadId }: DocumentsTabProps) {
         .maybeSingle();
       return data;
     })(),
+    getDocumentsForProject(projectId),
   ]);
+
+  // Sign Supabase URLs / pass through Drive URLs so DocumentList can render
+  // a working Open link per row.
+  const indexedDocuments = docsResult.success ? await attachOpenUrls(docsResult.data) : [];
+  const canDeleteDocuments = !!viewerRole && ['founder', 'project_manager'].includes(viewerRole);
 
   // Fetch lead-era files from the proposal-files bucket
   let leadFiles: {
@@ -78,6 +88,26 @@ export async function DocumentsTab({ projectId, leadId }: DocumentsTabProps) {
         </div>
         <DocumentDropZone entityType="project" entityId={projectId} />
       </div>
+
+      {/* Indexed documents (mig 109) — soft-delete enabled for founder + PM */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Indexed Documents{' '}
+            <span className="text-xs font-normal text-n-500">
+              ({indexedDocuments.length})
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!docsResult.success && (
+            <div className="text-xs text-red-600 mb-2">
+              Failed to load documents: {docsResult.error}
+            </div>
+          )}
+          <DocumentList documents={indexedDocuments} canDelete={canDeleteDocuments} />
+        </CardContent>
+      </Card>
 
       {/* Existing project files shell (buckets, drag-drop recategorize, generated docs) */}
       <ProjectFiles

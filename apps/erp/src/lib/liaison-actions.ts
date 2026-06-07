@@ -3,6 +3,8 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { emitErpEvent } from '@/lib/n8n/emit';
+import { requireAuthUser } from '@/lib/auth';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 /**
  * Create a net metering application for a project.
@@ -10,7 +12,7 @@ import { emitErpEvent } from '@/lib/n8n/emit';
 export async function createNetMeteringApplication(input: {
   projectId: string;
   discomName: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[createNetMeteringApplication]';
   console.log(`${op} Starting for project: ${input.projectId}`);
 
@@ -24,7 +26,7 @@ export async function createNetMeteringApplication(input: {
     .maybeSingle();
 
   if (existing) {
-    return { success: false, error: 'Net metering application already exists for this project.' };
+    return err('Net metering application already exists for this project.', 'ALREADY_EXISTS');
   }
 
   // Fetch project to auto-determine CEIG requirement
@@ -36,7 +38,7 @@ export async function createNetMeteringApplication(input: {
 
   if (projectError || !project) {
     console.error(`${op} Could not fetch project:`, { error: projectError?.message });
-    return { success: false, error: 'Could not load project data.' };
+    return err('Could not load project data.', projectError?.code);
   }
 
   const ceigRequired =
@@ -56,13 +58,13 @@ export async function createNetMeteringApplication(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   void emitNetMeteringApplicationSubmitted(input.projectId);
   revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 async function emitNetMeteringApplicationSubmitted(projectId: string): Promise<void> {
@@ -112,7 +114,7 @@ export async function updateCeigStatus(input: {
   ceigApprovalDate?: string;
   ceigCertificateNumber?: string;
   ceigRejectionReason?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateCeigStatus]';
   console.log(`${op} Starting for project: ${input.projectId}, status: ${input.ceigStatus}`);
 
@@ -135,7 +137,7 @@ export async function updateCeigStatus(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   // If CEIG approved, also update the projects table
@@ -153,7 +155,7 @@ export async function updateCeigStatus(input: {
     void emitCeigApprovalReceived(input.projectId, input.ceigCertificateNumber, input.ceigApprovalDate);
   }
 
-  return { success: true };
+  return ok(undefined);
 }
 
 async function emitCeigApprovalReceived(
@@ -213,7 +215,7 @@ export async function updateDiscomStatus(input: {
   discomApplicationDate?: string;
   discomApplicationNumber?: string;
   notes?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateDiscomStatus]';
   console.log(`${op} Starting for project: ${input.projectId}, status: ${input.discomStatus}`);
 
@@ -236,14 +238,14 @@ export async function updateDiscomStatus(input: {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     // Check if this is the CEIG gate trigger error
     if (error.message?.includes('CEIG clearance required')) {
-      return { success: false, error: 'CEIG clearance must be approved before TNEB submission can proceed.' };
+      return err('CEIG clearance must be approved before TNEB submission can proceed.', 'CEIG_REQUIRED');
     }
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 /**
@@ -254,7 +256,7 @@ export async function updateNetMeterInstallation(input: {
   netMeterInstalled: boolean;
   netMeterInstalledDate?: string;
   netMeterSerialNumber?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateNetMeterInstallation]';
   console.log(`${op} Starting for project: ${input.projectId}`);
 
@@ -271,12 +273,12 @@ export async function updateNetMeterInstallation(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 /**
@@ -286,7 +288,7 @@ export async function recordFollowup(input: {
   projectId: string;
   nextFollowupDate?: string;
   notes?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[recordFollowup]';
   console.log(`${op} Starting for project: ${input.projectId}`);
 
@@ -313,11 +315,11 @@ export async function recordFollowup(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/liaison');
-  return { success: true };
+  return ok(undefined);
 }
 
 /**
@@ -330,15 +332,13 @@ export async function uploadLiaisonDocument(input: {
   documentName: string;
   storagePath: string;
   fileSizeBytes?: number;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[uploadLiaisonDocument]';
   console.log(`${op} Starting for project: ${input.projectId}, type: ${input.documentType}`);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: emp } = await supabase
     .from('employees')
@@ -361,12 +361,12 @@ export async function uploadLiaisonDocument(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 /**
@@ -377,15 +377,13 @@ export async function addLiaisonActivity(input: {
   projectId: string;
   description: string;
   activityType?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[addLiaisonActivity]';
   console.log(`${op} Starting for project: ${input.projectId}`);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   // Insert into activities table (owner_id is profile_id, body stores the note)
   const activityId = crypto.randomUUID();
@@ -400,7 +398,7 @@ export async function addLiaisonActivity(input: {
 
   if (error) {
     console.error(`${op} Activities insert failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   // Link to the project via activity_associations
@@ -411,7 +409,7 @@ export async function addLiaisonActivity(input: {
   });
 
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 /**
@@ -420,7 +418,7 @@ export async function addLiaisonActivity(input: {
 export async function updateLiaisonFields(input: {
   projectId: string;
   fields: Record<string, unknown>;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateLiaisonFields]';
   console.log(`${op} Starting for project: ${input.projectId}`);
 
@@ -432,12 +430,12 @@ export async function updateLiaisonFields(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 /**
@@ -450,15 +448,15 @@ export async function createObjection(input: {
   objectionType: string;
   description: string;
   raisedDate: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[createObjection]';
   console.log(`${op} Starting for project: ${input.projectId}`);
 
-  const supabase = await createClient();
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   // Get logged_by employee ID
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
 
   const { data: emp } = await supabase
     .from('employees')
@@ -466,7 +464,7 @@ export async function createObjection(input: {
     .eq('profile_id', user.id)
     .single();
 
-  if (!emp) return { success: false, error: 'Employee profile not found' };
+  if (!emp) return err('Employee profile not found', 'EMPLOYEE_MISSING');
 
   const { error } = await supabase
     .from('liaison_objections')
@@ -482,7 +480,7 @@ export async function createObjection(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   // Update DISCOM status to objection_raised
@@ -492,14 +490,14 @@ export async function createObjection(input: {
     .eq('project_id', input.projectId);
 
   revalidatePath('/liaison');
-  return { success: true };
+  return ok(undefined);
 }
 
 export async function setAwaitingClientDetails(input: {
   projectId: string;
   awaiting: boolean;
   note?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[setAwaitingClientDetails]';
   console.log(`${op} Setting awaiting=${input.awaiting} for project: ${input.projectId}`);
 
@@ -515,10 +513,10 @@ export async function setAwaitingClientDetails(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message, projectId: input.projectId });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/liaison');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
