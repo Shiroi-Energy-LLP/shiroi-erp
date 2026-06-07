@@ -24,7 +24,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {
           "response": { "response": { "responseFormat": "json" } },
-          "timeout": 55000
+          "timeout": 120000
         }
       },
       "id": "node-http-poll",
