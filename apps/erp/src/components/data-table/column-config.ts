@@ -46,7 +46,7 @@ export const LEAD_COLUMNS: ColumnDef[] = [
       { value: 'social_media', label: 'Social Media' }, { value: 'walkin', label: 'Walk-in' },
     ] },
   // Referrer: flattened from channel_partners embed. Custom renderer in
-  // data-table.tsx handles VIP badge. Inline-edit options are injected at
+  // data-table.tsx handles MGMT REF badge. Inline-edit options are injected at
   // runtime via DataTable's `dynamicOptions` prop (the partners list isn't
   // static so it can't live in column-config).
   { key: 'referrer', label: 'Referrer', sortKey: 'referrer_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'select' },

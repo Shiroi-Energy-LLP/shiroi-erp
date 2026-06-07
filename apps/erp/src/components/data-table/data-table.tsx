@@ -383,7 +383,7 @@ export function DataTable({
         }
       : {};
 
-    // Referrer column — shows VIP badge for internal partners, "+ Set" when
+    // Referrer column — shows MGMT REF badge for internal partners, "+ Set" when
     // null. Double-click anywhere on the cell opens an inline select populated
     // with the partner list (passed in via DataTable's `dynamicOptions` prop).
     // The save handler in leads-table-wrapper translates the column key
@@ -409,14 +409,14 @@ export function DataTable({
           </span>
         );
       }
-      // Compact badge mode (per Vivek): show just "VIP" for internal, "CUSTOMER"
+      // Compact badge mode (per Vivek): show "MGMT REF" for internal, "CUSTOMER"
       // for external. Hover surfaces the full partner name via title.
       const pillClass = isInternal
-        ? 'inline-flex items-center justify-center rounded-full h-6 min-w-[72px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-status-success-bg text-status-success-text'
-        : 'inline-flex items-center justify-center rounded-full h-6 min-w-[72px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-[#FCE7F3] text-[#9D174D]';
+        ? 'inline-flex items-center justify-center rounded-full h-6 min-w-[88px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-status-success-bg text-status-success-text'
+        : 'inline-flex items-center justify-center rounded-full h-6 min-w-[88px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-[#FCE7F3] text-[#9D174D]';
       return (
         <span {...editProps} className={`${editProps.className ?? ''} inline-flex items-center`} title={referrerName}>
-          <span className={pillClass}>{isInternal ? 'VIP' : 'Customer'}</span>
+          <span className={pillClass}>{isInternal ? 'MGMT REF' : 'Customer'}</span>
         </span>
       );
     }

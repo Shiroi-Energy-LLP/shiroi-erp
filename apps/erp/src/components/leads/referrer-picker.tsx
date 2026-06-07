@@ -17,7 +17,7 @@ interface ReferrerPickerProps {
 
 /**
  * Combobox for picking a channel partner as lead referrer.
- * Internal (VIP) partners are listed first with a [VIP] prefix;
+ * Internal (MGMT REF) partners are listed first with a [MGMT REF] prefix;
  * external partners follow alphabetically.
  *
  * Receives partner list as props — fetched once server-side to avoid
@@ -43,10 +43,10 @@ export function ReferrerPicker({
       >
         <option value="">No referrer</option>
         {internalPartners.length > 0 && (
-          <optgroup label="Internal (VIP)">
+          <optgroup label="Internal (MGMT REF)">
             {internalPartners.map((p) => (
               <option key={p.id} value={p.id}>
-                [VIP] {p.partner_name}
+                [MGMT REF] {p.partner_name}
               </option>
             ))}
           </optgroup>
