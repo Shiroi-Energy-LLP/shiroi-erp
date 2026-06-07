@@ -11,6 +11,7 @@ import {
   confirmProjectReview,
   markProjectDuplicate,
 } from '@/lib/data-review-actions';
+import { verifyEntityData } from '@/lib/data-flag-actions';
 import { DuplicateSearch } from './duplicate-search';
 
 interface Props {
@@ -51,6 +52,21 @@ export function ProjectEditRow({ row, onDone }: Props) {
         return;
       }
       addToast({ title: `${row.project_number} confirmed`, variant: 'success' });
+      onDone();
+    });
+  };
+
+  const handleVerifyData = () => {
+    startTransition(async () => {
+      const result = await verifyEntityData({
+        entityType: 'project',
+        entityId: row.id,
+      });
+      if (!result.success) {
+        addToast({ title: result.error ?? 'Verify failed', variant: 'destructive' });
+        return;
+      }
+      addToast({ title: `${row.project_number} data verified`, variant: 'success' });
       onDone();
     });
   };
@@ -165,6 +181,14 @@ export function ProjectEditRow({ row, onDone }: Props) {
           onClick={() => setDupOpen(true)}
         >
           Mark Duplicate
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isPending}
+          onClick={handleVerifyData}
+        >
+          Verify data quality
         </Button>
       </div>
 

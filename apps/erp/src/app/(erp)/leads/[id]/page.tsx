@@ -3,7 +3,7 @@ import { getLead } from '@/lib/leads-queries';
 import { getEntityContacts } from '@/lib/contacts-queries';
 import { listChannelPartnersForPicker, getPartner } from '@/lib/partners-queries';
 import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
-import { InlineReferrerPicker } from '@/components/leads/inline-referrer-picker';
+import { ReferrerChangeDialog } from '@/components/leads/referrer-change-dialog';
 import { formatDate, toIST } from '@repo/ui/formatters';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 
@@ -39,14 +39,23 @@ export default async function LeadDetailsTab({ params }: LeadDetailPageProps) {
           <CardContent className="space-y-3">
             <InfoRow label="Segment" value={lead.segment} capitalize />
             <InfoRow label="Source" value={lead.source?.replace(/_/g, ' ')} capitalize />
-            {/* Referrer row — inline picker with auto-save (no dialog) */}
+            {/* Referrer row — shows current partner name + "Change" button
+                that opens the ReferrerChangeDialog. Internal partners get a
+                "[VIP]" prefix to match the picker pattern elsewhere. */}
             <div className="flex items-center justify-between text-sm gap-3">
               <span className="text-n-500 shrink-0">Referrer</span>
-              <InlineReferrerPicker
-                leadId={id}
-                currentPartnerId={lead.channel_partner_id}
-                partners={partners}
-              />
+              <div className="flex items-center gap-2">
+                <span className="text-n-900">
+                  {currentPartner
+                    ? `${currentPartner.is_internal ? '[VIP] ' : ''}${currentPartner.partner_name}`
+                    : <span className="text-n-400">—</span>}
+                </span>
+                <ReferrerChangeDialog
+                  leadId={id}
+                  currentPartnerId={lead.channel_partner_id}
+                  partners={partners}
+                />
+              </div>
             </div>
             {lead.system_type && (
               <InfoRow label="System Type" value={lead.system_type.replace(/_/g, ' ')} capitalize />

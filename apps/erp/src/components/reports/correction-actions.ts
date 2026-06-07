@@ -1,6 +1,7 @@
 'use server';
 
 import { createCorrectionRequest } from '@/lib/site-report-queries';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 interface SubmitCorrectionInput {
   originalReportId: string;
@@ -14,19 +15,19 @@ interface SubmitCorrectionInput {
 
 export async function submitCorrectionAction(
   input: SubmitCorrectionInput,
-): Promise<{ error?: string; correctionId?: string }> {
+): Promise<ActionResult<{ correctionId: string }>> {
   const op = '[submitCorrectionAction]';
   console.log(`${op} Starting for report: ${input.originalReportId}, field: ${input.fieldCorrected}`);
 
   try {
     if (!input.fieldCorrected) {
-      return { error: 'Field to correct is required.' };
+      return err('Field to correct is required.', 'MISSING_FIELD');
     }
     if (!input.correctedValue) {
-      return { error: 'Corrected value is required.' };
+      return err('Corrected value is required.', 'MISSING_VALUE');
     }
     if (!input.correctionReason) {
-      return { error: 'Correction reason is mandatory.' };
+      return err('Correction reason is mandatory.', 'MISSING_REASON');
     }
 
     const result = await createCorrectionRequest({
@@ -41,13 +42,13 @@ export async function submitCorrectionAction(
       status: 'pending',
     });
 
-    return { correctionId: result.id };
-  } catch (error) {
+    return ok({ correctionId: result.id });
+  } catch (e) {
     console.error(`${op} Failed:`, {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+      error: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
       timestamp: new Date().toISOString(),
     });
-    return { error: error instanceof Error ? error.message : 'Failed to submit correction.' };
+    return err(e instanceof Error ? e.message : 'Failed to submit correction.', 'CORRECTION_FAILED');
   }
 }

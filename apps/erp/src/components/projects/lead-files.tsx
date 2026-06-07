@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { createClient } from '@repo/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
+import { formatDateFromTimestamp } from '@repo/ui/formatters';
 import { Download, FileText, Image, File, Table2, Ruler } from 'lucide-react';
 import { ImageViewer, type ViewableImage } from '@/components/ui/image-viewer';
 import { DataFlagButton } from '@/components/data-flag-button';
@@ -51,13 +52,6 @@ function formatFileSize(bytes?: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDate(iso: string): string {
-  if (!iso) return '';
-  return new Date(iso).toLocaleDateString('en-IN', {
-    timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric',
-  });
 }
 
 export function LeadFiles({ leadId, files }: LeadFilesProps) {
@@ -160,7 +154,7 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
                         </button>
                         <span className="text-[11px] text-[#9CA0AB]">
                           {formatFileSize(file.size)}
-                          {file.created_at && ` · ${formatDate(file.created_at)}`}
+                          {file.created_at && ` · ${formatDateFromTimestamp(file.created_at)}`}
                         </span>
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

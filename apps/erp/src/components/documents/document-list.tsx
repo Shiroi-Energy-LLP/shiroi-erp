@@ -5,6 +5,7 @@ import {
 } from '@/lib/documents-queries';
 import { Badge } from '@repo/ui';
 import { ExternalLink, FileText, Image as ImageIcon, FileCode, Layers } from 'lucide-react';
+import { DocumentDeleteButton } from './document-delete-button';
 
 function formatFileSize(bytes?: number | null): string {
   if (!bytes) return '—';
@@ -30,6 +31,11 @@ interface DocumentListProps {
   // Accept both shapes: rows with a pre-signed open URL (from attachOpenUrls)
   // and bare rows. Backwards-compatible with existing callers.
   documents: Array<DocumentRow | DocumentRowWithUrl>;
+  /**
+   * When true, renders a per-row "Delete" button that calls `softDeleteDocument`.
+   * Caller is responsible for role-gating before passing `true`.
+   */
+  canDelete?: boolean;
 }
 
 function openHref(doc: DocumentRow | DocumentRowWithUrl): string | null {
@@ -38,7 +44,7 @@ function openHref(doc: DocumentRow | DocumentRowWithUrl): string | null {
   return null;
 }
 
-export function DocumentList({ documents }: DocumentListProps) {
+export function DocumentList({ documents, canDelete = false }: DocumentListProps) {
   if (documents.length === 0) {
     return (
       <div className="py-6 text-center text-xs text-n-500">
@@ -78,20 +84,25 @@ export function DocumentList({ documents }: DocumentListProps) {
               </div>
             </div>
           </div>
-          {(() => {
-            const href = openHref(doc);
-            if (!href) return null;
-            return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-p-600 hover:underline flex items-center gap-1 shrink-0"
-              >
-                Open <ExternalLink className="h-3 w-3" />
-              </a>
-            );
-          })()}
+          <div className="flex items-center gap-3 shrink-0">
+            {(() => {
+              const href = openHref(doc);
+              if (!href) return null;
+              return (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-p-600 hover:underline flex items-center gap-1"
+                >
+                  Open <ExternalLink className="h-3 w-3" />
+                </a>
+              );
+            })()}
+            {canDelete && (
+              <DocumentDeleteButton documentId={doc.id} documentName={doc.name} />
+            )}
+          </div>
         </div>
       ))}
     </div>

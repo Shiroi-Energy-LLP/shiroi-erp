@@ -26,6 +26,7 @@ R15|apps/erp/src/app/(erp)/om/visits/page.tsx:2:import { createClient } from '@r
 R15|apps/erp/src/app/(erp)/projects/[id]/page.tsx:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/proposals/[id]/page.tsx:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/qc-gates/page.tsx:1:import { createClient } from '@repo/supabase/server';
+R15|apps/erp/src/app/(erp)/tasks/[id]/page.tsx:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/vendor-bills/review/page.tsx:14:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/integrations/sungrow/authorize/route.ts:17:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/procurement/[poId]/pdf/route.ts:4:import { createClient } from '@repo/supabase/server';
@@ -44,6 +45,7 @@ R15|apps/erp/src/components/leads/lead-files-list.tsx:4:import { createClient } 
 R15|apps/erp/src/components/leads/lead-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/status-change.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/om/amc-visit-tracker.tsx:7:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/projects/completion/milestone-photos-panel.tsx:15:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/projects/detail/documents-tab.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/components/projects/forms/liaison-form.tsx:7:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/projects/forms/qc-inspection-form.tsx:7:import { createClient } from '@repo/supabase/client';

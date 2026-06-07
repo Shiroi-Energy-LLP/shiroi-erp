@@ -74,6 +74,11 @@ export const LEAD_COLUMNS: ColumnDef[] = [
       { value: 'lost', label: 'Lost' },
       { value: 'on_hold', label: 'On Hold' },
     ] },
+  // AI lead score — sits between Status and Expected Close per Vivek's preference.
+  // Custom render path in data-table.tsx delegates to <LeadScoreBadge /> (0-30
+  // gray, 31-60 yellow, 61-85 green, 86-100 red "HOT"). No inline edit — score
+  // is computed by the Wave 2-4 lead-scorer.
+  { key: 'ai_score', label: 'Score', sortKey: 'ai_score', defaultVisible: true, sortable: true, editable: false, fieldType: 'number' },
   { key: 'assigned_to_name', label: 'Assigned To', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
   { key: 'estimated_size_kwp', label: 'System Size (kWp)', sortKey: 'estimated_size_kwp', defaultVisible: true, sortable: true, editable: true, fieldType: 'number' },
@@ -85,7 +90,6 @@ export const LEAD_COLUMNS: ColumnDef[] = [
   { key: 'close_probability', label: 'Probability %', sortKey: 'close_probability', defaultVisible: true, sortable: true, editable: true, fieldType: 'number', format: 'percentage' },
   { key: 'weighted_value', label: 'Weighted Value', defaultVisible: false, sortable: false, editable: false, fieldType: 'currency', format: 'currency' },
   { key: 'next_followup_date', label: 'Next Follow-up', sortKey: 'next_followup_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'date', format: 'date' },
-  { key: 'ai_score', label: 'AI Score', sortKey: 'ai_score', defaultVisible: true, sortable: true, editable: false, fieldType: 'badge' },
 ];
 
 // ── Proposals columns ──

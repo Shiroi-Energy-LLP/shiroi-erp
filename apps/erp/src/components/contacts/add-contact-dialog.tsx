@@ -75,14 +75,14 @@ export function AddContactDialog({ entityType, entityId, open, onOpenChange }: A
       email: newEmail.trim() || undefined,
     });
 
-    if (!createResult.success || !createResult.contactId) {
+    if (!createResult.success) {
       setLoading(false);
       setError(createResult.error ?? 'Failed to create contact');
       return;
     }
 
     const linkResult = await linkContactToEntity({
-      contactId: createResult.contactId,
+      contactId: createResult.data.contactId,
       entityType,
       entityId,
       roleLabel: roleLabel.trim() || undefined,

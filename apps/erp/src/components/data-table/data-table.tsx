@@ -7,7 +7,7 @@ import {
   Card, CardContent, Button, Badge, Checkbox, Input,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
-import { formatProjectNumber } from '@repo/ui/formatters';
+import { formatProjectNumber, formatDateFromTimestamp } from '@repo/ui/formatters';
 import {
   ChevronUp, ChevronDown, Columns3,
   ArrowUpDown, Check, X, Loader2,
@@ -16,16 +16,10 @@ import { ColumnPicker } from './column-picker';
 import { ViewTabs } from './view-tabs';
 import type { ColumnDef } from './column-config';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
+import { LeadScoreBadge } from '@/components/leads/lead-score-badge';
 import type { Database } from '@repo/types/database';
 
 // ── Formatters ──
-
-function formatDate(val: string | null): string {
-  if (!val) return '—';
-  return new Date(val).toLocaleDateString('en-IN', {
-    timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric',
-  });
-}
 
 function formatCurrency(val: number | null): string {
   if (val == null) return '—';
@@ -427,6 +421,13 @@ export function DataTable({
       );
     }
 
+    // AI lead score — uses LeadScoreBadge (0-30 gray / 31-60 yellow /
+    // 61-85 green / 86-100 red "HOT"). Renders "—" placeholder for null.
+    if (col.key === 'ai_score') {
+      const num = val == null ? null : Number(val);
+      return <LeadScoreBadge score={Number.isFinite(num) ? num : null} />;
+    }
+
     // Link field — always links to detail page
     if (col.key === linkField) {
       const displayVal = col.key === 'project_number'
@@ -479,7 +480,7 @@ export function DataTable({
     if (col.format === 'currency') return <span {...editableProps} className={`text-sm font-mono ${editableProps.className ?? ''}`}>{formatCurrency(val as number)}</span>;
 
     // Date
-    if (col.format === 'date') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatDate(val as string)}</span>;
+    if (col.format === 'date') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatDateFromTimestamp(val as string)}</span>;
 
     // Percentage
     if (col.format === 'percentage') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatPercentage(val as number)}</span>;

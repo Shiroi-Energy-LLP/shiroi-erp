@@ -2,6 +2,8 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { requireAuthUser } from '@/lib/auth';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 /**
  * Generate a handover pack document for a project.
@@ -9,13 +11,15 @@ import { revalidatePath } from 'next/cache';
  */
 export async function generateHandoverPack(
   projectId: string
-): Promise<{ success: boolean; documentId?: string; error?: string }> {
+): Promise<ActionResult<{ documentId: string }>> {
   const op = '[generateHandoverPack]';
   console.log(`${op} Starting for project: ${projectId}`);
 
-  if (!projectId) return { success: false, error: 'Missing project ID' };
+  if (!projectId) return err('Missing project ID', 'MISSING_ID');
 
-  const supabase = await createClient();
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   // Fetch all project data needed for the handover pack
   const { data: project, error: projectErr } = await supabase
@@ -31,7 +35,7 @@ export async function generateHandoverPack(
 
   if (projectErr || !project) {
     console.error(`${op} Project fetch failed:`, projectErr?.message);
-    return { success: false, error: 'Project not found' };
+    return err('Project not found', projectErr?.code);
   }
 
   // Get linked proposal
@@ -118,9 +122,6 @@ export async function generateHandoverPack(
     ],
   };
 
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser();
-
   // Check if a handover pack already exists for this project
   const { data: existing } = await supabase
     .from('generated_documents')
@@ -147,7 +148,7 @@ export async function generateHandoverPack(
       file_name: `Handover_Pack_${project.project_number}_v${nextVersion}.json`,
       storage_path: storagePath,
       version: nextVersion,
-      generated_by: user?.id ?? null,
+      generated_by: user.id,
       generated_at: new Date().toISOString(),
       accessible_to_customer: true,
     })
@@ -156,12 +157,12 @@ export async function generateHandoverPack(
 
   if (docErr) {
     console.error(`${op} Document insert failed:`, docErr.message);
-    return { success: false, error: docErr.message };
+    return err(docErr.message, docErr.code);
   }
 
   revalidatePath(`/projects/${projectId}`);
   console.log(`${op} Handover pack generated: v${nextVersion}`);
-  return { success: true, documentId: doc.id };
+  return ok({ documentId: doc.id });
 }
 
 /**

@@ -81,9 +81,9 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
                 )}
               </td>
 
-              {/* Task Name */}
+              {/* Task Name — links to detail page */}
               <td className="px-2 py-1.5 text-[11px] font-medium text-n-900">
-                <span className="flex items-center gap-1.5 flex-wrap">
+                <Link href={`/tasks/${task.id}`} className="flex items-center gap-1.5 flex-wrap hover:text-p-600 hover:underline">
                   {typeof task.title === 'string' && task.title.startsWith('[AI] ') && (
                     <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700 shrink-0">AI</Badge>
                   )}
@@ -92,7 +92,7 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
                       ? task.title.slice(5)
                       : task.title}
                   </span>
-                </span>
+                </Link>
               </td>
 
               {/* Assigned To */}

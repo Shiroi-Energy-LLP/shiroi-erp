@@ -79,9 +79,9 @@ export function ContactForm({ contact }: ContactFormProps) {
         notes: form.get('notes') as string,
       });
       setLoading(false);
-      if (res.success && res.contactId) {
+      if (res.success) {
         addToast({ variant: 'success', title: 'Contact saved', description: 'The contact has been saved successfully.' });
-        router.push(`/contacts/${res.contactId}`);
+        router.push(`/contacts/${res.data.contactId}`);
       } else {
         const errMsg = res.error ?? 'Failed to create contact';
         setError(errMsg);

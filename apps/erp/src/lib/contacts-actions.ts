@@ -2,6 +2,8 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { requireAuthUser } from '@/lib/auth';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 // ── Contacts ──
 
@@ -15,11 +17,11 @@ export async function createContact(input: {
   lifecycleStage?: string;
   source?: string;
   notes?: string;
-}): Promise<{ success: boolean; contactId?: string; error?: string }> {
+}): Promise<ActionResult<{ contactId: string }>> {
   const op = '[createContact]';
   console.log(`${op} Starting for: ${input.firstName} ${input.lastName ?? ''}`);
 
-  if (!input.firstName.trim()) return { success: false, error: 'First name is required' };
+  if (!input.firstName.trim()) return err('First name is required', 'MISSING_FIRST_NAME');
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -41,11 +43,11 @@ export async function createContact(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/contacts');
-  return { success: true, contactId: data.id };
+  return ok({ contactId: data.id });
 }
 
 export async function updateContact(id: string, input: {
@@ -58,7 +60,7 @@ export async function updateContact(id: string, input: {
   lifecycleStage?: string;
   source?: string;
   notes?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateContact]';
   console.log(`${op} Starting for: ${id}`);
 
@@ -82,12 +84,12 @@ export async function updateContact(id: string, input: {
   const { error } = await supabase.from('contacts').update(updates as any).eq('id', id);
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/contacts');
   revalidatePath(`/contacts/${id}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ── Companies ──
@@ -106,11 +108,11 @@ export async function createCompany(input: {
   pincode?: string;
   website?: string;
   notes?: string;
-}): Promise<{ success: boolean; companyId?: string; error?: string }> {
+}): Promise<ActionResult<{ companyId: string }>> {
   const op = '[createCompany]';
   console.log(`${op} Starting for: ${input.name}`);
 
-  if (!input.name.trim()) return { success: false, error: 'Company name is required' };
+  if (!input.name.trim()) return err('Company name is required', 'MISSING_NAME');
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -135,11 +137,11 @@ export async function createCompany(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/companies');
-  return { success: true, companyId: data.id };
+  return ok({ companyId: data.id });
 }
 
 export async function updateCompany(id: string, input: {
@@ -156,7 +158,7 @@ export async function updateCompany(id: string, input: {
   pincode?: string;
   website?: string;
   notes?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateCompany]';
   console.log(`${op} Starting for: ${id}`);
 
@@ -179,12 +181,12 @@ export async function updateCompany(id: string, input: {
   const { error } = await supabase.from('companies').update(updates as any).eq('id', id);
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/companies');
   revalidatePath(`/companies/${id}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ── Link/Unlink Contacts to Entities ──
@@ -195,7 +197,7 @@ export async function linkContactToEntity(input: {
   entityId: string;
   roleLabel?: string;
   isPrimary?: boolean;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[linkContactToEntity]';
   console.log(`${op} Linking contact ${input.contactId} to ${input.entityType}/${input.entityId}`);
 
@@ -212,17 +214,17 @@ export async function linkContactToEntity(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    if (error.code === '23505') return { success: false, error: 'This contact is already linked' };
-    return { success: false, error: error.message };
+    if (error.code === '23505') return err('This contact is already linked', '23505');
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/leads`);
   revalidatePath(`/proposals`);
   revalidatePath(`/projects`);
-  return { success: true };
+  return ok(undefined);
 }
 
-export async function unlinkContactFromEntity(entityContactId: string): Promise<{ success: boolean; error?: string }> {
+export async function unlinkContactFromEntity(entityContactId: string): Promise<ActionResult<void>> {
   const op = '[unlinkContactFromEntity]';
   console.log(`${op} Unlinking: ${entityContactId}`);
 
@@ -234,13 +236,13 @@ export async function unlinkContactFromEntity(entityContactId: string): Promise<
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/leads`);
   revalidatePath(`/proposals`);
   revalidatePath(`/projects`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ── Contact-Company Role ──
@@ -251,7 +253,7 @@ export async function addContactToCompany(input: {
   roleTitle: string;
   isPrimary?: boolean;
   startedAt?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[addContactToCompany]';
   console.log(`${op} Adding contact ${input.contactId} to company ${input.companyId}`);
 
@@ -268,15 +270,15 @@ export async function addContactToCompany(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath(`/contacts/${input.contactId}`);
   revalidatePath(`/companies/${input.companyId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
-export async function endContactCompanyRole(roleId: string): Promise<{ success: boolean; error?: string }> {
+export async function endContactCompanyRole(roleId: string): Promise<ActionResult<void>> {
   const op = '[endContactCompanyRole]';
   console.log(`${op} Ending role: ${roleId}`);
 
@@ -288,12 +290,12 @@ export async function endContactCompanyRole(roleId: string): Promise<{ success: 
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/contacts');
   revalidatePath('/companies');
-  return { success: true };
+  return ok(undefined);
 }
 
 // ── Activities ──
@@ -306,15 +308,14 @@ export async function createActivity(input: {
   durationMinutes?: number;
   metadata?: Record<string, unknown>;
   entityLinks: { entityType: string; entityId: string }[];
-}): Promise<{ success: boolean; activityId?: string; error?: string }> {
+}): Promise<ActionResult<{ activityId: string }>> {
   const op = '[createActivity]';
   console.log(`${op} Starting: ${input.activityType}`);
 
-  const supabase = await createClient();
-
   // Get current user profile id
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const { data: activity, error: actErr } = await supabase
     .from('activities')
@@ -332,7 +333,7 @@ export async function createActivity(input: {
 
   if (actErr) {
     console.error(`${op} Insert failed:`, { code: actErr.code, message: actErr.message });
-    return { success: false, error: actErr.message };
+    return err(actErr.message, actErr.code);
   }
 
   // Create associations
@@ -359,5 +360,5 @@ export async function createActivity(input: {
   revalidatePath('/contacts');
   revalidatePath('/companies');
 
-  return { success: true, activityId: activity.id };
+  return ok({ activityId: activity.id });
 }

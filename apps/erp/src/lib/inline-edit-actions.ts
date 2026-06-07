@@ -1,8 +1,9 @@
 'use server';
 
-import { createClient } from '@repo/supabase/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { upsertLeadFollowupTask } from '@/lib/leads-task-actions';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 /** Map entity types to their database table names */
 const ENTITY_TABLE_MAP: Record<string, string> = {
@@ -29,7 +30,7 @@ export async function updateCellValue(input: {
   rowId: string;
   field: string;
   value: string | number | boolean | null;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const op = '[updateCellValue]';
 
   const { entityType, rowId, value } = input;
@@ -49,22 +50,19 @@ export async function updateCellValue(input: {
   const tableName = ENTITY_TABLE_MAP[entityType];
   if (!tableName) {
     console.error(`${op} Unknown entity type: ${entityType}`);
-    return { success: false, error: `Unknown entity type: ${entityType}` };
+    return err(`Unknown entity type: ${entityType}`, 'UNKNOWN_ENTITY');
   }
 
   // Block sensitive fields
   if (BLOCKED_FIELDS.has(field)) {
     console.error(`${op} Field not editable: ${field}`);
-    return { success: false, error: `Field "${field}" cannot be edited` };
+    return err(`Field "${field}" cannot be edited`, 'BLOCKED_FIELD');
   }
-
-  const supabase = await createClient();
 
   // Verify user is authenticated
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { success: false, error: 'Not authenticated' };
-  }
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { supabase } = authed.data;
 
   console.log(`${op} Updating ${tableName}.${field} for ${rowId}`);
 
@@ -83,7 +81,7 @@ export async function updateCellValue(input: {
       rowId,
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   if (!updatedRows || updatedRows.length === 0) {
@@ -93,7 +91,7 @@ export async function updateCellValue(input: {
       rowId,
       timestamp: new Date().toISOString(),
     });
-    return { success: false, error: 'Update blocked — permission denied or row missing' };
+    return err('Update blocked — permission denied or row missing', 'NO_ROWS_AFFECTED');
   }
 
   // Flush the stage-count cache whenever a lead's status changes.
@@ -125,7 +123,7 @@ export async function updateCellValue(input: {
     bom_items: '/bom-review',
   };
   revalidatePath(PATH_MAP[entityType] ?? `/${entityType}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 /**
@@ -137,13 +135,13 @@ export async function bulkUpdateField(input: {
   rowIds: string[];
   field: string;
   value: string | number | boolean | null;
-}): Promise<{ success: boolean; updated: number; error?: string }> {
+}): Promise<ActionResult<{ updated: number }>> {
   const op = '[bulkUpdateField]';
   const { entityType, rowIds, value } = input;
   let { field } = input;
 
   if (!rowIds || rowIds.length === 0) {
-    return { success: false, updated: 0, error: 'No rows selected' };
+    return err('No rows selected', 'NO_ROWS');
   }
 
   const FIELD_ALIAS_MAP: Record<string, Record<string, string>> = {
@@ -157,19 +155,17 @@ export async function bulkUpdateField(input: {
   const tableName = ENTITY_TABLE_MAP[entityType];
   if (!tableName) {
     console.error(`${op} Unknown entity type: ${entityType}`);
-    return { success: false, updated: 0, error: `Unknown entity type: ${entityType}` };
+    return err(`Unknown entity type: ${entityType}`, 'UNKNOWN_ENTITY');
   }
 
   if (BLOCKED_FIELDS.has(field)) {
     console.error(`${op} Field not editable: ${field}`);
-    return { success: false, updated: 0, error: `Field "${field}" cannot be edited` };
+    return err(`Field "${field}" cannot be edited`, 'BLOCKED_FIELD');
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { success: false, updated: 0, error: 'Not authenticated' };
-  }
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { supabase } = authed.data;
 
   console.log(`${op} Updating ${tableName}.${field} for ${rowIds.length} rows`);
 
@@ -186,7 +182,7 @@ export async function bulkUpdateField(input: {
       field,
       rowCount: rowIds.length,
     });
-    return { success: false, updated: 0, error: error.message };
+    return err(error.message, error.code);
   }
 
   const PATH_MAP: Record<string, string> = {
@@ -200,5 +196,5 @@ export async function bulkUpdateField(input: {
     bom_items: '/bom-review',
   };
   revalidatePath(PATH_MAP[entityType] ?? `/${entityType}`);
-  return { success: true, updated: count ?? rowIds.length };
+  return ok({ updated: count ?? rowIds.length });
 }

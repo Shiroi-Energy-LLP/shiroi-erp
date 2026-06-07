@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { getStockPieces, getInventorySummary, getLowStockCutLengths } from '@/lib/inventory-queries';
 import type { InventoryFilters } from '@/lib/inventory-queries';
+import { getAllProjectsForAmc } from '@/lib/amc-actions';
+import { AllocateToProjectButton } from '@/components/inventory/allocate-to-project-button';
 import { formatDate } from '@repo/ui/formatters';
 import {
   Card,
@@ -75,10 +77,11 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   if (sp.scrap === 'false') filters.isScrap = false;
   if (sp.search) filters.search = sp.search;
 
-  const [pieces, summary, lowStockCutLengths] = await Promise.all([
+  const [pieces, summary, lowStockCutLengths, projects] = await Promise.all([
     getStockPieces(filters),
     getInventorySummary(),
     getLowStockCutLengths(),
+    getAllProjectsForAmc(),
   ]);
 
 
@@ -216,12 +219,13 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                 <TableHead>Project</TableHead>
                 <TableHead>Cut-Length</TableHead>
                 <TableHead>Updated</TableHead>
+                <TableHead className="w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pieces.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     No stock pieces found.
                   </TableCell>
                 </TableRow>
@@ -291,6 +295,16 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {formatDate(piece.updated_at)}
+                    </TableCell>
+                    <TableCell>
+                      {!piece.is_scrap && piece.current_location !== 'installed' && (
+                        <AllocateToProjectButton
+                          stockPieceId={piece.id}
+                          itemDescription={piece.item_description}
+                          currentProjectId={piece.project_id}
+                          projects={projects}
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
