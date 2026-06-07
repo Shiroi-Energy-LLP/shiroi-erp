@@ -77,6 +77,49 @@ interface InverterDue {
   rated_capacity_kw: number;
 }
 
+// ─── Time bounds ────────────────────────────────────────────────────────────
+// The whole point of these two constants is to guarantee the function ALWAYS
+// returns before the n8n HTTP Request node gives up. n8n's "The connection was
+// aborted, perhaps the server is offline" is what you get when the request
+// outlives the node's timeout — the function keeps running and still logs a 200,
+// but n8n has already marked the cron execution as failed.
+//
+// FETCH_TIMEOUT_MS caps any single vendor call so one hung endpoint (FIMER,
+// Sungrow, Growatt) can't stall the whole sequential batch. POLL_BUDGET_MS caps
+// the cumulative wall-clock: once exceeded we stop starting new inverters and
+// defer them to the next cycle (they keep their old last_poll_at and sort first
+// next time). Worst case ≈ POLL_BUDGET_MS + one inverter's fetches, which stays
+// comfortably under the n8n node timeout.
+const FETCH_TIMEOUT_MS = 10_000;
+const POLL_BUDGET_MS = 30_000;
+
+// fetch() with an AbortController-based timeout. Deno's fetch never times out on
+// its own, so a vendor endpoint that accepts the connection but never responds
+// would otherwise block until the platform wall-clock limit.
+async function fetchWithTimeout(
+  input: string,
+  init: RequestInit = {},
+  timeoutMs = FETCH_TIMEOUT_MS,
+): Promise<Response> {
+  // @ts-expect-error — AbortSignal.timeout is available in the Deno runtime
+  return await fetch(input, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+}
+
+// Clamp a reading timestamp into a window the monthly range partitions can
+// hold. Stale or future vendor clocks (e.g. a Growatt device whose
+// last_update_time is months old) produce a recorded_at that falls outside
+// every partition → "no partition of relation inverter_readings found for row",
+// failing the insert every cycle. Clamping to now() lands the reading in the
+// current partition and lets the offline/stale status still be recorded.
+function clampRecordedAt(iso: string): string {
+  const now = Date.now();
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t) || t < now - 3 * 24 * 60 * 60 * 1000 || t > now + 60 * 60 * 1000) {
+    return new Date(now).toISOString();
+  }
+  return iso;
+}
+
 // ─── Synthetic reading generator ───────────────────────────────────────────
 // SYNC WITH packages/inverter-adapters/src/base.ts :: syntheticReading
 
@@ -402,7 +445,7 @@ async function growattLogin(
   body.set('userName', username);
   body.set('password', hashedPassword);
 
-  const response = await fetch(`${GROWATT_BASE_URL}newTwoLoginAPI.do`, {
+  const response = await fetchWithTimeout(`${GROWATT_BASE_URL}newTwoLoginAPI.do`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
@@ -433,7 +476,7 @@ async function growattGetDeviceList(
 ): Promise<GrowattDevice[]> {
   const op = '[growattGetDeviceList]';
   const url = `${GROWATT_BASE_URL}newTwoPlantAPI.do?op=getAllDeviceList&plantId=${plantId}&language=1`;
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method: 'GET',
     headers: { Cookie: cookieHeader },
   });
@@ -473,7 +516,7 @@ async function fetchGrowattReadingViaInstallerToken(
 
   const base = (apiBase || 'https://openapi.growatt.com').replace(/\/$/, '');
   const url = `${base}/v1/plant/data?plant_id=${encodeURIComponent(inv.monitoring_site_id)}`;
-  const res = await fetch(url, { headers: { token } });
+  const res = await fetchWithTimeout(url, { headers: { token } });
   if (!res.ok) {
     throw new Error(`Growatt installer-token HTTP ${res.status} for plant ${inv.monitoring_site_id}`);
   }
@@ -659,7 +702,7 @@ async function sungrowPost<T>(
     sys_code: '901',
   };
   if (token) headers.token = token;
-  const res = await fetch(`${base.replace(/\/$/, '')}${path}`, {
+  const res = await fetchWithTimeout(`${base.replace(/\/$/, '')}${path}`, {
     method: 'POST', headers, body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Sungrow HTTP ${res.status} from ${path}`);
@@ -790,7 +833,7 @@ interface FimerCreds {
 
 async function fimerAuthenticate(creds: FimerCreds): Promise<string> {
   const basic = 'Basic ' + btoa(`${creds.username}:${creds.password}`);
-  const res = await fetch(`${FIMER_API_BASE}/authenticate`, {
+  const res = await fetchWithTimeout(`${FIMER_API_BASE}/authenticate`, {
     method: 'GET',
     headers: {
       Authorization: basic,
@@ -814,7 +857,7 @@ function fimerYyyymmdd(d: Date): string {
 }
 
 async function fimerGet<T>(path: string, apiKey: string, token: string): Promise<{ result?: T }> {
-  const res = await fetch(`${FIMER_API_BASE}${path}`, {
+  const res = await fetchWithTimeout(`${FIMER_API_BASE}${path}`, {
     headers: {
       'X-AuroraVision-ApiKey': apiKey,
       'X-AuroraVision-Token': token,
@@ -1019,12 +1062,22 @@ Deno.serve(async (req: Request) => {
 
   let succeeded = 0;
   let failed = 0;
+  let processed = 0;
 
   // Session cache for Growatt: shared across all inverters in this poll cycle.
   // Reduces logins from N-inverters-per-customer to 1-per-customer-per-cycle.
   const growattSessions = newGrowattSessionCache();
 
   for (const inv of inverters) {
+    // Stop starting new inverters once the time budget is spent. Deferred
+    // inverters keep their old last_poll_at and sort first next cycle, so the
+    // fleet still gets covered — just spread across cycles instead of blowing
+    // past the n8n node timeout in one shot.
+    if (Date.now() - startedAt > POLL_BUDGET_MS) {
+      console.warn(`${op} time budget ${POLL_BUDGET_MS}ms reached after ${processed} inverter(s); deferring ${inverters.length - processed} to next cycle`);
+      break;
+    }
+    processed++;
     try {
       let reading: NormalizedReading;
 
@@ -1147,6 +1200,11 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
+      // Guard against stale/future vendor timestamps that fall outside the
+      // monthly range partitions (otherwise the insert throws "no partition
+      // found" and the inverter logs a failure every single cycle).
+      reading.recorded_at = clampRecordedAt(reading.recorded_at);
+
       // Upsert reading
       const { error: upsertError } = await supabase.from('inverter_readings').upsert(
         { inverter_id: inv.id, ...reading },
@@ -1185,9 +1243,11 @@ Deno.serve(async (req: Request) => {
   }
 
   const summary = {
-    processed: inverters.length,
+    due: inverters.length,
+    processed,
     succeeded,
     failed,
+    deferred: inverters.length - processed,
     duration_ms: Date.now() - startedAt,
   };
   console.log(`${op} done`, summary);
