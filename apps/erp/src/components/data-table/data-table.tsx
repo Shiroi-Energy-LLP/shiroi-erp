@@ -389,7 +389,7 @@ export function DataTable({
         }
       : {};
 
-    // Referrer column — shows VIP badge for internal partners, "+ Set" when
+    // Referrer column — shows MGMT REF badge for internal partners, "+ Set" when
     // null. Double-click anywhere on the cell opens an inline select populated
     // with the partner list (passed in via DataTable's `dynamicOptions` prop).
     // The save handler in leads-table-wrapper translates the column key
