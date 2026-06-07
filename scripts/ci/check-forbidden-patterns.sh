@@ -66,6 +66,26 @@ scan_all() {
   # Rule 15 — Inline Supabase client imports in pages/components
   scan_pattern 15 "from ['\"]@repo/supabase/(server|client)['\"]" apps/erp/src/app
   scan_pattern 15 "from ['\"]@repo/supabase/(server|client)['\"]" apps/erp/src/components
+
+  # Rule SEC — hardcoded credential literals in scripts/ (the 2026-06-06
+  # GitGuardian leak: a one-off data script pasted ~186 real portal passwords
+  # inline). Quoted password/passwd/pwd literals are forbidden in scripts —
+  # load secrets from a gitignored file or process.env instead. Test fixtures
+  # (*.test.ts, *.fixtures.ts) use intentional dummies and are exempt; so are
+  # env-var lookups and the redaction placeholder.
+  local sec_raw
+  if command -v rg >/dev/null 2>&1; then
+    sec_raw=$(rg -n --no-heading \
+      -g '*.ts' -g '!*.test.ts' -g '!*.fixtures.ts' \
+      "(password|passwd|pwd)[\"']?\s*[:=]\s*[\"'][^\"'\$\{<][^\"']{2,}[\"']" \
+      scripts 2>/dev/null \
+      | rg -v "process\.env|VINODH_TEMP_PASSWORD|MIGRATION_USER_PASSWORD|Usage:|generateTempPassword|\.trim\(\)" || true)
+  fi
+  if [[ -n "$sec_raw" ]]; then
+    while IFS= read -r line; do
+      printf "RSEC|%s\n" "$line"
+    done <<< "$sec_raw"
+  fi
 }
 
 scan_sorted() {

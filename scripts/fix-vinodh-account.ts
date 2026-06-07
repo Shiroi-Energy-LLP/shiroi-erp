@@ -1,9 +1,10 @@
 /**
  * Fix Vinodh's account: update role to founder, reset password, ensure employee record exists.
  *
- * Usage: npx tsx scripts/fix-vinodh-account.ts
+ * Usage: VINODH_TEMP_PASSWORD='...' npx tsx scripts/fix-vinodh-account.ts
  *
- * Requires .env.local with NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY
+ * Requires .env.local with NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY,
+ * and a VINODH_TEMP_PASSWORD passed at runtime (never hardcode it).
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -25,7 +26,12 @@ const admin = createClient(supabaseUrl, supabaseKey, {
 });
 
 const EMAIL = 'vinodh@shiroienergy.com';
-const NEW_PASSWORD = 'Shiroi2026!tmp';
+// Never hardcode a password. Supply it at runtime via env var.
+const NEW_PASSWORD = process.env.VINODH_TEMP_PASSWORD;
+if (!NEW_PASSWORD) {
+  console.error('Missing VINODH_TEMP_PASSWORD env var — refusing to set a hardcoded password.');
+  process.exit(1);
+}
 
 async function main() {
   console.log('--- Fixing Vinodh account ---');

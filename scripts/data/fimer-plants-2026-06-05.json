@@ -106,17 +106,17 @@
   "additional_fimer_plants_in_credentials_dump_with_no_aurora_key": {
     "_note": "These FIMER portal logins exist in count-plant-credentials.ts but their X-AuroraVision-ApiKeys were not pasted on 2026-06-05. Without an API key the REST API can't be used — only the web portal. Generate keys via Aurora Vision portal → Account → API to enable telemetry polling for these plants too.",
     "plants": [
-      "Mountmeru _108KWp (Mountmeru_Solar / Solar@123)",
-      "Mountmeru _103 KWp (Mountmeru_Solar / Solar@123)",
-      "Hindu School Adyar (Hinduschool / Solar@123)",
-      "Hindu School_50 KWp (Hinduschool / Solar@123)",
-      "GGN School _15 KWp (Ggnschool / Solar@123)",
-      "Madurai SLCS College_88 KWp (slcscollege / Admin@123)",
-      "Chemin Enviro System_45KWp (CESZLDS45KW / Ces@7788)",
-      "Chemin Enviro System_2KWp (CESZLDS2KW / Ces@7788)",
-      "Solverminds_81 KWp (Solverminds / Solar@123)",
-      "GVN_Hospital_60KWp (Gvnhospital / Solar@123)",
-      "Dhayanada School_7.8 KWp (Dayananda / Solar@123)"
+      "Mountmeru _108KWp (Mountmeru_Solar)",
+      "Mountmeru _103 KWp (Mountmeru_Solar)",
+      "Hindu School Adyar (Hinduschool)",
+      "Hindu School_50 KWp (Hinduschool)",
+      "GGN School _15 KWp (Ggnschool)",
+      "Madurai SLCS College_88 KWp (slcscollege)",
+      "Chemin Enviro System_45KWp (CESZLDS45KW)",
+      "Chemin Enviro System_2KWp (CESZLDS2KW)",
+      "Solverminds_81 KWp (Solverminds)",
+      "GVN_Hospital_60KWp (Gvnhospital)",
+      "Dhayanada School_7.8 KWp (Dayananda)"
     ]
   }
 }
