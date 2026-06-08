@@ -34,3 +34,11 @@ describe('formatDate', () => {
     expect(result).toContain('2025');
   });
 });
+
+describe('formatDate (date-only, server-tz-safe)', () => {
+  it('renders the given calendar day in IST regardless of runtime TZ', () => {
+    // Pre-fix, under TZ=UTC this returned the previous day ("09 Jun 2026").
+    expect(formatDate('2026-06-10')).toBe('10 Jun 2026');
+    expect(formatDate('2026-01-01')).toBe('01 Jan 2026');
+  });
+});
