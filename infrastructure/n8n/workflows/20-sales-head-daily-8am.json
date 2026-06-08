@@ -161,15 +161,10 @@
   ],
   "connections": {
     "Daily 8:00 IST": {
-      "main": [
-        [
-          { "node": "Fetch expected orders (7d)", "type": "main", "index": 0 },
-          { "node": "Fetch expected payments (7d)", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Fetch expected orders (7d)", "type": "main", "index": 0 }]]
     },
     "Fetch expected orders (7d)": {
-      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Fetch expected payments (7d)", "type": "main", "index": 0 }]]
     },
     "Fetch expected payments (7d)": {
       "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]

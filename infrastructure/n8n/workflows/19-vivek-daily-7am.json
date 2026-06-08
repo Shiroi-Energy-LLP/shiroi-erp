@@ -173,23 +173,16 @@
   ],
   "connections": {
     "Daily 7:00 IST": {
-      "main": [
-        [
-          { "node": "AI Briefing — founder", "type": "main", "index": 0 },
-          { "node": "Fetch new leads (24h)", "type": "main", "index": 0 },
-          { "node": "Fetch tasks done (24h)", "type": "main", "index": 0 },
-          { "node": "Fetch lead activities (24h)", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "AI Briefing — founder", "type": "main", "index": 0 }]]
     },
     "AI Briefing — founder": {
-      "main": [[{ "node": "Compose digest (AI or fallback)", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Fetch new leads (24h)", "type": "main", "index": 0 }]]
     },
     "Fetch new leads (24h)": {
-      "main": [[{ "node": "Compose digest (AI or fallback)", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Fetch tasks done (24h)", "type": "main", "index": 0 }]]
     },
     "Fetch tasks done (24h)": {
-      "main": [[{ "node": "Compose digest (AI or fallback)", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Fetch lead activities (24h)", "type": "main", "index": 0 }]]
     },
     "Fetch lead activities (24h)": {
       "main": [[{ "node": "Compose digest (AI or fallback)", "type": "main", "index": 0 }]]
