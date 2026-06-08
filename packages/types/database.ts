@@ -16254,7 +16254,7 @@ export type Database = {
             referencedRelation: "tasks"
             referencedColumns: ["id"]
           }
-        ]
+          ]
       }
       tasks: {
         Row: {
@@ -18275,6 +18275,19 @@ export type Database = {
         }
         Relationships: []
       }
+      v_digest_followup_tasks_today: {
+        Row: {
+          assignee_name: string | null
+          category: string | null
+          customer_name: string | null
+          due_date: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string | null
+          title: string | null
+        }
+        Relationships: []
+      }
       v_digest_invoices_due_7d: {
         Row: {
           amount_outstanding: number | null
@@ -18335,6 +18348,19 @@ export type Database = {
           phone: string | null
           segment: Database["public"]["Enums"]["customer_segment"] | null
           source: Database["public"]["Enums"]["lead_source"] | null
+        }
+        Relationships: []
+      }
+      v_digest_leads_overdue: {
+        Row: {
+          close_overdue_days: number | null
+          customer_name: string | null
+          estimated_size_kwp: number | null
+          expected_close_date: string | null
+          followup_overdue_days: number | null
+          lead_id: string | null
+          next_followup_date: string | null
+          owner_name: string | null
         }
         Relationships: []
       }
@@ -19146,6 +19172,13 @@ export type Database = {
           status: string
         }[]
       }
+      get_won_value_mtd: {
+        Args: never
+        Returns: {
+          won_count: number
+          won_value: number
+        }[]
+      }
       haversine_distance_m: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -19708,6 +19741,18 @@ export type Database = {
       update_storage_mime_type: {
         Args: { p_bucket: string; p_mime: string; p_path: string }
         Returns: undefined
+      }
+      upsert_plant_monitoring_credential: {
+        Args: {
+          p_id: string
+          p_inverter_brand?: string
+          p_notes?: string
+          p_password: string
+          p_portal_url: string
+          p_project_id: string
+          p_username: string
+        }
+        Returns: string
       }
     }
     Enums: {
