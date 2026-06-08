@@ -128,11 +128,14 @@ CLAUDE.md §WORKFLOW step 3 is the authoritative form; recap here so it travels 
 
 ### Type generation
 
-```bash
-npx supabase gen types typescript --project-id actqtzoxjilqnldnacqz --schema public > packages/types/database.ts
+Use the **Supabase Management API + the `SUPABASE_ACCESS_TOKEN` PAT** in `.env.local` (full one-liner in CLAUDE.md → "Regenerating database.ts"; then run `node scripts/strip-view-fk-entries.mjs` + `pnpm check-types`):
+
+```
+GET https://api.supabase.com/v1/projects/<ref>/types/typescript
+Authorization: Bearer $SUPABASE_ACCESS_TOKEN      → 200  { "types": "..." }
 ```
 
-A commit that changes schema but not types is incomplete (NEVER-DO #20).
+The old `npx supabase gen types --project-id` route 403'd on the stale `supabase login` CLI token; the PAT works — no Dashboard, no MCP (confirmed 2026-06-08). A commit that changes schema but not types is incomplete (NEVER-DO #20).
 
 ### Env var name list
 
@@ -140,6 +143,7 @@ CLAUDE.md lists the names. Key operational notes:
 
 - **Supabase key format (locked March 2026):** `sb_publishable_…` replaces legacy `anon`; `sb_secret_…` replaces legacy `service_role`. Never use the legacy names in new code.
 - **Edge Function limitation:** Edge Functions currently still take JWTs via legacy keys. Workaround is documented where Edge Functions are used.
+- **Supabase admin ops via PAT (2026-06-08):** `SUPABASE_ACCESS_TOKEN` (full-scope PAT `shiroi-erp-mgmt`) in `.env.local` drives the **Management API** (`api.supabase.com`) — set Edge Function secrets, regen types, deploy functions — programmatically, **no Dashboard**. Confirmed: secrets (`POST .../secrets` → 201) + type-gen (`GET .../types/typescript` → 200). The old "CLI 403-locked / Dashboard-only" framing was the stale `supabase login` token, not a hard limit. Helper: `scripts/set-fimer-edge-secrets.ts`.
 
 ---
 

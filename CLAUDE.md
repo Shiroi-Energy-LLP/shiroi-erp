@@ -97,6 +97,7 @@ SUPABASE_SECRET_KEY                   (sb_secret_...)
 PROD_SUPABASE_URL                     (prod: kfkydkwycgijvexqiysc.supabase.co)
 PROD_SUPABASE_PUBLISHABLE_KEY
 PROD_SUPABASE_SECRET_KEY
+SUPABASE_ACCESS_TOKEN                 (full-scope PAT "shiroi-erp-mgmt" → Supabase Management API at api.supabase.com. Works where the old "supabase login" CLI token 403'd. Use to set Edge secrets, deploy functions, and regen types programmatically — NO Dashboard needed. See "Regenerating database.ts" below + scripts/set-fimer-edge-secrets.ts)
 ANTHROPIC_API_KEY
 PVWATTS_API_KEY
 PVLIB_MICROSERVICE_URL
@@ -188,7 +189,16 @@ FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW 
 
 ## Regenerating `packages/types/database.ts`
 
-There is no `pnpm typegen` script. The personal Supabase CLI under Vivek's account cannot pull project types — `supabase gen types typescript --project-id <ref>` returns 403 ("Your account does not have the necessary privileges to access this endpoint"). The only reliable path is through the Supabase MCP server.
+**Preferred (since 2026-06-08): the Management API + the `SUPABASE_ACCESS_TOKEN` PAT — no Dashboard, no MCP.** `.env.local` holds a full-scope PAT (`shiroi-erp-mgmt`). `GET https://api.supabase.com/v1/projects/<ref>/types/typescript` with `Authorization: Bearer $SUPABASE_ACCESS_TOKEN` returns `200` + the same `{"types":"..."}` wrapper the MCP returns (confirmed 2026-06-08). One-liner that writes it straight to the file, then run the strip step + check-types:
+
+```bash
+node -e "require('dotenv').config({path:'.env.local'}); fetch('https://api.supabase.com/v1/projects/actqtzoxjilqnldnacqz/types/typescript',{headers:{Authorization:'Bearer '+(process.env.SUPABASE_ACCESS_TOKEN||'').trim()}}).then(r=>r.json()).then(o=>require('fs').writeFileSync('packages/types/database.ts',o.types))"
+node scripts/strip-view-fk-entries.mjs && pnpm check-types
+```
+
+**The old 403 was the stale `supabase login` CLI token (it lacked org privileges), NOT a hard account limit** — the PAT has the privileges. (Don't capture the token via shell `$(...)` — the dotenvx banner pollutes it and the CLI then rejects the format; read `process.env.SUPABASE_ACCESS_TOKEN` inside node, as above.)
+
+**MCP fallback** (still works if the PAT is ever unavailable):
 
 The flow:
 
@@ -203,7 +213,7 @@ The flow:
 
 If you ever see "Type instantiation excessively deep" (TS2589) after a regen, you forgot the strip step.
 
-The supabase CLI gap is tracked but not fixable from this repo — it's an account-permissions issue on Supabase's side.
+(Historical: the "CLI 403 / account-permissions" framing applied to the old `supabase login` token. The `shiroi-erp-mgmt` PAT resolves it for Management-API ops — secrets, type-gen, deploys — so prefer the PAT method above.)
 
 ## HOW TO WORK IN THIS REPO
 
