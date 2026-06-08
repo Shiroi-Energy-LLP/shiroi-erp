@@ -15,11 +15,15 @@ export function QuickAddTask({ leadId, employees, currentUserId }: QuickAddTaskP
   const [title, setTitle] = useState('');
   const [assignedTo, setAssignedTo] = useState(currentUserId || '');
   const [dueDate, setDueDate] = useState(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0]!;
+    const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    istNow.setDate(istNow.getDate() + 1);
+    const y = istNow.getFullYear();
+    const m = String(istNow.getMonth() + 1).padStart(2, '0');
+    const d = String(istNow.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   });
   const [priority, setPriority] = useState('medium');
+  const [category, setCategory] = useState('call');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
@@ -33,6 +37,7 @@ export function QuickAddTask({ leadId, employees, currentUserId }: QuickAddTaskP
         assignedTo,
         dueDate,
         priority,
+        category,
       });
       if (result.success) {
         setTitle('');
@@ -79,6 +84,21 @@ export function QuickAddTask({ leadId, employees, currentUserId }: QuickAddTaskP
           className="h-9 text-sm"
           required
         />
+      </div>
+      <div className="w-32">
+        <label className="text-xs font-medium text-n-500 mb-1 block">Type</label>
+        <Select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="h-9 text-sm"
+        >
+          <option value="call">Call</option>
+          <option value="site_visit">Site visit</option>
+          <option value="lead_followup">Follow-up</option>
+          <option value="document">Document</option>
+          <option value="payment_followup">Payment</option>
+          <option value="general">Other</option>
+        </Select>
       </div>
       <div className="w-28">
         <label className="text-xs font-medium text-n-500 mb-1 block">Priority</label>

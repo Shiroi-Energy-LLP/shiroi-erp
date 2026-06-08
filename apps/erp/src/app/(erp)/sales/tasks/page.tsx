@@ -31,6 +31,9 @@ function getCategoryLabel(category: string | null): string {
     case 'payment_escalation': return 'Escalation';
     case 'advance_payment': return 'Advance';
     case 'general': return 'General';
+    case 'call': return 'Call';
+    case 'site_visit': return 'Site visit';
+    case 'document': return 'Document';
     default: return category ?? '—';
   }
 }

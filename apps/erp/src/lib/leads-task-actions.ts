@@ -18,6 +18,7 @@ interface CreateLeadTaskInput {
   assignedTo: string;
   dueDate: string;
   priority?: string;
+  category?: string;
 }
 
 export async function createLeadTask(input: CreateLeadTaskInput): Promise<ActionResult<void>> {
@@ -50,6 +51,7 @@ export async function createLeadTask(input: CreateLeadTaskInput): Promise<Action
     created_by: employee.id,
     due_date: input.dueDate,
     priority: input.priority ?? 'medium',
+    category: input.category ?? 'general',
     is_completed: false,
   });
 
