@@ -41,13 +41,13 @@ export default async function LeadDetailsTab({ params }: LeadDetailPageProps) {
             <InfoRow label="Source" value={lead.source?.replace(/_/g, ' ')} capitalize />
             {/* Referrer row — shows current partner name + "Change" button
                 that opens the ReferrerChangeDialog. Internal partners get a
-                "[VIP]" prefix to match the picker pattern elsewhere. */}
+                "[MGMT REF]" prefix to match the picker pattern elsewhere. */}
             <div className="flex items-center justify-between text-sm gap-3">
               <span className="text-n-500 shrink-0">Referrer</span>
               <div className="flex items-center gap-2">
                 <span className="text-n-900">
                   {currentPartner
-                    ? `${currentPartner.is_internal ? '[VIP] ' : ''}${currentPartner.partner_name}`
+                    ? `${currentPartner.is_internal ? '[MGMT REF] ' : ''}${currentPartner.partner_name}`
                     : <span className="text-n-400">—</span>}
                 </span>
                 <ReferrerChangeDialog

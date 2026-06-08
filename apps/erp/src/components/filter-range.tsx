@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRef } from 'react';
 
 interface FilterRangeProps {
   /** Label shown above/before the inputs */
@@ -20,8 +21,12 @@ interface FilterRangeProps {
 
 /**
  * Dual-input range filter that syncs min/max values as separate URL params.
- * Supports 'number' and 'date' input types.
- * Navigates on blur.
+ * Supports 'number' and 'date' input types. Navigates on blur.
+ *
+ * Both inputs commit through a single `commit()` that reads BOTH live values
+ * from refs — so a rapid second blur can't rebuild the URL from a stale
+ * searchParams snapshot and silently drop the first bound (the old per-input
+ * handleBlur did exactly that).
  */
 export function FilterRange({
   label,
@@ -39,13 +44,15 @@ export function FilterRange({
   const minValue = searchParams.get(minParam) ?? '';
   const maxValue = searchParams.get(maxParam) ?? '';
 
-  function handleBlur(param: string, value: string) {
+  const minRef = useRef<HTMLInputElement>(null);
+  const maxRef = useRef<HTMLInputElement>(null);
+
+  function commit() {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(param, value);
-    } else {
-      params.delete(param);
-    }
+    const min = minRef.current?.value ?? '';
+    const max = maxRef.current?.value ?? '';
+    if (min) params.set(minParam, min); else params.delete(minParam);
+    if (max) params.set(maxParam, max); else params.delete(maxParam);
     params.delete('page');
     router.push(`${pathname}?${params.toString()}`);
   }
@@ -67,20 +74,22 @@ export function FilterRange({
         {label}
       </span>
       <input
+        ref={minRef}
         type={type}
         defaultValue={minValue}
         key={`${minParam}-${minValue}`}
         placeholder={minPlaceholder}
-        onBlur={(e) => handleBlur(minParam, e.target.value)}
+        onBlur={commit}
         className={`${inputClass} ${widthClass}`}
       />
       <span className="text-n-400 text-xs">—</span>
       <input
+        ref={maxRef}
         type={type}
         defaultValue={maxValue}
         key={`${maxParam}-${maxValue}`}
         placeholder={maxPlaceholder}
-        onBlur={(e) => handleBlur(maxParam, e.target.value)}
+        onBlur={commit}
         className={`${inputClass} ${widthClass}`}
       />
     </div>

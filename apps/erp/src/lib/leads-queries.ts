@@ -4,7 +4,7 @@ import type { Database } from '@repo/types/database';
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
 // Re-export pure helpers for convenience
-export { isValidTransition, normalizePhone, getValidNextStatuses } from './leads-helpers';
+export { isValidTransition, normalizePhone, getValidNextStatuses, resolveReferrerFilter } from './leads-helpers';
 
 export interface LeadFilters {
   status?: LeadStatus | LeadStatus[];
@@ -15,6 +15,8 @@ export interface LeadFilters {
   referrer?: string;
   /** Resolved list of channel_partner IDs for 'internal_all' sentinel */
   referrerIds?: string[];
+  /** Leads-page "No referrer" bucket → channel_partner_id IS NULL */
+  noReferrer?: boolean;
   /**
    * "Referred by Clients" filter: source='referral' AND channel_partner_id IS NOT NULL
    * AND that partner has is_internal=FALSE. Callers must pass externalPartnerIds
@@ -142,6 +144,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   if (filters.referrerIds && filters.referrerIds.length > 0) {
     query = query.in('channel_partner_id', filters.referrerIds);
   }
+  if (filters.noReferrer) query = query.is('channel_partner_id', null);
   if (filters.referredBy === 'clients') {
     // source='referral' AND channel_partner_id IS NOT NULL AND partner is external
     query = query.eq('source', 'referral').not('channel_partner_id', 'is', null);
@@ -404,6 +407,7 @@ async function getLeadsViaSearchRpc(
     p_close_to: closeTo,
     p_referrer_ids: referrerIds,
     p_referrer_id: referrerId,
+    p_no_referrer: !!filters.noReferrer,
     p_referred_by_clients: filters.referredBy === 'clients',
     p_external_partner_ids:
       filters.externalPartnerIds && filters.externalPartnerIds.length > 0

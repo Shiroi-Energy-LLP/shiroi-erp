@@ -52,7 +52,7 @@ export function ReferrerPicker({
           </optgroup>
         )}
         {externalPartners.length > 0 && (
-          <optgroup label="External Partners">
+          <optgroup label="Customer">
             {externalPartners.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.partner_name}

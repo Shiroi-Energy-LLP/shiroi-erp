@@ -67,6 +67,34 @@ export function normalizePhone(phone: string): string {
   return digits;
 }
 
+/**
+ * Resolves the leads-list referrer-mode selector into a query filter.
+ *
+ *   - 'none'     → leads with no channel partner at all (migration 171,
+ *                  search_leads_no_referrer)
+ *   - 'mgmt'     → only internal "MGMT REF" channel partners
+ *   - 'customer' → only external customer referrers
+ *   - 'internal_all' / '' / undefined / anything else → no referrer filter
+ *
+ * Pure + side-effect free so the leads and sales pages share one source of truth.
+ */
+export function resolveReferrerFilter(
+  mode: string | undefined,
+  internalReferrerIds: string[],
+  externalReferrerIds: string[],
+): { noReferrer?: boolean; referrerIds?: string[] } {
+  switch (mode) {
+    case 'none':
+      return { noReferrer: true };
+    case 'mgmt':
+      return { referrerIds: internalReferrerIds };
+    case 'customer':
+      return { referrerIds: externalReferrerIds };
+    default:
+      return {};
+  }
+}
+
 export function getValidNextStatuses(current: LeadStatus): LeadStatus[] {
   return VALID_TRANSITIONS[current] ?? [];
 }

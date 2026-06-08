@@ -1,12 +1,12 @@
 import Link from 'next/link';
-import { getLeads, getSalesEngineers } from '@/lib/leads-queries';
+import { getLeads, getSalesEngineers, resolveReferrerFilter } from '@/lib/leads-queries';
 import type { LeadFilters } from '@/lib/leads-queries';
 import {
   getLeadStageCounts,
   getLeadsClosingBetween,
   getPipelineCloseWindow,
 } from '@/lib/leads-pipeline-queries';
-import { getInternalReferrers, getReferralPartners } from '@/lib/partners-queries';
+import { getInternalReferrers, getExternalPartnerIds } from '@/lib/partners-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { LeadsTableWrapper } from '@/components/leads/leads-table-wrapper';
 import { LeadStageNav } from '@/components/leads/lead-stage-nav';
@@ -18,6 +18,7 @@ import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
 import { FilterMultiSelect } from '@/components/filter-multi-select';
 import { FilterRange } from '@/components/filter-range';
+import { DateRangeFilter } from '@/components/date-range-filter';
 import { STAGE_LABELS } from '@/lib/leads-helpers';
 import type { Database } from '@repo/types/database';
 
@@ -90,7 +91,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
     closingThisWeek,
     employees,
     internalReferrers,
-    externalReferrers,
+    externalPartnerIds,
     closingThisWeekWindow,
     closingThisMonthWindow,
   ] = await Promise.all([
@@ -99,13 +100,16 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
     getLeadsClosingBetween(weekStart, weekEnd),
     getSalesEngineers(),
     getInternalReferrers(),
-    getReferralPartners(),
+    getExternalPartnerIds(),
     getPipelineCloseWindow(weekStart, weekEnd),
     getPipelineCloseWindow(monthStart, monthEnd),
   ]);
 
-  const referrerIds: string[] | undefined =
-    referrerParam === 'internal_all' ? internalReferrers.map((r) => r.id) : undefined;
+  const { referrerIds, noReferrer } = resolveReferrerFilter(
+    referrerParam,
+    internalReferrers.map((r) => r.id),
+    externalPartnerIds,
+  );
 
   const leadsFilters: LeadFilters = {
     status: statusFilter,
@@ -113,8 +117,8 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
     segment: params.segment || undefined,
     search: params.search || undefined,
     assignedTo: params.assignedTo || undefined,
-    referrer: referrerParam && referrerParam !== 'internal_all' ? referrerParam : undefined,
     referrerIds,
+    noReferrer,
     kwpMin,
     kwpMax,
     closeFrom: params.closeFrom || undefined,
@@ -149,16 +153,6 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   const visibleColumns = viewCols && viewCols.length > 0
     ? viewCols
     : getDefaultColumns('leads');
-
-  const referrerOptions: { value: string; label: string; disabled?: boolean }[] = [
-    { value: '', label: 'All Sources' },
-    { value: 'internal_all', label: 'All Internal (Vivek / Mgmt)' },
-    ...internalReferrers.map((r) => ({ value: r.id, label: `  ${r.partner_name}` })),
-    ...(externalReferrers.length > 0
-      ? [{ value: '__divider__', label: '── External Partners ──', disabled: true }]
-      : []),
-    ...externalReferrers.map((r) => ({ value: r.id, label: r.partner_name })),
-  ];
 
   return (
     <div className="space-y-4">
@@ -224,16 +218,11 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
               <option value="industrial">Industrial</option>
             </FilterSelect>
 
-            <FilterSelect paramName="referrer" className="w-48 h-9 text-sm">
-              {referrerOptions.map((opt) => (
-                <option
-                  key={opt.value || 'all'}
-                  value={opt.value}
-                  disabled={opt.disabled}
-                >
-                  {opt.label}
-                </option>
-              ))}
+            <FilterSelect paramName="referrer" className="w-44 h-9 text-sm">
+              <option value="">All Referrers</option>
+              <option value="none">No referrer</option>
+              <option value="mgmt">MGMT</option>
+              <option value="customer">Customer</option>
             </FilterSelect>
 
             <FilterRange
@@ -245,12 +234,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
               maxPlaceholder="Max"
             />
 
-            <FilterRange
-              label="Closing"
-              minParam="closeFrom"
-              maxParam="closeTo"
-              type="date"
-            />
+            <DateRangeFilter label="Closing" fromParam="closeFrom" toParam="closeTo" />
 
             <SearchInput
               placeholder="Search name or phone..."

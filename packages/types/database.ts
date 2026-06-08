@@ -19502,6 +19502,7 @@ export type Database = {
           p_kwp_max?: number
           p_kwp_min?: number
           p_limit?: number
+          p_no_referrer?: boolean
           p_offset?: number
           p_query?: string
           p_referred_by_clients?: boolean
