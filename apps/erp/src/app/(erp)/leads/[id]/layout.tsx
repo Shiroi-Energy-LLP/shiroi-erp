@@ -4,6 +4,7 @@ import { getLead, leadHasProject, leadHasProposal, leadHasDetailedProposal } fro
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import { LeadTabs } from '@/components/leads/lead-tabs';
 import { StatusChange } from '@/components/leads/status-change';
+import { LeadNameEditDialog } from '@/components/leads/lead-name-edit-dialog';
 import { QuickQuoteButton } from '@/components/proposals/quick-quote-button';
 import { ClosureBandBadge, ClosureBandHelper } from '@/components/sales/closure-band-badge';
 import { AttemptWonButton } from '@/components/sales/attempt-won-button';
@@ -83,7 +84,10 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-n-900">{lead.customer_name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-n-900">{lead.customer_name}</h1>
+            <LeadNameEditDialog leadId={lead.id} currentName={lead.customer_name} />
+          </div>
           <div className="flex items-center gap-3 flex-wrap">
             <LeadStatusBadge status={lead.status} />
             {lead.employees?.full_name && (
