@@ -109,6 +109,27 @@ function syntheticReading(ratedCapacityKw: number): NormalizedReading {
   };
 }
 
+// ─── Reading-timestamp guard ────────────────────────────────────────────────
+// SYNC WITH packages/inverter-adapters/src/base.ts :: clampRecordedAt
+//
+// A vendor datalogger with a misconfigured clock can report a recorded_at
+// outside the live partition range of inverter_readings (RANGE-partitioned by
+// month, NO default partition). The out-of-range row has nowhere to go, so the
+// upsert hard-errors ("no partition of relation ... found for row") on every
+// poll and the reading is lost (plant 10467798, 2026-06-09). The poll is
+// real-time, so clamp implausible stamps to poll time; the kept range
+// [now-36h, now+1h] always maps to the current or previous month. The original
+// vendor value survives in raw_payload for diagnosis.
+function clampRecordedAt(recordedAt: string, now: Date): string {
+  const FUTURE_GRACE_MS = 60 * 60 * 1000; // 1 hour
+  const PAST_GRACE_MS = 36 * 60 * 60 * 1000; // 36 hours
+  const t = new Date(recordedAt).getTime();
+  if (!Number.isFinite(t)) return now.toISOString();
+  if (t > now.getTime() + FUTURE_GRACE_MS) return now.toISOString();
+  if (t < now.getTime() - PAST_GRACE_MS) return now.toISOString();
+  return new Date(t).toISOString();
+}
+
 // ─── Growatt adapter (inlined from packages/inverter-adapters/src/growatt.ts) ─
 // SYNC WITH packages/inverter-adapters/src/growatt.ts
 
@@ -1146,6 +1167,17 @@ Deno.serve(async (req: Request) => {
         console.warn(`${op} unsupported brand="${inv.brand}" for inverter ${inv.id}; skipping`);
         continue;
       }
+
+      // Guard against datalogger clock errors: a future/garbage recorded_at has
+      // no partition and would hard-error the upsert every cycle (2026-06-09).
+      const polledAt = new Date();
+      const safeRecordedAt = clampRecordedAt(reading.recorded_at, polledAt);
+      if (safeRecordedAt !== reading.recorded_at) {
+        console.warn(
+          `${op} inverter ${inv.id} (${inv.brand}): implausible recorded_at=${reading.recorded_at} → clamped to ${safeRecordedAt}`,
+        );
+      }
+      reading.recorded_at = safeRecordedAt;
 
       // Upsert reading
       const { error: upsertError } = await supabase.from('inverter_readings').upsert(

@@ -252,3 +252,40 @@ export function syntheticReading(
     },
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// Reading-timestamp guard
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Clamp a vendor-supplied `recorded_at` to a value guaranteed to land in a
+ * live monthly partition of `inverter_readings`.
+ *
+ * Background (2026-06-09): a Growatt datalogger (plant 10467798) reported a
+ * `last_update_time` outside the existing partition range. `inverter_readings`
+ * is RANGE-partitioned by month with NO default partition, so the out-of-range
+ * row had nowhere to go — the upsert hard-errored ("no partition of relation
+ * ... found for row") on every 10-minute poll, spamming the Postgres log and
+ * silently dropping the reading.
+ *
+ * The poll is real-time, so the only correct stamp for an implausible value is
+ * the poll time. We keep the vendor timestamp when it sits within a sane window
+ * of `now` (a small future grace for clock skew; ~1.5 days into the past for
+ * infrequent reporters) and fall back to `now` otherwise. The kept range
+ * [now-36h, now+1h] always maps to the current or previous month — both always
+ * retained — so the upsert can never miss a partition again.
+ *
+ * The original vendor value is preserved in the reading's `raw_payload`, so a
+ * misconfigured device clock stays diagnosable.
+ *
+ * SYNC WITH supabase/functions/inverter-poll/index.ts :: clampRecordedAt
+ */
+export function clampRecordedAt(recordedAt: string, now: Date = new Date()): string {
+  const FUTURE_GRACE_MS = 60 * 60 * 1000; // 1 hour
+  const PAST_GRACE_MS = 36 * 60 * 60 * 1000; // 36 hours
+  const t = new Date(recordedAt).getTime();
+  if (!Number.isFinite(t)) return now.toISOString();
+  if (t > now.getTime() + FUTURE_GRACE_MS) return now.toISOString();
+  if (t < now.getTime() - PAST_GRACE_MS) return now.toISOString();
+  return new Date(t).toISOString();
+}
