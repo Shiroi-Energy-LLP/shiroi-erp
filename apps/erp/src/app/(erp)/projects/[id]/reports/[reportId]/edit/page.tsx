@@ -45,7 +45,6 @@ export default async function EditReportPage({ params }: EditReportPageProps) {
 
       <ReportForm
         projectId={projectId}
-        userId={profile.id}
         defaultDate={report.report_date}
         defaultWorkersCount={lastReport?.workers_count ?? 0}
         defaultSupervisorsCount={lastReport?.supervisors_count ?? 0}

@@ -32,11 +32,10 @@ const CORRECTABLE_FIELDS = [
 interface CorrectionFormProps {
   reportId: string;
   projectId: string;
-  userId: string;
   report: Record<string, unknown>;
 }
 
-export function CorrectionForm({ reportId, projectId, userId, report }: CorrectionFormProps) {
+export function CorrectionForm({ reportId, projectId, report }: CorrectionFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +74,6 @@ export function CorrectionForm({ reportId, projectId, userId, report }: Correcti
         const result = await submitCorrectionAction({
           originalReportId: reportId,
           projectId,
-          requestedBy: userId,
           fieldCorrected,
           originalValue,
           correctedValue,

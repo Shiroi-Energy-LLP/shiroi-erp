@@ -1,12 +1,12 @@
 'use server';
 
 import { createReport, updateReport, createSitePhoto } from '@/lib/site-report-queries';
+import { getCurrentEmployeeId } from '@/lib/auth';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 interface SubmitReportInput {
   reportId?: string;
   projectId: string;
-  userId: string;
   reportDate: string;
   panelsInstalledToday: number;
   panelsInstalledCumulative: number;
@@ -46,6 +46,16 @@ export async function submitReportAction(
       return err('Work description is required.', 'MISSING_DESCRIPTION');
     }
 
+    // submitted_by / uploaded_by are FKs to employees(id) — resolve the
+    // employee id from the session. Never trust a client-passed identity.
+    const employeeId = await getCurrentEmployeeId();
+    if (!employeeId) {
+      return err(
+        'Your account is not linked to an employee record, so the report cannot be attributed to you. Ask an admin to link your login to an employee.',
+        'NO_EMPLOYEE',
+      );
+    }
+
     let reportId: string;
 
     if (input.reportId) {
@@ -75,7 +85,7 @@ export async function submitReportAction(
       const result = await createReport({
         id: crypto.randomUUID(),
         project_id: input.projectId,
-        submitted_by: input.userId,
+        submitted_by: employeeId,
         report_date: input.reportDate,
         panels_installed_today: input.panelsInstalledToday,
         panels_installed_cumulative: input.panelsInstalledCumulative,
@@ -105,7 +115,7 @@ export async function submitReportAction(
         id: crypto.randomUUID(),
         daily_report_id: reportId,
         project_id: input.projectId,
-        uploaded_by: input.userId,
+        uploaded_by: employeeId,
         file_name: photo.fileName,
         storage_path: photo.storagePath,
         file_size_bytes: photo.fileSizeBytes,

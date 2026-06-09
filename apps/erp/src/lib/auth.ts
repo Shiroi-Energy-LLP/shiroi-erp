@@ -50,6 +50,34 @@ export async function getUserProfile(): Promise<UserProfile | null> {
   return profile;
 }
 
+/**
+ * Resolves the employees.id for the currently authenticated user.
+ * Returns null if unauthenticated or the profile has no linked employee row.
+ *
+ * IMPORTANT: ownership/attribution columns key off employees(id), NOT the
+ * profiles/auth uid — e.g. daily_site_reports.submitted_by,
+ * site_photos.uploaded_by, site_report_corrections.requested_by. Never write
+ * profile.id / auth.uid() into those FK columns; resolve the employee id here.
+ */
+export async function getCurrentEmployeeId(): Promise<string | null> {
+  const op = '[getCurrentEmployeeId]';
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('employees')
+    .select('id')
+    .eq('profile_id', user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
+    return null;
+  }
+  return data?.id ?? null;
+}
+
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getUser();
   if (!user) redirect('/login');

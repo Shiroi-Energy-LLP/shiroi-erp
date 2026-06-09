@@ -215,6 +215,7 @@ API routes:
 7. **Actuals lock is sticky.** Locking BOI / BOQ / Actuals via `actuals_locked` makes all three tabs read-only. Always warn on pending vouchers before locking.
 8. **Display.** `formatProjectNumber` strips `SHIROI/PROJ/` prefix for compact UI.
 9. **Survey API route.** Path is `/api/projects/[id]/survey` (NOT `/survey/pdf`) — single `route.ts` that returns the PDF as attachment.
+10. **Report writes need the employee id, not the profile id.** `daily_site_reports.submitted_by`, `site_photos.uploaded_by`, and `site_report_corrections.requested_by` are FKs to `employees(id)`. The report pages used to pass `getUserProfile().id` (the profiles/auth uid) into these columns, so every web-form insert failed `..._fkey` for all roles (surfaced 2026-06-09 as "Manivel can't add daily reports" — RLS `dsr_insert` passes for `project_manager`; the failure is the FK downstream). `submitReportAction` / `submitCorrectionAction` now resolve the employee id from the session via `getCurrentEmployeeId()` (`apps/erp/src/lib/auth.ts`) and never trust a client-passed identity. The same `*_by`-employee-FK trap can lurk in any action that writes an attribution column.
 
 ## Past Decisions & Specs
 

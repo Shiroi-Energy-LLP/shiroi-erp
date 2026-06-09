@@ -206,7 +206,6 @@ export default async function CorrectionPage({ params }: CorrectionPageProps) {
       <CorrectionForm
         reportId={reportId}
         projectId={projectId}
-        userId={profile.id}
         report={report}
       />
     </div>

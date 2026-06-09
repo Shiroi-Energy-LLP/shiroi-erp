@@ -38,7 +38,6 @@ export default async function NewReportPage({ params }: NewReportPageProps) {
 
       <ReportForm
         projectId={id}
-        userId={profile.id}
         defaultDate={today}
         defaultWorkersCount={lastReport?.workers_count ?? 0}
         defaultSupervisorsCount={lastReport?.supervisors_count ?? 0}
