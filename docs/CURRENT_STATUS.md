@@ -6,6 +6,16 @@
 
 ---
 
+## Prod cutover (dev → prod) — PLANNED, NOT SCHEDULED
+
+> We are **not** migrating now. The full design + step-by-step runbook is written and agreed:
+> [`docs/superpowers/specs/2026-06-09-dev-to-prod-migration-design.md`](superpowers/specs/2026-06-09-dev-to-prod-migration-design.md).
+> Execution is deferred until Vivek green-lights a prod window (after dev is validated + the team is working on dev).
+>
+> **Shape:** one-shot freeze + CLI dump/restore (118 MB DB) + rclone S3-to-S3 (16 GB / 20,253 Storage objects) into the existing **paused** Tokyo prod project (`kfkydkwycgijvexqiysc`). Dev is only ever *read* — rollback is simply "don't flip the app." A hard per-table row-count-parity gate blocks the cutover until prod matches dev. Landmines already solved in the spec: vault pgcrypto key (non-portable → re-create on prod), auth UUIDs preserved (keeps `created_by`/`assigned_to` FKs intact), storage-metadata collision (rclone-only, `storage.objects` excluded from the SQL dump), 7 pg_cron jobs re-created, JWT secret kept prod-side (7 staff re-login once). Supabase's native "Restore to a new project" was rejected (same-region-only, can't target the existing prod, skips Storage).
+
+---
+
 ## Phase
 
 **Phase F — Scale. ✅ F1+F3+F4+F6+F7+F8 DONE (2026-05-24). F2+F5 deferred (manual).**
