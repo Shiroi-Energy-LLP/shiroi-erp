@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { formatCustomerProject } from './customer-project';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -33,7 +34,7 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   let query = supabase
     .from('projects')
     .select(
-      'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, site_city, advance_amount, customer_phone, notes, employees!projects_project_manager_id_fkey(full_name)',
+      'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, site_city, advance_amount, customer_phone, notes, project_name, company_id, employees!projects_project_manager_id_fkey(full_name), companies!projects_company_id_fkey(name)',
       { count: 'estimated' },
     )
     .is('deleted_at', null);
@@ -59,13 +60,15 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   }
 
   const total = count ?? 0;
-  return {
-    data: data ?? [],
-    total,
-    page,
-    pageSize,
-    totalPages: Math.ceil(total / pageSize),
-  };
+  const rows = (data ?? []).map((p) => {
+    const co = p.companies as { name: string } | null;
+    return {
+      ...p,
+      company_name: co?.name ?? null,
+      customer_project: formatCustomerProject({ companyName: co?.name ?? null, customerName: p.customer_name, projectName: p.project_name }),
+    };
+  });
+  return { data: rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
 /**

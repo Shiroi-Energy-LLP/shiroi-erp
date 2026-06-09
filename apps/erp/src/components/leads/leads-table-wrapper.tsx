@@ -91,7 +91,7 @@ export function LeadsTableWrapper({
       views={views}
       activeViewId={activeViewId}
       linkPrefix="/leads"
-      linkField="customer_name"
+      linkField="customer_project"
       onSelectionChange={setSelectedIds}
       selectedIds={selectedIds}
       onCellEdit={handleCellEdit}

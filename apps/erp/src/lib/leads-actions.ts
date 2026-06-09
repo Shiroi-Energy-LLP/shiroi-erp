@@ -386,6 +386,68 @@ export async function mergeLeads(
   return ok(null);
 }
 
+/**
+ * Update the linked company and project name on a lead.
+ *
+ * Uses the silent-RLS zero-rows guard: Supabase returns success on
+ * RLS-blocked UPDATEs, so we `.select('id')` and treat an empty result
+ * as "Update blocked" (see renameLead for the same pattern).
+ */
+export async function updateLeadCompanyProject(
+  leadId: string,
+  input: { companyId: string | null; projectName: string | null },
+): Promise<ActionResult<void>> {
+  const op = '[updateLeadCompanyProject]';
+  try {
+    if (!leadId) return err('Missing lead ID');
+
+    const trimmedProjectName = input.projectName?.trim() || null;
+
+    const supabase = await createClient();
+
+    const { data: updatedRows, error } = await supabase
+      .from('leads')
+      .update({
+        company_id: input.companyId,
+        project_name: trimmedProjectName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', leadId)
+      .select('id');
+
+    if (error) {
+      console.error(`${op} Failed`, {
+        code: error.code,
+        message: error.message,
+        leadId,
+        timestamp: new Date().toISOString(),
+      });
+      return err(error.message, error.code);
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      console.error(`${op} 0 rows affected — RLS blocked or lead missing`, {
+        leadId,
+        timestamp: new Date().toISOString(),
+      });
+      return err('Update blocked — permission denied or row missing', 'NO_ROWS_AFFECTED');
+    }
+
+    revalidatePath(`/sales/${leadId}`);
+    revalidatePath(`/leads/${leadId}`);
+    revalidatePath('/sales');
+    revalidatePath('/leads');
+    return ok(undefined);
+  } catch (e) {
+    console.error(`${op} threw`, {
+      error: e instanceof Error ? e.message : String(e),
+      leadId,
+      timestamp: new Date().toISOString(),
+    });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
 export async function archiveLead(leadId: string): Promise<ActionResult<null>> {
   const op = '[archiveLead]';
   console.log(`${op} Starting for: ${leadId}`);

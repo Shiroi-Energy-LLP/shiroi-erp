@@ -2,6 +2,9 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects-queries';
 import { createClient } from '@repo/supabase/server';
+import { getCompanyOptions } from '@/lib/contacts-queries';
+import { CompanyProjectEditor } from '@/components/leads/company-project-editor';
+import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import {
   getCurrentUserRoleForProject,
   getActiveEmployeesLite,
@@ -68,11 +71,12 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
   }
 
   // Details tab — fetch everything the new boxes need in parallel
-  const [project, viewerRole, employees, financials] = await Promise.all([
+  const [project, viewerRole, employees, financials, companies] = await Promise.all([
     getProject(id),
     getCurrentUserRoleForProject(),
     getActiveEmployeesLite(),
     getProjectFinancials(id),
+    getCompanyOptions(),
   ]);
 
   if (!project) {
@@ -189,6 +193,22 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
             viewerRole={viewerRole}
           />
         )}
+
+        {/* Company & Project Name linkage */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Company &amp; Project</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CompanyProjectEditor
+              entityType="project"
+              entityId={id}
+              companyId={(project as any).company_id ?? null}
+              projectName={(project as any).project_name ?? null}
+              companies={companies}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
 

@@ -6296,6 +6296,7 @@ export type Database = {
           notes: string | null
           phone: string
           pincode: string | null
+          project_name: string | null
           proposal_gate_bypassed: boolean
           segment: Database["public"]["Enums"]["customer_segment"]
           source: Database["public"]["Enums"]["lead_source"]
@@ -6353,6 +6354,7 @@ export type Database = {
           notes?: string | null
           phone: string
           pincode?: string | null
+          project_name?: string | null
           proposal_gate_bypassed?: boolean
           segment: Database["public"]["Enums"]["customer_segment"]
           source: Database["public"]["Enums"]["lead_source"]
@@ -6410,6 +6412,7 @@ export type Database = {
           notes?: string | null
           phone?: string
           pincode?: string | null
+          project_name?: string | null
           proposal_gate_bypassed?: boolean
           segment?: Database["public"]["Enums"]["customer_segment"]
           source?: Database["public"]["Enums"]["lead_source"]
@@ -11941,6 +11944,7 @@ export type Database = {
           procurement_status: string | null
           project_cost_manual: number | null
           project_manager_id: string | null
+          project_name: string | null
           project_number: string
           project_type: string
           proposal_id: string
@@ -12036,6 +12040,7 @@ export type Database = {
           procurement_status?: string | null
           project_cost_manual?: number | null
           project_manager_id?: string | null
+          project_name?: string | null
           project_number: string
           project_type?: string
           proposal_id: string
@@ -12131,6 +12136,7 @@ export type Database = {
           procurement_status?: string | null
           project_cost_manual?: number | null
           project_manager_id?: string | null
+          project_name?: string | null
           project_number?: string
           project_type?: string
           proposal_id?: string
@@ -19521,6 +19527,8 @@ export type Database = {
           assigned_to_name: string
           city: string
           close_probability: number
+          company_id: string
+          company_name: string
           created_at: string
           customer_name: string
           email: string
@@ -19532,6 +19540,7 @@ export type Database = {
           next_followup_date: string
           phone: string
           pincode: string
+          project_name: string
           referrer_is_internal: boolean
           referrer_name: string
           segment: string

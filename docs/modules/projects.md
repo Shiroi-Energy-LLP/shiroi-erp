@@ -24,6 +24,7 @@ Editable boxes on the Details tab:
 - **SystemConfigBox** — size (kWp), type (`on_grid` / `off_grid` / `hybrid`), mounting (`elevated` / `low_raise` / `minirail` / `long_rail` / `customized`), panel / inverter / battery / cable brand+model, `scope_la` / `scope_civil` / `scope_meter` (`shiroi` | `client`), remarks.
 - **CustomerInfoBox** — debounced contact picker → `primary_contact_id` FK, site + billing address, Google Maps link.
 - **TimelineTeamBox** — 6 date fields (order_date, planned_start, etc.) + PM + site_supervisor dropdowns.
+- **CompanyProjectEditor** (mig 172) — links the project to a `companies` record (`projects.company_id`) + sets `projects.project_name` via the reusable `CompanyPicker` (shared with leads). Won deals inherit both automatically: `create_project_from_accepted_proposal` now copies `company_id` + `project_name` from the lead. The `/projects` list shows a default **"Customer — Project"** column (`company.name ?? customer_name`, + ` — project_name`); `project_name` is inline-editable there; `project_number` stays the row link. Old projects (pre-mig-172) display the fallback customer_name until the Phase-2 backfill links them.
 
 ### 2. Survey
 

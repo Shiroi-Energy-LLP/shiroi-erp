@@ -641,7 +641,7 @@ export function DataTable({
                           // Per-column cell class hooks
                           let cellClass = entityType === 'leads' ? 'px-3 py-2' : 'py-2';
                           if (entityType === 'leads') {
-                            if (col.key === 'customer_name') {
+                            if (col.key === 'customer_name' || col.key === 'customer_project') {
                               cellClass += ' font-medium text-n-900';
                             } else if (
                               col.fieldType === 'number' ||
@@ -650,7 +650,7 @@ export function DataTable({
                               cellClass += ' font-mono tabular-nums text-right';
                             }
                           } else {
-                            if (col.key === 'customer_name') cellClass += ' font-medium';
+                            if (col.key === 'customer_name' || col.key === 'customer_project') cellClass += ' font-medium';
                             if (col.fieldType === 'phone') cellClass += ' tabular-nums';
                             if (col.fieldType === 'number' || col.format === 'currency') cellClass += ' text-right tabular-nums';
                           }

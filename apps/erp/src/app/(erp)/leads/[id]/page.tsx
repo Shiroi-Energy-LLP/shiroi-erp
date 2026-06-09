@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import { getLead } from '@/lib/leads-queries';
-import { getEntityContacts } from '@/lib/contacts-queries';
+import { getEntityContacts, getCompanyOptions } from '@/lib/contacts-queries';
 import { listChannelPartnersForPicker, getPartner } from '@/lib/partners-queries';
 import { EntityContactsCard } from '@/components/contacts/entity-contacts-card';
 import { ReferrerChangeDialog } from '@/components/leads/referrer-change-dialog';
+import { CompanyProjectEditor } from '@/components/leads/company-project-editor';
 import { formatDate, toIST } from '@repo/ui/formatters';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 
@@ -13,9 +14,10 @@ interface LeadDetailPageProps {
 
 export default async function LeadDetailsTab({ params }: LeadDetailPageProps) {
   const { id } = await params;
-  const [lead, entityContacts] = await Promise.all([
+  const [lead, entityContacts, companies] = await Promise.all([
     getLead(id),
     getEntityContacts('lead', id),
+    getCompanyOptions(),
   ]);
 
   if (!lead) {
@@ -112,6 +114,21 @@ export default async function LeadDetailsTab({ params }: LeadDetailPageProps) {
                 </a>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Company &amp; Project</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CompanyProjectEditor
+              entityType="lead"
+              entityId={lead.id}
+              companyId={lead.company_id ?? null}
+              projectName={lead.project_name ?? null}
+              companies={companies}
+            />
           </CardContent>
         </Card>
 

@@ -31,7 +31,10 @@ export type EntityType = 'leads' | 'proposals' | 'projects' | 'contacts' | 'comp
 // ── Leads columns ──
 
 export const LEAD_COLUMNS: ColumnDef[] = [
-  { key: 'customer_name', label: 'Customer Name', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'text', frozen: true },
+  { key: 'customer_project', label: 'Customer — Project', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text', frozen: true },
+  { key: 'customer_name', label: 'Customer Name', sortKey: 'customer_name', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
+  { key: 'company_name', label: 'Company', defaultVisible: false, sortable: false, editable: false, fieldType: 'text' },
+  { key: 'project_name', label: 'Project Name', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
   { key: 'phone', label: 'Phone', defaultVisible: true, sortable: false, editable: true, fieldType: 'phone' },
   { key: 'email', label: 'Email', defaultVisible: false, sortable: false, editable: true, fieldType: 'email' },
   { key: 'city', label: 'City', sortKey: 'city', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
@@ -120,7 +123,10 @@ export const PROPOSAL_COLUMNS: ColumnDef[] = [
 
 export const PROJECT_COLUMNS: ColumnDef[] = [
   { key: 'project_number', label: 'Project #', sortKey: 'project_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
-  { key: 'customer_name', label: 'Customer', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'link' },
+  { key: 'customer_project', label: 'Customer — Project', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
+  { key: 'customer_name', label: 'Customer', sortKey: 'customer_name', defaultVisible: false, sortable: true, editable: true, fieldType: 'link' },
+  { key: 'company_name', label: 'Company', defaultVisible: false, sortable: false, editable: false, fieldType: 'text' },
+  { key: 'project_name', label: 'Project Name', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
   { key: 'site_city', label: 'Location', sortKey: 'site_city', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
   { key: 'system_size_kwp', label: 'Size (kWp)', sortKey: 'system_size_kwp', defaultVisible: true, sortable: true, editable: true, fieldType: 'number' },
   { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: true, fieldType: 'badge',
