@@ -10703,6 +10703,79 @@ export type Database = {
           }
           ]
       }
+      project_activities: {
+        Row: {
+          activity_date: string
+          contractor_count: number
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          description: string
+          done_by: string | null
+          id: string
+          notes: string | null
+          os_count: number
+          project_id: string
+          se_count: number
+          stage_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          contractor_count?: number
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          description: string
+          done_by?: string | null
+          id?: string
+          notes?: string | null
+          os_count?: number
+          project_id: string
+          se_count?: number
+          stage_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          contractor_count?: number
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          description?: string
+          done_by?: string | null
+          id?: string
+          notes?: string | null
+          os_count?: number
+          project_id?: string
+          se_count?: number
+          stage_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_activities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_activities_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "execution_milestones_master"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       project_assignments: {
         Row: {
           assigned_at: string
@@ -19050,6 +19123,21 @@ export type Database = {
           brand_sungrow: number
           missing_count: number
           total_count: number
+        }[]
+      }
+      get_project_activities_summary: {
+        Args: {
+          p_from?: string
+          p_project_id?: string
+          p_stage_id?: string
+          p_to?: string
+        }
+        Returns: {
+          distinct_projects: number
+          total_activities: number
+          total_contractor: number
+          total_os: number
+          total_se: number
         }[]
       }
       get_project_cable_summary: {
