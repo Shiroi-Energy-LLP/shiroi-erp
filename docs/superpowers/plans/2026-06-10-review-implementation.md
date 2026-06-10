@@ -47,6 +47,7 @@
 These are surfaced first because two of them (git-history purge, DR) are the highest-severity items in the whole review and are **not mine to execute**. Claude will, on request, produce a step-by-step runbook for each; Claude will not run destructive/infra/credential operations autonomously.
 
 - **R1 [V] — Purge git history of the leaked plant credentials + rotate them.** Deep-review §4. Working tree was scrubbed June 6 (commit `88a275f`) but history was **not** rewritten: `git show a573304:scripts/count-plant-credentials.ts` still yields ~186 plaintext customer-portal passwords. Until history is rewritten (`git filter-repo`) **and** the passwords rotated, the leak is live. *Doc calls this the #1 security action.* Bundle with **R9** (Zoho `.xls`).
+  - **Expanded by Batch 0 (2026-06-10):** the FIMER scrub surfaced more leaked credentials in history — **8 Aurora Vision `api_key`s** (shiroienergy, chemfabalkalis, harsha, bossshyam, siddharth, edisonschool, sriramsv, soapplant_solar) plus the **Shiroienergy portal password** (`Solar@123`), committed in `packages/inverter-adapters/src/fimer.test.ts` and `scripts/data/fimer-plants-2026-06-05.json`. Working tree is now scrubbed, but history retains them → **rotate all 8 keys + that password** and add both paths to the `filter-repo` purge. Also: untracked on-disk `scripts/debug-fimer-*.ts` / `scripts/discover-fimer-*.ts` may carry creds — scrub before they're ever committed.
 - **R2 [V] — Move backups off the protected project + run one restore drill.** Deep-review §9. The only automated backup is the n8n SQLite tar uploaded to a bucket on the **same dev Supabase project** it protects; the ERP DB relies solely on Supabase 7-day PITR; no restore has ever been test-run. Gates the prod cutover (the cutover spec assumes a restore works).
 - **R3 [V] — Document a bus-factor escrow.** Deep-review §9. `N8N_ENCRYPTION_KEY` (lose it = all n8n creds unreadable), Supabase dashboard, Meta/WhatsApp, Google OAuth, `.env.local` — all Vivek-only, no escrow.
 - **R4 [DECIDE] — Encrypt aadhaar/PAN/bank columns, OR correct master-ref §13.** Deep-review §3. Columns are **plaintext `text`** today (only `plant_monitoring_credentials.password_encrypted` is real pgcrypto). Live exposure is currently theoretical (0 employees have aadhaar populated) but the master reference falsely claims these are "column-level encrypted via pgcrypto." Decide: encrypt with the mig-158 pattern **before** HR onboarding enters data, or fix the doc. If "encrypt," it becomes a [C→dev] task.
@@ -61,6 +62,8 @@ These are surfaced first because two of them (git-history purge, DR) are the hig
 ## Part B — Execution batches
 
 ### Batch 0 — Security quick wins (code) · [C]
+
+> ✅ **COMPLETE — 2026-06-10**, merged to main (commits `441181a` Next bump, `918f8cc` exceljs, `b9ace29` Sentry redaction, `ddf1671` FIMER cred scrub). All four CI gates green on the integrated branch. Scope note: Task 0.2 kept `xlsx` for trusted `scripts/` (only the production parse path moved to exceljs). Task 0.4 **expanded** beyond the test fixture — the same FIMER credentials were also in the committed `scripts/data/fimer-plants-2026-06-05.json` dump (now scrubbed); see R1.
 
 **Files:**
 - Modify: `apps/erp/package.json:25` (next), root `package.json:39` (drop xlsx)
