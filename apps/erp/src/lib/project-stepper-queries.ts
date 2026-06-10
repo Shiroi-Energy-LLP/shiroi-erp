@@ -311,8 +311,8 @@ export async function getStepExecutionData(projectId: string) {
 
   const supabase = await createClient();
 
-  // Parallelize all three independent queries
-  const [milestonesResult, reportResult, tasksResult] = await Promise.all([
+  // Parallelize all four independent queries
+  const [milestonesResult, reportResult, tasksResult, entityTasksResult] = await Promise.all([
     supabase
       .from('project_milestones')
       .select('id, milestone_name, milestone_order, status, completion_pct, is_blocked, blocked_reason, planned_start_date, planned_end_date, actual_start_date, actual_end_date')
@@ -326,6 +326,14 @@ export async function getStepExecutionData(projectId: string) {
       .from('tasks')
       .select('id, title, milestone_id, assigned_to, assigned_date, priority, due_date, is_completed, completed_at, completed_by, remarks, category, employees!tasks_assigned_to_fkey(full_name), completedByEmployee:employees!tasks_completed_by_fkey(full_name)')
       .eq('project_id', projectId)
+      .is('deleted_at', null)
+      .order('due_date', { ascending: true, nullsFirst: false }),
+    supabase
+      .from('tasks')
+      .select('id, title, milestone_id, assigned_to, assigned_date, priority, due_date, is_completed, completed_at, completed_by, remarks, category, employees!tasks_assigned_to_fkey(full_name), completedByEmployee:employees!tasks_completed_by_fkey(full_name)')
+      .eq('entity_type', 'project')
+      .eq('entity_id', projectId)
+      .is('project_id', null)
       .is('deleted_at', null)
       .order('due_date', { ascending: true, nullsFirst: false }),
   ]);
@@ -343,10 +351,16 @@ export async function getStepExecutionData(projectId: string) {
     console.error(`${op} Tasks query failed:`, { code: tasksResult.error.code, message: tasksResult.error.message, projectId });
   }
 
+  if (entityTasksResult.error) {
+    console.error(`${op} Entity tasks query failed:`, { code: entityTasksResult.error.code, message: entityTasksResult.error.message, projectId });
+  }
+
+  // The .is('project_id', null) filter on the second query makes overlap with
+  // the first impossible — no dedupe needed.
   return {
     milestones: milestonesResult.data ?? [],
     reportCount: reportResult.count ?? 0,
-    tasks: tasksResult.data ?? [],
+    tasks: [...(tasksResult.data ?? []), ...(entityTasksResult.data ?? [])],
   };
 }
 

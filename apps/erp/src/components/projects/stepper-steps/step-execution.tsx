@@ -3,6 +3,7 @@ import {
 } from '@repo/ui';
 import { getStepExecutionData } from '@/lib/project-stepper-queries';
 import { getActiveEmployeesForProject } from '@/lib/project-step-actions';
+import { getProjectCompletionPct } from '@/lib/project-completion-queries';
 import { HardHat, ListTodo } from 'lucide-react';
 import Link from 'next/link';
 import { MilestoneSeedButton, MilestoneStatusControl, QuickTaskForm } from '@/components/projects/forms/milestone-form';
@@ -37,16 +38,19 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
   let reportCount = 0;
   let tasks: Awaited<ReturnType<typeof getStepExecutionData>>['tasks'] = [];
   let employees: { id: string; full_name: string }[] = [];
+  let overallWeightedPct = 0;
 
   try {
-    const [data, empList] = await Promise.all([
+    const [data, empList, weightedPct] = await Promise.all([
       getStepExecutionData(projectId),
       getActiveEmployeesForProject(),
+      getProjectCompletionPct(projectId),
     ]);
     milestones = data.milestones;
     reportCount = data.reportCount;
     tasks = data.tasks;
     employees = empList;
+    overallWeightedPct = weightedPct;
   } catch (error) {
     console.error('[StepExecution] Failed to load execution data:', {
       projectId,
@@ -96,13 +100,9 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
   const otherTasksCompleted = otherTasks.filter((t: any) => t.is_completed).length;
   const otherPct = otherTasks.length > 0 ? Math.round((otherTasksCompleted / otherTasks.length) * 100) : 0;
 
-  // Overall % from milestone averages + other tasks bucket
-  // Each milestone counts as one "bucket"; other tasks (if any) count as one additional bucket.
-  const buckets = milestoneTaskCounts.map((mc) => mc.pct);
-  if (otherTasks.length > 0) buckets.push(otherPct);
-  const overallPct = buckets.length > 0
-    ? Math.round(buckets.reduce((sum, pct) => sum + pct, 0) / buckets.length)
-    : 0;
+  // Overall % — milestone-weighted, from get_project_completion_pct (mig 173).
+  // Same number as the Progress tab and the projects list cache.
+  const overallPct = Math.round(overallWeightedPct);
 
   return (
     <div className="space-y-6">
