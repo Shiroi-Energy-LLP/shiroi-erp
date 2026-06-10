@@ -68,21 +68,11 @@ const EDITABLE_PROJECT_FIELDS = new Set<string>([
 ]);
 
 /**
- * Fields that require elevated roles. Checked alongside the generic
- * updater below.
+ * Project Value (contracted_value) is PM-owned: only the project manager
+ * may edit it, with founder as the standing override (2026-06-10 spec).
  */
-const FINANCIAL_FIELDS = new Set<string>([
-  'contracted_value',
-]);
-
-const ALLOWED_FINANCIAL_ROLES = new Set<string>([
-  'founder',
-  'project_manager',
-  'finance',
-  // "marketing_manager" is not a DB role yet — sales_engineer covers
-  // the marketing team until that role is created.
-  'sales_engineer',
-]);
+const PROJECT_VALUE_FIELD = 'contracted_value';
+const PROJECT_VALUE_EDIT_ROLES = new Set<string>(['project_manager', 'founder']);
 
 // ── Primitive: load the caller's role ──────────────────────────────
 async function getCallerRole(): Promise<{
@@ -134,12 +124,12 @@ export async function updateProjectField(input: {
   const { userId, role } = await getCallerRole();
   if (!userId) return { success: false, error: 'Not authenticated' };
 
-  if (FINANCIAL_FIELDS.has(field)) {
-    if (!role || !ALLOWED_FINANCIAL_ROLES.has(role)) {
+  if (field === PROJECT_VALUE_FIELD) {
+    if (!role || !PROJECT_VALUE_EDIT_ROLES.has(role)) {
       console.warn(`${op} Role ${role} blocked from editing ${field}`);
       return {
         success: false,
-        error: 'Only PMs, finance, and founders can edit financial fields',
+        error: 'Only the Project Manager can edit the Project Value.',
       };
     }
   }
