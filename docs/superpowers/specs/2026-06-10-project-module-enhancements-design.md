@@ -54,7 +54,7 @@
 - **UI (`step-bom.tsx`):** pencil/Edit affordance per item row → inline edit row or small dialog (match the existing BOQ inline-edit idiom). Visible to PM/founder only. An expandable per-item "history" affordance lists audit entries (changed_by, changed_at, field old→new).
 - Existing add/delete behavior for draft versions is unchanged. The BOQ step's `updateBoqItem` is untouched.
 
-**Migration 173 — `project_boq_item_history`:**
+**Migration 175 — `project_boq_item_history`:**
 
 ```
 project_boq_item_history (
@@ -79,7 +79,7 @@ project_boq_item_history (
 **Today:** `submitDeliveryChallan` (apps/erp/src/lib/project-dc-actions.ts) flips a DC `draft → dispatched` and stamps `dispatched_at`. Linked BOQ items (`delivery_challan_items.boq_item_id`) get `dispatched_qty` incremented at DC **creation**, but `procurement_status` never moves automatically — the PM flips it by hand.
 
 **Change:**
-- **Migration 174 — RPC `mark_dc_boq_items_delivered(p_dc_id UUID)`:** for every `delivery_challan_items` row of that DC, update the linked `project_boq_items.procurement_status` from `'ready_to_dispatch'` to `'delivered'` — **guarded**: only rows currently `'ready_to_dispatch'` advance; items in any other status are left untouched. Returns the count updated. `SECURITY DEFINER` with `SET search_path = public`, EXECUTE granted to `authenticated` only (not `anon`).
+- **Migration 176 — RPC `mark_dc_boq_items_delivered(p_dc_id UUID)`:** for every `delivery_challan_items` row of that DC, update the linked `project_boq_items.procurement_status` from `'ready_to_dispatch'` to `'delivered'` — **guarded**: only rows currently `'ready_to_dispatch'` advance; items in any other status are left untouched. Returns the count updated. `SECURITY DEFINER` with `SET search_path = public`, EXECUTE granted to `authenticated` only (not `anon`).
 - **Action change:** `submitDeliveryChallan` calls the RPC immediately after the status flip succeeds, in the same action. RPC failure is logged with the `op` prefix but does not roll back the dispatch (status advance is best-effort sugar; the PM can still set status by hand). Revalidate the project path so the BOQ tab reflects it.
 - **Semantics note (flagged at design review):** items are marked delivered on dispatch regardless of partial quantities — if a BOQ line is split across DCs, the first dispatch of that line delivers it. Refinement to "only when cumulative `dispatched_qty ≥ quantity`" is a small RPC change if Vivek wants it later.
 - Naming note: requirement says "marked as Dispatched … status changes to Delivered" — i.e. the DC `dispatched` event drives the BOQ item to `delivered`. The DC's own `delivered` status (signature/receiver capture, currently unused) is out of scope.
@@ -90,7 +90,7 @@ project_boq_item_history (
 
 **Today:** two unrelated numbers exist. The Execution step computes per-milestone % = done/total task ratio and shows a plain average. The Progress tab's `get_project_completion_pct` RPC sums weights of **manually ticked** `project_completion_items` (10 components, weights 5–25, handover 0). `projects.completion_pct` exists but is stale/legacy.
 
-**Change (Migration 175):**
+**Change (Migration 173):**
 1. **`execution_milestones_master.weight INT NOT NULL DEFAULT 10`** — seeded so the 10 milestones sum to 100:
 
    | Milestone | Weight |
@@ -122,7 +122,7 @@ Largely already true (milestone groups + "Other Tasks (No Milestone)" group). Ha
 
 A **Tasks | Activities** toggle inside the Execution tab (`step-execution.tsx`); Activities renders the daily activity log for that project.
 
-**Migration 176 — `project_activities` + summary RPC:**
+**Migration 174 — `project_activities` + summary RPC:**
 
 ```
 project_activities (
@@ -181,11 +181,11 @@ project_activities (
 |---|---|---|
 | A | Project Value gate (server + FinancialBox) | none |
 | B | Expenses: ProjectCombobox swap + project-detail Add Expense entry | none |
-| C | Mig 175 + completion-% rewrite (RPC, trigger, Progress tab rebuild, Execution header %, checklist removal, task-query hardening) | none |
-| D | Mig 176 + Activities table/RPC + queries/actions/constants + Execution sub-tab UI | none |
+| C | Mig 173 + completion-% rewrite (RPC, trigger, Progress tab rebuild, Execution header %, checklist removal, task-query hardening) | none |
+| D | Mig 174 + Activities table/RPC + queries/actions/constants + Execution sub-tab UI | none |
 | E | Global `/activities` page + nav | after D |
-| F | Mig 173 + BOI per-item edit + audit UI | sequential with G |
-| G | Mig 174 + BOQ edit affordance + auto-deliver wiring | sequential with F (shared files: BOI/BOQ steps, `project_boq_items`) |
+| F | Mig 175 + BOI per-item edit + audit UI | sequential with G |
+| G | Mig 176 + BOQ edit affordance + auto-deliver wiring | sequential with F (shared files: BOI/BOQ steps, `project_boq_items`) |
 
 A, B, C, D, F+G can start in parallel; E follows D. Each workstream lands with its migration applied to dev + types regenerated + all four CI gates green before docs/commit per the end-of-task sequence.
 
