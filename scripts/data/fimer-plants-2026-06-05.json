@@ -4,15 +4,15 @@
     "source": "Solar Plant ID.xlsx (Vivek's OneDrive) + Aurora Vision API keys pasted in chat",
     "portal": "Aurora Vision (FIMER/ABB) — https://www.auroravision.net",
     "api_base": "https://api.auroravision.net/api/rest",
-    "note": "Each account holds its own X-AuroraVision-ApiKey + portal username+password. The Shiroienergy master account covers 17 plants; 6 sub-accounts each cover 1 plant. soapplant_solar key (1ade2cef-…-0c81) is excluded — its portal password is not in the credential dump.",
+    "note": "Each account holds its own X-AuroraVision-ApiKey + portal username+password. The master account covers 17 plants; 6 sub-accounts each cover 1 plant. soapplant_solar key (REDACTED) is excluded — its portal password is not in the credential dump.",
     "validation_2026_06_05": "7/7 listed accounts authenticate (GET /api/rest/authenticate → 200 + token). One live telemetry sample at probe time: Schangalaya_25 KWp (eid 20030256) producing 7.16 kW; daily energy 95–102 kWh/day."
   },
   "accounts": [
     {
       "slug": "shiroienergy",
       "label": "Shiroi Energy master (Manivel)",
-      "username": "Shiroienergy",
-      "api_key": "fa1d0f38-cf72-4257-95d3-66a13d55cba6-0c81",
+      "username": "REDACTED",
+      "api_key": "REDACTED",
       "env_var": "FIMER_CRED_SHIROIENERGY",
       "plants": [
         { "name": "Chemfab Alkalis SS_8.7 KWp",   "entity_id": "20869541", "serial": "1802110945", "location": "Pondicherry",     "capacity_kw": 8.7 },
@@ -38,8 +38,8 @@
     {
       "slug": "chemfabalkalis",
       "label": "Chemfab Alkalis",
-      "username": "Chemfabalkalis",
-      "api_key": "863ff628-798e-46f4-a6e9-584e4948d071-0c81",
+      "username": "REDACTED",
+      "api_key": "REDACTED",
       "env_var": "FIMER_CRED_CHEMFABALKALIS",
       "plants": [
         { "name": "Chemfab Alkalis SS_110 KWp", "entity_id": "16151321", "serial": "1816131681", "location": "Pondicherry", "capacity_kw": 110.0 }
@@ -48,8 +48,8 @@
     {
       "slug": "harsha",
       "label": "Harsha",
-      "username": "harsha123",
-      "api_key": "7e930bc5-4ab6-41a9-ba3b-e7bb952db941-0c81",
+      "username": "REDACTED",
+      "api_key": "REDACTED",
       "env_var": "FIMER_CRED_HARSHA",
       "plants": [
         { "name": "Harsha_2 KWp", "entity_id": null, "serial": "1741143997", "location": "Trichy", "capacity_kw": 2.0, "_note": "Entity ID will be discovered on first poll via /v1/device/?serialNumber=." }
@@ -58,8 +58,8 @@
     {
       "slug": "bossshyam",
       "label": "Boss Shyam (Baskar)",
-      "username": "Bossshyam",
-      "api_key": "c1a68209-40cf-4f85-bea0-20755802f364-0c81",
+      "username": "REDACTED",
+      "api_key": "REDACTED",
       "env_var": "FIMER_CRED_BOSSSHYAM",
       "plants": [
         { "name": "Baskar_2.5 KWp", "entity_id": null, "serial": "1907135456", "location": "Trichy", "capacity_kw": 2.5, "_note": "EID via serialNumber lookup on first poll." }
@@ -68,8 +68,8 @@
     {
       "slug": "siddharth",
       "label": "Siddharth",
-      "username": "Siddharth",
-      "api_key": "1d4193e5-42d9-49de-bb0c-40d23933176d-0c81",
+      "username": "REDACTED",
+      "api_key": "REDACTED",
       "env_var": "FIMER_CRED_SIDDHARTH",
       "plants": [
         { "name": "Siddarth_1 KWp", "entity_id": null, "serial": "1902125288", "location": "Chennai", "capacity_kw": 1.0, "_note": "EID via serialNumber lookup on first poll." }
@@ -78,8 +78,8 @@
     {
       "slug": "edisonschool",
       "label": "Edison School",
-      "username": "Edisonschool",
-      "api_key": "3b5befce-2803-4e95-8285-a3c6877a2544-0c81",
+      "username": "REDACTED",
+      "api_key": "REDACTED",
       "env_var": "FIMER_CRED_EDISONSCHOOL",
       "plants": [
         { "name": "Edison School_48 KWp", "entity_id": "24213751", "serial": "1929115464", "location": "Chidambaram", "capacity_kw": 48.0 }
@@ -88,8 +88,8 @@
     {
       "slug": "sriramsv",
       "label": "Sriram",
-      "username": "Sriramsv",
-      "api_key": "69e43b4b-2e16-46c2-9ac2-152eae981be5-0c81",
+      "username": "REDACTED",
+      "api_key": "REDACTED",
       "env_var": "FIMER_CRED_SRIRAMSV",
       "plants": [
         { "name": "Sriram_4 KWp", "entity_id": null, "serial": "1738116753", "location": "Chennai", "capacity_kw": 4.0, "_note": "EID via serialNumber lookup on first poll." }
@@ -99,7 +99,7 @@
   "deferred_accounts": [
     {
       "slug": "soapplant_solar",
-      "api_key": "1ade2cef-e240-4ff2-8344-560bb1c713a3-0c81",
+      "api_key": "REDACTED",
       "reason": "Portal username+password not in credential dump. Cannot authenticate without password. Provide password to enable."
     }
   ],
