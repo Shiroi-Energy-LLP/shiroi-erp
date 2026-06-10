@@ -3424,6 +3424,7 @@ export type Database = {
           milestone_label: string
           milestone_name: string
           milestone_order: number
+          weight: number
         }
         Insert: {
           created_at?: string
@@ -3433,6 +3434,7 @@ export type Database = {
           milestone_label: string
           milestone_name: string
           milestone_order: number
+          weight?: number
         }
         Update: {
           created_at?: string
@@ -3442,6 +3444,7 @@ export type Database = {
           milestone_label?: string
           milestone_name?: string
           milestone_order?: number
+          weight?: number
         }
         Relationships: []
       }
