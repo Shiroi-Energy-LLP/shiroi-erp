@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@repo/ui';
-import { createClient } from '@repo/supabase/server';
-import { getProjectCompletionPct } from '@/lib/project-completion-queries';
+import { getMilestoneProgressData } from '@/lib/project-completion-queries';
 import { ListTodo } from 'lucide-react';
 
 /** Milestone display labels — aligned with execution_milestones_master. */
@@ -19,73 +18,23 @@ const MILESTONE_LABELS: Record<string, string> = {
 };
 
 /**
- * Read-only weighted-milestone completion breakdown. Single source of truth is
- * get_project_completion_pct (mig 173) — this panel mirrors its math row-by-row
- * (task ratio per milestone, stored pct fallback, weight from the master table).
+ * Read-only weighted-milestone completion breakdown. Data comes from
+ * getMilestoneProgressData (project-completion-queries.ts), which mirrors
+ * the get_project_completion_pct RPC math row-by-row (task ratio per
+ * milestone, stored pct fallback, weight from the master table).
  * Tasks are edited on the Execution tab; nothing is editable here.
  */
 export async function MilestoneProgressPanel({ projectId }: { projectId: string }) {
-  const op = '[MilestoneProgressPanel]';
-  const supabase = await createClient();
+  const { overallPct, rows: progressRows } = await getMilestoneProgressData(projectId);
 
-  const [milestonesRes, weightsRes, overallPct] = await Promise.all([
-    supabase
-      .from('project_milestones')
-      .select('id, milestone_name, milestone_order, status, completion_pct')
-      .eq('project_id', projectId)
-      .order('milestone_order', { ascending: true }),
-    supabase
-      .from('execution_milestones_master')
-      .select('milestone_name, weight'),
-    getProjectCompletionPct(projectId),
-  ]);
-
-  if (milestonesRes.error) {
-    console.error(`${op} milestones query failed:`, {
-      code: milestonesRes.error.code, message: milestonesRes.error.message, projectId,
-    });
-  }
-  const milestones = milestonesRes.data ?? [];
-  const weightByName: Record<string, number> = {};
-  for (const w of weightsRes.data ?? []) weightByName[w.milestone_name] = Number(w.weight);
-
-  // Tasks fetched by milestone_id (this project's milestones only) — matches
-  // the RPC's inclusion semantics, including universal-entity tasks.
-  const milestoneIdList = milestones.map((m) => m.id);
-  const taskAgg: Record<string, { total: number; done: number }> = {};
-  if (milestoneIdList.length > 0) {
-    const { data: taskRows, error: tasksErr } = await supabase
-      .from('tasks')
-      .select('milestone_id, is_completed')
-      .in('milestone_id', milestoneIdList)
-      .is('deleted_at', null);
-    if (tasksErr) {
-      console.error(`${op} tasks query failed:`, {
-        code: tasksErr.code, message: tasksErr.message, projectId,
-      });
-    }
-    for (const t of taskRows ?? []) {
-      if (!t.milestone_id) continue;
-      const agg = (taskAgg[t.milestone_id] ??= { total: 0, done: 0 });
-      agg.total += 1;
-      if (t.is_completed) agg.done += 1;
-    }
-  }
-
-  const rows = milestones.map((m) => {
-    const agg = taskAgg[m.id];
-    const pct = agg && agg.total > 0
-      ? Math.round((agg.done / agg.total) * 100)
-      : Math.round(Number(m.completion_pct ?? 0));
-    return {
-      id: m.id,
-      label: MILESTONE_LABELS[m.milestone_name] ?? m.milestone_name.replace(/_/g, ' '),
-      weight: weightByName[m.milestone_name] ?? 10,
-      total: agg?.total ?? 0,
-      done: agg?.done ?? 0,
-      pct,
-    };
-  });
+  const rows = progressRows.map((r) => ({
+    id: r.id,
+    label: MILESTONE_LABELS[r.milestoneName] ?? r.milestoneName.replace(/_/g, ' '),
+    weight: r.weight,
+    total: r.totalTasks,
+    done: r.doneTasks,
+    pct: r.pct,
+  }));
 
   return (
     <Card>
