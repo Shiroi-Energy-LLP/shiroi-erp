@@ -7,6 +7,7 @@ interface ProjectOpt {
   id: string;
   customer_name: string;
   project_number: string | null;
+  project_name?: string | null;
 }
 
 export interface ProjectComboboxProps {
@@ -51,7 +52,8 @@ export function ProjectCombobox({
       .filter(
         (p) =>
           p.customer_name.toLowerCase().includes(lower) ||
-          (p.project_number?.toLowerCase().includes(lower) ?? false),
+          (p.project_number?.toLowerCase().includes(lower) ?? false) ||
+          (p.project_name?.toLowerCase().includes(lower) ?? false),
       )
       .slice(0, 50);
   }, [query, projects]);
@@ -115,7 +117,9 @@ export function ProjectCombobox({
   }
 
   // Show selected project name in input; otherwise show live query
-  const displayValue = selectedProject ? selectedProject.customer_name : query;
+  const displayValue = selectedProject
+    ? `${selectedProject.customer_name}${selectedProject.project_name ? ' – ' + selectedProject.project_name : ''}`
+    : query;
 
   return (
     <div ref={containerRef} className={`relative ${className ?? ''}`}>
@@ -179,7 +183,7 @@ export function ProjectCombobox({
                       : 'text-n-700 hover:bg-n-050'
                   }`}
                 >
-                  <span className="truncate text-sm">{project.customer_name}</span>
+                  <span className="truncate text-sm">{project.customer_name}{project.project_name ? ` – ${project.project_name}` : ''}</span>
                   {project.project_number && (
                     <span className="ml-2 text-[10px] text-n-400 flex-shrink-0 font-mono">
                       {project.project_number}

@@ -30,6 +30,7 @@ interface ProjectOpt {
   id: string;
   customer_name: string;
   project_number: string | null;
+  project_name?: string | null;
 }
 
 interface AddInverterDialogProps {

@@ -380,6 +380,45 @@ export async function getActiveEmployeesLite(): Promise<{ id: string; full_name:
   return (data ?? []) as { id: string; full_name: string }[];
 }
 
+const PROJECT_DELETE_ROLES = new Set<string>(['founder', 'project_manager']);
+
+/**
+ * Soft delete (deleted_at + deleted_by). Hard delete is impossible anyway —
+ * a dozen RESTRICT FKs (invoices, payments, POs…) reference projects.
+ * Restore is DB-only by design (2026-06-11 spec).
+ */
+export async function deleteProject(input: {
+  projectId: string;
+  confirmNumber: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[deleteProject]';
+  const { role, employeeId } = await getCallerRole();
+  if (!role || !PROJECT_DELETE_ROLES.has(role)) {
+    return { success: false, error: 'Only Project Managers and Founders can delete projects.' };
+  }
+  const supabase = await createClient();
+  const { data: project, error: readErr } = await supabase
+    .from('projects')
+    .select('project_number, deleted_at')
+    .eq('id', input.projectId)
+    .maybeSingle();
+  if (readErr || !project) return { success: false, error: readErr?.message ?? 'Project not found' };
+  if (project.deleted_at) return { success: false, error: 'Project is already deleted.' };
+  if ((project.project_number ?? '') !== input.confirmNumber.trim()) {
+    return { success: false, error: 'Confirmation text does not match the project number.' };
+  }
+  const { error } = await supabase
+    .from('projects')
+    .update({ deleted_at: new Date().toISOString(), deleted_by: employeeId ?? null } as any)
+    .eq('id', input.projectId);
+  if (error) {
+    console.error(`${op} Soft delete failed:`, { code: error.code, message: error.message, projectId: input.projectId });
+    return { success: false, error: error.message };
+  }
+  revalidatePath('/projects');
+  return { success: true };
+}
+
 /**
  * Search contacts by name/phone/email for the Customer Information
  * picker on the detail page.
@@ -406,6 +445,31 @@ export async function searchContactsLite(
     return [];
   }
   return (data ?? []) as { id: string; name: string; phone: string | null; email: string | null }[];
+}
+
+export interface ProjectSearchHit {
+  id: string;
+  project_number: string | null;
+  customer_name: string | null;
+  project_name: string | null;
+}
+
+export async function searchProjectsLite(query: string): Promise<ProjectSearchHit[]> {
+  const op = '[searchProjectsLite]';
+  const supabase = await createClient();
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+  const { data, error } = await supabase.rpc('search_projects_lite', {
+    p_query: trimmed,
+    p_limit: 8,
+  });
+  if (error) {
+    console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+  return (data ?? []).map((r: { id: string; project_number: string | null; customer_name: string | null; project_name: string | null }) => ({
+    id: r.id, project_number: r.project_number, customer_name: r.customer_name, project_name: r.project_name,
+  }));
 }
 
 /**

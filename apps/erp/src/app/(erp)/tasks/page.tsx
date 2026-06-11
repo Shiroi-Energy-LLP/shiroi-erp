@@ -150,7 +150,6 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Due Date</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Notes</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Done By</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-10">Log</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-16">Actions</th>
                   </tr>
                 </thead>

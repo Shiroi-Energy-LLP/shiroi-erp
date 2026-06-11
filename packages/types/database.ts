@@ -5078,6 +5078,57 @@ export type Database = {
           }
           ]
       }
+      item_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          value?: string
+        }
+        Relationships: []
+      }
+      item_units: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          value?: string
+        }
+        Relationships: []
+      }
       language_training_scenarios: {
         Row: {
           created_at: string
@@ -10411,6 +10462,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "price_book_item_category_fkey"
+            columns: ["item_category"]
+            isOneToOne: false
+            referencedRelation: "item_categories"
+            referencedColumns: ["value"]
+          },
+          {
             foreignKeyName: "price_book_rate_updated_by_fkey"
             columns: ["rate_updated_by"]
             isOneToOne: false
@@ -10717,6 +10775,7 @@ export type Database = {
           os_count: number
           project_id: string
           se_count: number
+          stage_custom: string | null
           stage_id: string | null
           updated_at: string
         }
@@ -10733,6 +10792,7 @@ export type Database = {
           os_count?: number
           project_id: string
           se_count?: number
+          stage_custom?: string | null
           stage_id?: string | null
           updated_at?: string
         }
@@ -10749,6 +10809,7 @@ export type Database = {
           os_count?: number
           project_id?: string
           se_count?: number
+          stage_custom?: string | null
           stage_id?: string | null
           updated_at?: string
         }
@@ -12052,6 +12113,7 @@ export type Database = {
           data_verified_at: string | null
           data_verified_by: string | null
           deleted_at: string | null
+          deleted_by: string | null
           estimated_site_expenses_budget: number
           handover_pdf_path: string | null
           has_builder_scope: boolean
@@ -12148,6 +12210,7 @@ export type Database = {
           data_verified_at?: string | null
           data_verified_by?: string | null
           deleted_at?: string | null
+          deleted_by?: string | null
           estimated_site_expenses_budget?: number
           handover_pdf_path?: string | null
           has_builder_scope?: boolean
@@ -12244,6 +12307,7 @@ export type Database = {
           data_verified_at?: string | null
           data_verified_by?: string | null
           deleted_at?: string | null
+          deleted_by?: string | null
           estimated_site_expenses_budget?: number
           handover_pdf_path?: string | null
           has_builder_scope?: boolean
@@ -12329,6 +12393,13 @@ export type Database = {
             columns: ["customer_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
@@ -19847,6 +19918,17 @@ export type Database = {
           review_status: string
           system_size_kwp: number
           total_count: number
+        }[]
+      }
+      search_projects_lite: {
+        Args: { p_limit?: number; p_query?: string }
+        Returns: {
+          customer_name: string
+          id: string
+          order_date: string
+          project_name: string
+          project_number: string
+          status: string
         }[]
       }
       search_proposals: {

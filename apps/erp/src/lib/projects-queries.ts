@@ -1,13 +1,13 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { formatCustomerProject } from './customer-project';
-import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
 export interface ProjectFilters {
   status?: ProjectStatus;
   search?: string;
+  fy?: string;
   page?: number;
   pageSize?: number;
   sort?: string;
@@ -46,9 +46,30 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   query = query.order(sortCol, { ascending: sortAsc });
 
   if (filters.status) query = query.eq('status', filters.status);
+  if (filters.fy && /^\d{4}-\d{2}$/.test(filters.fy)) {
+    const startYear = parseInt(filters.fy.slice(0, 4), 10);
+    const fyFrom = `${startYear}-04-01`;
+    const fyTo = `${startYear + 1}-04-01`;
+    // Internally generated dates — safe to interpolate (not user text).
+    query = query.or(
+      `and(order_date.gte.${fyFrom},order_date.lt.${fyTo}),and(order_date.is.null,created_at.gte.${fyFrom},created_at.lt.${fyTo})`,
+    );
+  }
   if (filters.search) {
-    const s = sanitizeForIlike(filters.search);
-    query = query.or(`project_number.ilike.${s},customer_name.ilike.${s}`);
+    // Injection-safe: resolve matching ids via RPC, then filter by id.
+    // Also makes project_name searchable (spec 2026-06-11 #3).
+    const { data: hits, error: searchErr } = await supabase.rpc('search_projects_lite', {
+      p_query: filters.search.trim(),
+      p_limit: 500,
+    });
+    if (searchErr) {
+      console.error(`${op} search RPC failed:`, { code: searchErr.code, message: searchErr.message });
+    }
+    const ids = (hits ?? []).map((h: { id: string }) => h.id);
+    if (ids.length === 0) {
+      return { data: [], total: 0, page, pageSize, totalPages: 0 };
+    }
+    query = query.in('id', ids);
   }
 
   query = query.range(from, to);
@@ -115,6 +136,7 @@ export async function getProject(id: string) {
       '*, employees!projects_project_manager_id_fkey(full_name), pm_supervisor:employees!projects_site_supervisor_id_fkey(full_name), project_milestones(*, project_completion_components(*)), project_delay_log(*, employees!project_delay_log_logged_by_fkey(full_name), project_milestones!project_delay_log_milestone_id_fkey(milestone_name)), project_change_orders(*, preparer:employees!project_change_orders_prepared_by_fkey(full_name), approver:employees!project_change_orders_approved_by_internal_fkey(full_name))',
     )
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (error) {

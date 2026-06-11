@@ -20,7 +20,7 @@ interface EditTaskDialogProps {
     project_id: string | null;
   };
   employees: { id: string; full_name: string }[];
-  projects: { id: string; project_number: string; customer_name: string }[];
+  projects: { id: string; project_number: string; customer_name: string; project_name?: string | null }[];
 }
 
 // ── Searchable Project Dropdown (customer_name display) ──
@@ -30,7 +30,7 @@ function SearchableProjectSelect({
   value,
   onChange,
 }: {
-  projects: { id: string; project_number: string; customer_name: string }[];
+  projects: { id: string; project_number: string; customer_name: string; project_name?: string | null }[];
   value: string;
   onChange: (id: string) => void;
 }) {

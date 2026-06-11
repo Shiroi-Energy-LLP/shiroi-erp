@@ -304,12 +304,12 @@ export async function getActiveEmployees(): Promise<{ id: string; full_name: str
   return data ?? [];
 }
 
-export async function getActiveProjects(): Promise<{ id: string; project_number: string; customer_name: string }[]> {
+export async function getActiveProjects(): Promise<{ id: string; project_number: string; customer_name: string; project_name: string | null }[]> {
   const op = '[getActiveProjects]';
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name')
+    .select('id, project_number, customer_name, project_name')
     .is('deleted_at', null)
     .order('customer_name', { ascending: true });
 
@@ -317,7 +317,7 @@ export async function getActiveProjects(): Promise<{ id: string; project_number:
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return [];
   }
-  return data ?? [];
+  return (data ?? []).map((p) => ({ ...p, project_name: p.project_name ?? null }));
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -337,6 +337,26 @@ export async function getMilestonesForProject(
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+  return data ?? [];
+}
+
+/**
+ * Milestones ordered by milestone_order for the /tasks create dialog picker.
+ */
+export async function getProjectMilestonesLite(
+  projectId: string,
+): Promise<{ id: string; milestone_name: string }[]> {
+  const op = '[getProjectMilestonesLite]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('project_milestones')
+    .select('id, milestone_name')
+    .eq('project_id', projectId)
+    .order('milestone_order', { ascending: true });
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, projectId });
     return [];
   }
   return data ?? [];

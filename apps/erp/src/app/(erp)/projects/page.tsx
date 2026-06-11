@@ -2,9 +2,9 @@ import { getProjects } from '@/lib/projects-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ProjectsTableWrapper } from '@/components/projects/projects-table-wrapper';
 import { getDefaultColumns } from '@/components/data-table/column-config';
-import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
+import { ProjectsSearchBox } from '@/components/projects/projects-search-box';
 import type { Database } from '@repo/types/database';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
@@ -24,6 +24,7 @@ interface ProjectsPageProps {
   searchParams: Promise<{
     status?: string;
     search?: string;
+    year?: string;
     page?: string;
     sort?: string;
     dir?: string;
@@ -35,10 +36,15 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   const params = await searchParams;
   const page = parseInt(params.page ?? '1', 10);
 
+  const currentFyStart = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+  const fyOptions: string[] = [];
+  for (let y = currentFyStart; y >= 2014; y--) fyOptions.push(`${y}-${String((y + 1) % 100).padStart(2, '0')}`);
+
   const [result, views] = await Promise.all([
     getProjects({
       status: (params.status as ProjectStatus) || undefined,
       search: params.search || undefined,
+      fy: params.year || undefined,
       page,
       pageSize: 50,
       sort: params.sort || undefined,
@@ -59,6 +65,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   const currentFilters: Record<string, string> = {};
   if (params.status) currentFilters.status = params.status;
   if (params.search) currentFilters.search = params.search;
+  if (params.year) currentFilters.year = params.year;
 
   // If explicit view param, use that. Otherwise fall back to user's default view.
   const activeView = params.view
@@ -70,17 +77,20 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
     : getDefaultColumns('projects');
 
   const filterBar = (
-    <FilterBar basePath="/projects" filterParams={['search', 'status']}>
+    <FilterBar basePath="/projects" filterParams={['search', 'status', 'year']}>
       <FilterSelect paramName="status" className="w-44 h-9 text-sm">
         <option value="">All Statuses</option>
         {STATUS_OPTIONS.map((s) => (
           <option key={s.value} value={s.value}>{s.label}</option>
         ))}
       </FilterSelect>
-      <SearchInput
-        placeholder="Search project # or customer..."
-        className="w-64 h-9 text-sm"
-      />
+      <FilterSelect paramName="year" className="w-36 h-9 text-sm">
+        <option value="">All years</option>
+        {fyOptions.map((fy) => (
+          <option key={fy} value={fy}>{`FY ${fy}`}</option>
+        ))}
+      </FilterSelect>
+      <ProjectsSearchBox />
     </FilterBar>
   );
 

@@ -40,6 +40,7 @@ import { DcCertificatesPanel } from '@/components/projects/certificates/dc-certi
 import { getDcCertificatesForProject } from '@/lib/dc-certificate-queries';
 // S5 — F7 BOQ variance narrative
 import { BoqVarianceCard } from '@/components/projects/detail/boq-variance-card';
+import { DeleteProjectCard } from '@/components/projects/detail/delete-project-card';
 
 interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
@@ -208,6 +209,11 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
             />
           </CardContent>
         </Card>
+
+        {/* Danger zone — soft delete (PM + founder only) */}
+        {viewerRole && ['founder', 'project_manager'].includes(viewerRole) && (
+          <DeleteProjectCard projectId={id} projectNumber={(project as any).project_number ?? ''} />
+        )}
       </div>
     </div>
 

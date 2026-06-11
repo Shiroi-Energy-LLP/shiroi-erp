@@ -7,11 +7,11 @@ import {
   Button, Input, Label, Select,
 } from '@repo/ui';
 import { Plus, Search } from 'lucide-react';
-import { createTask } from '@/lib/tasks-actions';
+import { createTask, getProjectMilestonesLite } from '@/lib/tasks-actions';
 
 interface CreateTaskDialogProps {
   employees: { id: string; full_name: string }[];
-  projects: { id: string; project_number: string; customer_name: string }[];
+  projects: { id: string; project_number: string; customer_name: string; project_name?: string | null }[];
 }
 
 // ── Searchable Project Dropdown (customer_name display) ──
@@ -21,7 +21,7 @@ function SearchableProjectSelect({
   value,
   onChange,
 }: {
-  projects: { id: string; project_number: string; customer_name: string }[];
+  projects: { id: string; project_number: string; customer_name: string; project_name?: string | null }[];
   value: string;
   onChange: (id: string) => void;
 }) {
@@ -106,6 +106,18 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [selectedProject, setSelectedProject] = React.useState('');
+  const [milestoneId, setMilestoneId] = React.useState('');
+  const [milestones, setMilestones] = React.useState<{ id: string; milestone_name: string }[]>([]);
+
+  async function handleProjectChange(id: string) {
+    setSelectedProject(id);
+    setMilestoneId('');
+    if (id) {
+      getProjectMilestonesLite(id).then(setMilestones);
+    } else {
+      setMilestones([]);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -122,12 +134,15 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
       dueDate: form.get('dueDate') as string || undefined,
       assignedTo: form.get('assignedTo') as string || undefined,
       remarks: form.get('remarks') as string || undefined,
+      milestoneId: milestoneId || undefined,
     });
 
     setSaving(false);
     if (result.success) {
       setOpen(false);
       setSelectedProject('');
+      setMilestoneId('');
+      setMilestones([]);
       router.refresh();
     } else {
       setError(result.error ?? 'Failed to create task');
@@ -135,7 +150,7 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setSelectedProject(''); }}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setSelectedProject(''); setMilestoneId(''); setMilestones([]); } }}>
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5 h-8 text-xs">
           <Plus className="h-3.5 w-3.5" /> New Task
@@ -151,9 +166,24 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
             <SearchableProjectSelect
               projects={projects}
               value={selectedProject}
-              onChange={setSelectedProject}
+              onChange={handleProjectChange}
             />
           </div>
+          {milestones.length > 0 && (
+            <div>
+              <Label className="text-xs">Milestone (optional)</Label>
+              <select
+                value={milestoneId}
+                onChange={(e) => setMilestoneId(e.target.value)}
+                className="w-full rounded-md border border-n-200 px-2 h-9 text-xs focus:outline-none focus:ring-1 focus:ring-p-400"
+              >
+                <option value="">— No milestone —</option>
+                {milestones.map((m) => (
+                  <option key={m.id} value={m.id}>{m.milestone_name.replace(/_/g, ' ')}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <Label htmlFor="title" className="text-xs">Task Name *</Label>
             <Input id="title" name="title" required placeholder="What needs to be done?" className="h-9 text-xs" />

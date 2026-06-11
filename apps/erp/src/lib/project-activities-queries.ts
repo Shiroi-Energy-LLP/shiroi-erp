@@ -145,14 +145,14 @@ export async function getActivityStageOptions(): Promise<ActivityStageOption[]> 
 
 /** Light project list for the global filter combobox (mirrors /expenses). */
 export async function getProjectOptionsForActivities(): Promise<
-  { id: string; project_number: string | null; customer_name: string }[]
+  { id: string; project_number: string | null; customer_name: string; project_name: string | null }[]
 > {
   const op = '[getProjectOptionsForActivities]';
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name')
+    .select('id, project_number, customer_name, project_name')
     .order('created_at', { ascending: false })
     .limit(500);
 
@@ -164,5 +164,6 @@ export async function getProjectOptionsForActivities(): Promise<
     id: p.id,
     project_number: p.project_number,
     customer_name: p.customer_name ?? p.project_number ?? p.id.slice(0, 8),
+    project_name: p.project_name ?? null,
   }));
 }
