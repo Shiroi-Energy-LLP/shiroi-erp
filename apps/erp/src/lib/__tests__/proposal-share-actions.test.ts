@@ -123,10 +123,16 @@ vi.mock('../n8n/emit', () => ({
 // Import AFTER vi.mock — see referral-actions.test.ts comment.
 import { acceptProposalFromPortal } from '../proposal-share-actions';
 
-const validToken = 'a'.repeat(64); // 32-byte hex token
+// acceptProposalFromPortal rate-limits per token (5 attempts/minute) via
+// module-level state that survives across tests in this file. Every test
+// gets a fresh 64-char token so attempts in one test never trip the limiter
+// in another. The limiter itself is asserted in its own describe below.
+let tokenCounter = 0;
+let validToken: string; // 32-byte-hex-shaped token, unique per test
 
 beforeEach(() => {
   resetState();
+  validToken = (tokenCounter++).toString(16).padStart(4, '0') + 'a'.repeat(60);
 });
 
 afterEach(() => {
@@ -299,5 +305,24 @@ describe('acceptProposalFromPortal — accept flow', () => {
     }
     // No event emitted when the update fails.
     expect(state.emits).toHaveLength(0);
+  });
+});
+
+// ── Rate limiting ────────────────────────────────────────────────────────
+
+describe('acceptProposalFromPortal — rate limiting', () => {
+  it('blocks the 6th attempt on the same token within a minute', async () => {
+    for (let i = 0; i < 5; i++) {
+      const r = await acceptProposalFromPortal(validToken);
+      expect(r.success).toBe(true);
+    }
+
+    const sixth = await acceptProposalFromPortal(validToken);
+    expect(sixth.success).toBe(false);
+    if (!sixth.success) {
+      expect(sixth.error).toMatch(/Too many accept attempts/);
+    }
+    // The 6th attempt is rejected before any DB work — still only 5 UPDATEs.
+    expect(state.updates).toHaveLength(5);
   });
 });

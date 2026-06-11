@@ -210,10 +210,15 @@ import { sendProposalToCustomer } from '../proposal-send-actions';
 
 beforeEach(() => {
   resetState();
+  // The action refuses to call the internal generate-pdf route without the
+  // shared webhook secret (returns 'Server misconfigured' otherwise) —
+  // present it so tests can exercise the fetch path.
+  vi.stubEnv('N8N_WEBHOOK_SECRET', 'test-webhook-secret');
 });
 
 afterEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllEnvs();
 });
 
 // Helper: pick the proposals UPDATE
@@ -286,6 +291,21 @@ describe('sendProposalToCustomer — PDF refresh', () => {
     }
     expect(state.emits).toHaveLength(0);
     expect(state.updates).toHaveLength(0);
+  });
+
+  it('returns "Server misconfigured" when N8N_WEBHOOK_SECRET is unset', async () => {
+    vi.stubEnv('N8N_WEBHOOK_SECRET', '');
+    state.proposal = defaultProposal({ current_pdf_storage_path: null });
+
+    const result = await sendProposalToCustomer('prop-1');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toMatch(/Server misconfigured/);
+    }
+    // The guard fires before the fetch — the endpoint is never called.
+    expect(state.fetchCalls).toHaveLength(0);
+    expect(state.emits).toHaveLength(0);
   });
 
   it('does NOT call generate-pdf when current_pdf_storage_path already exists', async () => {
