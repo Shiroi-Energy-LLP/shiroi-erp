@@ -8,15 +8,16 @@ import { deleteServiceTicket } from '@/lib/service-ticket-actions';
 
 interface DeleteTicketButtonProps {
   ticketId: string;
-  ticketNumber: string;
+  ticketTitle?: string;
 }
 
-export function DeleteTicketButton({ ticketId, ticketNumber }: DeleteTicketButtonProps) {
+export function DeleteTicketButton({ ticketId, ticketTitle }: DeleteTicketButtonProps) {
   const router = useRouter();
   const [deleting, setDeleting] = React.useState(false);
 
   async function handleDelete() {
-    if (!confirm(`Close ticket ${ticketNumber}? This will mark it as closed.`)) return;
+    const label = ticketTitle ? `"${ticketTitle}"` : 'this ticket';
+    if (!confirm(`Close ${label}? This will mark it as closed.`)) return;
     setDeleting(true);
     const result = await deleteServiceTicket(ticketId);
     setDeleting(false);

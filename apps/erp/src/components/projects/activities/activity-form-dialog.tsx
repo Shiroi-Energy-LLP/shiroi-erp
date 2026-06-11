@@ -16,24 +16,31 @@ import {
 } from '@repo/ui';
 import { addProjectActivity, updateProjectActivity } from '@/lib/project-activities-actions';
 import type { ActivityStageOption, ProjectActivityRow } from '@/lib/project-activities-constants';
+import { ProjectCombobox } from '@/components/forms/project-combobox';
 
 interface ActivityFormDialogProps {
-  projectId: string;
+  projectId?: string;
   stages: ActivityStageOption[];
   /** When set, the dialog edits this row; otherwise it creates. */
   existing?: ProjectActivityRow;
   trigger: React.ReactNode;
+  /** List of projects for global add (when projectId is absent). */
+  projects?: { id: string; project_number: string | null; customer_name: string; project_name?: string | null }[];
 }
 
-export function ActivityFormDialog({ projectId, stages, existing, trigger }: ActivityFormDialogProps) {
+export function ActivityFormDialog({ projectId, stages, existing, trigger, projects }: ActivityFormDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [pickedProjectId, setPickedProjectId] = React.useState('');
 
   const todayIso = new Date().toISOString().slice(0, 10);
   const [activityDate, setActivityDate] = React.useState(existing?.activity_date ?? todayIso);
-  const [stageId, setStageId] = React.useState(existing?.stage_id ?? '');
+  // If existing has stage_custom and no stage_id, init select to __custom__
+  const initStageId = existing?.stage_custom && !existing.stage_id ? '__custom__' : (existing?.stage_id ?? '');
+  const [stageId, setStageId] = React.useState(initStageId);
+  const [stageCustom, setStageCustom] = React.useState(existing?.stage_custom ?? '');
   const [doneBy, setDoneBy] = React.useState(existing?.done_by ?? '');
   const [description, setDescription] = React.useState(existing?.description ?? '');
   const [seCount, setSeCount] = React.useState(String(existing?.se_count ?? 0));
@@ -44,7 +51,9 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger }: Act
   React.useEffect(() => {
     if (!open) {
       setActivityDate(existing?.activity_date ?? todayIso);
-      setStageId(existing?.stage_id ?? '');
+      const sid = existing?.stage_custom && !existing.stage_id ? '__custom__' : (existing?.stage_id ?? '');
+      setStageId(sid);
+      setStageCustom(existing?.stage_custom ?? '');
       setDoneBy(existing?.done_by ?? '');
       setDescription(existing?.description ?? '');
       setSeCount(String(existing?.se_count ?? 0));
@@ -53,15 +62,22 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger }: Act
       setNotes(existing?.notes ?? '');
       setError(null);
       setSaving(false);
+      setPickedProjectId('');
     }
   }, [open]);
 
   async function handleSave() {
+    const resolvedProjectId = projectId ?? pickedProjectId;
+    if (!resolvedProjectId) {
+      setError('Pick a project');
+      return;
+    }
     setSaving(true);
     setError(null);
     const data = {
       activityDate,
-      stageId: stageId || null,
+      stageId: stageId && stageId !== '__custom__' ? stageId : null,
+      stageCustom: stageId === '__custom__' ? (stageCustom || null) : null,
       doneBy: doneBy || null,
       description,
       seCount: parseInt(seCount || '0', 10),
@@ -70,8 +86,8 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger }: Act
       notes: notes || null,
     };
     const result = existing
-      ? await updateProjectActivity({ projectId, activityId: existing.id, data })
-      : await addProjectActivity({ projectId, data });
+      ? await updateProjectActivity({ projectId: resolvedProjectId, activityId: existing.id, data })
+      : await addProjectActivity({ projectId: resolvedProjectId, data });
     setSaving(false);
     if (!result.success) { setError(result.error); return; }
     setOpen(false);
@@ -86,6 +102,18 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger }: Act
           <DialogTitle>{existing ? 'Edit activity' : 'Add activity'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          {/* Project picker — only when no projectId prop given */}
+          {!projectId && projects && (
+            <div>
+              <Label>Project *</Label>
+              <ProjectCombobox
+                projects={projects}
+                value={pickedProjectId}
+                onChange={setPickedProjectId}
+                placeholder="Search project…"
+              />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Date *</Label>
@@ -96,7 +124,16 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger }: Act
               <Select value={stageId} onChange={(e) => setStageId(e.target.value)}>
                 <option value="">— No stage —</option>
                 {stages.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                <option value="__custom__">Other (type below)…</option>
               </Select>
+              {stageId === '__custom__' && (
+                <Input
+                  className="mt-1"
+                  value={stageCustom}
+                  onChange={(e) => setStageCustom(e.target.value)}
+                  placeholder="Custom stage name"
+                />
+              )}
             </div>
           </div>
           <div>

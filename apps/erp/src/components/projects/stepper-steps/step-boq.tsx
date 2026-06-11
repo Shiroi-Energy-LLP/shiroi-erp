@@ -19,6 +19,7 @@ import {
 } from '@/components/projects/forms/boq-variance-form';
 import { getCategoryLabel, BOI_CATEGORIES } from '@/lib/boi-constants';
 import { getItemSuggestions } from '@/lib/item-suggestions-queries';
+import { listItemCategories, listItemUnits } from '@/lib/item-catalog-queries';
 import { BoqCategoryFilterWrapper } from '@/components/projects/forms/boq-category-filter-wrapper';
 import Link from 'next/link';
 
@@ -52,13 +53,18 @@ export async function StepBoq({ projectId }: StepBoqProps) {
   let approvedSiteExpenses = 0;
   let suggestions: Awaited<ReturnType<typeof getItemSuggestions>> = [];
 
+  let itemCategories: Awaited<ReturnType<typeof listItemCategories>> = [];
+  let itemUnits: Awaited<ReturnType<typeof listItemUnits>> = [];
+
   try {
-    [boqData, bomLines, boiState, approvedSiteExpenses, suggestions] = await Promise.all([
+    [boqData, bomLines, boiState, approvedSiteExpenses, suggestions, itemCategories, itemUnits] = await Promise.all([
       getStepBoqData(projectId),
       getStepBomData(projectId),
       getBoiState(projectId),
       getApprovedSiteExpenses(projectId),
       getItemSuggestions(),
+      listItemCategories(),
+      listItemUnits(),
     ]);
   } catch (error) {
     console.error('[StepBoq] Failed to load data:', error);
@@ -70,6 +76,9 @@ export async function StepBoq({ projectId }: StepBoqProps) {
       </div>
     );
   }
+
+  const catalogCategories = itemCategories.map((c) => ({ value: c.value, label: c.label }));
+  const catalogUnits = itemUnits.map((u) => u.value);
 
   const hasBomLines = bomLines.length > 0;
   const hasBoqItems = boqData.type === 'items' && boqData.items.length > 0;
@@ -337,7 +346,7 @@ export async function StepBoq({ projectId }: StepBoqProps) {
                 })}
 
                 {/* Add item row */}
-                <BoqAddItemRow projectId={projectId} suggestions={suggestions} />
+                <BoqAddItemRow projectId={projectId} suggestions={suggestions} categories={catalogCategories} units={catalogUnits} />
 
                 {/* Grand Total row */}
                 <tr className="border-t-2 border-n-200 bg-n-50">

@@ -191,10 +191,16 @@ const GST_RATES = ['0', '5', '12', '18', '28'];
 export function BoqAddItemRow({
   projectId,
   suggestions,
+  categories,
+  units: unitsProp,
 }: {
   projectId: string;
   suggestions: ItemSuggestion[];
+  categories?: { value: string; label: string }[];
+  units?: string[];
 }) {
+  const cats = categories ?? BOI_CATEGORIES;
+  const unitList = unitsProp ?? UNITS;
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -257,7 +263,7 @@ export function BoqAddItemRow({
             className="text-xs h-8 w-[140px]"
           >
             <option value="">Category...</option>
-            {BOI_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {cats.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5">
@@ -302,7 +308,7 @@ export function BoqAddItemRow({
               onChange={(e) => setRow({ ...row, unit: e.target.value })}
               className="text-xs h-8 w-[60px]"
             >
-              {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+              {unitList.map((u) => <option key={u} value={u}>{u}</option>)}
             </Select>
           </div>
         </td>

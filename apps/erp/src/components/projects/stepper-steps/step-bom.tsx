@@ -13,6 +13,7 @@ import {
 import { BoqSeedButton } from '@/components/projects/forms/boq-variance-form';
 import { getCategoryLabel } from '@/lib/boi-constants';
 import { getItemSuggestions } from '@/lib/item-suggestions-queries';
+import { listItemCategories, listItemUnits } from '@/lib/item-catalog-queries';
 import { BoiCategoryFilter } from '@/components/projects/forms/boi-category-filter';
 import { getCurrentUserRoleForProject } from '@/lib/project-detail-actions';
 import Link from 'next/link';
@@ -36,13 +37,17 @@ function BoiStatusBadge({ status }: { status: string }) {
 }
 
 export async function StepBom({ projectId }: StepBomProps) {
-  const [bois, boiState, boqData, suggestions, viewerRole] = await Promise.all([
+  const [bois, boiState, boqData, suggestions, viewerRole, itemCategories, itemUnits] = await Promise.all([
     getBoisForProject(projectId),
     getBoiState(projectId),
     getStepBoqData(projectId),
     getItemSuggestions(),
     getCurrentUserRoleForProject(),
+    listItemCategories(),
+    listItemUnits(),
   ]);
+  const catalogCategories = itemCategories.map((c) => ({ value: c.value, label: c.label }));
+  const catalogUnits = itemUnits.map((u) => u.value);
   const canManageItems = !!viewerRole && ['founder', 'project_manager'].includes(viewerRole);
 
   const hasProposal = !!(boiState as any)?.proposal_id;
@@ -233,7 +238,7 @@ export async function StepBom({ projectId }: StepBomProps) {
                         <td className="px-2 py-1">
                           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             {canManageItems && (
-                              <BoiEditButton projectId={projectId} item={item} />
+                              <BoiEditButton projectId={projectId} item={item} units={catalogUnits} />
                             )}
                             <BoiItemHistoryButton itemId={item.id} />
                             {canEdit && (
@@ -249,7 +254,7 @@ export async function StepBom({ projectId }: StepBomProps) {
                     ))}
 
                     {/* Inline add row — only for draft BOIs */}
-                    {canEdit && <BoiInlineAddRow projectId={projectId} boiId={boi.id} suggestions={suggestions} />}
+                    {canEdit && <BoiInlineAddRow projectId={projectId} boiId={boi.id} suggestions={suggestions} categories={catalogCategories} units={catalogUnits} />}
 
                     {/* Empty state */}
                     {items.length === 0 && !canEdit && (

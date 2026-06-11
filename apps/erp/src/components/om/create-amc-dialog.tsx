@@ -8,10 +8,11 @@ import {
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
 import { createAmcSchedule } from '@/lib/amc-actions';
+import { ProjectCombobox } from '@/components/forms/project-combobox';
 
 interface CreateAmcDialogProps {
-  commissionedProjects: { id: string; project_number: string; customer_name: string; commissioned_date: string | null }[];
-  allProjects: { id: string; project_number: string; customer_name: string }[];
+  commissionedProjects: { id: string; project_number: string; customer_name: string; project_name: string | null; commissioned_date: string | null }[];
+  allProjects: { id: string; project_number: string; customer_name: string; project_name: string | null }[];
   employees: { id: string; full_name: string }[];
 }
 
@@ -34,17 +35,7 @@ export function CreateAmcDialog({ commissionedProjects, allProjects, employees }
   const [amcAmount, setAmcAmount] = React.useState('');
 
   const isFree = category === 'free_amc';
-  const projects = isFree ? commissionedProjects : allProjects;
-
-  function handleProjectChange(projectId: string) {
-    setSelectedProject(projectId);
-    if (isFree) {
-      const project = commissionedProjects.find((p) => p.id === projectId);
-      if (project?.commissioned_date) {
-        setCommDate(project.commissioned_date);
-      }
-    }
-  }
+  const activeList = isFree ? commissionedProjects : allProjects;
 
   function handleCategoryChange(cat: string) {
     setCategory(cat as 'free_amc' | 'paid_amc');
@@ -120,23 +111,21 @@ export function CreateAmcDialog({ commissionedProjects, allProjects, employees }
           <div className="grid grid-cols-2 gap-3">
             {/* Project */}
             <div className="col-span-2">
-              <Label htmlFor="amc-project" className="text-xs">Project *</Label>
-              <Select
-                id="amc-project"
+              <Label className="text-xs">Project *</Label>
+              <ProjectCombobox
+                projects={activeList}
                 value={selectedProject}
-                onChange={(e) => handleProjectChange(e.target.value)}
-                required
-                className="h-8 text-xs"
-              >
-                <option value="" disabled>
-                  {isFree ? 'Select commissioned project...' : 'Select project...'}
-                </option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.customer_name}
-                  </option>
-                ))}
-              </Select>
+                onChange={(id) => {
+                  setSelectedProject(id);
+                  const proj = activeList.find((p) => p.id === id);
+                  const projWithDate = proj as unknown as { commissioned_date?: string | null } | undefined;
+                  if (category === 'free_amc' && projWithDate?.commissioned_date) {
+                    setCommDate(projWithDate.commissioned_date);
+                  }
+                }}
+                placeholder={isFree ? 'Search commissioned project…' : 'Search project…'}
+                inputClassName="h-8 text-xs"
+              />
             </div>
 
             {/* Assigned To */}

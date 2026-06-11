@@ -23,6 +23,7 @@ type ProjectLite = {
   id: string;
   project_number: string;
   customer_name: string;
+  project_name: string | null;
   commissioned_date: string | null;
 };
 
@@ -588,7 +589,7 @@ export async function getCommissionedProjects(): Promise<ProjectLite[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name, commissioned_date')
+    .select('id, project_number, customer_name, project_name, commissioned_date')
     .is('deleted_at', null)
     .in('status', ['completed', 'waiting_net_metering'])
     .order('commissioned_date', { ascending: false })
@@ -598,7 +599,7 @@ export async function getCommissionedProjects(): Promise<ProjectLite[]> {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return [];
   }
-  return data ?? [];
+  return (data ?? []).map((p) => ({ ...p, project_name: p.project_name ?? null }));
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -610,7 +611,7 @@ export async function getAllProjectsForAmc(): Promise<Omit<ProjectLite, 'commiss
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name')
+    .select('id, project_number, customer_name, project_name')
     .is('deleted_at', null)
     .order('project_number', { ascending: true })
     .limit(500);
@@ -619,7 +620,7 @@ export async function getAllProjectsForAmc(): Promise<Omit<ProjectLite, 'commiss
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return [];
   }
-  return data ?? [];
+  return (data ?? []).map((p) => ({ ...p, project_name: p.project_name ?? null }));
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -660,6 +661,7 @@ export async function getProjectsWithAmc(): Promise<Omit<ProjectLite, 'commissio
         id: p.id,
         project_number: p.project_number ?? '',
         customer_name: p.customer_name ?? '',
+        project_name: null,
       });
     }
   }

@@ -143,23 +143,20 @@ export function ActivitiesClient({
                 {showProject && (
                   <td className="px-2 py-1.5">
                     <a href={`/projects/${r.project_id}?tab=execution`} className="text-blue-600 hover:underline">
-                      {r.project_customer ?? r.project_number ?? '—'}
+                      {r.project_display ?? '—'}
                     </a>
-                    {r.project_number && (
-                      <span className="block text-[9px] text-n-400 font-mono">{r.project_number}</span>
-                    )}
                   </td>
                 )}
-                <td className="px-2 py-1.5 text-n-700">{r.stage_label ?? '—'}</td>
+                <td className="px-2 py-1.5 text-n-700">{r.stage_label ?? r.stage_custom ?? '—'}</td>
                 <td className="px-2 py-1.5 text-n-700">{r.done_by ?? '—'}</td>
-                <td className="px-2 py-1.5 text-n-900 max-w-[260px]">
-                  <span className="truncate block" title={r.description}>{r.description}</span>
+                <td className="px-2 py-1.5 text-n-900 max-w-[420px]">
+                  <span className="whitespace-normal break-words">{r.description}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right font-mono">{r.se_count || '—'}</td>
                 <td className="px-2 py-1.5 text-right font-mono">{r.os_count || '—'}</td>
                 <td className="px-2 py-1.5 text-right font-mono">{r.contractor_count || '—'}</td>
-                <td className="px-2 py-1.5 text-n-500 max-w-[120px]">
-                  <span className="truncate block" title={r.notes ?? undefined}>{r.notes ?? '—'}</span>
+                <td className="px-2 py-1.5 text-n-500 max-w-[200px]">
+                  <span className="whitespace-normal break-words">{r.notes ?? '—'}</span>
                 </td>
                 {canManage && (
                   <td className="px-2 py-1.5">

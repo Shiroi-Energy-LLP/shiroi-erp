@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Users } from 'lucide-react';
+import { Users, Plus } from 'lucide-react';
+import { Button } from '@repo/ui';
+import { ActivityFormDialog } from '@/components/projects/activities/activity-form-dialog';
 import {
   listProjectActivities,
   getActivitiesSummary,
@@ -71,6 +73,13 @@ export default async function ActivitiesPage({ searchParams }: Props) {
           <div className="text-xs uppercase tracking-wider text-n-500">Execution</div>
           <h1 className="text-2xl font-semibold">Activities — All Projects</h1>
         </div>
+        {canManage && (
+          <ActivityFormDialog
+            stages={stages}
+            projects={projects}
+            trigger={<Button size="sm"><Plus className="h-3.5 w-3.5 mr-1" /> Add Activity</Button>}
+          />
+        )}
       </div>
 
       {/* Org-wide manpower + activity stats (SQL-aggregated, filter-aware) */}
@@ -104,7 +113,7 @@ export default async function ActivitiesPage({ searchParams }: Props) {
         </span>
       </div>
       <p className="text-[10px] text-n-400">
-        Showing up to {ACTIVITIES_PAGE_SIZE} per page. To add an activity, open the project&apos;s Execution tab → Activities.
+        Showing up to {ACTIVITIES_PAGE_SIZE} per page.
       </p>
     </div>
   );

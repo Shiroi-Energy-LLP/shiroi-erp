@@ -38,7 +38,11 @@ export function BomInlineAddRow({
   projectId,
   hasProposal,
   suggestions,
-}: BomLineFormProps & { suggestions: ItemSuggestion[] }) {
+  categories,
+  units: unitsProp,
+}: BomLineFormProps & { suggestions: ItemSuggestion[]; categories?: { value: string; label: string }[]; units?: string[] }) {
+  const cats = categories ?? BOI_CATEGORIES;
+  const unitList = unitsProp ?? UNITS;
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -102,7 +106,7 @@ export function BomInlineAddRow({
             className="text-xs h-8 w-[160px]"
           >
             <option value="">Category...</option>
-            {BOI_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {cats.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5">
@@ -150,7 +154,7 @@ export function BomInlineAddRow({
             onChange={(e) => setRow({ ...row, unit: e.target.value })}
             className="text-xs h-8 w-[70px]"
           >
-            {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+            {unitList.map((u) => <option key={u} value={u}>{u}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5 text-right">
@@ -276,12 +280,18 @@ export function BoiInlineAddRow({
   boiId,
   disabled,
   suggestions,
+  categories,
+  units: unitsProp,
 }: {
   projectId: string;
   boiId?: string;
   disabled?: boolean;
   suggestions: ItemSuggestion[];
+  categories?: { value: string; label: string }[];
+  units?: string[];
 }) {
+  const cats = categories ?? BOI_CATEGORIES;
+  const unitList = unitsProp ?? UNITS;
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -348,7 +358,7 @@ export function BoiInlineAddRow({
             className="text-xs h-8 w-[160px]"
           >
             <option value="">Category...</option>
-            {BOI_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {cats.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5">
@@ -396,7 +406,7 @@ export function BoiInlineAddRow({
             onChange={(e) => setRow({ ...row, unit: e.target.value })}
             className="text-xs h-8 w-[70px]"
           >
-            {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+            {unitList.map((u) => <option key={u} value={u}>{u}</option>)}
           </Select>
         </td>
         <td></td>
@@ -577,7 +587,8 @@ interface BoiEditableItem {
   gst_rate: number | null;
 }
 
-export function BoiEditButton({ projectId, item }: { projectId: string; item: BoiEditableItem }) {
+export function BoiEditButton({ projectId, item, units: unitsProp }: { projectId: string; item: BoiEditableItem; units?: string[] }) {
+  const unitList = unitsProp ?? UNITS;
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -665,7 +676,7 @@ export function BoiEditButton({ projectId, item }: { projectId: string; item: Bo
           <div>
             <label className="block text-[10px] text-n-500 mb-0.5">Unit</label>
             <Select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="text-xs h-8">
-              {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+              {unitList.map((u) => <option key={u} value={u}>{u}</option>)}
             </Select>
           </div>
           <div>

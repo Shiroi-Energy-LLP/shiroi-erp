@@ -8,6 +8,7 @@ import {
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
 import { createServiceTicket } from '@/lib/service-ticket-actions';
+import { ProjectCombobox } from '@/components/forms/project-combobox';
 
 const ISSUE_TYPES = [
   { value: 'no_generation', label: 'No Generation' },
@@ -32,7 +33,7 @@ const SEVERITY_OPTIONS = [
 
 interface CreateTicketDialogProps {
   employees: { id: string; full_name: string }[];
-  projects: { id: string; project_number: string; customer_name: string }[];
+  projects: { id: string; project_number: string | null; customer_name: string; project_name?: string | null }[];
 }
 
 export function CreateTicketDialog({ employees, projects }: CreateTicketDialogProps) {
@@ -40,20 +41,27 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [projectId, setProjectId] = React.useState('');
+
+  React.useEffect(() => {
+    if (!open) {
+      setProjectId('');
+      setError(null);
+    }
+  }, [open]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
     setError(null);
 
-    const form = new FormData(e.currentTarget);
-    const projectId = form.get('projectId') as string;
     if (!projectId) {
       setError('Project is required');
       setSaving(false);
       return;
     }
 
+    const form = new FormData(e.currentTarget);
     const result = await createServiceTicket({
       projectId,
       title: form.get('title') as string,
@@ -85,13 +93,13 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="projectId">Project *</Label>
-            <Select id="projectId" name="projectId" required defaultValue="">
-              <option value="" disabled>Select a project...</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.project_number} — {p.customer_name}</option>
-              ))}
-            </Select>
+            <Label>Project *</Label>
+            <ProjectCombobox
+              projects={projects}
+              value={projectId}
+              onChange={setProjectId}
+              placeholder="Search project by customer, name or number…"
+            />
           </div>
           <div>
             <Label htmlFor="title">Title *</Label>

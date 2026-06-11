@@ -32,9 +32,11 @@ export interface ProjectActivityRow {
   contractor_count: number;
   notes: string | null;
   created_by_name: string | null;
+  stage_custom: string | null;
   // Global view extras (null on the per-project tab)
   project_number: string | null;
   project_customer: string | null;
+  project_display: string | null;
 }
 
 export interface ActivitiesSummary {

@@ -4,6 +4,8 @@ import {
   getPriceBookBrands,
   getPriceBookVendors,
 } from '@/lib/price-book-actions';
+import { listItemCategories, listItemUnits } from '@/lib/item-catalog-queries';
+import { getUserProfile } from '@/lib/auth';
 import {
   Card,
   CardContent,
@@ -66,12 +68,18 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
   const brand = (params.brand as string | undefined) || undefined;
   const vendor = (params.vendor as string | undefined) || undefined;
 
-  const [{ items, total }, categories, brands, vendors] = await Promise.all([
+  const [{ items, total }, categories, brands, vendors, itemCategories, itemUnits, profile] = await Promise.all([
     getPriceBookItems({ page, per_page: PER_PAGE, search, category, brand, vendor }),
     getPriceBookCategories(),
     getPriceBookBrands(),
     getPriceBookVendors(),
+    listItemCategories(),
+    listItemUnits(),
+    getUserProfile(),
   ]);
+
+  const CATALOG_ROLES = new Set(['founder', 'project_manager', 'purchase_officer']);
+  const canManageLists = !!profile && CATALOG_ROLES.has(profile.role);
 
   const totalPages = Math.ceil(total / PER_PAGE);
   const offset = (page - 1) * PER_PAGE;
@@ -98,7 +106,18 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
             <span className="text-sm font-normal text-n-500">({total} items)</span>
           </h1>
         </div>
-        <AddPriceBookItemDialog />
+        <div className="flex items-center gap-2">
+          {canManageLists && (
+            <Link href="/price-book/settings">
+              <Button size="sm" variant="ghost" className="text-xs h-8">Manage lists</Button>
+            </Link>
+          )}
+          <AddPriceBookItemDialog
+            categories={itemCategories.map((c) => ({ value: c.value, label: c.label }))}
+            units={itemUnits.map((u) => u.value)}
+            canManageLists={canManageLists}
+          />
+        </div>
       </div>
 
       {/* Filters */}
@@ -213,7 +232,12 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
                         {/* Actions */}
                         <td className="px-2 py-2">
                           <div className="flex items-center justify-center gap-0.5">
-                            <EditPriceBookItemDialog item={item} />
+                            <EditPriceBookItemDialog
+                              item={item}
+                              categories={itemCategories.map((c) => ({ value: c.value, label: c.label }))}
+                              units={itemUnits.map((u) => u.value)}
+                              canManageLists={canManageLists}
+                            />
                             <DeletePriceBookItemButton
                               id={item.id}
                               itemDescription={item.item_description}

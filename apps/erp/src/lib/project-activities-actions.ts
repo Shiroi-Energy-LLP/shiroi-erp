@@ -10,6 +10,7 @@ const MANAGE_ROLES = new Set<string>(['founder', 'project_manager']);
 export interface ActivityInput {
   activityDate: string;        // 'YYYY-MM-DD'
   stageId: string | null;
+  stageCustom: string | null;
   doneBy: string | null;
   description: string;
   seCount: number;
@@ -64,7 +65,8 @@ export async function addProjectActivity(input: {
     .insert({
       project_id: input.projectId,
       activity_date: input.data.activityDate,
-      stage_id: input.data.stageId,
+      stage_id: input.data.stageId ? input.data.stageId : null,
+      stage_custom: input.data.stageId ? null : (input.data.stageCustom?.trim() || null),
       done_by: input.data.doneBy?.trim() || null,
       description: input.data.description.trim(),
       se_count: input.data.seCount,
@@ -105,7 +107,8 @@ export async function updateProjectActivity(input: {
     .from('project_activities')
     .update({
       activity_date: input.data.activityDate,
-      stage_id: input.data.stageId,
+      stage_id: input.data.stageId ? input.data.stageId : null,
+      stage_custom: input.data.stageId ? null : (input.data.stageCustom?.trim() || null),
       done_by: input.data.doneBy?.trim() || null,
       description: input.data.description.trim(),
       se_count: input.data.seCount,

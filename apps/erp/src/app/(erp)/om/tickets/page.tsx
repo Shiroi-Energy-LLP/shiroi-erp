@@ -189,7 +189,6 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Ticket #</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Title</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Issue Type</th>
@@ -219,11 +218,6 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                         key={ticket.id}
                         className={`border-b border-n-100 hover:bg-n-50 ${isClosed ? 'opacity-50' : ''}`}
                       >
-                        {/* Ticket # */}
-                        <td className="px-2 py-1.5 font-mono text-n-500">
-                          {String(parseInt((ticket.ticket_number || '').replace('TKT-', '') || '0')).padStart(3, '0')}
-                        </td>
-
                         {/* Project */}
                         <td className="px-2 py-1.5">
                           {ticket.project_id ? (
@@ -306,7 +300,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                               }}
                               employees={employees}
                             />
-                            <DeleteTicketButton ticketId={ticket.id} ticketNumber={ticket.ticket_number} />
+                            <DeleteTicketButton ticketId={ticket.id} ticketTitle={ticket.title} />
                           </div>
                         </td>
                       </tr>
