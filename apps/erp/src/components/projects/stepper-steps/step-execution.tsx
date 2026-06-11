@@ -14,6 +14,8 @@ import {
   DeleteTaskButton,
   MilestoneEditableField,
 } from '@/components/projects/forms/execution-task-row';
+import { ExecutionSubTabs } from '@/components/projects/execution-sub-tabs';
+import { ActivitiesPanel } from '@/components/projects/activities/activities-panel';
 
 interface StepExecutionProps {
   projectId: string;
@@ -69,16 +71,21 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
 
   if (!hasMilestones) {
     return (
-      <div>
-        <MilestoneSeedButton projectId={projectId} />
-        <div className="flex flex-col items-center justify-center py-16">
-          <HardHat className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Milestones</h3>
-          <p className="text-[13px] text-[#7C818E] max-w-md text-center">
-            Click &quot;Seed Default Milestones&quot; above to create the default execution milestones.
-          </p>
-        </div>
-      </div>
+      <ExecutionSubTabs
+        tasksView={
+          <div>
+            <MilestoneSeedButton projectId={projectId} />
+            <div className="flex flex-col items-center justify-center py-16">
+              <HardHat className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
+              <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Milestones</h3>
+              <p className="text-[13px] text-[#7C818E] max-w-md text-center">
+                Click &quot;Seed Default Milestones&quot; above to create the default execution milestones.
+              </p>
+            </div>
+          </div>
+        }
+        activitiesView={<ActivitiesPanel projectId={projectId} />}
+      />
     );
   }
 
@@ -104,7 +111,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
   // Same number as the Progress tab and the projects list cache.
   const overallPct = Math.round(overallWeightedPct);
 
-  return (
+  const tasksView = (
     <div className="space-y-6">
       {/* ── Overall Progress Dashboard ── */}
       <div className="flex gap-3 flex-wrap">
@@ -445,6 +452,13 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
         </Link>
       </div>
     </div>
+  );
+
+  return (
+    <ExecutionSubTabs
+      tasksView={tasksView}
+      activitiesView={<ActivitiesPanel projectId={projectId} />}
+    />
   );
 }
 
