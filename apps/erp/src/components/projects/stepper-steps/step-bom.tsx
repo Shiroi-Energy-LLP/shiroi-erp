@@ -8,11 +8,13 @@ import { Package, Lock, CheckCircle2, Clock, Send } from 'lucide-react';
 import {
   BoiInlineAddRow, BoiDeleteButton,
   BoiSubmitButton, BoiApproveButton, BoiLockVersionButton, CreateNewBoiButton,
+  BoiEditButton, BoiItemHistoryButton,
 } from '@/components/projects/forms/bom-line-form';
 import { BoqSeedButton } from '@/components/projects/forms/boq-variance-form';
 import { getCategoryLabel } from '@/lib/boi-constants';
 import { getItemSuggestions } from '@/lib/item-suggestions-queries';
 import { BoiCategoryFilter } from '@/components/projects/forms/boi-category-filter';
+import { getCurrentUserRoleForProject } from '@/lib/project-detail-actions';
 import Link from 'next/link';
 
 interface StepBomProps {
@@ -34,12 +36,14 @@ function BoiStatusBadge({ status }: { status: string }) {
 }
 
 export async function StepBom({ projectId }: StepBomProps) {
-  const [bois, boiState, boqData, suggestions] = await Promise.all([
+  const [bois, boiState, boqData, suggestions, viewerRole] = await Promise.all([
     getBoisForProject(projectId),
     getBoiState(projectId),
     getStepBoqData(projectId),
     getItemSuggestions(),
+    getCurrentUserRoleForProject(),
   ]);
+  const canManageItems = !!viewerRole && ['founder', 'project_manager'].includes(viewerRole);
 
   const hasProposal = !!(boiState as any)?.proposal_id;
   const hasAnyBoi = bois.length > 0;
@@ -184,6 +188,11 @@ export async function StepBom({ projectId }: StepBomProps) {
                   </span>
                 )}
               </div>
+              {isLocked && canManageItems && (
+                <p className="text-[10px] text-amber-700 mt-1">
+                  Locked BOI — PM edits remain possible and are recorded in the item history.
+                </p>
+              )}
             </CardHeader>
 
             <CardContent className="p-0">
@@ -222,15 +231,19 @@ export async function StepBom({ projectId }: StepBomProps) {
                         <td className="px-2 py-1 text-right font-mono text-[#3F424D]">{item.quantity}</td>
                         <td className="px-2 py-1 text-[#7C818E]">{item.unit}</td>
                         <td className="px-2 py-1">
-                          {canEdit && (
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {canManageItems && (
+                              <BoiEditButton projectId={projectId} item={item} />
+                            )}
+                            <BoiItemHistoryButton itemId={item.id} />
+                            {canEdit && (
                               <BoiDeleteButton
                                 projectId={projectId}
                                 itemId={item.id}
                                 label={item.item_description}
                               />
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

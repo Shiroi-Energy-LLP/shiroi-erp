@@ -2,6 +2,8 @@
 
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { buildBoqItemDiff, type BoqItemPatch, type BoqItemSnapshot } from './boq-item-diff';
+import { getCurrentEmployeeId, getUserProfile } from './auth';
 
 // ── BOM Line CRUD (edit/add/delete within project's proposal) ──
 
@@ -364,4 +366,136 @@ export async function unlockBoi(input: {
 
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
+}
+
+// ── BOI Items: edit any state, audited (mig 175) ──
+// PM/founder may edit BOI items even when the BOI version is locked; every
+// change writes a project_boq_item_history row first. History insert failure
+// ABORTS the edit — an unaudited change defeats the purpose of the override.
+
+const BOI_EDIT_ROLES = new Set<string>(['founder', 'project_manager']);
+
+export async function updateBoiItem(input: {
+  projectId: string;
+  itemId: string;
+  data: BoqItemPatch;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[updateBoiItem]';
+
+  const profile = await getUserProfile();
+  if (!profile) return { success: false, error: 'Not authenticated' };
+  if (!BOI_EDIT_ROLES.has(profile.role)) {
+    return { success: false, error: 'Only the Project Manager can edit BOI items.' };
+  }
+  const employeeId = await getCurrentEmployeeId();
+  if (!employeeId) return { success: false, error: 'No employee record linked to your account.' };
+
+  const supabase = await createClient();
+
+  const { data: current, error: readErr } = await supabase
+    .from('project_boq_items')
+    .select('id, project_id, boi_id, item_description, brand, model, quantity, unit, unit_price, gst_rate')
+    .eq('id', input.itemId)
+    .eq('project_id', input.projectId)
+    .maybeSingle();
+
+  if (readErr) {
+    console.error(`${op} Read failed:`, { code: readErr.code, message: readErr.message, itemId: input.itemId });
+    return { success: false, error: readErr.message };
+  }
+  if (!current) return { success: false, error: 'Item not found' };
+
+  const snapshot: BoqItemSnapshot = {
+    item_description: current.item_description,
+    brand: current.brand,
+    model: current.model,
+    quantity: current.quantity === null ? null : Number(current.quantity),
+    unit: current.unit,
+    unit_price: current.unit_price === null ? null : Number(current.unit_price),
+    gst_rate: current.gst_rate === null ? null : Number(current.gst_rate),
+  };
+  const diff = buildBoqItemDiff(snapshot, input.data);
+  if (Object.keys(diff).length === 0) return { success: true };
+
+  // 1. Audit first — abort on failure.
+  const { error: histErr } = await supabase.from('project_boq_item_history').insert({
+    boq_item_id: current.id,
+    project_id: current.project_id,
+    boi_id: current.boi_id,
+    changed_by: employeeId,
+    changes: diff,
+  });
+  if (histErr) {
+    console.error(`${op} History insert failed — edit aborted:`, {
+      code: histErr.code, message: histErr.message, itemId: input.itemId,
+      timestamp: new Date().toISOString(),
+    });
+    return { success: false, error: `Audit log write failed: ${histErr.message}` };
+  }
+
+  // 2. Apply the edit. Recompute total when any pricing input changed
+  //    (same formula as updateBoqItem: qty × rate × (1 + gst/100)).
+  const updateData: Record<string, unknown> = {};
+  for (const [field, change] of Object.entries(diff)) updateData[field] = change.new;
+
+  if ('quantity' in diff || 'unit_price' in diff || 'gst_rate' in diff) {
+    const qty = ('quantity' in diff ? diff.quantity.new : snapshot.quantity) as number | null;
+    const rate = ('unit_price' in diff ? diff.unit_price.new : snapshot.unit_price) as number | null;
+    const gst = ('gst_rate' in diff ? diff.gst_rate.new : snapshot.gst_rate) as number | null;
+    updateData.total_price = Number(qty ?? 0) * Number(rate ?? 0) * (1 + Number(gst ?? 0) / 100);
+  }
+
+  const { error: updErr } = await supabase
+    .from('project_boq_items')
+    .update(updateData as any)
+    .eq('id', input.itemId)
+    .eq('project_id', input.projectId);
+
+  if (updErr) {
+    console.error(`${op} Update failed (audit row already written):`, {
+      code: updErr.code, message: updErr.message, itemId: input.itemId,
+      timestamp: new Date().toISOString(),
+    });
+    return { success: false, error: updErr.message };
+  }
+
+  revalidatePath(`/projects/${input.projectId}`);
+  return { success: true };
+}
+
+// Lazy-loaded per-item audit trail for the expandable history row.
+export interface BoiItemHistoryEntry {
+  id: string;
+  changed_at: string;
+  changed_by_name: string | null;
+  changes: Record<string, { old: string | number | null; new: string | number | null }>;
+}
+
+export async function getBoiItemHistory(input: {
+  itemId: string;
+}): Promise<{ success: boolean; entries?: BoiItemHistoryEntry[]; error?: string }> {
+  const op = '[getBoiItemHistory]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('project_boq_item_history')
+    .select('id, changed_at, changes, employees!project_boq_item_history_changed_by_fkey(full_name)')
+    .eq('boq_item_id', input.itemId)
+    .order('changed_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, itemId: input.itemId });
+    return { success: false, error: error.message };
+  }
+
+  return {
+    success: true,
+    entries: (data ?? []).map((r: any) => ({
+      id: r.id,
+      changed_at: r.changed_at,
+      changed_by_name: r.employees?.full_name ?? null,
+      changes: r.changes ?? {},
+    })),
+  };
 }

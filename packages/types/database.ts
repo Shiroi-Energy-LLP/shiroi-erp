@@ -10911,6 +10911,65 @@ export type Database = {
           }
           ]
       }
+      project_boq_item_history: {
+        Row: {
+          boi_id: string | null
+          boq_item_id: string
+          changed_at: string
+          changed_by: string
+          changes: Json
+          id: string
+          project_id: string
+        }
+        Insert: {
+          boi_id?: string | null
+          boq_item_id: string
+          changed_at?: string
+          changed_by: string
+          changes: Json
+          id?: string
+          project_id: string
+        }
+        Update: {
+          boi_id?: string | null
+          boq_item_id?: string
+          changed_at?: string
+          changed_by?: string
+          changes?: Json
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_boq_item_history_boi_id_fkey"
+            columns: ["boi_id"]
+            isOneToOne: false
+            referencedRelation: "project_bois"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_boq_item_history_boq_item_id_fkey"
+            columns: ["boq_item_id"]
+            isOneToOne: false
+            referencedRelation: "project_boq_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_boq_item_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_boq_item_history_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       project_boq_items: {
         Row: {
           boi_id: string | null
@@ -19372,6 +19431,10 @@ export type Database = {
         }[]
       }
       lock_stale_reports: { Args: never; Returns: undefined }
+      mark_dc_boq_items_delivered: {
+        Args: { p_dc_id: string }
+        Returns: number
+      }
       mark_project_duplicate: {
         Args: {
           p_made_by: string

@@ -11,6 +11,7 @@ import {
   BoqInlineEdit,
   BoqAddItemRow,
   BoqDeleteButton,
+  BoqEditButton,
   BoqFinalSummary,
   BoqCompleteButton,
   SendToPurchaseButton,
@@ -311,11 +312,25 @@ export async function StepBoq({ projectId }: StepBoqProps) {
                         />
                       </td>
                       <td className="px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <BoqDeleteButton
-                          projectId={projectId}
-                          itemId={item.id}
-                          label={item.item_description}
-                        />
+                        <div className="flex items-center gap-0.5">
+                          <BoqEditButton
+                            projectId={projectId}
+                            item={{
+                              id: item.id,
+                              item_description: item.item_description,
+                              brand: item.brand,
+                              model: item.model,
+                              quantity: qty,
+                              unit_price: rate,
+                              gst_rate: Number(item.gst_rate),
+                            }}
+                          />
+                          <BoqDeleteButton
+                            projectId={projectId}
+                            itemId={item.id}
+                            label={item.item_description}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
