@@ -62,6 +62,7 @@ BOQ (yet_to_finalize) → Send to Purchase (yet_to_place) → Vendor Assigned �
 - PO totals compute on save: subtotal + per-rate-band GST split (intra-state Tamil Nadu = 50/50 CGST/SGST) + round-off.
 - PO status enum includes `approved`, `dispatched`, `acknowledged`, `cancelled`. Cancel is a soft delete — no `deleted_at` column on `purchase_orders`.
 - Price Book (252 active rows, Manivel's sheet) is the rate source of truth for auto-pricing and PO creation.
+- **Categories + units are DB-managed since mig 177 (2026-06-11):** `item_categories` (seeded Manivel-15; `price_book.item_category` is now an FK to it — the old CHECK constraint is gone) + `item_units` (seeded with Vivek's canonical list + every in-use value). Add/Edit dialogs load both lists from the DB and offer inline "+ Add new…" for founder/PM/purchase-officer; full management (add + activate/deactivate) at `/price-book/settings`. This also fixed a real bug: the dialogs' old hardcoded legacy category list violated the mig-057 CHECK, so saving most categories failed. BOI/BOQ item forms consume the same lists (props with constants fallback); `getCategoryLabel` title-cases unknown values.
 
 ## Key Tables
 

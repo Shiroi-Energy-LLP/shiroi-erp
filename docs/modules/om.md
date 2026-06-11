@@ -10,14 +10,15 @@ O&M is the post-handover side of the system — everything that happens after a 
 ## Screens / Routes
 
 - `/om/visits` — scheduled + past visits
-- `/om/tickets` — service ticket list (TKT-NNN format, padStart 3 digits)
-  - 12-column table: Ticket #, Project, Title, Issue Type, Severity, Status, Assigned To, Service Amount, Created, SLA Due, Resolved By, Actions
+- `/om/tickets` — service ticket list (ticket numbers still mint internally as TKT-NNN but are **no longer displayed** — column removed 2026-06-11 per Vivek; `created_at` auto-records and shows as Created)
+  - 11-column table: Project, Title, Issue Type, Severity, Status, Assigned To, Service Amount, Created, SLA Due, Resolved By, Actions
   - Inline status toggle (6 statuses: open/assigned/in_progress/resolved/closed/escalated — auto-sets `resolved_at`/`resolved_by`, `closed_at`)
-  - Edit dialog, Delete (soft via status=closed)
+  - Edit dialog, Delete (soft via status=closed; confirm text uses the ticket title)
   - Filters: status, severity, issue_type, engineer, project, search
+  - Create dialog: project picked via the searchable `ProjectCombobox` (customer – project name, number badge) — replaced the plain dropdown 2026-06-11
 - `/om/amc` — contract-centric AMC table
   - 9 columns: Project Name clickable, Category Free/Paid, Scheduled Visits X/Y expandable, Status Open/Closed toggle, Next AMC Date, Completed Date, Notes, Actions, Report
-  - Create AMC: Free = auto-creates 3 visits, Paid = prompts duration/visits/amount
+  - Create AMC: Free = auto-creates 3 visits, Paid = prompts duration/visits/amount; project picked via `ProjectCombobox` (2026-06-11 — keeps the Free→commissioned-only list switch + commissioned-date autofill)
   - `AmcVisitTracker` per-contract expandable sub-table with inline status + edit panel (work done, issues, resolution, customer feedback, report file upload to `project-files` bucket)
 - `/om/plant-monitoring` — credential storage + future inverter live data
   - 3 summary cards (total, per-brand, missing credentials)

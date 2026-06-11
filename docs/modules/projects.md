@@ -24,6 +24,8 @@ Editable boxes on the Details tab:
 - **SystemConfigBox** — size (kWp), type (`on_grid` / `off_grid` / `hybrid`), mounting (`elevated` / `low_raise` / `minirail` / `long_rail` / `customized`), panel / inverter / battery / cable brand+model, `scope_la` / `scope_civil` / `scope_meter` (`shiroi` | `client`), remarks.
 - **CustomerInfoBox** — debounced contact picker → `primary_contact_id` FK, site + billing address, Google Maps link.
 - **TimelineTeamBox** — 6 date fields (order_date, planned_start, etc.) + PM + site_supervisor dropdowns.
+- **DeleteProjectCard** (2026-06-11, mig 177) — danger-zone card, PM + founder only. Soft delete: type the exact `project_number` to confirm → `deleted_at` + `deleted_by` set, project vanishes from every list and the detail page 404s (`getProject` filters deleted). No restore UI by design — restore is a DB operation. Hard delete is impossible regardless (RESTRICT FKs from invoices/payments/POs/site reports/…).
+- **List search (2026-06-11):** the /projects search box is a typeahead (`ProjectsSearchBox` → `search_projects_lite` RPC) — suggestions show "Customer – Project Name" + number and jump straight to the project; the list filter itself resolves ids via the same RPC (injection-safe, replaces the old `.or()` ILIKE; `project_name` is now searchable). `ProjectCombobox` (expenses/activities/OM/tickets/AMC dialogs) also searches + displays `project_name`.
 - **CompanyProjectEditor** (mig 172) — links the project to a `companies` record (`projects.company_id`) + sets `projects.project_name` via the reusable `CompanyPicker` (shared with leads). Won deals inherit both automatically: `create_project_from_accepted_proposal` now copies `company_id` + `project_name` from the lead. The `/projects` list shows a default **"Customer — Project"** column (`company.name ?? customer_name`, + ` — project_name`); `project_name` is inline-editable there; `project_number` stays the row link. Old projects (pre-mig-172) display the fallback customer_name until the Phase-2 backfill links them.
 
 ### 2. Survey
@@ -58,7 +60,7 @@ DC PDF via `@react-pdf/renderer` at `GET /api/projects/[id]/dc/[dcId]` — Shiro
 
 **Tasks | Activities sub-tabs (2026-06-11).** The Execution tab now has a client-side toggle (`ExecutionSubTabs`, both views server-rendered, CSS visibility only):
 - **Tasks & Milestones** — the existing milestone table + execution tasks. The header "Overall %" is now the **milestone-weighted** number from `get_project_completion_pct` (mig 173) — same figure as the Progress tab and the `projects.completion_pct` cache. The task fetch in `getStepExecutionData` is hardened with a second merged query so universal-entity tasks (`entity_type='project'`, `project_id NULL`) are always visible (two `.eq` queries, no `.or()` interpolation).
-- **Activities** (mig 174) — daily site activity log: Date · Stage (FK to `execution_milestones_master`) · Done By (free text — crews aren't employees) · Description · **SE / OS / Contractor** manpower counts (SE = Shiroi, OS = outsourced) · Notes. Summary chips (totals via `get_project_activities_summary` RPC — SQL aggregation, never JS). Client-side filters: date range / stage / manpower type. PM + founder add/edit/soft-delete (`deleted_at`; RLS has no DELETE policy); all employees read. Files: `project-activities-{constants,queries,actions}.ts` + `components/projects/activities/`. A **global `/activities` page** (nav: founder / PM / site_supervisor) shows all projects consolidated with a Project column, server-side filters (project combobox / date range / stage) + pagination, and org-wide manpower stats.
+- **Activities** (mig 174) — daily site activity log: Date · Stage (FK to `execution_milestones_master`, **or a free-text custom stage** via "Other (type below)…" → `stage_custom`, mig 177 — master list untouched, summary/stage filters operate on master stages only) · Done By (free text — crews aren't employees) · Description (word-wrapped) · **SE / OS / Contractor** manpower counts (SE = Shiroi, OS = outsourced) · Notes. Summary chips (totals via `get_project_activities_summary` RPC — SQL aggregation, never JS). Client-side filters: date range / stage / manpower type. PM + founder add/edit/soft-delete (`deleted_at`; RLS has no DELETE policy); all employees read. Files: `project-activities-{constants,queries,actions}.ts` + `components/projects/activities/`. A **global `/activities` page** (nav: founder / PM / site_supervisor) shows all projects consolidated with a Project column (**project name only** — `project_name ?? customer_name`, no number sub-line, per Vivek 2026-06-11), server-side filters (project combobox / date range / stage) + pagination, org-wide manpower stats, and an **Add Activity** button (PM/founder) whose dialog includes a project picker.
 
 #### Tamil voice-to-text site reports (B1, May 2026)
 
@@ -189,7 +191,7 @@ Drag-and-drop recategorization uses Supabase Storage `.move()` — which is an U
 
 ```
 apps/erp/src/app/(erp)/projects/
-  page.tsx                    ← list with 8-status filter
+  page.tsx                    ← list with 8-status + FY (Apr–Mar, order_date) filters + typeahead search box
   [id]/page.tsx               ← detail with 13-tab workflow
 
 apps/erp/src/components/projects/
