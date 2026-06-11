@@ -1,6 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { formatCustomerProject } from './customer-project';
+import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -46,9 +47,8 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
 
   if (filters.status) query = query.eq('status', filters.status);
   if (filters.search) {
-    query = query.or(
-      `project_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`,
-    );
+    const s = sanitizeForIlike(filters.search);
+    query = query.or(`project_number.ilike.${s},customer_name.ilike.${s}`);
   }
 
   query = query.range(from, to);

@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 
 type PurchaseOrderRow = Database['public']['Tables']['purchase_orders']['Row'];
 type VendorRow = Database['public']['Tables']['vendors']['Row'];
@@ -102,10 +103,10 @@ export async function getPurchaseRequests(filters: ProcurementFilters = {}): Pro
   if (filters.status) query = query.eq('procurement_status', filters.status);
   if (filters.priority) query = query.eq('procurement_priority', filters.priority);
   if (filters.projectId) query = query.eq('id', filters.projectId);
-  if (filters.search)
-    query = query.or(
-      `project_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`,
-    );
+  if (filters.search) {
+    const s = sanitizeForIlike(filters.search);
+    query = query.or(`project_number.ilike.${s},customer_name.ilike.${s}`);
+  }
 
   const { data: projects, error, count } = await query;
   if (error) {
@@ -315,9 +316,7 @@ export async function getPurchaseOrders(filters: ProcurementFilters = {}): Promi
     query = query.eq('vendor_id', filters.vendorId);
   }
   if (filters.search) {
-    query = query.or(
-      `po_number.ilike.%${filters.search}%`,
-    );
+    query = query.or(`po_number.ilike.${sanitizeForIlike(filters.search)}`);
   }
 
   const { data, error } = await query;
