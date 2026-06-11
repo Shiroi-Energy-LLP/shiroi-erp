@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 
 export type Expense = Database['public']['Tables']['expenses']['Row'];
 export type ExpenseStatus = 'submitted' | 'verified' | 'approved' | 'rejected';
@@ -77,9 +78,9 @@ export async function listExpenses(filters: ListExpensesFilters = {}): Promise<{
   if (filters.dateFrom) query = query.gte('expense_date', filters.dateFrom);
   if (filters.dateTo) query = query.lte('expense_date', filters.dateTo);
   if (filters.search) {
-    const s = filters.search.trim();
+    const s = sanitizeForIlike(filters.search);
     query = query.or(
-      `voucher_number.ilike.%${s}%,description.ilike.%${s}%`,
+      `voucher_number.ilike.${s},description.ilike.${s}`,
     );
   }
 
