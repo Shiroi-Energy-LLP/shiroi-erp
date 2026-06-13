@@ -178,6 +178,10 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 
 **Env vars** introduced for e-invoice seller block: `SHIROI_GSTIN`, `SHIROI_ADDRESS_LINE1`, `SHIROI_CITY`, `SHIROI_STATE_CODE` (default `33` = Tamil Nadu), `SHIROI_PINCODE` (default `600002`), `SHIROI_ACCOUNTS_EMAIL`.
 
+## Payment follow-up back-fill (June 13, 2026)
+
+One-off reconciliation of Vivek's external "Payment followup" sheet into **dev** (no migration, no schema change). 12 `customer_payments` back-filled (₹28,90,336; receipts `SHIROI/REC/2026-27/0025–0036`; `payment_method='bank_transfer'`; `payment_date=2026-06-13`; `erp_recorded=true`; source `erp`; back-fill note — the sheet carried only cumulative totals, so receipt/date/method were stamped). The sheet diverged from the ERP **both ways**: 9 projects already had received ≥ the sheet (sheet was stale — not lowered, since `customer_payments` is Tier-3 immutable; Vivek's sheet was refreshed from the ERP instead). **Zero consultant payouts** spawned — none of the 12 leads carry a channel-partner commission, so `fn_create_consultant_payout_on_customer_payment` returns early (the `payment_method` CHECK also forced `bank_transfer` over a literal `'adjustment'`). **6 open items** were pushed as `notifications` (type `alert`) to Prem (`marketing_manager`) + Manivel (`project_manager`): create Lancor-Ananda / Dhandapani-BCPL / Sribala-BCPL via the normal lead→proposal→order flow then record (₹1.08L / ₹1.10L / ₹2.11L); identify BCPL + Murali-Pammal (blank sheet "received"); obtain Radiance Splendour's revised contract value (extra scope — ERP received ₹71.7L > contract ₹61L) and raise `contracted_value`. Re-apply the 12 payments to prod at the eventual cutover. Build scripts: `scripts/build-payment-reconciliation.py` + `scripts/build-payment-followup-refreshed.py`. See CHANGELOG 2026-06-13.
+
 ## Past Decisions & Specs
 
 - Migration 021 — initial payment follow-up trigger on project status transitions.
