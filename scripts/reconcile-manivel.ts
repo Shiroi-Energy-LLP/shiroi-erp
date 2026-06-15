@@ -1,12 +1,13 @@
 /**
- * Phase 1 — Manivel sheet <-> ERP reconciliation AUDIT (read-only).
+ * Phase 1 — Manivel sheet <-> ERP reconciliation AUDIT (read-only) + shared matcher.
  *
- * Reads the source-of-truth workbook (Projects + Budgets sheets) and matches its
- * 266 projects against the ERP `projects` table (dev) by normalized project name,
- * with size as a confidence signal. Writes a per-project comparison CSV + a
- * human-readable markdown report. Makes NO database writes.
+ * Reads the source-of-truth workbook (Projects + Budgets) and matches its projects
+ * against the ERP `projects` table (dev) by normalized name, with size as a
+ * confidence signal. Exposes the matcher (`loadSheet`, `loadErp`, `computeMatches`)
+ * for reuse by the seed script so the seeded buckets match this audit exactly.
  *
- * Run: pnpm exec tsx scripts/reconcile-manivel.ts
+ * Run directly to (re)generate the report + CSVs:  pnpm exec tsx scripts/reconcile-manivel.ts
+ * Makes NO database writes.
  */
 import { createClient } from '@supabase/supabase-js';
 import * as XLSX from 'xlsx';
@@ -21,7 +22,7 @@ const OUT_CSV = path.resolve(__dirname, 'data/reconciliation-2026-06-15.csv');
 const OUT_ERPONLY = path.resolve(__dirname, 'data/reconciliation-erp-only-2026-06-15.csv');
 const OUT_MD = path.resolve(__dirname, '../docs/reviews/2026-06-15-manivel-erp-reconciliation.md');
 
-const admin = createClient(
+export const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SECRET_KEY!,
   { auth: { autoRefreshToken: false, persistSession: false } },
@@ -29,7 +30,7 @@ const admin = createClient(
 
 // ---------- helpers ----------
 const HON = /\b(mr|mrs|ms|dr|prof|messrs|sri|smt|thiru|m\/s)\b/g;
-function norm(s: unknown): string {
+export function norm(s: unknown): string {
   return (s ?? '').toString().toLowerCase()
     .replace(/&/g, ' and ')
     .replace(/[._,/\\()\[\]'"`-]/g, ' ')
@@ -37,9 +38,7 @@ function norm(s: unknown): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
-function tokens(s: string): string[] {
-  return norm(s).split(' ').filter(Boolean);
-}
+function tokens(s: string): string[] { return norm(s).split(' ').filter(Boolean); }
 function jaccard(a: string, b: string): number {
   const A = new Set(tokens(a)), B = new Set(tokens(b));
   if (!A.size || !B.size) return 0;
@@ -61,30 +60,34 @@ function levRatio(a: string, b: string): number {
   const x = norm(a), y = norm(b); const m = Math.max(x.length, y.length);
   return m ? 1 - lev(x, y) / m : 1;
 }
-function score(a: string, b: string): number {
-  // token overlap is primary; a typo-tolerant ratio rescues minor spelling diffs
+export function score(a: string, b: string): number {
   return Math.max(jaccard(a, b), 0.85 * levRatio(a, b));
 }
-function num(v: unknown): number | null {
+export function num(v: unknown): number | null {
   if (v === null || v === undefined || v === '') return null;
   const n = Number(String(v).replace(/[,₹\s]/g, ''));
   return Number.isFinite(n) ? n : null;
 }
-function yr(v: unknown): number | null {
+export function yr(v: unknown): number | null {
   const n = num(v); return n && n > 1990 && n < 2100 ? Math.trunc(n) : null;
 }
 function csvCell(v: unknown): string {
   const s = v === null || v === undefined ? '' : String(v);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
+export function sizeMatch(a: number | null, b: number | null): boolean {
+  if (a == null || b == null) return false;
+  const hi = Math.max(a, b); if (hi === 0) return true;
+  return Math.abs(a - b) / hi <= 0.1;
+}
 
 // ---------- sheet ----------
-interface SheetProj {
-  no: number | null; name: string; size: number | null; status: string | null;
+export interface SheetProj {
+  no: number | null; name: string; nameNorm: string; size: number | null; status: string | null;
   location: string | null; year: number | null;
   projectCost: number | null; actualCost: number | null; profitRs: number | null;
 }
-function loadSheet(): SheetProj[] {
+export function loadSheet(): SheetProj[] {
   const wb = XLSX.readFile(WB, { cellDates: true });
   const projects = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets['Projects'], { defval: null });
   const budgets = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets['Budgets'], { defval: null });
@@ -93,7 +96,7 @@ function loadSheet(): SheetProj[] {
     const name = (r['Project Name'] ?? '').toString().trim();
     if (!name) continue;
     byName.set(norm(name), {
-      no: num(r['S.No']), name, size: num(r['Size']),
+      no: num(r['S.No']), name, nameNorm: norm(name), size: num(r['Size']),
       status: (r['Status'] ?? null) as string | null,
       location: (r['Location'] ?? null) as string | null,
       year: yr(r['Years']),
@@ -105,7 +108,7 @@ function loadSheet(): SheetProj[] {
     if (!name) continue;
     const key = norm(name);
     const ex = byName.get(key) ?? {
-      no: num(r['No']), name, size: num(r['Size']), status: (r['Status'] ?? null) as string | null,
+      no: num(r['No']), name, nameNorm: key, size: num(r['Size']), status: (r['Status'] ?? null) as string | null,
       location: null, year: null, projectCost: null, actualCost: null, profitRs: null,
     };
     ex.projectCost = num(r['Project Cost']);
@@ -117,13 +120,13 @@ function loadSheet(): SheetProj[] {
   return [...byName.values()];
 }
 
-interface ErpProj {
+// ---------- erp ----------
+export interface ErpProj {
   id: string; number: string | null; customer: string | null; projectName: string | null;
   size: number | null; city: string | null; status: string | null;
   orderYear: number | null; contracted: number | null; createdYear: number | null;
 }
-
-async function loadErp(): Promise<ErpProj[]> {
+export async function loadErp(): Promise<ErpProj[]> {
   const { data, error } = await admin.from('projects')
     .select('id, project_number, customer_name, project_name, system_size_kwp, site_city, status, order_date, contracted_value, created_at')
     .is('deleted_at', null);
@@ -141,69 +144,65 @@ async function loadErp(): Promise<ErpProj[]> {
     createdYear: p.created_at ? new Date(p.created_at as string).getFullYear() : null,
   }));
 }
-
-function erpLabel(e: ErpProj): string {
+export function erpLabel(e: ErpProj): string {
   return e.projectName || e.customer || e.number || e.id;
 }
-function sizeMatch(a: number | null, b: number | null): boolean {
-  if (a == null || b == null) return false;
-  const hi = Math.max(a, b); if (hi === 0) return true;
-  return Math.abs(a - b) / hi <= 0.1;
+
+// ---------- matcher ----------
+export type Bucket = 'auto' | 'likely' | 'ambiguous' | 'sheet-only';
+export interface ReconRow {
+  sheet: SheetProj; erp: ErpProj | null; bucket: Bucket; score: number; nearTie: boolean; sizeMatch: boolean;
+}
+export function computeMatches(sheet: SheetProj[], erp: ErpProj[]): { rows: ReconRow[]; erpOnly: ErpProj[] } {
+  const usedErp = new Set<string>();
+  const rows: ReconRow[] = sheet.map((s) => {
+    const scored = erp.map((e) => ({ e, sc: score(s.name, erpLabel(e)) })).sort((a, b) => b.sc - a.sc);
+    const best = scored[0], second = scored[1];
+    const nearTie = best && second ? best.sc - second.sc < 0.06 : false;
+    const sm = best ? sizeMatch(s.size, best.e.size) : false;
+    let bucket: Bucket;
+    if (!best || best.sc < 0.34) bucket = 'sheet-only';
+    else if (best.sc >= 0.9) bucket = 'auto';
+    else if (best.sc >= 0.6 && sm && !nearTie) bucket = 'auto';
+    else if (best.sc >= 0.5 && !nearTie) bucket = 'likely';
+    else bucket = 'ambiguous';
+    if (best && bucket !== 'sheet-only') usedErp.add(best.e.id);
+    return { sheet: s, erp: bucket === 'sheet-only' ? null : best?.e ?? null, bucket, score: best ? +best.sc.toFixed(3) : 0, nearTie, sizeMatch: sm };
+  });
+  const erpOnly = erp.filter((e) => !usedErp.has(e.id));
+  return { rows, erpOnly };
 }
 
-async function run() {
+// ---------- report (only when run directly) ----------
+async function main() {
   const sheet = loadSheet();
   const erp = await loadErp();
   console.log(`Sheet projects: ${sheet.length}   ERP active projects: ${erp.length}`);
+  const { rows, erpOnly } = computeMatches(sheet, erp);
 
-  const usedErp = new Set<string>();
-  const rows = sheet.map((s) => {
-    const scored = erp.map((e) => ({ e, sc: score(s.name, erpLabel(e)) }))
-      .sort((a, b) => b.sc - a.sc);
-    const best = scored[0];
-    const second = scored[1];
-    const nearTie = best && second ? best.sc - second.sc < 0.06 : false;
-    const sm = best ? sizeMatch(s.size, best.e.size) : false;
+  const flat = rows.map((r) => ({
+    sheetNo: r.sheet.no, sheetName: r.sheet.name, sheetSize: r.sheet.size, sheetStatus: r.sheet.status,
+    sheetYear: r.sheet.year, sheetProjectCost: r.sheet.projectCost, sheetActualCost: r.sheet.actualCost,
+    bucket: r.bucket, matchScore: r.score, nearTie: r.nearTie, sizeMatch: r.sizeMatch,
+    erpNumber: r.erp?.number ?? '', erpName: r.erp ? erpLabel(r.erp) : '', erpSize: r.erp?.size ?? '',
+    erpStatus: r.erp?.status ?? '', erpOrderYear: r.erp?.orderYear ?? '', erpContracted: r.erp?.contracted ?? '',
+    valueDiff: r.erp && r.erp.contracted != null && r.sheet.projectCost != null ? +(r.sheet.projectCost - r.erp.contracted).toFixed(2) : '',
+    yearDiff: r.erp && r.erp.orderYear != null && r.sheet.year != null && r.erp.orderYear !== r.sheet.year ? `${r.sheet.year}->${r.erp.orderYear}` : '',
+  }));
 
-    let bucket: string;
-    if (!best || best.sc < 0.34) bucket = 'sheet-only';
-    else if (best.sc >= 0.9) bucket = 'auto';                  // near-exact name wins even past a close sibling
-    else if (best.sc >= 0.6 && sm && !nearTie) bucket = 'auto'; // good score + size confirms + no rival
-    else if (best.sc >= 0.5 && !nearTie) bucket = 'likely';
-    else bucket = 'ambiguous';                                 // near-tie / weak → human resolves
-
-    if (best && bucket !== 'sheet-only') usedErp.add(best.e.id);
-
-    const e = best?.e;
-    return {
-      sheetNo: s.no, sheetName: s.name, sheetSize: s.size, sheetStatus: s.status,
-      sheetYear: s.year, sheetProjectCost: s.projectCost, sheetActualCost: s.actualCost,
-      bucket, matchScore: best ? +best.sc.toFixed(3) : 0, nearTie, sizeMatch: sm,
-      erpNumber: e?.number ?? '', erpName: e ? erpLabel(e) : '', erpSize: e?.size ?? '',
-      erpStatus: e?.status ?? '', erpOrderYear: e?.orderYear ?? '', erpContracted: e?.contracted ?? '',
-      valueDiff: e && e.contracted != null && s.projectCost != null ? +(s.projectCost - e.contracted).toFixed(2) : '',
-      yearDiff: e && e.orderYear != null && s.year != null && e.orderYear !== s.year ? `${s.year}->${e.orderYear}` : '',
-    };
-  });
-
-  // ERP-only: active ERP projects never matched to a sheet row (pre-2022 candidates)
-  const erpOnly = erp.filter((e) => !usedErp.has(e.id));
-
-  // ---------- write CSVs ----------
   const head = ['sheetNo', 'sheetName', 'sheetSize', 'sheetStatus', 'sheetYear', 'sheetProjectCost', 'sheetActualCost',
     'bucket', 'matchScore', 'nearTie', 'sizeMatch', 'erpNumber', 'erpName', 'erpSize', 'erpStatus', 'erpOrderYear', 'erpContracted', 'valueDiff', 'yearDiff'];
-  fs.writeFileSync(OUT_CSV, [head.join(','), ...rows.map((r) => head.map((h) => csvCell((r as Record<string, unknown>)[h])).join(','))].join('\n'));
+  fs.writeFileSync(OUT_CSV, [head.join(','), ...flat.map((r) => head.map((h) => csvCell((r as Record<string, unknown>)[h])).join(','))].join('\n'));
 
   const eh = ['erpNumber', 'erpName', 'customer', 'erpSize', 'erpStatus', 'orderYear', 'createdYear', 'contracted'];
   fs.writeFileSync(OUT_ERPONLY, [eh.join(','), ...erpOnly.map((e) => [e.number, erpLabel(e), e.customer, e.size, e.status, e.orderYear, e.createdYear, e.contracted].map(csvCell).join(','))].join('\n'));
 
-  // ---------- summary ----------
-  const by = (b: string) => rows.filter((r) => r.bucket === b).length;
+  const by = (b: Bucket) => rows.filter((r) => r.bucket === b).length;
   const counts = { auto: by('auto'), likely: by('likely'), ambiguous: by('ambiguous'), sheetOnly: by('sheet-only') };
   const matched = counts.auto + counts.likely + counts.ambiguous;
   const sheetWithValue = sheet.filter((s) => (s.projectCost ?? 0) > 0).length;
-  const valueFlags = rows.filter((r) => typeof r.valueDiff === 'number' && Math.abs(r.valueDiff as number) > 1).length;
-  const yearFlags = rows.filter((r) => r.yearDiff !== '').length;
+  const valueFlags = flat.filter((r) => typeof r.valueDiff === 'number' && Math.abs(r.valueDiff as number) > 1).length;
+  const yearFlags = flat.filter((r) => r.yearDiff !== '').length;
 
   const md = `# Manivel Sheet ↔ ERP Reconciliation (2026-06-15)
 
@@ -228,12 +227,12 @@ Generated by \`scripts/reconcile-manivel.ts\`. **No data was modified.**
 ## Sample — ambiguous (first 15, for the reconciliation UI queue)
 | Sheet | Size | Best ERP guess | Score | NearTie |
 |---|---|---|---|---|
-${rows.filter((r) => r.bucket === 'ambiguous').slice(0, 15).map((r) => `| ${r.sheetName} | ${r.sheetSize ?? ''} | ${r.erpName} | ${r.matchScore} | ${r.nearTie ? 'yes' : ''} |`).join('\n')}
+${flat.filter((r) => r.bucket === 'ambiguous').slice(0, 15).map((r) => `| ${r.sheetName} | ${r.sheetSize ?? ''} | ${r.erpName} | ${r.matchScore} | ${r.nearTie ? 'yes' : ''} |`).join('\n')}
 
 ## Sample — sheet-only (first 15)
 | Sheet | Size | Year | Project Cost |
 |---|---|---|---|
-${rows.filter((r) => r.bucket === 'sheet-only').slice(0, 15).map((r) => `| ${r.sheetName} | ${r.sheetSize ?? ''} | ${r.sheetYear ?? ''} | ${r.sheetProjectCost ?? ''} |`).join('\n')}
+${flat.filter((r) => r.bucket === 'sheet-only').slice(0, 15).map((r) => `| ${r.sheetName} | ${r.sheetSize ?? ''} | ${r.sheetYear ?? ''} | ${r.sheetProjectCost ?? ''} |`).join('\n')}
 
 ## Files
 - \`scripts/data/reconciliation-2026-06-15.csv\` — every sheet project + best ERP match + diffs
@@ -243,10 +242,9 @@ ${rows.filter((r) => r.bucket === 'sheet-only').slice(0, 15).map((r) => `| ${r.s
 `;
   fs.mkdirSync(path.dirname(OUT_MD), { recursive: true });
   fs.writeFileSync(OUT_MD, md);
-
-  console.log('Buckets:', counts, 'ERP-only:', erpOnly.length);
-  console.log('Value flags:', valueFlags, 'Year flags:', yearFlags);
-  console.log('Wrote:', OUT_CSV, OUT_ERPONLY, OUT_MD);
+  console.log('Buckets:', counts, 'ERP-only:', erpOnly.length, '| value flags:', valueFlags, 'year flags:', yearFlags);
 }
 
-run().catch((e) => { console.error(e); process.exit(1); });
+if (require.main === module) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}

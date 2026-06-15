@@ -11952,6 +11952,88 @@ export type Database = {
           }
           ]
       }
+      project_reconciliation: {
+        Row: {
+          cost_erp: number | null
+          created_at: string
+          match_method: string | null
+          match_score: number | null
+          matched_sheet_id: string | null
+          notes: string | null
+          preferred_source: string
+          project_id: string
+          resolved_status: string | null
+          resolved_year: number | null
+          revenue_erp: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sheet_actual_cost: number | null
+          sheet_project_cost: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cost_erp?: number | null
+          created_at?: string
+          match_method?: string | null
+          match_score?: number | null
+          matched_sheet_id?: string | null
+          notes?: string | null
+          preferred_source?: string
+          project_id: string
+          resolved_status?: string | null
+          resolved_year?: number | null
+          revenue_erp?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sheet_actual_cost?: number | null
+          sheet_project_cost?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cost_erp?: number | null
+          created_at?: string
+          match_method?: string | null
+          match_score?: number | null
+          matched_sheet_id?: string | null
+          notes?: string | null
+          preferred_source?: string
+          project_id?: string
+          resolved_status?: string | null
+          resolved_year?: number | null
+          revenue_erp?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sheet_actual_cost?: number | null
+          sheet_project_cost?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_reconciliation_matched_sheet_id_fkey"
+            columns: ["matched_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "recon_sheet_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_reconciliation_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_reconciliation_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
       project_review_audit: {
         Row: {
           decision: string
@@ -14512,6 +14594,51 @@ export type Database = {
           retrieved_chunk_ids?: string[]
           thumbs_down_count?: number
           thumbs_up_count?: number
+        }
+        Relationships: []
+      }
+      recon_sheet_projects: {
+        Row: {
+          actual_cost: number | null
+          id: string
+          imported_at: string
+          location: string | null
+          name: string
+          name_norm: string
+          profit_rs: number | null
+          project_cost: number | null
+          sheet_no: number | null
+          sheet_year: number | null
+          size_kwp: number | null
+          status: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          id?: string
+          imported_at?: string
+          location?: string | null
+          name: string
+          name_norm: string
+          profit_rs?: number | null
+          project_cost?: number | null
+          sheet_no?: number | null
+          sheet_year?: number | null
+          size_kwp?: number | null
+          status?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          id?: string
+          imported_at?: string
+          location?: string | null
+          name?: string
+          name_norm?: string
+          profit_rs?: number | null
+          project_cost?: number | null
+          sheet_no?: number | null
+          sheet_year?: number | null
+          size_kwp?: number | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -19302,6 +19429,17 @@ export type Database = {
           total_po_cost: number
           total_received: number
           total_site_expenses: number
+        }[]
+      }
+      get_project_profitability: {
+        Args: { p_project_id?: string }
+        Returns: {
+          cost_erp: number
+          cost_expenses: number
+          cost_po: number
+          margin_pct: number
+          project_id: string
+          revenue_erp: number
         }[]
       }
       get_project_profitability_v2: {
