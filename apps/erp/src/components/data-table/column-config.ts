@@ -99,7 +99,11 @@ export const LEAD_COLUMNS: ColumnDef[] = [
 
 export const PROPOSAL_COLUMNS: ColumnDef[] = [
   { key: 'proposal_number', label: 'Proposal #', sortKey: 'proposal_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
-  { key: 'customer_name', label: 'Customer', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
+  // Combined "Customer — Project" from the linked lead (company ?? customer_name, plus project_name).
+  // Computed in proposals-queries via formatCustomerProject; the search_proposals RPC (mig 178) returns
+  // the lead's company + project name. Display-only — the row link stays proposal_number.
+  { key: 'customer_project', label: 'Customer — Project', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
+  { key: 'customer_name', label: 'Customer Name', defaultVisible: false, sortable: true, editable: false, fieldType: 'text' },
   { key: 'proposal_type', label: 'Type', sortKey: 'is_budgetary', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'detailed', label: 'Detailed' }, { value: 'budgetary', label: 'Budgetary' }] },
   { key: 'system_type', label: 'System', sortKey: 'system_type', defaultVisible: true, sortable: true, editable: true, fieldType: 'select',

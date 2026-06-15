@@ -19947,9 +19947,11 @@ export type Database = {
           gross_margin_pct: number
           id: string
           is_budgetary: boolean
+          lead_company_name: string
           lead_customer_name: string
           lead_id: string
           lead_phone: string
+          lead_project_name: string
           margin_approval_required: boolean
           margin_approved_by: string
           proposal_number: string

@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { formatCustomerProject } from './customer-project';
 
 type ProposalStatus = Database['public']['Enums']['proposal_status'];
 
@@ -23,6 +24,8 @@ type SearchProposalRow = {
   margin_approved_by: string | null;
   lead_customer_name: string | null;
   lead_phone: string | null;
+  lead_company_name: string | null;
+  lead_project_name: string | null;
   total_count: number | string;
 };
 
@@ -97,6 +100,12 @@ export async function getProposals(filters: ProposalFilters = {}): Promise<Pagin
     margin_approved_by: p.margin_approved_by,
     leads: { customer_name: p.lead_customer_name ?? '', phone: p.lead_phone ?? '' },
     customer_name: p.lead_customer_name ?? '—',
+    company_name: p.lead_company_name ?? null,
+    customer_project: formatCustomerProject({
+      companyName: p.lead_company_name,
+      customerName: p.lead_customer_name,
+      projectName: p.lead_project_name,
+    }),
     total_price: p.total_after_discount,
     margin_pct: p.gross_margin_pct,
     proposal_type: p.is_budgetary ? 'budgetary' : 'detailed',
