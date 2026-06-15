@@ -81,6 +81,7 @@ const ITEMS = {
   waImportQueue:  { label: 'WA Import Queue',   href: '/whatsapp-import',    icon: 'MessageSquare' },
   dataQuality:    { label: 'Data Quality',      href: '/data-quality',       icon: 'Flag' },
   reconciliation: { label: 'Reconciliation',    href: '/reconciliation',     icon: 'ListChecks' },
+  commandCenter:  { label: 'Command Center',    href: '/command-center',     icon: 'LayoutDashboard' },
   bomReview:      { label: 'BOM Review',        href: '/bom-review',         icon: 'ListChecks' },
   expenses:       { label: 'Expenses',          href: '/expenses',           icon: 'Receipt' },
   activities:     { label: 'Activities',        href: '/activities',         icon: 'Activity' },
@@ -97,7 +98,7 @@ const ITEMS = {
 // ---------------------------------------------------------------------------
 const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   founder: [
-    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
+    { label: 'Overview',     items: [ITEMS.commandCenter, ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Sales',        items: [ITEMS.sales, ITEMS.salesTeamTasks, ITEMS.salesPatterns, ITEMS.salesTerritories, ITEMS.partners, ITEMS.liaison] },
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.activities] },
@@ -123,7 +124,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   project_manager: [
-    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
+    { label: 'Overview',     items: [ITEMS.commandCenter, ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports, ITEMS.activities, ITEMS.reconciliation] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Execution',    items: [ITEMS.qcGates] },

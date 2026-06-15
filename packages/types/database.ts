@@ -19101,6 +19101,17 @@ export type Database = {
           zoho_monthly_company_expenses: number
         }[]
       }
+      get_dashboard_year_summary: {
+        Args: never
+        Returns: {
+          avg_margin_pct: number
+          completed_count: number
+          project_count: number
+          total_contracted: number
+          total_cost_erp: number
+          year_bucket: string
+        }[]
+      }
       get_data_flag_summary: {
         Args: never
         Returns: {
