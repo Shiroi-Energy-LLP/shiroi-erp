@@ -137,6 +137,7 @@ export function EditPriceBookItemDialog({ item, categories, units, canManageList
         unit: selectedUnit,
         base_price: parseFloat(basePriceRaw) || 0,
         gst_rate: parseFloat(gstRateRaw) || 18,
+        gst_type: (form.get('gst_type') as string) || item.gst_type || 'supply',
         hsn_code: (form.get('hsn_code') as string) || null,
         vendor_name: (form.get('vendor_name') as string) || null,
         default_qty: parseFloat(defaultQtyRaw) || null,
@@ -256,6 +257,15 @@ export function EditPriceBookItemDialog({ item, categories, units, canManageList
               <Label htmlFor="edit-pb-hsn" className="text-xs">HSN Code</Label>
               <Input id="edit-pb-hsn" name="hsn_code" defaultValue={item.hsn_code ?? ''} placeholder="e.g. 8541" className="h-9 text-xs font-mono" />
             </div>
+          </div>
+
+          {/* GST Type */}
+          <div>
+            <Label htmlFor="edit-pb-gst_type" className="text-xs">GST Type</Label>
+            <Select id="edit-pb-gst_type" name="gst_type" defaultValue={item.gst_type ?? 'supply'} className="h-9 text-xs">
+              <option value="supply">Supply (goods — 5% HSN 8541)</option>
+              <option value="works_contract">Works Contract (service — 18%)</option>
+            </Select>
           </div>
 
           {/* Vendor + Default Qty */}

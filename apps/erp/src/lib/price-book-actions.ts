@@ -111,6 +111,7 @@ export async function createPriceBookItem(input: {
 
   const { error } = await supabase.from('price_book').insert({
     ...input,
+    gst_type: input.gst_type ?? 'supply',
     is_active: true,
     effective_from: today,
   } as any);

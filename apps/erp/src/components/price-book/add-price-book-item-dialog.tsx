@@ -240,6 +240,15 @@ export function AddPriceBookItemDialog({ onSuccess, categories, units, canManage
             </div>
           </div>
 
+          {/* GST Type */}
+          <div>
+            <Label htmlFor="add-gst_type" className="text-xs">GST Type</Label>
+            <Select id="add-gst_type" name="gst_type" defaultValue="supply" className="h-9 text-xs">
+              <option value="supply">Supply (goods — 5% HSN 8541)</option>
+              <option value="works_contract">Works Contract (service — 18%)</option>
+            </Select>
+          </div>
+
           {/* Vendor + Default Qty */}
           <div className="grid grid-cols-2 gap-3">
             <div>
