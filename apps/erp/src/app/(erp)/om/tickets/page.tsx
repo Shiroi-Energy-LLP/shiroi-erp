@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getAllTickets } from '@/lib/service-ticket-actions';
+import { getAllTickets, getServiceTicketAmountTotal } from '@/lib/service-ticket-actions';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { getProjectsWithTickets } from '@/lib/ticket-queries';
 import { formatDate } from '@repo/ui/formatters';
@@ -86,7 +86,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  const [{ tickets, total }, employees, projects, filterProjects] = await Promise.all([
+  const [{ tickets, total }, employees, projects, filterProjects, totalServiceAmount] = await Promise.all([
     getAllTickets({
       status: params.status || undefined,
       severity: params.severity || undefined,
@@ -100,6 +100,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
     getActiveEmployees(),
     getActiveProjects(),
     getProjectsWithTickets(),
+    getServiceTicketAmountTotal(),
   ]);
 
   const totalPages = Math.ceil(total / perPage);
@@ -122,7 +123,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-lg font-heading font-bold text-n-900">
             Service Tickets{' '}
@@ -131,7 +132,13 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
             </span>
           </h1>
         </div>
-        <CreateTicketDialog employees={employees} projects={projects} />
+        <div className="flex items-center gap-3">
+          <div className="rounded-md border border-n-200 bg-n-50 px-3 py-1.5 text-right">
+            <div className="text-[10px] uppercase tracking-wider text-n-500">Total Service Amount</div>
+            <div className="text-sm font-bold text-n-900 tabular-nums">{formatINR(totalServiceAmount)}</div>
+          </div>
+          <CreateTicketDialog employees={employees} projects={projects} />
+        </div>
       </div>
 
       {/* Filters */}
@@ -211,12 +218,10 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                     const resolvedByName = ticket.resolved_by_employee && 'full_name' in ticket.resolved_by_employee
                       ? (ticket.resolved_by_employee as { full_name: string }).full_name
                       : null;
-                    const isClosed = ticket.status === 'closed' || ticket.status === 'resolved';
-
                     return (
                       <tr
                         key={ticket.id}
-                        className={`border-b border-n-100 hover:bg-n-50 ${isClosed ? 'opacity-50' : ''}`}
+                        className="border-b border-n-100 hover:bg-n-50"
                       >
                         {/* Project */}
                         <td className="px-2 py-1.5">
@@ -224,11 +229,15 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                             <Link href={`/projects/${ticket.project_id}`} className="text-[#00B050] hover:underline text-xs">
                               {projectInfo?.customer_name ?? '—'}
                             </Link>
-                          ) : '—'}
+                          ) : ticket.project_name_custom ? (
+                            <span className="text-xs text-n-700">{ticket.project_name_custom}</span>
+                          ) : (
+                            <span className="text-n-300 text-xs">—</span>
+                          )}
                         </td>
 
                         {/* Title */}
-                        <td className={`px-2 py-1.5 text-[11px] font-medium ${isClosed ? 'line-through text-n-400' : 'text-n-900'}`}>
+                        <td className="px-2 py-1.5 text-[11px] font-medium text-n-900">
                           <span title={ticket.title}>{ticket.title}</span>
                         </td>
 

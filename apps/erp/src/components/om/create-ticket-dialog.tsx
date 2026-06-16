@@ -42,10 +42,12 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [projectId, setProjectId] = React.useState('');
+  const [customProject, setCustomProject] = React.useState('');
 
   React.useEffect(() => {
     if (!open) {
       setProjectId('');
+      setCustomProject('');
       setError(null);
     }
   }, [open]);
@@ -55,15 +57,16 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
     setSaving(true);
     setError(null);
 
-    if (!projectId) {
-      setError('Project is required');
+    if (!projectId && !customProject.trim()) {
+      setError('Pick a project or type a project name');
       setSaving(false);
       return;
     }
 
     const form = new FormData(e.currentTarget);
     const result = await createServiceTicket({
-      projectId,
+      projectId: projectId || undefined,
+      projectNameCustom: projectId ? undefined : customProject.trim() || undefined,
       title: form.get('title') as string,
       description: form.get('description') as string,
       issueType: form.get('issueType') as string,
@@ -98,7 +101,10 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
               projects={projects}
               value={projectId}
               onChange={setProjectId}
-              placeholder="Search project by customer, name or number…"
+              allowCustom
+              customValue={customProject}
+              onCustomChange={setCustomProject}
+              placeholder="Search project, or type a new name (Service/AMC/misc)…"
             />
           </div>
           <div>

@@ -8521,7 +8521,8 @@ export type Database = {
           parts_cost: number
           parts_covered_by_warranty: boolean
           parts_used: boolean
-          project_id: string
+          project_id: string | null
+          project_name_custom: string | null
           raised_by_customer: string | null
           raised_by_employee: string | null
           recurring_fault: boolean
@@ -8556,7 +8557,8 @@ export type Database = {
           parts_cost?: number
           parts_covered_by_warranty?: boolean
           parts_used?: boolean
-          project_id: string
+          project_id?: string | null
+          project_name_custom?: string | null
           raised_by_customer?: string | null
           raised_by_employee?: string | null
           recurring_fault?: boolean
@@ -8591,7 +8593,8 @@ export type Database = {
           parts_cost?: number
           parts_covered_by_warranty?: boolean
           parts_used?: boolean
-          project_id?: string
+          project_id?: string | null
+          project_name_custom?: string | null
           raised_by_customer?: string | null
           raised_by_employee?: string | null
           recurring_fault?: boolean
@@ -10773,7 +10776,8 @@ export type Database = {
           id: string
           notes: string | null
           os_count: number
-          project_id: string
+          project_id: string | null
+          project_name_custom: string | null
           se_count: number
           stage_custom: string | null
           stage_id: string | null
@@ -10790,7 +10794,8 @@ export type Database = {
           id?: string
           notes?: string | null
           os_count?: number
-          project_id: string
+          project_id?: string | null
+          project_name_custom?: string | null
           se_count?: number
           stage_custom?: string | null
           stage_id?: string | null
@@ -10807,7 +10812,8 @@ export type Database = {
           id?: string
           notes?: string | null
           os_count?: number
-          project_id?: string
+          project_id?: string | null
+          project_name_custom?: string | null
           se_count?: number
           stage_custom?: string | null
           stage_id?: string | null
@@ -19483,6 +19489,14 @@ export type Database = {
           needs_review: number
         }[]
       }
+      get_project_status_summary: {
+        Args: { p_fy?: string }
+        Returns: {
+          project_count: number
+          status: string
+          total_kwp: number
+        }[]
+      }
       get_projects_without_today_report: {
         Args: never
         Returns: {
@@ -19534,6 +19548,7 @@ export type Database = {
           source: string
         }[]
       }
+      get_service_ticket_amount_total: { Args: never; Returns: number }
       get_team_attendance_for_month: {
         Args: { p_month: number; p_year: number }
         Returns: {

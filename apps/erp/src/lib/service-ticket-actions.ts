@@ -35,7 +35,8 @@ function slaHoursForSeverity(severity: string): number {
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function createServiceTicket(input: {
-  projectId: string;
+  projectId?: string;
+  projectNameCustom?: string;
   title: string;
   description: string;
   issueType: string;
@@ -44,6 +45,10 @@ export async function createServiceTicket(input: {
 }): Promise<ActionResult<{ ticketId: string; ticketNumber: string }>> {
   const op = '[createServiceTicket]';
   console.log(`${op} Starting: ${input.title}`);
+
+  if (!input.projectId && !input.projectNameCustom?.trim()) {
+    return err('A project or a project name is required');
+  }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -72,7 +77,8 @@ export async function createServiceTicket(input: {
   const ticketNumber = `TKT-${String(nextNum).padStart(4, '0')}`;
 
   const insert: ServiceTicketInsert = {
-    project_id: input.projectId,
+    project_id: input.projectId || null,
+    project_name_custom: input.projectId ? null : (input.projectNameCustom?.trim() ?? null),
     title: input.title,
     description: input.description,
     issue_type: input.issueType,
@@ -352,7 +358,7 @@ export type TicketListRow = Pick<
   | 'severity' | 'status' | 'service_amount' | 'created_at'
   | 'sla_deadline' | 'sla_breached' | 'sla_hours' | 'resolved_at'
   | 'closed_at' | 'resolution_notes' | 'assigned_to' | 'project_id'
-  | 'raised_by_employee'
+  | 'project_name_custom' | 'raised_by_employee'
 > & {
   projects: { project_number: string; customer_name: string } | null;
   assignee: { full_name: string } | null;
@@ -379,7 +385,7 @@ export async function getAllTickets(filters: {
   let query = supabase
     .from('om_service_tickets')
     .select(
-      'id, ticket_number, title, description, issue_type, severity, status, service_amount, created_at, sla_deadline, sla_breached, sla_hours, resolved_at, closed_at, resolution_notes, assigned_to, project_id, raised_by_employee, projects!om_service_tickets_project_id_fkey(project_number, customer_name), assignee:employees!om_service_tickets_assigned_to_fkey(full_name), resolved_by_employee:employees!om_service_tickets_resolved_by_fkey(full_name)',
+      'id, ticket_number, title, description, issue_type, severity, status, service_amount, created_at, sla_deadline, sla_breached, sla_hours, resolved_at, closed_at, resolution_notes, assigned_to, project_id, project_name_custom, raised_by_employee, projects!om_service_tickets_project_id_fkey(project_number, customer_name), assignee:employees!om_service_tickets_assigned_to_fkey(full_name), resolved_by_employee:employees!om_service_tickets_resolved_by_fkey(full_name)',
       { count: 'estimated' },
     )
     .order('created_at', { ascending: false })
@@ -415,4 +421,19 @@ export async function getAllTickets(filters: {
   }
 
   return { tickets: data ?? [], total: count ?? 0 };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Total Service Amount (SQL SUM — NEVER-DO #12: never aggregate money in JS)
+// ═══════════════════════════════════════════════════════════════════════
+
+export async function getServiceTicketAmountTotal(): Promise<number> {
+  const op = '[getServiceTicketAmountTotal]';
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('get_service_ticket_amount_total');
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return 0;
+  }
+  return Number(data ?? 0);
 }
