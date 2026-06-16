@@ -34,6 +34,7 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger, proje
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [pickedProjectId, setPickedProjectId] = React.useState('');
+  const [customProject, setCustomProject] = React.useState('');
 
   const todayIso = new Date().toISOString().slice(0, 10);
   const [activityDate, setActivityDate] = React.useState(existing?.activity_date ?? todayIso);
@@ -63,17 +64,11 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger, proje
       setError(null);
       setSaving(false);
       setPickedProjectId('');
+      setCustomProject('');
     }
   }, [open]);
 
   async function handleSave() {
-    const resolvedProjectId = projectId ?? pickedProjectId;
-    if (!resolvedProjectId) {
-      setError('Pick a project');
-      return;
-    }
-    setSaving(true);
-    setError(null);
     const data = {
       activityDate,
       stageId: stageId && stageId !== '__custom__' ? stageId : null,
@@ -85,9 +80,32 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger, proje
       contractorCount: parseInt(contractorCount || '0', 10),
       notes: notes || null,
     };
-    const result = existing
-      ? await updateProjectActivity({ projectId: resolvedProjectId, activityId: existing.id, data })
-      : await addProjectActivity({ projectId: resolvedProjectId, data });
+
+    let result;
+    if (existing) {
+      // Editing: the project linkage is fixed — only the activity fields change.
+      setSaving(true);
+      setError(null);
+      result = await updateProjectActivity({
+        activityId: existing.id,
+        projectId: existing.project_id ?? undefined,
+        data,
+      });
+    } else {
+      const useProjectId = projectId ?? pickedProjectId;
+      const useCustom = useProjectId ? '' : customProject.trim();
+      if (!useProjectId && !useCustom) {
+        setError('Pick a project or type a project name');
+        return;
+      }
+      setSaving(true);
+      setError(null);
+      result = await addProjectActivity({
+        projectId: useProjectId || undefined,
+        projectNameCustom: useCustom || undefined,
+        data,
+      });
+    }
     setSaving(false);
     if (!result.success) { setError(result.error); return; }
     setOpen(false);
@@ -110,7 +128,10 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger, proje
                 projects={projects}
                 value={pickedProjectId}
                 onChange={setPickedProjectId}
-                placeholder="Search project…"
+                allowCustom
+                customValue={customProject}
+                onCustomChange={setCustomProject}
+                placeholder="Search project, or type a new name (Service/AMC/misc)…"
               />
             </div>
           )}

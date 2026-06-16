@@ -43,18 +43,22 @@ async function requirePmCaller(): Promise<
   return ok({ employeeId });
 }
 
-function revalidate(projectId: string) {
-  revalidatePath(`/projects/${projectId}`);
+function revalidate(projectId?: string) {
+  if (projectId) revalidatePath(`/projects/${projectId}`);
   revalidatePath('/activities');
 }
 
 export async function addProjectActivity(input: {
-  projectId: string;
+  projectId?: string;
+  projectNameCustom?: string;
   data: ActivityInput;
 }): Promise<ActionResult<{ id: string }>> {
   const op = '[addProjectActivity]';
   const invalid = validate(input.data);
   if (invalid) return err(invalid);
+  if (!input.projectId && !input.projectNameCustom?.trim()) {
+    return err('A project or a project name is required');
+  }
 
   const caller = await requirePmCaller();
   if (!caller.success) return caller;
@@ -63,7 +67,8 @@ export async function addProjectActivity(input: {
   const { data, error } = await supabase
     .from('project_activities')
     .insert({
-      project_id: input.projectId,
+      project_id: input.projectId || null,
+      project_name_custom: input.projectId ? null : (input.projectNameCustom?.trim() || null),
       activity_date: input.data.activityDate,
       stage_id: input.data.stageId ? input.data.stageId : null,
       stage_custom: input.data.stageId ? null : (input.data.stageCustom?.trim() || null),
@@ -91,8 +96,8 @@ export async function addProjectActivity(input: {
 }
 
 export async function updateProjectActivity(input: {
-  projectId: string;
   activityId: string;
+  projectId?: string;
   data: ActivityInput;
 }): Promise<ActionResult<void>> {
   const op = '[updateProjectActivity]';
@@ -103,6 +108,7 @@ export async function updateProjectActivity(input: {
   if (!caller.success) return caller;
 
   const supabase = await createClient();
+  // Match by the unique activity id only — supports custom-project rows (project_id NULL).
   const { error } = await supabase
     .from('project_activities')
     .update({
@@ -117,7 +123,6 @@ export async function updateProjectActivity(input: {
       notes: input.data.notes?.trim() || null,
     })
     .eq('id', input.activityId)
-    .eq('project_id', input.projectId)
     .is('deleted_at', null);
 
   if (error) {
@@ -133,20 +138,20 @@ export async function updateProjectActivity(input: {
 }
 
 export async function deleteProjectActivity(input: {
-  projectId: string;
   activityId: string;
+  projectId?: string;
 }): Promise<ActionResult<void>> {
   const op = '[deleteProjectActivity]';
   const caller = await requirePmCaller();
   if (!caller.success) return caller;
 
   const supabase = await createClient();
-  // Soft delete — RLS has no DELETE policy by design.
+  // Soft delete — RLS has no DELETE policy by design. Match by unique id only
+  // (supports custom-project rows where project_id is NULL).
   const { error } = await supabase
     .from('project_activities')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', input.activityId)
-    .eq('project_id', input.projectId)
     .is('deleted_at', null);
 
   if (error) {

@@ -17,14 +17,14 @@ function formatDay(iso: string): string {
   });
 }
 
-function DeleteActivityButton({ projectId, activityId }: { projectId: string; activityId: string }) {
+function DeleteActivityButton({ projectId, activityId }: { projectId: string | null; activityId: string }) {
   const router = useRouter();
   const [deleting, setDeleting] = React.useState(false);
 
   async function handleDelete() {
     if (!confirm('Delete this activity?')) return;
     setDeleting(true);
-    const result = await deleteProjectActivity({ projectId, activityId });
+    const result = await deleteProjectActivity({ activityId, projectId: projectId ?? undefined });
     setDeleting(false);
     if (result.success) router.refresh();
     else alert(result.error);
@@ -142,9 +142,13 @@ export function ActivitiesClient({
                 <td className="px-2 py-1.5 text-n-700 whitespace-nowrap">{formatDay(r.activity_date)}</td>
                 {showProject && (
                   <td className="px-2 py-1.5">
-                    <a href={`/projects/${r.project_id}?tab=execution`} className="text-blue-600 hover:underline">
-                      {r.project_display ?? '—'}
-                    </a>
+                    {r.project_id ? (
+                      <a href={`/projects/${r.project_id}?tab=execution`} className="text-blue-600 hover:underline">
+                        {r.project_display ?? '—'}
+                      </a>
+                    ) : (
+                      <span className="text-n-700">{r.project_name_custom ?? '—'}</span>
+                    )}
                   </td>
                 )}
                 <td className="px-2 py-1.5 text-n-700">{r.stage_label ?? r.stage_custom ?? '—'}</td>
@@ -162,7 +166,7 @@ export function ActivitiesClient({
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-1">
                       <ActivityFormDialog
-                        projectId={r.project_id}
+                        projectId={r.project_id ?? undefined}
                         stages={stages}
                         existing={r}
                         trigger={

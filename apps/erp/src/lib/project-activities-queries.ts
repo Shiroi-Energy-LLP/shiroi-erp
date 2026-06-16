@@ -33,7 +33,7 @@ export async function listProjectActivities(
   let query = supabase
     .from('project_activities')
     .select(
-      'id, project_id, activity_date, stage_id, stage_custom, done_by, description, se_count, os_count, contractor_count, notes, ' +
+      'id, project_id, project_name_custom, activity_date, stage_id, stage_custom, done_by, description, se_count, os_count, contractor_count, notes, ' +
       'execution_milestones_master(milestone_label), ' +
       'employees!project_activities_created_by_fkey(full_name), ' +
       'projects!project_activities_project_id_fkey(project_number, customer_name, project_name)',
@@ -75,6 +75,7 @@ export async function listProjectActivities(
     return {
       id: r.id,
       project_id: r.project_id,
+      project_name_custom: r.project_name_custom ?? null,
       activity_date: r.activity_date,
       stage_id: r.stage_id,
       stage_label: r.execution_milestones_master?.milestone_label ?? null,
@@ -88,7 +89,9 @@ export async function listProjectActivities(
       created_by_name: r.employees?.full_name ?? null,
       project_number: project?.project_number ?? null,
       project_customer: customer,
-      project_display: project ? (project.project_name ?? project.customer_name ?? null) : null,
+      project_display: project
+        ? (project.project_name ?? project.customer_name ?? null)
+        : (r.project_name_custom ?? null),
     };
   });
 

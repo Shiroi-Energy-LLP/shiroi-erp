@@ -21,7 +21,8 @@ export interface ActivityStageOption {
 /** Shape shared by the project sub-tab and the global /activities page. */
 export interface ProjectActivityRow {
   id: string;
-  project_id: string;
+  project_id: string | null;
+  project_name_custom: string | null;
   activity_date: string;
   stage_id: string | null;
   stage_label: string | null;
