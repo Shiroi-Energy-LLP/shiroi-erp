@@ -1,10 +1,12 @@
-import { getProjects } from '@/lib/projects-queries';
+import { getProjects, getProjectStatusSummary } from '@/lib/projects-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ProjectsTableWrapper } from '@/components/projects/projects-table-wrapper';
+import { ProjectsSummaryHeader } from '@/components/projects/projects-summary-header';
 import { getDefaultColumns } from '@/components/data-table/column-config';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
 import { ProjectsSearchBox } from '@/components/projects/projects-search-box';
+import { dateToFy, fyOptions } from '@/lib/helpers/fiscal-year';
 import type { Database } from '@repo/types/database';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
@@ -36,11 +38,10 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   const params = await searchParams;
   const page = parseInt(params.page ?? '1', 10);
 
-  const currentFyStart = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1;
-  const fyOptions: string[] = [];
-  for (let y = currentFyStart; y >= 2014; y--) fyOptions.push(`${y}-${String((y + 1) % 100).padStart(2, '0')}`);
+  const now = new Date();
+  const fyList = fyOptions(now.getFullYear(), now.getMonth());
 
-  const [result, views] = await Promise.all([
+  const [result, views, statusSummary] = await Promise.all([
     getProjects({
       status: (params.status as ProjectStatus) || undefined,
       search: params.search || undefined,
@@ -51,6 +52,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
       dir: (params.dir as 'asc' | 'desc') || undefined,
     }),
     getMyViews('projects'),
+    getProjectStatusSummary(params.year || undefined),
   ]);
 
   // Flatten employee relationship for DataTable
@@ -58,7 +60,9 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
     ...p,
     project_manager_name: p.employees?.full_name ?? '—',
     site_city: p.site_city ?? '—',
-    year: p.created_at ? new Date(p.created_at).getFullYear().toString() : '—',
+    // Year column = fiscal year of order_date (created_at fallback) — editable FY cell.
+    year: dateToFy(p.order_date ?? p.created_at) ?? '—',
+    notes: p.notes ?? '',
     remarks: p.notes ?? '',
   }));
 
@@ -86,7 +90,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
       </FilterSelect>
       <FilterSelect paramName="year" className="w-36 h-9 text-sm">
         <option value="">All years</option>
-        {fyOptions.map((fy) => (
+        {fyList.map((fy) => (
           <option key={fy} value={fy}>{`FY ${fy}`}</option>
         ))}
       </FilterSelect>
@@ -97,6 +101,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   return (
     <ProjectsTableWrapper
       filterBar={filterBar}
+      summaryHeader={<ProjectsSummaryHeader rows={statusSummary} />}
       data={flatData}
       total={result.total}
       page={result.page}

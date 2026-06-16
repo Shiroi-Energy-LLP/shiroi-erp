@@ -10,11 +10,12 @@ import {
 import { formatProjectNumber, formatDateFromTimestamp } from '@repo/ui/formatters';
 import {
   ChevronUp, ChevronDown, Columns3,
-  ArrowUpDown, Check, X, Loader2,
+  ArrowUpDown, Check, X, Loader2, ClipboardList,
 } from 'lucide-react';
 import { ColumnPicker } from './column-picker';
 import { ViewTabs } from './view-tabs';
 import type { ColumnDef } from './column-config';
+import { fyOptions } from '@/lib/helpers/fiscal-year';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
 import { LeadScoreBadge } from '@/components/leads/lead-score-badge';
 import type { Database } from '@repo/types/database';
@@ -135,6 +136,34 @@ function InlineEditInput({
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
+      </div>
+    );
+  }
+
+  // Fiscal-year dropdown — projects "Year" column; the save handler maps it to order_date.
+  if (fieldType === 'fy') {
+    const now = new Date();
+    const opts = fyOptions(now.getUTCFullYear(), now.getUTCMonth());
+    return (
+      <div className="flex items-center gap-1">
+        <select
+          ref={inputRef as React.RefObject<HTMLSelectElement>}
+          value={localValue}
+          onChange={(e) => {
+            setLocalValue(e.target.value);
+            onSave(e.target.value);
+          }}
+          onKeyDown={handleKeyDown}
+          onBlur={onCancel}
+          className="h-7 rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+          disabled={saving}
+        >
+          {!opts.includes(localValue) && <option value={localValue}>{localValue || '—'}</option>}
+          {opts.map((fy) => (
+            <option key={fy} value={fy}>{`FY ${fy}`}</option>
           ))}
         </select>
         {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
@@ -503,6 +532,30 @@ export function DataTable({
         >
           {displayVal}
         </Link>
+      );
+    }
+
+    // Activities — link to the project's Execution → Activities sub-tab.
+    if (col.fieldType === 'activities_link') {
+      return (
+        <Link
+          href={`${linkPrefix}/${row[idField]}?tab=execution`}
+          className="inline-flex items-center gap-1 text-xs text-shiroi-green hover:underline"
+        >
+          <ClipboardList className="h-3.5 w-3.5" /> Activities
+        </Link>
+      );
+    }
+
+    // Wrapping text (e.g. Notes) — multi-line instead of overflowing on one row.
+    if (col.wrap) {
+      return (
+        <span
+          {...editableProps}
+          className={`block whitespace-normal break-words text-sm ${editableProps.className ?? ''}`}
+        >
+          {val != null && String(val).trim() !== '' ? String(val) : '—'}
+        </span>
       );
     }
 

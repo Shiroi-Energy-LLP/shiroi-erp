@@ -9,6 +9,8 @@ import { updateCellValue, bulkUpdateField } from '@/lib/inline-edit-actions';
 interface ProjectsTableWrapperProps {
   /** Filter bar JSX rendered from the server page (FilterBar + FilterSelect + SearchInput) */
   filterBar: React.ReactNode;
+  /** Status-count + total-system-size dashboard, rendered above the filter bar. */
+  summaryHeader?: React.ReactNode;
   data: any[];
   total: number;
   page: number;
@@ -35,6 +37,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 
 export function ProjectsTableWrapper({
   filterBar,
+  summaryHeader,
   data,
   total,
   page,
@@ -87,6 +90,7 @@ export function ProjectsTableWrapper({
 
   return (
     <>
+      {summaryHeader}
       {/*
         Sticky header: filter bar + (conditional) bulk action bar.
         `-mx-4 lg:-mx-6` extends the white background into main's p-4/p-6 padding area

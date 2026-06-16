@@ -14,6 +14,32 @@ export interface ProjectFilters {
   dir?: 'asc' | 'desc';
 }
 
+export interface ProjectStatusSummaryRow {
+  status: string; // a project_status value, or 'TOTAL' for the grand-total row
+  project_count: number;
+  total_kwp: number;
+}
+
+/**
+ * Per-status counts + summed system size for the projects-list header, FY-filtered
+ * with the same order_date/created_at logic the list uses. Includes a 'TOTAL' row
+ * (SQL GROUPING SETS) so the total system size never touches JS (NEVER-DO #12).
+ */
+export async function getProjectStatusSummary(fy?: string): Promise<ProjectStatusSummaryRow[]> {
+  const op = '[getProjectStatusSummary]';
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('get_project_status_summary', { p_fy: fy ?? undefined });
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message, fy });
+    return [];
+  }
+  return (data ?? []).map((r: { status: string; project_count: number; total_kwp: number | string }) => ({
+    status: r.status,
+    project_count: Number(r.project_count ?? 0),
+    total_kwp: Number(r.total_kwp ?? 0),
+  }));
+}
+
 export interface PaginatedResult<T> {
   data: T[];
   total: number;

@@ -16,8 +16,12 @@ export interface ColumnDef {
   sortable?: boolean;
   /** Can this cell be inline-edited? */
   editable?: boolean;
-  /** Field type for inline edit and filter operators */
-  fieldType: 'text' | 'number' | 'date' | 'select' | 'badge' | 'currency' | 'phone' | 'email' | 'link';
+  /** Let the cell wrap onto multiple lines instead of truncating (e.g. Notes). */
+  wrap?: boolean;
+  /** Field type for inline edit and filter operators.
+   *  'fy' = fiscal-year dropdown (writes order_date); 'activities_link' = link to the
+   *  project's Execution → Activities tab. */
+  fieldType: 'text' | 'number' | 'date' | 'select' | 'badge' | 'currency' | 'phone' | 'email' | 'link' | 'fy' | 'activities_link';
   /** Options for select-type fields */
   options?: { value: string; label: string }[];
   /** Format function name (handled in renderer) */
@@ -144,7 +148,9 @@ export const PROJECT_COLUMNS: ColumnDef[] = [
       { value: 'waiting_net_metering', label: 'Waiting for Net Metering' },
       { value: 'meter_client_scope', label: 'Meter - Client Scope' },
     ] },
-  { key: 'year', label: 'Year', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
+  { key: 'notes', label: 'Notes', defaultVisible: true, sortable: false, editable: true, fieldType: 'text', wrap: true, width: '220px' },
+  { key: 'activities', label: 'Activities', defaultVisible: true, sortable: false, editable: false, fieldType: 'activities_link' },
+  { key: 'year', label: 'Year', sortKey: 'order_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'fy' },
   { key: 'remarks', label: 'Remarks', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
   { key: 'system_type', label: 'System Type', sortKey: 'system_type', defaultVisible: false, sortable: true, editable: true, fieldType: 'select',
     options: [{ value: 'on_grid', label: 'On-Grid' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'off_grid', label: 'Off-Grid' }] },
