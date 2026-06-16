@@ -16,6 +16,7 @@ O&M is the post-handover side of the system — everything that happens after a 
   - Edit dialog, Delete (soft via status=closed; confirm text uses the ticket title)
   - Filters: status, severity, issue_type, engineer, project, search
   - Create dialog: project picked via the searchable `ProjectCombobox` (customer – project name, number badge) — replaced the plain dropdown 2026-06-11
+  - **2026-06-16 (mig 183):** closed/resolved rows are no longer struck-through/dimmed — the inline status badge already reads "Closed" (the `line-through`/`opacity-50` was removed). A **Total Service Amount** stat in the page header sums `service_amount` across all tickets via the `get_service_ticket_amount_total()` RPC (SQL `SUM`, never JS). Tickets can be raised against a **free-text project name** (Service/AMC/misc not in the projects list): `project_id` is nullable with a `project_name_custom` fallback (CHECK one-of-two); the create dialog uses `ProjectCombobox.allowCustom` and the list shows the custom label when there's no linked project.
 - `/om/amc` — contract-centric AMC table
   - 9 columns: Project Name clickable, Category Free/Paid, Scheduled Visits X/Y expandable, Status Open/Closed toggle, Next AMC Date, Completed Date, Notes, Actions, Report
   - Create AMC: Free = auto-creates 3 visits, Paid = prompts duration/visits/amount; project picked via `ProjectCombobox` (2026-06-11 — keeps the Free→commissioned-only list switch + commissioned-date autofill)
