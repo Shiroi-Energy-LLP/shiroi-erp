@@ -4,6 +4,9 @@ import {
 } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { getStepBoqData, getStepBomData, getBoiState, getApprovedSiteExpenses } from '@/lib/project-stepper-queries';
+import { getProjectHeader } from '@/lib/projects-queries';
+import { getUserProfile } from '@/lib/auth';
+import { BoqDownloadButton } from '@/components/procurement/boq-download-button';
 import { Calculator, CheckCircle2, Package } from 'lucide-react';
 import {
   BoqSeedButton,
@@ -55,9 +58,11 @@ export async function StepBoq({ projectId }: StepBoqProps) {
 
   let itemCategories: Awaited<ReturnType<typeof listItemCategories>> = [];
   let itemUnits: Awaited<ReturnType<typeof listItemUnits>> = [];
+  let projectHeader: Awaited<ReturnType<typeof getProjectHeader>> = null;
+  let viewerProfile: Awaited<ReturnType<typeof getUserProfile>> = null;
 
   try {
-    [boqData, bomLines, boiState, approvedSiteExpenses, suggestions, itemCategories, itemUnits] = await Promise.all([
+    [boqData, bomLines, boiState, approvedSiteExpenses, suggestions, itemCategories, itemUnits, projectHeader, viewerProfile] = await Promise.all([
       getStepBoqData(projectId),
       getStepBomData(projectId),
       getBoiState(projectId),
@@ -65,6 +70,8 @@ export async function StepBoq({ projectId }: StepBoqProps) {
       getItemSuggestions(),
       listItemCategories(),
       listItemUnits(),
+      getProjectHeader(projectId),
+      getUserProfile(),
     ]);
   } catch (error) {
     console.error('[StepBoq] Failed to load data:', error);
@@ -116,6 +123,24 @@ export async function StepBoq({ projectId }: StepBoqProps) {
 
   // Item-level BOQ view
   const items = boqData.items;
+
+  // BOQ PDF inputs (download is client-side via @react-pdf/renderer).
+  const pdfProject = {
+    project_number: projectHeader?.project_number ?? projectId,
+    customer_name: projectHeader?.customer_name ?? '',
+    site_address: null as string | null,
+  };
+  const pdfItems = items.map((it: any) => ({
+    line_number: Number(it.line_number ?? 0),
+    item_category: getCategoryLabel(it.item_category),
+    item_description: it.item_description ?? '',
+    unit: it.unit ?? 'nos',
+    quantity: Number(it.quantity ?? 0),
+    unit_price: Number(it.unit_price ?? 0),
+    total_price: Number(it.total_price ?? 0),
+    hsn_code: it.hsn_code ?? null,
+  }));
+  const pdfGeneratedBy = viewerProfile?.full_name ?? 'Shiroi Energy';
   const totalValue = items.reduce((sum: number, item: any) => sum + Number(item.total_price || 0), 0);
   const totalWithoutGst = items.reduce((sum: number, item: any) => {
     const qty = Number(item.quantity || 0);
@@ -240,6 +265,7 @@ export async function StepBoq({ projectId }: StepBoqProps) {
             <BoqCategoryFilterWrapper categories={uniqueCategories} />
 
             {/* Action buttons */}
+            <BoqDownloadButton project={pdfProject} items={pdfItems} generatedBy={pdfGeneratedBy} />
             <ApplyPriceBookButton projectId={projectId} zeroPriceCount={zeroPriceCount} />
             <SendToPurchaseButton projectId={projectId} yetToFinalizeCount={yetToFinalizeCount} />
 
