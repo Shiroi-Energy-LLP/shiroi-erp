@@ -335,7 +335,7 @@ export function ProjectFiles({
             {/* File list below slideshow for management */}
             <div
               className={`space-y-0.5 max-h-[160px] overflow-y-auto rounded border border-dashed p-2 transition-all ${
-                dragOverCategory === 'photos' ? 'border-[#00B050] bg-[#00B050]/5' : 'border-[#DFE2E8]'
+                dragOverCategory === 'photos' ? 'border-[#E08A00] bg-[#E08A00]/5' : 'border-[#E5DFD3]'
               }`}
               onDragOver={(e) => {
                 e.preventDefault();

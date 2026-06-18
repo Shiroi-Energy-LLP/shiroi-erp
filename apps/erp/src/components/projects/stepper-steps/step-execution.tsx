@@ -103,7 +103,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
           className="h-full rounded-full transition-all duration-500"
           style={{
             width: `${overallPct}%`,
-            backgroundColor: overallPct === 100 ? '#059669' : '#00B050',
+            backgroundColor: overallPct === 100 ? '#059669' : '#16A34A',
           }}
         />
       </div>

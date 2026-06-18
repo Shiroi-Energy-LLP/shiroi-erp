@@ -65,7 +65,7 @@ export async function ClosureApprovalsPanel() {
                 <TableCell>
                   <Link
                     href={`/sales/${a.lead_id}`}
-                    className="text-shiroi-green hover:underline font-medium"
+                    className="text-shiroi-gold-dark hover:underline font-medium"
                   >
                     {a.lead_customer_name}
                   </Link>

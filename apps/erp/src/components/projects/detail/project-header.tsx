@@ -83,7 +83,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
     <div className="flex items-center justify-between gap-4 flex-wrap">
       <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-3">
-          <Link href="/projects" className="text-sm text-n-500 hover:text-shiroi-green">
+          <Link href="/projects" className="text-sm text-n-500 hover:text-shiroi-gold-dark">
             Projects
           </Link>
           <span className="text-n-400">/</span>
@@ -121,7 +121,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             value={project.status}
             disabled={busy}
             onChange={handleStatusChange}
-            className={`h-9 text-sm font-medium rounded-md border px-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-shiroi-green/30 ${STATUS_STYLES[project.status]} disabled:opacity-60`}
+            className={`h-9 text-sm font-medium rounded-md border px-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30 ${STATUS_STYLES[project.status]} disabled:opacity-60`}
           >
             {STATUS_ORDER.map((s) => (
               <option key={s} value={s}>

@@ -68,7 +68,7 @@ export default async function CashFlowPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/invoices"
-            className="inline-flex items-center gap-1.5 rounded-md bg-[#00B050] px-3 py-2 text-sm font-medium text-white hover:bg-[#009040] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#E08A00] px-3 py-2 text-sm font-medium text-[#1F1709] hover:bg-[#C77606] transition-colors"
           >
             <TrendingUp className="h-4 w-4" />
             Raise Invoice
@@ -199,7 +199,7 @@ export default async function CashFlowPage() {
                       <TableCell>
                         <Link
                           href={`/cash/${pos.project_id}`}
-                          className="text-[#00B050] hover:underline font-medium"
+                          className="text-[#B45309] hover:underline font-medium"
                         >
                           {project?.project_number ?? '—'}
                         </Link>
@@ -275,7 +275,7 @@ export default async function CashFlowPage() {
                       <TableCell>
                         <Link
                           href={`/cash/${inv.project_id}`}
-                          className="text-[#00B050] hover:underline"
+                          className="text-[#B45309] hover:underline"
                         >
                           {project?.project_number ?? '—'}
                         </Link>

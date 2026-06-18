@@ -118,7 +118,7 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
               name="description"
               required
               rows={3}
-              className="w-full rounded-md border border-n-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+              className="w-full rounded-md border border-n-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
               placeholder="Detailed description of the issue..."
             />
           </div>

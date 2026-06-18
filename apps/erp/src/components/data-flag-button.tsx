@@ -125,7 +125,7 @@ export function DataFlagButton({
                     id="flag-type"
                     value={flagType}
                     onChange={(e) => setFlagType(e.target.value as FlagType)}
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E08A00]"
                   >
                     {FLAG_TYPE_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -154,7 +154,7 @@ export function DataFlagButton({
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="What's wrong with this data?"
                     rows={3}
-                    className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050] resize-none"
+                    className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E08A00] resize-none"
                   />
                 </div>
               </div>

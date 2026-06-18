@@ -108,7 +108,7 @@ export function DateRangeFilter({ label, fromParam, toParam, className }: DateRa
         type="button"
         onClick={() => (open ? setOpen(false) : openPopover())}
         className={`inline-flex items-center gap-1.5 h-9 px-3 text-sm border rounded-md bg-white hover:bg-n-50 transition-colors ${
-          isActive ? 'border-shiroi-green text-shiroi-green font-medium' : 'border-n-200 text-n-700'
+          isActive ? 'border-shiroi-gold text-shiroi-gold-dark font-medium' : 'border-n-200 text-n-700'
         }`}
       >
         <span className="text-xs font-medium">{label}:</span>
@@ -118,7 +118,7 @@ export function DateRangeFilter({ label, fromParam, toParam, className }: DateRa
             role="button"
             aria-label="Clear date range"
             onClick={clear}
-            className="ml-0.5 flex items-center justify-center w-4 h-4 rounded-full hover:bg-shiroi-green/10 text-shiroi-green"
+            className="ml-0.5 flex items-center justify-center w-4 h-4 rounded-full hover:bg-shiroi-gold/10 text-shiroi-gold-dark"
           >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
               <path d="M2 2l6 6M8 2L2 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -166,9 +166,9 @@ export function DateRangeFilter({ label, fromParam, toParam, className }: DateRa
                     c.inMonth ? '' : 'text-n-300'
                   } ${
                     isEdge
-                      ? 'bg-shiroi-green text-white font-semibold'
+                      ? 'bg-shiroi-gold text-shiroi-ink font-semibold'
                       : selected
-                        ? 'bg-shiroi-green/15 text-shiroi-green'
+                        ? 'bg-shiroi-gold/15 text-shiroi-gold-dark'
                         : 'hover:bg-n-100 text-n-700'
                   }`}
                 >
@@ -187,7 +187,7 @@ export function DateRangeFilter({ label, fromParam, toParam, className }: DateRa
             <button
               type="button"
               onClick={() => commit(draftFrom, draftTo)}
-              className="text-xs font-medium px-3 h-7 rounded-md bg-shiroi-green text-white hover:bg-shiroi-green/90"
+              className="text-xs font-medium px-3 h-7 rounded-md bg-shiroi-gold text-shiroi-ink hover:bg-shiroi-gold/90"
             >
               Apply
             </button>

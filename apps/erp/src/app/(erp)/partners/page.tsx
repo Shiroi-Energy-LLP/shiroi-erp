@@ -152,7 +152,7 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
                     <TableCell className="font-medium">
                       <Link
                         href={`/partners/${p.id}`}
-                        className="text-shiroi-green hover:underline"
+                        className="text-shiroi-gold-dark hover:underline"
                       >
                         {p.partner_name}
                       </Link>

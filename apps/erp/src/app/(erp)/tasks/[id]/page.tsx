@@ -86,7 +86,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
           </div>
           <Link
             href="/tasks"
-            className="text-xs text-shiroi-green hover:underline"
+            className="text-xs text-shiroi-gold-dark hover:underline"
           >
             ← Back to Tasks
           </Link>
@@ -106,7 +106,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
               <span className="text-n-500 shrink-0">Project</span>
               <Link
                 href={`/projects/${task.project_id}`}
-                className="text-shiroi-green hover:underline text-right"
+                className="text-shiroi-gold-dark hover:underline text-right"
               >
                 {projectInfo.customer_name}
                 {projectInfo.project_number ? ` (${projectInfo.project_number})` : ''}

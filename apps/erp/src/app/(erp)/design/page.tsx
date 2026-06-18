@@ -168,7 +168,7 @@ export default async function DesignPage() {
                     return (
                       <TableRow key={lead.id}>
                         <TableCell className="font-medium">
-                          <Link href={`/design/${lead.id}`} className="text-[#00B050] hover:underline">
+                          <Link href={`/design/${lead.id}`} className="text-[#B45309] hover:underline">
                             {lead.customer_name}
                           </Link>
                         </TableCell>
@@ -262,7 +262,7 @@ export default async function DesignPage() {
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/projects/${project.id}`}
-                            className="text-xs font-medium text-[#00B050] hover:underline whitespace-nowrap"
+                            className="text-xs font-medium text-[#B45309] hover:underline whitespace-nowrap"
                           >
                             Open
                           </Link>

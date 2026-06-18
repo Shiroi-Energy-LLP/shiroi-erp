@@ -96,7 +96,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
           const href = card.key === 'all' ? '/liaison' : `/liaison?filter=${card.key}`;
           return (
             <Link key={card.key} href={href} className="block group">
-              <Card className={`transition-shadow hover:shadow-md ${isActive ? 'ring-2 ring-[#00B050]' : ''}`}>
+              <Card className={`transition-shadow hover:shadow-md ${isActive ? 'ring-2 ring-[#E08A00]' : ''}`}>
                 <CardContent className="flex items-center gap-3 p-4">
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.bgColor}`}>
                     <Icon className={`h-4 w-4 ${card.iconColor}`} />
@@ -120,7 +120,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
           <span className="text-xs text-n-600">
             Filtered: {CARD_DEFS.find((c) => c.key === activeFilter)?.label}
           </span>
-          <Link href="/liaison" className="text-xs text-[#00B050] hover:underline">
+          <Link href="/liaison" className="text-xs text-[#B45309] hover:underline">
             × Clear
           </Link>
         </div>
@@ -155,13 +155,13 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                     return (
                       <tr
                         key={app.id}
-                        className={`h-10 border-b border-n-100 hover:bg-[#00B050]/[0.04] ${i % 2 === 1 ? 'bg-n-50/30' : ''}`}
+                        className={`h-10 border-b border-n-100 hover:bg-[#E08A00]/[0.04] ${i % 2 === 1 ? 'bg-n-50/30' : ''}`}
                       >
                         <td className="px-3 py-2">
                           {app.projects ? (
                             <Link
                               href={`/liaison/net-metering/${app.project_id}`}
-                              className="font-medium text-n-900 hover:text-[#00B050] hover:underline"
+                              className="font-medium text-n-900 hover:text-[#B45309] hover:underline"
                             >
                               {app.projects.project_number} — {app.projects.customer_name}
                             </Link>

@@ -44,7 +44,7 @@ export default async function StockPieceDetailPage({ params }: StockPieceDetailP
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link href="/inventory" className="text-sm text-[#00B050] hover:underline">
+        <Link href="/inventory" className="text-sm text-[#B45309] hover:underline">
           &larr; Back to Inventory
         </Link>
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">
@@ -96,7 +96,7 @@ export default async function StockPieceDetailPage({ params }: StockPieceDetailP
                 <div>
                   <div className="text-xs text-muted-foreground mb-0.5">Allocated Project</div>
                   {piece.projects ? (
-                    <Link href={`/projects/${piece.project_id}`} className="text-sm font-medium text-[#00B050] hover:underline">
+                    <Link href={`/projects/${piece.project_id}`} className="text-sm font-medium text-[#B45309] hover:underline">
                       {piece.projects.project_number} — {piece.projects.customer_name}
                     </Link>
                   ) : (

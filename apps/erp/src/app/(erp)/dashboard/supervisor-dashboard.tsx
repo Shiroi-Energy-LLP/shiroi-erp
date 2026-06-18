@@ -35,7 +35,7 @@ export async function SupervisorDashboard() {
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <HardHat className="h-8 w-8 text-[#00B050]" />
+                <HardHat className="h-8 w-8 text-[#B45309]" />
                 <div>
                   <h2 className="font-heading text-lg font-bold text-[#1A1D24]">
                     {data.activeProject.project_number}

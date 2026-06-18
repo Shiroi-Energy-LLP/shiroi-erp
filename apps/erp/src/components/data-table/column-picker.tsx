@@ -142,10 +142,10 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 bg-white border border-[#DFE2E8] cursor-grab active:cursor-grabbing hover:border-[#00B050] transition-all duration-150 group ${
+                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 bg-white border border-[#E5DFD3] cursor-grab active:cursor-grabbing hover:border-[#E08A00] transition-all duration-150 group ${
                     dragIdx === index ? 'opacity-50' : ''
                   } ${
-                    dropIdx === index && dragIdx !== index ? 'border-t-2 border-t-[#00B050]' : ''
+                    dropIdx === index && dragIdx !== index ? 'border-t-2 border-t-[#E08A00]' : ''
                   }`}
                 >
                   <GripVertical className="h-3.5 w-3.5 text-n-400 shrink-0 cursor-grab" />

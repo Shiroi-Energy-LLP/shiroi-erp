@@ -24,7 +24,7 @@ function formatStatus(status: string): string {
 
 export function TodayPriorities({ projects }: TodayPrioritiesProps) {
   return (
-    <Card className="bg-[#001F0D] border-[#003D1A]">
+    <Card className="bg-[#1F1709] border-[#3A2A08]">
       <CardHeader className="pb-3">
         <CardTitle className="text-base text-white flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-[#FCA524]" />
@@ -42,7 +42,7 @@ export function TodayPriorities({ projects }: TodayPrioritiesProps) {
               <Link
                 key={project.id}
                 href={`/projects/${project.id}`}
-                className="block rounded-md bg-[#003D1A] p-3 hover:bg-[#004D22] transition-colors"
+                className="block rounded-md bg-[#5C3206] p-3 hover:bg-[#7A3D06] transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div>

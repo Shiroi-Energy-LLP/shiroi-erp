@@ -14,7 +14,7 @@ const LIFECYCLE_COLORS: Record<string, string> = {
   subscriber: '#7C818E',
   lead: '#2563EB',
   opportunity: '#EA580C',
-  customer: '#00B050',
+  customer: '#16A34A',
   evangelist: '#9333EA',
 };
 
@@ -136,7 +136,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                         <TableCell>
                           <Link
                             href={`/${ec.entity_type}s/${ec.entity_id}`}
-                            className="text-[#00B050] hover:underline font-medium capitalize"
+                            className="text-[#B45309] hover:underline font-medium capitalize"
                           >
                             {ec.entity_type}
                           </Link>
@@ -178,7 +178,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                 <div className="space-y-3">
                   {contact.contact_company_roles.map((ccr: any) => (
                     <div key={ccr.id} className="rounded-md border border-[#DFE2E8] p-3">
-                      <Link href={`/companies/${ccr.company_id}`} className="text-sm font-medium text-[#00B050] hover:underline">
+                      <Link href={`/companies/${ccr.company_id}`} className="text-sm font-medium text-[#B45309] hover:underline">
                         {ccr.companies?.name}
                       </Link>
                       <p className="text-xs text-[#7C818E] mt-0.5">{ccr.role_title}</p>

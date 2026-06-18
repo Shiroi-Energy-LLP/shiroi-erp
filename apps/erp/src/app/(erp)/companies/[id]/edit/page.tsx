@@ -10,7 +10,7 @@ export default async function EditCompanyPage({ params }: { params: Promise<{ id
 
   return (
     <div className="space-y-6">
-      <Link href={`/companies/${id}`} className="text-sm text-[#00B050] hover:underline">&larr; Back to Company</Link>
+      <Link href={`/companies/${id}`} className="text-sm text-[#B45309] hover:underline">&larr; Back to Company</Link>
       <CompanyForm company={company as any} />
     </div>
   );

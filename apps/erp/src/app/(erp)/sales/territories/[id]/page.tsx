@@ -124,7 +124,7 @@ export default async function TerritoryDetailPage({ params }: TerritoryDetailPro
                 <span className="font-heading text-lg font-bold">{leadCount}</span>
                 <Link
                   href={leadsHref}
-                  className="ml-3 text-xs text-shiroi-green hover:underline"
+                  className="ml-3 text-xs text-shiroi-gold-dark hover:underline"
                 >
                   View leads →
                 </Link>

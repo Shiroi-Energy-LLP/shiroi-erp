@@ -33,7 +33,7 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/liaison/net-metering" className="text-sm text-[#00B050] hover:underline">&larr; Back to Net Metering</Link>
+          <Link href="/liaison/net-metering" className="text-sm text-[#B45309] hover:underline">&larr; Back to Net Metering</Link>
           <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">
             {project?.project_number} — {project?.customer_name}
           </h1>
@@ -123,7 +123,7 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
           ) : (
             <div className="space-y-3">
               {objections.map((obj: any) => (
-                <div key={obj.id} className="rounded-md border border-[#DFE2E8] p-3 text-sm space-y-1">
+                <div key={obj.id} className="rounded-md border border-[#E5DFD3] p-3 text-sm space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-medium capitalize">{obj.objection_source} — {obj.objection_type?.replace(/_/g, ' ')}</span>
                     <Badge variant={obj.resolved ? 'success' : 'error'} className="capitalize">

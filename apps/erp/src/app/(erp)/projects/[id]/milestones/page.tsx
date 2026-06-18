@@ -43,7 +43,7 @@ export default async function MilestonesPage({ params }: MilestonesPageProps) {
               <div
                 className={`h-full rounded-full transition-all ${
                   project.completion_pct >= 100 ? 'bg-[#065F46]' :
-                  project.completion_pct >= 50 ? 'bg-[#00B050]' : 'bg-[#FCA524]'
+                  project.completion_pct >= 50 ? 'bg-[#16A34A]' : 'bg-[#FCA524]'
                 }`}
                 style={{ width: `${Math.min(project.completion_pct, 100)}%` }}
               />
@@ -100,7 +100,7 @@ export default async function MilestonesPage({ params }: MilestonesPageProps) {
                         className={`h-full rounded-full ${
                           milestone.status === 'blocked' ? 'bg-[#991B1B]' :
                           milestone.status === 'completed' ? 'bg-[#065F46]' :
-                          milestone.status === 'in_progress' ? 'bg-[#00B050]' : 'bg-[#BFC3CC]'
+                          milestone.status === 'in_progress' ? 'bg-[#16A34A]' : 'bg-[#BFC3CC]'
                         }`}
                         style={{ width: `${Math.min(milestone.completion_pct, 100)}%` }}
                       />
@@ -197,7 +197,7 @@ function MilestoneStepIcon({ status, order }: { status: string; order: number })
   const baseClasses = 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold';
   const statusClasses =
     status === 'completed' ? 'bg-[#065F46] text-white' :
-    status === 'in_progress' ? 'bg-[#00B050] text-white' :
+    status === 'in_progress' ? 'bg-[#16A34A] text-white' :
     status === 'blocked' ? 'bg-[#991B1B] text-white' :
     'bg-[#E5E7EB] text-[#7C818E]';
 

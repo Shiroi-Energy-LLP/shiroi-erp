@@ -45,7 +45,7 @@ export default async function EmployeesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr" className="text-sm text-[#00B050] hover:underline">
+          <Link href="/hr" className="text-sm text-[#B45309] hover:underline">
             &larr; Back to HR
           </Link>
           <Eyebrow className="mb-1">EMPLOYEES</Eyebrow>
@@ -97,7 +97,7 @@ export default async function EmployeesPage() {
                     <TableCell>
                       <Link
                         href={`/hr/employees/${emp.id}`}
-                        className="text-[#00B050] hover:underline font-medium"
+                        className="text-[#B45309] hover:underline font-medium"
                       >
                         {emp.full_name}
                       </Link>

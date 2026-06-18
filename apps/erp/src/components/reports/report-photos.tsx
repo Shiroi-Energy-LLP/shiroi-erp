@@ -62,7 +62,7 @@ export function ReportPhotos({ photos }: ReportPhotosProps) {
             type="button"
             onClick={() => handlePhotoClick(index, photo.storage_path)}
             className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer hover:opacity-90 ${
-              expandedIndex === index ? 'border-[#00B050] ring-2 ring-[#00B050]/20' : 'border-transparent'
+              expandedIndex === index ? 'border-[#E08A00] ring-2 ring-[#E08A00]/20' : 'border-transparent'
             }`}
           >
             {signedUrls[photo.storage_path] ? (

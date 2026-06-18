@@ -50,7 +50,7 @@ export default async function PODetailPage({ params }: PageProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link href="/procurement" className="text-sm text-[#00B050] hover:underline">
+        <Link href="/procurement" className="text-sm text-[#B45309] hover:underline">
           &larr; Back to Purchase Orders
         </Link>
         <div className="flex items-center gap-3 mt-1">
@@ -84,7 +84,7 @@ export default async function PODetailPage({ params }: PageProps) {
             <h3 className="text-xs font-bold text-[#7C818E] uppercase">Project</h3>
             {po.projects ? (
               <>
-                <Link href={`/projects/${po.project_id}`} className="text-sm font-medium text-[#00B050] hover:underline">
+                <Link href={`/projects/${po.project_id}`} className="text-sm font-medium text-[#B45309] hover:underline">
                   {po.projects.project_number}
                 </Link>
                 <p className="text-xs text-[#7C818E]">{po.projects.customer_name}</p>
@@ -265,7 +265,7 @@ export default async function PODetailPage({ params }: PageProps) {
           {linkedBills.length === 0 ? (
             <p className="text-xs text-gray-400 py-3">
               No vendor bills linked to this PO yet. Bills are linked automatically when imported from Zoho, or can be linked manually from the{' '}
-              <Link href="/vendor-bills" className="text-[#00B050] hover:underline">vendor bills page</Link>.
+              <Link href="/vendor-bills" className="text-[#B45309] hover:underline">vendor bills page</Link>.
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -285,7 +285,7 @@ export default async function PODetailPage({ params }: PageProps) {
                   {linkedBills.map((bill) => (
                     <TableRow key={bill.id}>
                       <TableCell>
-                        <Link href={`/vendor-bills/${bill.id}`} className="text-sm font-mono text-[#00B050] hover:underline">
+                        <Link href={`/vendor-bills/${bill.id}`} className="text-sm font-mono text-[#B45309] hover:underline">
                           {bill.bill_number}
                         </Link>
                       </TableCell>

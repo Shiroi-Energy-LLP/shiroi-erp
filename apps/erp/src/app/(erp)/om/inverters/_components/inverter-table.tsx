@@ -229,7 +229,7 @@ export function InverterTable({ inverters, monitoringCredentials }: InverterTabl
                           {inv.project_id ? (
                             <Link
                               href={`/projects/${inv.project_id}`}
-                              className="text-[#00B050] hover:underline text-xs font-medium"
+                              className="text-[#B45309] hover:underline text-xs font-medium"
                             >
                               {customerName}
                               {projectNumber && (

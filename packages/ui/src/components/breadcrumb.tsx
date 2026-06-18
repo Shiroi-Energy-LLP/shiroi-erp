@@ -34,7 +34,7 @@ function Breadcrumb({ items, className }: BreadcrumbProps) {
             ) : (
               <a
                 href={item.href}
-                className="text-shiroi-green hover:text-shiroi-green-dark hover:underline underline-offset-2 transition-colors"
+                className="text-shiroi-gold-dark hover:text-shiroi-gold-deep hover:underline underline-offset-2 transition-colors"
               >
                 {item.label}
               </a>

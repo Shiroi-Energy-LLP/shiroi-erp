@@ -21,7 +21,7 @@ function ProgressRow({ label, current, total }: { label: string; current: number
       </div>
       <div className="h-1.5 rounded-full bg-[#E5E7EB] overflow-hidden">
         <div
-          className="h-full rounded-full bg-shiroi-green transition-all duration-300"
+          className="h-full rounded-full bg-shiroi-gold transition-all duration-300"
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>

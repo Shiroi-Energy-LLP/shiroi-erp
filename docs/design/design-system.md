@@ -1,12 +1,27 @@
-# Shiroi Energy — ERP Design System V2.0
+# Shiroi Energy — ERP Design System V3.0 · Solar Gold
 
-## Version 2.0 · April 2026 · Development Handoff Reference
+## Version 3.0 · June 2026 · Development Handoff Reference
 
-> **How to use this file**: This is the single source of truth for all ERP UI decisions. It replaces V1.0 entirely. All token names map directly to CSS variables in `packages/ui/theme.css`. The companion HTML file (`Shiroi_ERP_Design_System_V2.html`) is an interactive visual reference — open it in a browser to see live mockups.
+> **How to use this file**: This is the single source of truth for all ERP UI decisions. It supersedes V2.0 (eco-green). All token names map directly to the Tailwind theme in `packages/ui/tailwind.config.ts` and the shadcn CSS variables in `apps/erp/src/app/globals.css`. The reference bundle lives in `docs/design/solar-gold/`.
 
 ---
 
-## V1 → V2 — What Changed and Why
+## V2 → V3 — The Solar Gold rebrand (June 2026)
+
+The brand hue moves from **eco-green (`#00B050`)** to **Solar Gold (`#E08A00`)**, drawn from the sun in the logo. The decision rule that governs the whole system:
+
+- **Brand / action = SOLAR GOLD.** Links, primary buttons, focus rings, active nav, active filters/tabs, brand icons, progress bars, selected/hover accents, drag-drop highlights, KPI accents, the eyebrow bar.
+  - On coloured fills (buttons, active pills, badges): gold `#E08A00` with **dark ink text `#1F1709`** — never white (white-on-gold fails WCAG, ~2.4:1).
+  - As text / links / icons on a white or light surface: use the darker **`#B45309`** (AA-compliant), not `#E08A00`.
+- **Green is now a STATUS-ONLY signal.** Any green that means *success / won / converted / accepted / completed / delivered / paid / healthy / active / live / approved* stays green and migrates to the status tokens (`--success-*`, status green `#16A34A` / `#065F46`).
+- **Fonts:** Archivo (headings/KPI/labels/table headers) · IBM Plex Sans (body, table cells, inputs, **and figures via tabular-nums** — its plain round zero replaces the old dotted-zero JetBrains Mono) · Rajdhani (brand lockup only).
+- **Surfaces warm up:** page is warm cream `#FBF8F2`, borders/zebra are warm sand, the two dark surfaces (sidebar `#16130D`, table header `#221C12`) become a warm near-black. Layout, spacing, component structure and behaviour are unchanged — this was a token + font swap.
+
+When you hit a legacy `#00B050`, ask: *brand action, or status?* Brand → gold. Status → green.
+
+---
+
+## V1 → V2 history — What Changed and Why (superseded, kept for context)
 
 ### Problem 1: Body text contrast failure
 
@@ -18,7 +33,7 @@ V1 used `#92AF95` text on dark green gradient backgrounds (`linear-gradient(150d
 
 V1 used `#FACB01` amber for eyebrow labels and section markers on dark green sections. High saturation on high saturation created a "construction sign" feel.
 
-**V2 fix**: Eyebrow labels use `#00B050` brand green on white backgrounds. Solar gold is now `#F0B429` (warmer, less neon) and restricted to CTA buttons and specific warning emphasis only — never as label text on dark surfaces.
+**V2 fix**: Eyebrow labels used `#00B050` brand green on white backgrounds. Solar gold was `#F0B429` (warmer, less neon) and restricted to CTA buttons and specific warning emphasis only — never as label text on dark surfaces. *(V3 Solar Gold now makes gold the brand and reserves green for status — see the top of this file.)*
 
 ### Problem 3: Green-tinted neutrals
 
@@ -30,13 +45,13 @@ V1 neutrals were olive-green: `#92AF95`, `#668B6A`, `#456848`, `#2E4A32`. After 
 
 V1 used Oswald (condensed display face) in UPPERCASE for every heading. This is designed for billboards and marketing heroes, not for an everyday work tool.
 
-**V2 fix**: DM Sans replaces Oswald for all ERP headings. It is a geometric sans-serif: clean, modern, professional. No forced uppercase on headings — only labels and eyebrows use uppercase. Oswald is retained exclusively for the marketing/public website hero sections. Rajdhani remains for the brand name only.
+**V2 fix**: DM Sans replaced Oswald for all ERP headings. No forced uppercase on headings — only labels and eyebrows use uppercase. *(V3 Solar Gold replaces DM Sans with Archivo and Inter with IBM Plex Sans — see the type scale below.)* Rajdhani remains for the brand name only.
 
 ### Problem 5: Dark green everywhere
 
 V1 applied the dark green gradient to heroes, section backgrounds, sidebar, footer, and table headers — making the entire app feel like one heavy dark mass. Professional ERPs (Salesforce, Linear, Monday.com) are predominantly light.
 
-**V2 principle**: The ERP workspace is 95% white/off-white. Dark surfaces exist only in two places: the sidebar (`#111318`) and data table headers (`#1A1D24`). Brand green appears as thin lines, icons, badges, and buttons — never as a large background fill inside the app.
+**V2 principle (carried into V3)**: The ERP workspace is 95% white/off-white. Dark surfaces exist only in two places: the sidebar and data table headers — warmed in V3 to `#16130D` / `#221C12`. The brand colour appears as thin lines, icons, badges, and buttons — never as a large background fill inside the app.
 
 ---
 
@@ -44,31 +59,37 @@ V1 applied the dark green gradient to heroes, section backgrounds, sidebar, foot
 
 ```css
 :root {
-  /* ── BRAND ── */
-  --brand:        #00B050;   /* Primary — buttons, active nav, links, accents */
-  --brand-hover:  #009945;   /* Button hover state */
-  --brand-dark:   #007A38;   /* Link text, emphasis, hover on secondary elements */
-  --brand-deep:   #004D22;   /* Reserved — deep backgrounds if ever needed */
-  --brand-night:  #0A1A10;   /* Reserved — not used in ERP app */
+  /* ── BRAND (Solar Gold) ── */
+  --brand:        #E08A00;   /* Primary fills — buttons, active nav, icons, accents */
+  --brand-hover:  #C77606;   /* Button hover (darker gold) */
+  --brand-dark:   #B45309;   /* Link text, eyebrows, emphasis on light — AA on white */
+  --brand-deep:   #7A3D06;   /* Reserved — deep emphasis */
+  --brand-night:  #1F1709;   /* Ink text on gold fills; warm near-black */
 
-  /* ── SOLAR ACCENT ── */
-  --solar:        #F0B429;   /* CTA buttons only, solar-themed highlights */
-  --solar-light:  #F7D070;   /* Solar hover state */
-  --solar-bg:     #FEF8E7;   /* Solar background tint (extremely light) */
+  /* Brand gold tints (translucent — active states / rings) */
+  --brand-12:     rgba(224,138,0,.16);   /* Active nav background */
+  --brand-08:     rgba(224,138,0,.08);   /* Selected table row */
+  --brand-ring:   rgba(224,138,0,.22);   /* Input focus ring */
 
-  /* ── NEUTRALS (desaturated warm-gray — NOT green-tinted) ── */
-  --n950: #111318;   /* Sidebar background ONLY */
-  --n900: #1A1D24;   /* Table header background */
+  /* ── SOLAR ACCENT (brighter marigold) ── */
+  --solar:        #F0B429;   /* Solar CTA buttons, solar-themed glyphs */
+  --solar-light:  #F7D070;   /* Solar hover-light */
+  --solar-hover:  #E5A825;   /* Solar CTA hover */
+  --solar-bg:     #FCF3E2;   /* Solar background tint (warm, very light) */
+
+  /* ── NEUTRALS (warm sand/stone light end; warm near-black darks) ── */
+  --n950: #16130D;   /* Sidebar background — warm near-black */
+  --n900: #221C12;   /* Table header background — warm */
   --n800: #2D3039;   /* Heavy text (rarely used) */
-  --n700: #3F424D;   /* Primary body text on white — 9.8:1 contrast */
+  --n700: #3F424D;   /* Primary body text on white — high contrast */
   --n600: #5A5E6B;   /* Secondary text, descriptions */
   --n500: #7C818E;   /* Muted text, labels, captions, placeholders */
   --n400: #9CA0AB;   /* Disabled text, timestamps */
-  --n300: #BFC3CC;   /* Border emphasis, sidebar text default */
-  --n200: #DFE2E8;   /* Default borders, dividers, input borders */
-  --n150: #EBEDF2;   /* Subtle borders, zebra stripe borders */
-  --n100: #F2F4F7;   /* Page background, zebra stripes, input backgrounds */
-  --n050: #F8F9FB;   /* Content area background (lightest surface) */
+  --n300: #C2BBAE;   /* Border emphasis (hover), warm */
+  --n200: #E5DFD3;   /* Default borders, dividers, input borders — warm */
+  --n150: #EDE8DD;   /* Subtle borders, zebra stripe borders — warm */
+  --n100: #F4F0E7;   /* Zebra stripes, input backgrounds, sunken — warm */
+  --n050: #FBF8F2;   /* Content area background (lightest, warm cream) */
   --white: #FFFFFF;  /* Card backgrounds, header, modals, inputs */
 
   /* ── STATUS ── */
@@ -117,30 +138,31 @@ V1 applied the dark green gradient to heroes, section backgrounds, sidebar, foot
 
 | Font | Role | Google Fonts Load | Notes |
 |---|---|---|---|
-| **DM Sans** | ERP headings (H1–H4), KPI values, card titles, labels/eyebrows | `DM+Sans:wght@400;500;600;700` | Replaces Oswald for all ERP UI. Geometric sans-serif, clean and modern. |
-| **Inter** | Body text, captions, form inputs, table cells, descriptions | `Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300` | Primary body font. |
+| **Archivo** | ERP headings (H1–H4), KPI values, card titles, labels/eyebrows, table headers | `Archivo:wght@400;500;600;700;800` | Replaces Archivo for all ERP headings. Grotesque sans, confident and legible. |
+| **IBM Plex Sans** | Body text, captions, form inputs, table cells, descriptions **and all figures** (IDs, currency, capacity) via `tabular-nums` | `IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400` | Primary body font. Its plain round zero replaces the old IBM Plex Sans dotted zero. Repointed as the `mono` family too. |
 | **Rajdhani** | Brand name "SHIROI ENERGY" only | `Rajdhani:wght@500;600;700` | Never used for headings or UI text. Brand lockup only. |
-| **JetBrains Mono** | Code, tokens, IDs, hex values, monospace data | `JetBrains+Mono:wght@400;500` | Monospace data display. |
+
+**Tabular figures:** `body { font-variant-numeric: tabular-nums; }` is set globally so currency / capacity / ID columns align without a separate monospace family.
 
 ### Type Scale
 
 | Style | Font | Size | Weight | Transform | Letter-spacing | Use |
 |---|---|---|---|---|---|---|
 | Brand name | Rajdhani | 14–32px | 700 | Uppercase | .08em | Sidebar lockup, footer |
-| H1 Display | DM Sans | 42px | 700 | None | -.02em | Page titles, hero text |
-| H2 Section | DM Sans | 28px | 700 | None | -.01em | Section headers |
-| H3 Card | DM Sans | 18px | 700 | None | 0 | Card titles, dialog titles |
-| H4 Subtitle | DM Sans | 14px | 600 | None | 0 | Sub-section headers |
-| Body Regular | Inter | 14px | 400 | None | 0 | All body text, descriptions |
-| Body Small | Inter | 13px | 400 | None | 0 | Table cells, form inputs |
-| Caption | Inter | 11px | 400 | None | 0 | Timestamps, meta text, hints |
-| Label / Eyebrow | DM Sans | 10px | 700 | Uppercase | .14em | Section eyebrows, card labels |
-| KPI Value | DM Sans | 28px | 700 | None | -.02em | Dashboard KPI numbers |
-| Monospace | JetBrains Mono | 12px | 400 | None | 0 | IDs, tokens, code, hex values |
+| H1 Display | Archivo | 42px | 700 | None | -.02em | Page titles, hero text |
+| H2 Section | Archivo | 28px | 700 | None | -.01em | Section headers |
+| H3 Card | Archivo | 18px | 700 | None | 0 | Card titles, dialog titles |
+| H4 Subtitle | Archivo | 14px | 600 | None | 0 | Sub-section headers |
+| Body Regular | IBM Plex Sans | 14px | 400 | None | 0 | All body text, descriptions |
+| Body Small | IBM Plex Sans | 13px | 400 | None | 0 | Table cells, form inputs |
+| Caption | IBM Plex Sans | 11px | 400 | None | 0 | Timestamps, meta text, hints |
+| Label / Eyebrow | Archivo | 10px | 700 | Uppercase | .14em | Section eyebrows, card labels |
+| KPI Value | Archivo | 28px | 700 | None | -.02em | Dashboard KPI numbers |
+| Figures | IBM Plex Sans | 12–28px | 500 | None | tabular-nums | IDs, currency (₹), capacity (kW) |
 
 ### Eyebrow Pattern
 
-All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then uppercase DM Sans 10px/700 text in `--brand` green.
+All section eyebrows follow this pattern: a 14px x 2px gold bar, 8px gap, then uppercase Archivo 10px/700 text in `--brand-dark` gold (`#B45309`).
 
 ```
 ──  OPERATIONS
@@ -152,22 +174,22 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 
 | Property | Value |
 |---|---|
-| Background | `#111318` (--n950, near-black, barely tinted) |
+| Background | `#16130D` (--n950, near-black, barely tinted) |
 | Expanded width | `240px` |
 | Collapsed width | `60px` |
 | Header height | `56px` (--header-height) |
 | Item height | `38px` — comfortable tap target |
-| Active indicator | 3px left bar · `#00B050` · rounded 0 2px 2px 0 |
-| Active background | `rgba(0,176,80,.12)` |
+| Active indicator | 3px left bar · `#E08A00` · rounded 0 2px 2px 0 |
+| Active background | `rgba(224,138,0,.12)` |
 | Active text | `#FFFFFF` (full white) |
 | Default text | `rgba(255,255,255,.55)` |
 | Hover text | `rgba(255,255,255,.85)` |
 | Hover background | `rgba(255,255,255,.05)` |
-| Section label | DM Sans 9px/700 · uppercase · .16em · `rgba(255,255,255,.25)` |
+| Section label | Archivo 9px/700 · uppercase · .16em · `rgba(255,255,255,.25)` |
 | Icon size | 20px · Lucide outline · 40px touch target |
 | Icon color (default) | `rgba(255,255,255,.55)` (matches text) |
 | Icon color (active) | Full white (1.0 opacity) |
-| Badge | min-width 18px · `rgba(0,176,80,.2)` bg · `#00B050` text |
+| Badge | min-width 18px · `rgba(224,138,0,.2)` bg · `#E08A00` text |
 | Collapse transition | 200ms cubic-bezier(.4,0,.2,1) on `width` |
 | Mobile behaviour | Hidden → slide-over drawer at <=900px |
 | Z-index | `100` (below modals at 300) |
@@ -177,7 +199,7 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 
 **Section grouping**: Operations · Finance · Admin. Max 6 items per section. Never nest deeper than 2 levels.
 
-**User footer**: 32px avatar square (brand green bg, white initials), name in Inter 12px/600, role in Inter 10px at `rgba(255,255,255,.35)`.
+**User footer**: 32px avatar square (brand green bg, white initials), name in IBM Plex Sans 12px/600, role in IBM Plex Sans 10px at `rgba(255,255,255,.35)`.
 
 ---
 
@@ -187,10 +209,10 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 |---|---|
 | Height | `56px` |
 | Background | `#FFFFFF` (--white) |
-| Border bottom | `1px solid #DFE2E8` (--n200) |
+| Border bottom | `1px solid #E5DFD3` (--n200) |
 | Shadow | `--shadow-xs` (0 1px 2px) |
-| Page title | DM Sans 16px/700 · `--n900` |
-| Subtitle | Inter 12px · `--n500` |
+| Page title | Archivo 16px/700 · `--n900` |
+| Subtitle | IBM Plex Sans 12px · `--n500` |
 
 **Search bar**: Pill-shaped (--r-md), background `--n100`, border `--n200`, placeholder in `--n500`. Keyboard shortcut badge Ctrl+K in a small pill.
 
@@ -202,14 +224,14 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 
 | Property | Value |
 |---|---|
-| Background | `#F8F9FB` (--n050) |
+| Background | `#FBF8F2` (--n050) |
 | Content padding | `24px` desktop · `16px` mobile |
 | Card gap | `16px` |
 | Section gap | `24px` between page sections |
 
 **App shell**: `[sidebar 240px] [header 56px + content area]`
 
-**Key principle**: Content area is always light. Cards are white (`#FFFFFF`) with `1px solid #DFE2E8` border and `--shadow-xs`. No dark green backgrounds in the content area, ever.
+**Key principle**: Content area is always light. Cards are white (`#FFFFFF`) with `1px solid #E5DFD3` border and `--shadow-xs`. No dark green backgrounds in the content area, ever.
 
 ---
 
@@ -218,7 +240,7 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 ```
 +-----------------------------------+
 | LABEL  (11px/600 uppercase --n500)    |
-| VALUE  (28px DM Sans 700 --n950)      |
+| VALUE  (28px Archivo 700 --n950)      |
 |         optional UNIT (13px --n500)   |
 | ^ TREND (11px/600 success/error)      |
 | Sub-note (11px --n400)                |
@@ -250,17 +272,17 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 | Property | Value |
 |---|---|
 | Cell padding | `0 14px` vertical · height set on row |
-| Header background | `#1A1D24` (--n900) |
-| Header text | `#BFC3CC` (--n300) · DM Sans 10px/700 · uppercase · .08em |
+| Header background | `#221C12` (--n900) |
+| Header text | `#C2BBAE` (--n300) · Archivo 10px/700 · uppercase · .08em |
 | Header corner radius | `--r-sm` on first and last `th` |
-| Zebra striping | Odd rows: white · Even rows: `--n050` (#F8F9FB) |
+| Zebra striping | Odd rows: white · Even rows: `--n050` (#FBF8F2) |
 | Hover state | `--n050` background |
-| Selected row | `rgba(0,176,80,.08)` + 3px green left border |
+| Selected row | `rgba(224,138,0,.08)` + 3px green left border |
 | Text truncation | Ellipsis at `max-width:200px` · tooltip on hover |
 | Inline actions | Hidden until row hover · max 3 (view / edit / more) |
-| ID column | JetBrains Mono 12px · `--brand-dark` · font-weight 600 |
-| Client name | Inter 13px · font-weight 600 · `--n900` |
-| Currency values | JetBrains Mono 12px |
+| ID column | IBM Plex Sans 12px · `--brand-dark` · font-weight 600 |
+| Client name | IBM Plex Sans 13px · font-weight 600 · `--n900` |
+| Currency values | IBM Plex Sans 12px |
 | Pagination | Bottom bar with `--n150` top border · showing count + page buttons |
 | Table wrapper | White card with 0 padding, `--r-lg` radius, `--n200` border |
 | Toolbar | Flex row above table with title + filter/export/create buttons |
@@ -272,18 +294,18 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 | Rule | Specification |
 |---|---|
 | Label placement | Always **above** field — never floating, never right-aligned |
-| Label font | Inter 12px/600 · `--n700` |
+| Label font | IBM Plex Sans 12px/600 · `--n700` |
 | Required indicator | Red `*` after label text — `#DC2626` |
 | Optional fields | No indicator |
 | Input height | `36px` single-line · textarea: vertical resize only |
-| Input font | Inter 13px · `--n900` |
-| Default border | `1.5px solid #DFE2E8` (--n200) |
+| Input font | IBM Plex Sans 13px · `--n900` |
+| Default border | `1.5px solid #E5DFD3` (--n200) |
 | Border radius | `--r-md` (8px) |
-| Focus state | Border `#00B050` + `box-shadow: 0 0 0 3px rgba(0,176,80,.1)` |
+| Focus state | Border `#E08A00` + `box-shadow: 0 0 0 3px rgba(224,138,0,.22)` |
 | Error state | Border `#DC2626` + `box-shadow: 0 0 0 3px rgba(220,38,38,.08)` |
 | Disabled state | Background `--n050` · text `--n400` · cursor not-allowed |
-| Hint text | Inter 11px · `--n500` |
-| Error message | Inter 11px · `#DC2626` · below input |
+| Hint text | IBM Plex Sans 11px · `--n500` |
+| Error message | IBM Plex Sans 11px · `#DC2626` · below input |
 | Multi-column | Max 2 columns desktop · always 1 column <=600px |
 | Save Draft | Always available for complex forms (saves without validation) |
 | Stepper max | 5 steps · always show all steps · completed = check |
@@ -296,8 +318,8 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 
 | Variant | Background | Text | Border | Hover |
 |---|---|---|---|---|
-| **Primary** | `#00B050` | `#FFFFFF` | None | `#009945` |
-| **Secondary** | `#FFFFFF` | `#00B050` | `1.5px solid #00B050` | `--success-bg` background |
+| **Primary** | `#E08A00` | `#1F1709` (ink) | None | `#C77606` |
+| **Secondary** | `#FFFFFF` | `#B45309` | `1.5px solid #E08A00` | `--solar-bg` background |
 | **Ghost** | `#FFFFFF` | `--n700` | `1px solid --n200` | `--n050` bg + `--n300` border |
 | **Danger** | `--error-bg` | `--error-text` | `1px solid --error-border` | Darker error-bg |
 | **Solar CTA** | `#F0B429` | `--n950` | None | `#E5A825` |
@@ -307,7 +329,7 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 |---|---|
 | Padding (default) | `8px 16px` |
 | Padding (small) | `5px 10px` |
-| Font | Inter 13px/600 (default) · 12px (small) |
+| Font | IBM Plex Sans 13px/600 (default) · 12px (small) |
 | Border radius | `--r-md` (8px) |
 | Transition | `--transition-fast` (150ms) |
 | Press effect | `transform: scale(.97)` at 100ms |
@@ -329,7 +351,7 @@ All section eyebrows follow this pattern: a 14px x 2px green bar, 8px gap, then 
 |---|---|
 | Padding | `2px 8px` |
 | Border radius | `99px` (full pill) |
-| Font | Inter 10px/700 |
+| Font | IBM Plex Sans 10px/700 |
 | Dot indicator | 5px circle, `currentColor` at 60% opacity, before text |
 
 **Rule**: Same status always gets the same colour across every screen. Active is always green, Pending always amber. No exceptions.
@@ -360,10 +382,10 @@ Steps: Survey → Design → Installation → Inspection → Net Metering → Ha
 
 | State | Visual |
 |---|---|
-| Active step | `#00B050` ring `box-shadow: 0 0 0 4px rgba(0,176,80,.15)` |
-| Completed step | `#00B050` fill · white check icon |
+| Active step (current) | **gold** `#E08A00` ring `box-shadow: 0 0 0 4px rgba(224,138,0,.15)` · gold fill + ink |
+| Completed step | **status green** `#16A34A` fill · white check icon |
 | Upcoming step | `--n200` fill · `--n500` text |
-| Connector (completed) | `#00B050` line |
+| Connector (completed) | **status green** `#16A34A` line |
 | Connector (upcoming) | `--n200` line |
 
 ---
@@ -375,8 +397,8 @@ Steps: Survey → Design → Installation → Inspection → Net Metering → Ha
 | Property | Value |
 |---|---|
 | Icon | Lucide icon · 48px · `opacity: .5` · `--n400` colour |
-| Title | DM Sans 18px/700 · `--n900` · describes what's missing |
-| Description | Inter 13px · `--n500` · max 320px width · action-driven copy |
+| Title | Archivo 18px/700 · `--n900` · describes what's missing |
+| Description | IBM Plex Sans 13px · `--n500` · max 320px width · action-driven copy |
 | CTA | Primary button if user can create · Ghost button if user can filter |
 | Copy formula | `No [entity] yet → [action verb] your first [entity]` |
 
@@ -429,7 +451,7 @@ Never say "No data found" — always be specific to the context.
 | Property | Value |
 |---|---|
 | Background | `--white` (#FFFFFF) |
-| Border | `1px solid --n200` (#DFE2E8) |
+| Border | `1px solid --n200` (#E5DFD3) |
 | Border radius | `--r-lg` (12px) |
 | Padding | `20px` |
 | Shadow | `--shadow-xs` |
@@ -440,7 +462,7 @@ Never say "No data found" — always be specific to the context.
 
 | Property | Value |
 |---|---|
-| Font | DM Sans 10px/700 |
+| Font | Archivo 10px/700 |
 | Transform | Uppercase |
 | Letter-spacing | .14em |
 | Colour | `--n500` |
@@ -454,11 +476,11 @@ Never say "No data found" — always be specific to the context.
 
 | Type | Background | Border-left | Text colour |
 |---|---|---|---|
-| Info (success context) | `--success-bg` | `3px solid #00B050` | `--success-text` |
+| Info (success context) | `--success-bg` | `3px solid #16A34A` | `--success-text` |
 | Warning | `--warning-bg` | `3px solid #F0B429` | `--warning-text` |
 | Error | `--error-bg` | `3px solid #DC2626` | `--error-text` |
 
-All info boxes: `border-radius: 0 --r-sm --r-sm 0` · padding `12px 16px` · Inter 13px · line-height 1.6.
+All info boxes: `border-radius: 0 --r-sm --r-sm 0` · padding `12px 16px` · IBM Plex Sans 13px · line-height 1.6.
 
 ---
 
@@ -542,9 +564,9 @@ All info boxes: `border-radius: 0 --r-sm --r-sm 0` · padding `12px 16px` · Int
 |---|---|
 | Page size | A4 · 210x297mm · portrait |
 | Margins | Top 20mm · Right 15mm · Bottom 20mm · Left 20mm |
-| Body font | Inter Regular 10pt · `--n900` · 1.4x leading |
-| Section heading | DM Sans Bold 14pt · `#00B050` |
-| Table font | Inter 9pt · dark header row · zebra |
+| Body font | IBM Plex Sans Regular 10pt · `--n900` · 1.4x leading |
+| Section heading | Archivo Bold 14pt · `#B45309` (gold-dark on white) |
+| Table font | IBM Plex Sans 9pt · dark header row · zebra |
 | Watermark | Logo · 3% opacity · centred behind content |
 | Footer | `--n900` bar · address + page X of Y |
 | Page breaks | Never inside tables · never inside card sections |
@@ -637,11 +659,11 @@ When implemented, the dark mode will invert the content area only. The sidebar i
 
 | Light Mode | Dark Mode |
 |---|---|
-| `--white` (#FFFFFF) card bg | `#1A1D24` (--n900) |
-| `--n050` (#F8F9FB) page bg | `#111318` (--n950) |
-| `--n200` (#DFE2E8) borders | `#2D3039` (--n800) |
-| `--n700` (#3F424D) body text | `#BFC3CC` (--n300) |
-| `--n900` (#1A1D24) table header | `#2D3039` (--n800) |
+| `--white` (#FFFFFF) card bg | `#221C12` (--n900) |
+| `--n050` (#FBF8F2) page bg | `#16130D` (--n950) |
+| `--n200` (#E5DFD3) borders | `#2D3039` (--n800) |
+| `--n700` (#3F424D) body text | `#C2BBAE` (--n300) |
+| `--n900` (#221C12) table header | `#2D3039` (--n800) |
 | Status badge opacity | Reduced to 70% |
 | Shadows | Replaced by border strokes |
 
@@ -653,14 +675,14 @@ Toggle: header icon · persisted in `localStorage` · default: respect `prefers-
 
 Use brand gradient sequence for multi-series charts:
 
-1. `#00B050` (Brand green)
-2. `#3B82F6` (Blue)
-3. `#F0B429` (Solar gold)
+1. `#E08A00` (Brand gold)
+2. `#0EA5C2` (Cyan — from the logo / grid + net metering)
+3. `#16A34A` (Green — generation / healthy)
 4. `#9333EA` (Purple)
 5. `#EF4444` (Red)
-6. `#06B6D4` (Cyan)
+6. `#F0B429` (Solar light)
 
-For single-series charts, use `#00B050` with `--success-bg` as the area fill.
+For single-series charts, use `#E08A00` with `--solar-bg` as the area fill.
 
 ---
 
@@ -676,4 +698,4 @@ Kasturba Nagar, Adyar, Chennai - 600 020
 
 ---
 
-*Shiroi Energy ERP Design System · V2.0 · April 2026 · Confidential*
+*Shiroi Energy ERP Design System · V3.0 Solar Gold · June 2026 · Confidential*

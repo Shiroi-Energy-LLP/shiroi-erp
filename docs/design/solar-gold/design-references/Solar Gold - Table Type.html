@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shiroi ERP — Table Type Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: #ECE7DD;
+    font-family: 'Inter', sans-serif;
+    min-width: 100%; min-height: 100vh; width: max-content;
+    padding: 48px; box-sizing: border-box;
+  }
+  .page-head { width: 720px; margin-bottom: 36px; }
+  .page-head h1 { font-family: 'Archivo', sans-serif; font-size: 26px; font-weight: 700; color: #1A1407; margin: 0 0 8px; letter-spacing: -.01em; }
+  .page-head p { font-size: 14px; line-height: 1.6; color: #6B5E48; margin: 0; }
+  .page-head .rec { margin-top: 12px; font-size: 13px; color: #8A5A0C; font-weight: 600; }
+
+  .row { display: flex; flex-direction: row; align-items: flex-start; gap: 32px; }
+  .col { flex: none; display: flex; flex-direction: column; width: 560px; }
+  .flabel { margin-bottom: 14px; }
+  .flabel .name { font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 700; color: #1A1407; display: flex; align-items: center; gap: 9px; }
+  .flabel .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fff; background: #9A8A6E; padding: 2px 7px; border-radius: 999px; }
+  .flabel .tag.rec { background: #B07408; }
+  .flabel .stack-line { font-size: 12px; color: #8A7A5E; margin-top: 4px; }
+
+  .card { background: #FBF8F2; border: 1px solid #E6DCC8; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 3px rgba(40,30,10,.08), 0 8px 24px rgba(40,30,10,.09); }
+
+  /* zero / figure showcase */
+  .glyphs { padding: 20px 22px; border-bottom: 1px solid #ECE3D2; background: #fff; }
+  .glyphs .gl-lab { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #B07408; margin-bottom: 10px; }
+  .glyphs .digits { font-family: var(--fig); font-size: 30px; font-weight: 500; color: #1A1407; letter-spacing: .04em; font-feature-settings: "tnum" 1; }
+  .glyphs .zero { color: #B07408; }
+  .glyphs .ex { font-family: var(--fig); font-size: 17px; color: #4F4636; margin-top: 8px; font-feature-settings: "tnum" 1; display: flex; gap: 18px; flex-wrap: wrap; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #221B0E; color: rgba(255,255,255,.8); font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; text-align: left; padding: 10px 16px; }
+  thead th.r { text-align: right; }
+  tbody td { padding: 11px 16px; font-family: var(--cell); font-size: 13.5px; color: #3F3526; border-top: 1px solid #ECE3D2; }
+  tbody tr:nth-child(even) { background: #F5EFE2; }
+  td.mono { font-family: var(--fig); font-size: 12.5px; color: #5A4E38; font-feature-settings: "tnum" 1; }
+  td.num { font-family: var(--fig); font-feature-settings: "tnum" 1; }
+  td.r { text-align: right; }
+  td.gap { color: #B91C1C; font-weight: 600; }
+  td .client { font-weight: 500; color: #2A2113; }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Table type — fixing the cells & the zero</h1>
+    <p>Headings stay <strong>Archivo</strong>. These four vary the <strong>cell font</strong> (the client names) and the <strong>figure font</strong> for IDs &amp; currency. Every option here uses a <strong>clean, un-dotted, un-slashed zero</strong> — the top strip blows the digits up so you can check the <span style="color:#B07408;font-weight:600">0</span> shape directly.</p>
+    <p class="rec">My pick: <strong>Option A</strong> — drop the monospace entirely. A proportional sans with tabular figures (à la Stripe / Mercury) keeps currency columns aligned, kills the code-y zero, and makes client names feel less generic.</p>
+  </div>
+
+  <div class="row" id="row"></div>
+
+  <script>
+  const ROWS = [
+    ['PV-0421','Anand Residence','₹6.4 L','−₹4.4 L'],
+    ['PV-0418','Sai Textiles','₹54.0 L','−₹14.0 L'],
+    ['PV-0410','Lakshmi Mills','₹98.0 L','−₹28.0 L'],
+    ['PV-0407','GreenMart Coimbatore','₹22.5 L','−₹4.5 L'],
+  ];
+
+  const OPTS = [
+    {
+      name: 'Option A · No mono — Inter tabular',
+      tag: 'Recommended', rec: true,
+      stack: 'Cells: Inter · Figures: Inter (tabular figures)',
+      cell: "'Inter'", fig: "'Inter'", monoIds: false,
+    },
+    {
+      name: 'Option B · IBM Plex Sans',
+      tag: 'Engineering sans',
+      stack: 'Cells & figures: IBM Plex Sans (tabular) — one cohesive technical sans',
+      cell: "'IBM Plex Sans'", fig: "'IBM Plex Sans'", monoIds: false,
+    },
+    {
+      name: 'Option C · Space Mono figures',
+      tag: 'Mono, clean zero',
+      stack: 'Cells: Inter · IDs + currency: Space Mono (plain oval zero, no dot)',
+      cell: "'Inter'", fig: "'Space Mono'", monoIds: true,
+    },
+    {
+      name: 'Option D · DM Mono figures',
+      tag: 'Mono, softer',
+      stack: 'Cells: Inter · IDs + currency: DM Mono (clean zero, lighter weight)',
+      cell: "'Inter'", fig: "'DM Mono'", monoIds: true,
+    },
+  ];
+
+  function cardHTML(o) {
+    const idCls = o.monoIds ? 'mono' : 'num';
+    const body = ROWS.map(([id,client,inv,gap]) => `
+      <tr>
+        <td class="${idCls}">${id}</td>
+        <td><span class="client">${client}</span></td>
+        <td class="r num">${inv}</td>
+        <td class="r num gap">${gap}</td>
+      </tr>`).join('');
+    return `<div class="card" style="--cell:${o.cell},sans-serif; --fig:${o.fig},${o.monoIds?'monospace':'sans-serif'};">
+      <div class="glyphs">
+        <div class="gl-lab">Figures &amp; zero</div>
+        <div class="digits"><span class="zero">0</span>123456789</div>
+        <div class="ex"><span>₹1,24,000</span><span>₹42.6 L</span><span>12.45 kWp</span><span>PV-0407</span></div>
+      </div>
+      <table>
+        <thead><tr><th>Project</th><th>Client</th><th class="r">Invested</th><th class="r">Gap</th></tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`;
+  }
+
+  document.getElementById('row').innerHTML = OPTS.map(o => `
+    <div class="col">
+      <div class="flabel">
+        <span class="name">${o.name} <span class="tag ${o.rec?'rec':''}">${o.tag}</span></span>
+        <div class="stack-line">${o.stack}</div>
+      </div>
+      ${cardHTML(o)}
+    </div>`).join('');
+  </script>
+</body>
+</html>

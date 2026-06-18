@@ -153,7 +153,7 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="text-sm text-n-500">
           Generate a Quick Quote for Path A, or build a Detailed Proposal for Path B through the{' '}
-          <Link href={`/design/${leadId}`} className="text-shiroi-green hover:underline">
+          <Link href={`/design/${leadId}`} className="text-shiroi-gold-dark hover:underline">
             design workspace
           </Link>
           .
@@ -277,7 +277,7 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
                     <div className="flex items-center gap-3 flex-wrap">
                       <Link
                         href={`/proposals/${proposal.id}`}
-                        className="text-sm font-mono font-medium text-n-900 hover:text-shiroi-green"
+                        className="text-sm font-mono font-medium text-n-900 hover:text-shiroi-gold-dark"
                       >
                         {proposal.proposal_number}
                       </Link>

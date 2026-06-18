@@ -64,7 +64,7 @@ const STATUS_DOT_COLORS: Record<string, string> = {
   order_placed: '#2563EB',
   received: '#059669',
   ready_to_dispatch: '#7C3AED',
-  delivered: '#00B050',
+  delivered: '#16A34A',
 };
 
 interface BoqItemStatusSelectProps {

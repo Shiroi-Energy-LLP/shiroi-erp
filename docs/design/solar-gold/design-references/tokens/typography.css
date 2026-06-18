@@ -1,0 +1,52 @@
+/* Shiroi Energy — Typography tokens (Solar Gold revision)
+   Archivo → headings/KPI/labels/table headers · IBM Plex Sans → body, table
+   cells, inputs AND figures (tabular) · Rajdhani → brand lockup only.
+   No forced uppercase on headings; only labels/eyebrows and table headers
+   are uppercase. */
+
+:root {
+  /* ── FAMILIES ── */
+  --font-heading: "Archivo", system-ui, sans-serif;        /* H1–H4, KPI values, card titles, labels */
+  --font-body:    "IBM Plex Sans", system-ui, sans-serif;  /* body, table cells, inputs */
+  --font-brand:   "Rajdhani", system-ui, sans-serif;       /* "SHIROI ENERGY" lockup only */
+  --font-numeric: "IBM Plex Sans", system-ui, sans-serif;  /* IDs, currency, capacity — tabular figures */
+  --font-mono:    "IBM Plex Sans", system-ui, sans-serif;  /* alias of numeric (was JetBrains Mono); plain round zero */
+
+  /* ── TYPE SCALE (size / weight / tracking) ──
+     Brand name   Rajdhani       14–32  700  uppercase  .08em
+     H1 Display   Archivo        42     700  none      -.02em
+     H2 Section   Archivo        28     700  none      -.01em
+     H3 Card      Archivo        18     700  none       0
+     H4 Subtitle  Archivo        14     600  none       0
+     Body         IBM Plex Sans  14     400  none       0
+     Body Small   IBM Plex Sans  13     400  none       0
+     Caption      IBM Plex Sans  11     400  none       0
+     Eyebrow      Archivo        10     700  uppercase  .14em
+     KPI Value    Archivo        28     700  none      -.02em
+     Figures      IBM Plex Sans  12–28  500  tabular-nums  (IDs, ₹, kW) */
+
+  --fs-h1:      42px;   --lh-h1:      1.1;   /* @kind other */
+  --fs-h2:      28px;   --lh-h2:      1.15;  /* @kind other */
+  --fs-h3:      18px;   --lh-h3:      1.3;   /* @kind other */
+  --fs-h4:      14px;   --lh-h4:      1.4;   /* @kind other */
+  --fs-body:    14px;   --lh-body:    1.55;  /* @kind other */
+  --fs-body-sm: 13px;   --lh-body-sm: 1.5;   /* @kind other */
+  --fs-caption: 11px;   --lh-caption: 1.4;   /* @kind other */
+  --fs-eyebrow: 10px;
+  --fs-kpi:     28px;
+  --fs-mono:    12px;
+
+  --tracking-tight:   -0.02em;  /* H1, KPI values */
+  --tracking-snug:    -0.01em;  /* H2 */
+  --tracking-eyebrow:  0.14em;  /* eyebrow / card labels */
+  --tracking-brand:    0.08em;  /* brand lockup */
+  --tracking-th:       0.08em;  /* table header */
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+}
+
+/* Tabular figures everywhere so currency / capacity / ID columns align. */
+body { font-variant-numeric: tabular-nums; }

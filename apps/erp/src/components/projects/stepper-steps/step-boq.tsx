@@ -36,7 +36,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   order_placed: { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
   received: { bg: '#F0FDF4', text: '#059669', border: '#A7F3D0' },
   ready_to_dispatch: { bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
-  delivered: { bg: '#F0FDF4', text: '#00B050', border: '#86EFAC' },
+  delivered: { bg: '#F0FDF4', text: '#16A34A', border: '#86EFAC' },
 };
 
 const STATUS_LABELS: Record<string, string> = {

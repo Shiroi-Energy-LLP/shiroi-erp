@@ -82,7 +82,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 {company.website && (
                   <div>
                     <span className="text-[#7C818E]">Website</span>
-                    <p className="mt-0.5 text-[#00B050]">{company.website}</p>
+                    <p className="mt-0.5 text-[#B45309]">{company.website}</p>
                   </div>
                 )}
                 {(company as any).company_size && (
@@ -121,7 +121,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     {activeContacts.map((ccr: any) => (
                       <TableRow key={ccr.id}>
                         <TableCell>
-                          <Link href={`/contacts/${ccr.contacts?.id}`} className="text-[#00B050] hover:underline font-medium">
+                          <Link href={`/contacts/${ccr.contacts?.id}`} className="text-[#B45309] hover:underline font-medium">
                             {ccr.contacts?.name}
                           </Link>
                         </TableCell>
@@ -155,7 +155,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     {pastContacts.map((ccr: any) => (
                       <TableRow key={ccr.id}>
                         <TableCell>
-                          <Link href={`/contacts/${ccr.contacts?.id}`} className="text-[#00B050] hover:underline font-medium">
+                          <Link href={`/contacts/${ccr.contacts?.id}`} className="text-[#B45309] hover:underline font-medium">
                             {ccr.contacts?.name}
                           </Link>
                         </TableCell>

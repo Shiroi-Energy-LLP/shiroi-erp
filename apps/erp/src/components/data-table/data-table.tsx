@@ -46,15 +46,15 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   design_confirmed: { bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
   proposal_sent: { bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' },
   negotiation: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
-  won: { bg: '#F0FDF4', text: '#00B050', border: '#86EFAC' },
-  converted: { bg: '#F0FDF4', text: '#00B050', border: '#86EFAC' },
+  won: { bg: '#F0FDF4', text: '#16A34A', border: '#86EFAC' },
+  converted: { bg: '#F0FDF4', text: '#16A34A', border: '#86EFAC' },
   lost: { bg: '#F5F5F5', text: '#525252', border: '#D4D4D4' },
   on_hold: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
   disqualified: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   // Proposal statuses
   draft: { bg: '#F5F6F8', text: '#7C818E', border: '#DFE2E8' },
   sent: { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
-  accepted: { bg: '#F0FDF4', text: '#00B050', border: '#BBF7D0' },
+  accepted: { bg: '#F0FDF4', text: '#16A34A', border: '#BBF7D0' },
   rejected: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   expired: { bg: '#F5F5F5', text: '#525252', border: '#D4D4D4' },
   revised: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
@@ -62,7 +62,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   order_received: { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
   yet_to_start: { bg: '#F5F6F8', text: '#525252', border: '#DFE2E8' },
   in_progress: { bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' },
-  completed: { bg: '#F0FDF4', text: '#00B050', border: '#BBF7D0' },
+  completed: { bg: '#F0FDF4', text: '#16A34A', border: '#BBF7D0' },
   holding_shiroi: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
   holding_client: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   waiting_net_metering: { bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
@@ -131,7 +131,7 @@ function InlineEditInput({
           }}
           onKeyDown={handleKeyDown}
           onBlur={onCancel}
-          className="h-7 rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+          className="h-7 rounded border border-shiroi-gold/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
           disabled={saving}
         >
           {options.map((opt) => (
@@ -158,7 +158,7 @@ function InlineEditInput({
           }}
           onKeyDown={handleKeyDown}
           onBlur={onCancel}
-          className="h-7 rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+          className="h-7 rounded border border-shiroi-gold/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
           disabled={saving}
         >
           {!opts.includes(localValue) && <option value={localValue}>{localValue || '—'}</option>}
@@ -182,7 +182,7 @@ function InlineEditInput({
           onChange={(e) => setLocalValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => handleSave()}
-          className="h-7 rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+          className="h-7 rounded border border-shiroi-gold/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
           disabled={saving}
         />
         {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
@@ -202,7 +202,7 @@ function InlineEditInput({
         onChange={(e) => setLocalValue(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={() => handleSave()}
-        className="h-7 w-full min-w-[80px] max-w-[200px] rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+        className="h-7 w-full min-w-[80px] max-w-[200px] rounded border border-shiroi-gold/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
         disabled={saving}
       />
       {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
@@ -407,7 +407,7 @@ export function DataTable({
     const editableProps = isEditable
       ? {
           onDoubleClick: () => handleCellClick(rowId, col),
-          className: 'cursor-text hover:bg-shiroi-green/5 rounded px-1 -mx-1 transition-colors',
+          className: 'cursor-text hover:bg-shiroi-gold/5 rounded px-1 -mx-1 transition-colors',
           title: 'Double-click to edit',
         }
       : {};
@@ -424,7 +424,7 @@ export function DataTable({
       const editProps = canEdit
         ? {
             onDoubleClick: () => handleCellClick(rowId, col),
-            className: 'cursor-text hover:bg-shiroi-green/[0.08] rounded px-1 -mx-1 transition-colors',
+            className: 'cursor-text hover:bg-shiroi-gold/[0.08] rounded px-1 -mx-1 transition-colors',
             title: 'Double-click to change referrer',
           }
         : {};
@@ -432,7 +432,7 @@ export function DataTable({
         return (
           <span
             {...editProps}
-            className={`${editProps.className ?? ''} inline-flex items-center text-xs text-shiroi-green/70 hover:text-shiroi-green`}
+            className={`${editProps.className ?? ''} inline-flex items-center text-xs text-shiroi-gold-dark/70 hover:text-shiroi-gold-dark`}
           >
             + Set referrer
           </span>
@@ -465,7 +465,7 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
-          className="font-medium text-shiroi-green hover:underline"
+          className="font-medium text-shiroi-gold-dark hover:underline"
         >
           {displayVal}
         </Link>
@@ -528,7 +528,7 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
-          className="font-medium text-shiroi-green hover:underline"
+          className="font-medium text-shiroi-gold-dark hover:underline"
         >
           {displayVal}
         </Link>
@@ -547,7 +547,7 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}?tab=execution`}
-          className="inline-flex items-center gap-1 text-xs text-shiroi-green hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-shiroi-gold-dark hover:underline"
         >
           <ClipboardList className="h-3.5 w-3.5" /> Activities
         </Link>
@@ -642,9 +642,9 @@ export function DataTable({
                           <span className="inline-flex flex-col">
                             {sortColumn === col.sortKey ? (
                               sortDirection === 'asc' ? (
-                                <ChevronUp className="h-3 w-3 text-shiroi-green" />
+                                <ChevronUp className="h-3 w-3 text-shiroi-gold-dark" />
                               ) : (
-                                <ChevronDown className="h-3 w-3 text-shiroi-green" />
+                                <ChevronDown className="h-3 w-3 text-shiroi-gold-dark" />
                               )
                             ) : (
                               <ArrowUpDown className="h-3 w-3 opacity-30" />
@@ -679,9 +679,9 @@ export function DataTable({
                     // referrer-cell dblclick handler below.
                     const leadsRowClass = entityType === 'leads'
                       ? (isSelected
-                          ? 'h-12 bg-shiroi-green/[0.08] border-l-2 border-l-shiroi-green'
-                          : 'h-12 hover:bg-shiroi-green/[0.06] border-l-2 border-l-transparent transition-colors')
-                      : (isSelected ? 'bg-shiroi-green/5' : 'hover:bg-n-050');
+                          ? 'h-12 bg-shiroi-gold/[0.08] border-l-2 border-l-shiroi-gold'
+                          : 'h-12 hover:bg-shiroi-gold/[0.06] border-l-2 border-l-transparent transition-colors')
+                      : (isSelected ? 'bg-shiroi-gold/5' : 'hover:bg-n-050');
 
                     return (
                       <TableRow

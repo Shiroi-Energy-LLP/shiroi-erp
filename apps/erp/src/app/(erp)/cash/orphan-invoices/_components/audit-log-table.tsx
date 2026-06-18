@@ -50,7 +50,7 @@ export function AuditLogTable() {
               type="button"
               onClick={() => { setDecisionFilter(d); setPage(1); }}
               className={`text-xs px-2 py-1 rounded ${
-                decisionFilter === d ? 'bg-[#00B050] text-white' : 'bg-gray-100 text-gray-700'
+                decisionFilter === d ? 'bg-[#E08A00] text-[#1F1709]' : 'bg-gray-100 text-gray-700'
               }`}
             >
               {d || 'All'}

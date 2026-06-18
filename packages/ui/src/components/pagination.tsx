@@ -79,7 +79,7 @@ function Pagination({
             className={cn(
               'inline-flex items-center justify-center h-8 w-8 rounded-md text-sm',
               p === currentPage
-                ? 'bg-shiroi-green text-white font-medium'
+                ? 'bg-shiroi-gold text-shiroi-ink font-medium'
                 : 'border border-n-200 hover:bg-[#F5F6F8]'
             )}
           >

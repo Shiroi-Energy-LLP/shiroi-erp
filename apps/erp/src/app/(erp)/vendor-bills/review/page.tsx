@@ -96,7 +96,7 @@ export default async function VendorBillAiReviewPage() {
       <div>
         <Eyebrow className="mb-1">FINANCE / AI</Eyebrow>
         <div className="flex items-center gap-3">
-          <Bot className="h-6 w-6 text-[#00B050]" />
+          <Bot className="h-6 w-6 text-[#B45309]" />
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
             Vendor Invoice AI Review
           </h1>
@@ -199,7 +199,7 @@ export default async function VendorBillAiReviewPage() {
                       <TableCell className="font-mono text-sm">
                         <Link
                           href={`/vendor-bills/${bill.id}`}
-                          className="text-[#00B050] hover:underline"
+                          className="text-[#B45309] hover:underline"
                         >
                           {bill.bill_number}
                         </Link>
@@ -242,7 +242,7 @@ export default async function VendorBillAiReviewPage() {
                       <TableCell>
                         <Link
                           href={`/vendor-bills/${bill.id}`}
-                          className="text-sm font-medium text-[#00B050] hover:underline whitespace-nowrap"
+                          className="text-sm font-medium text-[#B45309] hover:underline whitespace-nowrap"
                         >
                           Review
                         </Link>

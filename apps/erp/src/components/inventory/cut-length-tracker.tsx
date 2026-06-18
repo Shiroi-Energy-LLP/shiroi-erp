@@ -157,7 +157,7 @@ export function CutLengthTracker({ piece }: CutLengthTrackerProps) {
                       ? 'bg-[#991B1B]'
                       : isLow
                       ? 'bg-[#EA580C]'
-                      : 'bg-[#00B050]'
+                      : 'bg-[#16A34A]'
                   }`}
                   style={{ width: `${Math.max(2, remainingPercent)}%` }}
                 />

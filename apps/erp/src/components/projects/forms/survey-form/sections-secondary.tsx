@@ -273,7 +273,7 @@ export function SectionDeviations({
             id="routing_changes"
             name="routing_changes"
             rows={2}
-            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E08A00]"
             defaultValue={existing?.routing_changes ?? ''}
             placeholder="Any changes to planned cable routing..."
           />
@@ -284,7 +284,7 @@ export function SectionDeviations({
             id="cable_size_changes"
             name="cable_size_changes"
             rows={2}
-            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E08A00]"
             defaultValue={existing?.cable_size_changes ?? ''}
             placeholder="Any changes to cable sizing..."
           />
@@ -295,7 +295,7 @@ export function SectionDeviations({
             id="other_special_requests"
             name="other_special_requests"
             rows={2}
-            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E08A00]"
             defaultValue={existing?.other_special_requests ?? ''}
             placeholder="Any other special requirements or client requests..."
           />
@@ -322,7 +322,7 @@ export function SectionSignatures({
           id="notes"
           name="notes"
           rows={3}
-          className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+          className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E08A00]"
           defaultValue={existing?.notes ?? ''}
           placeholder="Additional survey observations..."
         />

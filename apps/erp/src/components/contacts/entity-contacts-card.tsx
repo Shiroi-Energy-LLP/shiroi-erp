@@ -58,7 +58,7 @@ export function EntityContactsCard({ entityType, entityId, contacts }: EntityCon
                   <div>
                     <Link
                       href={`/contacts/${ec.contacts?.id}`}
-                      className="text-sm font-medium text-shiroi-green hover:underline"
+                      className="text-sm font-medium text-shiroi-gold-dark hover:underline"
                     >
                       {ec.contacts?.name}
                     </Link>

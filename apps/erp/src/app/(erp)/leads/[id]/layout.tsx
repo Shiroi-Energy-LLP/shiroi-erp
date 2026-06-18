@@ -114,7 +114,7 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
           {/* Detailed quote CTA — prominent when no detailed proposal exists yet */}
           {needsDetailedProposalNudge && (
             <Link href={`/leads/${id}/proposal`}>
-              <Button size="sm" className="bg-shiroi-green hover:bg-shiroi-green/90 text-white">
+              <Button size="sm" className="bg-shiroi-gold hover:bg-shiroi-gold/90 text-shiroi-ink">
                 Create Detailed Quote
               </Button>
             </Link>

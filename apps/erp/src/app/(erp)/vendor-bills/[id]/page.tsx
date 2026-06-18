@@ -134,11 +134,11 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
 
       {/* ── AI Extraction Review Section (only when pending_review) ──────────── */}
       {isPendingReview && (
-        <Card className="border-2 border-[#00B050] bg-[#f0faf4]">
+        <Card className="border-2 border-[#E08A00] bg-[#FCF3E2]">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Bot className="h-5 w-5 text-[#00B050]" />
+                <Bot className="h-5 w-5 text-[#B45309]" />
                 AI Extraction Review
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -255,7 +255,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
                         href={pdfSignedUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-[#00B050] hover:underline flex items-center gap-1"
+                        className="text-xs text-[#B45309] hover:underline flex items-center gap-1"
                       >
                         <FileText className="h-3 w-3" />
                         Open in new tab
@@ -296,7 +296,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="font-semibold">
-                <Link href={`/vendors/${vendor?.id}`} className="hover:underline text-[#00B050]">
+                <Link href={`/vendors/${vendor?.id}`} className="hover:underline text-[#B45309]">
                   {vendor?.company_name ?? '—'}
                 </Link>
               </div>
@@ -333,7 +333,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
               {project && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Project</span>
-                  <Link href={`/projects/${bill.project_id}`} className="hover:underline text-[#00B050]">
+                  <Link href={`/projects/${bill.project_id}`} className="hover:underline text-[#B45309]">
                     {project.project_number}
                   </Link>
                 </div>

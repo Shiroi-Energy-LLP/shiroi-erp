@@ -64,7 +64,7 @@ export default async function EmployeeProfilePage({ params }: EmployeeProfilePag
           </Badge>
           <Link
             href={`/hr/${id}`}
-            className="text-sm text-[#00B050] hover:underline"
+            className="text-sm text-[#B45309] hover:underline"
           >
             Full Detail &rarr;
           </Link>

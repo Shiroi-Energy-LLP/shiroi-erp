@@ -46,7 +46,7 @@ export default async function AllLeaveRequestsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr/leave" className="text-sm text-[#00B050] hover:underline">
+          <Link href="/hr/leave" className="text-sm text-[#B45309] hover:underline">
             &larr; Back to Leave Management
           </Link>
           <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">All Leave Requests</h1>

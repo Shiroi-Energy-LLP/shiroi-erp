@@ -193,7 +193,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
           href="/data-quality"
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
             !entityTypeFilter && !flagTypeFilter
-              ? 'bg-[#00B050] text-white'
+              ? 'bg-[#E08A00] text-[#1F1709]'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
@@ -205,7 +205,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
             href={`/data-quality?entity_type=${et}`}
             className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
               entityTypeFilter === et
-                ? 'bg-[#00B050] text-white'
+                ? 'bg-[#E08A00] text-[#1F1709]'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -245,7 +245,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                     return (
                       <tr key={flag.id} className="border-b last:border-0 hover:bg-gray-50">
                         <td className="px-4 py-3">
-                          <Link href={href} className="text-sm text-[#00B050] hover:underline capitalize">
+                          <Link href={href} className="text-sm text-[#B45309] hover:underline capitalize">
                             {flag.entity_type.replace(/_/g, ' ')}
                           </Link>
                           <p className="text-xs text-gray-400 font-mono">{flag.entity_id.slice(0, 8)}...</p>

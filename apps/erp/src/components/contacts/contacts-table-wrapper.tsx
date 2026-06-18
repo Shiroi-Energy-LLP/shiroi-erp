@@ -60,7 +60,7 @@ export function ContactsTableWrapper({
       onCellEdit={handleCellEdit}
       bulkActions={
         selectedIds.length > 0 ? (
-          <span className="text-xs text-shiroi-green font-medium ml-2">
+          <span className="text-xs text-shiroi-gold-dark font-medium ml-2">
             {selectedIds.length} selected
           </span>
         ) : null

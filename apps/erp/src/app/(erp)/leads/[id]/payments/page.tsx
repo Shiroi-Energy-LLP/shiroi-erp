@@ -97,7 +97,7 @@ export default async function PaymentsTab({ params }: PaymentsTabProps) {
           <CardContent className="pt-4 pb-3">
             <div className="text-xs font-medium text-n-500 uppercase">Project Progress</div>
             <div className="text-xl font-bold text-n-900 mt-1">{project.completion_pct}%</div>
-            <Link href={`/projects/${project.id}`} className="text-xs text-shiroi-green hover:underline">
+            <Link href={`/projects/${project.id}`} className="text-xs text-shiroi-gold-dark hover:underline">
               {project.project_number}
             </Link>
           </CardContent>

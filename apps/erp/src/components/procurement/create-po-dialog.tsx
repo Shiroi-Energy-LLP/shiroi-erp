@@ -139,7 +139,7 @@ export function CreatePODialog({ projects, vendors }: CreatePODialogProps) {
                 <select
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-[#00B050]"
+                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-[#E08A00]"
                 >
                   <option value="">Select project...</option>
                   {projects.map((p) => (
@@ -152,7 +152,7 @@ export function CreatePODialog({ projects, vendors }: CreatePODialogProps) {
                 <select
                   value={vendorId}
                   onChange={(e) => setVendorId(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-[#00B050]"
+                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-[#E08A00]"
                 >
                   <option value="">Select vendor...</option>
                   {vendors.map((v) => (

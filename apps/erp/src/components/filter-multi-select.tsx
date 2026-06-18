@@ -85,7 +85,7 @@ export function FilterMultiSelect({
         onClick={() => setOpen((o) => !o)}
         className={`inline-flex items-center gap-1.5 h-9 px-3 text-sm border rounded-md bg-white hover:bg-n-50 transition-colors ${
           selected.length > 0
-            ? 'border-shiroi-green text-shiroi-green font-medium'
+            ? 'border-shiroi-gold text-shiroi-gold-dark font-medium'
             : 'border-n-200 text-n-700'
         }`}
       >
@@ -95,7 +95,7 @@ export function FilterMultiSelect({
             role="button"
             aria-label="Clear filter"
             onClick={clear}
-            className="ml-0.5 flex items-center justify-center w-4 h-4 rounded-full hover:bg-shiroi-green/10 text-shiroi-green"
+            className="ml-0.5 flex items-center justify-center w-4 h-4 rounded-full hover:bg-shiroi-gold/10 text-shiroi-gold-dark"
           >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
               <path d="M2 2l6 6M8 2L2 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -126,7 +126,7 @@ export function FilterMultiSelect({
                   type="checkbox"
                   checked={checked}
                   onChange={() => toggle(opt.value)}
-                  className="h-3.5 w-3.5 rounded border-n-300 accent-shiroi-green"
+                  className="h-3.5 w-3.5 rounded border-n-300 accent-shiroi-gold"
                 />
                 <span className={checked ? 'text-n-900 font-medium' : 'text-n-700'}>
                   {opt.label}

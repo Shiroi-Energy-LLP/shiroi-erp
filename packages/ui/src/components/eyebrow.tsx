@@ -9,8 +9,8 @@ interface EyebrowProps {
 function Eyebrow({ children, className }: EyebrowProps) {
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      <div className="w-3.5 h-0.5 rounded-full bg-shiroi-green shrink-0" />
-      <span className="text-[10px] font-heading font-bold uppercase tracking-[0.14em] text-shiroi-green">
+      <div className="w-3.5 h-0.5 rounded-full bg-shiroi-gold shrink-0" />
+      <span className="text-[10px] font-heading font-bold uppercase tracking-[0.14em] text-shiroi-gold-dark">
         {children}
       </span>
     </div>

@@ -82,7 +82,7 @@ function SignDialog({ projectId, certificateType, onClose, onSigned }: SignDialo
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               placeholder="Full name as per KYC"
-              className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30"
+              className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30"
               required
             />
           </div>
@@ -96,7 +96,7 @@ function SignDialog({ projectId, certificateType, onClose, onSigned }: SignDialo
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               placeholder="+91 99999 99999"
-              className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30"
+              className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30"
               required
             />
           </div>
@@ -108,7 +108,7 @@ function SignDialog({ projectId, certificateType, onClose, onSigned }: SignDialo
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="Optional remarks"
-              className="w-full rounded-md border border-n-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30 resize-none"
+              className="w-full rounded-md border border-n-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30 resize-none"
             />
           </div>
 
@@ -213,7 +213,7 @@ export function DcCertificatesPanel({ projectId, certificates, viewerRole }: DcC
                 ) : canSign ? (
                   <button
                     onClick={() => setSigningType(type)}
-                    className="flex items-center gap-1 text-xs text-shiroi-green hover:underline font-medium"
+                    className="flex items-center gap-1 text-xs text-shiroi-gold-dark hover:underline font-medium"
                   >
                     <Pen className="h-3 w-3" />
                     Sign

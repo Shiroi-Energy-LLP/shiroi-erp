@@ -1,22 +1,17 @@
 import './globals.css';
-import { Inter, DM_Sans, JetBrains_Mono, Rajdhani } from 'next/font/google';
+import { Archivo, IBM_Plex_Sans, Rajdhani } from 'next/font/google';
 import { ToastProvider } from '@repo/ui';
 
-const inter = Inter({
+const archivo = Archivo({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-archivo',
 });
 
-const dmSans = DM_Sans({
+const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-dm-sans',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-jetbrains-mono',
+  variable: '--font-ibm-plex-sans',
 });
 
 const rajdhani = Rajdhani({
@@ -38,7 +33,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body
-        className={`${inter.variable} ${dmSans.variable} ${jetbrainsMono.variable} ${rajdhani.variable} font-sans antialiased`}
+        className={`${archivo.variable} ${ibmPlexSans.variable} ${rajdhani.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
         <ToastProvider>{children}</ToastProvider>

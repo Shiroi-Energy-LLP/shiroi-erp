@@ -147,7 +147,7 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
                       <div className="min-w-0 flex-1">
                         <button
                           onClick={() => isImage ? openImage(file) : handleDownload(file.name)}
-                          className="text-[#00B050] hover:underline truncate block text-left text-[13px]"
+                          className="text-[#B45309] hover:underline truncate block text-left text-[13px]"
                           title={file.name}
                         >
                           {file.name.replace(/^\d+_/, '')}
@@ -166,7 +166,7 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
                         />
                         <button
                           onClick={() => isImage ? openImage(file) : handleDownload(file.name)}
-                          className="p-1 text-[#7C818E] hover:text-[#00B050]"
+                          className="p-1 text-[#7C818E] hover:text-[#B45309]"
                           title={isImage ? 'View' : 'Download'}
                         >
                           <Download className="h-3.5 w-3.5" />
