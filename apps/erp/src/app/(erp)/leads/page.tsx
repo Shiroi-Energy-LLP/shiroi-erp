@@ -85,31 +85,23 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   const kwpMax = params.kwpMax ? parseFloat(params.kwpMax) : undefined;
   const referrerParam = params.referrer;
 
-  const [
-    views,
-    stageCounts,
-    closingThisWeek,
-    employees,
-    internalReferrers,
-    externalPartnerIds,
-    closingThisWeekWindow,
-    closingThisMonthWindow,
-  ] = await Promise.all([
-    getMyViews('leads'),
-    getLeadStageCounts(),
-    getLeadsClosingBetween(weekStart, weekEnd),
-    getSalesEngineers(),
-    getInternalReferrers(),
-    getExternalPartnerIds(),
-    getPipelineCloseWindow(weekStart, weekEnd),
-    getPipelineCloseWindow(monthStart, monthEnd),
-  ]);
-
-  const { referrerIds, noReferrer } = resolveReferrerFilter(
-    referrerParam,
-    internalReferrers.map((r) => r.id),
-    externalPartnerIds,
-  );
+  // Only the 'mgmt' / 'customer' referrer modes need a channel_partners lookup
+  // to resolve their id list; every other mode ('none', unset) does not. These
+  // lookups feed resolveReferrerFilter only — they are not rendered — so resolve
+  // them up front and ONLY when needed. This keeps the common load from firing
+  // two extra queries and lets getLeads join the parallel batch below instead of
+  // running as a serial second wave.
+  let referrerIds: string[] | undefined;
+  let noReferrer: boolean | undefined;
+  if (referrerParam === 'mgmt') {
+    const internalReferrers = await getInternalReferrers();
+    ({ referrerIds, noReferrer } = resolveReferrerFilter(referrerParam, internalReferrers.map((r) => r.id), []));
+  } else if (referrerParam === 'customer') {
+    const externalPartnerIds = await getExternalPartnerIds();
+    ({ referrerIds, noReferrer } = resolveReferrerFilter(referrerParam, [], externalPartnerIds));
+  } else {
+    ({ referrerIds, noReferrer } = resolveReferrerFilter(referrerParam, [], []));
+  }
 
   const leadsFilters: LeadFilters = {
     status: statusFilter,
@@ -130,7 +122,27 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
     dir: (params.dir as 'asc' | 'desc') || undefined,
   };
 
-  const result = await getLeads(leadsFilters);
+  // Fetch the table data alongside the page chrome in one parallel batch.
+  // getLeads is the heaviest query here, so overlapping it with the summary /
+  // nav / filter lookups (rather than awaiting it afterwards) shortens the
+  // critical path — important while the dev DB is CPU-constrained.
+  const [
+    result,
+    views,
+    stageCounts,
+    closingThisWeek,
+    employees,
+    closingThisWeekWindow,
+    closingThisMonthWindow,
+  ] = await Promise.all([
+    getLeads(leadsFilters),
+    getMyViews('leads'),
+    getLeadStageCounts(),
+    getLeadsClosingBetween(weekStart, weekEnd),
+    getSalesEngineers(),
+    getPipelineCloseWindow(weekStart, weekEnd),
+    getPipelineCloseWindow(monthStart, monthEnd),
+  ]);
 
   // Build current filter params for view saving
   const currentFilters: Record<string, string> = {};
