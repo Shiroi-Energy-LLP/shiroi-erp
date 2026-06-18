@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic';
 interface Props {
   searchParams: Promise<{
     project?: string;
+    search?: string;
     from?: string;
     to?: string;
     stage?: string;
@@ -46,7 +47,7 @@ export default async function ActivitiesPage({ searchParams }: Props) {
   };
 
   const [{ rows, hasMore }, summary, stages, projects, profile] = await Promise.all([
-    listProjectActivities({ ...filters, page }),
+    listProjectActivities({ ...filters, search: params.search || undefined, page }),
     getActivitiesSummary(filters),
     getActivityStageOptions(),
     getProjectOptionsForActivities(),
@@ -58,6 +59,7 @@ export default async function ActivitiesPage({ searchParams }: Props) {
   function pageHref(p: number): string {
     const sp = new URLSearchParams();
     if (params.project) sp.set('project', params.project);
+    if (params.search) sp.set('search', params.search);
     if (params.from) sp.set('from', params.from);
     if (params.to) sp.set('to', params.to);
     if (params.stage) sp.set('stage', params.stage);
@@ -93,7 +95,7 @@ export default async function ActivitiesPage({ searchParams }: Props) {
       </div>
 
       <Suspense>
-        <GlobalActivitiesFilters projects={projects} stages={stages} />
+        <GlobalActivitiesFilters stages={stages} />
       </Suspense>
 
       <ActivitiesClient

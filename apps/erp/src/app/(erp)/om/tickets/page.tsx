@@ -1,13 +1,11 @@
 import * as React from 'react';
 import { getAllTickets, getServiceTicketAmountTotal } from '@/lib/service-ticket-actions';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
-import { getProjectsWithTickets } from '@/lib/ticket-queries';
 import { formatDate } from '@repo/ui/formatters';
 import { CreateTicketDialog } from '@/components/om/create-ticket-dialog';
 import { EditTicketDialog } from '@/components/om/edit-ticket-dialog';
 import { DeleteTicketButton } from '@/components/om/delete-ticket-button';
 import { TicketStatusToggle } from '@/components/om/ticket-status-toggle';
-import { SearchableProjectFilter } from '@/components/tasks/searchable-project-filter';
 import {
   Card,
   CardContent,
@@ -86,7 +84,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  const [{ tickets, total }, employees, projects, filterProjects, totalServiceAmount] = await Promise.all([
+  const [{ tickets, total }, employees, projects, totalServiceAmount] = await Promise.all([
     getAllTickets({
       status: params.status || undefined,
       severity: params.severity || undefined,
@@ -99,7 +97,6 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
     }),
     getActiveEmployees(),
     getActiveProjects(),
-    getProjectsWithTickets(),
     getServiceTicketAmountTotal(),
   ]);
 
@@ -169,10 +166,9 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                 <option key={emp.id} value={emp.id}>{emp.full_name}</option>
               ))}
             </FilterSelect>
-            <SearchableProjectFilter projects={filterProjects} basePath="/om/tickets" />
             <SearchInput
-              placeholder="Search ticket..."
-              className="w-48 h-8 text-xs"
+              placeholder="Search customer, project, or ticket…"
+              className="w-64 h-8 text-xs"
             />
           </FilterBar>
         </CardContent>

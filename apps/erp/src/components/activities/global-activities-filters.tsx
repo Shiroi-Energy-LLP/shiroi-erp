@@ -3,15 +3,14 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input, Select, Button } from '@repo/ui';
-import { ProjectCombobox } from '@/components/forms/project-combobox';
+import { SearchInput } from '@/components/search-input';
 import type { ActivityStageOption } from '@/lib/project-activities-constants';
 
 interface GlobalActivitiesFiltersProps {
-  projects: { id: string; project_number: string | null; customer_name: string }[];
   stages: ActivityStageOption[];
 }
 
-export function GlobalActivitiesFilters({ projects, stages }: GlobalActivitiesFiltersProps) {
+export function GlobalActivitiesFilters({ stages }: GlobalActivitiesFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -24,17 +23,15 @@ export function GlobalActivitiesFilters({ projects, stages }: GlobalActivitiesFi
     router.replace(qs ? `/activities?${qs}` : '/activities');
   }
 
-  const hasAny = ['project', 'from', 'to', 'stage'].some((k) => !!searchParams.get(k));
+  const hasAny = ['project', 'search', 'from', 'to', 'stage'].some((k) => !!searchParams.get(k));
 
   return (
     <div className="flex items-end gap-2 flex-wrap">
       <div className="w-[260px]">
-        <label className="block text-[10px] text-n-500 mb-0.5">Project</label>
-        <ProjectCombobox
-          projects={projects}
-          value={searchParams.get('project') ?? ''}
-          onChange={(id) => setParam('project', id)}
-          inputClassName="h-8 text-xs"
+        <label className="block text-[10px] text-n-500 mb-0.5">Search</label>
+        <SearchInput
+          placeholder="Search customer, project, or activity…"
+          className="h-8 text-xs w-full"
         />
       </div>
       <div>
