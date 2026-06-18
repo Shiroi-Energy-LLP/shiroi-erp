@@ -156,7 +156,7 @@ export function ProjectsTableWrapper({
         views={views}
         activeViewId={activeViewId}
         linkPrefix="/projects"
-        linkField="project_number"
+        linkField="customer_project"
         onSelectionChange={setSelectedIds}
         selectedIds={selectedIds}
         onCellEdit={handleCellEdit}

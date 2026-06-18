@@ -535,6 +535,13 @@ export function DataTable({
       );
     }
 
+    // Project # on the projects list — the row link is now Customer — Project, so this
+    // column (hidden by default) renders as a plain, prefix-stripped code rather than a
+    // second link. Scoped to projects so the purchase-orders project_number cell is untouched.
+    if (col.key === 'project_number' && entityType === 'projects') {
+      return <span className="text-sm">{formatProjectNumber(val as string | null)}</span>;
+    }
+
     // Activities — link to the project's Execution → Activities sub-tab.
     if (col.fieldType === 'activities_link') {
       return (
