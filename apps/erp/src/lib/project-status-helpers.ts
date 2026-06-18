@@ -13,7 +13,7 @@ const STATUS_ORDER: string[] = [
   'completed',
 ];
 
-const STATUS_LABELS: Record<string, string> = {
+export const STATUS_LABELS: Record<string, string> = {
   order_received: 'Order Received',
   yet_to_start: 'Yet to Start',
   in_progress: 'In Progress',

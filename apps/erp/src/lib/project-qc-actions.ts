@@ -133,20 +133,6 @@ export async function requestQcRework(input: {
   return { success: true };
 }
 
-// ── Helper: Get milestones for QC form dropdown ──
-
-export async function getProjectMilestones(projectId: string): Promise<{ id: string; milestone_name: string; milestone_order: number }[]> {
-  const op = '[getProjectMilestones]';
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('project_milestones')
-    .select('id, milestone_name, milestone_order')
-    .eq('project_id', projectId)
-    .order('milestone_order', { ascending: true });
-
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return [];
-  }
-  return data ?? [];
-}
+// Note: getProjectMilestones lives in projects-queries.ts (the live one used by
+// the milestones page). A dead duplicate here was removed in the 2026-06-18
+// redundancy sweep — it had zero import sites.

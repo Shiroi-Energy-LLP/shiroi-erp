@@ -13,8 +13,8 @@ Your instinct was right. The repo's append-only habit (migrations never rewritte
 | Area | Redundant found | Acted now | Flagged for your call |
 |---|---:|---:|---:|
 | **Indexes — exact-key duplicate/shadowed** | 25 | **25 dropped (mig 188, dev)** | — |
-| **Indexes — prefix-shadowed (wider survivor)** | 20 | — | 20 |
-| **Indexes — reversed-column-order near-dup** | 1 | — | 1 |
+| **Indexes — prefix-shadowed (wider survivor)** | 20 | **16 cold dropped (mig 189)** | 4 hot kept |
+| **Indexes — reversed-column-order near-dup** | 1 | **1 dropped (mig 189)** | — |
 | **Indexes — never-scanned in dev (cold, not dup)** | ~40 | — | appendix |
 | **SQL functions / triggers / constraints** | 0 | — | — (clean) |
 | **Overlapping columns (`x` + `x_id`)** | 0 | — | — (clean) |
@@ -28,7 +28,7 @@ Your instinct was right. The repo's append-only habit (migrations never rewritte
 2. **`CreateTask` vs `CreateQuickTask`** → **real overlap.** `createQuickTask` is a narrower copy of the universal `createTask` (same `tasks` table). It's one of a *cluster* of parallel task-write paths. Details in §3. Flagged, not auto-changed (behaviour risk).
 3. **"Drop the 2 duplicate company indexes"** → **already done** by mig 187 (committed today). This sweep found **25 more** of the same kind across the ERP and dropped them in mig 188.
 
-**"Do we have a lot of these things?"** — At the schema level, yes: **46 redundant index objects** (4 in mig 187 + 25 in mig 188 + 17 still flagged), i.e. ~7% of the 661 plain indexes were redundant. At the code level, the duplication is moderate and concentrated in a few clear clusters (task-writes, invoice/payment dialogs, `formatINR`, status-label maps). None of it is catastrophic; all of it is cleanable.
+**"Do we have a lot of these things?"** — At the schema level, yes: **46 redundant index objects** (4 in mig 187 + 25 in mig 188 + 17 in mig 189), i.e. ~7% of the 661 plain indexes were redundant — **all now dropped on dev** (only 4 hot prefix-shadowed kept by choice). At the code level, the duplication is moderate and concentrated in a few clear clusters (task-writes, invoice/payment dialogs, `formatINR`, status-label maps). None of it is catastrophic; all of it is cleanable.
 
 ---
 

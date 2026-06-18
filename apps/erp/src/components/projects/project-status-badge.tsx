@@ -1,5 +1,7 @@
 import { Badge } from '@repo/ui';
 import type { Database } from '@repo/types/database';
+// Single source of truth for the status→label map (no 'use server', client-safe).
+import { STATUS_LABELS } from '@/lib/project-status-helpers';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -14,23 +16,12 @@ const STATUS_VARIANT: Record<ProjectStatus, 'info' | 'pending' | 'warning' | 'su
   meter_client_scope: 'info',
 };
 
-const STATUS_LABEL: Record<ProjectStatus, string> = {
-  order_received: 'Order Received',
-  yet_to_start: 'Yet to Start',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  holding_shiroi: 'Holding from Shiroi',
-  holding_client: 'Holding from Client',
-  waiting_net_metering: 'Waiting for Net Metering',
-  meter_client_scope: 'Meter - Client Scope',
-};
-
 export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   return (
     <Badge variant={STATUS_VARIANT[status]}>
-      {STATUS_LABEL[status]}
+      {STATUS_LABELS[status]}
     </Badge>
   );
 }
 
-export { STATUS_LABEL as PROJECT_STATUS_LABELS };
+export { STATUS_LABELS as PROJECT_STATUS_LABELS };
