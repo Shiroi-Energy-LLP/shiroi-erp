@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatINR, shortINR, toIST, formatDate } from './formatters';
+import { formatINR, formatRate, shortINR, toIST, formatDate } from './formatters';
 
 describe('formatINR', () => {
   it('formats whole rupees with Indian grouping', () => {
@@ -7,6 +7,20 @@ describe('formatINR', () => {
   });
   it('formats crores correctly', () => {
     expect(formatINR(10000000)).toBe('₹1,00,00,000');
+  });
+  it('rounds paise away — full INR only (2026-06-18 policy)', () => {
+    expect(formatINR(1234.78)).toBe('₹1,235');
+    expect(formatINR(1234.4)).toBe('₹1,234');
+  });
+});
+
+describe('formatRate', () => {
+  it('keeps up to 2 decimals for unit rates', () => {
+    expect(formatRate(14.5)).toBe('₹14.5');
+    expect(formatRate(1234.78)).toBe('₹1,234.78');
+  });
+  it('drops trailing zeros for whole rates', () => {
+    expect(formatRate(1500)).toBe('₹1,500');
   });
 });
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { getAllTickets, getServiceTicketAmountTotal } from '@/lib/service-ticket-actions';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
-import { formatDate } from '@repo/ui/formatters';
+import { formatDate, formatINR as formatINRBase } from '@repo/ui/formatters';
 import { CreateTicketDialog } from '@/components/om/create-ticket-dialog';
 import { EditTicketDialog } from '@/components/om/edit-ticket-dialog';
 import { DeleteTicketButton } from '@/components/om/delete-ticket-button';
@@ -59,12 +59,7 @@ function severityVariant(severity: string): 'error' | 'warning' | 'info' | 'outl
 
 function formatINR(amount: number): string {
   if (!amount) return '—';
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return formatINRBase(amount);
 }
 
 interface TicketsPageProps {

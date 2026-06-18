@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Badge } from '@repo/ui';
 import { updateCellValue } from '@/lib/inline-edit-actions';
 import { DataFlagButton } from '@/components/data-flag-button';
+import { formatINR as formatINRBase } from '@repo/ui/formatters';
 
 const CATEGORY_LABELS: Record<string, string> = {
   panel: 'Panel', inverter: 'Inverter', battery: 'Battery', structure: 'Structure',
@@ -85,8 +86,7 @@ export function BomReviewTable({ data }: { data: BomLine[] }) {
     );
   };
 
-  const formatINR = (amount: number) =>
-    amount > 0 ? `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : '—';
+  const formatINR = (amount: number) => (amount > 0 ? formatINRBase(amount) : '—');
 
   return (
     <div className="overflow-x-auto">

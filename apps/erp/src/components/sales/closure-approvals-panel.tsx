@@ -14,15 +14,7 @@ import {
 } from '@repo/ui';
 import { listPendingClosureApprovals } from '@/lib/closure-queries';
 import { ClosureApprovalActions } from './closure-approval-actions';
-
-function formatINR(n: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+import { formatINR } from '@repo/ui/formatters';
 
 /**
  * Founder-only panel showing pending amber-band closure approval requests.

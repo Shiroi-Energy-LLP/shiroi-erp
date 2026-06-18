@@ -10,7 +10,7 @@ import { DataFlagButton } from '@/components/data-flag-button';
 import { PoRateInlineEdit } from '@/components/procurement/po-rate-inline-edit';
 import { PoDownloadButton } from '@/components/procurement/po-download-button';
 import { PoDeleteButton } from '@/components/procurement/po-delete-button';
-import { formatDate } from '@repo/ui/formatters';
+import { formatDate, formatINR as formatINRBase } from '@repo/ui/formatters';
 
 function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -23,7 +23,7 @@ function statusVariant(status: string): 'default' | 'secondary' | 'destructive' 
 
 function formatINR(amount: number | null): string {
   if (!amount) return '—';
-  return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return formatINRBase(amount);
 }
 
 interface PageProps {

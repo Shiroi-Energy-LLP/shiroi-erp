@@ -23,6 +23,7 @@ import {
   removeBomLine,
   updateBomLineQuantity,
 } from '@/lib/quote-actions';
+import { formatINR } from '@repo/ui/formatters';
 
 export interface BomLineRow {
   id: string;
@@ -51,15 +52,6 @@ interface BomPickerProps {
   priceBookOptions: PriceBookOption[];
   /** When true, the picker is disabled (e.g. proposal already sent). */
   readOnly?: boolean;
-}
-
-function formatINR(n: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
 }
 
 export function BomPicker({

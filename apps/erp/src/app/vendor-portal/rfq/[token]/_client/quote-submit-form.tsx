@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { submitQuoteFromVendor } from '@/lib/vendor-portal-actions';
 import type { PublicRfqShape } from '@/lib/vendor-portal-queries';
+import { formatINR } from '@repo/ui/formatters';
 
 type LineState = {
   rfqItemId: string;
@@ -241,13 +242,4 @@ export function QuoteSubmitForm({
       </div>
     </form>
   );
-}
-
-function formatINR(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle, Select, Badge } from '@repo/ui';
 import { Handshake, X } from 'lucide-react';
 import { assignPartnerToLead, unassignPartnerFromLead } from '@/lib/partners-actions';
+import { formatINR } from '@repo/ui/formatters';
 
 interface PartnerOption {
   id: string;
@@ -21,15 +22,6 @@ interface ConsultantPickerProps {
   lockedCommissionAmount: number | null;
   basePrice: number | null;
   availablePartners: PartnerOption[];
-}
-
-function formatINR(n: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
 }
 
 const COMMISSION_TYPE_LABELS: Record<string, string> = {

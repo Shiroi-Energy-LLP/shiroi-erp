@@ -16,6 +16,7 @@ import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
 import { Handshake } from 'lucide-react';
+import { formatINR } from '@repo/ui/formatters';
 
 const PARTNER_TYPE_LABELS: Record<string, string> = {
   individual_broker: 'Individual Broker',
@@ -47,15 +48,6 @@ function formatCommissionRate(type: string, rate: number): string {
   if (type === 'percentage_of_revenue') return `${rate}%`;
   if (type === 'fixed_per_deal') return `\u20B9${rate.toLocaleString('en-IN')}`;
   return String(rate);
-}
-
-function formatINR(value: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 interface PartnersPageProps {

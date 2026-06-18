@@ -1,4 +1,20 @@
+// Whole-rupee INR display — paise are NOT shown (rounded to the nearest rupee).
+// Org-wide policy (2026-06-18, Vivek): "full INR only, paise not needed".
+// For per-unit rates that need decimal precision (e.g. ₹14.50/Wp) use formatRate().
+// Display-only — the underlying stored/computed values keep full precision.
 export function formatINR(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+// Precise INR for unit prices / rates — shows up to 2 decimals when present
+// (e.g. ₹14.50/Wp). Use this where rounding to whole rupees would be misleading;
+// use formatINR() for amounts and totals.
+export function formatRate(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
