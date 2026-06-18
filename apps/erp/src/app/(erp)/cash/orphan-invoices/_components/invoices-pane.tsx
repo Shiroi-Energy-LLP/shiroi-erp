@@ -69,7 +69,7 @@ export function InvoicesPane({ zohoCustomerName }: Props) {
   if (!zohoCustomerName) {
     return (
       <Card>
-        <CardContent className="py-12 text-center text-[#7C818E]">
+        <CardContent className="py-12 text-center text-n-500">
           Select a customer on the left to start triage.
         </CardContent>
       </Card>
@@ -95,7 +95,7 @@ export function InvoicesPane({ zohoCustomerName }: Props) {
         <TabsContent value="invoices" className="space-y-3">
           {bundle.invoices.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-[#7C818E]">
+              <CardContent className="py-8 text-center text-n-500">
                 No pending invoices for this customer.
               </CardContent>
             </Card>
@@ -146,7 +146,7 @@ export function InvoicesPane({ zohoCustomerName }: Props) {
         <TabsContent value="advances" className="space-y-2">
           {bundle.orphan_payments_no_invoice.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-[#7C818E]">
+              <CardContent className="py-8 text-center text-n-500">
                 No advance payments.
               </CardContent>
             </Card>
@@ -156,7 +156,7 @@ export function InvoicesPane({ zohoCustomerName }: Props) {
                 <CardContent className="p-3 flex justify-between items-center">
                   <div>
                     <p className="text-sm font-bold">{p.receipt_number}</p>
-                    <p className="text-xs text-[#7C818E]">
+                    <p className="text-xs text-n-500">
                       {formatDate(p.payment_date)} · {p.payment_method ?? '—'} ·{' '}
                       {formatINR(Number(p.amount))}
                     </p>

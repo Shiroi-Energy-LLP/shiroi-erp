@@ -75,7 +75,7 @@ export default async function OmVisitsPage() {
         <Card>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-sm text-[#7C818E]">No data available. Could not load visit data.</p>
+              <p className="text-sm text-n-500">No data available. Could not load visit data.</p>
             </div>
           </CardContent>
         </Card>
@@ -103,7 +103,7 @@ export default async function OmVisitsPage() {
           <Eyebrow className="mb-1">O&M VISITS</Eyebrow>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
             O&M Visits{' '}
-            <span className="text-base font-normal text-[#7C818E]">
+            <span className="text-base font-normal text-n-500">
               ({scheduled.length} scheduled, {visits.length} reports)
             </span>
           </h1>

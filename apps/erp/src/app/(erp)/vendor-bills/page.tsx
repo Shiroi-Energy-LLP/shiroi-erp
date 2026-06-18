@@ -154,7 +154,7 @@ export default async function VendorBillsPage({ searchParams }: PageProps) {
                     <TableCell className="font-mono text-sm">
                       <Link
                         href={`/vendor-bills/${bill.id}`}
-                        className="text-[#B45309] hover:underline"
+                        className="text-shiroi-gold-dark hover:underline"
                       >
                         {bill.bill_number}
                       </Link>

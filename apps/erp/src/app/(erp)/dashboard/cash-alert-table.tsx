@@ -64,7 +64,7 @@ export function CashAlertTable({ projects }: { projects: CashProject[] }) {
             {projects.map((p) => (
               <TableRow key={p.project_id}>
                 <TableCell>
-                  <Link href={`/projects/${p.project_id}`} className="text-[#B45309] hover:underline font-medium">
+                  <Link href={`/projects/${p.project_id}`} className="text-shiroi-gold-dark hover:underline font-medium">
                     {p.projects.project_number}
                   </Link>
                 </TableCell>

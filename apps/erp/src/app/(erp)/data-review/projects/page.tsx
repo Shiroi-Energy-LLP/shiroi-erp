@@ -50,12 +50,12 @@ export default async function DataReviewProjectsPage({
       />
       <div>
         <h1 className="text-2xl font-bold text-[#1A1D24]">Project Data Review</h1>
-        <p className="text-sm text-[#7C818E]">
+        <p className="text-sm text-n-500">
           Confirm system size + order value for all {counts.all_projects} projects. One-time sweep.
         </p>
       </div>
 
-      <Suspense fallback={<div className="p-6 text-sm text-[#7C818E]">Loading…</div>}>
+      <Suspense fallback={<div className="p-6 text-sm text-n-500">Loading…</div>}>
         <DataReviewShell
           tab={tab}
           counts={counts}

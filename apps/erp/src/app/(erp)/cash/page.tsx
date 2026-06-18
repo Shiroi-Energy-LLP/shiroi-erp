@@ -199,7 +199,7 @@ export default async function CashFlowPage() {
                       <TableCell>
                         <Link
                           href={`/cash/${pos.project_id}`}
-                          className="text-[#B45309] hover:underline font-medium"
+                          className="text-shiroi-gold-dark hover:underline font-medium"
                         >
                           {project?.project_number ?? '—'}
                         </Link>
@@ -275,7 +275,7 @@ export default async function CashFlowPage() {
                       <TableCell>
                         <Link
                           href={`/cash/${inv.project_id}`}
-                          className="text-[#B45309] hover:underline"
+                          className="text-shiroi-gold-dark hover:underline"
                         >
                           {project?.project_number ?? '—'}
                         </Link>

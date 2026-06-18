@@ -81,7 +81,7 @@ export async function SalesDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Phone className="h-4 w-4 text-[#B45309]" />
+                <Phone className="h-4 w-4 text-shiroi-gold-dark" />
                 Follow-ups Today
               </CardTitle>
               <Badge variant={data.followUpsToday.length > 0 ? 'warning' : 'neutral'}>

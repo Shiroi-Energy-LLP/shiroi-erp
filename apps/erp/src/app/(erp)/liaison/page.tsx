@@ -83,7 +83,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
       <div>
         <Eyebrow className="mb-1">LIAISON</Eyebrow>
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Liaison</h1>
-        <p className="text-sm text-[#7C818E] mt-1">
+        <p className="text-sm text-n-500 mt-1">
           CEIG clearances, TNEB net-metering applications, and follow-up tracking.
         </p>
       </div>
@@ -102,7 +102,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                     <Icon className={`h-4 w-4 ${card.iconColor}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs text-[#7C818E] leading-tight">{card.label}</p>
+                    <p className="text-xs text-n-500 leading-tight">{card.label}</p>
                     <p className="text-xl font-heading font-bold text-[#1A1D24]">
                       {summary[card.summaryKey]}
                     </p>
@@ -120,7 +120,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
           <span className="text-xs text-n-600">
             Filtered: {CARD_DEFS.find((c) => c.key === activeFilter)?.label}
           </span>
-          <Link href="/liaison" className="text-xs text-[#B45309] hover:underline">
+          <Link href="/liaison" className="text-xs text-shiroi-gold-dark hover:underline">
             × Clear
           </Link>
         </div>
@@ -161,7 +161,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                           {app.projects ? (
                             <Link
                               href={`/liaison/net-metering/${app.project_id}`}
-                              className="font-medium text-n-900 hover:text-[#B45309] hover:underline"
+                              className="font-medium text-n-900 hover:text-shiroi-gold-dark hover:underline"
                             >
                               {app.projects.project_number} — {app.projects.customer_name}
                             </Link>

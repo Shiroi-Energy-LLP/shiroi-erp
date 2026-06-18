@@ -62,7 +62,7 @@ export default async function LeaveManagementPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr" className="text-sm text-[#B45309] hover:underline">
+          <Link href="/hr" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to HR
           </Link>
           <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">Leave Management</h1>
@@ -147,7 +147,7 @@ export default async function LeaveManagementPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-[#B45309]" />
+            <CalendarDays className="h-5 w-5 text-shiroi-gold-dark" />
             On Leave This Month
             <span className="text-sm font-normal text-gray-500 ml-1">
               {new Date(year, month - 1, 1).toLocaleString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })}
@@ -208,7 +208,7 @@ export default async function LeaveManagementPage() {
 
       {/* All requests link */}
       <div className="text-center">
-        <Link href="/hr/leave/all" className="text-sm text-[#B45309] hover:underline">
+        <Link href="/hr/leave/all" className="text-sm text-shiroi-gold-dark hover:underline">
           View all leave requests &rarr;
         </Link>
       </div>

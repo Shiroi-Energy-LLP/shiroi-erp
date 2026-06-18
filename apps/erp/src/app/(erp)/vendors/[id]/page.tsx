@@ -231,7 +231,7 @@ export default async function VendorDetailPage({ params }: PageProps) {
                     {bills.map(b => (
                       <TableRow key={b.id}>
                         <TableCell className="font-mono text-sm">
-                          <Link href={`/vendor-bills/${b.id}`} className="text-[#B45309] hover:underline">
+                          <Link href={`/vendor-bills/${b.id}`} className="text-shiroi-gold-dark hover:underline">
                             {b.bill_number}
                           </Link>
                         </TableCell>

@@ -92,7 +92,7 @@ export function BomReviewTable({ data }: { data: BomLine[] }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-xs font-medium text-[#7C818E]">
+          <tr className="border-b text-left text-xs font-medium text-n-500">
             <th className="px-3 py-2 w-8">#</th>
             <th className="px-3 py-2 min-w-[200px]">Item Description</th>
             <th className="px-3 py-2">Category</th>

@@ -90,7 +90,7 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
             <Columns3 className="h-4 w-4" />
             Edit Columns
           </h3>
-          <button onClick={() => onOpenChange(false)} className="text-[#7C818E] hover:text-[#1A1D24]">
+          <button onClick={() => onOpenChange(false)} className="text-n-500 hover:text-[#1A1D24]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -128,7 +128,7 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
           {/* Right: Selected columns (reorderable) */}
           <div className="w-1/2 flex flex-col">
             <div className="px-3 py-3 border-b border-[#DFE2E8]">
-              <p className="text-xs font-medium text-[#7C818E]">
+              <p className="text-xs font-medium text-n-500">
                 {localColumns.length} columns selected
               </p>
             </div>

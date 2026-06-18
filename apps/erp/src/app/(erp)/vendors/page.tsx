@@ -112,7 +112,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                       <h2 className="text-lg font-heading font-bold text-[#1A1D24]">
                         No Vendors Found
                       </h2>
-                      <p className="text-sm text-[#7C818E] max-w-[320px] mt-1">
+                      <p className="text-sm text-n-500 max-w-[320px] mt-1">
                         {params.type || params.search
                           ? 'Try adjusting your filters.'
                           : 'No vendors have been added yet.'}
@@ -124,7 +124,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                 vendors.map((vendor) => (
                   <TableRow key={vendor.id}>
                     <TableCell>
-                      <span className="text-[#B45309] font-medium">
+                      <span className="text-shiroi-gold-dark font-medium">
                         {vendor.vendor_code ?? '---'}
                       </span>
                     </TableCell>
@@ -142,7 +142,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                       {vendor.is_msme ? (
                         <Badge variant="success">MSME</Badge>
                       ) : (
-                        <span className="text-sm text-[#7C818E]">---</span>
+                        <span className="text-sm text-n-500">---</span>
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-sm">
@@ -155,7 +155,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                             vendor.is_active ? 'bg-[#16A34A]' : 'bg-[#DC2626]'
                           }`}
                         />
-                        <span className="text-sm text-[#7C818E]">
+                        <span className="text-sm text-n-500">
                           {vendor.is_active ? 'Yes' : 'No'}
                         </span>
                       </span>

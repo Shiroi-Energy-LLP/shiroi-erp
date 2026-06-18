@@ -204,7 +204,7 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Name</span>
-                  <Link href={`/leads/${proposal.lead_id}`} className="text-[#B45309] hover:underline">
+                  <Link href={`/leads/${proposal.lead_id}`} className="text-shiroi-gold-dark hover:underline">
                     {proposal.leads.customer_name}
                   </Link>
                 </div>
@@ -243,7 +243,7 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
                       {rev.id === proposal.id ? (
                         <span className="font-medium">Rev {rev.revision_number}</span>
                       ) : (
-                        <Link href={`/proposals/${rev.id}`} className="text-[#B45309] hover:underline">
+                        <Link href={`/proposals/${rev.id}`} className="text-shiroi-gold-dark hover:underline">
                           Rev {rev.revision_number}
                         </Link>
                       )}

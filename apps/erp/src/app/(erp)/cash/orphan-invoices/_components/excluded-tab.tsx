@@ -44,9 +44,9 @@ export function ExcludedTab() {
     });
   };
 
-  if (!data) return <Card><CardContent className="py-8 text-[#7C818E]">Loading…</CardContent></Card>;
+  if (!data) return <Card><CardContent className="py-8 text-n-500">Loading…</CardContent></Card>;
   const empty = data.invoices.length === 0 && data.payments.length === 0;
-  if (empty) return <Card><CardContent className="py-12 text-center text-[#7C818E]">No excluded rows.</CardContent></Card>;
+  if (empty) return <Card><CardContent className="py-12 text-center text-n-500">No excluded rows.</CardContent></Card>;
 
   return (
     <div className="space-y-6">

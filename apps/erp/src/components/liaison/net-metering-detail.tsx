@@ -308,15 +308,15 @@ export function NetMeteringDetail({ projectId, application, ceigRequired }: NetM
           <CardContent className="space-y-3">
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="text-[#7C818E] text-xs">Last Followup</span>
+                <span className="text-n-500 text-xs">Last Followup</span>
                 <p className="font-mono">{application.last_followup_date ?? '—'}</p>
               </div>
               <div>
-                <span className="text-[#7C818E] text-xs">Next Followup</span>
+                <span className="text-n-500 text-xs">Next Followup</span>
                 <p className="font-mono">{application.next_followup_date ?? '—'}</p>
               </div>
               <div>
-                <span className="text-[#7C818E] text-xs">Total Followups</span>
+                <span className="text-n-500 text-xs">Total Followups</span>
                 <p className="font-mono">{application.followup_count}</p>
               </div>
             </div>

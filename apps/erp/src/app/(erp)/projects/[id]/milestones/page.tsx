@@ -199,7 +199,7 @@ function MilestoneStepIcon({ status, order }: { status: string; order: number })
     status === 'completed' ? 'bg-[#065F46] text-white' :
     status === 'in_progress' ? 'bg-[#16A34A] text-white' :
     status === 'blocked' ? 'bg-[#991B1B] text-white' :
-    'bg-[#E5E7EB] text-[#7C818E]';
+    'bg-[#E5E7EB] text-n-500';
 
   return (
     <div className={`${baseClasses} ${statusClasses}`}>

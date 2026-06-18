@@ -86,7 +86,7 @@ export default async function CertificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr" className="text-sm text-[#B45309] hover:underline">
+          <Link href="/hr" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to HR
           </Link>
           <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Certifications</h1>

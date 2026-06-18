@@ -36,14 +36,14 @@ export function AuditLogTable() {
     fetchAuditClient({ page, decision: decisionFilter || undefined }).then((d) => setData(d as any));
   }, [page, decisionFilter]);
 
-  if (!data) return <Card><CardContent className="py-8 text-[#7C818E]">Loading…</CardContent></Card>;
+  if (!data) return <Card><CardContent className="py-8 text-n-500">Loading…</CardContent></Card>;
   const totalPages = Math.max(1, Math.ceil(data.total / 50));
 
   return (
     <Card>
       <CardContent className="p-0">
         <div className="p-3 border-b flex gap-2 flex-wrap">
-          <span className="text-xs text-[#7C818E]">Filter:</span>
+          <span className="text-xs text-n-500">Filter:</span>
           {['', 'assign', 'exclude', 'skip', 'reassign', 'undo_exclude', 'undo_skip'].map((d) => (
             <button
               key={d || 'all'}
@@ -69,7 +69,7 @@ export function AuditLogTable() {
           </TableHeader>
           <TableBody>
             {data.rows.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-[#7C818E]">No audit rows.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-8 text-n-500">No audit rows.</TableCell></TableRow>
             ) : (
               data.rows.map((r) => (
                 <TableRow key={r.id}>
@@ -83,7 +83,7 @@ export function AuditLogTable() {
                       {r.decision}
                     </span>
                   </TableCell>
-                  <TableCell className="text-xs text-[#7C818E] max-w-md truncate">{r.notes ?? '—'}</TableCell>
+                  <TableCell className="text-xs text-n-500 max-w-md truncate">{r.notes ?? '—'}</TableCell>
                 </TableRow>
               ))
             )}

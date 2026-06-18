@@ -118,7 +118,7 @@ export default async function HRListPage() {
                       <TableCell>
                         <Link
                           href={`/hr/${emp.id}`}
-                          className="text-[#B45309] hover:underline font-medium"
+                          className="text-shiroi-gold-dark hover:underline font-medium"
                         >
                           {emp.employee_code}
                         </Link>

@@ -74,13 +74,13 @@ export function ReportPhotos({ photos }: ReportPhotosProps) {
             ) : (
               <div className="w-full h-full bg-[#F5F5F5] flex items-center justify-center">
                 {loadingUrl === photo.storage_path ? (
-                  <div className="w-5 h-5 border-2 border-[#7C818E] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-n-500 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <div className="text-center px-2">
-                    <svg className="w-6 h-6 text-[#7C818E] mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="w-6 h-6 text-n-500 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
                     </svg>
-                    <span className="text-[10px] text-[#7C818E] truncate block">{photo.file_name}</span>
+                    <span className="text-[10px] text-n-500 truncate block">{photo.file_name}</span>
                   </div>
                 )}
               </div>
@@ -113,7 +113,7 @@ export function ReportPhotos({ photos }: ReportPhotosProps) {
           </div>
           {photos[expandedIndex]!.caption && (
             <div className="p-3 bg-white border-t">
-              <p className="text-sm text-[#3F424D]">{photos[expandedIndex]!.caption}</p>
+              <p className="text-sm text-n-700">{photos[expandedIndex]!.caption}</p>
             </div>
           )}
         </div>

@@ -47,7 +47,7 @@ export function AINarrative({ reportId, projectId, existingNarrative, generatedA
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#B45309]" />
+            <Sparkles className="h-4 w-4 text-shiroi-gold-dark" />
             AI Summary
           </CardTitle>
           <Button
@@ -83,7 +83,7 @@ export function AINarrative({ reportId, projectId, existingNarrative, generatedA
 
         {narrative ? (
           <div>
-            <p className="text-sm text-[#3F424D] leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm text-n-700 leading-relaxed whitespace-pre-wrap">
               {narrative}
             </p>
             {lastGenerated && (

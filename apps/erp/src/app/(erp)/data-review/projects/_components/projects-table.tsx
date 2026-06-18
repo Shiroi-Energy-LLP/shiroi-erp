@@ -21,7 +21,7 @@ export function ProjectsTable({ rows, showActions = true }: Props) {
   if (rows.length === 0) {
     return (
       <Card>
-        <CardContent className="py-12 text-center text-sm text-[#7C818E]">
+        <CardContent className="py-12 text-center text-sm text-n-500">
           No projects in this tab.
         </CardContent>
       </Card>
@@ -31,7 +31,7 @@ export function ProjectsTable({ rows, showActions = true }: Props) {
   return (
     <div className="rounded-md border border-[#E5E7EB] overflow-hidden">
       {/* Header */}
-      <div className="grid grid-cols-[2fr_3fr_1fr_2fr_2fr_1fr] gap-3 bg-[#F9FAFB] px-4 py-2 text-xs font-semibold text-[#7C818E] uppercase tracking-wide">
+      <div className="grid grid-cols-[2fr_3fr_1fr_2fr_2fr_1fr] gap-3 bg-[#F9FAFB] px-4 py-2 text-xs font-semibold text-n-500 uppercase tracking-wide">
         <span>Project #</span>
         <span>Customer</span>
         <span>kWp</span>
@@ -73,7 +73,7 @@ export function ProjectsTable({ rows, showActions = true }: Props) {
                 <Badge variant="secondary" className="text-[10px] px-1 py-0">HubSpot</Badge>
               )}
               {row.pv_ref_in_notes && (
-                <span className="text-[10px] text-[#7C818E] font-mono">{row.pv_ref_in_notes}</span>
+                <span className="text-[10px] text-n-500 font-mono">{row.pv_ref_in_notes}</span>
               )}
               {(row.financials_invalidated || row.system_size_uncertain) && (
                 <AlertTriangle className="h-3 w-3 text-amber-500" />
@@ -82,9 +82,9 @@ export function ProjectsTable({ rows, showActions = true }: Props) {
             {/* Chevron */}
             <span className="flex items-center justify-end">
               {expandedId === row.id ? (
-                <ChevronDown className="h-4 w-4 text-[#7C818E]" />
+                <ChevronDown className="h-4 w-4 text-n-500" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-[#7C818E]" />
+                <ChevronRight className="h-4 w-4 text-n-500" />
               )}
             </span>
           </button>
@@ -110,7 +110,7 @@ export function ProjectsTable({ rows, showActions = true }: Props) {
 
 function ReadOnlyDetails({ row }: { row: ReviewProjectRow }) {
   return (
-    <div className="text-sm text-[#7C818E] space-y-1">
+    <div className="text-sm text-n-500 space-y-1">
       {row.pv_ref_in_notes && <p>PV ref: <span className="font-mono">{row.pv_ref_in_notes}</span></p>}
       {row.drive_link && (
         <p>Drive: <a href={row.drive_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">link</a></p>

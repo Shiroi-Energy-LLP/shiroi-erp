@@ -97,12 +97,12 @@ export async function HRDashboard() {
                     <span className="text-sm font-medium text-[#1A1D24]">
                       {cert.employee_name}
                     </span>
-                    <span className="text-xs text-[#7C818E]">
+                    <span className="text-xs text-n-500">
                       {cert.certification_name}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#7C818E]">
+                    <span className="text-xs text-n-500">
                       Expires {formatDate(cert.expiry_date)}
                     </span>
                     {cert.blocks_deployment && (

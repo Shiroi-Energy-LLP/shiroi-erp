@@ -72,7 +72,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
       <div>
         <Eyebrow className="mb-1">BOM REVIEW</Eyebrow>
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">BOM Line Items Review</h1>
-        <p className="text-sm text-[#7C818E]">
+        <p className="text-sm text-n-500">
           Review and fix BOM data across all proposals. Double-click any cell to edit.
         </p>
       </div>
@@ -84,7 +84,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
             <p className="text-2xl font-heading font-bold text-[#1A1D24]">
               {(totalCount ?? 0).toLocaleString('en-IN')}
             </p>
-            <p className="text-xs text-[#7C818E]">Total BOM Lines</p>
+            <p className="text-xs text-n-500">Total BOM Lines</p>
           </CardContent>
         </Card>
         <Card>
@@ -92,7 +92,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
             <p className="text-2xl font-heading font-bold text-green-600">
               {(withRateCount ?? 0).toLocaleString('en-IN')}
             </p>
-            <p className="text-xs text-[#7C818E]">With Rate</p>
+            <p className="text-xs text-n-500">With Rate</p>
           </CardContent>
         </Card>
         <Card>
@@ -100,7 +100,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
             <p className="text-2xl font-heading font-bold text-orange-600">
               {(noRateCount ?? 0).toLocaleString('en-IN')}
             </p>
-            <p className="text-xs text-[#7C818E]">Missing Rate</p>
+            <p className="text-xs text-n-500">Missing Rate</p>
           </CardContent>
         </Card>
         <Card>
@@ -108,14 +108,14 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
             <p className="text-2xl font-heading font-bold text-red-600">
               {flaggedCount ?? 0}
             </p>
-            <p className="text-xs text-[#7C818E]">Flagged Items</p>
+            <p className="text-xs text-n-500">Flagged Items</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Category Filter */}
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-sm text-[#7C818E]">Category:</span>
+        <span className="text-sm text-n-500">Category:</span>
         <Link
           href="/bom-review"
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
@@ -166,7 +166,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
               Previous
             </Link>
           )}
-          <span className="px-3 py-1 text-sm text-[#7C818E]">
+          <span className="px-3 py-1 text-sm text-n-500">
             Page {page} of {totalPages}
           </span>
           {page < totalPages && (

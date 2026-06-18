@@ -297,8 +297,8 @@ export function LeadFilesPanel({ leadId, readOnly = false }: LeadFilesPanelProps
             className="hidden"
             onChange={handleFileInput}
           />
-          <span className="text-xs text-[#7C818E]">{totalFiles} files total</span>
-          {moving && <span className="text-xs text-[#7C818E]">Moving...</span>}
+          <span className="text-xs text-n-500">{totalFiles} files total</span>
+          {moving && <span className="text-xs text-n-500">Moving...</span>}
         </div>
       )}
 

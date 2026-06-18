@@ -212,7 +212,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
                       <tr key={cred.id} className="border-b border-n-100 hover:bg-n-50">
                         <td className="px-2 py-1.5">
                           {cred.project_id ? (
-                            <Link href={`/projects/${cred.project_id}`} className="text-[#B45309] hover:underline text-xs font-medium">
+                            <Link href={`/projects/${cred.project_id}`} className="text-shiroi-gold-dark hover:underline text-xs font-medium">
                               {customerName}
                             </Link>
                           ) : customerName}
@@ -237,7 +237,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
                             href={cred.portal_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[#B45309] hover:underline text-[11px] inline-flex items-center gap-1 max-w-[260px]"
+                            className="text-shiroi-gold-dark hover:underline text-[11px] inline-flex items-center gap-1 max-w-[260px]"
                             title={cred.portal_url}
                           >
                             <span className="truncate">{cred.portal_url}</span>

@@ -10,7 +10,7 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
 
   return (
     <div className="space-y-6">
-      <Link href={`/contacts/${id}`} className="text-sm text-[#B45309] hover:underline">&larr; Back to Contact</Link>
+      <Link href={`/contacts/${id}`} className="text-sm text-shiroi-gold-dark hover:underline">&larr; Back to Contact</Link>
       <ContactForm contact={contact as any} />
     </div>
   );

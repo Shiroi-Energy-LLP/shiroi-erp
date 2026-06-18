@@ -33,7 +33,7 @@ export function CustomerListPane({ customers, selected, onSelect }: Props) {
       </div>
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <p className="p-4 text-xs text-[#7C818E]">No matching customers.</p>
+          <p className="p-4 text-xs text-n-500">No matching customers.</p>
         ) : (
           filtered.map((c) => {
             const total = new Decimal(c.invoice_total).plus(new Decimal(c.payment_total));
@@ -48,10 +48,10 @@ export function CustomerListPane({ customers, selected, onSelect }: Props) {
                 }`}
               >
                 <p className="text-xs font-bold text-[#1A1D24] truncate">{c.zoho_customer_name}</p>
-                <p className="text-[10px] text-[#7C818E] mt-0.5">
+                <p className="text-[10px] text-n-500 mt-0.5">
                   {c.invoice_count} invoices · {shortINR(total.toNumber())}
                 </p>
-                <p className="text-[10px] text-[#7C818E]">
+                <p className="text-[10px] text-n-500">
                   {c.candidate_project_count} ERP candidates
                 </p>
               </button>

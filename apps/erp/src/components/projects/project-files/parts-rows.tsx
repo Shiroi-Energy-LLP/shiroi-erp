@@ -55,7 +55,7 @@ export function HandoverBox({
     <Card className="flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
-          <Package className="h-4 w-4 text-[#7C818E]" />
+          <Package className="h-4 w-4 text-n-500" />
           Handover Pack
           {pack && <Badge variant="success" className="text-[10px]">v{pack.version}</Badge>}
         </CardTitle>
@@ -141,7 +141,7 @@ export function FileRow({
             else onDownload(file);
           }
         }}
-        className="text-[#B45309] hover:underline truncate text-left flex-1 text-[12px] cursor-pointer select-none"
+        className="text-shiroi-gold-dark hover:underline truncate text-left flex-1 text-[12px] cursor-pointer select-none"
         title={file.name}
         draggable={false}
       >
@@ -162,7 +162,7 @@ export function FileRow({
             if (isImage) onOpenImage(file);
             else onDownload(file);
           }}
-          className="p-0.5 text-[#7C818E] hover:text-[#B45309]"
+          className="p-0.5 text-n-500 hover:text-shiroi-gold-dark"
           title={isImage ? 'View' : 'Download'}
         >
           <Download className="h-3 w-3" />
@@ -173,7 +173,7 @@ export function FileRow({
             e.stopPropagation();
             onDelete(file);
           }}
-          className="p-0.5 text-[#7C818E] hover:text-[#991B1B]"
+          className="p-0.5 text-n-500 hover:text-[#991B1B]"
           title="Delete"
         >
           <Trash2 className="h-3 w-3" />
@@ -221,7 +221,7 @@ export function GeneratedDocRow({
           href={downloadUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-0.5 text-[#7C818E] hover:text-[#B45309] opacity-0 group-hover:opacity-100 flex-shrink-0"
+          className="p-0.5 text-n-500 hover:text-shiroi-gold-dark opacity-0 group-hover:opacity-100 flex-shrink-0"
           title="Download PDF"
         >
           <FileDown className="h-3 w-3" />
@@ -260,7 +260,7 @@ export function LeadFileRow({
       <Icon className="h-3 w-3 text-[#9CA0AB] flex-shrink-0" />
       <button
         onClick={() => (isImage ? onOpenImage(-1) : handleDownload())}
-        className="text-[#B45309] hover:underline truncate text-left flex-1 text-[12px]"
+        className="text-shiroi-gold-dark hover:underline truncate text-left flex-1 text-[12px]"
         title={file.name}
       >
         {file.name.replace(/^\d+_/, '')}
@@ -271,7 +271,7 @@ export function LeadFileRow({
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0">
         <button
           onClick={handleDownload}
-          className="p-0.5 text-[#7C818E] hover:text-[#B45309]"
+          className="p-0.5 text-n-500 hover:text-shiroi-gold-dark"
           title="Download"
         >
           <Download className="h-3 w-3" />

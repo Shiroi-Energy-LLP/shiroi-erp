@@ -96,7 +96,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
       <div>
         <Eyebrow className="mb-1">DATA QUALITY</Eyebrow>
         <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Data Quality Dashboard</h1>
-        <p className="text-sm text-[#7C818E]">
+        <p className="text-sm text-n-500">
           Flag issues, verify data, track cleanup progress
         </p>
       </div>
@@ -111,7 +111,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <p className="text-2xl font-heading font-bold text-[#1A1D24]">{unresolvedFlags}</p>
-                <p className="text-xs text-[#7C818E]">Unresolved Flags</p>
+                <p className="text-xs text-n-500">Unresolved Flags</p>
               </div>
             </div>
           </CardContent>
@@ -125,7 +125,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <p className="text-2xl font-heading font-bold text-[#1A1D24]">{resolvedThisWeek}</p>
-                <p className="text-xs text-[#7C818E]">Resolved This Week</p>
+                <p className="text-xs text-n-500">Resolved This Week</p>
               </div>
             </div>
           </CardContent>
@@ -139,7 +139,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <p className="text-2xl font-heading font-bold text-[#1A1D24]">{totalFlags}</p>
-                <p className="text-xs text-[#7C818E]">Total Flags (All Time)</p>
+                <p className="text-xs text-n-500">Total Flags (All Time)</p>
               </div>
             </div>
           </CardContent>
@@ -153,7 +153,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <p className="text-2xl font-heading font-bold text-[#1A1D24]">{totalVerified}</p>
-                <p className="text-xs text-[#7C818E]">Records Verified</p>
+                <p className="text-xs text-n-500">Records Verified</p>
               </div>
             </div>
           </CardContent>
@@ -188,7 +188,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-sm text-[#7C818E]">Filter:</span>
+        <span className="text-sm text-n-500">Filter:</span>
         <Link
           href="/data-quality"
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
@@ -227,7 +227,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b text-left text-xs font-medium text-[#7C818E]">
+                  <tr className="border-b text-left text-xs font-medium text-n-500">
                     <th className="px-4 py-3">Entity</th>
                     <th className="px-4 py-3">Type</th>
                     <th className="px-4 py-3">Field</th>
@@ -245,7 +245,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                     return (
                       <tr key={flag.id} className="border-b last:border-0 hover:bg-gray-50">
                         <td className="px-4 py-3">
-                          <Link href={href} className="text-sm text-[#B45309] hover:underline capitalize">
+                          <Link href={href} className="text-sm text-shiroi-gold-dark hover:underline capitalize">
                             {flag.entity_type.replace(/_/g, ' ')}
                           </Link>
                           <p className="text-xs text-gray-400 font-mono">{flag.entity_id.slice(0, 8)}...</p>
@@ -290,7 +290,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
               Previous
             </Link>
           )}
-          <span className="px-3 py-1 text-sm text-[#7C818E]">
+          <span className="px-3 py-1 text-sm text-n-500">
             Page {page} of {totalPages}
           </span>
           {page < totalPages && (

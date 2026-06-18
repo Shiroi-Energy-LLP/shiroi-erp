@@ -147,7 +147,7 @@ export function SectionFeasibility({
   return (
     <>
       {/* 2a: Roof Details */}
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7C818E] mb-2">Roof Details</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-n-500 mb-2">Roof Details</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
           <Label htmlFor="roof_type">Roof Type *</Label>
@@ -209,7 +209,7 @@ export function SectionFeasibility({
       </div>
 
       {/* 2b: Structure */}
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7C818E] mb-2">Structure</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-n-500 mb-2">Structure</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
           <Label htmlFor="structure_type">Structure Type *</Label>
@@ -236,7 +236,7 @@ export function SectionFeasibility({
       </div>
 
       {/* 2c: Electrical & Load */}
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7C818E] mb-2">Electrical & Load</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-n-500 mb-2">Electrical & Load</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
           <Label htmlFor="existing_load_kw">Existing Load (kW)</Label>
@@ -298,7 +298,7 @@ export function SectionFeasibility({
       </div>
 
       {/* 2d: Shading */}
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7C818E] mb-2">Shading Analysis</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-n-500 mb-2">Shading Analysis</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <Label htmlFor="shading_assessment">Overall Shading</Label>
@@ -318,8 +318,8 @@ export function SectionFeasibility({
                 key={s.value}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer border transition-colors ${
                   shadeSources.includes(s.value)
-                    ? 'bg-[#E08A00]/10 border-[#E08A00] text-[#B45309]'
-                    : 'bg-white border-n-300 text-[#7C818E] hover:border-n-400'
+                    ? 'bg-[#E08A00]/10 border-[#E08A00] text-shiroi-gold-dark'
+                    : 'bg-white border-n-300 text-n-500 hover:border-n-400'
                 }`}
               >
                 <input type="checkbox" className="sr-only"
@@ -350,7 +350,7 @@ export function SectionFeasibility({
       </div>
 
       {/* 2e: Recommendation */}
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7C818E] mb-2">Recommendation</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-n-500 mb-2">Recommendation</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
           <Label htmlFor="recommended_size_kwp">Recommended Size (kWp)</Label>
@@ -394,7 +394,7 @@ export function SectionFeasibility({
       </div>
 
       {/* 2f: Feasibility Checks + Photos */}
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7C818E] mb-2">Feasibility Checks</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-n-500 mb-2">Feasibility Checks</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">

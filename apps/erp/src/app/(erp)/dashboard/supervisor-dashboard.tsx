@@ -35,7 +35,7 @@ export async function SupervisorDashboard() {
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <HardHat className="h-8 w-8 text-[#B45309]" />
+                <HardHat className="h-8 w-8 text-shiroi-gold-dark" />
                 <div>
                   <h2 className="font-heading text-lg font-bold text-[#1A1D24]">
                     {data.activeProject.project_number}
@@ -44,7 +44,7 @@ export async function SupervisorDashboard() {
                     {data.activeProject.customer_name} &middot; {data.activeProject.site_city}
                   </p>
                   {data.activeProject.currentMilestone && (
-                    <p className="text-xs text-[#7C818E] mt-0.5">
+                    <p className="text-xs text-n-500 mt-0.5">
                       Current: {data.activeProject.currentMilestone}
                     </p>
                   )}
@@ -69,7 +69,7 @@ export async function SupervisorDashboard() {
               <h2 className="text-base font-heading font-bold text-[#1A1D24]">
                 No Active Project
               </h2>
-              <p className="text-sm text-[#7C818E] mt-1">
+              <p className="text-sm text-n-500 mt-1">
                 You are not currently assigned to any active project.
               </p>
             </div>
@@ -147,7 +147,7 @@ export async function SupervisorDashboard() {
                         <span className="text-sm font-medium text-[#1A1D24]">
                           {formatDate(report.report_date)}
                         </span>
-                        <span className="text-xs text-[#7C818E] truncate max-w-[160px]">
+                        <span className="text-xs text-n-500 truncate max-w-[160px]">
                           {report.panels_installed_today} panels installed
                         </span>
                       </div>

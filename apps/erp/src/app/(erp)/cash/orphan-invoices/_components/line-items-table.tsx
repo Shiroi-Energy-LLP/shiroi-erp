@@ -14,7 +14,7 @@ interface Props {
 
 export function LineItemsTable({ items }: Props) {
   if (items.length === 0) {
-    return <p className="text-xs text-[#7C818E] italic">No line items recorded.</p>;
+    return <p className="text-xs text-n-500 italic">No line items recorded.</p>;
   }
   return (
     <Table>
@@ -32,7 +32,7 @@ export function LineItemsTable({ items }: Props) {
             <TableCell>
               <div className="text-xs font-medium">{it.item_name ?? '—'}</div>
               {it.item_description && (
-                <div className="text-[10px] text-[#7C818E]">{it.item_description}</div>
+                <div className="text-[10px] text-n-500">{it.item_description}</div>
               )}
             </TableCell>
             <TableCell className="text-right text-xs font-mono">{it.quantity}</TableCell>

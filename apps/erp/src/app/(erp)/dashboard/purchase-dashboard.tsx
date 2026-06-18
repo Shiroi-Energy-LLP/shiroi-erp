@@ -162,9 +162,9 @@ export async function PurchaseDashboard() {
                         <span className="text-sm font-medium text-[#1A1D24]">
                           {po.vendors?.company_name}
                         </span>
-                        <span className="text-xs text-[#7C818E]">{po.po_number}</span>
+                        <span className="text-xs text-n-500">{po.po_number}</span>
                         <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-[#7C818E]">
+                          <span className="text-xs text-n-500">
                             {formatINR(po.amount_outstanding)} outstanding
                           </span>
                           <Badge variant={daysSince >= 45 ? 'error' : 'warning'}>

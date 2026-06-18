@@ -174,7 +174,7 @@ export function CategoryBox({
     >
       <CardHeader className="pb-1 pt-3 px-3">
         <CardTitle className="text-[13px] flex items-center gap-1.5">
-          <Icon className="h-3.5 w-3.5 text-[#7C818E]" />
+          <Icon className="h-3.5 w-3.5 text-n-500" />
           {category.label}
           {totalCount > 0 && (
             <span className="text-[11px] text-[#9CA0AB] font-normal">({totalCount})</span>

@@ -31,7 +31,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#7C818E]" />
+                <FileText className="w-4 h-4 text-n-500" />
                 1. Project Details
               </CardTitle>
             </CardHeader>
@@ -41,7 +41,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
               <InfoRow label="Contact Phone" value={survey?.contact_phone} />
               {(survey?.gps_lat || survey?.gps_lng) && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#7C818E] flex items-center gap-1">
+                  <span className="text-n-500 flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
                     GPS
                   </span>
@@ -54,7 +54,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
               )}
               <InfoRow label="Site Access" value={survey?.site_access_notes} />
               <div className="flex justify-between text-sm items-center">
-                <span className="text-[#7C818E]">Survey Status</span>
+                <span className="text-n-500">Survey Status</span>
                 <SurveyStatusBadge status={survey?.survey_status} />
               </div>
             </CardContent>
@@ -64,7 +64,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
           <Card className="md:col-span-2">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#7C818E]" />
+                <CheckCircle2 className="w-4 h-4 text-n-500" />
                 2. Mounting & Site Feasibility
               </CardTitle>
             </CardHeader>
@@ -150,7 +150,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-[#7C818E]" />
+                <AlertTriangle className="w-4 h-4 text-n-500" />
                 6. Deviations
               </CardTitle>
             </CardHeader>
@@ -177,29 +177,29 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
             <CardContent>
               {survey?.notes ? (
                 <div className="mb-4">
-                  <span className="text-xs text-[#7C818E] block mb-1">Notes</span>
-                  <p className="text-sm text-[#3F424D] whitespace-pre-wrap">{survey.notes}</p>
+                  <span className="text-xs text-n-500 block mb-1">Notes</span>
+                  <p className="text-sm text-n-700 whitespace-pre-wrap">{survey.notes}</p>
                 </div>
               ) : (
                 <div className="mb-4">
-                  <span className="text-xs text-[#7C818E]">No notes recorded.</span>
+                  <span className="text-xs text-n-500">No notes recorded.</span>
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <span className="text-xs text-[#7C818E] block mb-1">Surveyor Signature</span>
+                  <span className="text-xs text-n-500 block mb-1">Surveyor Signature</span>
                   {survey?.surveyor_signature ? (
                     <img src={survey.surveyor_signature} alt="Surveyor signature" className="border border-n-200 rounded h-24 bg-white" />
                   ) : (
-                    <span className="text-sm text-[#7C818E]">{'\u2014'}</span>
+                    <span className="text-sm text-n-500">{'\u2014'}</span>
                   )}
                 </div>
                 <div>
-                  <span className="text-xs text-[#7C818E] block mb-1">Customer Signature</span>
+                  <span className="text-xs text-n-500 block mb-1">Customer Signature</span>
                   {survey?.customer_signature ? (
                     <img src={survey.customer_signature} alt="Customer signature" className="border border-n-200 rounded h-24 bg-white" />
                   ) : (
-                    <span className="text-sm text-[#7C818E]">{'\u2014'}</span>
+                    <span className="text-sm text-n-500">{'\u2014'}</span>
                   )}
                 </div>
               </div>
@@ -210,9 +210,9 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16">
-          <ClipboardList className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
+          <ClipboardList className="w-12 h-12 text-n-500 opacity-50 mb-3" />
           <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Site Survey Yet</h3>
-          <p className="text-[13px] text-[#7C818E]">Click &quot;Create Site Survey&quot; above to add survey data for this project.</p>
+          <p className="text-[13px] text-n-500">Click &quot;Create Site Survey&quot; above to add survey data for this project.</p>
         </div>
       )}
     </div>
@@ -224,7 +224,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
 function InfoRow({ label, value, capitalize: cap }: { label: string; value: string | null | undefined; capitalize?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className="text-[#7C818E]">{label}</span>
+      <span className="text-n-500">{label}</span>
       <span className={`font-medium text-[#1A1D24] ${cap ? 'capitalize' : ''}`}>
         {value || '\u2014'}
       </span>
@@ -235,7 +235,7 @@ function InfoRow({ label, value, capitalize: cap }: { label: string; value: stri
 function BoolRow({ label, value }: { label: string; value: boolean | null | undefined }) {
   return (
     <div className="flex justify-between text-sm items-center">
-      <span className="text-[#7C818E]">{label}</span>
+      <span className="text-n-500">{label}</span>
       {value ? (
         <Badge variant="success">Yes</Badge>
       ) : (
@@ -248,7 +248,7 @@ function BoolRow({ label, value }: { label: string; value: boolean | null | unde
 function EquipmentRow({ label, finalized, photoPath }: { label: string; finalized: boolean | null | undefined; photoPath: string | null | undefined }) {
   return (
     <div className="flex justify-between text-sm items-center">
-      <span className="text-[#7C818E]">{label}</span>
+      <span className="text-n-500">{label}</span>
       <span className="flex items-center gap-2">
         {finalized ? (
           <Badge variant="success">Yes</Badge>
@@ -256,7 +256,7 @@ function EquipmentRow({ label, finalized, photoPath }: { label: string; finalize
           <Badge variant="neutral">No</Badge>
         )}
         {photoPath && (
-          <span className="text-xs text-[#7C818E] flex items-center gap-1">
+          <span className="text-xs text-n-500 flex items-center gap-1">
             <Camera className="w-3 h-3" />
             Photo attached
           </span>
@@ -268,7 +268,7 @@ function EquipmentRow({ label, finalized, photoPath }: { label: string; finalize
 
 function PhotoIndicator({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-[#7C818E]">
+    <span className="inline-flex items-center gap-1.5 text-xs text-n-500">
       <Camera className="w-3.5 h-3.5" />
       {label}
     </span>

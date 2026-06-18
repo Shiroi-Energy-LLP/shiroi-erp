@@ -42,7 +42,7 @@ export default async function MyTasksPage() {
           <Eyebrow className="mb-1">MY TASKS</Eyebrow>
           <h1 className="text-2xl font-bold text-[#1A1D24]">
             My Tasks{' '}
-            <span className="text-base font-normal text-[#7C818E]">
+            <span className="text-base font-normal text-n-500">
               ({pendingCount} pending, {completedCount} done)
             </span>
           </h1>

@@ -50,44 +50,44 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             <CardContent>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-[#7C818E]">Segment</span>
+                  <span className="text-n-500">Segment</span>
                   <p className="mt-0.5 capitalize">{company.segment}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">GSTIN</span>
+                  <span className="text-n-500">GSTIN</span>
                   <p className="font-mono mt-0.5">{company.gstin ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">PAN</span>
+                  <span className="text-n-500">PAN</span>
                   <p className="font-mono mt-0.5">{(company as any).pan ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">Industry</span>
+                  <span className="text-n-500">Industry</span>
                   <p className="mt-0.5">{(company as any).industry ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">City</span>
+                  <span className="text-n-500">City</span>
                   <p className="mt-0.5">{company.city ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">State</span>
+                  <span className="text-n-500">State</span>
                   <p className="mt-0.5">{company.state ?? '—'}</p>
                 </div>
                 {company.address_line1 && (
                   <div className="col-span-2">
-                    <span className="text-[#7C818E]">Address</span>
+                    <span className="text-n-500">Address</span>
                     <p className="mt-0.5">{company.address_line1}{company.address_line2 ? `, ${company.address_line2}` : ''}{company.pincode ? ` - ${company.pincode}` : ''}</p>
                   </div>
                 )}
                 {company.website && (
                   <div>
-                    <span className="text-[#7C818E]">Website</span>
-                    <p className="mt-0.5 text-[#B45309]">{company.website}</p>
+                    <span className="text-n-500">Website</span>
+                    <p className="mt-0.5 text-shiroi-gold-dark">{company.website}</p>
                   </div>
                 )}
                 {(company as any).company_size && (
                   <div>
-                    <span className="text-[#7C818E]">Company Size</span>
+                    <span className="text-n-500">Company Size</span>
                     <p className="mt-0.5 capitalize">{(company as any).company_size}</p>
                   </div>
                 )}
@@ -121,7 +121,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     {activeContacts.map((ccr: any) => (
                       <TableRow key={ccr.id}>
                         <TableCell>
-                          <Link href={`/contacts/${ccr.contacts?.id}`} className="text-[#B45309] hover:underline font-medium">
+                          <Link href={`/contacts/${ccr.contacts?.id}`} className="text-shiroi-gold-dark hover:underline font-medium">
                             {ccr.contacts?.name}
                           </Link>
                         </TableCell>
@@ -140,7 +140,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           {pastContacts.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base text-[#7C818E]">Past Contacts</CardTitle>
+                <CardTitle className="text-base text-n-500">Past Contacts</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -155,12 +155,12 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     {pastContacts.map((ccr: any) => (
                       <TableRow key={ccr.id}>
                         <TableCell>
-                          <Link href={`/contacts/${ccr.contacts?.id}`} className="text-[#B45309] hover:underline font-medium">
+                          <Link href={`/contacts/${ccr.contacts?.id}`} className="text-shiroi-gold-dark hover:underline font-medium">
                             {ccr.contacts?.name}
                           </Link>
                         </TableCell>
                         <TableCell className="text-sm">{ccr.role_title}</TableCell>
-                        <TableCell className="text-sm text-[#7C818E]">{ccr.ended_at}</TableCell>
+                        <TableCell className="text-sm text-n-500">{ccr.ended_at}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -185,7 +185,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 <CardTitle className="text-base">Notes</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-[#3F424D] whitespace-pre-wrap">{company.notes}</p>
+                <p className="text-sm text-n-700 whitespace-pre-wrap">{company.notes}</p>
               </CardContent>
             </Card>
           )}

@@ -325,7 +325,7 @@ export function ProjectFiles({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Camera className="h-4 w-4 text-[#7C818E]" />
+              <Camera className="h-4 w-4 text-n-500" />
               Site Photos
               <span className="text-xs text-[#9CA0AB] font-normal">({allPhotos.length})</span>
             </CardTitle>

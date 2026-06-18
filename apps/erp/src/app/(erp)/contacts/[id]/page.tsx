@@ -74,38 +74,38 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             <CardContent>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-[#7C818E]">First Name</span>
+                  <span className="text-n-500">First Name</span>
                   <p className="mt-0.5">{(contact as any).first_name ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">Last Name</span>
+                  <span className="text-n-500">Last Name</span>
                   <p className="mt-0.5">{(contact as any).last_name ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">Phone</span>
+                  <span className="text-n-500">Phone</span>
                   <p className="font-mono mt-0.5">{contact.phone ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">Secondary Phone</span>
+                  <span className="text-n-500">Secondary Phone</span>
                   <p className="font-mono mt-0.5">{(contact as any).secondary_phone ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">Email</span>
+                  <span className="text-n-500">Email</span>
                   <p className="mt-0.5">{contact.email ?? '—'}</p>
                 </div>
                 <div>
-                  <span className="text-[#7C818E]">Designation</span>
+                  <span className="text-n-500">Designation</span>
                   <p className="mt-0.5">{contact.designation ?? '—'}</p>
                 </div>
                 {(contact as any).source && (
                   <div>
-                    <span className="text-[#7C818E]">Source</span>
+                    <span className="text-n-500">Source</span>
                     <p className="mt-0.5">{(contact as any).source}</p>
                   </div>
                 )}
                 {contact.notes && (
                   <div className="col-span-2">
-                    <span className="text-[#7C818E]">Notes</span>
+                    <span className="text-n-500">Notes</span>
                     <p className="mt-0.5 whitespace-pre-wrap">{contact.notes}</p>
                   </div>
                 )}
@@ -136,7 +136,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                         <TableCell>
                           <Link
                             href={`/${ec.entity_type}s/${ec.entity_id}`}
-                            className="text-[#B45309] hover:underline font-medium capitalize"
+                            className="text-shiroi-gold-dark hover:underline font-medium capitalize"
                           >
                             {ec.entity_type}
                           </Link>
@@ -178,10 +178,10 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                 <div className="space-y-3">
                   {contact.contact_company_roles.map((ccr: any) => (
                     <div key={ccr.id} className="rounded-md border border-[#DFE2E8] p-3">
-                      <Link href={`/companies/${ccr.company_id}`} className="text-sm font-medium text-[#B45309] hover:underline">
+                      <Link href={`/companies/${ccr.company_id}`} className="text-sm font-medium text-shiroi-gold-dark hover:underline">
                         {ccr.companies?.name}
                       </Link>
-                      <p className="text-xs text-[#7C818E] mt-0.5">{ccr.role_title}</p>
+                      <p className="text-xs text-n-500 mt-0.5">{ccr.role_title}</p>
                       <div className="mt-1 flex items-center justify-between gap-2">
                         {ccr.ended_at ? (
                           <Badge variant="neutral" className="text-[9px]">Ended {ccr.ended_at}</Badge>

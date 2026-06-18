@@ -103,7 +103,7 @@ export default async function ProfitabilityPage() {
                     <TableCell>
                       <Link
                         href={`/projects/${proj.project_id}`}
-                        className="text-[#B45309] hover:underline font-medium font-mono text-sm"
+                        className="text-shiroi-gold-dark hover:underline font-medium font-mono text-sm"
                       >
                         {proj.project_number}
                       </Link>

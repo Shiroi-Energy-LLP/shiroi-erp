@@ -74,7 +74,7 @@ export default async function MyReportsPage() {
                       {report.projects?.project_number ? (
                         <Link
                           href={`/projects/${report.project_id}/reports/${report.id}`}
-                          className="text-[#B45309] hover:underline"
+                          className="text-shiroi-gold-dark hover:underline"
                         >
                           {formatDate(report.report_date)}
                         </Link>

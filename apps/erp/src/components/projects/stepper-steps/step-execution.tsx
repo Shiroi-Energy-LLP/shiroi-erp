@@ -62,7 +62,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
       <div className="flex flex-col items-center justify-center py-16">
         <HardHat className="w-12 h-12 text-red-400 opacity-50 mb-3" />
         <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
-        <p className="text-[13px] text-[#7C818E]">Could not load execution data. Please refresh the page.</p>
+        <p className="text-[13px] text-n-500">Could not load execution data. Please refresh the page.</p>
       </div>
     );
   }
@@ -318,7 +318,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
         ) : (
           <CardContent className="py-6">
             <div className="flex flex-col items-center gap-2 text-center">
-              <HardHat className="w-8 h-8 text-[#7C818E] opacity-40" />
+              <HardHat className="w-8 h-8 text-n-500 opacity-40" />
               <p className="text-[12px] text-n-500 max-w-md">
                 No execution milestones seeded yet. Tasks above are still tracked — seed the standard 10 milestones to enable milestone-weighted progress.
               </p>

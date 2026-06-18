@@ -96,7 +96,7 @@ export function ProjectEditRow({ row, onDone }: Props) {
   return (
     <div className="space-y-4">
       {/* Source info */}
-      <div className="text-xs text-[#7C818E] space-y-0.5">
+      <div className="text-xs text-n-500 space-y-0.5">
         {row.pv_ref_in_notes && (
           <p>PV ref: <span className="font-mono">{row.pv_ref_in_notes}</span></p>
         )}
@@ -127,7 +127,7 @@ export function ProjectEditRow({ row, onDone }: Props) {
       {/* Edit inputs */}
       <div className="flex items-end gap-4">
         <div>
-          <label className="text-xs font-medium text-[#7C818E] mb-1 block">
+          <label className="text-xs font-medium text-n-500 mb-1 block">
             System size (kWp)
           </label>
           <Input
@@ -141,7 +141,7 @@ export function ProjectEditRow({ row, onDone }: Props) {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-[#7C818E] mb-1 block">
+          <label className="text-xs font-medium text-n-500 mb-1 block">
             Order value (₹)
           </label>
           <Input

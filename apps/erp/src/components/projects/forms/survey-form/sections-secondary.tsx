@@ -40,7 +40,7 @@ export function SectionClientDiscussion({
           <Label htmlFor="mounting_procedure_explained" className="mb-0 font-medium">
             Mounting Procedure Explained
           </Label>
-          <p className="text-xs text-[#7C818E]">
+          <p className="text-xs text-n-500">
             Customer has been explained the mounting procedure and structure installation process
           </p>
         </div>
@@ -55,7 +55,7 @@ export function SectionClientDiscussion({
           <Label htmlFor="fixing_arrangement_discussed" className="mb-0 font-medium">
             Fixing Arrangement Discussed
           </Label>
-          <p className="text-xs text-[#7C818E]">
+          <p className="text-xs text-n-500">
             Panel fixing arrangement, clamps, and structure anchoring details discussed with client
           </p>
         </div>
@@ -79,7 +79,7 @@ export function SectionEquipment({
 }) {
   return (
     <>
-      <p className="text-xs text-[#7C818E] mb-4">
+      <p className="text-xs text-n-500 mb-4">
         For each equipment item, toggle whether the location has been finalized and upload a photo of the selected location.
       </p>
       <div className="space-y-3">
@@ -181,7 +181,7 @@ export function SectionAcRouting({
           <Label htmlFor="ac_routing_finalized" className="mb-0 font-medium">
             AC Routing Finalized
           </Label>
-          <p className="text-xs text-[#7C818E]">
+          <p className="text-xs text-n-500">
             AC cable routing from inverter to distribution board has been planned and confirmed
           </p>
         </div>

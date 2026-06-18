@@ -33,11 +33,11 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/liaison/net-metering" className="text-sm text-[#B45309] hover:underline">&larr; Back to Net Metering</Link>
+          <Link href="/liaison/net-metering" className="text-sm text-shiroi-gold-dark hover:underline">&larr; Back to Net Metering</Link>
           <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">
             {project?.project_number} — {project?.customer_name}
           </h1>
-          <p className="text-sm text-[#7C818E]">
+          <p className="text-sm text-n-500">
             {project?.system_size_kwp} kWp {project?.system_type?.replace(/_/g, ' ')} · {project?.site_city}
           </p>
         </div>
@@ -130,7 +130,7 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
                       {obj.resolved ? 'Resolved' : 'Open'}
                     </Badge>
                   </div>
-                  <p className="text-[#3F424D]">{obj.objection_description}</p>
+                  <p className="text-n-700">{obj.objection_description}</p>
                   <p className="text-xs text-[#9CA0AB]">
                     Raised: {formatDate(obj.objection_date)}
                     {obj.resolved_date && ` · Resolved: ${formatDate(obj.resolved_date)}`}

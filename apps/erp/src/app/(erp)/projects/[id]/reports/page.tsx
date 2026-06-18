@@ -83,7 +83,7 @@ export default async function ReportsPage({ params }: ReportsPageProps) {
                       <TableCell className="font-mono text-sm">
                         <Link
                           href={`/projects/${id}/reports/${report.id}`}
-                          className="text-[#B45309] hover:underline"
+                          className="text-shiroi-gold-dark hover:underline"
                         >
                           {formatDate(report.report_date)}
                         </Link>
@@ -119,21 +119,21 @@ export default async function ReportsPage({ params }: ReportsPageProps) {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/projects/${id}/reports/${report.id}`}
-                            className="text-xs text-[#B45309] hover:underline"
+                            className="text-xs text-shiroi-gold-dark hover:underline"
                           >
                             View
                           </Link>
                           {locked ? (
                             <Link
                               href={`/projects/${id}/reports/${report.id}/correction`}
-                              className="text-xs text-[#7C818E] hover:underline"
+                              className="text-xs text-n-500 hover:underline"
                             >
                               Request Correction
                             </Link>
                           ) : (
                             <Link
                               href={`/projects/${id}/reports/${report.id}/edit`}
-                              className="text-xs text-[#7C818E] hover:underline"
+                              className="text-xs text-n-500 hover:underline"
                             >
                               Edit
                             </Link>

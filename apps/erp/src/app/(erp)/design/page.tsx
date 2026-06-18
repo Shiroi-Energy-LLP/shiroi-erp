@@ -80,7 +80,7 @@ export default async function DesignPage() {
         <Card>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-sm text-[#7C818E]">Could not load design queue. Please try again later.</p>
+              <p className="text-sm text-n-500">Could not load design queue. Please try again later.</p>
             </div>
           </CardContent>
         </Card>
@@ -117,19 +117,19 @@ export default async function DesignPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <CardContent className="py-4">
-              <p className="text-xs font-medium text-[#7C818E] uppercase tracking-wide">Total in Queue</p>
+              <p className="text-xs font-medium text-n-500 uppercase tracking-wide">Total in Queue</p>
               <p className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">{totalCount}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="py-4">
-              <p className="text-xs font-medium text-[#7C818E] uppercase tracking-wide">In Design</p>
+              <p className="text-xs font-medium text-n-500 uppercase tracking-wide">In Design</p>
               <p className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">{inDesignCount}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="py-4">
-              <p className="text-xs font-medium text-[#7C818E] uppercase tracking-wide">Design Confirmed</p>
+              <p className="text-xs font-medium text-n-500 uppercase tracking-wide">Design Confirmed</p>
               <p className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">{designConfirmedCount}</p>
             </CardContent>
           </Card>
@@ -168,7 +168,7 @@ export default async function DesignPage() {
                     return (
                       <TableRow key={lead.id}>
                         <TableCell className="font-medium">
-                          <Link href={`/design/${lead.id}`} className="text-[#B45309] hover:underline">
+                          <Link href={`/design/${lead.id}`} className="text-shiroi-gold-dark hover:underline">
                             {lead.customer_name}
                           </Link>
                         </TableCell>
@@ -262,7 +262,7 @@ export default async function DesignPage() {
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/projects/${project.id}`}
-                            className="text-xs font-medium text-[#B45309] hover:underline whitespace-nowrap"
+                            className="text-xs font-medium text-shiroi-gold-dark hover:underline whitespace-nowrap"
                           >
                             Open
                           </Link>

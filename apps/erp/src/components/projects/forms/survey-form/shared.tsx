@@ -57,9 +57,9 @@ export function CollapsibleSection({
           <span className="text-sm font-semibold text-[#1A1D24]">{title}</span>
         </div>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-[#7C818E]" />
+          <ChevronUp className="h-4 w-4 text-n-500" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-[#7C818E]" />
+          <ChevronDown className="h-4 w-4 text-n-500" />
         )}
       </button>
       {isOpen && <div className="px-4 py-4 bg-white border-t border-n-200">{children}</div>}
@@ -159,13 +159,13 @@ export function PhotoUpload({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="text-xs text-[#7C818E] hover:text-[#1A1D24] flex items-center gap-1 border border-dashed border-n-300 rounded px-2 py-1 hover:border-n-400 transition-colors"
+            className="text-xs text-n-500 hover:text-[#1A1D24] flex items-center gap-1 border border-dashed border-n-300 rounded px-2 py-1 hover:border-n-400 transition-colors"
           >
             <Upload className="h-3 w-3" /> Upload photo
           </button>
         )}
         {uploading && (
-          <span className="text-xs text-[#7C818E] flex items-center gap-1">
+          <span className="text-xs text-n-500 flex items-center gap-1">
             <span className="h-3 w-3 border border-n-400 border-t-[#E08A00] rounded-full animate-spin" />
             Uploading...
           </span>
@@ -197,7 +197,7 @@ export function ProgressBar({ completed, total }: { completed: number; total: nu
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs font-medium text-[#7C818E] whitespace-nowrap">
+      <span className="text-xs font-medium text-n-500 whitespace-nowrap">
         {pct}% complete ({completed}/{total})
       </span>
     </div>
