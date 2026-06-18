@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shiroi ERP — Design Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Rajdhani:wght@600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: #E9EBEF;
+    font-family: 'Inter', sans-serif;
+    min-width: 100%;
+    min-height: 100vh;
+    width: max-content;
+    padding: 48px;
+    box-sizing: border-box;
+  }
+  .page-head { width: 720px; margin-bottom: 36px; }
+  .page-head h1 { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: #1A1D24; margin: 0 0 8px; letter-spacing: -.01em; }
+  .page-head p { font-size: 14px; line-height: 1.6; color: #5A5E6B; margin: 0; }
+
+  .row { display: flex; flex-direction: row; align-items: flex-start; gap: 40px; }
+  .col { flex: none; display: flex; flex-direction: column; }
+  .frame-label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; padding-left: 2px; }
+  .frame-label .name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #1A1D24; }
+  .frame-label .desc { font-size: 12.5px; color: #6B7280; max-width: 1140px; line-height: 1.5; }
+  .frame-label .chip { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; color: #6B7280; }
+  .swatches { display: inline-flex; gap: 5px; vertical-align: middle; }
+  .swatches i { width: 13px; height: 13px; border-radius: 3px; display: inline-block; border: 1px solid rgba(0,0,0,.08); }
+
+  .frame {
+    width: 1180px; height: 820px;
+    background: #fff; border-radius: 3px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(16,24,40,.08), 0 8px 28px rgba(16,24,40,.10);
+    display: flex; position: relative;
+  }
+
+  /* ---- App shell (driven by per-frame CSS vars) ---- */
+  .side { width: 230px; flex: none; display: flex; flex-direction: column; background: var(--side-bg); }
+  .side-brand { height: 56px; display: flex; align-items: center; gap: 10px; padding: 0 18px; }
+  .side-brand img { width: 26px; height: 26px; }
+  .side-brand .wm { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.95); }
+  .nav { flex: 1; overflow: hidden; padding: 10px 12px; display: flex; flex-direction: column; gap: 14px; }
+  .nav-sec-label { padding: 6px 10px 4px; font-family: var(--head-font); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .16em; color: rgba(255,255,255,.28); }
+  .nav-item { display: flex; align-items: center; gap: 11px; padding: 8px 11px; border-radius: 8px; border-left: 3px solid transparent; color: rgba(255,255,255,.55); font-size: 13px; font-weight: 500; }
+  .nav-item svg { width: 19px; height: 19px; stroke: rgba(255,255,255,.55); }
+  .nav-item.active { background: var(--active-bg); border-left-color: var(--active-bar); color: #fff; }
+  .nav-item.active svg { stroke: #fff; }
+  .side-foot { padding: 12px; border-top: 1px solid rgba(255,255,255,.07); color: rgba(255,255,255,.4); font-size: 13px; display: flex; align-items: center; gap: 11px; }
+  .side-foot svg { width: 19px; height: 19px; stroke: rgba(255,255,255,.4); }
+
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--content-bg); }
+  .topbar { height: 56px; flex: none; background: #fff; border-bottom: 1px solid #DFE2E8; box-shadow: var(--topbar-shadow, 0 1px 2px rgba(16,24,40,.04)); display: flex; align-items: center; justify-content: space-between; padding: 0 22px; }
+  .topbar::after { content: ''; position: absolute; }
+  .topbar h2 { margin: 0; font-family: var(--head-font); font-size: 16px; font-weight: 700; color: #1A1D24; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .search { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 11px; background: #F2F4F7; border: 1px solid #DFE2E8; border-radius: 8px; color: #7C818E; font-size: 13px; width: 210px; }
+  .search svg { width: 15px; height: 15px; stroke: #7C818E; }
+  .search .kbd { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 1px 5px; background: #fff; border: 1px solid #DFE2E8; border-radius: 4px; }
+  .icon-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+  .icon-btn svg { width: 18px; height: 18px; stroke: #5A5E6B; }
+  .avatar { width: 32px; height: 32px; border-radius: 8px; background: var(--brand); color: var(--brand-text); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; font-family: var(--head-font); }
+
+  .content { flex: 1; overflow: hidden; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+  .eyebrow { font-family: var(--head-font); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--link); }
+  .greet { margin: 8px 0 0; font-family: var(--head-font); font-size: 24px; font-weight: 700; color: #1A1D24; letter-spacing: -.01em; }
+
+  .infobox { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--info-warn-bg); border-left: 3px solid var(--accent); border-radius: 0 7px 7px 0; font-size: 13px; color: #7A5B0E; }
+  .infobox svg { width: 17px; height: 17px; stroke: var(--accent); flex: none; }
+
+  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .kpi { background: #fff; border: 1px solid #DFE2E8; border-radius: 12px; padding: 15px; box-shadow: 0 1px 2px rgba(16,24,40,.04); display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden; }
+  .kpi .tile { width: 34px; height: 34px; border-radius: 9px; background: var(--kpi-tint); display: flex; align-items: center; justify-content: center; }
+  .kpi .tile svg { width: 18px; height: 18px; stroke: var(--kpi-icon); }
+  .kpi .lab { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #7C818E; }
+  .kpi .val { font-family: var(--head-font); font-size: 23px; font-weight: 700; color: #1A1D24; letter-spacing: -.01em; }
+  .kpi .val.mono { font-family: 'JetBrains Mono', monospace; font-size: 21px; }
+  .kpi .sub { font-size: 11.5px; color: #7C818E; display: flex; align-items: center; gap: 5px; }
+  .kpi .sub .up { color: #047857; font-weight: 600; }
+
+  .two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; flex: 1; min-height: 0; }
+  .stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .card { background: #fff; border: 1px solid #DFE2E8; border-radius: 12px; box-shadow: 0 1px 2px rgba(16,24,40,.04); overflow: hidden; }
+  .card-head { padding: 13px 16px; border-bottom: 1px solid #EBEDF2; display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-family: var(--head-font); font-size: 15px; font-weight: 700; color: #1A1D24; }
+  .card-pad { padding: 15px 16px; }
+  .card-label { font-family: var(--head-font); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #7C818E; margin-bottom: 11px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--thead-bg); color: var(--thead-text); font-family: var(--head-font); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; text-align: left; padding: 9px 16px; }
+  thead th.r { text-align: right; }
+  tbody td { padding: 10px 16px; font-size: 12.5px; color: #3F424D; border-top: 1px solid #EBEDF2; }
+  tbody tr:nth-child(even) { background: #F8F9FB; }
+  td.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  td.r { text-align: right; }
+  td.gap { color: #B91C1C; font-weight: 600; }
+
+  .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 1.6; }
+  .b-err { background: #FEF2F2; color: #991B1B; }
+  .b-pend { background: #FFF7ED; color: #9A3412; }
+  .b-info { background: #EFF6FF; color: #1E40AF; }
+  .b-prog { background: #FFF7ED; color: #9A3412; }
+  .b-ok { background: #ECFDF5; color: #065F46; }
+  .b-neutral { background: #F3F4F6; color: #4B5563; }
+
+  .prow { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #3F424D; }
+  .prow + .prow { margin-top: 11px; }
+  .amc-val { display: flex; align-items: baseline; gap: 7px; }
+  .amc-val b { font-family: var(--head-font); font-size: 24px; font-weight: 700; color: #1A1D24; }
+  .amc-val span { font-size: 13px; color: #7C818E; }
+  .bar { margin-top: 9px; height: 6px; border-radius: 99px; background: #EBEDF2; overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 71%; border-radius: 99px; background: var(--brand); }
+  .link { margin-top: 11px; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--link); }
+  .link svg { width: 13px; height: 13px; stroke: var(--link); }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 8px; background: var(--brand); color: var(--brand-text); font-size: 13px; font-weight: 600; border: none; }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Shiroi ERP — design directions</h1>
+    <p>The current founder dashboard beside three new directions. Same layout and data — only the design <em>system</em> changes (color, type, dark surfaces). The logo is unchanged in all four. Scroll right to compare →</p>
+  </div>
+
+  <div class="row" id="row"></div>
+
+  <script>
+  const ICON = {
+    dashboard:'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
+    leads:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75',
+    projects:'M4 4h6l2 3h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
+    procurement:'M6 6h15l-1.6 9H7.5z M6 6 5 3H2 M9 20a1 1 0 1 0 .01 0 M18 20a1 1 0 1 0 .01 0',
+    om:'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2.5-.5-.5-2.5z',
+    cash:'M22 7l-8.5 8.5-5-5L2 17 M16 7h6v6',
+    receipt:'M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z M8 8h8 M8 12h8 M8 16h5',
+    hr:'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+    inventory:'M21 8l-9-5-9 5 9 5 9-5z M3 8v8l9 5 9-5V8 M12 13v8',
+    dollar:'M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
+    hardhat:'M2 18h20 M4 18v-3a8 8 0 0 1 16 0v3 M10 6V4a2 2 0 0 1 4 0v2',
+    file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6',
+    check:'M22 11.1V12a10 10 0 1 1-5.9-9.1 M22 4 12 14l-3-3',
+    search:'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3',
+    bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9 M13.7 21a2 2 0 0 1-3.4 0',
+    arrow:'M5 12h14 M12 5l7 7-7 7',
+    panel:'M3 3h18v18H3z M9 3v18'
+  };
+  const svg = (n, w=2) => `<svg viewBox="0 0 24 24" fill="none" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${ICON[n].split(' M').map((d,i)=>`<path d="${i?'M'+d:d}"/>`).join('')}</svg>`;
+
+  const NAV = [
+    ['Operations', [['dashboard','Dashboard',1],['leads','Leads'],['projects','Projects'],['procurement','Procurement'],['om','O&M']]],
+    ['Finance', [['cash','Cash Flow'],['receipt','Invoices']]],
+    ['Admin', [['hr','HR'],['inventory','Inventory']]],
+  ];
+  const KPIS = [
+    ['dollar','Cash Invested','₹42.6 L','6 projects',1],
+    ['cash','Pipeline Value','₹12.4 Cr','<span class="up">▲ 12% MoM</span>',1],
+    ['hardhat','Active Projects','103','With cash positions',0],
+    ['file','Overdue Reports','4','Missing today',0],
+    ['check','Pending Approvals','2','Awaiting founder OK',0],
+  ];
+
+  function frameHTML(t) {
+    const nav = NAV.map(([sec, items]) => `
+      <div>
+        <div class="nav-sec-label">${sec}</div>
+        ${items.map(([ic,lab,act]) => `<div class="nav-item ${act?'active':''}">${svg(ic)}<span>${lab}</span></div>`).join('')}
+      </div>`).join('');
+
+    const kpis = KPIS.map(([ic,lab,val,sub,mono]) => `
+      <div class="kpi">
+        <div class="tile">${svg(ic)}</div>
+        <div class="lab">${lab}</div>
+        <div class="val ${mono?'mono':''}">${val}</div>
+        <div class="sub">${sub}</div>
+      </div>`).join('');
+
+    return `<div class="frame" style="${t.vars}">
+      <aside class="side">
+        <div class="side-brand"><img src="assets/logo.svg" alt=""><span class="wm">Shiroi Energy</span></div>
+        <nav class="nav">${nav}</nav>
+        <div class="side-foot">${svg('panel')}<span>Collapse</span></div>
+      </aside>
+      <div class="main">
+        <header class="topbar">
+          <h2>Dashboard</h2>
+          <div class="topbar-right">
+            <div class="search">${svg('search')}<span>Search…</span><span class="kbd">⌘K</span></div>
+            <div class="icon-btn">${svg('bell')}</div>
+            <div class="avatar">VK</div>
+          </div>
+        </header>
+        <div class="content">
+          <div>
+            <div class="eyebrow">Dashboard</div>
+            <h1 class="greet">Good morning, Vivek</h1>
+          </div>
+          <div class="infobox">${svg('bell')}<span>Payroll export due in 3 days · 48 employees pending approval.</span></div>
+          <div class="kpis">${kpis}</div>
+          <div class="two-col">
+            <div class="stack">
+              <div class="card">
+                <div class="card-head"><span class="card-title">Cash-negative projects</span><span class="badge b-err">6 alerts</span></div>
+                <table>
+                  <thead><tr><th>Project</th><th>Client</th><th class="r">Invested</th><th class="r">Received</th><th class="r">Gap</th></tr></thead>
+                  <tbody>
+                    <tr><td class="mono">PV-0421</td><td>Anand Residence</td><td class="r mono">₹6.4 L</td><td class="r mono">₹2.0 L</td><td class="r mono gap">−₹4.4 L</td></tr>
+                    <tr><td class="mono">PV-0418</td><td>Sai Textiles</td><td class="r mono">₹54.0 L</td><td class="r mono">₹40.0 L</td><td class="r mono gap">−₹14.0 L</td></tr>
+                    <tr><td class="mono">PV-0410</td><td>Lakshmi Mills</td><td class="r mono">₹98.0 L</td><td class="r mono">₹70.0 L</td><td class="r mono gap">−₹28.0 L</td></tr>
+                    <tr><td class="mono">PV-0407</td><td>GreenMart Coimbatore</td><td class="r mono">₹22.5 L</td><td class="r mono">₹18.0 L</td><td class="r mono gap">−₹4.5 L</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="card card-pad">
+                <div class="card-label">Pipeline</div>
+                <div class="prow"><span>Survey scheduled</span><span class="badge b-neutral">12</span></div>
+                <div class="prow"><span>Proposal sent</span><span class="badge b-info">8</span></div>
+                <div class="prow"><span>Negotiation</span><span class="badge b-prog">5</span></div>
+                <div class="prow"><span>Closure soon</span><span class="badge b-ok">3</span></div>
+              </div>
+              <div class="card card-pad">
+                <div class="card-label">AMC this month</div>
+                <div class="amc-val"><b>34</b><span>/ 48 visits</span></div>
+                <div class="bar"><i></i></div>
+                <a class="link">View AMC schedule ${svg('arrow')}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const sw = (arr) => `<span class="swatches">${arr.map(c=>`<i style="background:${c}"></i>`).join('')}</span>`;
+
+  const THEMES = [
+    {
+      name: 'Current — V2 “eco-green”',
+      desc: 'Today’s system. Single emerald brand hue, cool-charcoal sidebar, DM Sans headings. Clean and competent — but the green has no relationship to the sun logo, so it reads like generic green SaaS.',
+      sw: ['#00B050','#F0B429','#111318','#F8F9FB'],
+      vars: `--brand:#00B050;--brand-text:#fff;--accent:#F0B429;--link:#007A38;--side-bg:#111318;--active-bg:rgba(0,176,80,.14);--active-bar:#00B050;--head-font:'DM Sans';--content-bg:#F8F9FB;--kpi-tint:#ECFDF3;--kpi-icon:#00B050;--info-warn-bg:#FFFBEB;--thead-bg:#1A1D24;--thead-text:rgba(255,255,255,.78);`
+    },
+    {
+      name: 'A · Solar Gold',
+      desc: 'Gold becomes the protagonist — drawn straight from the logo. Amber primary actions, warm-charcoal sidebar, Space Grotesk headings with engineering confidence. Green demoted to a “live / healthy / generating” status signal only.',
+      sw: ['#E08A00','#F0B429','#16130D','#FBF8F2'],
+      vars: `--brand:#E08A00;--brand-text:#fff;--accent:#E08A00;--link:#B45309;--side-bg:#16130D;--active-bg:rgba(224,138,0,.18);--active-bar:#F0B429;--head-font:'Space Grotesk';--content-bg:#FBF8F2;--kpi-tint:#FCEFD6;--kpi-icon:#C2740A;--info-warn-bg:#FCF3E2;--thead-bg:#221C12;--thead-text:rgba(255,255,255,.78);`
+    },
+    {
+      name: 'B · Dusk',
+      desc: 'The premium energy-brand register (think Tesla Energy / Enphase). Same gold accent, but a deep warm near-black sidebar and a gold hairline under the header. Most dramatic of the three while keeping the 95%-light content area.',
+      sw: ['#E89400','#F4B731','#120F0A','#FAF7F1'],
+      vars: `--brand:#E89400;--brand-text:#fff;--accent:#E89400;--link:#B45309;--side-bg:#120F0A;--active-bg:rgba(244,183,49,.16);--active-bar:#F4B731;--head-font:'Space Grotesk';--content-bg:#FAF7F1;--kpi-tint:#FBEFD7;--kpi-icon:#B97608;--info-warn-bg:#FBF1DD;--thead-bg:#1C160E;--thead-text:rgba(255,255,255,.8);--topbar-shadow:inset 0 -2px 0 rgba(232,148,0,.45),0 1px 2px rgba(16,24,40,.04);`
+    },
+    {
+      name: 'C · Sky + Gold',
+      desc: 'Picks up the logo’s cyan. Cyan is the interactive / grid / net-metering colour (links, active nav, charts), gold is the energy accent, green stays for status. Cooler and more “utility / data” in feel, still unmistakably solar.',
+      sw: ['#0AA0B5','#F0B429','#0E1518','#F7F9FA'],
+      vars: `--brand:#0AA0B5;--brand-text:#fff;--accent:#F0B429;--link:#0E7C8B;--side-bg:#0E1518;--active-bg:rgba(10,160,181,.18);--active-bar:#16C0D6;--head-font:'Space Grotesk';--content-bg:#F7F9FA;--kpi-tint:#E2F6F9;--kpi-icon:#0A8FA1;--info-warn-bg:#FFFBEB;--thead-bg:#13202A;--thead-text:rgba(255,255,255,.78);`
+    },
+  ];
+
+  document.getElementById('row').innerHTML = THEMES.map(t => `
+    <div class="col">
+      <div class="frame-label">
+        <span class="name">${t.name}</span>
+        <span class="desc">${t.desc}</span>
+        <span class="chip">${sw(t.sw)}</span>
+      </div>
+      ${frameHTML(t)}
+    </div>`).join('');
+  </script>
+</body>
+</html>

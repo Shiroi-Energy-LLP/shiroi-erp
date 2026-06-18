@@ -7,7 +7,7 @@ const STATUS_COLORS: Record<string, string> = {
   order_received: '#1D4ED8',
   yet_to_start: '#525252',
   in_progress: '#EA580C',
-  completed: '#00B050',
+  completed: '#16A34A',
   holding_shiroi: '#B45309',
   holding_client: '#991B1B',
   waiting_net_metering: '#7C3AED',

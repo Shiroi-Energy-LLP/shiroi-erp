@@ -5,21 +5,28 @@
 import { StyleSheet } from '@react-pdf/renderer';
 
 export const BRAND = {
-  green:     '#00B050',   // matches design-system.md --brand
-  greenDark: '#007A38',   // matches --brand-dark
-  black:     '#111318',   // matches --n950
-  gray900:   '#1A1D24',
+  // Solar Gold brand accent. `green`/`greenDark` keys are kept as deprecated
+  // aliases (still referenced across PDF components) but now resolve to GOLD —
+  // green is no longer the brand hue. Prefer `gold`/`goldDark` going forward.
+  gold:      '#E08A00',   // matches design-system.md --brand (solar gold)
+  goldDark:  '#B45309',   // matches --brand-dark (AA on white)
+  ink:       '#1F1709',   // dark ink text on gold fills
+  green:     '#E08A00',   // deprecated alias → gold
+  greenDark: '#B45309',   // deprecated alias → gold-dark
+  black:     '#16130D',   // matches --n950 (warm near-black)
+  gray900:   '#221C12',   // warm
   gray700:   '#3F424D',   // body text on white
   gray500:   '#6B7280',   // secondary labels
-  gray300:   '#DFE2E8',
-  gray100:   '#F1F3F5',
-  gray50:    '#F8FAFC',
+  gray300:   '#E5DFD3',   // warm border
+  gray100:   '#F4F0E7',   // warm zebra
+  gray50:    '#FBF8F2',   // warm cream
   white:     '#FFFFFF',
   solar:     '#F0B429',   // optional CTA accent on payment milestone callouts
   // Legacy tokens — kept for non-proposal PDFs (project-report, survey-report, etc.)
   greenLight: '#ECFDF5',
   amber:      '#B45309',
   red:        '#991B1B',
+  statusGreen: '#16A34A', // true status green (live / healthy / pass marks)
 } as const;
 
 export const styles = StyleSheet.create({

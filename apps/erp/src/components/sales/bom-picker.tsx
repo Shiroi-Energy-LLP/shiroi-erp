@@ -190,7 +190,7 @@ export function BomPicker({
                       key={p.id}
                       onClick={() => setSelectedPriceBookId(p.id)}
                       className={`cursor-pointer px-3 py-2 text-xs hover:bg-n-100 ${
-                        selectedPriceBookId === p.id ? 'bg-shiroi-green/10 ring-1 ring-shiroi-green/30' : ''
+                        selectedPriceBookId === p.id ? 'bg-shiroi-gold/10 ring-1 ring-shiroi-gold/30' : ''
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">

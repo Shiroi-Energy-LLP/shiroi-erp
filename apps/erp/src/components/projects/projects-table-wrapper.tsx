@@ -100,8 +100,8 @@ export function ProjectsTableWrapper({
       <div className="sticky top-0 z-30 -mx-4 lg:-mx-6 bg-white border-b border-n-200 shadow-sm">
         <div className="px-4 lg:px-6 py-3">{filterBar}</div>
         {selectedIds.length > 0 && (
-          <div className="border-t border-n-200 px-4 lg:px-6 py-2 bg-shiroi-green/5 flex items-center gap-3 flex-wrap">
-            <span className="text-xs text-shiroi-green font-semibold">
+          <div className="border-t border-n-200 px-4 lg:px-6 py-2 bg-shiroi-gold/5 flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-shiroi-gold-dark font-semibold">
               {selectedIds.length} selected
             </span>
             <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export function ProjectsTableWrapper({
                 disabled={bulkBusy}
                 defaultValue=""
                 onChange={handleBulkStatus}
-                className="h-7 text-xs border border-n-300 rounded px-2 bg-white hover:border-shiroi-green focus:outline-none focus:ring-1 focus:ring-shiroi-green disabled:opacity-50"
+                className="h-7 text-xs border border-n-300 rounded px-2 bg-white hover:border-shiroi-gold focus:outline-none focus:ring-1 focus:ring-shiroi-gold disabled:opacity-50"
               >
                 <option value="" disabled>
                   {bulkBusy ? 'Updating…' : 'Pick a status'}

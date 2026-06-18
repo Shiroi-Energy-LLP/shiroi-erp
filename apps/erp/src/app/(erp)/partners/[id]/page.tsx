@@ -275,7 +275,7 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
                     <TableCell className="font-medium">
                       <Link
                         href={`/sales/${l.id}`}
-                        className="text-shiroi-green hover:underline"
+                        className="text-shiroi-gold-dark hover:underline"
                       >
                         {l.customer_name}
                       </Link>

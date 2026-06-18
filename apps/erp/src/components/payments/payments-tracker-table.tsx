@@ -192,7 +192,7 @@ export function PaymentsTrackerTable({ rows, allRows, summary, filter, thisWeekC
                         <TableCell>
                           <Link
                             href={`/projects/${row.project_id}`}
-                            className="hover:text-shiroi-green"
+                            className="hover:text-shiroi-gold-dark"
                           >
                             <div className="text-xs font-mono text-n-500">
                               {row.project_number}

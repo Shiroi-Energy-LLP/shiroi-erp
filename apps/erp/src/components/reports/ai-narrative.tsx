@@ -43,11 +43,11 @@ export function AINarrative({ reportId, projectId, existingNarrative, generatedA
   }
 
   return (
-    <Card className="border-[#00B050]/20">
+    <Card className="border-[#E08A00]/20">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#00B050]" />
+            <Sparkles className="h-4 w-4 text-[#B45309]" />
             AI Summary
           </CardTitle>
           <Button

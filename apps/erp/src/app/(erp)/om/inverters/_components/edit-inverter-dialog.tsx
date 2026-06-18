@@ -186,7 +186,7 @@ export function EditInverterDialogTrigger({
                 id="monitoring_credentials_id"
                 name="monitoring_credentials_id"
                 defaultValue={inverter.monitoring_credentials_id ?? ''}
-                className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+                className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
               >
                 <option value="">None</option>
                 {filteredCredentials.map((c) => (
@@ -271,7 +271,7 @@ export function EditInverterDialogTrigger({
                     name="polling_enabled"
                     value="true"
                     defaultChecked={inverter.polling_enabled}
-                    className="accent-shiroi-green"
+                    className="accent-shiroi-gold"
                   />
                   Yes
                 </label>
@@ -281,7 +281,7 @@ export function EditInverterDialogTrigger({
                     name="polling_enabled"
                     value="false"
                     defaultChecked={!inverter.polling_enabled}
-                    className="accent-shiroi-green"
+                    className="accent-shiroi-gold"
                   />
                   No
                 </label>

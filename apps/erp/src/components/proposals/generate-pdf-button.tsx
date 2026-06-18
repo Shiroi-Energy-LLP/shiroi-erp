@@ -64,7 +64,7 @@ export function GeneratePDFButton({ proposalId }: GeneratePDFButtonProps) {
           href={pdfUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-shiroi-green underline hover:no-underline"
+          className="text-xs text-shiroi-gold-dark underline hover:no-underline"
         >
           Open PDF ↗
         </a>

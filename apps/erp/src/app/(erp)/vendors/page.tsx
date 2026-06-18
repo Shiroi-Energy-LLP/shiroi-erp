@@ -124,7 +124,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                 vendors.map((vendor) => (
                   <TableRow key={vendor.id}>
                     <TableCell>
-                      <span className="text-[#00B050] font-medium">
+                      <span className="text-[#B45309] font-medium">
                         {vendor.vendor_code ?? '---'}
                       </span>
                     </TableCell>
@@ -152,7 +152,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                       <span className="flex items-center gap-1.5">
                         <span
                           className={`inline-block h-2 w-2 rounded-full ${
-                            vendor.is_active ? 'bg-[#00B050]' : 'bg-[#DC2626]'
+                            vendor.is_active ? 'bg-[#16A34A]' : 'bg-[#DC2626]'
                           }`}
                         />
                         <span className="text-sm text-[#7C818E]">

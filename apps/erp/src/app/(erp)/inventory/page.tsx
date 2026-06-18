@@ -101,7 +101,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <Package className="h-8 w-8 text-[#00B050]" />
+              <Package className="h-8 w-8 text-[#B45309]" />
               <div>
                 <p className="text-2xl font-bold font-mono">{summary.totalPieces}</p>
                 <p className="text-xs text-muted-foreground">Total Pieces</p>
@@ -233,7 +233,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                 pieces.map((piece) => (
                   <TableRow key={piece.id}>
                     <TableCell>
-                      <Link href={`/inventory/${piece.id}`} className="text-[#00B050] hover:underline font-medium">
+                      <Link href={`/inventory/${piece.id}`} className="text-[#B45309] hover:underline font-medium">
                         {piece.item_description}
                       </Link>
                       {piece.brand && (
@@ -258,7 +258,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     </TableCell>
                     <TableCell className="text-sm">
                       {piece.projects ? (
-                        <Link href={`/projects/${piece.project_id}`} className="text-[#00B050] hover:underline">
+                        <Link href={`/projects/${piece.project_id}`} className="text-[#B45309] hover:underline">
                           {piece.projects.project_number}
                         </Link>
                       ) : '—'}
@@ -277,7 +277,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                                     ? 'bg-[#991B1B]'
                                     : piece.current_length_m <= piece.minimum_usable_length_m * 2
                                     ? 'bg-[#EA580C]'
-                                    : 'bg-[#00B050]'
+                                    : 'bg-[#16A34A]'
                                 }`}
                                 style={{
                                   width: `${Math.min(100, ((piece.current_length_m) / (piece.original_length_m ?? piece.current_length_m)) * 100)}%`,

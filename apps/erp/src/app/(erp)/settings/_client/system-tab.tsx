@@ -119,9 +119,9 @@ export function SystemTab({ currentlyEnabled, updatedAt, updatedByName }: System
           onClick={() => handleToggleRequest(!enabled)}
           className={[
             'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent',
-            'transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-shiroi-green focus-visible:ring-offset-2',
+            'transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-shiroi-gold focus-visible:ring-offset-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            enabled ? 'bg-shiroi-green' : 'bg-n-300',
+            enabled ? 'bg-shiroi-gold' : 'bg-n-300',
           ].join(' ')}
         >
           <span className="sr-only">{enabled ? 'Disable proposal gate' : 'Enable proposal gate'}</span>

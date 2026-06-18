@@ -7,30 +7,38 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // V2 Shiroi brand
+        // Solar Gold brand — gold replaces green as the brand/action hue
         shiroi: {
-          green: '#00B050',
-          'green-hover': '#009945',
-          'green-dark': '#007A38',
-          'green-deep': '#004D22',
+          gold: '#E08A00',
+          'gold-hover': '#C77606',
+          'gold-dark': '#B45309', // links / text on light (AA on white)
+          'gold-deep': '#7A3D06',
+          ink: '#1F1709', // dark ink text on gold fills
           solar: '#F0B429',
           'solar-light': '#F7D070',
-          'solar-bg': '#FEF8E7',
+          'solar-bg': '#FCF3E2',
+          // Deprecated brand-green aliases → repointed to a true STATUS green.
+          // Brand-action usages have been swept to `shiroi-gold`; any remaining
+          // `shiroi-green*` class is a status signal (won / paid / success).
+          green: '#16A34A',
+          'green-hover': '#15803D',
+          'green-dark': '#15803D',
+          'green-deep': '#065F46',
         },
-        // V2 neutral scale (desaturated warm-gray)
+        // Solar Gold neutral scale (warm sand/stone light end, warm near-black darks)
         n: {
-          '950': '#111318',
-          '900': '#1A1D24',
+          '950': '#16130D',
+          '900': '#221C12',
           '800': '#2D3039',
           '700': '#3F424D',
           '600': '#5A5E6B',
           '500': '#7C818E',
           '400': '#9CA0AB',
-          '300': '#BFC3CC',
-          '200': '#DFE2E8',
-          '150': '#EBEDF2',
-          '100': '#F2F4F7',
-          '050': '#F8F9FB',
+          '300': '#C2BBAE',
+          '200': '#E5DFD3',
+          '150': '#EDE8DD',
+          '100': '#F4F0E7',
+          '050': '#FBF8F2',
         },
         // V2 status semantic colors
         status: {
@@ -97,10 +105,12 @@ const config: Config = {
         xs: '4px',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
-        heading: ['var(--font-dm-sans)', 'DM Sans', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-ibm-plex-sans)', 'IBM Plex Sans', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-archivo)', 'Archivo', 'system-ui', 'sans-serif'],
         brand: ['var(--font-rajdhani)', 'Rajdhani', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-jetbrains-mono)', 'JetBrains Mono', 'monospace'],
+        // mono repointed to IBM Plex Sans w/ tabular figures — plain round zero
+        // replaces the old JetBrains Mono dotted zero the client disliked.
+        mono: ['var(--font-ibm-plex-sans)', 'IBM Plex Sans', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         xs: '0 1px 2px rgba(0,0,0,.05)',

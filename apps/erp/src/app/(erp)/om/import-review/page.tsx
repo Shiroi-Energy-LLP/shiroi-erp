@@ -160,7 +160,7 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
         <Card>
           <CardContent className="py-3">
             <div className="text-xs text-n-500 uppercase tracking-wider">Imported</div>
-            <div className="text-2xl font-heading font-bold text-[#00B050] mt-1">{summary.imported}</div>
+            <div className="text-2xl font-heading font-bold text-[#16A34A] mt-1">{summary.imported}</div>
             {summary.errors > 0 && (
               <div className="text-[10px] text-red-600 mt-0.5">{summary.errors} errors</div>
             )}
@@ -176,7 +176,7 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
             href={tabUrl(tab.value)}
             className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
               currentStatus === tab.value
-                ? 'border-[#00B050] text-[#00B050]'
+                ? 'border-[#E08A00] text-[#B45309]'
                 : 'border-transparent text-n-500 hover:text-n-900'
             }`}
           >

@@ -110,7 +110,7 @@ export function ViewTabs({
         onClick={() => onViewChange(null)}
         className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
           !activeViewId
-            ? 'border-shiroi-green text-shiroi-green'
+            ? 'border-shiroi-gold text-shiroi-gold-dark'
             : 'border-transparent text-n-500 hover:text-n-900 hover:border-n-200'
         }`}
       >
@@ -124,7 +124,7 @@ export function ViewTabs({
             onClick={() => onViewChange(view)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeViewId === view.id
-                ? 'border-shiroi-green text-shiroi-green'
+                ? 'border-shiroi-gold text-shiroi-gold-dark'
                 : 'border-transparent text-n-500 hover:text-n-900 hover:border-n-200'
             }`}
           >
@@ -192,7 +192,7 @@ export function ViewTabs({
       ) : (
         <button
           onClick={() => setShowNewForm(true)}
-          className="flex items-center gap-1 px-3 py-2.5 text-sm text-n-500 hover:text-shiroi-green transition-colors"
+          className="flex items-center gap-1 px-3 py-2.5 text-sm text-n-500 hover:text-shiroi-gold-dark transition-colors"
         >
           <Plus className="h-3.5 w-3.5" /> Save view
         </button>

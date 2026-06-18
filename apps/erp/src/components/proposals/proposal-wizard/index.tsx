@@ -150,7 +150,7 @@ export function ProposalWizard({ leads }: { leads: Lead[] }) {
             <div
               className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
                 i === step
-                  ? 'bg-shiroi-green text-white'
+                  ? 'bg-shiroi-gold text-shiroi-ink'
                   : i < step
                     ? 'bg-status-success-bg text-status-success-text'
                     : 'bg-status-neutral-bg text-[#6B7280]'
@@ -164,7 +164,7 @@ export function ProposalWizard({ leads }: { leads: Lead[] }) {
               {label}
             </span>
             {i < STEPS.length - 1 && (
-              <div className={`w-8 h-px ${i < step ? 'bg-shiroi-green' : 'bg-[#E5E7EB]'}`} />
+              <div className={`w-8 h-px ${i < step ? 'bg-shiroi-gold' : 'bg-[#E5E7EB]'}`} />
             )}
           </div>
         ))}

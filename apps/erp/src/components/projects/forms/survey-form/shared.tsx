@@ -166,7 +166,7 @@ export function PhotoUpload({
         )}
         {uploading && (
           <span className="text-xs text-[#7C818E] flex items-center gap-1">
-            <span className="h-3 w-3 border border-n-400 border-t-[#00B050] rounded-full animate-spin" />
+            <span className="h-3 w-3 border border-n-400 border-t-[#E08A00] rounded-full animate-spin" />
             Uploading...
           </span>
         )}
@@ -193,7 +193,7 @@ export function ProgressBar({ completed, total }: { completed: number; total: nu
     <div className="flex items-center gap-3 mb-4">
       <div className="flex-1 h-2 bg-n-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-[#00B050] rounded-full transition-all duration-300"
+          className="h-full bg-[#E08A00] rounded-full transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>

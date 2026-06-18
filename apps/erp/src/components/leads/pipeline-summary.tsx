@@ -54,7 +54,7 @@ export function PipelineSummary({
 
       {/* 3 — Closing This Week (clickable) */}
       <Link href={weekUrl} className="block">
-        <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-transparent hover:border-shiroi-green/40">
+        <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-transparent hover:border-shiroi-gold/40">
           <CardContent className="pt-4 pb-3">
             <div className="text-xs font-medium text-n-500 uppercase tracking-wider">
               Closing This Week
@@ -73,7 +73,7 @@ export function PipelineSummary({
 
       {/* 4 — Closing This Month (clickable) */}
       <Link href={monthUrl} className="block">
-        <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-transparent hover:border-shiroi-green/40">
+        <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-transparent hover:border-shiroi-gold/40">
           <CardContent className="pt-4 pb-3">
             <div className="text-xs font-medium text-n-500 uppercase tracking-wider">
               Closing This Month

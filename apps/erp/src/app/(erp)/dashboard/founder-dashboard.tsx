@@ -151,7 +151,7 @@ export async function FounderDashboard() {
               </div>
               <div className="mt-2 h-1.5 rounded-full bg-[#E5E7EB] overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-shiroi-green transition-all duration-300"
+                  className="h-full rounded-full bg-shiroi-gold transition-all duration-300"
                   style={{ width: `${amcSummary.scheduled > 0 ? Math.round((amcSummary.completed / amcSummary.scheduled) * 100) : 0}%` }}
                 />
               </div>

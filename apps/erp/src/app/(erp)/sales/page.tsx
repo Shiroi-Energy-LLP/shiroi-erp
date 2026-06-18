@@ -310,9 +310,9 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
       {(closingParam || referredByParam) && (
         <div className="flex items-center gap-2">
           {closingParam && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-shiroi-green/40 bg-shiroi-green/10 px-3 py-1 text-xs font-medium text-shiroi-green">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-shiroi-gold/40 bg-shiroi-gold/10 px-3 py-1 text-xs font-medium text-shiroi-gold-dark">
               {closingParam === 'this_week' ? 'Closing this week' : 'Closing this month'}
-              <Link href="/sales" className="ml-1 text-shiroi-green/70 hover:text-shiroi-green" aria-label="Clear filter">
+              <Link href="/sales" className="ml-1 text-shiroi-gold-dark/70 hover:text-shiroi-gold-dark" aria-label="Clear filter">
                 ×
               </Link>
             </span>

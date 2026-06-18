@@ -158,7 +158,7 @@ export default async function VendorPaymentsPage() {
                       {payment.vendor_bill_id && payment.vendor_bills ? (
                         <Link
                           href={`/vendor-bills/${payment.vendor_bill_id}`}
-                          className="text-[#00B050] hover:underline"
+                          className="text-[#B45309] hover:underline"
                         >
                           {payment.vendor_bills.bill_number}
                         </Link>

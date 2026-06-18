@@ -125,7 +125,7 @@ export function RecordProjectPaymentDialog({
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-[#00B050]"
+                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-[#E08A00]"
                 >
                   <option value="bank_transfer">Bank Transfer</option>
                   <option value="upi">UPI</option>
@@ -161,7 +161,7 @@ export function RecordProjectPaymentDialog({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#E08A00]"
               />
             </div>
           </div>

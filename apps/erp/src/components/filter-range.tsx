@@ -60,7 +60,7 @@ export function FilterRange({
   const isActive = !!minValue || !!maxValue;
 
   const inputClass =
-    'h-9 px-2 text-sm border rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-green focus:border-shiroi-green border-n-200 text-n-900 placeholder:text-n-400';
+    'h-9 px-2 text-sm border rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-gold focus:border-shiroi-gold border-n-200 text-n-900 placeholder:text-n-400';
 
   const widthClass = type === 'date' ? 'w-[130px]' : 'w-[80px]';
 
@@ -68,7 +68,7 @@ export function FilterRange({
     <div className={`flex items-center gap-1.5 ${className ?? ''}`}>
       <span
         className={`text-xs font-medium whitespace-nowrap ${
-          isActive ? 'text-shiroi-green' : 'text-n-500'
+          isActive ? 'text-shiroi-gold-dark' : 'text-n-500'
         }`}
       >
         {label}

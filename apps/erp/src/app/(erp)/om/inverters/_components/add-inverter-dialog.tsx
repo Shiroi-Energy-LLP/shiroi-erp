@@ -133,7 +133,7 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
               required
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+              className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
             >
               <option value="">Select brand…</option>
               {INVERTER_BRANDS.map((b) => (
@@ -205,7 +205,7 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
               <select
                 id="monitoring_credentials_id"
                 name="monitoring_credentials_id"
-                className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+                className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
               >
                 <option value="">None</option>
                 {filteredCredentials.map((c) => (
@@ -285,11 +285,11 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
               <Label>Polling Enabled</Label>
               <div className="flex gap-3 mt-1">
                 <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                  <input type="radio" name="polling_enabled" value="true" defaultChecked className="accent-shiroi-green" />
+                  <input type="radio" name="polling_enabled" value="true" defaultChecked className="accent-shiroi-gold" />
                   Yes
                 </label>
                 <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                  <input type="radio" name="polling_enabled" value="false" className="accent-shiroi-green" />
+                  <input type="radio" name="polling_enabled" value="false" className="accent-shiroi-gold" />
                   No
                 </label>
               </div>

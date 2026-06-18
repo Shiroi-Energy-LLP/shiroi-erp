@@ -124,7 +124,7 @@ export function HandoverPack({ projectId, existingPack }: HandoverPackProps) {
               <div className="space-y-1 text-sm">
                 {metadata.warranty && Object.entries(metadata.warranty).map(([key, val]) => (
                   <div key={key} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3 w-3 text-[#00B050] flex-shrink-0" />
+                    <CheckCircle2 className="h-3 w-3 text-[#16A34A] flex-shrink-0" />
                     <span className="text-[#3F424D]">{String(val)}</span>
                   </div>
                 ))}

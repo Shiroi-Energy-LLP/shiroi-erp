@@ -95,7 +95,7 @@ export function CreatePlantMonitoringDialog({ projects }: CreatePlantMonitoringD
                   href="/projects/new"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-shiroi-green hover:underline"
+                  className="text-shiroi-gold-dark hover:underline"
                 >
                   Create it first →
                 </a>
@@ -148,7 +148,7 @@ export function CreatePlantMonitoringDialog({ projects }: CreatePlantMonitoringD
               id="notes"
               name="notes"
               rows={2}
-              className="w-full rounded-md border border-n-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+              className="w-full rounded-md border border-n-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
             />
           </div>
 

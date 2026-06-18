@@ -226,7 +226,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                         {/* Project */}
                         <td className="px-2 py-1.5">
                           {ticket.project_id ? (
-                            <Link href={`/projects/${ticket.project_id}`} className="text-[#00B050] hover:underline text-xs">
+                            <Link href={`/projects/${ticket.project_id}`} className="text-[#B45309] hover:underline text-xs">
                               {projectInfo?.customer_name ?? '—'}
                             </Link>
                           ) : ticket.project_name_custom ? (

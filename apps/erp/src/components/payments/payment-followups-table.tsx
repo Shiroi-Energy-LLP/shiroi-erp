@@ -108,7 +108,7 @@ export async function PaymentFollowupsTable() {
                         {r.project_id ? (
                           <Link
                             href={`/projects/${r.project_id}`}
-                            className="text-shiroi-green hover:underline font-medium text-sm"
+                            className="text-shiroi-gold-dark hover:underline font-medium text-sm"
                           >
                             {r.project_number ?? '—'}
                           </Link>

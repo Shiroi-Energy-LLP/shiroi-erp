@@ -158,7 +158,7 @@ export function ProjectCombobox({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`w-full pl-8 pr-8 border border-n-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-green ${inputClassName}`}
+          className={`w-full pl-8 pr-8 border border-n-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-gold ${inputClassName}`}
         />
         {(value || query || (allowCustom && customValue)) && (
           <button
@@ -181,7 +181,7 @@ export function ProjectCombobox({
                 href="/projects/new"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-shiroi-green hover:underline mt-1 inline-block"
+                className="text-xs text-shiroi-gold-dark hover:underline mt-1 inline-block"
               >
                 Create a new project →
               </a>
@@ -221,7 +221,7 @@ export function ProjectCombobox({
                 e.preventDefault(); // prevent input blur before the click fires
                 handleUseCustom();
               }}
-              className="w-full text-left px-3 py-2 text-xs text-shiroi-green hover:bg-n-50 border-t border-n-100"
+              className="w-full text-left px-3 py-2 text-xs text-shiroi-gold-dark hover:bg-n-50 border-t border-n-100"
             >
               Use “{query.trim()}” as project name
             </button>

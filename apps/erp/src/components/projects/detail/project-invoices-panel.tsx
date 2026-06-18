@@ -138,7 +138,7 @@ export async function ProjectInvoicesPanel({ projectId }: ProjectInvoicesPanelPr
                           invoiceNumber={inv.invoice_number}
                           outstandingAmount={outstanding}
                           trigger={
-                            <button className="text-xs text-shiroi-green hover:underline font-medium whitespace-nowrap">
+                            <button className="text-xs text-shiroi-gold-dark hover:underline font-medium whitespace-nowrap">
                               Record payment
                             </button>
                           }

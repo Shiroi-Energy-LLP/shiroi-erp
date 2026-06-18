@@ -6,7 +6,7 @@ const STATUS_META: { value: string; label: string; bg: string; text: string; bor
   { value: 'order_received', label: 'Order Received', bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
   { value: 'yet_to_start', label: 'Yet to Start', bg: '#F5F6F8', text: '#525252', border: '#DFE2E8' },
   { value: 'in_progress', label: 'In Progress', bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' },
-  { value: 'completed', label: 'Completed', bg: '#F0FDF4', text: '#00B050', border: '#BBF7D0' },
+  { value: 'completed', label: 'Completed', bg: '#F0FDF4', text: '#16A34A', border: '#BBF7D0' },
   { value: 'holding_shiroi', label: 'Holding — Shiroi', bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
   { value: 'holding_client', label: 'Holding — Client', bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   { value: 'waiting_net_metering', label: 'Waiting Net Metering', bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
@@ -31,7 +31,7 @@ export function ProjectsSummaryHeader({ rows }: { rows: ProjectStatusSummaryRow[
   return (
     <div className="flex flex-wrap items-stretch gap-2 pb-3">
       {/* Total system size + project count */}
-      <div className="rounded-lg border border-shiroi-green/30 bg-shiroi-green/5 px-4 py-2.5 min-w-[170px]">
+      <div className="rounded-lg border border-shiroi-gold/30 bg-shiroi-gold/5 px-4 py-2.5 min-w-[170px]">
         <div className="text-[10px] uppercase tracking-wider text-n-500">Total System Size</div>
         <div className="text-lg font-bold text-n-900 tabular-nums">
           {formatKwp(totalKwp)} <span className="text-xs font-normal text-n-500">kWp</span>

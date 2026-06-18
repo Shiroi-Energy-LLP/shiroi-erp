@@ -65,7 +65,7 @@ function Section({
       {drillHref ? (
         <Link
           href={drillHref}
-          className="block text-[10px] font-semibold text-n-500 uppercase tracking-wider mb-1.5 hover:text-shiroi-green transition-colors"
+          className="block text-[10px] font-semibold text-n-500 uppercase tracking-wider mb-1.5 hover:text-shiroi-gold-dark transition-colors"
         >
           {headerLabel}
         </Link>

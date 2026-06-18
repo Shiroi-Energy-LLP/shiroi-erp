@@ -106,7 +106,7 @@ export function RaiseInvoiceDialog({ projectId }: RaiseInvoiceDialogProps) {
                 <select
                   value={invoiceType}
                   onChange={(e) => setInvoiceType(e.target.value as typeof invoiceType)}
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-[#00B050]"
+                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-[#E08A00]"
                 >
                   <option value="proforma">Proforma</option>
                   <option value="tax_invoice">Tax Invoice</option>
@@ -190,7 +190,7 @@ export function RaiseInvoiceDialog({ projectId }: RaiseInvoiceDialogProps) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#E08A00]"
               />
             </div>
           </div>

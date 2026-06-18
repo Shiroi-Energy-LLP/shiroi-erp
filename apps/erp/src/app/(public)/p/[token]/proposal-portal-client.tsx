@@ -80,7 +80,7 @@ export function ProposalPortalClient({ proposal, formatINR, token }: Props) {
       {/* Header */}
       <header className="border-b bg-white px-6 py-4">
         <div className="mx-auto max-w-3xl flex items-center gap-3">
-          <div className="h-8 w-8 rounded-md bg-[#00B050] flex items-center justify-center text-white">
+          <div className="h-8 w-8 rounded-md bg-[#E08A00] flex items-center justify-center text-[#1F1709]">
             <Sun className="h-5 w-5" />
           </div>
           <span className="font-bold text-lg tracking-tight">Shiroi Energy</span>

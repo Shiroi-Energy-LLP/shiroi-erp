@@ -703,7 +703,7 @@ Default weights: delivery 15% · structure 15% · panels 25% · electrical 20% �
 
 **No Figma.** Claude writes screen specs and working Next.js/Tailwind components directly; v0.dev for visually complex ones. Screens are production code from the start.
 
-Design system: Shiroi Brand Guide V6. `packages/ui` holds tokens, shadcn/ui overrides, Tailwind config. Full detail: `docs/design/design-system.md` + `docs/design/brand-guide.html`.
+Design system: **Solar Gold (V3, June 2026)** — the brand hue is solar gold `#E08A00` (gold fills carry dark ink `#1F1709`; links/text on light use `#B45309`), green is reserved as a **status-only** signal (`#16A34A`/`--success-*`), fonts are Archivo (headings) · IBM Plex Sans (body + tabular figures) · Rajdhani (lockup), and surfaces are warm (cream page `#FBF8F2`, warm near-black sidebar `#16130D`). `packages/ui` holds tokens, shadcn/ui overrides, Tailwind config. Full detail: `docs/design/design-system.md` (V3.0) + reference bundle `docs/design/solar-gold/`. (Superseded: V2 eco-green `#00B050` + DM Sans/Inter/JetBrains Mono.)
 
 ### Three surfaces, three philosophies
 

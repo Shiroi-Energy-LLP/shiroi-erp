@@ -110,7 +110,7 @@ export function CustomerInfoBox({ projectId, project, primaryContact }: Customer
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
-              className="flex items-center gap-1.5 text-xs text-shiroi-green hover:underline"
+              className="flex items-center gap-1.5 text-xs text-shiroi-gold-dark hover:underline"
             >
               <Search className="h-3.5 w-3.5" /> Link contact
             </button>
@@ -215,7 +215,7 @@ export function CustomerInfoBox({ projectId, project, primaryContact }: Customer
                     href={String(v)}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sm text-shiroi-green hover:underline inline-flex items-center gap-1"
+                    className="text-sm text-shiroi-gold-dark hover:underline inline-flex items-center gap-1"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Open in Maps <ExternalLink className="h-3 w-3" />

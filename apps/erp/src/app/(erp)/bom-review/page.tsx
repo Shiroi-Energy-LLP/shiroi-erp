@@ -119,7 +119,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
         <Link
           href="/bom-review"
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-            !categoryFilter ? 'bg-[#00B050] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            !categoryFilter ? 'bg-[#E08A00] text-[#1F1709]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           All ({totalCount?.toLocaleString('en-IN')})
@@ -132,7 +132,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
               key={cat}
               href={`/bom-review?category=${cat}`}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                categoryFilter === cat ? 'bg-[#00B050] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                categoryFilter === cat ? 'bg-[#E08A00] text-[#1F1709]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {cat.replace(/_/g, ' ')} ({count.toLocaleString('en-IN')})

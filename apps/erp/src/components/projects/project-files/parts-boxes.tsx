@@ -163,7 +163,7 @@ export function CategoryBox({
 
   return (
     <Card
-      className={`transition-all ${isDropTarget ? 'ring-2 ring-[#00B050] ring-offset-1 bg-[#00B050]/5' : ''}`}
+      className={`transition-all ${isDropTarget ? 'ring-2 ring-[#E08A00] ring-offset-1 bg-[#E08A00]/5' : ''}`}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';

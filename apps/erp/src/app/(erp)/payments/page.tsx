@@ -206,7 +206,7 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
                     return (
                       <TableRow key={row.project_id}>
                         <TableCell>
-                          <Link href={`/projects/${row.project_id}`} className="hover:text-shiroi-green">
+                          <Link href={`/projects/${row.project_id}`} className="hover:text-shiroi-gold-dark">
                             <div className="text-xs font-mono text-n-500">{row.project_number}</div>
                             <div className="text-sm font-medium text-n-900 max-w-[180px] truncate">
                               {row.customer_name}

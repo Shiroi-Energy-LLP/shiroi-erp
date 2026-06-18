@@ -80,7 +80,7 @@ export function ProjectsSearchBox() {
         onFocus={() => { if (hits.length > 0) setOpen(true); }}
         placeholder="Search customer, project name or number…"
         autoComplete="off"
-        className="w-full h-9 pl-8 pr-3 border border-n-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+        className="w-full h-9 pl-8 pr-3 border border-n-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
       />
       {open && hits.length > 0 && (
         <div className="absolute z-50 mt-1 w-[22rem] rounded-md border border-n-200 bg-white shadow-md max-h-72 overflow-y-auto">

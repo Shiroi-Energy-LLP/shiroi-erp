@@ -318,7 +318,7 @@ export function SectionFeasibility({
                 key={s.value}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer border transition-colors ${
                   shadeSources.includes(s.value)
-                    ? 'bg-[#00B050]/10 border-[#00B050] text-[#00B050]'
+                    ? 'bg-[#E08A00]/10 border-[#E08A00] text-[#B45309]'
                     : 'bg-white border-n-300 text-[#7C818E] hover:border-n-400'
                 }`}
               >
