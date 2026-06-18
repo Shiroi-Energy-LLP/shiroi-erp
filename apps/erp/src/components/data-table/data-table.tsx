@@ -346,6 +346,23 @@ export function DataTable({
 
   // ── Inline editing ──
 
+  // Optimistic inline edits: reflect the saved value immediately and close the
+  // editor, then persist in the background — so an edit doesn't visibly freeze on
+  // the DB round-trip + page revalidation. Overlay is keyed by row id → { field: value }.
+  const [optimisticEdits, setOptimisticEdits] = React.useState<Record<string, Record<string, unknown>>>({});
+  // Server data is authoritative: when a fresh `data` snapshot arrives (after the
+  // server action revalidates the page), drop the overlays.
+  React.useEffect(() => {
+    setOptimisticEdits({});
+  }, [data]);
+  const displayData = React.useMemo(() => {
+    if (Object.keys(optimisticEdits).length === 0) return data;
+    return data.map((r) => {
+      const patch = optimisticEdits[String(r[idField])];
+      return patch ? { ...r, ...patch } : r;
+    });
+  }, [data, optimisticEdits, idField]);
+
   function handleCellClick(rowId: string, col: ColumnDef) {
     if (!col.editable || !onCellEdit) return;
     // Don't edit link fields — they navigate
@@ -367,12 +384,32 @@ export function DataTable({
       if (isNaN(parsedValue)) parsedValue = null;
     }
 
+    // Optimistic: reflect the value and close the editor now; persist in the
+    // background. 'referrer' is skipped because its cell renders from
+    // referrer_name/referrer_is_internal rather than the column key.
+    const optimistic = col?.key !== 'referrer';
+    if (optimistic) {
+      setOptimisticEdits((m) => ({ ...m, [rowId]: { ...m[rowId], [field]: parsedValue } }));
+    }
+    setEditingCell(null);
+
     const result = await onCellEdit(rowId, field, parsedValue);
     if (!result.success) {
+      // Roll back the optimistic value and surface the error.
+      if (optimistic) {
+        setOptimisticEdits((m) => {
+          const rowPatch = { ...m[rowId] };
+          delete rowPatch[field];
+          const next = { ...m };
+          if (Object.keys(rowPatch).length === 0) delete next[rowId];
+          else next[rowId] = rowPatch;
+          return next;
+        });
+      }
       setEditError(result.error ?? 'Failed to save');
       setTimeout(() => setEditError(null), 3000);
     }
-    setEditingCell(null);
+    // On success the overlay persists until the revalidated `data` arrives, then clears.
   }
 
   // ── Cell renderer ──
@@ -667,7 +704,7 @@ export function DataTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data.map((row) => {
+                  displayData.map((row) => {
                     const rowId = String(row[idField]);
                     const isSelected = selectedIds.includes(rowId);
 

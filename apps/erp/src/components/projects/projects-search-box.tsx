@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { searchProjectsLite, type ProjectSearchHit } from '@/lib/project-detail-actions';
 
 /**
@@ -16,6 +16,7 @@ export function ProjectsSearchBox() {
   const [value, setValue] = React.useState(searchParams.get('search') ?? '');
   const [hits, setHits] = React.useState<ProjectSearchHit[]>([]);
   const [open, setOpen] = React.useState(false);
+  const [searching, setSearching] = React.useState(false);
   const [highlighted, setHighlighted] = React.useState(-1);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const urlTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,13 +37,20 @@ export function ProjectsSearchBox() {
     urlTimer.current = setTimeout(() => pushUrl(next), 350);
     if (rpcTimer.current) clearTimeout(rpcTimer.current);
     if (next.trim().length >= 2) {
+      setSearching(true);
+      setOpen(true);
       rpcTimer.current = setTimeout(async () => {
-        const results = await searchProjectsLite(next);
-        setHits(results);
-        setOpen(true);
+        try {
+          const results = await searchProjectsLite(next);
+          setHits(results);
+        } finally {
+          setSearching(false);
+          setOpen(true);
+        }
       }, 250);
     } else {
       setHits([]);
+      setSearching(false);
       setOpen(false);
     }
   }
@@ -71,7 +79,11 @@ export function ProjectsSearchBox() {
 
   return (
     <div ref={containerRef} className="relative w-64">
-      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-n-400 pointer-events-none" />
+      {searching ? (
+        <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-n-400 animate-spin pointer-events-none" />
+      ) : (
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-n-400 pointer-events-none" />
+      )}
       <input
         type="text"
         value={value}
@@ -82,8 +94,11 @@ export function ProjectsSearchBox() {
         autoComplete="off"
         className="w-full h-9 pl-8 pr-3 border border-n-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
       />
-      {open && hits.length > 0 && (
+      {open && (searching || hits.length > 0) && (
         <div className="absolute z-50 mt-1 w-[22rem] rounded-md border border-n-200 bg-white shadow-md max-h-72 overflow-y-auto">
+          {searching && hits.length === 0 && (
+            <div className="px-3 py-2 text-sm text-n-400">Searching…</div>
+          )}
           <ul role="listbox">
             {hits.map((h, i) => (
               <li key={h.id} role="option" aria-selected={i === highlighted}
