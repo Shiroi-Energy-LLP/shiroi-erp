@@ -30,7 +30,7 @@ export async function createTask(input: {
   category?: string;
   remarks?: string;
   milestoneId?: string;
-}): Promise<ActionResult<void>> {
+}): Promise<ActionResult<{ taskId: string }>> {
   const op = '[createTask]';
   console.log(`${op} Starting: ${input.title}`);
 
@@ -49,8 +49,10 @@ export async function createTask(input: {
   if (!input.assignedTo) return err('Tasks must have an assignee');
 
   const today = new Date().toISOString().split('T')[0]!;
+  const id = crypto.randomUUID();
 
   const insert: TaskInsert = {
+    id,
     title: input.title,
     description: input.description || null,
     entity_type: input.entityType,
@@ -75,7 +77,7 @@ export async function createTask(input: {
 
   revalidatePath('/tasks');
   revalidatePath('/my-tasks');
-  return ok(undefined);
+  return ok({ taskId: id });
 }
 
 // ═══════════════════════════════════════════════════════════════════════

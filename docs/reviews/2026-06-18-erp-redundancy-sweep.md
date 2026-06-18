@@ -141,7 +141,7 @@ Not duplicates — they're simply unused *in dev* (e.g. zoho-sync, attribution, 
 
 1. **(done)** mig 188 — 25 exact-key index drops, dev. ✅
 2. **(1-word go)** mig 189 — drop the 16 cold prefix-shadowed + the reversed-order index (§1b/§1c).
-3. **Code, high value & low risk:** make `createQuickTask`/`createLeadTask`/`toggleTaskCompletion` thin wrappers over `tasks-actions.ts` (fixes the `completed_by` bug); collapse the 5-way employee-dropdown helper; delete the dead `getProjectMilestones`.
+3. **Code, high value & low risk:** ~~make `createQuickTask`/`createLeadTask`/`toggleTaskCompletion` thin wrappers over `tasks-actions.ts` (fixes the `completed_by` bug)~~ **✅ DONE 2026-06-18** — all three now delegate to the universal `createTask`/`toggleTaskStatus`; `completed_by` restored; `createTask` returns `taskId`; regression-locked by `__tests__/task-write-wrappers.test.ts`. Still open: collapse the 5-way employee-dropdown helper; delete the dead `getProjectMilestones`.
 4. **Consistency:** centralise project-status / BOQ / milestone / system-type label maps into `*-constants.ts`; import `formatINR` from `@repo/ui` everywhere.
 5. **Structural (larger):** shared `<InvoiceForm>`/`<PaymentForm>` + single actions; migrate hand-rolled tables to `data-table`; add `<ConfirmDeleteButton>` / `<Banner>` / `<TabNav>` primitives to `packages/ui`.
 
