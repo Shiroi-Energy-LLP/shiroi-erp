@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { getAllTasks } from '@/lib/all-tasks-queries';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
-import { getProjectsWithTasks } from '@/lib/tasks-queries';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import { TasksTable } from '@/components/tasks/tasks-table';
-import { SearchableProjectFilter } from '@/components/tasks/searchable-project-filter';
 import {
   Card,
   CardContent,
@@ -45,7 +43,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  const [{ tasks, total }, employees, projects, filterProjects] = await Promise.all([
+  const [{ tasks, total }, employees, projects] = await Promise.all([
     getAllTasks({
       status: params.status || undefined,
       priority: params.priority || undefined,
@@ -58,7 +56,6 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
     }),
     getActiveEmployees(),
     getActiveProjects(),        // full list — for create/edit task dialogs
-    getProjectsWithTasks(),     // filtered list — only projects with tasks, for the filter dropdown
   ]);
 
   const totalPages = Math.ceil(total / perPage);
@@ -115,10 +112,9 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                 <option key={emp.id} value={emp.id}>{emp.full_name}</option>
               ))}
             </FilterSelect>
-            <SearchableProjectFilter projects={filterProjects} />
             <SearchInput
-              placeholder="Search task..."
-              className="w-48 h-8 text-xs"
+              placeholder="Search customer, project, or task…"
+              className="w-64 h-8 text-xs"
             />
           </FilterBar>
         </CardContent>

@@ -1,5 +1,5 @@
 import {
-  Card, CardHeader, CardTitle, CardContent, Badge, Button,
+  Card, CardHeader, CardTitle, CardContent, Button,
 } from '@repo/ui';
 import { getStepExecutionData } from '@/lib/project-stepper-queries';
 import { getActiveEmployeesForProject } from '@/lib/project-step-actions';
@@ -69,26 +69,6 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
 
   const hasMilestones = milestones.length > 0;
 
-  if (!hasMilestones) {
-    return (
-      <ExecutionSubTabs
-        tasksView={
-          <div>
-            <MilestoneSeedButton projectId={projectId} />
-            <div className="flex flex-col items-center justify-center py-16">
-              <HardHat className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
-              <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Milestones</h3>
-              <p className="text-[13px] text-[#7C818E] max-w-md text-center">
-                Click &quot;Seed Default Milestones&quot; above to create the default execution milestones.
-              </p>
-            </div>
-          </div>
-        }
-        activitiesView={<ActivitiesPanel projectId={projectId} />}
-      />
-    );
-  }
-
   // Task-based counts
   const tasksCompleted = tasks.filter((t: any) => t.is_completed).length;
   const tasksOpen = tasks.filter((t: any) => !t.is_completed).length;
@@ -101,11 +81,6 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
     const pct = mTasks.length > 0 ? Math.round((mDone / mTasks.length) * 100) : Number(m.completion_pct || 0);
     return { milestoneId: m.id, total: mTasks.length, done: mDone, pct };
   });
-
-  // Other tasks (no milestone assigned)
-  const otherTasks = tasks.filter((t: any) => !t.milestone_id);
-  const otherTasksCompleted = otherTasks.filter((t: any) => t.is_completed).length;
-  const otherPct = otherTasks.length > 0 ? Math.round((otherTasksCompleted / otherTasks.length) * 100) : 0;
 
   // Overall % — milestone-weighted, from get_project_completion_pct (mig 173).
   // Same number as the Progress tab and the projects list cache.
@@ -133,105 +108,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
         />
       </div>
 
-      {/* ── Milestone Tracking Table ── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Milestone Tracking</CardTitle>
-          <div className="flex items-center gap-3">
-            <Link href={`/projects/${projectId}?tab=qc`}>
-              <Button size="sm" variant="ghost" className="text-xs">
-                Continue to QC &rarr;
-              </Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="border-b border-n-200 bg-n-50">
-                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Milestone</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Status</th>
-                  <th className="px-3 py-2 text-right text-[10px] font-medium text-n-500 w-[50px]">%</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Planned Date</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Actual Date</th>
-                  <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Info</th>
-                </tr>
-              </thead>
-              <tbody>
-                {milestones.map((m) => {
-                  const label = MILESTONE_LABELS[m.milestone_name] ?? m.milestone_name.replace(/_/g, ' ');
-                  const mc = milestoneTaskCounts.find((tc) => tc.milestoneId === m.id);
-                  const pct = mc?.pct ?? 0;
-
-                  return (
-                    <tr key={m.id} className="border-b border-n-100 hover:bg-n-50">
-                      <td className="px-3 py-1.5">
-                        <span className="font-medium text-n-900">{label}</span>
-                        {mc && mc.total > 0 && (
-                          <span className="text-[9px] text-n-400 ml-1.5">({mc.done}/{mc.total} tasks)</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <MilestoneStatusControl
-                          projectId={projectId}
-                          milestoneId={m.id}
-                          currentStatus={m.status}
-                          isBlocked={m.is_blocked}
-                          blockedReason={m.blocked_reason}
-                        />
-                      </td>
-                      <td className="px-3 py-1.5 text-right">
-                        <span className={`font-mono text-[11px] ${
-                          pct === 100 ? 'text-green-600 font-bold' :
-                          pct > 0 ? 'text-blue-600' : 'text-n-400'
-                        }`}>
-                          {pct}%
-                        </span>
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <MilestoneEditableField
-                          projectId={projectId}
-                          milestoneId={m.id}
-                          field="planned_end_date"
-                          value={m.planned_end_date}
-                          type="date"
-                        />
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <MilestoneEditableField
-                          projectId={projectId}
-                          milestoneId={m.id}
-                          field="actual_end_date"
-                          value={m.actual_end_date}
-                          type="date"
-                        />
-                      </td>
-                      <td className="px-3 py-1.5 max-w-[150px]">
-                        {m.is_blocked ? (
-                          <span className="text-[10px] text-red-600 truncate" title={m.blocked_reason ?? undefined}>
-                            {m.blocked_reason || 'Blocked'}
-                          </span>
-                        ) : (
-                          <MilestoneEditableField
-                            projectId={projectId}
-                            milestoneId={m.id}
-                            field="notes"
-                            value={(m as any).notes ?? null}
-                            type="text"
-                          />
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Execution Tasks Table ── */}
+      {/* ── Execution Tasks Table (above milestones) ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
@@ -336,97 +213,100 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
           </CardContent>
         ) : (
           <CardContent>
-            <p className="text-[11px] text-n-400 text-center py-4">No execution tasks yet. Use &quot;+ Task&quot; to create one.</p>
+            <p className="text-[11px] text-n-400 text-center py-4">No execution tasks yet. Use &quot;Create Execution Task&quot; to add one.</p>
           </CardContent>
         )}
       </Card>
 
-      {/* ── Other Tasks (no milestone assigned) ── */}
-      {otherTasks.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ListTodo className="h-4 w-4 text-n-400" />
-              <CardTitle className="text-base">Other Tasks (No Milestone)</CardTitle>
-            </div>
-            <Badge variant={otherPct === 100 ? 'default' : 'outline'}>
-              {otherTasksCompleted}/{otherTasks.length} ({otherPct}%)
-            </Badge>
-          </CardHeader>
+      {/* ── Milestone Tracking Table (below tasks) ── */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Milestone Tracking</CardTitle>
+          <div className="flex items-center gap-3">
+            <Link href={`/projects/${projectId}?tab=qc`}>
+              <Button size="sm" variant="ghost" className="text-xs">
+                Continue to QC &rarr;
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        {hasMilestones ? (
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-[11px]">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Task Name</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Assigned To</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Assigned Date</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Status</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Priority</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Due Date</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Notes</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Done By</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Activity Log</th>
-                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[60px]">Actions</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Milestone</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Status</th>
+                    <th className="px-3 py-2 text-right text-[10px] font-medium text-n-500 w-[50px]">%</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Planned Date</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Actual Date</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Info</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {otherTasks.map((task: any) => {
-                    const assigneeName = task.employees && 'full_name' in task.employees
-                      ? (task.employees as { full_name: string }).full_name
-                      : '—';
-                    const doneByName = task.completedByEmployee && 'full_name' in task.completedByEmployee
-                      ? (task.completedByEmployee as { full_name: string }).full_name
-                      : null;
-                    const isOverdue = task.due_date && !task.is_completed && new Date(task.due_date) < new Date();
+                  {milestones.map((m) => {
+                    const label = MILESTONE_LABELS[m.milestone_name] ?? m.milestone_name.replace(/_/g, ' ');
+                    const mc = milestoneTaskCounts.find((tc) => tc.milestoneId === m.id);
+                    const pct = mc?.pct ?? 0;
 
                     return (
-                      <tr key={task.id} className={`border-b border-n-100 ${task.is_completed ? 'opacity-60' : ''}`}>
-                        <td className={`px-2 py-1.5 max-w-[160px] ${task.is_completed ? 'line-through text-n-400' : 'text-n-900 font-medium'}`}>
-                          <span className="truncate block" title={task.title}>{task.title}</span>
+                      <tr key={m.id} className="border-b border-n-100 hover:bg-n-50">
+                        <td className="px-3 py-1.5">
+                          <span className="font-medium text-n-900">{label}</span>
+                          {mc && mc.total > 0 && (
+                            <span className="text-[9px] text-n-400 ml-1.5">({mc.done}/{mc.total} tasks)</span>
+                          )}
                         </td>
-                        <td className="px-2 py-1.5 text-n-600">{assigneeName}</td>
-                        <td className="px-2 py-1.5 text-n-500">
-                          {task.assigned_date
-                            ? new Date(task.assigned_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
-                            : '—'}
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <TaskStatusDropdown
-                            taskId={task.id}
-                            isCompleted={task.is_completed}
+                        <td className="px-3 py-1.5">
+                          <MilestoneStatusControl
                             projectId={projectId}
+                            milestoneId={m.id}
+                            currentStatus={m.status}
+                            isBlocked={m.is_blocked}
+                            blockedReason={m.blocked_reason}
                           />
                         </td>
-                        <td className="px-2 py-1.5">
-                          <PriorityBadge priority={task.priority} />
-                        </td>
-                        <td className={`px-2 py-1.5 ${isOverdue ? 'text-red-600 font-medium' : 'text-n-500'}`}>
-                          {task.due_date
-                            ? new Date(task.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
-                            : '—'}
-                        </td>
-                        <td className="px-2 py-1.5 text-n-500 max-w-[100px]">
-                          <span className="truncate block" title={task.remarks ?? undefined}>
-                            {task.remarks || '—'}
+                        <td className="px-3 py-1.5 text-right">
+                          <span className={`font-mono text-[11px] ${
+                            pct === 100 ? 'text-green-600 font-bold' :
+                            pct > 0 ? 'text-blue-600' : 'text-n-400'
+                          }`}>
+                            {pct}%
                           </span>
                         </td>
-                        <td className="px-2 py-1.5 text-n-600">
-                          {doneByName || '—'}
+                        <td className="px-3 py-1.5">
+                          <MilestoneEditableField
+                            projectId={projectId}
+                            milestoneId={m.id}
+                            field="planned_end_date"
+                            value={m.planned_end_date}
+                            type="date"
+                          />
                         </td>
-                        <td className="px-2 py-1.5">
-                          <ActivityLogCell taskId={task.id} />
+                        <td className="px-3 py-1.5">
+                          <MilestoneEditableField
+                            projectId={projectId}
+                            milestoneId={m.id}
+                            field="actual_end_date"
+                            value={m.actual_end_date}
+                            type="date"
+                          />
                         </td>
-                        <td className="px-2 py-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <EditTaskButton
-                              task={task}
-                              milestones={milestones}
-                              employees={employees}
+                        <td className="px-3 py-1.5 max-w-[150px]">
+                          {m.is_blocked ? (
+                            <span className="text-[10px] text-red-600 truncate" title={m.blocked_reason ?? undefined}>
+                              {m.blocked_reason || 'Blocked'}
+                            </span>
+                          ) : (
+                            <MilestoneEditableField
                               projectId={projectId}
+                              milestoneId={m.id}
+                              field="notes"
+                              value={(m as any).notes ?? null}
+                              type="text"
                             />
-                            <DeleteTaskButton taskId={task.id} projectId={projectId} />
-                          </div>
+                          )}
                         </td>
                       </tr>
                     );
@@ -435,8 +315,18 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
               </table>
             </div>
           </CardContent>
-        </Card>
-      )}
+        ) : (
+          <CardContent className="py-6">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <HardHat className="w-8 h-8 text-[#7C818E] opacity-40" />
+              <p className="text-[12px] text-n-500 max-w-md">
+                No execution milestones seeded yet. Tasks above are still tracked — seed the standard 10 milestones to enable milestone-weighted progress.
+              </p>
+              <MilestoneSeedButton projectId={projectId} />
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Quick links */}
       <div className="flex gap-3">

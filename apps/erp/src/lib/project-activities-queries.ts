@@ -1,4 +1,6 @@
 import { createClient } from '@repo/supabase/server';
+import { matchProjectIdsByText } from './helpers/project-search-ids';
+import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 import type {
   ActivitiesSummary,
   ActivityStageOption,
@@ -13,6 +15,7 @@ export interface ListActivitiesFilters {
   from?: string;        // 'YYYY-MM-DD'
   to?: string;          // 'YYYY-MM-DD'
   stageId?: string;
+  search?: string;      // free-text: activity/project text + customer (shared RPC)
   manpower?: ManpowerType; // rows where that count > 0
   page?: number;        // 1-based; ignored when paginate=false
   paginate?: boolean;   // default true; the project sub-tab passes false
@@ -49,6 +52,16 @@ export async function listProjectActivities(
   if (filters.manpower === 'se') query = query.gt('se_count', 0);
   if (filters.manpower === 'os') query = query.gt('os_count', 0);
   if (filters.manpower === 'contractor') query = query.gt('contractor_count', 0);
+  if (filters.search) {
+    // Free-text search across the activity description, its free-text project
+    // name, OR the linked project's customer/number/name (shared RPC) so typing
+    // a customer name filters the table live, like the Projects list.
+    const s = sanitizeForIlike(filters.search);
+    const projectIds = await matchProjectIdsByText(filters.search);
+    const clauses = [`description.ilike.${s}`, `project_name_custom.ilike.${s}`];
+    if (projectIds.length > 0) clauses.push(`project_id.in.(${projectIds.join(',')})`);
+    query = query.or(clauses.join(','));
+  }
 
   if (paginate) {
     const fromIdx = (page - 1) * ACTIVITIES_PAGE_SIZE;

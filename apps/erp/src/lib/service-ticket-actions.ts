@@ -5,6 +5,8 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { emitErpEvent } from '@/lib/n8n/emit';
+import { matchProjectIdsByText } from '@/lib/helpers/project-search-ids';
+import { sanitizeForIlike } from '@/lib/helpers/sanitize-or-filter';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Row types
@@ -411,7 +413,16 @@ export async function getAllTickets(filters: {
   if (filters.issue_type) query = query.eq('issue_type', filters.issue_type);
   if (filters.project_id) query = query.eq('project_id', filters.project_id);
   if (filters.assigned_to) query = query.eq('assigned_to', filters.assigned_to);
-  if (filters.search) query = query.ilike('title', `%${filters.search}%`);
+  if (filters.search) {
+    // Free-text search across the ticket title, its free-text project name, OR
+    // the linked project's customer/number/name (shared RPC) so typing a
+    // customer name filters the table live, like the Projects list.
+    const s = sanitizeForIlike(filters.search);
+    const projectIds = await matchProjectIdsByText(filters.search);
+    const clauses = [`title.ilike.${s}`, `project_name_custom.ilike.${s}`];
+    if (projectIds.length > 0) clauses.push(`project_id.in.(${projectIds.join(',')})`);
+    query = query.or(clauses.join(','));
+  }
 
   const { data, error, count } = await query.returns<TicketListRow[]>();
 

@@ -130,8 +130,9 @@ export const PROPOSAL_COLUMNS: ColumnDef[] = [
 // ── Projects columns ──
 
 export const PROJECT_COLUMNS: ColumnDef[] = [
-  { key: 'project_number', label: 'Project #', sortKey: 'project_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
-  { key: 'customer_project', label: 'Customer — Project', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
+  { key: 'customer_project', label: 'Customer — Project', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text', frozen: true },
+  // Project # is the row link no longer; Customer — Project is. Hidden by default, plain code when toggled on.
+  { key: 'project_number', label: 'Project #', sortKey: 'project_number', defaultVisible: false, sortable: true, editable: false, fieldType: 'text' },
   { key: 'customer_name', label: 'Customer', sortKey: 'customer_name', defaultVisible: false, sortable: true, editable: true, fieldType: 'link' },
   { key: 'company_name', label: 'Company', defaultVisible: false, sortable: false, editable: false, fieldType: 'text' },
   { key: 'project_name', label: 'Project Name', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },

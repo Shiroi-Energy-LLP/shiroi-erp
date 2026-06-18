@@ -1,4 +1,6 @@
 import { createClient } from '@repo/supabase/server';
+import { matchProjectIdsByText } from './helpers/project-search-ids';
+import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 
 export interface TaskFilters {
   status?: string;
@@ -40,7 +42,16 @@ export async function getAllTasks(filters: TaskFilters = {}) {
     query = query.eq('is_completed', false);
   if (filters.priority) query = query.eq('priority', filters.priority);
   if (filters.entity_type) query = query.eq('entity_type', filters.entity_type);
-  if (filters.search) query = query.ilike('title', `%${filters.search}%`);
+  if (filters.search) {
+    // Free-text search: match the task title OR the linked project's
+    // customer/number/name (resolved via the shared projects-search RPC) so
+    // typing a customer name filters the table live, like the Projects list.
+    const s = sanitizeForIlike(filters.search);
+    const projectIds = await matchProjectIdsByText(filters.search);
+    const clauses = [`title.ilike.${s}`];
+    if (projectIds.length > 0) clauses.push(`project_id.in.(${projectIds.join(',')})`);
+    query = query.or(clauses.join(','));
+  }
   if (filters.project_id) query = query.eq('project_id', filters.project_id);
   if (filters.assigned_to) query = query.eq('assigned_to', filters.assigned_to);
   if (filters.category) query = query.eq('category' as any, filters.category);
