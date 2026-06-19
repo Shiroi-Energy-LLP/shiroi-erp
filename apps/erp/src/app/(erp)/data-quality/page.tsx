@@ -44,33 +44,28 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
 
   const supabase = await createClient();
 
-  // ── Summary stats ──
-  // Cast supabase to any for new tables/columns not yet in generated types
+  // ── Summary stats (mig 194) ──
+  // One KPI RPC replaces 6 count:'exact' (3 on data_flags + 3 verified-record counts
+  // on leads/projects/proposals). The by-entity breakdown stays on its own RPC.
+  // `sb` (any) is retained only for the flags-list query below (data_flags columns
+  // are still cast).
   const sb = supabase as any;
-  const [totalRes, unresolvedRes, resolvedWeekRes, summaryRes, verifiedRes] = await Promise.all([
-    sb.from('data_flags').select('*', { count: 'exact', head: true }),
-    sb.from('data_flags').select('*', { count: 'exact', head: true }).is('resolved_at', null),
-    (() => {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return sb.from('data_flags').select('*', { count: 'exact', head: true })
-        .not('resolved_at', 'is', null).gte('resolved_at', weekAgo.toISOString());
-    })(),
+  const [kpiRes, summaryRes] = await Promise.all([
+    supabase.rpc('get_data_quality_summary'),
     sb.rpc('get_data_flag_summary'),
-    // Count verified records (data_verified_at not yet in generated types)
-    Promise.all([
-      sb.from('leads').select('*', { count: 'exact', head: true }).not('data_verified_at', 'is', null),
-      sb.from('projects').select('*', { count: 'exact', head: true }).not('data_verified_at', 'is', null),
-      sb.from('proposals').select('*', { count: 'exact', head: true }).not('data_verified_at', 'is', null),
-    ]),
   ]);
 
-  const totalFlags = totalRes.count ?? 0;
-  const unresolvedFlags = unresolvedRes.count ?? 0;
-  const resolvedThisWeek = resolvedWeekRes.count ?? 0;
+  const kpi = (kpiRes.data ?? {}) as unknown as {
+    total_flags: number;
+    unresolved_flags: number;
+    resolved_this_week: number;
+    verified_records: number;
+  };
+  const totalFlags = kpi.total_flags ?? 0;
+  const unresolvedFlags = kpi.unresolved_flags ?? 0;
+  const resolvedThisWeek = kpi.resolved_this_week ?? 0;
+  const totalVerified = kpi.verified_records ?? 0;
   const summary = (summaryRes.data ?? []) as { entity_type: string; total_flags: number; unresolved_flags: number; resolved_flags: number }[];
-  const [verifiedLeads, verifiedProjects, verifiedProposals] = verifiedRes;
-  const totalVerified = (verifiedLeads.count ?? 0) + (verifiedProjects.count ?? 0) + (verifiedProposals.count ?? 0);
 
   // ── Flags list ──
   let flagsQuery = sb

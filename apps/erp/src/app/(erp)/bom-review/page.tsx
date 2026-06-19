@@ -19,38 +19,23 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
 
   const supabase = await createClient();
 
-  // ── Summary stats ──
-  const { count: totalCount } = await supabase
-    .from('proposal_bom_lines')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: withRateCount } = await supabase
-    .from('proposal_bom_lines')
-    .select('*', { count: 'exact', head: true })
-    .gt('unit_price', 0);
-
-  const { count: noRateCount } = await supabase
-    .from('proposal_bom_lines')
-    .select('*', { count: 'exact', head: true })
-    .eq('unit_price', 0);
-
-  // ── Flags count for BOM items ──
-  const { count: flaggedCount } = await (supabase as any)
-    .from('data_flags')
-    .select('*', { count: 'exact', head: true })
-    .eq('entity_type', 'bom_item')
-    .is('resolved_at', null);
-
-  // ── Category breakdown ──
-  const { data: catData } = await supabase
-    .from('proposal_bom_lines')
-    .select('item_category');
-
-  const categoryCounts: Record<string, number> = {};
-  (catData ?? []).forEach((row: any) => {
-    const cat = row.item_category ?? 'unknown';
-    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-  });
+  // ── Summary stats (mig 194) ──
+  // One RPC returns the four counts + per-category breakdown in a single pass,
+  // replacing 3 count:'exact' on proposal_bom_lines (~24.7k rows) + a data_flags
+  // count + an unbounded item_category scan that pulled every row into Node.
+  const { data: summaryRaw } = await supabase.rpc('get_bom_review_summary');
+  const summary = (summaryRaw ?? {}) as unknown as {
+    total: number;
+    with_rate: number;
+    no_rate: number;
+    flagged: number;
+    category_counts: Record<string, number>;
+  };
+  const totalCount = summary.total ?? 0;
+  const withRateCount = summary.with_rate ?? 0;
+  const noRateCount = summary.no_rate ?? 0;
+  const flaggedCount = summary.flagged ?? 0;
+  const categoryCounts: Record<string, number> = summary.category_counts ?? {};
 
   // ── Paginated BOM lines ──
   let query = supabase

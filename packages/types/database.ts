@@ -19069,6 +19069,7 @@ export type Database = {
           scheduled_count: number
         }[]
       }
+      get_bom_review_summary: { Args: never; Returns: Json }
       get_candidate_projects_for_zoho_customer: {
         Args: { p_zoho_name: string }
         Returns: {
@@ -19127,6 +19128,7 @@ export type Database = {
           unresolved_flags: number
         }[]
       }
+      get_data_quality_summary: { Args: never; Returns: Json }
       get_expected_orders: {
         Args: { window_days: number }
         Returns: {
