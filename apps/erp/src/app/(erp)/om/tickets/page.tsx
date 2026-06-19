@@ -184,7 +184,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project</th>
@@ -217,35 +217,35 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                         {/* Project */}
                         <td className="px-2 py-1.5">
                           {ticket.project_id ? (
-                            <Link href={`/projects/${ticket.project_id}`} className="text-shiroi-gold-dark hover:underline text-xs">
+                            <Link href={`/projects/${ticket.project_id}`} className="text-shiroi-gold-dark hover:underline">
                               {projectInfo?.customer_name ?? '—'}
                             </Link>
                           ) : ticket.project_name_custom ? (
-                            <span className="text-xs text-n-700">{ticket.project_name_custom}</span>
+                            <span className="text-n-700">{ticket.project_name_custom}</span>
                           ) : (
-                            <span className="text-n-300 text-xs">—</span>
+                            <span className="text-n-300">—</span>
                           )}
                         </td>
 
                         {/* Title */}
-                        <td className="px-2 py-1.5 text-[11px] font-medium text-n-900">
+                        <td className="px-2 py-1.5 font-medium text-n-900">
                           <span title={ticket.title}>{ticket.title}</span>
                         </td>
 
                         {/* Issue Type */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-600 capitalize">
+                        <td className="px-2 py-1.5 text-n-600 capitalize">
                           {ticket.issue_type?.replace(/_/g, ' ') ?? <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Severity */}
-                        <td className="px-2 py-1.5">
+                        <td className="px-2 py-1.5 whitespace-nowrap">
                           <Badge variant={severityVariant(ticket.severity)} className="text-[10px] px-1.5 py-0 capitalize">
                             {ticket.severity}
                           </Badge>
                         </td>
 
                         {/* Status — inline toggle */}
-                        <td className="px-2 py-1.5">
+                        <td className="px-2 py-1.5 whitespace-nowrap">
                           <TicketStatusToggle
                             ticketId={ticket.id}
                             currentStatus={ticket.status}
@@ -254,22 +254,22 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                         </td>
 
                         {/* Assigned To */}
-                        <td className="px-2 py-1.5 text-[11px] text-n-700">
+                        <td className="px-2 py-1.5 text-n-700">
                           {assigneeName ?? <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Service Amount */}
-                        <td className="px-2 py-1.5 text-[11px] text-n-700 font-medium">
+                        <td className="px-2 py-1.5 text-n-700 font-medium whitespace-nowrap tabular-nums">
                           {ticket.service_amount > 0 ? formatINR(ticket.service_amount) : <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Created */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-500">
+                        <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                           {formatDate(ticket.created_at)}
                         </td>
 
                         {/* SLA Due */}
-                        <td className="px-2 py-1.5 text-[11px]">
+                        <td className="px-2 py-1.5 whitespace-nowrap">
                           {ticket.sla_deadline ? (
                             <span className={ticket.sla_breached ? 'text-red-600 font-medium' : 'text-n-600'}>
                               {formatDate(ticket.sla_deadline)}
@@ -280,12 +280,12 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                         </td>
 
                         {/* Resolved By */}
-                        <td className="px-2 py-1.5 text-[11px] text-n-600">
+                        <td className="px-2 py-1.5 text-n-600">
                           {resolvedByName ?? <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Actions */}
-                        <td className="px-2 py-1.5">
+                        <td className="px-2 py-1.5 whitespace-nowrap">
                           <div className="flex gap-0.5">
                             <EditTicketDialog
                               ticket={{

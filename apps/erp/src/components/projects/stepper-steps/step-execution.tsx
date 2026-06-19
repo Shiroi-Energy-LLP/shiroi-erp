@@ -112,7 +112,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
         {tasks.length > 0 ? (
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-[11px]">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
                     <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500">Task Name</th>
@@ -144,8 +144,8 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
 
                     return (
                       <tr key={task.id} className={`border-b border-n-100 ${task.is_completed ? 'opacity-60' : ''}`}>
-                        <td className={`px-2 py-1.5 max-w-[160px] ${task.is_completed ? 'line-through text-n-400' : 'text-n-900 font-medium'}`}>
-                          <span className="truncate block" title={task.title}>{task.title}</span>
+                        <td className={`px-2 py-1.5 ${task.is_completed ? 'line-through text-n-400' : 'text-n-900 font-medium'}`}>
+                          <span className="block" title={task.title}>{task.title}</span>
                         </td>
                         <td className="px-2 py-1.5 text-n-500">{milestoneLabel}</td>
                         <td className="px-2 py-1.5 text-n-600">{assigneeName}</td>
@@ -169,8 +169,8 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
                             ? new Date(task.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
                             : '—'}
                         </td>
-                        <td className="px-2 py-1.5 text-n-500 max-w-[100px]">
-                          <span className="truncate block" title={task.remarks ?? undefined}>
+                        <td className="px-2 py-1.5 text-n-500 max-w-[240px]">
+                          <span className="block" title={task.remarks ?? undefined}>
                             {task.remarks || '—'}
                           </span>
                         </td>
@@ -220,7 +220,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
         {hasMilestones ? (
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-[11px]">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
                     <th className="px-3 py-2 text-left text-[10px] font-medium text-n-500">Milestone</th>

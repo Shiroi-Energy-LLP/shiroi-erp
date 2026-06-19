@@ -135,7 +135,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Client</th>

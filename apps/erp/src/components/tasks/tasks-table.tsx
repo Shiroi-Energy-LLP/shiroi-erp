@@ -37,7 +37,7 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
         return (
           <tr key={task.id} className="border-b border-n-100 hover:bg-n-50">
             {/* Client — project customer if project-linked, lead customer otherwise */}
-            <td className="px-2 py-1.5 text-[11px]">
+            <td className="px-3 py-2 align-top">
               {projectInfo ? (
                 <Link href={`/projects/${task.project_id}`} className="text-p-600 hover:underline font-medium">
                   {projectInfo.customer_name}
@@ -52,7 +52,7 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
             </td>
 
             {/* Task Name — links to detail page */}
-            <td className="px-2 py-1.5 text-[11px] font-medium text-n-900">
+            <td className="px-3 py-2 align-top font-medium text-n-900">
               <Link href={`/tasks/${task.id}`} className="flex items-center gap-1.5 flex-wrap hover:text-p-600 hover:underline">
                 {typeof task.title === 'string' && task.title.startsWith('[AI] ') && (
                   <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700 shrink-0">AI</Badge>
@@ -66,12 +66,12 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
             </td>
 
             {/* Assigned To */}
-            <td className="px-2 py-1.5 text-[11px] text-n-700">
+            <td className="px-3 py-2 align-top text-n-700">
               {task.assignee?.full_name ?? <span className="text-n-300">—</span>}
             </td>
 
             {/* Status — Open (red) / Closed (green) toggle */}
-            <td className="px-2 py-1.5">
+            <td className="px-3 py-2 align-top whitespace-nowrap">
               <TaskStatusToggle
                 taskId={task.id}
                 isCompleted={task.is_completed}
@@ -80,14 +80,14 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
             </td>
 
             {/* Priority */}
-            <td className="px-2 py-1.5">
+            <td className="px-3 py-2 align-top whitespace-nowrap">
               <Badge variant={getPriorityVariant(task.priority)} className="text-[10px] px-1.5 py-0">
                 {task.priority?.charAt(0).toUpperCase() + task.priority?.slice(1)}
               </Badge>
             </td>
 
             {/* Due Date */}
-            <td className="px-2 py-1.5 text-[11px]">
+            <td className="px-3 py-2 align-top whitespace-nowrap">
               {task.due_date ? (
                 <span className={overdue ? 'text-red-600 font-medium' : 'text-n-600'}>
                   {formatDate(task.due_date)}
@@ -98,17 +98,17 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
             </td>
 
             {/* Notes */}
-            <td className="px-2 py-1.5 text-[10px] text-n-600" title={task.remarks ?? ''}>
+            <td className="px-3 py-2 align-top text-n-600 max-w-[260px]" title={task.remarks ?? ''}>
               {task.remarks ?? <span className="text-n-300">—</span>}
             </td>
 
             {/* Done By */}
-            <td className="px-2 py-1.5 text-[11px] text-n-600">
+            <td className="px-3 py-2 align-top text-n-600">
               {completedByName ?? <span className="text-n-300">—</span>}
             </td>
 
             {/* Actions (Edit / Delete) */}
-            <td className="px-2 py-1.5">
+            <td className="px-3 py-2 align-top whitespace-nowrap">
               <div className="flex gap-0.5">
                 <EditTaskDialog
                   task={{
