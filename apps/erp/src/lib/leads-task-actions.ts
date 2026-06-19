@@ -48,6 +48,11 @@ export async function createLeadTask(input: CreateLeadTaskInput): Promise<Action
   if (!result.success) return err(result.error, result.code);
 
   revalidatePath(`/leads/${input.leadId}/tasks`);
+  revalidatePath(`/sales/${input.leadId}/tasks`);
+  // A new lead_followup task drives leads.next_followup_date via the mig-193
+  // trigger; bust the list caches so the "Next Follow-up" column reflects it.
+  revalidatePath('/leads');
+  revalidatePath('/sales');
   return ok(undefined);
 }
 
@@ -82,7 +87,12 @@ export async function completeLeadTask(taskId: string, leadId: string): Promise<
   }
 
   revalidatePath(`/leads/${leadId}/tasks`);
+  revalidatePath(`/sales/${leadId}/tasks`);
   revalidatePath('/my-tasks');
+  // Completing a lead_followup task rolls leads.next_followup_date to the next
+  // open follow-up (or clears it) via the mig-193 trigger; refresh list caches.
+  revalidatePath('/leads');
+  revalidatePath('/sales');
   return ok(undefined);
 }
 

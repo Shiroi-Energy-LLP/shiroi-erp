@@ -23,7 +23,10 @@ export function QuickAddTask({ leadId, employees, currentUserId }: QuickAddTaskP
     return `${y}-${m}-${d}`;
   });
   const [priority, setPriority] = useState('medium');
-  const [category, setCategory] = useState('call');
+  // Default to 'lead_followup' so the rep's normal "add a task + due date" action
+  // drives the lead's Next Follow-up date (mig 193 mirrors the open lead_followup
+  // task ↔ leads.next_followup_date). Picking another type is a deliberate opt-out.
+  const [category, setCategory] = useState('lead_followup');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
