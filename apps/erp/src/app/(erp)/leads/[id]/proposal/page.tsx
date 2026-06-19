@@ -2,13 +2,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLead } from '@/lib/leads-queries';
 import { createClient } from '@repo/supabase/server';
-import { createDraftDetailedProposal } from '@/lib/quote-actions';
 import { ProposalStatusBadge } from '@/components/proposals/proposal-status-badge';
 import { ProposalDataQualityBanner } from '@/components/proposal-data-quality-banner';
 import { QuickQuoteButton } from '@/components/proposals/quick-quote-button';
 import { BomPicker, type BomLineRow, type PriceBookOption } from '@/components/sales/bom-picker';
 import { ConsultantPicker } from '@/components/sales/consultant-picker';
 import { FinalizeDetailedProposalButton } from '@/components/sales/finalize-detailed-proposal-button';
+import { StartDetailedProposalButton } from '@/components/sales/start-detailed-proposal-button';
 import { formatINR, formatDate } from '@repo/ui/formatters';
 import {
   Card,
@@ -101,9 +101,11 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
   const availablePartners = partnersRes.data ?? [];
   const currentPartner = currentPartnerRes.data ?? null;
 
-  // Draft detailed proposal resolution. Auto-create one if the lead is in
-  // a Path B stage and doesn't have a draft yet (mirrors /design/[leadId]).
-  let draftProposalId = leadMeta?.draft_proposal_id ?? null;
+  // Draft detailed proposal resolution. The draft is created on an explicit
+  // user action (StartDetailedProposalButton) — never auto-created during
+  // render (NEVER-DO #24: a GET must not write; prefetch / concurrent renders
+  // would double-fire the INSERT and the proposal.requested n8n event).
+  const draftProposalId = leadMeta?.draft_proposal_id ?? null;
   const isPathBStage = [
     'site_survey_scheduled',
     'site_survey_done',
@@ -111,12 +113,6 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
     'design_confirmed',
     'detailed_proposal_sent',
   ].includes(lead.status);
-  if (!draftProposalId && isPathBStage) {
-    const createResult = await createDraftDetailedProposal(leadId);
-    if (createResult.success) {
-      draftProposalId = createResult.data.proposalId;
-    }
-  }
 
   // Draft proposal's BOM lines
   let draftBomLines: BomLineRow[] = [];
@@ -174,6 +170,26 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
         basePrice={leadMeta?.base_quote_price ?? null}
         availablePartners={availablePartners as any}
       />
+
+      {/* ─── Start detailed proposal (no draft yet) ─── */}
+      {isPathBStage && !draftProposalId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Detailed Proposal</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-n-600">
+              This lead is ready for a detailed proposal. Starting one creates a draft and opens the
+              BOM editor — and notifies the design head to assign a designer. Or build the BOM in the{' '}
+              <Link href={`/design/${leadId}`} className="text-shiroi-gold-dark hover:underline">
+                design workspace
+              </Link>
+              .
+            </p>
+            <StartDetailedProposalButton leadId={leadId} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* ─── Draft detailed proposal editor ─── */}
       {draftProposalId && isPathBStage && (

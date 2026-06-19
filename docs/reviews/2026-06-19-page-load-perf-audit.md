@@ -33,9 +33,9 @@ Worked across two parallel sessions. **Done + pushed:**
 - Correctness: `getEmployeeCompensation` self-view restored (compared `profiles.id` to `employees.id` → dead branch).
 - Structural dedup: payment **and** invoice action merges (canonical + thin wrappers, regression-tested — the payment one preserves the n8n commission emit via an explicit `notify` flag, master-ref §4.19); 5 employee-dropdown helpers → 1; label maps centralized.
 - **`/procurement/orders` pagination + dashboard counts (mig 192).** `getPurchaseOrders` was a bare `.limit(100)` showing 100 of ~2,046 POs (correctness bug); now selects the ~7 displayed columns with `count:'estimated'` + `.range()`, returns `{rows,total}`, and the page has a filter-preserving pager. The purchase dashboard's three status KPIs (which shared that capped fetch and so also undercounted) now come from new SECURITY-INVOKER RPC `get_purchase_order_status_counts` — one `COUNT(*) FILTER` pass over the full table (NEVER-DO #12/#13/#25). Verified on dev: 2,046 POs, counts pending 77 / active 20 / pending-deliveries 20.
+- **`createDraftDetailedProposal` write-during-render fixed (NEVER-DO #24).** Both `leads/[id]/proposal` (re-exported by `sales/[id]/proposal`) and `design/[leadId]` no longer auto-create the draft during render — the INSERT (and the `proposal.requested` n8n event that WhatsApps the design head) now fires only from an explicit `StartDetailedProposalButton` click → `router.refresh()` reveals the BOM editor. Vivek signed off on the explicit-button UX (vs. DB-level idempotency). No migration; the button shows in exactly the stages auto-create used to.
 
 **Still open (need a focused pass — NOT quick edits):**
-- **`createDraftDetailedProposal` write-during-render** (`leads/[id]/proposal/page.tsx:114`, `design/[leadId]/page.tsx:46`) — violates NEVER-DO #24 (a GET that INSERTs; prefetch/concurrent renders double-fire). The fix moves draft creation out of render into an explicit action/button = a **UX change to the sales flow** needing product sign-off, so left for that decision.
 - The per-page perf tail: [G5] lazy-load dialog/dropdown data, `SELECT *` trims, remaining JS-money→RPC ([G6]), the `/bom-review` GROUP BY RPC, and the NEVER-DO #15 inline-query moves.
 
 ---
@@ -135,7 +135,7 @@ Format per page: **Load today** (round-trips / `getUser` count / parallel-vs-wat
 
 ### `/sales/[id]/proposal`
 - **Load today:** ~9 round-trips. **What's heavy:** the `leads` table is read **3×** in one batch (`getLead`, `leadMetaRes`, and `currentPartnerRes`'s IIFE); the **entire active `price_book`** is pulled for the BOM picker; and `createDraftDetailedProposal` — **a write — runs during page render** for draft-less Path-B leads.
-- **Suggested changes:** (1) collapse the 3 `leads` reads to 1; (2) `[G5]` lazy-load `price_book` behind the picker; (3) move the draft-creation write out of render into an explicit action/button.
+- **Suggested changes:** (1) collapse the 3 `leads` reads to 1; (2) `[G5]` lazy-load `price_book` behind the picker; (3) ✓ **done** — draft-creation write moved out of render into the explicit `StartDetailedProposalButton`.
 
 ### `/sales/[id]/files`, `/tasks`, `/payments`, `/activities`
 - `files`: a **2nd `getUser`** (`getUserProfile` at `files/page.tsx:32`) on top of the layout's; 5 serial awaits; per-document `createSignedUrl` fan-out. → `[G1]`, parallelize, batch signed-URL calls.

@@ -116,6 +116,7 @@ apps/erp/src/components/
 - **Pipeline summary** comes from the `get_pipeline_summary()` RPC (migration 048), wrapped in `getCachedPipelineSummary` with 300s TTL. Never `.reduce()` over proposals in JS for dashboard numbers — rule #12.
 - **`price_book_id` on BOM lines** is enforced for detailed proposals by `finalizeDetailedProposal` (validates every line has it). Legacy BOM lines can be free-text; `BomPicker` shows an amber chip for them.
 - **FK on `lead_status_history.changed_by`** points to `employees.id`, not `auth.users.id`. Migration 055 fixed the trigger — look up via `profile_id = auth.uid()` with NULL fallback.
+- **Detailed-proposal draft is created by an explicit button, never during render.** The Quote tab (`/sales/[id]/proposal`, a one-line re-export of `leads/[id]/proposal`) and the design workspace (`/design/[leadId]`) show a `StartDetailedProposalButton` when the lead is in a Path B stage with no `draft_proposal_id`; clicking it runs `createDraftDetailedProposal` (idempotent) then `router.refresh()` to reveal the BomPicker. Do **not** call that action from a server-component render — it INSERTs a proposal AND fires the `proposal.requested` n8n event (WhatsApps the design head), so a prefetch / concurrent render would double-fire both (NEVER-DO #24). This replaced the old auto-create-on-entry (fixed 2026-06-20).
 
 ## /sales filtering, bulk actions, and dashboard widgets (mig 109)
 
