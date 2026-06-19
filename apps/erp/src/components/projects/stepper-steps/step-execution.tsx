@@ -169,7 +169,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
                             ? new Date(task.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
                             : '—'}
                         </td>
-                        <td className="px-2 py-1.5 text-n-500 max-w-[240px]">
+                        <td className="px-2 py-1.5 text-n-500 max-w-[240px] whitespace-normal break-words">
                           <span className="block" title={task.remarks ?? undefined}>
                             {task.remarks || '—'}
                           </span>
@@ -282,7 +282,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
                         </td>
                         <td className="px-3 py-1.5 max-w-[150px]">
                           {m.is_blocked ? (
-                            <span className="text-[10px] text-red-600 truncate" title={m.blocked_reason ?? undefined}>
+                            <span className="text-xs text-red-600 whitespace-normal break-words" title={m.blocked_reason ?? undefined}>
                               {m.blocked_reason || 'Blocked'}
                             </span>
                           ) : (

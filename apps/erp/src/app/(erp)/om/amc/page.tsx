@@ -229,11 +229,9 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Notes */}
-                        <td className="px-2 py-2 text-n-600 max-w-[240px]">
+                        <td className="px-2 py-2 text-n-600 max-w-[240px] whitespace-normal break-words">
                           {contract.notes ? (
-                            <span title={contract.notes}>
-                              {contract.notes.substring(0, 50)}{contract.notes.length > 50 ? '...' : ''}
-                            </span>
+                            <span title={contract.notes}>{contract.notes}</span>
                           ) : (
                             <span className="text-n-300">—</span>
                           )}
