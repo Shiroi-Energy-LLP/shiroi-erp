@@ -158,9 +158,13 @@ export async function getProject(id: string) {
   // The page calls notFound() when this returns null.
   const { data, error } = await supabase
     .from('projects')
-    .select(
-      '*, employees!projects_project_manager_id_fkey(full_name), pm_supervisor:employees!projects_site_supervisor_id_fkey(full_name), project_milestones(*, project_completion_components(*)), project_delay_log(*, employees!project_delay_log_logged_by_fkey(full_name), project_milestones!project_delay_log_milestone_id_fkey(milestone_name)), project_change_orders(*, preparer:employees!project_change_orders_prepared_by_fkey(full_name), approver:employees!project_change_orders_approved_by_internal_fkey(full_name))',
-    )
+    // Perf audit: the project detail (Details tab) — getProject's only caller — reads
+    // only scalar columns (via `*`). The 5 nested embeds this used to pull
+    // (project_milestones+components, project_delay_log+joins, project_change_orders+joins,
+    // plus the two employee joins) are all unused here; the milestones/delays/change-order
+    // sub-routes and the layout header fetch their own data. Dropping them removes the
+    // module's heaviest embed fan-out from the detail page.
+    .select('*')
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();
