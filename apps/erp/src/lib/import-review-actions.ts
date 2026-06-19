@@ -71,3 +71,36 @@ export async function bulkApprovePendingImports(ids: string[]): Promise<ActionRe
   revalidatePath('/om/import-review');
   return ok({ approved, failed: errors.length, errors });
 }
+
+/**
+ * Link a staged import to an EXISTING project: attaches its monitoring credential
+ * (+ one inverter row only if the project has none and the import has a serial),
+ * then marks the import imported. No new project is created — unlike approve.
+ * Used by the Import Review "Link" action for plants that already have a project.
+ */
+export async function linkPendingImportToProject(
+  importId: string,
+  projectId: string,
+): Promise<ActionResult<{ project_id: string }>> {
+  const op = '[linkPendingImportToProject]';
+  if (!importId) return err('Import id is required');
+  if (!projectId) return err('Pick a project to link to');
+  try {
+    const supabase = await createClient();
+    const { data, error } = await (supabase.rpc as any)('link_pending_import_to_project', {
+      p_import_id: importId,
+      p_project_id: projectId,
+    });
+    if (error) {
+      console.error(`${op} Failed:`, { code: error.code, message: error.message, importId, projectId, timestamp: new Date().toISOString() });
+      return err(error.message, error.code);
+    }
+    revalidatePath('/om/import-review');
+    revalidatePath('/om/plant-monitoring');
+    return ok({ project_id: data as string });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`${op} Exception:`, { message: msg, importId, projectId, timestamp: new Date().toISOString() });
+    return err(msg);
+  }
+}

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@repo/ui';
 import { Upload } from 'lucide-react';
 import { listPendingImports, getImportSummary, type ListFilters } from '@/lib/import-review-queries';
+import { getAllActiveProjects } from '@/lib/plant-monitoring-queries';
 import { ImportReviewList } from './_components/import-review-list';
 import { FilterBar } from '@/components/filter-bar';
 import { FilterSelect } from '@/components/filter-select';
@@ -85,9 +86,10 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
     per_page: perPage,
   };
 
-  const [{ items, total }, summary] = await Promise.all([
+  const [{ items, total }, summary, projects] = await Promise.all([
     listPendingImports(filters),
     getImportSummary(),
+    getAllActiveProjects(),
   ]);
 
   const totalPages = Math.ceil(total / perPage);
@@ -220,7 +222,7 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
           </CardContent>
         </Card>
       ) : (
-        <ImportReviewList items={items} />
+        <ImportReviewList items={items} projects={projects} />
       )}
 
       {/* Pagination */}

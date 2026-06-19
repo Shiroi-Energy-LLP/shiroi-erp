@@ -7,12 +7,21 @@ import { ChevronDown, ChevronRight, ExternalLink, CheckCircle2, XCircle, AlertTr
 import { approvePendingImport, rejectPendingImport, updatePendingImportField } from '@/lib/import-review-actions';
 import type { PendingImport, PendingChild } from '@/lib/import-review-queries';
 import { useRouter } from 'next/navigation';
+import { LinkProjectDialog } from './link-project-dialog';
+
+interface ProjectOpt {
+  id: string;
+  customer_name: string;
+  project_number: string | null;
+  project_name?: string | null;
+}
 
 interface Props {
   row: PendingImport;
   selected: boolean;
   onToggleSelect: () => void;
   fetchChildren: (id: string) => Promise<PendingChild[]>;
+  projects: ProjectOpt[];
 }
 
 function formatINR(amt: number | null): string {
@@ -58,7 +67,7 @@ function PasswordField({ value, label }: { value: string | null; label: string }
   );
 }
 
-export function ImportRowCard({ row, selected, onToggleSelect, fetchChildren }: Props) {
+export function ImportRowCard({ row, selected, onToggleSelect, fetchChildren, projects }: Props) {
   const router = useRouter();
   const [expanded, setExpanded] = React.useState(false);
   const [pendingAction, setPendingAction] = React.useState<'approve' | 'reject' | null>(null);
@@ -190,6 +199,7 @@ export function ImportRowCard({ row, selected, onToggleSelect, fetchChildren }: 
                   {pendingAction === 'reject' ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
                   Reject
                 </Button>
+                <LinkProjectDialog importId={row.id} importName={row.project_name} projects={projects} />
               </div>
             )}
             {row.status_review === 'imported' && row.imported_project_id && (
