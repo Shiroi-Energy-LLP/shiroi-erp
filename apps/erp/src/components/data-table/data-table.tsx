@@ -735,8 +735,9 @@ export function DataTable({
                           </TableCell>
                         )}
                         {visibleColumnDefs.map((col) => {
-                          // Per-column cell class hooks
-                          let cellClass = entityType === 'leads' ? 'px-3 py-2' : 'py-2';
+                          // Per-column cell class hooks. align-top so wrapped
+                          // multi-line cells line up with single-line neighbours.
+                          let cellClass = entityType === 'leads' ? 'px-3 py-2 align-top' : 'py-2 align-top';
                           if (entityType === 'leads') {
                             if (col.key === 'customer_name' || col.key === 'customer_project') {
                               cellClass += ' font-medium text-n-900';
@@ -751,6 +752,14 @@ export function DataTable({
                             if (col.fieldType === 'phone') cellClass += ' tabular-nums';
                             if (col.fieldType === 'number' || col.format === 'currency') cellClass += ' text-right tabular-nums';
                           }
+                          // Table standard: numbers, dates, status badges stay on one
+                          // line; text columns wrap. (Wrap-flagged columns always wrap.)
+                          const keepOneLine = !col.wrap && (
+                            col.fieldType === 'number' || col.fieldType === 'phone' ||
+                            col.fieldType === 'badge' || col.format === 'currency' ||
+                            col.format === 'date' || col.format === 'percentage'
+                          );
+                          if (keepOneLine) cellClass += ' whitespace-nowrap';
                           return (
                             <TableCell key={col.key} className={cellClass}>
                               {renderCell(row, col)}

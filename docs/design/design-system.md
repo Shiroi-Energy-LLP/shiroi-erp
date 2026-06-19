@@ -263,26 +263,33 @@ All section eyebrows follow this pattern: a 14px x 2px gold bar, 8px gap, then u
 
 ## Component 05 — Data Tables & Density
 
+**Universal standard (V3.1 · 2026-06-19) — enforced in the `@repo/ui` `Table` primitive (`packages/ui/src/components/table.tsx`):**
+
+- **Body cell text is 14px (`text-sm`) for every display table.** Nothing renders table data smaller. The size is set once on the `<Table>` primitive, so every table built on it inherits it. **Do not hand-roll raw `<table>`/`<td>` for display tables** — use the `Table / TableHeader / TableBody / TableRow / TableHead / TableCell` primitives so the size and wrap rules apply automatically. (Hand-rolled tables hardcoding `text-[10px]/[11px]` were the drift this standard fixes.)
+- **Text wraps; numbers/dates/status/actions stay on one line.** Long names, titles, notes and descriptions wrap to multiple lines (`whitespace-normal break-words`; cells `align-top`) and are never clipped. Numeric, currency, date, percentage, phone, status-badge and action columns add `whitespace-nowrap`.
+- **Headers** keep the small uppercase label style (Archivo 10px/700, uppercase, `.08em`, `whitespace-nowrap`). The 14px rule is **body-only**.
+
 | Density Mode | Row Height | When to Use |
 |---|---|---|
 | Compact | `36px` | Power users, wide tables, read-only dashboards |
-| **Standard** | **`44px`** | **Default for all Shiroi ERP tables** |
+| **Standard** | **`44px` (min)** | **Default for all Shiroi ERP tables** — rows grow taller when text wraps |
 | Comfortable | `56px` | Client-facing reports, PDFs, presentations |
 
 | Property | Value |
 |---|---|
-| Cell padding | `0 14px` vertical · height set on row |
+| Cell padding | `8px 14px` (`py-2 px-3.5`) · `align-top` |
+| Body cell text | IBM Plex Sans **14px** (`text-sm`) — universal |
 | Header background | `#221C12` (--n900) |
-| Header text | `#C2BBAE` (--n300) · Archivo 10px/700 · uppercase · .08em |
+| Header text | `#C2BBAE` (--n300) · Archivo 10px/700 · uppercase · .08em · nowrap |
 | Header corner radius | `--r-sm` on first and last `th` |
 | Zebra striping | Odd rows: white · Even rows: `--n050` (#FBF8F2) |
 | Hover state | `--n050` background |
 | Selected row | `rgba(224,138,0,.08)` + 3px green left border |
-| Text truncation | Ellipsis at `max-width:200px` · tooltip on hover |
-| Inline actions | Hidden until row hover · max 3 (view / edit / more) |
-| ID column | IBM Plex Sans 12px · `--brand-dark` · font-weight 600 |
-| Client name | IBM Plex Sans 13px · font-weight 600 · `--n900` |
-| Currency values | IBM Plex Sans 12px |
+| Text handling | **Wrap** to multiple lines (no ellipsis truncation) · numbers/dates/status/actions single-line |
+| Inline actions | Hidden until row hover · max 3 (view / edit / more) · nowrap |
+| ID column | IBM Plex Sans 14px · `--brand-dark` · font-weight 600 |
+| Client name | IBM Plex Sans 14px · font-weight 600 · `--n900` |
+| Currency values | IBM Plex Sans 14px · tabular-nums · nowrap |
 | Pagination | Bottom bar with `--n150` top border · showing count + page buttons |
 | Table wrapper | White card with 0 padding, `--r-lg` radius, `--n200` border |
 | Toolbar | Flex row above table with title + filter/export/create buttons |
