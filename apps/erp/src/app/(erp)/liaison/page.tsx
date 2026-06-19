@@ -130,7 +130,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm [&_td]:align-top">
               <thead className="bg-n-50 border-b-2 border-n-200 sticky top-0">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-n-600 uppercase tracking-wider">Project</th>
@@ -169,7 +169,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                             <span className="text-n-400">—</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono tabular-nums text-n-600">
+                        <td className="px-3 py-2 text-right font-mono tabular-nums text-n-600 whitespace-nowrap">
                           {app.projects?.system_size_kwp != null
                             ? Number(app.projects.system_size_kwp).toFixed(1)
                             : '—'}
@@ -187,10 +187,10 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                             {app.awaiting_client_details && <AwaitingClientBadge />}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-n-600 font-mono tabular-nums text-xs">
+                        <td className="px-3 py-2 text-n-600 font-mono tabular-nums whitespace-nowrap">
                           {app.discom_application_date ? formatDate(app.discom_application_date) : '—'}
                         </td>
-                        <td className={`px-3 py-2 font-mono tabular-nums text-xs ${followupOverdue ? 'text-red-600 font-semibold' : 'text-n-600'}`}>
+                        <td className={`px-3 py-2 font-mono tabular-nums whitespace-nowrap ${followupOverdue ? 'text-red-600 font-semibold' : 'text-n-600'}`}>
                           {followupDate ? formatDate(app.next_followup_date) : '—'}
                         </td>
                       </tr>

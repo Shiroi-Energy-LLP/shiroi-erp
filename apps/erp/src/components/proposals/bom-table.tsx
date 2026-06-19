@@ -100,7 +100,7 @@ export function BOMTable({ lines }: { lines: BOMLine[] }) {
                 <TableCell className="text-right font-mono">{formatINR(line.unit_price)}</TableCell>
                 <TableCell className="text-right font-mono font-medium">{formatINR(line.total_price)}</TableCell>
                 <TableCell>
-                  <span className="text-xs">{GST_LABEL[line.gst_type]}</span>
+                  <span>{GST_LABEL[line.gst_type]}</span>
                 </TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${SCOPE_COLORS[line.scope_owner]}`}>
