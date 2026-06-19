@@ -24,6 +24,22 @@ All work below is **dev-only** until a prod window is green-lit (`memory/project
 
 ---
 
+## Execution status (updated 2026-06-19)
+
+Worked across two parallel sessions. **Done + pushed:**
+- **[G1]** request-scoped session cache (`getAuthUser`/`getSessionContext` split) — the per-render `auth.getUser()` storm deduped across ~25 pages; the only place an `unstable_cache`/module-scope memo would bleed sessions, so guarded by NEVER-DO #22.
+- **[G2]** `pg_trgm` + 14 GIN search indexes + `idx_tasks_milestone_id` (mig 190).
+- Projects sub-route guards → `getProjectHeader` (drops the module's heaviest query from 5 routes); `/sales` list `getLeads` folded into the parallel batch + redundant closing-window scan dropped.
+- Correctness: `getEmployeeCompensation` self-view restored (compared `profiles.id` to `employees.id` → dead branch).
+- Structural dedup: payment **and** invoice action merges (canonical + thin wrappers, regression-tested — the payment one preserves the n8n commission emit via an explicit `notify` flag, master-ref §4.19); 5 employee-dropdown helpers → 1; label maps centralized.
+
+**Still open (need a focused pass — NOT quick edits):**
+- **`/procurement/orders` pagination.** The list silently shows 100 of 2,041 POs (correctness bug). But the `/procurement` dashboard derives its status counts from the *same* capped `getPurchaseOrders()` fetch (`purchase-queries.ts`), so a correct fix also needs a `COUNT(*) FILTER` **RPC** (its own migration) for the dashboard — not just a pager. Flagged, deliberately not rushed in a finishing sprint on a financial module.
+- **`createDraftDetailedProposal` write-during-render** (`leads/[id]/proposal/page.tsx:114`, `design/[leadId]/page.tsx:46`) — violates NEVER-DO #24 (a GET that INSERTs; prefetch/concurrent renders double-fire). The fix moves draft creation out of render into an explicit action/button = a **UX change to the sales flow** needing product sign-off, so left for that decision.
+- The per-page perf tail: [G5] lazy-load dialog/dropdown data, `SELECT *` trims, remaining JS-money→RPC ([G6]), the `/bom-review` GROUP BY RPC, and the NEVER-DO #15 inline-query moves.
+
+---
+
 ## Part 1 — Global fixes (do these first; each touches many pages)
 
 These are referenced as `[G1]`…`[G6]` in the per-page sections.
