@@ -10,6 +10,7 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ## June 2026
 
+- **[2026-06-19]** style(ui/tables): universal 14px-body + text-wrap table standard — set once in the `@repo/ui` `Table` primitive + `DataTable`, then swept ~30 hand-rolled display tables (tasks, execution, service tickets, O&M, project steps, finance/procurement, misc); numbers/dates/status/actions stay single-line; editor grids, forms & badges untouched. → no migration · spec `2026-06-19-table-typography-wrap-standard-design.md` · modules: cross-cutting / design system
 - **[2026-06-19]** docs: lean-reset of the bloated index files — CHANGELOG 320→40 KB (verbose multi-paragraph entries → one line each; full prose archived) + CURRENT_STATUS 110→7 KB, plus an advisory CI entry-length guardrail. → no migration · spec `2026-06-19-docs-lean-reset-design.md` · docs
 - **[2026-06-19]** fix(hr): `getEmployeeCompensation` self-view restored — the role gate's `isSelf` compared `profiles.id` to `employees.id` (never matched → dead branch); now resolves the caller's `employees.id` via `getCurrentEmployeeId()`, so an employee can view their OWN compensation (founder/hr_manager unchanged). → no migration · module: hr
 - **[2026-06-19]** perf+security(auth): [G1] request-scoped session cache — one validated `auth.getUser()` per render instead of 2–3; `getAuthUser`/`getSessionContext` split. → no migration · review `2026-06-19-page-load-perf-audit.md` [G1] · modules: cross-cutting
