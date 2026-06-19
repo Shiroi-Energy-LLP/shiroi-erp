@@ -14,7 +14,7 @@ import {
 
 // ── Create Invoice ──
 
-export async function createInvoice(input: {
+type CreateInvoiceInput = {
   projectId: string;
   invoiceType: 'proforma' | 'tax_invoice' | 'credit_note';
   milestoneName?: string;
@@ -26,8 +26,21 @@ export async function createInvoice(input: {
   invoiceDate: string;
   dueDate: string;
   notes?: string;
-}): Promise<ActionResult<{ invoiceId: string }>> {
-  const op = '[createInvoice]';
+};
+
+/**
+ * Canonical invoice write. createInvoice (general /invoices flow, project picker)
+ * and raiseProjectInvoice (project-detail dialog, fixed project) both delegate
+ * here — they were byte-identical inserts into `invoices` with the same
+ * generate_doc_number('INV') numbering and revalidations; the only difference was
+ * the return shape (raiseProjectInvoice also returns invoiceNumber). No n8n emit
+ * on either path, so this merge carries no notification divergence (master-ref
+ * §4.19; locked by __tests__/invoice-write-wrappers.test.ts).
+ */
+export async function createCustomerInvoice(
+  input: CreateInvoiceInput,
+): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
+  const op = '[createCustomerInvoice]';
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -44,7 +57,7 @@ export async function createInvoice(input: {
 
   // Generate invoice number using DB function
   const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'INV' });
-  const invoiceNumber = docNum || `SHIROI/INV/${new Date().getFullYear()}/TEMP`;
+  const invoiceNumber = (docNum as string | null) || `SHIROI/INV/${new Date().getFullYear()}/TEMP`;
 
   const { data, error } = await supabase
     .from('invoices')
@@ -69,16 +82,28 @@ export async function createInvoice(input: {
     .select('id')
     .single();
 
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return err(error.message, error.code);
+  if (error || !data) {
+    console.error(`${op} Insert failed:`, { code: error?.code, message: error?.message, projectId: input.projectId });
+    return err(error?.message ?? 'Failed to create invoice', error?.code);
   }
 
   revalidatePath('/invoices');
   revalidatePath('/cash');
   revalidatePath('/payments/reconciliation');
   revalidatePath(`/projects/${input.projectId}`);
-  return ok({ invoiceId: data?.id ?? '' });
+  return ok({ invoiceId: data.id, invoiceNumber });
+}
+
+/**
+ * General /invoices-page invoice entry (project picker). Thin wrapper over
+ * createCustomerInvoice; preserves the historical {invoiceId}-only return.
+ */
+export async function createInvoice(
+  input: CreateInvoiceInput,
+): Promise<ActionResult<{ invoiceId: string }>> {
+  const res = await createCustomerInvoice(input);
+  if (!res.success) return res;
+  return ok({ invoiceId: res.data.invoiceId });
 }
 
 // ── Record Customer Payment ──
@@ -348,76 +373,13 @@ export async function recordVendorPayment(input: {
   return ok(undefined);
 }
 
-// ── Project-context: Raise Invoice (ActionResult<T> pattern) ──
-// Used by project detail raise-invoice dialog — pre-scoped to a project.
-
-export async function raiseProjectInvoice(input: {
-  projectId: string;
-  invoiceType: 'proforma' | 'tax_invoice' | 'credit_note';
-  milestoneName?: string;
-  subtotalSupply: number;
-  subtotalWorks: number;
-  gstSupplyAmount: number;
-  gstWorksAmount: number;
-  totalAmount: number;
-  invoiceDate: string;
-  dueDate: string;
-  notes?: string;
-}): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
-  const op = '[raiseProjectInvoice]';
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
-
-  const { data: employee, error: empError } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
-
-  if (empError || !employee) {
-    console.error(`${op} Employee lookup failed:`, { empError, timestamp: new Date().toISOString() });
-    return err('Employee profile not found');
-  }
-
-  const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'INV' });
-  const invoiceNumber = (docNum as string | null) || `SHIROI/INV/${new Date().getFullYear()}/TEMP`;
-
-  const { data, error } = await supabase
-    .from('invoices')
-    .insert({
-      project_id: input.projectId,
-      raised_by: employee.id,
-      invoice_number: invoiceNumber,
-      invoice_type: input.invoiceType,
-      milestone_name: input.milestoneName || null,
-      subtotal_supply: input.subtotalSupply,
-      subtotal_works: input.subtotalWorks,
-      gst_supply_amount: input.gstSupplyAmount,
-      gst_works_amount: input.gstWorksAmount,
-      total_amount: input.totalAmount,
-      amount_outstanding: input.totalAmount,
-      invoice_date: input.invoiceDate,
-      due_date: input.dueDate,
-      status: 'draft',
-      notes: input.notes || null,
-      erp_created: true,
-    })
-    .select('id')
-    .single();
-
-  if (error || !data) {
-    console.error(`${op} Insert failed:`, { code: error?.code, message: error?.message, projectId: input.projectId, timestamp: new Date().toISOString() });
-    return err(error?.message ?? 'Failed to create invoice');
-  }
-
-  revalidatePath('/invoices');
-  revalidatePath('/cash');
-  revalidatePath('/payments/reconciliation');
-  revalidatePath(`/projects/${input.projectId}`);
-
-  return ok({ invoiceId: data.id, invoiceNumber });
+// ── Project-context: Raise Invoice ──
+// Project-detail dialog — pre-scoped to a project. Thin wrapper over
+// createCustomerInvoice (also returns invoiceNumber, which the dialog renders).
+export async function raiseProjectInvoice(
+  input: CreateInvoiceInput,
+): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
+  return createCustomerInvoice(input);
 }
 
 // ── Project-context: Record Payment ──
