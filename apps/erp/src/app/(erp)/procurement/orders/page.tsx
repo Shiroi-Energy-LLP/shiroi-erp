@@ -28,22 +28,43 @@ interface POListPageProps {
     vendor?: string;
     project?: string;
     search?: string;
+    page?: string;
   }>;
 }
 
+const PER_PAGE = 50;
+
 export default async function POListPage({ searchParams }: POListPageProps) {
   const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
 
-  const [purchaseOrders, vendors, projects] = await Promise.all([
+  const [poResult, vendors, projects] = await Promise.all([
     getPurchaseOrders({
       status: params.status || undefined,
       vendorId: params.vendor || undefined,
       projectId: params.project || undefined,
       search: params.search || undefined,
+      page: currentPage,
+      per_page: PER_PAGE,
     }),
     getVendorsList(),
     getProjectsList(),
   ]);
+
+  const purchaseOrders = poResult.rows;
+  const total = poResult.total;
+  const totalPages = Math.ceil(total / PER_PAGE);
+
+  function pageUrl(page: number) {
+    const p = new URLSearchParams();
+    if (params.status) p.set('status', params.status);
+    if (params.vendor) p.set('vendor', params.vendor);
+    if (params.project) p.set('project', params.project);
+    if (params.search) p.set('search', params.search);
+    if (page > 1) p.set('page', String(page));
+    const qs = p.toString();
+    return `/procurement/orders${qs ? `?${qs}` : ''}`;
+  }
 
   return (
     <div className="space-y-4">
@@ -57,7 +78,7 @@ export default async function POListPage({ searchParams }: POListPageProps) {
           </Link>
           <h1 className="text-lg font-heading font-bold text-n-900">
             All Purchase Orders
-            <span className="text-sm font-normal text-n-500 ml-2">({purchaseOrders.length})</span>
+            <span className="text-sm font-normal text-n-500 ml-2">({total})</span>
           </h1>
         </div>
         <CreatePODialog projects={projects} vendors={vendors} />
@@ -139,6 +160,31 @@ export default async function POListPage({ searchParams }: POListPageProps) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-n-200 bg-n-50">
+              <span className="text-[11px] text-n-500">
+                Page {currentPage} of {totalPages} &middot; {total} POs
+              </span>
+              <div className="flex gap-2">
+                {currentPage > 1 && (
+                  <Link href={pageUrl(currentPage - 1)}>
+                    <Button size="sm" variant="outline" className="h-7 text-[11px] px-2.5">
+                      &larr; Previous
+                    </Button>
+                  </Link>
+                )}
+                {currentPage < totalPages && (
+                  <Link href={pageUrl(currentPage + 1)}>
+                    <Button size="sm" variant="outline" className="h-7 text-[11px] px-2.5">
+                      Next &rarr;
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
           )}
         </CardContent>

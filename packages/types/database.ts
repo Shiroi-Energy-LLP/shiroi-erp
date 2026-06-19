@@ -19506,6 +19506,14 @@ export type Database = {
           status: Database["public"]["Enums"]["project_status"]
         }[]
       }
+      get_purchase_order_status_counts: {
+        Args: never
+        Returns: {
+          active_count: number
+          pending_count: number
+          pending_deliveries: number
+        }[]
+      }
       get_receivables_reconciliation: {
         Args: never
         Returns: {
@@ -19581,6 +19589,10 @@ export type Database = {
       increment_partner_commission: {
         Args: { p_amount: number; p_partner_id: string }
         Returns: number
+      }
+      link_pending_import_to_project: {
+        Args: { p_import_id: string; p_project_id: string }
+        Returns: string
       }
       list_pending_imports: {
         Args: {
@@ -20139,6 +20151,8 @@ export type Database = {
         }[]
       }
       seed_pending_project_import: { Args: { p_data: Json }; Returns: string }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       undo_project_review: {
         Args: { p_made_by: string; p_project_id: string }
         Returns: {

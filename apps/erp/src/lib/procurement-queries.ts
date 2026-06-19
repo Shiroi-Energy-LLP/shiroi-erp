@@ -21,6 +21,23 @@ export interface POListItem extends PurchaseOrderRow {
   projects: Pick<ProjectRow, 'project_number' | 'customer_name'> | null;
 }
 
+/**
+ * Trimmed PO row for the paginated orders list + the dashboard's "recent POs" —
+ * only the columns those two surfaces render. Unlike POListItem it does NOT
+ * extend the full PurchaseOrderRow, because getPurchaseOrders no longer does a
+ * SELECT * (the trimmed select wouldn't satisfy the full-row shape).
+ */
+export interface POListRow {
+  id: string;
+  po_number: string;
+  po_date: string;
+  status: string;
+  total_amount: number;
+  amount_outstanding: number;
+  vendors: Pick<VendorRow, 'company_name'> | null;
+  projects: Pick<ProjectRow, 'project_number' | 'customer_name'> | null;
+}
+
 export interface PODetail extends PurchaseOrderRow {
   vendors: Pick<VendorRow, 'company_name' | 'is_msme' | 'contact_person' | 'email' | 'phone' | 'gstin'> | null;
   projects: Pick<ProjectRow, 'project_number' | 'customer_name'> | null;
@@ -293,18 +310,32 @@ export async function getEmployeeIdForProfile(profileId: string): Promise<string
 // Existing PO Queries (preserved for PO detail page)
 // ---------------------------------------------------------------------------
 
-export async function getPurchaseOrders(filters: ProcurementFilters = {}): Promise<POListItem[]> {
+const PO_LIST_PAGE_SIZE = 50;
+
+/**
+ * Paginated PO list. Selects only the columns the list/dashboard render and uses
+ * count: 'estimated' + .range() (NEVER-DO #13/#25 — a bare .limit(100) silently
+ * hid 1,900+ of ~2,000 POs). Returns { rows, total } so callers can page.
+ */
+export async function getPurchaseOrders(
+  filters: ProcurementFilters = {},
+): Promise<{ rows: POListRow[]; total: number }> {
   const op = '[getPurchaseOrders]';
   console.log(`${op} Starting`);
 
   const supabase = await createClient();
+  const page = filters.page ?? 1;
+  const perPage = filters.per_page ?? PO_LIST_PAGE_SIZE;
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
   let query = supabase
     .from('purchase_orders')
     .select(
-      '*, vendors!purchase_orders_vendor_id_fkey(company_name, is_msme), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
+      'id, po_number, po_date, status, total_amount, amount_outstanding, vendors!purchase_orders_vendor_id_fkey(company_name), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
+      { count: 'estimated' },
     )
-    .order('po_date', { ascending: false })
-    .limit(100);
+    .order('po_date', { ascending: false });
 
   if (filters.status) {
     query = query.eq('status', filters.status);
@@ -319,14 +350,48 @@ export async function getPurchaseOrders(filters: ProcurementFilters = {}): Promi
     query = query.or(`po_number.ilike.${sanitizeForIlike(filters.search)}`);
   }
 
-  const { data, error } = await query;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load purchase orders: ${error.message}`);
   }
 
-  return (data ?? []) as unknown as POListItem[];
+  return { rows: (data ?? []) as unknown as POListRow[], total: count ?? 0 };
+}
+
+export interface POStatusCounts {
+  pendingPOCount: number;
+  activePOCount: number;
+  pendingDeliveries: number;
+}
+
+/**
+ * PO status KPI buckets for the purchase dashboard, counted in one SQL pass over
+ * the full table (mig 192 get_purchase_order_status_counts). Replaces deriving
+ * them from a .limit(100)-capped getPurchaseOrders() + JS .filter().length,
+ * which undercounted on ~2,000 POs (NEVER-DO #12/#13).
+ */
+export async function getPurchaseOrderStatusCounts(): Promise<POStatusCounts> {
+  const op = '[getPurchaseOrderStatusCounts]';
+  console.log(`${op} Starting`);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('get_purchase_order_status_counts');
+
+  if (error) {
+    console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load purchase order status counts: ${error.message}`);
+  }
+
+  const row = data?.[0];
+  return {
+    pendingPOCount: Number(row?.pending_count ?? 0),
+    activePOCount: Number(row?.active_count ?? 0),
+    pendingDeliveries: Number(row?.pending_deliveries ?? 0),
+  };
 }
 
 export async function getPurchaseOrder(id: string): Promise<PODetail | null> {

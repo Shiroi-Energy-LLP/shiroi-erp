@@ -175,6 +175,7 @@ apps/erp/src/app/api/procurement/[poId]/pdf/route.ts
 - **PO PDF** requires `@react-pdf/renderer` listed in `experimental.serverComponentsExternalPackages` in `apps/erp/next.config.js` (shared with all other PDF routes — see projects module Known Gotchas).
 - **"Send to Purchase" from BOQ** is bulk (`yet_to_finalize` → `yet_to_place`) and lives in the project BOQ step, not here. Entry point is `sendBoqToPurchase` in `project-step-actions.ts`.
 - **PO cancel** is a status flip to `cancelled`, not a row delete — `purchase_orders` has no `deleted_at` column. The PO stays in the flat list (`/procurement/orders`) with a cancelled badge for audit.
+- **PO list is paginated** (mig 192, June 2026). `getPurchaseOrders(filters)` returns `{ rows, total }` — a trimmed select (only the ~7 displayed cols + vendor/project embeds), `count:'estimated'` + `.range()`, 50/page; the page has a filter-preserving pager. It used to be a bare `.limit(100)` that silently hid ~1,950 of ~2,046 POs. The **purchase dashboard** (`purchase-queries.ts::getPurchaseDashboardData`) gets its three status KPIs from RPC **`get_purchase_order_status_counts`** (one `COUNT(*) FILTER` pass, SECURITY INVOKER) and its "recent POs" from `getPurchaseOrders({ per_page: 10 })` — never aggregate PO buckets in JS over a capped fetch again (NEVER-DO #12/#13/#25).
 - **Vendor assignment on a received item** should be blocked upstream; the BOQ row is effectively locked once it moves past `ordered`.
 
 ## C1 Additions (Migration 123, May 2026)

@@ -32,9 +32,9 @@ Worked across two parallel sessions. **Done + pushed:**
 - Projects sub-route guards → `getProjectHeader` (drops the module's heaviest query from 5 routes); `/sales` list `getLeads` folded into the parallel batch + redundant closing-window scan dropped.
 - Correctness: `getEmployeeCompensation` self-view restored (compared `profiles.id` to `employees.id` → dead branch).
 - Structural dedup: payment **and** invoice action merges (canonical + thin wrappers, regression-tested — the payment one preserves the n8n commission emit via an explicit `notify` flag, master-ref §4.19); 5 employee-dropdown helpers → 1; label maps centralized.
+- **`/procurement/orders` pagination + dashboard counts (mig 192).** `getPurchaseOrders` was a bare `.limit(100)` showing 100 of ~2,046 POs (correctness bug); now selects the ~7 displayed columns with `count:'estimated'` + `.range()`, returns `{rows,total}`, and the page has a filter-preserving pager. The purchase dashboard's three status KPIs (which shared that capped fetch and so also undercounted) now come from new SECURITY-INVOKER RPC `get_purchase_order_status_counts` — one `COUNT(*) FILTER` pass over the full table (NEVER-DO #12/#13/#25). Verified on dev: 2,046 POs, counts pending 77 / active 20 / pending-deliveries 20.
 
 **Still open (need a focused pass — NOT quick edits):**
-- **`/procurement/orders` pagination.** The list silently shows 100 of 2,041 POs (correctness bug). But the `/procurement` dashboard derives its status counts from the *same* capped `getPurchaseOrders()` fetch (`purchase-queries.ts`), so a correct fix also needs a `COUNT(*) FILTER` **RPC** (its own migration) for the dashboard — not just a pager. Flagged, deliberately not rushed in a finishing sprint on a financial module.
 - **`createDraftDetailedProposal` write-during-render** (`leads/[id]/proposal/page.tsx:114`, `design/[leadId]/page.tsx:46`) — violates NEVER-DO #24 (a GET that INSERTs; prefetch/concurrent renders double-fire). The fix moves draft creation out of render into an explicit action/button = a **UX change to the sales flow** needing product sign-off, so left for that decision.
 - The per-page perf tail: [G5] lazy-load dialog/dropdown data, `SELECT *` trims, remaining JS-money→RPC ([G6]), the `/bom-review` GROUP BY RPC, and the NEVER-DO #15 inline-query moves.
 
@@ -206,9 +206,9 @@ Format per page: **Load today** (round-trips / `getUser` count / parallel-vs-wat
 - **What's heavy:** `getPurchaseRequests` (`procurement-queries.ts:124`) — after the 50 paged projects, fires **2 unbounded `.in(projectIds)` queries** (`project_boq_items`, `purchase_orders`) and sums in JS per project; 3 internal queries are sequential.
 - **Suggested changes:** push the per-project BOQ/PO totals into a SQL RPC (`GROUP BY project_id`); parallelize.
 
-### `/procurement/orders`
+### `/procurement/orders` — ✓ **Done (mig 192)**
 - **What's heavy:** `getPurchaseOrders` (`:301`) = `SELECT *` + embeds + **`.limit(100)` with no pagination** → **silently shows only 100 of 2,041 POs** (correctness bug, not just perf).
-- **Suggested changes:** add `count: 'estimated'` + `.range()` pagination; select the ~7 displayed columns.
+- **Suggested changes:** add `count: 'estimated'` + `.range()` pagination; select the ~7 displayed columns. **Shipped:** trimmed select + `{rows,total}` pagination + a pager; dashboard counts moved to the `get_purchase_order_status_counts` RPC (see Execution status).
 
 ### `/procurement/requisitions`, `/procurement/reconciliation/[projectId]`
 - Both: `getUserProfile` serial gate before the data fetch (`[G1]`+`[G4]`). Reconciliation also has JS `.reduce()` sums the RPC could return.
@@ -324,7 +324,7 @@ Format per page: **Load today** (round-trips / `getUser` count / parallel-vs-wat
 - [ ] `/projects/[id]/{change-orders,delays,milestones,qc,reports}`: replace the `getProject(id)` mega-fetch existence-guard with `getProjectHeader`; drop the duplicate child query. **Removes the module's heaviest query from 5 routes.**
 - [ ] `/projects/[id]#boq` + `#bom` + `#actuals` + `#delivery`: fetch the `projects` row once (`cache()`); move BOQ/expense money sums to a SQL RPC; bound `getItemSuggestions` (≤2,000 BOQ rows) and `getStepDeliveryData` (`SELECT *`).
 - [ ] `/bom-review`: 3 exact counts + category scan → one `GROUP BY` RPC.
-- [ ] `/procurement/orders`: paginate (fix silent 100-of-2,041 truncation).
+- [x] `/procurement/orders`: paginate (fix silent 100-of-2,041 truncation). **Done — mig 192** (also moved the dashboard's PO status KPIs to a `COUNT(*) FILTER` RPC).
 - [ ] **[G5]** lazy-load dialog/dropdown data: `/om/inverters`, `/om/amc`, `/sales/[id]/proposal`, `/price-book`, `/tasks`, `/activities`.
 - [ ] `/data-quality`: 7 exact counts → one RPC.
 

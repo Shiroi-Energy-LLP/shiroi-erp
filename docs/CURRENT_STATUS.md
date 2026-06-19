@@ -28,7 +28,7 @@
 
 | Item | Status |
 |------|--------|
-| **Page-load perf audit** (`docs/reviews/2026-06-19-page-load-perf-audit.md`) | In progress, dev-only. Shipped: mig 190 (pg_trgm search + tasks/milestone index), [G1] request-scoped session `cache()`. Pending: dev compute upsize (Vivek's call) + the remaining round-trip/cold-plan items. |
+| **Page-load perf audit** (`docs/reviews/2026-06-19-page-load-perf-audit.md`) | In progress, dev-only. Shipped: mig 190 (pg_trgm search + tasks/milestone index), [G1] request-scoped session `cache()`, mig 192 (`/procurement/orders` pagination + `get_purchase_order_status_counts` RPC for the dashboard KPIs). Pending: dev compute upsize (Vivek's call) + the remaining round-trip/cold-plan items. |
 | **Docs lean-reset** (`spec 2026-06-19-docs-lean-reset-design.md`) | ~Done. CHANGELOG 320→40 KB, this file reset, advisory CI length-check added. |
 | **Theming → Solar Gold** | Token swap + 384-hex colour-shift + whole-rupee money shipped (June 18). Pending Vivek call: status-colour + label-map centralization (blocked on the label-wording decision). |
 | **Manivel reconciliation + Command Center** (migs 180–185) | Shipped to dev. Write-back of reconciled values into `projects` still pending. |
