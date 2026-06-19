@@ -108,7 +108,7 @@ export function ActivitiesClient({
       )}
 
       <div className="overflow-x-auto border border-n-200 rounded-lg">
-        <table className="w-full text-[11px]">
+        <table className="w-full text-sm [&_td]:align-top">
           <thead>
             <tr className="border-b border-n-200 bg-n-50">
               <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[30px]">#</th>
@@ -138,7 +138,7 @@ export function ActivitiesClient({
             )}
             {filtered.map((r, i) => (
               <tr key={r.id} className="border-b border-n-100 hover:bg-n-50">
-                <td className="px-2 py-1.5 font-mono text-n-400">{i + 1}</td>
+                <td className="px-2 py-1.5 font-mono text-n-400 whitespace-nowrap">{i + 1}</td>
                 <td className="px-2 py-1.5 text-n-700 whitespace-nowrap">{formatDay(r.activity_date)}</td>
                 {showProject && (
                   <td className="px-2 py-1.5">
@@ -156,14 +156,14 @@ export function ActivitiesClient({
                 <td className="px-2 py-1.5 text-n-900 max-w-[420px]">
                   <span className="whitespace-normal break-words">{r.description}</span>
                 </td>
-                <td className="px-2 py-1.5 text-right font-mono">{r.se_count || '—'}</td>
-                <td className="px-2 py-1.5 text-right font-mono">{r.os_count || '—'}</td>
-                <td className="px-2 py-1.5 text-right font-mono">{r.contractor_count || '—'}</td>
+                <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{r.se_count || '—'}</td>
+                <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{r.os_count || '—'}</td>
+                <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{r.contractor_count || '—'}</td>
                 <td className="px-2 py-1.5 text-n-500 max-w-[200px]">
                   <span className="whitespace-normal break-words">{r.notes ?? '—'}</span>
                 </td>
                 {canManage && (
-                  <td className="px-2 py-1.5">
+                  <td className="px-2 py-1.5 whitespace-nowrap">
                     <div className="flex items-center gap-1">
                       <ActivityFormDialog
                         projectId={r.project_id ?? undefined}

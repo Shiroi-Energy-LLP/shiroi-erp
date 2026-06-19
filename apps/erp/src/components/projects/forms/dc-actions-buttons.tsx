@@ -133,21 +133,21 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
         className="border-b border-n-100 hover:bg-n-50 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
-        <td className="px-2 py-2 font-mono font-bold text-p-600 text-[12px]">
+        <td className="px-2 py-2 font-mono font-bold text-p-600 whitespace-nowrap">
           <div className="flex items-center gap-1">
             {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             {dcLabel}
           </div>
         </td>
-        <td className="px-2 py-2 font-mono text-[11px] text-n-700">{dc.dc_number}</td>
-        <td className="px-2 py-2 text-[12px] text-n-700">
+        <td className="px-2 py-2 font-mono text-n-700 whitespace-nowrap">{dc.dc_number}</td>
+        <td className="px-2 py-2 text-n-700 whitespace-nowrap">
           {dc.dc_date ? new Date(dc.dc_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '\u2014'}
         </td>
-        <td className="px-2 py-2 text-[11px] text-n-600 max-w-[200px] truncate">
+        <td className="px-2 py-2 text-n-600 max-w-[240px]">
           {dc.dispatch_to || '\u2014'}
         </td>
-        <td className="px-2 py-2 text-center font-mono text-[12px]">{items.length}</td>
-        <td className="px-2 py-2">
+        <td className="px-2 py-2 text-center font-mono whitespace-nowrap">{items.length}</td>
+        <td className="px-2 py-2 whitespace-nowrap">
           <Badge
             variant={dc.status === 'delivered' ? 'success' : dc.status === 'dispatched' ? 'warning' : 'neutral'}
             className="capitalize text-[10px]"
@@ -173,7 +173,7 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
               {/* Items table with HSN Code */}
               <div>
                 <p className="text-[10px] font-bold text-n-500 uppercase tracking-wide mb-2">Item Details</p>
-                <table className="w-full text-[11px]">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-n-200">
                       <th className="px-2 py-1 text-left font-medium text-n-500 w-[30px]">S.No</th>

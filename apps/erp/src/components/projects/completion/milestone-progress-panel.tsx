@@ -54,7 +54,7 @@ export async function MilestoneProgressPanel({ projectId }: { projectId: string 
             </Link>.
           </p>
         ) : (
-          <table className="w-full text-[12px]">
+          <table className="w-full text-sm [&_td]:align-top">
             <thead>
               <tr className="border-b border-n-200 bg-n-50">
                 <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">Milestone</th>
@@ -68,13 +68,13 @@ export async function MilestoneProgressPanel({ projectId }: { projectId: string 
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-n-100 hover:bg-n-50">
                   <td className="px-3 py-1.5 font-medium text-n-900">{r.label}</td>
-                  <td className="px-3 py-1.5 text-right">
+                  <td className="px-3 py-1.5 text-right whitespace-nowrap">
                     <Badge variant="outline" className="text-[10px]">{r.weight}%</Badge>
                   </td>
-                  <td className="px-3 py-1.5 text-right font-mono text-n-500">
+                  <td className="px-3 py-1.5 text-right font-mono text-n-500 whitespace-nowrap">
                     {r.total > 0 ? `${r.done}/${r.total}` : '—'}
                   </td>
-                  <td className={`px-3 py-1.5 text-right font-mono ${
+                  <td className={`px-3 py-1.5 text-right font-mono whitespace-nowrap ${
                     r.pct === 100 ? 'text-green-600 font-bold' : r.pct > 0 ? 'text-blue-600' : 'text-n-400'
                   }`}>
                     {r.pct}%

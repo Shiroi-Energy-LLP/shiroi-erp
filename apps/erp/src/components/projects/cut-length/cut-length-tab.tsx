@@ -329,7 +329,7 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
         </div>
       ) : (
         <div className="rounded-lg border border-n-200 overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm [&_td]:align-top">
             <thead>
               <tr className="bg-n-50 border-b border-n-200">
                 <th className="px-3 py-2.5 text-left text-xs font-medium text-n-500 uppercase tracking-wide">Material</th>
@@ -351,8 +351,8 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
                     </div>
                   </td>
                   <td className="px-3 py-2.5 text-n-600">{r.specification}</td>
-                  <td className="px-3 py-2.5 text-right font-mono font-medium text-n-800">{Number(r.length_meters).toFixed(2)}</td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-2.5 text-right font-mono font-medium text-n-800 whitespace-nowrap">{Number(r.length_meters).toFixed(2)}</td>
+                  <td className="px-3 py-2.5 whitespace-nowrap">
                     {r.project_stage ? (
                       <Badge variant="outline" className="text-[10px]">
                         {STAGE_OPTIONS.find((s) => s.value === r.project_stage)?.label ?? r.project_stage}
@@ -361,12 +361,12 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
                       <span className="text-n-400">—</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-n-600 text-xs">{formatDate(r.cut_date)}</td>
-                  <td className="px-3 py-2.5 text-n-500 text-xs">
+                  <td className="px-3 py-2.5 text-n-600 whitespace-nowrap">{formatDate(r.cut_date)}</td>
+                  <td className="px-3 py-2.5 text-n-500">
                     {r.profiles?.full_name ?? '—'}
                   </td>
                   {canDelete && (
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-3 py-2.5 text-right whitespace-nowrap">
                       <button
                         onClick={() => setPendingDeleteId(r.id)}
                         disabled={deletingId === r.id}

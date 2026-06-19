@@ -269,7 +269,7 @@ function ReadOnlyChecklist({ data }: { data: QcChecklistData }) {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <table className="w-full text-[11px]">
+            <table className="w-full text-sm [&_td]:align-top">
               <thead>
                 <tr className="border-b border-n-200 bg-n-50">
                   <th className="px-3 py-1 text-left text-[10px] font-medium text-n-500 w-[50%]">
@@ -287,7 +287,7 @@ function ReadOnlyChecklist({ data }: { data: QcChecklistData }) {
                 {section.items.map((item, iIdx) => (
                   <tr key={iIdx} className="border-b border-n-50 last:border-b-0">
                     <td className="px-3 py-1.5 text-n-800">{item.item}</td>
-                    <td className="px-3 py-1.5 text-center">
+                    <td className="px-3 py-1.5 text-center whitespace-nowrap">
                       {item.passed === true ? (
                         <span className="inline-flex items-center gap-0.5 text-green-700 font-semibold">
                           <Check className="h-3 w-3" /> Yes

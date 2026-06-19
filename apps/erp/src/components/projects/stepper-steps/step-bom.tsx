@@ -82,7 +82,7 @@ export async function StepBom({ projectId }: StepBomProps) {
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full text-[12px]">
+                <table className="w-full text-sm [&_td]:align-top">
                   <thead>
                     <tr className="border-b border-n-200 bg-n-50">
                       <th className="px-2 py-1.5 text-left font-medium text-n-500">Category</th>
@@ -96,8 +96,8 @@ export async function StepBom({ projectId }: StepBomProps) {
                       <tr key={item.id} className="border-b border-n-100">
                         <td className="px-2 py-1.5">{getCategoryLabel(item.item_category)}</td>
                         <td className="px-2 py-1.5">{item.item_description}</td>
-                        <td className="px-2 py-1.5 text-right font-mono">{item.quantity}</td>
-                        <td className="px-2 py-1.5">{item.unit}</td>
+                        <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{item.quantity}</td>
+                        <td className="px-2 py-1.5 whitespace-nowrap">{item.unit}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -210,7 +210,7 @@ export async function StepBom({ projectId }: StepBomProps) {
 
               {/* Compact BOI Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-[12px]">
+                <table className="w-full text-sm [&_td]:align-top">
                   <thead>
                     <tr className="border-b border-n-200 bg-n-050">
                       <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[150px]">Category</th>
@@ -233,9 +233,9 @@ export async function StepBom({ projectId }: StepBomProps) {
                         <td className="px-2 py-1 text-n-500">
                           {[item.brand, item.model].filter(Boolean).join(' ') || '\u2014'}
                         </td>
-                        <td className="px-2 py-1 text-right font-mono text-n-700">{item.quantity}</td>
-                        <td className="px-2 py-1 text-n-500">{item.unit}</td>
-                        <td className="px-2 py-1">
+                        <td className="px-2 py-1 text-right font-mono text-n-700 whitespace-nowrap">{item.quantity}</td>
+                        <td className="px-2 py-1 text-n-500 whitespace-nowrap">{item.unit}</td>
+                        <td className="px-2 py-1 whitespace-nowrap">
                           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             {canManageItems && (
                               <BoiEditButton projectId={projectId} item={item} units={catalogUnits} />
@@ -259,7 +259,7 @@ export async function StepBom({ projectId }: StepBomProps) {
                     {/* Empty state */}
                     {items.length === 0 && !canEdit && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-[12px] text-n-500">
+                        <td colSpan={6} className="px-4 py-6 text-center text-n-500">
                           No items in this BOI.
                         </td>
                       </tr>

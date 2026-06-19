@@ -213,7 +213,7 @@ export async function StepBoq({ projectId }: StepBoqProps) {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-050">
                     <th className="px-3 py-1.5 text-left font-medium text-n-500">Category</th>
@@ -229,17 +229,17 @@ export async function StepBoq({ projectId }: StepBoqProps) {
                     return (
                       <tr key={cat} className="border-b border-n-100 hover:bg-n-050">
                         <td className="px-3 py-1.5 font-medium text-n-950">{getCategoryLabel(cat)}</td>
-                        <td className="px-3 py-1.5 text-right font-mono text-n-500">{totals.count}</td>
-                        <td className="px-3 py-1.5 text-right font-mono text-n-700">{formatINR(totals.totalWithoutGst)}</td>
-                        <td className="px-3 py-1.5 text-right font-mono font-medium text-n-950">{formatINR(totals.totalWithGst)}</td>
+                        <td className="px-3 py-1.5 text-right font-mono text-n-500 whitespace-nowrap">{totals.count}</td>
+                        <td className="px-3 py-1.5 text-right font-mono text-n-700 whitespace-nowrap">{formatINR(totals.totalWithoutGst)}</td>
+                        <td className="px-3 py-1.5 text-right font-mono font-medium text-n-950 whitespace-nowrap">{formatINR(totals.totalWithGst)}</td>
                       </tr>
                     );
                   })}
                   <tr className="border-t-2 border-n-200 bg-n-050">
                     <td className="px-3 py-1.5 font-bold text-n-950">Total</td>
-                    <td className="px-3 py-1.5 text-right font-mono font-bold">{items.length}</td>
-                    <td className="px-3 py-1.5 text-right font-mono font-bold">{formatINR(totalWithoutGst)}</td>
-                    <td className="px-3 py-1.5 text-right font-mono font-bold">{formatINR(totalValue)}</td>
+                    <td className="px-3 py-1.5 text-right font-mono font-bold whitespace-nowrap">{items.length}</td>
+                    <td className="px-3 py-1.5 text-right font-mono font-bold whitespace-nowrap">{formatINR(totalWithoutGst)}</td>
+                    <td className="px-3 py-1.5 text-right font-mono font-bold whitespace-nowrap">{formatINR(totalValue)}</td>
                   </tr>
                 </tbody>
               </table>

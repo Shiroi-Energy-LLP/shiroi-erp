@@ -110,7 +110,7 @@ export async function StepDelivery({ projectId }: StepDeliveryProps) {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
                     <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500 w-[60px]">DC #</th>
