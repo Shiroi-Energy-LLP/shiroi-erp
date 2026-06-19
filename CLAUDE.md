@@ -149,7 +149,7 @@ FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW 
 
 ---
 
-## NEVER DO (21 rules — rationale in master reference §4.8 + §4.12–4.15)
+## NEVER DO (25 rules — rationale in master reference §4.8 + §4.12–4.19)
 
 1. Never hardcode env variables, API keys, or Supabase project IDs.
 2. Never commit `.env.local`.
@@ -172,6 +172,10 @@ FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW 
 19. Never throw from a server action — return `ActionResult<T>`.
 20. Never ship schema changes without regenerating types in the same commit.
 21. Never import runtime values from `-queries.ts` files in a `'use client'` component — `import type` only. Extract shared constants (label maps, enum orders, weight maps) to `<domain>-constants.ts` with no server imports. The queries file re-exports from there. `pnpm check-types` does NOT catch the boundary violation; only `pnpm build` does. (Master ref §4.13.)
+22. Never cache authenticated identity/role outside a **request-scoped React `cache()`**. No `unstable_cache`, module scope, or any cross-request store for `auth.getUser()`/profile/role — it bleeds one user's session into another. Server actions always re-resolve identity server-side; never trust a client-passed `role`/`userId`. (Master ref §4.17.)
+23. Never ship a user-facing text search as leading-wildcard `col ILIKE '%term%'` without a `pg_trgm` GIN index on the searched column — it forces a sequential scan. (Master ref §4.18 sibling; NEVER-DO #17 extension.)
+24. Never perform a DB write (INSERT/UPDATE/DELETE) during a server-component / page render. Writes belong in explicit actions triggered by user intent — a GET that mutates isn't idempotent (prefetch + concurrent renders double-fire). (Master ref §4.17 sibling.)
+25. Never use a bare `.limit(N)` on a list that can exceed N rows without pagination (`count: 'estimated'` + `.range()`) — it silently hides rows. (Master ref §4.18 sibling.)
 
 ---
 

@@ -91,7 +91,7 @@ Format per page: **Load today** (round-trips / `getUser` count / parallel-vs-wat
 ---
 
 ## SALES / LEADS
-> The user's "leads page" is **`/sales`** — middleware 307-redirects `/leads` → `/sales`. The `apps/erp/src/app/(erp)/leads/**` files are **dead code** (unreachable) and can be deleted in a cleanup. `/sales/[id]` and its tabs are thin re-exports of the `leads/[id]/*` files.
+> The user's "leads page" is **`/sales`** — middleware 307-redirects `/leads` → `/sales`. **Only `leads/page.tsx` + `leads/loading.tsx` are dead** (the list view, now unreachable). The rest of `leads/**` is **live**: `/sales/[id]`, its 5 tabs, and `/sales/new` are thin `export { default } from '../../leads/[id]/…'` re-exports of the `leads/**` files (verified 2026-06-19) — deleting them breaks the entire sales-detail experience. To "clean up", **invert** the re-export (make `sales/**` the real files and `leads/**` the redirect) — a refactor, not a delete.
 
 ### `/sales` (the leads list)
 - **Load today:** ~11 round-trips, 1 `getUser` (via `getMyViews`), **2-stage waterfall** — a 9-way `Promise.all` (`sales/page.tsx:105`) then `getLeads` awaited *separately* (`:158`).
@@ -318,7 +318,7 @@ Format per page: **Load today** (round-trips / `getUser` count / parallel-vs-wat
 - [ ] `SELECT *` trims: `qc-gates`, `daily-reports`, `getPurchaseOrders`, `getMSMEAlertPOs`.
 - [ ] NEVER-DO #15 inline-query moves: `/sales/[id]/tasks`, `/expenses`, `/hr/certifications`, `/qc-gates`, `/daily-reports`, `/tasks/[id]`.
 - [ ] `/reconciliation`: summary RPC + paginate.
-- [ ] Delete dead `apps/erp/src/app/(erp)/leads/**` (unreachable post-redirect).
+- [ ] Delete **only** the genuinely-dead `leads/page.tsx` + `leads/loading.tsx` (the list, unreachable post-redirect). **Do NOT delete `leads/[id]/**` or `leads/new/**`** — `/sales/[id]`, its 5 tabs, and `/sales/new` re-export them (verified 2026-06-19; a wholesale delete breaks sales-detail). Inverting the re-export is a separate refactor.
 - [ ] `CREATE INDEX idx_tasks_milestone_id ON tasks(milestone_id)` — completion tab currently seq-scans (cheap at 233 rows; add before prod scale).
 - [ ] Drop `getCallerRole`'s unused `employees` read (folded into `[G1]`).
 
