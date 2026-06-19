@@ -46,6 +46,13 @@ jobs:
       - name: Forbidden-pattern check (CLAUDE.md rules 11, 13, 15)
         run: bash scripts/ci/check-forbidden-patterns.sh
 
+      # Advisory only — surfaces over-long CHANGELOG entries (the file is a grep-able
+      # index; paragraphs belong in docs/reviews/). The script always exits 0, and
+      # continue-on-error guarantees it can never redden a build. (docs lean-reset 2026-06-19)
+      - name: Changelog entry-length (advisory — never fails the build)
+        run: bash scripts/ci/check-changelog-entry-length.sh
+        continue-on-error: true
+
       # Catches client/server boundary violations and other production-only
       # errors that `pnpm check-types` misses (e.g. a 'use client' component
       # transitively importing the server Supabase client). Without this,
