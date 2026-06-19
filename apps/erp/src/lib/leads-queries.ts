@@ -1,6 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { formatCustomerProject } from './customer-project';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
@@ -300,19 +301,12 @@ export async function leadHasDetailedProposal(leadId: string): Promise<boolean> 
   return !!data;
 }
 
-export async function getSalesEngineers() {
-  const op = '[getSalesEngineers]';
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name');
-  if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
-    throw new Error(`Failed to load sales engineers: ${error.message}`);
-  }
-  return data ?? [];
+// Active-employee dropdown — delegates to the shared helper. The name is
+// historical: it returns ALL active employees, not just sales engineers
+// (2026-06-19 sweep §3). Now returns [] on error (was: threw) — an empty
+// dropdown beats crashing the page render on a transient failure.
+export async function getSalesEngineers(): Promise<{ id: string; full_name: string }[]> {
+  return getActiveEmployeesForSelect();
 }
 
 /**

@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@repo/supabase/server';
+import { getActiveEmployeesForSelect } from './employees-queries';
 import type { Database } from '@repo/types/database';
 
 export type SalesTerritory = Database['public']['Tables']['sales_territories']['Row'];
@@ -113,20 +114,7 @@ export async function countLeadsInTerritory(cities: string[]): Promise<number> {
  * Fetch all active employees for the assignee select.
  * Returns a minimal shape: id + full_name.
  */
+// Active-employee dropdown — delegates to the shared helper (2026-06-19 sweep §3).
 export async function listEmployeesForSelect(): Promise<{ id: string; full_name: string }[]> {
-  const op = '[listEmployeesForSelect]';
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name', { ascending: true });
-
-  if (error) {
-    console.error(`${op} query failed`, { error, timestamp: new Date().toISOString() });
-    return [];
-  }
-
-  return (data ?? []) as { id: string; full_name: string }[];
+  return getActiveEmployeesForSelect();
 }

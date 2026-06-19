@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { emitErpEvent } from '@/lib/n8n/emit';
 import { createTask, toggleTaskStatus } from '@/lib/tasks-actions';
 import { getCurrentEmployeeId } from '@/lib/auth';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 // Extracted from project-dc-actions.ts (item 15a, 2026-06-06) to keep that
 // file under the 500-LOC ceiling. Milestones + tasks + the employee dropdown
@@ -275,18 +276,8 @@ export async function toggleTaskCompletion(input: {
 
 // ── Employees: Get active list for dropdowns ──
 
+// Active-employee dropdown — delegates to the shared helper (the name implied a
+// project filter that never existed; 2026-06-19 sweep §3).
 export async function getActiveEmployeesForProject(): Promise<{ id: string; full_name: string }[]> {
-  const op = '[getActiveEmployeesForProject]';
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name');
-
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return [];
-  }
-  return data ?? [];
+  return getActiveEmployeesForSelect();
 }

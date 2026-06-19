@@ -4,6 +4,7 @@ import type { Database } from '@repo/types/database';
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Row types
@@ -290,20 +291,9 @@ export async function getWorkLogs(taskId: string): Promise<WorkLogRow[]> {
 // Helpers
 // ═══════════════════════════════════════════════════════════════════════
 
+// Active-employee dropdown — delegates to the shared helper (2026-06-19 sweep §3).
 export async function getActiveEmployees(): Promise<{ id: string; full_name: string }[]> {
-  const op = '[getActiveEmployees]';
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name');
-
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return [];
-  }
-  return data ?? [];
+  return getActiveEmployeesForSelect();
 }
 
 export async function getActiveProjects(): Promise<{ id: string; project_number: string; customer_name: string; project_name: string | null }[]> {

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from './n8n/emit';
 import { getSessionContext, getCurrentEmployeeId } from '@/lib/auth';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -348,18 +349,9 @@ export async function getCurrentUserRoleForProject(): Promise<string | null> {
  * Returns active employees for the project-manager / site-supervisor
  * pickers. Light shape so the dropdown stays fast.
  */
+// Active-employee dropdown — delegates to the shared helper (2026-06-19 sweep §3).
 export async function getActiveEmployeesLite(): Promise<{ id: string; full_name: string }[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name', { ascending: true });
-  if (error) {
-    console.error('[getActiveEmployeesLite] Failed:', error.message);
-    return [];
-  }
-  return (data ?? []) as { id: string; full_name: string }[];
+  return getActiveEmployeesForSelect();
 }
 
 const PROJECT_DELETE_ROLES = new Set<string>(['founder', 'project_manager']);
