@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
 import { getEmployee, getLeaveBalances } from '@/lib/hr-queries';
 import { formatDate } from '@repo/ui/formatters';
+import { LEAVE_TYPE_LABELS } from '@/lib/label-constants';
 import {
   Card,
   CardHeader,
@@ -17,17 +18,6 @@ import { CompensationView } from '@/components/hr/compensation-view';
 interface EmployeeProfilePageProps {
   params: Promise<{ id: string }>;
 }
-
-const LEAVE_TYPE_LABELS: Record<string, string> = {
-  casual: 'Casual Leave',
-  sick: 'Sick Leave',
-  earned: 'Earned Leave',
-  maternity: 'Maternity Leave',
-  paternity: 'Paternity Leave',
-  compensatory: 'Comp Off',
-  loss_of_pay: 'Loss of Pay',
-  other: 'Other',
-};
 
 export default async function EmployeeProfilePage({ params }: EmployeeProfilePageProps) {
   await requireRole(['founder', 'hr_manager']);

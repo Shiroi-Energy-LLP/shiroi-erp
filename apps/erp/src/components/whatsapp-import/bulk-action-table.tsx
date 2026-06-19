@@ -14,13 +14,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@repo/ui';
 import { Check, X } from 'lucide-react';
 import { batchApproveQueueItems, batchRejectQueueItems } from '@/lib/whatsapp-import-actions';
-
-const PROFILE_LABELS: Record<string, string> = {
-  marketing: 'Marketing',
-  llp: 'LLP / Purchase',
-  shiroi_energy: 'Shiroi Energy ⚡',
-  site: 'Site',
-};
+import { WHATSAPP_PROFILE_LABELS as PROFILE_LABELS } from '@/lib/label-constants';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   customer_payment: { label: 'Payment',      color: 'bg-green-100 text-green-800' },

@@ -7,6 +7,7 @@ import { QcInspectionForm } from '@/components/projects/forms/qc-inspection-form
 import { QcApprovalControls, QcPdfDownloadButton } from '@/components/projects/forms/qc-approval-controls';
 import { QcSectionPhotos } from '@/components/projects/forms/qc-photo-display';
 import type { QcChecklistData, QcSectionResult, QcProjectInfo } from '@/lib/qc-constants';
+import { SYSTEM_TYPE_LABELS } from '@/lib/label-constants';
 
 interface StepQcProps {
   projectId: string;
@@ -168,12 +169,6 @@ export async function StepQc({ projectId }: StepQcProps) {
 }
 
 // ── Project details card (shown at top of QC step in all states) ──
-
-const SYSTEM_TYPE_LABELS: Record<string, string> = {
-  on_grid: 'On-Grid',
-  off_grid: 'Off-Grid',
-  hybrid: 'Hybrid',
-};
 
 function QcProjectDetailsCard({
   projectInfo,

@@ -8,6 +8,7 @@ import { getProjectHeader } from '@/lib/projects-queries';
 import { getUserProfile } from '@/lib/auth';
 import { BoqDownloadButton } from '@/components/procurement/boq-download-button';
 import { Calculator, CheckCircle2, Package } from 'lucide-react';
+import { BOQ_STATUS_LABELS as STATUS_LABELS } from '@/lib/label-constants';
 import {
   BoqSeedButton,
   BoqItemStatusSelect,
@@ -37,15 +38,6 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   received: { bg: '#F0FDF4', text: '#059669', border: '#A7F3D0' },
   ready_to_dispatch: { bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
   delivered: { bg: '#F0FDF4', text: '#16A34A', border: '#86EFAC' },
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  yet_to_finalize: 'Yet to Finalize',
-  yet_to_place: 'Yet to Place',
-  order_placed: 'Order Placed',
-  received: 'Received',
-  ready_to_dispatch: 'Ready to Dispatch',
-  delivered: 'Delivered',
 };
 
 

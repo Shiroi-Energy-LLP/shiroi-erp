@@ -1,11 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import { EditableField } from './editable-field';
-
-const SYSTEM_TYPE_OPTIONS = [
-  { value: 'on_grid', label: 'On-Grid' },
-  { value: 'off_grid', label: 'Off-Grid' },
-  { value: 'hybrid', label: 'Hybrid' },
-];
+import { SYSTEM_TYPE_OPTIONS } from '@/lib/label-constants';
 
 const STRUCTURE_OPTIONS = [
   { value: 'elevated_gi', label: 'Elevated (GI)' },

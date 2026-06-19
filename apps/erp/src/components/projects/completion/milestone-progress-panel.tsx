@@ -2,20 +2,7 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@repo/ui';
 import { getMilestoneProgressData } from '@/lib/project-completion-queries';
 import { ListTodo } from 'lucide-react';
-
-/** Milestone display labels — aligned with execution_milestones_master. */
-const MILESTONE_LABELS: Record<string, string> = {
-  material_delivery: 'Material Delivery',
-  structure_installation: 'Structure Installation',
-  panel_installation: 'Panel Installation',
-  electrical_work: 'Electrical Work',
-  earthing_work: 'Earthing Work',
-  civil_work: 'Civil Work',
-  testing_commissioning: 'Testing & Commissioning',
-  net_metering: 'Net Metering',
-  handover: 'Handover',
-  follow_ups: 'Follow-ups',
-};
+import { MILESTONE_LABELS } from '@/lib/label-constants';
 
 /**
  * Read-only weighted-milestone completion breakdown. Data comes from

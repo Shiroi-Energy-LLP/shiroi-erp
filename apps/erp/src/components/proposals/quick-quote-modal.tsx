@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Label, Card, CardContent } from '@repo/ui';
 import { createBudgetaryQuoteAction } from '@/lib/proposal-actions';
+import { SYSTEM_TYPE_OPTIONS as SYSTEM_TYPES } from '@/lib/label-constants';
 
 interface QuickQuoteModalProps {
   leadId: string;
@@ -12,12 +13,6 @@ interface QuickQuoteModalProps {
   defaultSegment: string | null;
   onClose: () => void;
 }
-
-const SYSTEM_TYPES = [
-  { value: 'on_grid', label: 'On Grid' },
-  { value: 'hybrid', label: 'Hybrid' },
-  { value: 'off_grid', label: 'Off Grid' },
-];
 
 const STRUCTURE_TYPES = [
   { value: 'flush_mount', label: 'Flush Mount (Flat Roof)' },

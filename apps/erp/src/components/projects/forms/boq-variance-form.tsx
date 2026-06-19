@@ -8,6 +8,7 @@ import { RefreshCw, Save, Plus, X, Trash2, Check, Send, Pencil } from 'lucide-re
 import { seedBoqFromBom, updateCostVariance, updateBoqItemStatus, updateBoqItem, addBoqItem, deleteBoqItem, completeBoq, updateProjectCostManual, sendBoqToPurchase, applyPriceBookRates, updateEstimatedSiteExpenses } from '@/lib/project-step-actions';
 import { BOI_CATEGORIES } from '@/lib/boi-constants';
 import { ItemCombobox, type ItemSuggestion } from '@/components/forms/item-combobox';
+import { BOQ_STATUS_OPTIONS } from '@/lib/label-constants';
 
 interface BoqActionsProps {
   projectId: string;
@@ -49,15 +50,6 @@ export function BoqSeedButton({ projectId, hasBomLines, hasVariances }: BoqActio
 }
 
 // BOQ item status dropdown — used in step-boq.tsx
-const BOQ_STATUS_OPTIONS = [
-  { value: 'yet_to_finalize', label: 'Yet to Finalize' },
-  { value: 'yet_to_place', label: 'Yet to Place' },
-  { value: 'order_placed', label: 'Order Placed' },
-  { value: 'received', label: 'Received' },
-  { value: 'ready_to_dispatch', label: 'Ready to Dispatch' },
-  { value: 'delivered', label: 'Delivered' },
-];
-
 const STATUS_DOT_COLORS: Record<string, string> = {
   yet_to_finalize: '#7C818E',
   yet_to_place: '#B45309',

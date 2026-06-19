@@ -5,19 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@repo/ui';
 import { RefreshCw, Plus } from 'lucide-react';
 import { seedProjectMilestones, updateMilestoneStatus, createQuickTask } from '@/lib/project-step-actions';
-
-const MILESTONE_DISPLAY_LABELS: Record<string, string> = {
-  material_delivery: 'Material Delivery',
-  structure_installation: 'Structure Installation',
-  panel_installation: 'Panel Installation',
-  electrical_work: 'Electrical Work',
-  earthing_work: 'Earthing Work',
-  civil_work: 'Civil Work',
-  testing_commissioning: 'Testing & Commissioning',
-  net_metering: 'Net Metering',
-  handover: 'Handover',
-  follow_ups: 'Follow-ups',
-};
+import { MILESTONE_LABELS as MILESTONE_DISPLAY_LABELS } from '@/lib/label-constants';
 
 // ── Seed Button ──
 

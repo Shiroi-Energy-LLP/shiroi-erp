@@ -7,6 +7,7 @@ import { getProjectCompletionPct } from '@/lib/project-completion-queries';
 import { HardHat, ListTodo } from 'lucide-react';
 import Link from 'next/link';
 import { MilestoneSeedButton, MilestoneStatusControl, QuickTaskForm } from '@/components/projects/forms/milestone-form';
+import { MILESTONE_LABELS } from '@/lib/label-constants';
 import {
   TaskStatusDropdown,
   ActivityLogCell,
@@ -20,20 +21,6 @@ import { ActivitiesPanel } from '@/components/projects/activities/activities-pan
 interface StepExecutionProps {
   projectId: string;
 }
-
-/** Milestone display labels — aligned with execution_milestones_master table. */
-const MILESTONE_LABELS: Record<string, string> = {
-  material_delivery: 'Material Delivery',
-  structure_installation: 'Structure Installation',
-  panel_installation: 'Panel Installation',
-  electrical_work: 'Electrical Work',
-  earthing_work: 'Earthing Work',
-  civil_work: 'Civil Work',
-  testing_commissioning: 'Testing & Commissioning',
-  net_metering: 'Net Metering',
-  handover: 'Handover',
-  follow_ups: 'Follow-ups',
-};
 
 export async function StepExecution({ projectId }: StepExecutionProps) {
   let milestones: Awaited<ReturnType<typeof getStepExecutionData>>['milestones'] = [];

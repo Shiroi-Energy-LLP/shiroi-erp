@@ -6,6 +6,7 @@ import {
   getLeaveCalendar,
 } from '@/lib/hr-queries';
 import { formatDate } from '@repo/ui/formatters';
+import { LEAVE_TYPE_LABELS } from '@/lib/label-constants';
 import {
   Card,
   CardContent,
@@ -22,17 +23,6 @@ import {
 } from '@repo/ui';
 import { CalendarCheck, CalendarDays } from 'lucide-react';
 import { LeaveActionButtons } from '@/components/hr/leave-action-buttons';
-
-const LEAVE_TYPE_LABELS: Record<string, string> = {
-  casual: 'Casual',
-  sick: 'Sick',
-  earned: 'Earned',
-  maternity: 'Maternity',
-  paternity: 'Paternity',
-  compensatory: 'Comp Off',
-  loss_of_pay: 'LOP',
-  other: 'Other',
-};
 
 function leaveStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
