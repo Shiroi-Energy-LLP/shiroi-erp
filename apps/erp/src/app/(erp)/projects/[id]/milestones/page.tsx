@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getProjectMilestones, getProject } from '@/lib/projects-queries';
+import { getProjectMilestones, getProjectHeader } from '@/lib/projects-queries';
 import { calcWeightedCompletion } from '@/lib/completion-calc';
 import { MilestoneStatusBadge } from '@/components/projects/milestone-status-badge';
 import { formatDate } from '@repo/ui/formatters';
@@ -18,7 +18,7 @@ interface MilestonesPageProps {
 export default async function MilestonesPage({ params }: MilestonesPageProps) {
   const { id } = await params;
   const [project, milestones] = await Promise.all([
-    getProject(id),
+    getProjectHeader(id),
     getProjectMilestones(id),
   ]);
 

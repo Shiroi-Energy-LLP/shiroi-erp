@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProjectReports } from '@/lib/site-report-queries';
-import { getProject } from '@/lib/projects-queries';
+import { getProjectHeader } from '@/lib/projects-queries';
 import { isReportLocked, hoursUntilLock } from '@/lib/report-lock';
 import { formatDate } from '@repo/ui/formatters';
 import {
@@ -26,7 +26,7 @@ interface ReportsPageProps {
 export default async function ReportsPage({ params }: ReportsPageProps) {
   const { id } = await params;
   const [project, reports] = await Promise.all([
-    getProject(id),
+    getProjectHeader(id),
     getProjectReports(id),
   ]);
 

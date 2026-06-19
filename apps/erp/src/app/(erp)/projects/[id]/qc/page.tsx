@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getProject, getProjectQCInspections } from '@/lib/projects-queries';
+import { getProjectHeader, getProjectQCInspections } from '@/lib/projects-queries';
 import { formatDate, toIST } from '@repo/ui/formatters';
 import {
   Card,
@@ -28,7 +28,7 @@ interface ChecklistItem {
 export default async function QCPage({ params }: QCPageProps) {
   const { id } = await params;
   const [project, inspections] = await Promise.all([
-    getProject(id),
+    getProjectHeader(id),
     getProjectQCInspections(id),
   ]);
 
