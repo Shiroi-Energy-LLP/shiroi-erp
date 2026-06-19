@@ -4,7 +4,6 @@ import { getLeads, getSalesEngineers } from '@/lib/leads-queries';
 import type { LeadFilters } from '@/lib/leads-queries';
 import {
   getLeadStageCounts,
-  getLeadsClosingBetween,
   getPipelineCloseWindow,
 } from '@/lib/leads-pipeline-queries';
 import { getInternalReferrers, getReferralPartners, getExternalPartnerIds } from '@/lib/partners-queries';
@@ -101,26 +100,13 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
   const referrerParam = params.referrer;
   const referredByParam = params.referredBy === 'clients' ? 'clients' as const : undefined;
 
-  // Stage 1 — parallel fetches that don't depend on each other
-  const [
-    views,
-    stageCounts,
-    closingThisWeek,
-    employees,
-    internalReferrers,
-    externalReferrers,
-    closingThisWeekWindow,
-    closingThisMonthWindow,
-    externalPartnerIds,
-  ] = await Promise.all([
-    getMyViews('leads'),
-    getLeadStageCounts(),
-    getLeadsClosingBetween(weekStart, weekEnd),
-    getSalesEngineers(),
+  // Pre-resolve the two fetches getLeads may depend on. internalReferrers is
+  // needed for the referrer dropdown regardless; externalPartnerIds only for the
+  // "referred by clients" filter. Resolving them first lets getLeads (the heaviest
+  // query) run in the SAME parallel batch as the summary fetches below, instead of
+  // waterfalling sequentially after all of them.
+  const [internalReferrers, externalPartnerIds] = await Promise.all([
     getInternalReferrers(),
-    getReferralPartners(),
-    getPipelineCloseWindow(weekStart, weekEnd),
-    getPipelineCloseWindow(monthStart, monthEnd),
     referredByParam === 'clients' ? getExternalPartnerIds() : Promise.resolve([] as string[]),
   ]);
 
@@ -154,8 +140,27 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     dir: (params.dir as 'asc' | 'desc') || undefined,
   };
 
-  // Stage 2 — getLeads (may depend on internalReferrers for referrerIds)
-  const result = await getLeads(leadsFilters);
+  // Main batch — getLeads (the heaviest query) now runs in parallel with the
+  // summary/display fetches rather than waterfalling after them.
+  // (The redundant getLeadsClosingBetween scan was dropped: the "closing this week"
+  // count comes from closingThisWeekWindow.leadCount, which the week RPC returns.)
+  const [
+    views,
+    stageCounts,
+    employees,
+    externalReferrers,
+    closingThisWeekWindow,
+    closingThisMonthWindow,
+    result,
+  ] = await Promise.all([
+    getMyViews('leads'),
+    getLeadStageCounts(),
+    getSalesEngineers(),
+    getReferralPartners(),
+    getPipelineCloseWindow(weekStart, weekEnd),
+    getPipelineCloseWindow(monthStart, monthEnd),
+    getLeads(leadsFilters),
+  ]);
 
   const currentFilters: Record<string, string> = {};
   if (params.status) currentFilters.status = params.status;
@@ -216,7 +221,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
 
       <PipelineSummary
         stageCounts={stageCounts}
-        closingThisWeekCount={closingThisWeek.length}
+        closingThisWeekCount={closingThisWeekWindow.leadCount}
         weekStart={weekStart}
         weekEnd={weekEnd}
         monthStart={monthStart}
