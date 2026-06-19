@@ -191,7 +191,7 @@ export function CompanyForm({ company }: CompanyFormProps) {
               name="notes"
               rows={3}
               defaultValue={company?.notes ?? ''}
-              className="flex w-full rounded-md border-[1.5px] border-[#E5DFD3] bg-white px-3 py-2 text-[13px] text-[#221C12] focus-visible:outline-none focus-visible:border-[#E08A00] focus-visible:shadow-[0_0_0_3px_rgba(224,138,0,0.22)]"
+              className="flex w-full rounded-md border-[1.5px] border-n-200 bg-white px-3 py-2 text-[13px] text-n-900 focus-visible:outline-none focus-visible:border-shiroi-gold focus-visible:shadow-[0_0_0_3px_rgba(224,138,0,0.22)]"
               placeholder="Any notes about this company..."
             />
           </div>

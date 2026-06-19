@@ -62,7 +62,7 @@ export function ReportPhotos({ photos }: ReportPhotosProps) {
             type="button"
             onClick={() => handlePhotoClick(index, photo.storage_path)}
             className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer hover:opacity-90 ${
-              expandedIndex === index ? 'border-[#E08A00] ring-2 ring-[#E08A00]/20' : 'border-transparent'
+              expandedIndex === index ? 'border-shiroi-gold ring-2 ring-shiroi-gold/20' : 'border-transparent'
             }`}
           >
             {signedUrls[photo.storage_path] ? (
@@ -72,7 +72,7 @@ export function ReportPhotos({ photos }: ReportPhotosProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-[#F5F5F5] flex items-center justify-center">
+              <div className="w-full h-full bg-n-100 flex items-center justify-center">
                 {loadingUrl === photo.storage_path ? (
                   <div className="w-5 h-5 border-2 border-n-500 border-t-transparent rounded-full animate-spin" />
                 ) : (
@@ -96,7 +96,7 @@ export function ReportPhotos({ photos }: ReportPhotosProps) {
 
       {/* Expanded view */}
       {expandedIndex !== null && photos[expandedIndex] && signedUrls[photos[expandedIndex]!.storage_path] && (
-        <div className="relative rounded-lg overflow-hidden bg-[#F5F5F5] border">
+        <div className="relative rounded-lg overflow-hidden bg-n-100 border">
           <img
             src={signedUrls[photos[expandedIndex]!.storage_path]}
             alt={photos[expandedIndex]!.caption || photos[expandedIndex]!.file_name}

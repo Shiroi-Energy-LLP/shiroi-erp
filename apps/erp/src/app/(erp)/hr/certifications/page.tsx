@@ -67,7 +67,7 @@ export default async function CertificationsPage() {
   } catch {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Certifications</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Certifications</h1>
         <Card>
           <CardContent>
             <EmptyState
@@ -89,7 +89,7 @@ export default async function CertificationsPage() {
           <Link href="/hr" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to HR
           </Link>
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Certifications</h1>
+          <h1 className="text-2xl font-heading font-bold text-n-950 mt-1">Certifications</h1>
           <p className="text-sm text-gray-500">
             {certifications.length} certification{certifications.length !== 1 ? 's' : ''}
           </p>

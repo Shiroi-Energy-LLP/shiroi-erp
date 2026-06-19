@@ -85,7 +85,7 @@ function InfoRow({ label, value, mono, capitalize: cap }: { label: string; value
   return (
     <div className="flex justify-between text-sm">
       <span className="text-n-500">{label}</span>
-      <span className={`font-medium text-[#1A1D24] ${mono ? 'font-mono' : ''} ${cap ? 'capitalize' : ''}`}>
+      <span className={`font-medium text-n-950 ${mono ? 'font-mono' : ''} ${cap ? 'capitalize' : ''}`}>
         {value || '\u2014'}
       </span>
     </div>
@@ -96,7 +96,7 @@ function FinanceItem({ label, value, highlight }: { label: string; value: number
   return (
     <div>
       <div className="text-xs text-n-500 mb-0.5">{label}</div>
-      <div className={`text-sm font-mono font-medium ${highlight === 'negative' ? 'text-[#991B1B]' : highlight === 'positive' ? 'text-[#065F46]' : 'text-[#1A1D24]'}`}>
+      <div className={`text-sm font-mono font-medium ${highlight === 'negative' ? 'text-[#991B1B]' : highlight === 'positive' ? 'text-[#065F46]' : 'text-n-950'}`}>
         {formatINR(value)}
       </div>
     </div>

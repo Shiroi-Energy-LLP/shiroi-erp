@@ -83,24 +83,24 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
       <div className="absolute inset-0 bg-black/20" onClick={() => onOpenChange(false)} />
 
       {/* Panel */}
-      <div className="relative w-[420px] bg-white shadow-xl border-l border-[#DFE2E8] flex flex-col h-full">
+      <div className="relative w-[420px] bg-white shadow-xl border-l border-n-200 flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#DFE2E8]">
-          <h3 className="text-base font-semibold text-[#1A1D24] flex items-center gap-2">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-n-200">
+          <h3 className="text-base font-semibold text-n-950 flex items-center gap-2">
             <Columns3 className="h-4 w-4" />
             Edit Columns
           </h3>
-          <button onClick={() => onOpenChange(false)} className="text-n-500 hover:text-[#1A1D24]">
+          <button onClick={() => onOpenChange(false)} className="text-n-500 hover:text-n-950">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Left: Available columns */}
-          <div className="w-1/2 border-r border-[#DFE2E8] flex flex-col">
-            <div className="px-3 py-3 border-b border-[#DFE2E8]">
+          <div className="w-1/2 border-r border-n-200 flex flex-col">
+            <div className="px-3 py-3 border-b border-n-200">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[#9CA0AB]" />
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-n-400" />
                 <Input
                   value={search}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
@@ -113,13 +113,13 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
               {filteredColumns.map((col) => (
                 <label
                   key={col.key}
-                  className="flex items-center gap-2.5 rounded-md px-2.5 py-2 cursor-pointer hover:bg-[#F5F6F8] transition-colors"
+                  className="flex items-center gap-2.5 rounded-md px-2.5 py-2 cursor-pointer hover:bg-n-100 transition-colors"
                 >
                   <Checkbox
                     checked={localColumns.includes(col.key)}
                     onCheckedChange={() => toggleColumn(col.key)}
                   />
-                  <span className="text-[13px] text-[#1A1D24]">{col.label}</span>
+                  <span className="text-[13px] text-n-950">{col.label}</span>
                 </label>
               ))}
             </div>
@@ -127,7 +127,7 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
 
           {/* Right: Selected columns (reorderable) */}
           <div className="w-1/2 flex flex-col">
-            <div className="px-3 py-3 border-b border-[#DFE2E8]">
+            <div className="px-3 py-3 border-b border-n-200">
               <p className="text-xs font-medium text-n-500">
                 {localColumns.length} columns selected
               </p>
@@ -142,17 +142,17 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 bg-white border border-[#E5DFD3] cursor-grab active:cursor-grabbing hover:border-[#E08A00] transition-all duration-150 group ${
+                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 bg-white border border-n-200 cursor-grab active:cursor-grabbing hover:border-shiroi-gold transition-all duration-150 group ${
                     dragIdx === index ? 'opacity-50' : ''
                   } ${
-                    dropIdx === index && dragIdx !== index ? 'border-t-2 border-t-[#E08A00]' : ''
+                    dropIdx === index && dragIdx !== index ? 'border-t-2 border-t-shiroi-gold' : ''
                   }`}
                 >
                   <GripVertical className="h-3.5 w-3.5 text-n-400 shrink-0 cursor-grab" />
-                  <span className="text-[13px] text-[#1A1D24] flex-1 truncate">{col.label}</span>
+                  <span className="text-[13px] text-n-950 flex-1 truncate">{col.label}</span>
                   <button
                     onClick={() => toggleColumn(col.key)}
-                    className="text-[#9CA0AB] hover:text-[#991B1B] opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="text-n-400 hover:text-[#991B1B] opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -163,7 +163,7 @@ export function ColumnPicker({ allColumns, visibleColumns, onColumnsChange, open
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-[#DFE2E8]">
+        <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-n-200">
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button size="sm" onClick={handleApply}>Apply</Button>
         </div>

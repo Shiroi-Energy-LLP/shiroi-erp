@@ -61,7 +61,7 @@ export async function StepExecution({ projectId }: StepExecutionProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <HardHat className="w-12 h-12 text-red-400 opacity-50 mb-3" />
-        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
+        <h3 className="text-lg font-bold font-heading text-n-950 mb-1">Failed to Load</h3>
         <p className="text-[13px] text-n-500">Could not load execution data. Please refresh the page.</p>
       </div>
     );

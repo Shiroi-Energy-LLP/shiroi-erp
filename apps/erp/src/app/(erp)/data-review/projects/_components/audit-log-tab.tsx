@@ -72,9 +72,9 @@ export function AuditLogTab() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-md border border-[#E5E7EB] overflow-hidden">
+      <div className="rounded-md border border-n-200 overflow-hidden">
         {/* Header */}
-        <div className="grid grid-cols-[1.5fr_2fr_2fr_3fr_1.5fr_1fr] gap-3 bg-[#F9FAFB] px-4 py-2 text-xs font-semibold text-n-500 uppercase tracking-wide">
+        <div className="grid grid-cols-[1.5fr_2fr_2fr_3fr_1.5fr_1fr] gap-3 bg-n-050 px-4 py-2 text-xs font-semibold text-n-500 uppercase tracking-wide">
           <span>Date</span>
           <span>Project #</span>
           <span>Customer</span>
@@ -86,7 +86,7 @@ export function AuditLogTab() {
         {rows.map((row) => (
           <div
             key={row.id}
-            className="border-t border-[#E5E7EB] grid grid-cols-[1.5fr_2fr_2fr_3fr_1.5fr_1fr] gap-3 px-4 py-3 items-start"
+            className="border-t border-n-200 grid grid-cols-[1.5fr_2fr_2fr_3fr_1.5fr_1fr] gap-3 px-4 py-3 items-start"
           >
             {/* Date */}
             <span className="text-xs text-n-500">
@@ -97,10 +97,10 @@ export function AuditLogTab() {
             </span>
 
             {/* Project # */}
-            <span className="font-mono text-xs text-[#1A1D24]">{row.project_number}</span>
+            <span className="font-mono text-xs text-n-950">{row.project_number}</span>
 
             {/* Customer */}
-            <span className="text-xs text-[#1A1D24] truncate">{row.customer_name}</span>
+            <span className="text-xs text-n-950 truncate">{row.customer_name}</span>
 
             {/* Decision details */}
             <div className="space-y-0.5">

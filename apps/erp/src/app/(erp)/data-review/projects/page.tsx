@@ -49,7 +49,7 @@ export default async function DataReviewProjectsPage({
         items={[{ label: 'Data Review', href: '/data-review/projects' }, { label: 'Projects' }]}
       />
       <div>
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Project Data Review</h1>
+        <h1 className="text-2xl font-bold text-n-950">Project Data Review</h1>
         <p className="text-sm text-n-500">
           Confirm system size + order value for all {counts.all_projects} projects. One-time sweep.
         </p>

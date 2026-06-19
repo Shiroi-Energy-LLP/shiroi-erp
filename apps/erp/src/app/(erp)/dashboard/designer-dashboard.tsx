@@ -27,7 +27,7 @@ export async function DesignerDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Design Workspace</h1>
+      <h1 className="text-2xl font-heading font-bold text-n-950">Design Workspace</h1>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4">
@@ -85,7 +85,7 @@ export async function DesignerDashboard() {
                   <TableBody>
                     {data.designQueue.map((lead) => (
                       <TableRow key={lead.id}>
-                        <TableCell className="font-medium text-[#1A1D24]">
+                        <TableCell className="font-medium text-n-950">
                           {lead.customer_name}
                         </TableCell>
                         <TableCell>{lead.city}</TableCell>
@@ -119,21 +119,21 @@ export async function DesignerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2">
-                  <span className="text-sm text-[#5A5E6B]">Pending designs</span>
-                  <span className="font-heading text-lg font-bold text-[#111318]">
+                <div className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2">
+                  <span className="text-sm text-n-600">Pending designs</span>
+                  <span className="font-heading text-lg font-bold text-n-950">
                     {data.pendingDesigns}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2">
-                  <span className="text-sm text-[#5A5E6B]">Drafts in progress</span>
-                  <span className="font-heading text-lg font-bold text-[#111318]">
+                <div className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2">
+                  <span className="text-sm text-n-600">Drafts in progress</span>
+                  <span className="font-heading text-lg font-bold text-n-950">
                     {data.inProgress}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2">
-                  <span className="text-sm text-[#5A5E6B]">Completed this month</span>
-                  <span className="font-heading text-lg font-bold text-[#111318]">
+                <div className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2">
+                  <span className="text-sm text-n-600">Completed this month</span>
+                  <span className="font-heading text-lg font-bold text-n-950">
                     {data.completedThisMonth}
                   </span>
                 </div>

@@ -41,7 +41,7 @@ const SCOPE_COLORS: Record<ScopeOwner, string> = {
   shiroi: 'bg-status-success-bg text-status-success-text',
   client: 'bg-status-info-bg text-status-info-text',
   builder: 'bg-status-warning-bg text-status-warning-text',
-  excluded: 'bg-status-neutral-bg text-[#6B7280]',
+  excluded: 'bg-status-neutral-bg text-n-500',
 };
 
 const SCOPE_LABEL: Record<ScopeOwner, string> = {

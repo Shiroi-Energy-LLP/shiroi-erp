@@ -71,7 +71,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">CONTACTS</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">Contacts</h1>
+          <h1 className="text-2xl font-bold text-n-950">Contacts</h1>
         </div>
         <Link href="/contacts/new">
           <Button>New Contact</Button>

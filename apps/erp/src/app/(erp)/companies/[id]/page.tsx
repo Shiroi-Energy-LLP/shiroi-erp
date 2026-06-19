@@ -31,7 +31,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">{company.name}</h1>
+          <h1 className="text-2xl font-bold text-n-950 mt-1">{company.name}</h1>
         </div>
         <Link href={`/companies/${id}/edit`}>
           <Button variant="outline" size="sm" className="gap-1.5">

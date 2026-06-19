@@ -69,7 +69,7 @@ export function BomReviewTable({ data }: { data: BomLine[] }) {
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
-          className="w-full rounded border border-[#E08A00] px-2 py-1 text-sm focus:outline-none"
+          className="w-full rounded border border-shiroi-gold px-2 py-1 text-sm focus:outline-none"
           disabled={isPending}
         />
       );

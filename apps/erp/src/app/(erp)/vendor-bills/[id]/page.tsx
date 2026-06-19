@@ -114,7 +114,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
         <div className="flex items-start justify-between">
           <div>
             <Eyebrow className="mb-1">VENDOR BILL</Eyebrow>
-            <h1 className="text-2xl font-heading font-bold text-[#1A1D24] font-mono">
+            <h1 className="text-2xl font-heading font-bold text-n-950 font-mono">
               {bill.bill_number}
             </h1>
           </div>
@@ -134,7 +134,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
 
       {/* ── AI Extraction Review Section (only when pending_review) ──────────── */}
       {isPendingReview && (
-        <Card className="border-2 border-[#E08A00] bg-[#FCF3E2]">
+        <Card className="border-2 border-shiroi-gold bg-shiroi-solar-bg">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -176,7 +176,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* Left: AI-extracted fields */}
               <div className="space-y-3 text-sm">
-                <h3 className="font-semibold text-[#1A1D24]">AI-Extracted Fields</h3>
+                <h3 className="font-semibold text-n-950">AI-Extracted Fields</h3>
                 <div className="rounded-md border bg-white p-4 space-y-2">
                   {aiData?.vendor_name_extracted && (
                     <div className="flex justify-between">
@@ -241,7 +241,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
 
               {/* Right: PDF viewer */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-[#1A1D24] text-sm">Original PDF</h3>
+                <h3 className="font-semibold text-n-950 text-sm">Original PDF</h3>
                 {pdfSignedUrl ? (
                   <div className="rounded-md border overflow-hidden bg-gray-50">
                     <iframe

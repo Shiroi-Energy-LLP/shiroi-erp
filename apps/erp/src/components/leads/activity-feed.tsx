@@ -25,7 +25,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
         <div key={activity.id} className="relative pl-6 pb-6">
           {/* Timeline line */}
           {index < activities.length - 1 && (
-            <div className="absolute left-[9px] top-3 bottom-0 w-px bg-[#D1D5DB]" />
+            <div className="absolute left-[9px] top-3 bottom-0 w-px bg-n-300" />
           )}
           {/* Timeline dot */}
           <div className="absolute left-0 top-1 h-[18px] w-[18px] rounded-full border-2 border-shiroi-gold bg-white" />
@@ -40,7 +40,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
               </span>
             </div>
             {activity.summary && (
-              <p className="text-sm text-[#3E3E3E]">{activity.summary}</p>
+              <p className="text-sm text-n-700">{activity.summary}</p>
             )}
             {activity.outcome && (
               <p className="text-sm text-muted-foreground">

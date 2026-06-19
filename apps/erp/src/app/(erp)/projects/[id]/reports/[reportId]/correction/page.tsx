@@ -49,7 +49,7 @@ export default async function CorrectionPage({ params }: CorrectionPageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-[#1A1D24]">Request Correction</h2>
+        <h2 className="text-lg font-semibold text-n-950">Request Correction</h2>
         <p className="text-sm text-muted-foreground">
           This report is locked. Submit a correction request for manager approval.
         </p>
@@ -180,7 +180,7 @@ export default async function CorrectionPage({ params }: CorrectionPageProps) {
                     <p className="text-muted-foreground">
                       <span className="line-through">{correction.original_value}</span>
                       {' -> '}
-                      <span className="text-[#1A1D24]">{correction.corrected_value}</span>
+                      <span className="text-n-950">{correction.corrected_value}</span>
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Reason: {correction.correction_reason}

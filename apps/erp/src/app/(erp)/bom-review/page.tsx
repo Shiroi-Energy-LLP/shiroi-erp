@@ -71,7 +71,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
       {/* Header */}
       <div>
         <Eyebrow className="mb-1">BOM REVIEW</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">BOM Line Items Review</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">BOM Line Items Review</h1>
         <p className="text-sm text-n-500">
           Review and fix BOM data across all proposals. Double-click any cell to edit.
         </p>
@@ -81,7 +81,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <p className="text-2xl font-heading font-bold text-[#1A1D24]">
+            <p className="text-2xl font-heading font-bold text-n-950">
               {(totalCount ?? 0).toLocaleString('en-IN')}
             </p>
             <p className="text-xs text-n-500">Total BOM Lines</p>
@@ -119,7 +119,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
         <Link
           href="/bom-review"
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-            !categoryFilter ? 'bg-[#E08A00] text-[#1F1709]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            !categoryFilter ? 'bg-shiroi-gold text-shiroi-ink' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           All ({totalCount?.toLocaleString('en-IN')})
@@ -132,7 +132,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
               key={cat}
               href={`/bom-review?category=${cat}`}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                categoryFilter === cat ? 'bg-[#E08A00] text-[#1F1709]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                categoryFilter === cat ? 'bg-shiroi-gold text-shiroi-ink' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {cat.replace(/_/g, ' ')} ({count.toLocaleString('en-IN')})

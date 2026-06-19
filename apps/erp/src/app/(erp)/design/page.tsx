@@ -75,7 +75,7 @@ export default async function DesignPage() {
       <div className="space-y-6">
         <div>
           <Eyebrow className="mb-1">DESIGN QUEUE</Eyebrow>
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Design Queue</h1>
+          <h1 className="text-2xl font-heading font-bold text-n-950">Design Queue</h1>
         </div>
         <Card>
           <CardContent>
@@ -104,33 +104,33 @@ export default async function DesignPage() {
       {/* ── Page header ───────────────────────────────────────────────────── */}
       <div>
         <Eyebrow className="mb-1">DESIGN QUEUE</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Design Queue</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Design Queue</h1>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════
           Section 1: In Design — Leads
           ════════════════════════════════════════════════════════════════════ */}
       <section className="space-y-4">
-        <h2 className="text-base font-semibold text-[#1A1D24]">In Design — Leads</h2>
+        <h2 className="text-base font-semibold text-n-950">In Design — Leads</h2>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <CardContent className="py-4">
               <p className="text-xs font-medium text-n-500 uppercase tracking-wide">Total in Queue</p>
-              <p className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">{totalCount}</p>
+              <p className="text-2xl font-heading font-bold text-n-950 mt-1">{totalCount}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="py-4">
               <p className="text-xs font-medium text-n-500 uppercase tracking-wide">In Design</p>
-              <p className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">{inDesignCount}</p>
+              <p className="text-2xl font-heading font-bold text-n-950 mt-1">{inDesignCount}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="py-4">
               <p className="text-xs font-medium text-n-500 uppercase tracking-wide">Design Confirmed</p>
-              <p className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">{designConfirmedCount}</p>
+              <p className="text-2xl font-heading font-bold text-n-950 mt-1">{designConfirmedCount}</p>
             </CardContent>
           </Card>
         </div>
@@ -204,7 +204,7 @@ export default async function DesignPage() {
           ════════════════════════════════════════════════════════════════════ */}
       <section className="space-y-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-[#1A1D24]">At-Site Design — Projects</h2>
+          <h2 className="text-base font-semibold text-n-950">At-Site Design — Projects</h2>
           {projectsNeedingDesign.length > 0 && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#EDE9FE] text-[#5B21B6]">
               {projectsNeedingDesign.length}

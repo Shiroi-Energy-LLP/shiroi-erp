@@ -90,7 +90,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Inventory</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Inventory</h1>
         <p className="text-sm text-gray-500">
           {summary.totalPieces} items total · {summary.cutLengthPieces} cut-length · {summary.scrapPieces} scrapped
         </p>

@@ -57,7 +57,7 @@ export default async function PODetailPage({ params }: PageProps) {
           <Eyebrow className="mb-0">PURCHASE ORDER</Eyebrow>
           <DataFlagButton entityType="po" entityId={poId} />
         </div>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">{po.po_number}</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">{po.po_number}</h1>
         <div className="flex items-center gap-2 mt-2">
           <PoDownloadButton poId={poId} poNumber={po.po_number ?? ''} />
           {(po.status === 'draft' || po.status === 'sent') && (
@@ -71,7 +71,7 @@ export default async function PODetailPage({ params }: PageProps) {
         <Card>
           <CardContent className="pt-4 space-y-2">
             <h3 className="text-xs font-bold text-n-500 uppercase">Vendor</h3>
-            <p className="text-sm font-medium text-[#1A1D24]">{po.vendors?.company_name ?? '—'}</p>
+            <p className="text-sm font-medium text-n-950">{po.vendors?.company_name ?? '—'}</p>
             {po.vendors?.contact_person && <p className="text-xs text-n-500">{po.vendors.contact_person}</p>}
             {po.vendors?.phone && <p className="text-xs text-n-500">{po.vendors.phone}</p>}
             {po.vendors?.gstin && <p className="text-xs text-n-500">GSTIN: {po.vendors.gstin}</p>}
@@ -126,7 +126,7 @@ export default async function PODetailPage({ params }: PageProps) {
       {/* Line Items */}
       <Card>
         <CardContent className="pt-4">
-          <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+          <h2 className="text-sm font-heading font-bold text-n-950 mb-3">
             Line Items ({items.length})
           </h2>
           <div className="overflow-x-auto">
@@ -190,7 +190,7 @@ export default async function PODetailPage({ params }: PageProps) {
       {deliveryChallans.length > 0 && (
         <Card>
           <CardContent className="pt-4">
-            <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+            <h2 className="text-sm font-heading font-bold text-n-950 mb-3">
               Delivery Challans ({deliveryChallans.length})
             </h2>
             <Table>
@@ -227,7 +227,7 @@ export default async function PODetailPage({ params }: PageProps) {
       {payments.length > 0 && (
         <Card>
           <CardContent className="pt-4">
-            <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+            <h2 className="text-sm font-heading font-bold text-n-950 mb-3">
               Vendor Payments ({payments.length})
             </h2>
             <Table>
@@ -259,7 +259,7 @@ export default async function PODetailPage({ params }: PageProps) {
       {/* Associated Vendor Bills */}
       <Card>
         <CardContent className="pt-4">
-          <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+          <h2 className="text-sm font-heading font-bold text-n-950 mb-3">
             Associated Vendor Bills ({linkedBills.length})
           </h2>
           {linkedBills.length === 0 ? (
@@ -318,7 +318,7 @@ export default async function PODetailPage({ params }: PageProps) {
       {po.notes && (
         <Card>
           <CardContent className="pt-4">
-            <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-2">Notes</h2>
+            <h2 className="text-sm font-heading font-bold text-n-950 mb-2">Notes</h2>
             <p className="text-sm text-n-500 whitespace-pre-wrap">{po.notes}</p>
           </CardContent>
         </Card>

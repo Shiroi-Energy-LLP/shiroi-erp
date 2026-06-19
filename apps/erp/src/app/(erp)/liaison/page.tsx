@@ -82,7 +82,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
       {/* Header */}
       <div>
         <Eyebrow className="mb-1">LIAISON</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Liaison</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Liaison</h1>
         <p className="text-sm text-n-500 mt-1">
           CEIG clearances, TNEB net-metering applications, and follow-up tracking.
         </p>
@@ -96,14 +96,14 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
           const href = card.key === 'all' ? '/liaison' : `/liaison?filter=${card.key}`;
           return (
             <Link key={card.key} href={href} className="block group">
-              <Card className={`transition-shadow hover:shadow-md ${isActive ? 'ring-2 ring-[#E08A00]' : ''}`}>
+              <Card className={`transition-shadow hover:shadow-md ${isActive ? 'ring-2 ring-shiroi-gold' : ''}`}>
                 <CardContent className="flex items-center gap-3 p-4">
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.bgColor}`}>
                     <Icon className={`h-4 w-4 ${card.iconColor}`} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-n-500 leading-tight">{card.label}</p>
-                    <p className="text-xl font-heading font-bold text-[#1A1D24]">
+                    <p className="text-xl font-heading font-bold text-n-950">
                       {summary[card.summaryKey]}
                     </p>
                   </div>
@@ -155,7 +155,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                     return (
                       <tr
                         key={app.id}
-                        className={`h-10 border-b border-n-100 hover:bg-[#E08A00]/[0.04] ${i % 2 === 1 ? 'bg-n-50/30' : ''}`}
+                        className={`h-10 border-b border-n-100 hover:bg-shiroi-gold/[0.04] ${i % 2 === 1 ? 'bg-n-50/30' : ''}`}
                       >
                         <td className="px-3 py-2">
                           {app.projects ? (

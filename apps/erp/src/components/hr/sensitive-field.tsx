@@ -43,7 +43,7 @@ export function SensitiveField({
         into NEFT / IFSC tools, which is the whole reason for the reveal button.
       */}
       <span
-        className={`font-mono text-sm text-[#1A1D24] ${revealed ? '' : 'select-none'}`}
+        className={`font-mono text-sm text-n-950 ${revealed ? '' : 'select-none'}`}
       >
         {displayValue}
       </span>

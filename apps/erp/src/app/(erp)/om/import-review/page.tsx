@@ -176,7 +176,7 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
             href={tabUrl(tab.value)}
             className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
               currentStatus === tab.value
-                ? 'border-[#E08A00] text-shiroi-gold-dark'
+                ? 'border-shiroi-gold text-shiroi-gold-dark'
                 : 'border-transparent text-n-500 hover:text-n-900'
             }`}
           >

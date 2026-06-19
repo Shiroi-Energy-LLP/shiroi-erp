@@ -78,7 +78,7 @@ export async function StepBoq({ projectId }: StepBoqProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <Calculator className="w-12 h-12 text-red-400 opacity-50 mb-3" />
-        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
+        <h3 className="text-lg font-bold font-heading text-n-950 mb-1">Failed to Load</h3>
         <p className="text-[13px] text-n-500">Could not load BOQ data. Please refresh the page.</p>
       </div>
     );
@@ -105,7 +105,7 @@ export async function StepBoq({ projectId }: StepBoqProps) {
         />
         <div className="flex flex-col items-center justify-center py-16">
           <Calculator className="w-12 h-12 text-n-500 opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No BOQ Items</h3>
+          <h3 className="text-lg font-bold font-heading text-n-950 mb-1">No BOQ Items</h3>
           <p className="text-[13px] text-n-500 max-w-md text-center">
             {hasBomLines
               ? 'Click "Generate BOQ from BOM" above to create procurement items from your BOM.'
@@ -223,7 +223,7 @@ export async function StepBoq({ projectId }: StepBoqProps) {
             <div className="overflow-x-auto">
               <table className="w-full text-[12px]">
                 <thead>
-                  <tr className="border-b border-n-200 bg-[#F8F9FA]">
+                  <tr className="border-b border-n-200 bg-n-050">
                     <th className="px-3 py-1.5 text-left font-medium text-n-500">Category</th>
                     <th className="px-3 py-1.5 text-right font-medium text-n-500">Items</th>
                     <th className="px-3 py-1.5 text-right font-medium text-n-500">Subtotal (excl. GST)</th>
@@ -235,16 +235,16 @@ export async function StepBoq({ projectId }: StepBoqProps) {
                     const totals = categoryTotals[cat];
                     if (!totals) return null;
                     return (
-                      <tr key={cat} className="border-b border-n-100 hover:bg-[#F8F9FA]">
-                        <td className="px-3 py-1.5 font-medium text-[#1A1D24]">{getCategoryLabel(cat)}</td>
+                      <tr key={cat} className="border-b border-n-100 hover:bg-n-050">
+                        <td className="px-3 py-1.5 font-medium text-n-950">{getCategoryLabel(cat)}</td>
                         <td className="px-3 py-1.5 text-right font-mono text-n-500">{totals.count}</td>
                         <td className="px-3 py-1.5 text-right font-mono text-n-700">{formatINR(totals.totalWithoutGst)}</td>
-                        <td className="px-3 py-1.5 text-right font-mono font-medium text-[#1A1D24]">{formatINR(totals.totalWithGst)}</td>
+                        <td className="px-3 py-1.5 text-right font-mono font-medium text-n-950">{formatINR(totals.totalWithGst)}</td>
                       </tr>
                     );
                   })}
-                  <tr className="border-t-2 border-n-200 bg-[#F8F9FA]">
-                    <td className="px-3 py-1.5 font-bold text-[#1A1D24]">Total</td>
+                  <tr className="border-t-2 border-n-200 bg-n-050">
+                    <td className="px-3 py-1.5 font-bold text-n-950">Total</td>
                     <td className="px-3 py-1.5 text-right font-mono font-bold">{items.length}</td>
                     <td className="px-3 py-1.5 text-right font-mono font-bold">{formatINR(totalWithoutGst)}</td>
                     <td className="px-3 py-1.5 text-right font-mono font-bold">{formatINR(totalValue)}</td>

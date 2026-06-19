@@ -58,7 +58,7 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">PROPOSALS</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">Proposals</h1>
+          <h1 className="text-2xl font-bold text-n-950">Proposals</h1>
         </div>
         <Link href="/proposals/new">
           <Button>New Proposal</Button>

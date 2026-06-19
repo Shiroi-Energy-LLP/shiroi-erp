@@ -69,8 +69,8 @@ export function ObjectionForm({ projectId, netMeteringId }: ObjectionFormProps) 
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="space-y-3 border-t border-[#E5DFD3] pt-4 mt-4">
-      <p className="text-sm font-medium text-[#221C12]">Record a new objection</p>
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-3 border-t border-n-200 pt-4 mt-4">
+      <p className="text-sm font-medium text-n-900">Record a new objection</p>
       {error && (
         <div className="flex items-center gap-2 rounded-md border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs text-[#991B1B]">
           <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />

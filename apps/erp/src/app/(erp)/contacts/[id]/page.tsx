@@ -42,7 +42,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mt-1">
-            <h1 className="text-2xl font-bold text-[#1A1D24]">{contact.name}</h1>
+            <h1 className="text-2xl font-bold text-n-950">{contact.name}</h1>
             <Badge
               variant="neutral"
               className="text-[10px] capitalize"
@@ -120,7 +120,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             </CardHeader>
             <CardContent>
               {entities.length === 0 ? (
-                <p className="text-sm text-[#9CA0AB] py-4 text-center">Not linked to any entities yet.</p>
+                <p className="text-sm text-n-400 py-4 text-center">Not linked to any entities yet.</p>
               ) : (
                 <Table>
                   <TableHeader>
@@ -177,7 +177,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               ) : (
                 <div className="space-y-3">
                   {contact.contact_company_roles.map((ccr: any) => (
-                    <div key={ccr.id} className="rounded-md border border-[#DFE2E8] p-3">
+                    <div key={ccr.id} className="rounded-md border border-n-200 p-3">
                       <Link href={`/companies/${ccr.company_id}`} className="text-sm font-medium text-shiroi-gold-dark hover:underline">
                         {ccr.companies?.name}
                       </Link>

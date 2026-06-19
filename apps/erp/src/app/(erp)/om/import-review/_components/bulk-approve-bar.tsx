@@ -71,7 +71,7 @@ export function BulkApproveBar({ selectedIds, onClear }: Props) {
           size="sm"
           onClick={handleBulkApprove}
           disabled={pending}
-          className="bg-[#E08A00] hover:bg-[#C77606] text-[#1F1709] h-7 text-xs"
+          className="bg-shiroi-gold hover:bg-shiroi-gold-hover text-shiroi-ink h-7 text-xs"
         >
           {pending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
           Approve all

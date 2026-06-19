@@ -97,7 +97,7 @@ export default async function VendorBillAiReviewPage() {
         <Eyebrow className="mb-1">FINANCE / AI</Eyebrow>
         <div className="flex items-center gap-3">
           <Bot className="h-6 w-6 text-shiroi-gold-dark" />
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
+          <h1 className="text-2xl font-heading font-bold text-n-950">
             Vendor Invoice AI Review
           </h1>
         </div>
@@ -116,7 +116,7 @@ export default async function VendorBillAiReviewPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold font-mono text-[#1A1D24]">{kpis.pending_count}</p>
+            <p className="text-2xl font-bold font-mono text-n-950">{kpis.pending_count}</p>
           </CardContent>
         </Card>
 
@@ -152,7 +152,7 @@ export default async function VendorBillAiReviewPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold font-mono text-[#1A1D24]">
+            <p className="text-2xl font-bold font-mono text-n-950">
               {kpis.avg_confidence !== null ? `${Math.round(kpis.avg_confidence * 100)}%` : '—'}
             </p>
           </CardContent>

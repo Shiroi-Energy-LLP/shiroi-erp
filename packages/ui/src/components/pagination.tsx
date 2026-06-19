@@ -67,7 +67,7 @@ function Pagination({
             'inline-flex items-center justify-center h-8 px-3 rounded-md border text-sm',
             currentPage <= 1
               ? 'pointer-events-none opacity-50 border-n-200'
-              : 'border-n-200 hover:bg-[#F5F6F8] cursor-pointer'
+              : 'border-n-200 hover:bg-n-100 cursor-pointer'
           )}
         >
           Previous
@@ -80,7 +80,7 @@ function Pagination({
               'inline-flex items-center justify-center h-8 w-8 rounded-md text-sm',
               p === currentPage
                 ? 'bg-shiroi-gold text-shiroi-ink font-medium'
-                : 'border border-n-200 hover:bg-[#F5F6F8]'
+                : 'border border-n-200 hover:bg-n-100'
             )}
           >
             {p}
@@ -92,7 +92,7 @@ function Pagination({
             'inline-flex items-center justify-center h-8 px-3 rounded-md border text-sm',
             currentPage >= totalPages
               ? 'pointer-events-none opacity-50 border-n-200'
-              : 'border-n-200 hover:bg-[#F5F6F8] cursor-pointer'
+              : 'border-n-200 hover:bg-n-100 cursor-pointer'
           )}
         >
           Next

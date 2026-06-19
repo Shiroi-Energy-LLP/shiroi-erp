@@ -39,7 +39,7 @@ export default async function ReportsPage({ params }: ReportsPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-[#1A1D24]">Daily Site Reports</h2>
+          <h2 className="text-lg font-semibold text-n-950">Daily Site Reports</h2>
           <p className="text-sm text-muted-foreground">
             {reports.length} report{reports.length !== 1 ? 's' : ''} submitted
           </p>

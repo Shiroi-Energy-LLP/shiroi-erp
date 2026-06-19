@@ -52,7 +52,7 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">COMPANIES</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">Companies</h1>
+          <h1 className="text-2xl font-bold text-n-950">Companies</h1>
         </div>
         <Link href="/companies/new">
           <Button>New Company</Button>

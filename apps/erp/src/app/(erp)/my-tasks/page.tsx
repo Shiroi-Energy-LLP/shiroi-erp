@@ -40,7 +40,7 @@ export default async function MyTasksPage() {
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">MY TASKS</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">
+          <h1 className="text-2xl font-bold text-n-950">
             My Tasks{' '}
             <span className="text-base font-normal text-n-500">
               ({pendingCount} pending, {completedCount} done)
@@ -94,7 +94,7 @@ export default async function MyTasksPage() {
                             View Project
                           </Link>
                         ) : (
-                          <span className="text-[#9CA0AB]">{'\u2014'}</span>
+                          <span className="text-n-400">{'\u2014'}</span>
                         )}
                       </TableCell>
                       <TableCell>

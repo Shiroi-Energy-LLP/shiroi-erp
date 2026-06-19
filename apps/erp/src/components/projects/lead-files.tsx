@@ -141,9 +141,9 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
                   return (
                     <div
                       key={file.id}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-[#F5F6F8] group text-sm"
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-n-100 group text-sm"
                     >
-                      <Icon className="h-3.5 w-3.5 text-[#9CA0AB] flex-shrink-0" />
+                      <Icon className="h-3.5 w-3.5 text-n-400 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
                         <button
                           onClick={() => isImage ? openImage(file) : handleDownload(file.name)}
@@ -152,7 +152,7 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
                         >
                           {file.name.replace(/^\d+_/, '')}
                         </button>
-                        <span className="text-[11px] text-[#9CA0AB]">
+                        <span className="text-[11px] text-n-400">
                           {formatFileSize(file.size)}
                           {file.created_at && ` · ${formatDateFromTimestamp(file.created_at)}`}
                         </span>

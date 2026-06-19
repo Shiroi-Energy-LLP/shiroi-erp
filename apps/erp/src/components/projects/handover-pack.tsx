@@ -84,19 +84,19 @@ export function HandoverPack({ projectId, existingPack }: HandoverPackProps) {
         )}
 
         {!pack && !generating ? (
-          <p className="text-sm text-[#9CA0AB] text-center py-4">
+          <p className="text-sm text-n-400 text-center py-4">
             Generate a handover pack to compile all project data into a customer-ready document.
           </p>
         ) : pack && metadata ? (
           <div className="space-y-4">
             {/* Generation info */}
-            <div className="flex items-center gap-2 text-[11px] text-[#9CA0AB]">
+            <div className="flex items-center gap-2 text-[11px] text-n-400">
               <Clock className="h-3 w-3" />
               Generated {formatDateTime(pack.generated_at)}
             </div>
 
             {/* System Summary */}
-            <div className="rounded-lg bg-[#F5F6F8] p-3 space-y-2">
+            <div className="rounded-lg bg-n-100 p-3 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-n-500">System</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
@@ -137,7 +137,7 @@ export function HandoverPack({ projectId, existingPack }: HandoverPackProps) {
               <div className="space-y-1">
                 {metadata.checklist?.map((item: string, i: number) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-n-700">
-                    <div className="h-3.5 w-3.5 rounded border border-[#DFE2E8] flex-shrink-0" />
+                    <div className="h-3.5 w-3.5 rounded border border-n-200 flex-shrink-0" />
                     {item}
                   </div>
                 ))}

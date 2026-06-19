@@ -43,7 +43,7 @@ export function AINarrative({ reportId, projectId, existingNarrative, generatedA
   }
 
   return (
-    <Card className="border-[#E08A00]/20">
+    <Card className="border-shiroi-gold/20">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
@@ -87,14 +87,14 @@ export function AINarrative({ reportId, projectId, existingNarrative, generatedA
               {narrative}
             </p>
             {lastGenerated && (
-              <p className="text-[11px] text-[#9CA0AB] mt-2 flex items-center gap-1">
+              <p className="text-[11px] text-n-400 mt-2 flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 Generated {formatDateTime(lastGenerated)}
               </p>
             )}
           </div>
         ) : !loading ? (
-          <p className="text-sm text-[#9CA0AB] text-center py-3">
+          <p className="text-sm text-n-400 text-center py-3">
             Click &quot;Generate&quot; to create an AI summary of this report.
           </p>
         ) : null}

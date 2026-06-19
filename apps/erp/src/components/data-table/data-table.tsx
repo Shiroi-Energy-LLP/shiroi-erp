@@ -655,7 +655,7 @@ export function DataTable({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
-                <TableRow className={entityType === 'leads' ? 'bg-gradient-to-b from-n-50 to-white border-b-2 border-n-200 [&_th]:text-[10px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.08em] [&_th]:text-n-600 [&_th]:h-11' : 'bg-[#F5F6F8]'}>
+                <TableRow className={entityType === 'leads' ? 'bg-gradient-to-b from-n-50 to-white border-b-2 border-n-200 [&_th]:text-[10px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.08em] [&_th]:text-n-600 [&_th]:h-11' : 'bg-n-100'}>
                   {/* Checkbox header */}
                   {onSelectionChange && (
                     <TableHead className="w-8 border-r border-n-100 px-3">

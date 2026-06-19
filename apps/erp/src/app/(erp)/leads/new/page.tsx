@@ -10,7 +10,7 @@ export default async function NewLeadPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-[#1A1D24]">Create New Lead</h1>
+      <h1 className="text-2xl font-bold text-n-950">Create New Lead</h1>
       <LeadForm partners={partners} companies={companies} />
     </div>
   );

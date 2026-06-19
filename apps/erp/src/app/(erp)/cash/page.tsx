@@ -63,12 +63,12 @@ export default async function CashFlowPage() {
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">CASH FLOW</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">Cash Flow</h1>
+          <h1 className="text-2xl font-bold text-n-950">Cash Flow</h1>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/invoices"
-            className="inline-flex items-center gap-1.5 rounded-md bg-[#E08A00] px-3 py-2 text-sm font-medium text-[#1F1709] hover:bg-[#C77606] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-md bg-shiroi-gold px-3 py-2 text-sm font-medium text-shiroi-ink hover:bg-shiroi-gold-hover transition-colors"
           >
             <TrendingUp className="h-4 w-4" />
             Raise Invoice
@@ -111,7 +111,7 @@ export default async function CashFlowPage() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-gray-500">Active PO Value</p>
-            <p className="text-2xl font-bold text-[#1A1D24]">
+            <p className="text-2xl font-bold text-n-950">
               {shortINR(Number(summary.activePOValue))}
             </p>
             <p className="text-xs text-gray-400 mt-1">

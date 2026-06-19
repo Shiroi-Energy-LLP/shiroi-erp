@@ -120,7 +120,7 @@ export function ProposalFiles({ leadId, proposalNumber, initialFiles }: Proposal
             {files.map((file) => (
               <div
                 key={file.id}
-                className="flex items-center justify-between text-sm py-1 border-b border-[#E5E7EB] last:border-0"
+                className="flex items-center justify-between text-sm py-1 border-b border-n-200 last:border-0"
               >
                 <div className="min-w-0 flex-1">
                   <button

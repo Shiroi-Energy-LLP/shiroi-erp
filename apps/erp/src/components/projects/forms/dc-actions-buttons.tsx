@@ -167,7 +167,7 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
 
       {/* Expanded detail */}
       {expanded && (
-        <tr className="border-b border-n-200 bg-[#F8F9FA]">
+        <tr className="border-b border-n-200 bg-n-050">
           <td colSpan={7} className="px-4 py-3">
             <div className="space-y-3">
               {/* Items table with HSN Code */}
@@ -186,7 +186,7 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
                     {items.map((item: any, idx: number) => (
                       <tr key={item.id} className="border-b border-n-100">
                         <td className="px-2 py-1 font-mono text-n-400">{idx + 1}</td>
-                        <td className="px-2 py-1 text-[#1A1D24]">{item.item_description}</td>
+                        <td className="px-2 py-1 text-n-950">{item.item_description}</td>
                         <td className="px-2 py-1 font-mono text-n-500">{item.hsn_code || '\u2014'}</td>
                         <td className="px-2 py-1 text-right font-mono">{item.quantity} {item.unit}</td>
                       </tr>
@@ -194,7 +194,7 @@ export function DcExpandableRow({ dc, projectId, dcLabel }: DcDetailProps) {
                   </tbody>
                   <tfoot>
                     <tr className="border-t border-n-300 bg-n-50">
-                      <td colSpan={3} className="px-2 py-1 font-bold text-[#1A1D24]">Total Items: {items.length}</td>
+                      <td colSpan={3} className="px-2 py-1 font-bold text-n-950">Total Items: {items.length}</td>
                       <td className="px-2 py-1 text-right font-mono font-bold">{totalQty} Nos</td>
                     </tr>
                   </tfoot>

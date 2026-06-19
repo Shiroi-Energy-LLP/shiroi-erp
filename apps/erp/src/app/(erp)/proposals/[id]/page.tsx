@@ -74,7 +74,7 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
       />
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-[#1A1D24] font-mono">
+          <h1 className="text-2xl font-bold text-n-950 font-mono">
             {proposal.proposal_number}
           </h1>
           <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
                 <CardTitle className="text-base">Notes</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-[#3E3E3E] whitespace-pre-wrap">{proposal.notes}</p>
+                <p className="text-sm text-n-700 whitespace-pre-wrap">{proposal.notes}</p>
               </CardContent>
             </Card>
           )}
@@ -288,7 +288,7 @@ function InfoItem({ label, value, capitalize: cap }: { label: string; value: str
   return (
     <div>
       <div className="text-xs text-muted-foreground mb-0.5">{label}</div>
-      <div className={`text-sm font-medium text-[#1A1D24] ${cap ? 'capitalize' : ''}`}>
+      <div className={`text-sm font-medium text-n-950 ${cap ? 'capitalize' : ''}`}>
         {value || '—'}
       </div>
     </div>
@@ -305,7 +305,7 @@ function TotalRow({ label, value, bold, muted, highlight }: {
   return (
     <div className={`flex justify-between text-sm ${bold ? 'font-bold text-base' : ''}`}>
       <span className={muted ? 'text-muted-foreground' : ''}>{label}</span>
-      <span className={`font-mono ${highlight === 'discount' ? 'text-[#065F46]' : ''} ${bold ? 'text-[#1A1D24]' : ''}`}>
+      <span className={`font-mono ${highlight === 'discount' ? 'text-[#065F46]' : ''} ${bold ? 'text-n-950' : ''}`}>
         {highlight === 'discount' ? `- ${formatINR(Math.abs(value))}` : formatINR(value)}
       </span>
     </div>
@@ -313,7 +313,7 @@ function TotalRow({ label, value, bold, muted, highlight }: {
 }
 
 function Divider() {
-  return <div className="border-t border-dashed border-[#E5E7EB]" />;
+  return <div className="border-t border-dashed border-n-200" />;
 }
 
 function panelLabel(p: { panel_brand: string | null; panel_model: string | null; panel_wattage: number | null; panel_count: number | null }): string {

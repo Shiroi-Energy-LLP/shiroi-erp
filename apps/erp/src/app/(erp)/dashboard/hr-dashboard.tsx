@@ -47,7 +47,7 @@ export async function HRDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">HR Dashboard</h1>
+      <h1 className="text-2xl font-heading font-bold text-n-950">HR Dashboard</h1>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4">
@@ -94,7 +94,7 @@ export async function HRDashboard() {
                   className="flex items-center justify-between rounded-md border border-[#FDE68A] bg-white px-3 py-2"
                 >
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-[#1A1D24]">
+                    <span className="text-sm font-medium text-n-950">
                       {cert.employee_name}
                     </span>
                     <span className="text-xs text-n-500">
@@ -147,7 +147,7 @@ export async function HRDashboard() {
                   <TableBody>
                     {data.recentLeaveRequests.map((lr) => (
                       <TableRow key={lr.id}>
-                        <TableCell className="font-medium text-[#1A1D24]">
+                        <TableCell className="font-medium text-n-950">
                           {lr.employee_name}
                         </TableCell>
                         <TableCell>{formatLeaveType(lr.leave_type)}</TableCell>
@@ -178,21 +178,21 @@ export async function HRDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2">
-                  <span className="text-sm text-[#5A5E6B]">Active employees</span>
-                  <span className="font-heading text-lg font-bold text-[#111318]">
+                <div className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2">
+                  <span className="text-sm text-n-600">Active employees</span>
+                  <span className="font-heading text-lg font-bold text-n-950">
                     {data.activeEmployeeCount}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2">
-                  <span className="text-sm text-[#5A5E6B]">Pending leaves</span>
-                  <span className="font-heading text-lg font-bold text-[#111318]">
+                <div className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2">
+                  <span className="text-sm text-n-600">Pending leaves</span>
+                  <span className="font-heading text-lg font-bold text-n-950">
                     {data.pendingLeaveCount}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2">
-                  <span className="text-sm text-[#5A5E6B]">Certs expiring</span>
-                  <span className="font-heading text-lg font-bold text-[#111318]">
+                <div className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2">
+                  <span className="text-sm text-n-600">Certs expiring</span>
+                  <span className="font-heading text-lg font-bold text-n-950">
                     {data.expiringCertCount}
                   </span>
                 </div>

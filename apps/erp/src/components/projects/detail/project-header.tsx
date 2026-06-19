@@ -87,7 +87,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             Projects
           </Link>
           <span className="text-n-400">/</span>
-          <h1 className="text-2xl font-bold text-[#1A1D24] font-mono truncate">
+          <h1 className="text-2xl font-bold text-n-950 font-mono truncate">
             {project.project_number}
           </h1>
         </div>
@@ -133,7 +133,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
         </div>
 
         <div className="text-right border-l border-n-200 pl-3">
-          <div className="text-2xl font-bold text-[#1A1D24]">{project.completion_pct}%</div>
+          <div className="text-2xl font-bold text-n-950">{project.completion_pct}%</div>
           <div className="text-xs text-n-500">Complete</div>
         </div>
       </div>

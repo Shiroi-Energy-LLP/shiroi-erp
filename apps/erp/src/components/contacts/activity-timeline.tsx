@@ -84,7 +84,7 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
       <CardContent>
         {/* Add Activity Form */}
         {showForm && (
-          <form onSubmit={handleAdd} className="mb-4 rounded-lg border border-n-200 p-4 bg-[#FAFBFC] space-y-3">
+          <form onSubmit={handleAdd} className="mb-4 rounded-lg border border-n-200 p-4 bg-n-050 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Type</Label>

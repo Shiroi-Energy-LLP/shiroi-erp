@@ -45,7 +45,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
                     <MapPin className="w-3 h-3" />
                     GPS
                   </span>
-                  <span className="font-medium text-[#1A1D24]">
+                  <span className="font-medium text-n-950">
                     {survey?.gps_lat && survey?.gps_lng
                       ? `${Number(survey.gps_lat).toFixed(6)}, ${Number(survey.gps_lng).toFixed(6)}`
                       : '\u2014'}
@@ -211,7 +211,7 @@ export async function StepSurvey({ projectId }: StepSurveyProps) {
       ) : (
         <div className="flex flex-col items-center justify-center py-16">
           <ClipboardList className="w-12 h-12 text-n-500 opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Site Survey Yet</h3>
+          <h3 className="text-lg font-bold font-heading text-n-950 mb-1">No Site Survey Yet</h3>
           <p className="text-[13px] text-n-500">Click &quot;Create Site Survey&quot; above to add survey data for this project.</p>
         </div>
       )}
@@ -225,7 +225,7 @@ function InfoRow({ label, value, capitalize: cap }: { label: string; value: stri
   return (
     <div className="flex justify-between text-sm">
       <span className="text-n-500">{label}</span>
-      <span className={`font-medium text-[#1A1D24] ${cap ? 'capitalize' : ''}`}>
+      <span className={`font-medium text-n-950 ${cap ? 'capitalize' : ''}`}>
         {value || '\u2014'}
       </span>
     </div>

@@ -26,7 +26,7 @@ export default async function EmployeesPage() {
   } catch {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Employees</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Employees</h1>
         <Card>
           <CardContent>
             <EmptyState
@@ -49,7 +49,7 @@ export default async function EmployeesPage() {
             &larr; Back to HR
           </Link>
           <Eyebrow className="mb-1">EMPLOYEES</Eyebrow>
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Employees</h1>
+          <h1 className="text-2xl font-heading font-bold text-n-950 mt-1">Employees</h1>
         </div>
         <Link href="/hr/employees/new">
           <Button>New Employee</Button>

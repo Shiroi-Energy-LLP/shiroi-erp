@@ -99,19 +99,19 @@ export default async function AttendancePage({ searchParams }: AttendancePagePro
           <Link href="/hr" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to HR
           </Link>
-          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">Attendance</h1>
+          <h1 className="text-2xl font-bold text-n-950 mt-1">Attendance</h1>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href={`/hr/attendance?month=${prevMonth}&year=${prevYear}`}
-            className="text-sm text-gray-500 hover:text-[#1A1D24] border rounded-md px-3 py-1.5"
+            className="text-sm text-gray-500 hover:text-n-950 border rounded-md px-3 py-1.5"
           >
             &larr; Prev
           </Link>
-          <span className="text-sm font-semibold text-[#1A1D24]">{monthLabel}</span>
+          <span className="text-sm font-semibold text-n-950">{monthLabel}</span>
           <Link
             href={`/hr/attendance?month=${nextMonth}&year=${nextYear}`}
-            className="text-sm text-gray-500 hover:text-[#1A1D24] border rounded-md px-3 py-1.5"
+            className="text-sm text-gray-500 hover:text-n-950 border rounded-md px-3 py-1.5"
           >
             Next &rarr;
           </Link>
@@ -196,7 +196,7 @@ export default async function AttendancePage({ searchParams }: AttendancePagePro
                   return (
                     <tr key={emp.id} className="border-b hover:bg-gray-50/50">
                       <td className="sticky left-0 bg-white border-r px-3 py-1.5 z-10">
-                        <div className="font-medium text-[#1A1D24]">{emp.full_name}</div>
+                        <div className="font-medium text-n-950">{emp.full_name}</div>
                         <div className="text-gray-400">{emp.employee_code}</div>
                       </td>
                       {days.map((d) => {

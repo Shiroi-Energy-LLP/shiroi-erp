@@ -118,7 +118,7 @@ function KpiCard({
             {icon}
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#1A1D24]">{count}</p>
+            <p className="text-2xl font-bold text-n-950">{count}</p>
             {total !== null && (
               <p className="text-xs text-n-500">{shortINR(Number(total))}</p>
             )}

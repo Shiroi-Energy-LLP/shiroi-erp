@@ -35,7 +35,7 @@ export async function PurchaseDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Purchase Dashboard</h1>
+      <h1 className="text-2xl font-heading font-bold text-n-950">Purchase Dashboard</h1>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4">
@@ -111,7 +111,7 @@ export async function PurchaseDashboard() {
                   <TableBody>
                     {data.recentPOs.map((po) => (
                       <TableRow key={po.id}>
-                        <TableCell className="font-medium text-[#1A1D24]">
+                        <TableCell className="font-medium text-n-950">
                           {po.po_number}
                         </TableCell>
                         <TableCell>{po.vendors?.company_name ?? '--'}</TableCell>
@@ -157,9 +157,9 @@ export async function PurchaseDashboard() {
                     return (
                       <div
                         key={po.id}
-                        className="flex flex-col rounded-md border border-[#DFE2E8] px-3 py-2"
+                        className="flex flex-col rounded-md border border-n-200 px-3 py-2"
                       >
-                        <span className="text-sm font-medium text-[#1A1D24]">
+                        <span className="text-sm font-medium text-n-950">
                           {po.vendors?.company_name}
                         </span>
                         <span className="text-xs text-n-500">{po.po_number}</span>

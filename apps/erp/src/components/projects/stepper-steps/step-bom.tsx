@@ -62,7 +62,7 @@ export async function StepBom({ projectId }: StepBomProps) {
       <div className="space-y-4">
         <div className="flex flex-col items-center justify-center py-12">
           <Package className="w-12 h-12 text-n-500 opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Bill of Items</h3>
+          <h3 className="text-lg font-bold font-heading text-n-950 mb-1">No Bill of Items</h3>
           <p className="text-[13px] text-n-500 max-w-md text-center mb-4">
             {hasProposal
               ? 'Generate BOI from the linked proposal BOM, or create a new BOI manually.'
@@ -124,7 +124,7 @@ export async function StepBom({ projectId }: StepBomProps) {
     <div className="space-y-4">
       {/* Header with Create New BOI button */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#1A1D24]">
+        <h3 className="text-sm font-semibold text-n-950">
           Bill of Items ({bois.length} version{bois.length !== 1 ? 's' : ''})
         </h3>
         <div className="flex items-center gap-2">
@@ -180,15 +180,15 @@ export async function StepBom({ projectId }: StepBomProps) {
               {/* Prepared By / Approved By */}
               <div className="flex items-center gap-4 mt-1.5 text-[11px] text-n-500">
                 {boi.prepared_by_name && (
-                  <span>Prepared: <strong className="text-[#1A1D24]">{boi.prepared_by_name}</strong></span>
+                  <span>Prepared: <strong className="text-n-950">{boi.prepared_by_name}</strong></span>
                 )}
                 {boi.approved_by_name && (
-                  <span>Approved: <strong className="text-[#1A1D24]">{boi.approved_by_name}</strong>
+                  <span>Approved: <strong className="text-n-950">{boi.approved_by_name}</strong>
                     {boi.approved_at && ` on ${formatDate(boi.approved_at)}`}
                   </span>
                 )}
                 {boi.locked_by_name && (
-                  <span>Locked: <strong className="text-[#1A1D24]">{boi.locked_by_name}</strong>
+                  <span>Locked: <strong className="text-n-950">{boi.locked_by_name}</strong>
                     {boi.locked_at && ` on ${formatDate(boi.locked_at)}`}
                   </span>
                 )}
@@ -212,7 +212,7 @@ export async function StepBom({ projectId }: StepBomProps) {
               <div className="overflow-x-auto">
                 <table className="w-full text-[12px]">
                   <thead>
-                    <tr className="border-b border-n-200 bg-[#F8F9FA]">
+                    <tr className="border-b border-n-200 bg-n-050">
                       <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[150px]">Category</th>
                       <th className="px-2 py-1.5 text-left font-medium text-n-500">Item Name</th>
                       <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[100px]">Make/Brand</th>
@@ -224,9 +224,9 @@ export async function StepBom({ projectId }: StepBomProps) {
                   <tbody>
                     {items.map((item: any) => (
                       <tr key={item.id}
-                        className={`border-b border-n-100 hover:bg-[#F8F9FA] group boi-row-${boi.id}`}
+                        className={`border-b border-n-100 hover:bg-n-050 group boi-row-${boi.id}`}
                         data-category={item.item_category}>
-                        <td className="px-2 py-1 font-medium text-[#1A1D24]">
+                        <td className="px-2 py-1 font-medium text-n-950">
                           {getCategoryLabel(item.item_category)}
                         </td>
                         <td className="px-2 py-1 text-n-700">{item.item_description}</td>

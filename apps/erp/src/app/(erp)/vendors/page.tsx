@@ -60,7 +60,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
         <div>
           <Eyebrow className="mb-1">VENDORS</Eyebrow>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-[#1A1D24]">Vendors</h1>
+            <h1 className="text-2xl font-bold text-n-950">Vendors</h1>
             <Badge variant="neutral">{vendors.length}</Badge>
           </div>
         </div>
@@ -108,8 +108,8 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                 <TableRow>
                   <TableCell colSpan={8} className="py-16">
                     <div className="flex flex-col items-center justify-center text-center">
-                      <Building2 className="h-12 w-12 text-[#9CA0AB] opacity-50 mb-4" />
-                      <h2 className="text-lg font-heading font-bold text-[#1A1D24]">
+                      <Building2 className="h-12 w-12 text-n-400 opacity-50 mb-4" />
+                      <h2 className="text-lg font-heading font-bold text-n-950">
                         No Vendors Found
                       </h2>
                       <p className="text-sm text-n-500 max-w-[320px] mt-1">

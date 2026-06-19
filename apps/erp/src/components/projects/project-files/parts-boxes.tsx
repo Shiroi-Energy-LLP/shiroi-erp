@@ -79,7 +79,7 @@ export function PhotoSlideshow({
 
   return (
     <div
-      className="relative aspect-[21/9] bg-[#1A1C20] rounded-lg overflow-hidden cursor-pointer group"
+      className="relative aspect-[21/9] bg-n-950 rounded-lg overflow-hidden cursor-pointer group"
       onMouseEnter={stopTimer}
       onMouseLeave={startTimer}
       onClick={() => onOpenViewer(slideIndex)}
@@ -163,7 +163,7 @@ export function CategoryBox({
 
   return (
     <Card
-      className={`transition-all ${isDropTarget ? 'ring-2 ring-[#E08A00] ring-offset-1 bg-[#E08A00]/5' : ''}`}
+      className={`transition-all ${isDropTarget ? 'ring-2 ring-shiroi-gold ring-offset-1 bg-shiroi-gold/5' : ''}`}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -177,19 +177,19 @@ export function CategoryBox({
           <Icon className="h-3.5 w-3.5 text-n-500" />
           {category.label}
           {totalCount > 0 && (
-            <span className="text-[11px] text-[#9CA0AB] font-normal">({totalCount})</span>
+            <span className="text-[11px] text-n-400 font-normal">({totalCount})</span>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="px-3 pb-3 min-h-[60px]">
         {/* Auto-generated documents */}
         {generatedDocs && (
-          <div className="space-y-0.5 mb-1.5 pb-1.5 border-b border-dashed border-[#DFE2E8]">
+          <div className="space-y-0.5 mb-1.5 pb-1.5 border-b border-dashed border-n-200">
             {generatedDocs}
           </div>
         )}
         {totalCount === 0 && !generatedDocs ? (
-          <p className="text-[11px] text-[#C8CBD0] text-center py-3">
+          <p className="text-[11px] text-n-300 text-center py-3">
             {isDropTarget ? 'Drop here' : 'Drag files here'}
           </p>
         ) : (

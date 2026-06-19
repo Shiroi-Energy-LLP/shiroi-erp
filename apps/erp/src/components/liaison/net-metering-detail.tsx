@@ -212,7 +212,7 @@ export function NetMeteringDetail({ projectId, application, ceigRequired }: NetM
         )}
 
         {/* DISCOM/TNEB Section */}
-        <Card className={ceigBlocked ? 'border-[#E5DFD3] opacity-75' : ''}>
+        <Card className={ceigBlocked ? 'border-n-200 opacity-75' : ''}>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Zap className="h-4 w-4" />

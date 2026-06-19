@@ -47,7 +47,7 @@ export default async function StockPieceDetailPage({ params }: StockPieceDetailP
         <Link href="/inventory" className="text-sm text-shiroi-gold-dark hover:underline">
           &larr; Back to Inventory
         </Link>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">
+        <h1 className="text-2xl font-heading font-bold text-n-950 mt-1">
           {piece.item_description}
         </h1>
         <div className="flex items-center gap-2 mt-1">
@@ -100,7 +100,7 @@ export default async function StockPieceDetailPage({ params }: StockPieceDetailP
                       {piece.projects.project_number} — {piece.projects.customer_name}
                     </Link>
                   ) : (
-                    <div className="text-sm text-[#1A1D24]">—</div>
+                    <div className="text-sm text-n-950">—</div>
                   )}
                 </div>
                 <InfoItem label="Installed At" value={piece.installed_at ? formatDate(piece.installed_at) : null} />
@@ -127,7 +127,7 @@ export default async function StockPieceDetailPage({ params }: StockPieceDetailP
               {piece.notes && (
                 <div className="mt-4">
                   <div className="text-xs text-muted-foreground mb-0.5">Notes</div>
-                  <p className="text-sm text-[#3E3E3E] whitespace-pre-wrap">{piece.notes}</p>
+                  <p className="text-sm text-n-700 whitespace-pre-wrap">{piece.notes}</p>
                 </div>
               )}
             </CardContent>
@@ -147,7 +147,7 @@ function InfoItem({ label, value, capitalize: cap }: { label: string; value: str
   return (
     <div>
       <div className="text-xs text-muted-foreground mb-0.5">{label}</div>
-      <div className={`text-sm font-medium text-[#1A1D24] ${cap ? 'capitalize' : ''}`}>
+      <div className={`text-sm font-medium text-n-950 ${cap ? 'capitalize' : ''}`}>
         {value || '—'}
       </div>
     </div>

@@ -54,7 +54,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">INVOICES</Eyebrow>
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Invoices</h1>
+          <h1 className="text-2xl font-heading font-bold text-n-950">Invoices</h1>
         </div>
         <CreateInvoiceDialog projects={projects} />
       </div>

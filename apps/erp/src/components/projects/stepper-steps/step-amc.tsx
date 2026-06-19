@@ -33,7 +33,7 @@ export async function StepAmc({ projectId }: StepAmcProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <CalendarCheck className="w-12 h-12 text-red-400 opacity-50 mb-3" />
-        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
+        <h3 className="text-lg font-bold font-heading text-n-950 mb-1">Failed to Load</h3>
         <p className="text-[13px] text-n-500">Could not load AMC data. Please refresh the page.</p>
       </div>
     );
@@ -58,7 +58,7 @@ export async function StepAmc({ projectId }: StepAmcProps) {
         <div className="flex gap-3 flex-wrap">
           <div className="px-4 py-3 bg-white border border-n-200 rounded-lg min-w-[100px]">
             <div className="text-xs text-n-500 mb-0.5">Visits</div>
-            <div className="text-xl font-bold text-[#1A1D24]">{visits.length}</div>
+            <div className="text-xl font-bold text-n-950">{visits.length}</div>
           </div>
           <div className="px-4 py-3 bg-white border border-green-200 rounded-lg min-w-[100px]">
             <div className="text-xs text-green-600 mb-0.5">Completed</div>
@@ -127,7 +127,7 @@ export async function StepAmc({ projectId }: StepAmcProps) {
       ) : (
         <div className="flex flex-col items-center justify-center py-16">
           <CalendarCheck className="w-12 h-12 text-n-500 opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No AMC Visits</h3>
+          <h3 className="text-lg font-bold font-heading text-n-950 mb-1">No AMC Visits</h3>
           <p className="text-[13px] text-n-500">Click &quot;Schedule Free AMC Visits&quot; above to create the post-commissioning maintenance schedule.</p>
         </div>
       )}

@@ -49,7 +49,7 @@ export default async function AllLeaveRequestsPage() {
           <Link href="/hr/leave" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to Leave Management
           </Link>
-          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">All Leave Requests</h1>
+          <h1 className="text-2xl font-bold text-n-950 mt-1">All Leave Requests</h1>
           <p className="text-sm text-gray-500">
             {leaveRequests.length} request{leaveRequests.length !== 1 ? 's' : ''} (last 200)
           </p>

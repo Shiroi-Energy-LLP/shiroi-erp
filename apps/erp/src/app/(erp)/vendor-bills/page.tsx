@@ -57,7 +57,7 @@ export default async function VendorBillsPage({ searchParams }: PageProps) {
       {/* Header */}
       <div>
         <Eyebrow className="mb-1">FINANCE</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Vendor Bills</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Vendor Bills</h1>
       </div>
 
       {/* KPI cards */}
@@ -99,7 +99,7 @@ export default async function VendorBillsPage({ searchParams }: PageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold font-mono text-[#1A1D24]">
+            <p className="text-2xl font-bold font-mono text-n-950">
               {bills.filter(b => b.source === 'zoho_import').length}
             </p>
             <p className="text-xs text-muted-foreground mt-1">imported from Zoho Books</p>

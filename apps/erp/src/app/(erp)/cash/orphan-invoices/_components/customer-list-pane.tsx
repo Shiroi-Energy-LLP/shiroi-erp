@@ -47,7 +47,7 @@ export function CustomerListPane({ customers, selected, onSelect }: Props) {
                   isSelected ? 'bg-amber-50 border-l-4 border-l-amber-500' : ''
                 }`}
               >
-                <p className="text-xs font-bold text-[#1A1D24] truncate">{c.zoho_customer_name}</p>
+                <p className="text-xs font-bold text-n-950 truncate">{c.zoho_customer_name}</p>
                 <p className="text-[10px] text-n-500 mt-0.5">
                   {c.invoice_count} invoices · {shortINR(total.toNumber())}
                 </p>

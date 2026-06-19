@@ -95,7 +95,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
       {/* Header */}
       <div>
         <Eyebrow className="mb-1">DATA QUALITY</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Data Quality Dashboard</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Data Quality Dashboard</h1>
         <p className="text-sm text-n-500">
           Flag issues, verify data, track cleanup progress
         </p>
@@ -110,7 +110,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                 <Flag className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-heading font-bold text-[#1A1D24]">{unresolvedFlags}</p>
+                <p className="text-2xl font-heading font-bold text-n-950">{unresolvedFlags}</p>
                 <p className="text-xs text-n-500">Unresolved Flags</p>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-heading font-bold text-[#1A1D24]">{resolvedThisWeek}</p>
+                <p className="text-2xl font-heading font-bold text-n-950">{resolvedThisWeek}</p>
                 <p className="text-xs text-n-500">Resolved This Week</p>
               </div>
             </div>
@@ -138,7 +138,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                 <BarChart3 className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-heading font-bold text-[#1A1D24]">{totalFlags}</p>
+                <p className="text-2xl font-heading font-bold text-n-950">{totalFlags}</p>
                 <p className="text-xs text-n-500">Total Flags (All Time)</p>
               </div>
             </div>
@@ -152,7 +152,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               </div>
               <div>
-                <p className="text-2xl font-heading font-bold text-[#1A1D24]">{totalVerified}</p>
+                <p className="text-2xl font-heading font-bold text-n-950">{totalVerified}</p>
                 <p className="text-xs text-n-500">Records Verified</p>
               </div>
             </div>
@@ -164,7 +164,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
       {summary.length > 0 && (
         <Card>
           <CardContent className="pt-4">
-            <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">Flags by Entity Type</h2>
+            <h2 className="text-sm font-heading font-bold text-n-950 mb-3">Flags by Entity Type</h2>
             <div className="flex flex-wrap gap-3">
               {summary.map((s) => (
                 <Link
@@ -193,7 +193,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
           href="/data-quality"
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
             !entityTypeFilter && !flagTypeFilter
-              ? 'bg-[#E08A00] text-[#1F1709]'
+              ? 'bg-shiroi-gold text-shiroi-ink'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
@@ -205,7 +205,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
             href={`/data-quality?entity_type=${et}`}
             className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
               entityTypeFilter === et
-                ? 'bg-[#E08A00] text-[#1F1709]'
+                ? 'bg-shiroi-gold text-shiroi-ink'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
