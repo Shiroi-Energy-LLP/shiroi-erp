@@ -4,6 +4,7 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from './n8n/emit';
+import { getSessionContext, getCurrentEmployeeId } from '@/lib/auth';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -75,32 +76,13 @@ const PROJECT_VALUE_FIELD = 'contracted_value';
 const PROJECT_VALUE_EDIT_ROLES = new Set<string>(['project_manager', 'founder']);
 
 // ── Primitive: load the caller's role ──────────────────────────────
-async function getCallerRole(): Promise<{
-  userId: string;
-  role: string | null;
-  employeeId: string | null;
-}> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { userId: '', role: null, employeeId: null };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('profile_id', user.id)
-    .maybeSingle();
-
-  return {
-    userId: user.id,
-    role: (profile?.role as string) ?? null,
-    employeeId: employee?.id ?? null,
-  };
+// Role-only, sharing the request-scoped session resolution (NEVER-DO #22 /
+// master-ref §4.17). The employees-id lookup that used to live here was unused
+// by the role-gated callers; the one caller that needs it (deleteProject's
+// deleted_by) resolves it via getCurrentEmployeeId() only after its role gate.
+async function getCallerRole(): Promise<{ userId: string; role: string | null }> {
+  const { userId, role } = await getSessionContext();
+  return { userId: userId ?? '', role };
 }
 
 /**
@@ -392,10 +374,11 @@ export async function deleteProject(input: {
   confirmNumber: string;
 }): Promise<{ success: boolean; error?: string }> {
   const op = '[deleteProject]';
-  const { role, employeeId } = await getCallerRole();
+  const { role } = await getCallerRole();
   if (!role || !PROJECT_DELETE_ROLES.has(role)) {
     return { success: false, error: 'Only Project Managers and Founders can delete projects.' };
   }
+  const employeeId = await getCurrentEmployeeId();
   const supabase = await createClient();
   const { data: project, error: readErr } = await supabase
     .from('projects')

@@ -1,6 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { sanitizeForIlike } from './helpers/sanitize-or-filter';
+import { getSessionContext, getCurrentEmployeeId } from '@/lib/auth';
 
 export type Expense = Database['public']['Tables']['expenses']['Row'];
 export type ExpenseStatus = 'submitted' | 'verified' | 'approved' | 'rejected';
@@ -223,20 +224,17 @@ export async function getExpenseKPIs(): Promise<{
   approved_month_amt: number;
 }> {
   const op = '[getExpenseKPIs]';
-  const supabase = await createClient();
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) {
+  // Shares the request-scoped session + employee resolution (NEVER-DO #22 / master-ref §4.17).
+  const { userId, role } = await getSessionContext();
+  if (!userId) {
     return { total_count: 0, submitted_count: 0, pending_action_amt: 0, approved_month_amt: 0 };
   }
+  const employeeId = await getCurrentEmployeeId();
 
-  const [{ data: profile }, { data: employee }] = await Promise.all([
-    supabase.from('profiles').select('role').eq('id', user.user.id).maybeSingle(),
-    supabase.from('employees').select('id').eq('profile_id', user.user.id).maybeSingle(),
-  ]);
-
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_expense_kpis', {
-    p_role: profile?.role ?? 'customer',
-    p_employee_id: employee?.id ?? '00000000-0000-0000-0000-000000000000',
+    p_role: role ?? 'customer',
+    p_employee_id: employeeId ?? '00000000-0000-0000-0000-000000000000',
   });
 
   if (error) {

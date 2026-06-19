@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { getSessionContext } from '@/lib/auth';
 
 // ═══════════════════════════════════════════════════════════════════════
 // getCurrentUserRole — role guard helper for the inverters page
@@ -11,17 +12,9 @@ export async function getCurrentUserRole(): Promise<{
   userId: string | null;
   role: string | null;
 }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { userId: null, role: null };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  return { userId: user.id, role: profile?.role ?? null };
+  // Shares the request-scoped session resolution (NEVER-DO #22 / master-ref §4.17).
+  const { userId, role } = await getSessionContext();
+  return { userId, role };
 }
 
 // ═══════════════════════════════════════════════════════════════════════
