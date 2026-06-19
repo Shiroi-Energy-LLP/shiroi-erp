@@ -105,7 +105,7 @@ export default async function POListPage({ searchParams }: POListPageProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">PO Number</th>
@@ -120,21 +120,21 @@ export default async function POListPage({ searchParams }: POListPageProps) {
                 <tbody>
                   {purchaseOrders.map((po) => (
                     <tr key={po.id} className="border-b border-n-100 hover:bg-n-50">
-                      <td className="px-2 py-1.5 text-[11px]">
+                      <td className="px-2 py-1.5 whitespace-nowrap">
                         <Link href={`/procurement/${po.id}`} className="text-p-600 hover:underline font-medium">
                           {po.po_number}
                         </Link>
                       </td>
-                      <td className="px-2 py-1.5 text-[11px] text-n-700">{po.vendors?.company_name ?? '—'}</td>
-                      <td className="px-2 py-1.5 text-[11px] text-n-600">
+                      <td className="px-2 py-1.5 text-n-700">{po.vendors?.company_name ?? '—'}</td>
+                      <td className="px-2 py-1.5 text-n-600">
                         {po.projects
                           ? `${po.projects.project_number} — ${po.projects.customer_name}`
                           : '—'}
                       </td>
-                      <td className="px-2 py-1.5 text-[10px] text-n-500">{formatDate(po.po_date)}</td>
-                      <td className="px-2 py-1.5 text-[11px] text-right font-mono">{formatINR(po.total_amount)}</td>
-                      <td className="px-2 py-1.5 text-[11px] text-right font-mono">{formatINR(po.amount_outstanding)}</td>
-                      <td className="px-2 py-1.5"><POStatusBadge status={po.status} /></td>
+                      <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">{formatDate(po.po_date)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{formatINR(po.total_amount)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{formatINR(po.amount_outstanding)}</td>
+                      <td className="px-2 py-1.5 whitespace-nowrap"><POStatusBadge status={po.status} /></td>
                     </tr>
                   ))}
                 </tbody>

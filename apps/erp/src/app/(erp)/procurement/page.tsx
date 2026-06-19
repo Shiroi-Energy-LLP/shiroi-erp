@@ -165,7 +165,7 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-10">S.No</th>
@@ -183,36 +183,36 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
                 <tbody>
                   {items.map((item, idx) => (
                     <tr key={item.project_id} className="border-b border-n-100 hover:bg-n-50">
-                      <td className="px-2 py-1.5 text-[11px] text-n-400 font-mono">
+                      <td className="px-2 py-1.5 text-n-400 font-mono whitespace-nowrap">
                         {(currentPage - 1) * perPage + idx + 1}
                       </td>
-                      <td className="px-2 py-1.5 text-[11px]">
+                      <td className="px-2 py-1.5">
                         <Link
                           href={`/procurement/project/${item.project_id}`}
                           className="text-p-600 hover:underline"
                         >
                           <div className="font-medium leading-tight">{item.project_number}</div>
-                          <div className="text-n-500 text-[10px] leading-tight truncate max-w-[160px]">{item.customer_name}</div>
+                          <div className="text-n-500 text-[10px] leading-tight max-w-[160px]">{item.customer_name}</div>
                         </Link>
                       </td>
-                      <td className="px-2 py-1.5 text-[11px] text-n-600 font-mono">{item.item_count}</td>
-                      <td className="px-2 py-1.5 text-[11px] text-n-600 font-mono">{item.po_count}</td>
-                      <td className="px-2 py-1.5 text-[10px] text-n-500">
+                      <td className="px-2 py-1.5 text-n-600 font-mono whitespace-nowrap">{item.item_count}</td>
+                      <td className="px-2 py-1.5 text-n-600 font-mono whitespace-nowrap">{item.po_count}</td>
+                      <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                         {item.boq_sent_to_purchase_at
                           ? formatDate(item.boq_sent_to_purchase_at)
                           : <span className="text-n-300">—</span>}
                       </td>
-                      <td className="px-2 py-1.5 text-[11px] text-right font-mono font-medium">
+                      <td className="px-2 py-1.5 text-right font-mono font-medium whitespace-nowrap">
                         {formatINR(item.total_with_tax)}
                       </td>
-                      <td className="px-2 py-1.5">{getStatusBadge(item.procurement_status)}</td>
-                      <td className="px-2 py-1.5">{getPriorityBadge(item.procurement_priority)}</td>
-                      <td className="px-2 py-1.5 text-[10px] text-n-500">
+                      <td className="px-2 py-1.5 whitespace-nowrap">{getStatusBadge(item.procurement_status)}</td>
+                      <td className="px-2 py-1.5 whitespace-nowrap">{getPriorityBadge(item.procurement_priority)}</td>
+                      <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                         {item.procurement_received_date
                           ? formatDate(item.procurement_received_date)
                           : <span className="text-n-300">—</span>}
                       </td>
-                      <td className="px-2 py-1.5">
+                      <td className="px-2 py-1.5 whitespace-nowrap">
                         <Link href={`/procurement/project/${item.project_id}`}>
                           <ArrowRight className="h-3.5 w-3.5 text-n-400 hover:text-p-600" />
                         </Link>

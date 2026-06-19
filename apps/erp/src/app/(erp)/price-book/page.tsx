@@ -166,7 +166,7 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-10 text-right">S.No</th>
@@ -188,36 +188,36 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
                     return (
                       <tr key={item.id} className="hover:bg-n-50 transition-colors">
                         {/* S.No */}
-                        <td className="px-2 py-2 text-[11px] text-n-400 text-right font-mono">{sNo}</td>
+                        <td className="px-2 py-2 text-n-400 text-right font-mono whitespace-nowrap">{sNo}</td>
 
                         {/* Category */}
                         <td className="px-2 py-2">
-                          <span className="text-[11px] text-n-600">{formatCategory(item.item_category)}</span>
+                          <span className="text-n-600">{formatCategory(item.item_category)}</span>
                         </td>
 
                         {/* Item */}
                         <td className="px-2 py-2 max-w-[260px]">
-                          <div className="text-[11px] text-n-900 font-medium">{item.item_description}</div>
+                          <div className="text-n-900 font-medium">{item.item_description}</div>
                           {item.specification && (
-                            <div className="text-[10px] text-n-400 mt-0.5 truncate">{item.specification}</div>
+                            <div className="text-[10px] text-n-400 mt-0.5">{item.specification}</div>
                           )}
                         </td>
 
                         {/* Make */}
-                        <td className="px-2 py-2 text-[11px] text-n-600">
+                        <td className="px-2 py-2 text-n-600">
                           {make || <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Qty */}
-                        <td className="px-2 py-2 text-[11px] text-n-600 text-right font-mono">
+                        <td className="px-2 py-2 text-n-600 text-right font-mono whitespace-nowrap">
                           {item.default_qty != null ? item.default_qty : 1}
                         </td>
 
                         {/* Unit */}
-                        <td className="px-2 py-2 text-[11px] text-n-500">{item.unit}</td>
+                        <td className="px-2 py-2 text-n-500 whitespace-nowrap">{item.unit}</td>
 
                         {/* Rate / Unit — inline edit + pending badge */}
-                        <td className="px-2 py-2 text-right">
+                        <td className="px-2 py-2 text-right whitespace-nowrap">
                           <PriceBookRateInlineEdit
                             id={item.id}
                             currentRate={item.base_price ?? 0}
@@ -225,12 +225,12 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
                         </td>
 
                         {/* Vendor */}
-                        <td className="px-2 py-2 text-[11px] text-n-500 max-w-[140px] truncate">
+                        <td className="px-2 py-2 text-n-500 max-w-[140px]">
                           {item.vendor_name ?? <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Actions */}
-                        <td className="px-2 py-2">
+                        <td className="px-2 py-2 whitespace-nowrap">
                           <div className="flex items-center justify-center gap-0.5">
                             <EditPriceBookItemDialog
                               item={item}

@@ -79,7 +79,7 @@ export function CatalogAdmin({ categories, units }: CatalogAdminProps) {
           <CardTitle className="text-sm">Categories ({categories.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm [&_td]:align-top">
             <thead className="bg-n-50 text-xs uppercase">
               <tr>
                 <th className="px-3 py-2 text-left">Label</th>
@@ -91,8 +91,8 @@ export function CatalogAdmin({ categories, units }: CatalogAdminProps) {
               {categories.map((c) => (
                 <tr key={c.value} className="border-t border-n-100">
                   <td className="px-3 py-2 text-n-900">{c.label}</td>
-                  <td className="px-3 py-2 font-mono text-xs text-n-500">{c.value}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 font-mono text-n-500 whitespace-nowrap">{c.value}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => handleToggleCategory(c.value, !c.is_active)}
@@ -134,7 +134,7 @@ export function CatalogAdmin({ categories, units }: CatalogAdminProps) {
           <CardTitle className="text-sm">Units ({units.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm [&_td]:align-top">
             <thead className="bg-n-50 text-xs uppercase">
               <tr>
                 <th className="px-3 py-2 text-left font-mono">Value</th>
@@ -144,8 +144,8 @@ export function CatalogAdmin({ categories, units }: CatalogAdminProps) {
             <tbody>
               {units.map((u) => (
                 <tr key={u.value} className="border-t border-n-100">
-                  <td className="px-3 py-2 font-mono text-xs text-n-900">{u.value}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 font-mono text-n-900 whitespace-nowrap">{u.value}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => handleToggleUnit(u.value, !u.is_active)}

@@ -117,8 +117,8 @@ export async function PaymentFollowupsTable() {
                         )}
                         <div className="text-xs text-n-500">{r.project_customer_name}</div>
                       </TableCell>
-                      <TableCell className="text-sm max-w-xs">
-                        <div className="truncate">{r.title}</div>
+                      <TableCell className="text-sm max-w-[240px]">
+                        <div>{r.title}</div>
                       </TableCell>
                       <TableCell>
                         {isEscalation ? (
