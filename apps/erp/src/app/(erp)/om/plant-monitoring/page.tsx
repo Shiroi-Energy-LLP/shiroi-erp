@@ -193,7 +193,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project</th>
@@ -212,7 +212,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
                       <tr key={cred.id} className="border-b border-n-100 hover:bg-n-50">
                         <td className="px-2 py-1.5">
                           {cred.project_id ? (
-                            <Link href={`/projects/${cred.project_id}`} className="text-shiroi-gold-dark hover:underline text-xs font-medium">
+                            <Link href={`/projects/${cred.project_id}`} className="text-shiroi-gold-dark hover:underline font-medium">
                               {customerName}
                             </Link>
                           ) : customerName}
@@ -226,7 +226,7 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
                             <span className="text-n-300">—</span>
                           )}
                         </td>
-                        <td className="px-2 py-1.5 text-[11px] font-mono text-n-700">
+                        <td className="px-2 py-1.5 font-mono text-n-700">
                           {cred.username}
                         </td>
                         <td className="px-2 py-1.5">
@@ -237,18 +237,18 @@ export default async function PlantMonitoringPage({ searchParams }: PageProps) {
                             href={cred.portal_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-shiroi-gold-dark hover:underline text-[11px] inline-flex items-center gap-1 max-w-[260px]"
+                            className="text-shiroi-gold-dark hover:underline inline-flex items-center gap-1 max-w-[260px]"
                             title={cred.portal_url}
                           >
-                            <span className="truncate">{cred.portal_url}</span>
+                            <span className="break-all">{cred.portal_url}</span>
                             <ExternalLink className="h-3 w-3 flex-shrink-0" />
                           </a>
                         </td>
-                        <td className="px-2 py-1.5 text-[10px] text-n-500">
+                        <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                           {formatDate(cred.created_at)}
                         </td>
                         {canEdit && (
-                          <td className="px-2 py-1.5">
+                          <td className="px-2 py-1.5 whitespace-nowrap">
                             <div className="flex gap-0.5">
                               <EditPlantMonitoringDialog
                                 credential={{

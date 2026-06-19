@@ -136,7 +136,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project Name</th>
@@ -165,7 +165,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         className={`border-b border-n-100 hover:bg-n-50 align-top ${!isOpen ? 'opacity-60' : ''}`}
                       >
                         {/* Project Name — clickable link */}
-                        <td className="px-2 py-2 text-[11px]">
+                        <td className="px-2 py-2">
                           {projectInfo ? (
                             <Link href={`/projects/${contract.project_id}`} className="text-p-600 hover:underline font-medium">
                               {projectInfo.customer_name}
@@ -205,7 +205,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Next AMC Date */}
-                        <td className="px-2 py-2 text-[10px] text-n-600">
+                        <td className="px-2 py-2 text-n-600 whitespace-nowrap">
                           {contract.next_visit_date ? (
                             <span className={
                               contract.next_visit_date < new Date().toISOString().split('T')[0]!
@@ -220,7 +220,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Completed Date — last completed visit */}
-                        <td className="px-2 py-2 text-[10px] text-n-500">
+                        <td className="px-2 py-2 text-n-500 whitespace-nowrap">
                           {contract.last_completed_date ? (
                             formatDate(contract.last_completed_date)
                           ) : (
@@ -229,7 +229,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Notes */}
-                        <td className="px-2 py-2 text-[10px] text-n-600 max-w-[160px]">
+                        <td className="px-2 py-2 text-n-600 max-w-[240px]">
                           {contract.notes ? (
                             <span title={contract.notes}>
                               {contract.notes.substring(0, 50)}{contract.notes.length > 50 ? '...' : ''}
@@ -240,7 +240,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Actions — contract number + per-row delete (founder + om_technician) */}
-                        <td className="px-2 py-2 text-[10px]">
+                        <td className="px-2 py-2 whitespace-nowrap">
                           <div className="flex items-center gap-1">
                             <span className="text-[9px] text-n-300 font-mono">{contract.contract_number}</span>
                             {canDeleteAmc && (
@@ -253,7 +253,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Report — per-visit reports are accessible via the visit tracker */}
-                        <td className="px-2 py-2 text-[10px]">
+                        <td className="px-2 py-2 whitespace-nowrap">
                           {completedCount > 0 ? (
                             <span className="text-green-600 font-medium text-[10px]">
                               {completedCount} visit{completedCount !== 1 ? 's' : ''}

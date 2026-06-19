@@ -193,7 +193,7 @@ export function InverterTable({ inverters, monitoringCredentials }: InverterTabl
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Brand</th>
@@ -229,7 +229,7 @@ export function InverterTable({ inverters, monitoringCredentials }: InverterTabl
                           {inv.project_id ? (
                             <Link
                               href={`/projects/${inv.project_id}`}
-                              className="text-shiroi-gold-dark hover:underline text-xs font-medium"
+                              className="text-shiroi-gold-dark hover:underline font-medium"
                             >
                               {customerName}
                               {projectNumber && (
@@ -239,22 +239,22 @@ export function InverterTable({ inverters, monitoringCredentials }: InverterTabl
                               )}
                             </Link>
                           ) : (
-                            <span className="text-xs text-n-400">{customerName}</span>
+                            <span className="text-n-400">{customerName}</span>
                           )}
                         </td>
 
                         {/* Serial */}
-                        <td className="px-2 py-1.5 text-[11px] font-mono text-n-700">
+                        <td className="px-2 py-1.5 font-mono text-n-700">
                           {inv.serial_number}
                         </td>
 
                         {/* Model */}
-                        <td className="px-2 py-1.5 text-[11px] text-n-600">
+                        <td className="px-2 py-1.5 text-n-600">
                           {inv.model ?? <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Rated kWp */}
-                        <td className="px-2 py-1.5 text-[11px] text-n-700 text-right font-mono">
+                        <td className="px-2 py-1.5 text-n-700 text-right font-mono whitespace-nowrap">
                           {Number(inv.rated_capacity_kw).toFixed(1)}
                         </td>
 
@@ -278,7 +278,7 @@ export function InverterTable({ inverters, monitoringCredentials }: InverterTabl
                         </td>
 
                         {/* Last Poll */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-500">
+                        <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                           {inv.last_poll_at
                             ? new Date(inv.last_poll_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
                             : <span className="text-n-300">Never</span>
@@ -286,7 +286,7 @@ export function InverterTable({ inverters, monitoringCredentials }: InverterTabl
                         </td>
 
                         {/* Last Reading */}
-                        <td className="px-2 py-1.5 text-[10px] text-n-500">
+                        <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                           {inv.last_reading_at
                             ? new Date(inv.last_reading_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
                             : <span className="text-n-300">Never</span>
@@ -294,7 +294,7 @@ export function InverterTable({ inverters, monitoringCredentials }: InverterTabl
                         </td>
 
                         {/* Actions */}
-                        <td className="px-2 py-1.5">
+                        <td className="px-2 py-1.5 whitespace-nowrap">
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => setEditingInverter(inv)}
