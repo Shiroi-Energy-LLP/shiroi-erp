@@ -89,7 +89,7 @@ function formatINR(amount: number): string {
     style: 'currency',
     currency: 'INR',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(amount);
 }
 
