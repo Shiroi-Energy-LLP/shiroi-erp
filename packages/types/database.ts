@@ -19428,6 +19428,7 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: number
       }
+      get_project_financials: { Args: { p_project_id: string }; Returns: Json }
       get_project_payment_overview: {
         Args: never
         Returns: {

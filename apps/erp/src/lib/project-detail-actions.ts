@@ -463,41 +463,25 @@ export async function getProjectFinancials(projectId: string): Promise<{
 }> {
   const supabase = await createClient();
 
-  const [{ data: project }, { data: boqItems }, { data: siteExpenses }] = await Promise.all([
-    supabase.from('projects').select('contracted_value').eq('id', projectId).maybeSingle(),
-    supabase
-      .from('project_boq_items')
-      .select('total_price, quantity, unit_price')
-      .eq('project_id', projectId),
-    supabase
-      .from('expenses')
-      .select('amount, status')
-      .eq('project_id', projectId)
-      .in('status', ['approved']),
-  ]);
-
-  const contractedValue = Number(project?.contracted_value ?? 0);
-  const boqTotal = (boqItems ?? []).reduce((sum, item: any) => {
-    const itemTotal =
-      typeof item.total_price === 'number'
-        ? item.total_price
-        : Number(item.quantity ?? 0) * Number(item.unit_price ?? 0);
-    return sum + (Number.isFinite(itemTotal) ? itemTotal : 0);
-  }, 0);
-  const siteExpensesTotal = (siteExpenses ?? []).reduce(
-    (sum, e: any) => sum + Number(e.amount ?? 0),
-    0,
-  );
-  const actualExpenses = boqTotal + siteExpensesTotal;
-  const marginAmount = contractedValue - actualExpenses;
-  const marginPct = contractedValue > 0 ? (marginAmount / contractedValue) * 100 : 0;
+  // mig 195: one SQL pass (contracted value + BOQ total + approved site-expense
+  // total + margin) replaces 3 parallel reads + a JS .reduce over money rows
+  // (NEVER-DO #12). Returns zeros for a missing / RLS-filtered project.
+  const { data } = await supabase.rpc('get_project_financials', { p_project_id: projectId });
+  const f = (data ?? {}) as unknown as {
+    contracted_value: number;
+    boq_total: number;
+    site_expenses_total: number;
+    actual_expenses: number;
+    margin_amount: number;
+    margin_pct: number;
+  };
 
   return {
-    contractedValue,
-    actualExpenses,
-    boqTotal,
-    siteExpensesTotal,
-    marginAmount,
-    marginPct,
+    contractedValue: Number(f.contracted_value ?? 0),
+    actualExpenses: Number(f.actual_expenses ?? 0),
+    boqTotal: Number(f.boq_total ?? 0),
+    siteExpensesTotal: Number(f.site_expenses_total ?? 0),
+    marginAmount: Number(f.margin_amount ?? 0),
+    marginPct: Number(f.margin_pct ?? 0),
   };
 }
