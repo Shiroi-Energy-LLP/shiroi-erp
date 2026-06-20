@@ -12,6 +12,7 @@ import {
   DollarSign, Award, GraduationCap, BookOpen, Truck,
   BarChart3, CalendarCheck, Building2, Shield,
   MessageSquare, Flag, ListChecks, Receipt, Activity, Handshake, Settings, Zap,
+  Upload,
   PanelLeftClose, PanelLeftOpen, Menu,
 } from 'lucide-react';
 
@@ -22,6 +23,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   DollarSign, Award, GraduationCap, BookOpen, Truck,
   BarChart3, CalendarCheck, Building2, Shield,
   MessageSquare, Flag, ListChecks, Receipt, Activity, Handshake, Settings, Zap,
+  Upload,
 };
 
 const STORAGE_KEY = 'shiroi-sidebar-collapsed';
