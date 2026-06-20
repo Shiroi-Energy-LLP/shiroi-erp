@@ -228,6 +228,13 @@ interface DataTableProps {
   activeViewId: string | null;
   linkPrefix: string;
   linkField: string;
+  /**
+   * When false, row detail links don't prefetch (on hover/viewport). Set false on
+   * large lists backed by a constrained DB to avoid a prefetch storm — each
+   * prefetch renders the detail route's layout query (e.g. getProjectHeader).
+   * Default true (Next.js default behaviour).
+   */
+  prefetch?: boolean;
   idField?: string;
   bulkActions?: React.ReactNode;
   onSelectionChange?: (ids: string[]) => void;
@@ -267,6 +274,7 @@ export function DataTable({
   activeViewId,
   linkPrefix,
   linkField,
+  prefetch = true,
   idField = 'id',
   bulkActions,
   onSelectionChange,
@@ -511,6 +519,7 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
+          prefetch={prefetch}
           className="font-medium text-shiroi-gold-dark hover:underline"
         >
           {displayVal}
@@ -574,6 +583,7 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
+          prefetch={prefetch}
           className="font-medium text-shiroi-gold-dark hover:underline"
         >
           {displayVal}
@@ -593,6 +603,7 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}?tab=execution`}
+          prefetch={prefetch}
           className="inline-flex items-center gap-1 text-xs text-shiroi-gold-dark hover:underline"
         >
           <ClipboardList className="h-3.5 w-3.5" /> Activities
