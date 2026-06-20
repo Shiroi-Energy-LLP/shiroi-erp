@@ -19517,6 +19517,20 @@ export type Database = {
           pending_deliveries: number
         }[]
       }
+      get_purchase_request_aggregates: {
+        Args: { p_project_ids: string[] }
+        Returns: {
+          item_count: number
+          items_order_placed: number
+          items_ready: number
+          items_received: number
+          items_yet_to_place: number
+          po_count: number
+          project_id: string
+          total_amount: number
+          total_with_tax: number
+        }[]
+      }
       get_receivables_reconciliation: {
         Args: never
         Returns: {
