@@ -441,11 +441,14 @@ export async function getMSMEAlertPOs(): Promise<POListItem[]> {
 
   const supabase = await createClient();
 
+  // is_msme is filtered IN SQL via an !inner vendor join (was: fetch every
+  // outstanding-delivered PO, including non-MSME, then .filter() in JS).
   const { data, error } = await supabase
     .from('purchase_orders')
     .select(
-      '*, vendors!purchase_orders_vendor_id_fkey(company_name, is_msme), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
+      '*, vendors!purchase_orders_vendor_id_fkey!inner(company_name, is_msme), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
     )
+    .eq('vendors.is_msme', true)
     .gt('amount_outstanding', 0)
     .not('actual_delivery_date', 'is', null)
     .order('actual_delivery_date', { ascending: true });
@@ -455,8 +458,7 @@ export async function getMSMEAlertPOs(): Promise<POListItem[]> {
     throw new Error(`Failed to load MSME alert POs: ${error.message}`);
   }
 
-  const allPOs = (data ?? []) as unknown as POListItem[];
-  return allPOs.filter((po) => po.vendors?.is_msme === true);
+  return (data ?? []) as unknown as POListItem[];
 }
 
 export async function getVendorsList(): Promise<Pick<VendorRow, 'id' | 'company_name'>[]> {
