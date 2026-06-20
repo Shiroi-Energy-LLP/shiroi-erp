@@ -92,13 +92,13 @@ export function ProjectsTableWrapper({
     // Fill main's viewport height so the table scrolls inside its own frame
     // (filter bar + column header stay fixed) instead of the whole page scrolling.
     <div className="flex h-full min-h-0 flex-col">
-      {summaryHeader && <div className="shrink-0">{summaryHeader}</div>}
       {/*
-        Filter bar + (conditional) bulk action bar — fixed above the scroll frame.
-        `-mx-4 lg:-mx-6` extends the white band into main's p-4/p-6 padding so it
-        spans the full content width.
+        Filter bar + (conditional) bulk action bar — the ONLY fixed band.
+        `-mt-4 lg:-mt-6` pulls it flush under the "Projects" topbar (merged white
+        header); `-mx-4 lg:-mx-6` spans the full content width. The KPIs, Views
+        and rows all scroll below it.
       */}
-      <div className="shrink-0 -mx-4 lg:-mx-6 border-b border-n-200 bg-white">
+      <div className="shrink-0 -mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b border-n-200 bg-white">
         <div className="px-4 lg:px-6 py-3">{filterBar}</div>
         {selectedIds.length > 0 && (
           <div className="border-t border-n-200 px-4 lg:px-6 py-2 bg-shiroi-gold/5 flex items-center gap-3 flex-wrap">
@@ -139,31 +139,34 @@ export function ProjectsTableWrapper({
         )}
       </div>
 
-      {/* Table fills the remaining height and scrolls internally; the filter bar
-          above and the column header inside both stay fixed (no page scroll). */}
-      <div className="min-h-0 flex-1">
-        <DataTable
-          containedScroll
-          entityType="projects"
-          allColumns={PROJECT_COLUMNS}
-          visibleColumns={visibleColumns}
-          data={data}
-          total={total}
-          page={page}
-          pageSize={pageSize}
-          totalPages={totalPages}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
-          currentFilters={currentFilters}
-          views={views}
-          activeViewId={activeViewId}
-          linkPrefix="/projects"
-          linkField="customer_project"
-          onSelectionChange={setSelectedIds}
-          selectedIds={selectedIds}
-          onCellEdit={handleCellEdit}
-          bulkActions={null}
-        />
+      {/* Scroll region: KPIs + Views + rows all scroll; the column header freezes
+          at the top (just under the fixed filter band) once the KPIs/Views pass. */}
+      <div className="min-h-0 flex-1 overflow-auto">
+        <div className="space-y-4 pt-4">
+          {summaryHeader}
+          <DataTable
+            containedScroll
+            entityType="projects"
+            allColumns={PROJECT_COLUMNS}
+            visibleColumns={visibleColumns}
+            data={data}
+            total={total}
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            currentFilters={currentFilters}
+            views={views}
+            activeViewId={activeViewId}
+            linkPrefix="/projects"
+            linkField="customer_project"
+            onSelectionChange={setSelectedIds}
+            selectedIds={selectedIds}
+            onCellEdit={handleCellEdit}
+            bulkActions={null}
+          />
+        </div>
       </div>
     </div>
   );

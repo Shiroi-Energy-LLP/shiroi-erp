@@ -617,7 +617,7 @@ export function DataTable({
   }
 
   return (
-    <div className={containedScroll ? 'flex h-full min-h-0 flex-col' : 'space-y-0'}>
+    <div className="space-y-0">
       {/* View Tabs */}
       <ViewTabs
         entityType={entityType}
@@ -658,10 +658,12 @@ export function DataTable({
         </div>
       </div>
 
-      {/* Table */}
-      <Card className={containedScroll ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : undefined}>
-        <CardContent className={containedScroll ? 'flex min-h-0 flex-1 flex-col overflow-hidden p-0' : 'p-0'}>
-          <div className={containedScroll ? 'min-h-0 flex-1 overflow-auto' : 'overflow-x-auto'}>
+      {/* Table — in containedScroll mode the wrapper has NO overflow box, so the
+          sticky header anchors to the page's scroll container (the wrapper around
+          the KPIs + table) and freezes there once the KPIs/Views scroll past. */}
+      <Card>
+        <CardContent className="p-0">
+          <div className={containedScroll ? undefined : 'overflow-x-auto'}>
             <table className="w-full caption-bottom text-sm">
               <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
                 <TableRow className={entityType === 'leads' ? 'bg-gradient-to-b from-n-50 to-white border-b-2 border-n-200 [&_th]:text-[10px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.08em] [&_th]:text-n-600 [&_th]:h-11' : 'bg-n-100'}>
