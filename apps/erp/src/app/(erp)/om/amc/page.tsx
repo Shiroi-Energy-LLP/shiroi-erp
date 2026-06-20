@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getAllAmcData, getCommissionedProjects, getAllProjectsForAmc, getProjectsWithAmc } from '@/lib/amc-actions';
+import { getAllAmcData, getProjectsWithAmc } from '@/lib/amc-actions';
 import { getActiveEmployees } from '@/lib/tasks-actions';
 import { getUserProfile } from '@/lib/auth';
 import { formatDate } from '@repo/ui/formatters';
@@ -30,14 +30,12 @@ interface AmcPageProps {
 export default async function AmcPage({ searchParams }: AmcPageProps) {
   const params = await searchParams;
 
-  const [{ contracts, total }, commissionedProjects, allProjects, employees, filterProjects, profile] = await Promise.all([
+  const [{ contracts, total }, employees, filterProjects, profile] = await Promise.all([
     getAllAmcData({
       status: params.status || undefined,
       category: params.category || undefined,
       project_id: params.project || undefined,
     }),
-    getCommissionedProjects(),
-    getAllProjectsForAmc(),
     getActiveEmployees(),
     getProjectsWithAmc(),
     getUserProfile(),
@@ -67,11 +65,7 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
             </span>
           </h1>
         </div>
-        <CreateAmcDialog
-          commissionedProjects={commissionedProjects}
-          allProjects={allProjects}
-          employees={employees}
-        />
+        <CreateAmcDialog employees={employees} />
       </div>
 
       {/* Summary Cards */}
