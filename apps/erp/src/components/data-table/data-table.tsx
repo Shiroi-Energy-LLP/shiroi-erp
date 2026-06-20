@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Card, CardContent, Button, Badge, Checkbox, Input,
-  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+  TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
 import { formatProjectNumber, formatDateFromTimestamp } from '@repo/ui/formatters';
 import {
@@ -241,6 +241,14 @@ interface DataTableProps {
    * overrides whatever the column's static `options` prop says.
    */
   dynamicOptions?: Record<string, { value: string; label: string }[]>;
+  /**
+   * When true, the table renders inside a bounded, internally-scrolling frame so
+   * the filter bar + column-header row stay fixed while only the body scrolls
+   * (the page itself doesn't scroll). The parent MUST give this component a
+   * bounded height — a `flex-1 min-h-0` wrapper inside a `flex h-full flex-col`
+   * page. Default false = legacy whole-page scroll.
+   */
+  containedScroll?: boolean;
 }
 
 export function DataTable({
@@ -263,6 +271,7 @@ export function DataTable({
   bulkActions,
   onSelectionChange,
   selectedIds = [],
+  containedScroll = false,
   onCellEdit,
   dynamicOptions,
 }: DataTableProps) {
@@ -608,7 +617,7 @@ export function DataTable({
   }
 
   return (
-    <div className="space-y-0">
+    <div className={containedScroll ? 'flex h-full min-h-0 flex-col' : 'space-y-0'}>
       {/* View Tabs */}
       <ViewTabs
         entityType={entityType}
@@ -650,10 +659,10 @@ export function DataTable({
       </div>
 
       {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+      <Card className={containedScroll ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : undefined}>
+        <CardContent className={containedScroll ? 'flex min-h-0 flex-1 flex-col overflow-hidden p-0' : 'p-0'}>
+          <div className={containedScroll ? 'min-h-0 flex-1 overflow-auto' : 'overflow-x-auto'}>
+            <table className="w-full caption-bottom text-sm">
               <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
                 <TableRow className={entityType === 'leads' ? 'bg-gradient-to-b from-n-50 to-white border-b-2 border-n-200 [&_th]:text-[10px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.08em] [&_th]:text-n-600 [&_th]:h-11' : 'bg-n-100'}>
                   {/* Checkbox header */}
@@ -771,7 +780,7 @@ export function DataTable({
                   })
                 )}
               </TableBody>
-            </Table>
+            </table>
           </div>
         </CardContent>
       </Card>

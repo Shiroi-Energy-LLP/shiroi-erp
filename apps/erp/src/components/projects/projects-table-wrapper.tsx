@@ -89,15 +89,16 @@ export function ProjectsTableWrapper({
   }
 
   return (
-    <>
-      {summaryHeader}
+    // Fill main's viewport height so the table scrolls inside its own frame
+    // (filter bar + column header stay fixed) instead of the whole page scrolling.
+    <div className="flex h-full min-h-0 flex-col">
+      {summaryHeader && <div className="shrink-0">{summaryHeader}</div>}
       {/*
-        Sticky header: filter bar + (conditional) bulk action bar.
-        `-mx-4 lg:-mx-6` extends the white background into main's p-4/p-6 padding area
-        so the sticky band visually spans the full horizontal length of the content column,
-        no gray strips on either side as rows scroll underneath.
+        Filter bar + (conditional) bulk action bar — fixed above the scroll frame.
+        `-mx-4 lg:-mx-6` extends the white band into main's p-4/p-6 padding so it
+        spans the full content width.
       */}
-      <div className="sticky top-0 z-30 -mx-4 lg:-mx-6 bg-white border-b border-n-200 shadow-sm">
+      <div className="shrink-0 -mx-4 lg:-mx-6 border-b border-n-200 bg-white">
         <div className="px-4 lg:px-6 py-3">{filterBar}</div>
         {selectedIds.length > 0 && (
           <div className="border-t border-n-200 px-4 lg:px-6 py-2 bg-shiroi-gold/5 flex items-center gap-3 flex-wrap">
@@ -138,30 +139,32 @@ export function ProjectsTableWrapper({
         )}
       </div>
 
-      {/* Spacing between the sticky band and the table */}
-      <div className="h-4" />
-
-      <DataTable
-        entityType="projects"
-        allColumns={PROJECT_COLUMNS}
-        visibleColumns={visibleColumns}
-        data={data}
-        total={total}
-        page={page}
-        pageSize={pageSize}
-        totalPages={totalPages}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-        currentFilters={currentFilters}
-        views={views}
-        activeViewId={activeViewId}
-        linkPrefix="/projects"
-        linkField="customer_project"
-        onSelectionChange={setSelectedIds}
-        selectedIds={selectedIds}
-        onCellEdit={handleCellEdit}
-        bulkActions={null}
-      />
-    </>
+      {/* Table fills the remaining height and scrolls internally; the filter bar
+          above and the column header inside both stay fixed (no page scroll). */}
+      <div className="min-h-0 flex-1">
+        <DataTable
+          containedScroll
+          entityType="projects"
+          allColumns={PROJECT_COLUMNS}
+          visibleColumns={visibleColumns}
+          data={data}
+          total={total}
+          page={page}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          currentFilters={currentFilters}
+          views={views}
+          activeViewId={activeViewId}
+          linkPrefix="/projects"
+          linkField="customer_project"
+          onSelectionChange={setSelectedIds}
+          selectedIds={selectedIds}
+          onCellEdit={handleCellEdit}
+          bulkActions={null}
+        />
+      </div>
+    </div>
   );
 }
