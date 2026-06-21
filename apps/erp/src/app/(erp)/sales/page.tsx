@@ -12,7 +12,8 @@ import { LeadsTableWrapper } from '@/components/leads/leads-table-wrapper';
 import { LeadStageNav } from '@/components/leads/lead-stage-nav';
 import { PipelineSummary } from '@/components/leads/pipeline-summary';
 import { getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Eyebrow } from '@repo/ui';
+import { Button, Eyebrow } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
@@ -205,18 +206,95 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
   ];
 
   return (
-    <div className="space-y-4">
-      <ProposalGateBanner />
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">SALES PIPELINE</Eyebrow>
-          <h1 className="text-2xl font-bold text-n-900">Sales</h1>
-        </div>
-        <div className="flex items-center gap-2">
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar
+              basePath="/sales"
+              filterParams={['search', 'source', 'segment', 'assignedTo', 'status', 'referrer', 'referredBy', 'kwpMin', 'kwpMax', 'closeFrom', 'closeTo']}
+            >
+              {/* C1: Multi-status filter */}
+              <FilterMultiSelect
+                paramName="status"
+                label="Status"
+                options={STATUS_FILTER_OPTIONS}
+              />
+
+              <FilterSelect paramName="source" className="w-36 h-9 text-sm">
+                <option value="">All Sources</option>
+                <option value="referral">Referral</option>
+                <option value="website">Website</option>
+                <option value="builder_tie_up">Builder Tie-up</option>
+                <option value="channel_partner">Channel Partner</option>
+                <option value="cold_call">Cold Call</option>
+                <option value="exhibition">Exhibition</option>
+                <option value="social_media">Social Media</option>
+                <option value="walkin">Walk-in</option>
+              </FilterSelect>
+
+              <FilterSelect paramName="segment" className="w-36 h-9 text-sm">
+                <option value="">All Segments</option>
+                <option value="residential">Residential</option>
+                <option value="commercial">Commercial</option>
+                <option value="industrial">Industrial</option>
+              </FilterSelect>
+
+              {/* C4: Referrer filter */}
+              <FilterSelect paramName="referrer" className="w-48 h-9 text-sm">
+                {referrerOptions.map((opt) => (
+                  <option
+                    key={opt.value || 'all'}
+                    value={opt.value}
+                    disabled={opt.disabled}
+                  >
+                    {opt.label}
+                  </option>
+                ))}
+              </FilterSelect>
+
+              {/* C2: "Referred by Clients" quick-filter chip */}
+              <FilterSelect paramName="referredBy" className="w-44 h-9 text-sm">
+                <option value="">All Referrals</option>
+                <option value="clients">Referred by Clients</option>
+              </FilterSelect>
+
+              {/* C2: kWp range filter */}
+              <FilterRange
+                label="kWp"
+                minParam="kwpMin"
+                maxParam="kwpMax"
+                type="number"
+                minPlaceholder="Min"
+                maxPlaceholder="Max"
+              />
+
+              {/* C3: Closing date range filter */}
+              <FilterRange
+                label="Closing"
+                minParam="closeFrom"
+                maxParam="closeTo"
+                type="date"
+              />
+
+              <SearchInput
+                placeholder="Search name or phone..."
+                className="w-56 h-9 text-sm"
+              />
+            </FilterBar>
+          </div>
           <Link href="/sales/new">
             <Button>New Lead</Button>
           </Link>
         </div>
+      }
+    >
+      <ProposalGateBanner />
+
+      {/* Title (scrolls away) */}
+      <div>
+        <Eyebrow className="mb-1">SALES PIPELINE</Eyebrow>
+        <h1 className="text-2xl font-bold text-n-900">Sales</h1>
       </div>
 
       <PipelineSummary
@@ -234,83 +312,6 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
         stageCounts={stageCounts.map((sc) => ({ status: sc.status, count: sc.count }))}
         basePath="/sales"
       />
-
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar
-            basePath="/sales"
-            filterParams={['search', 'source', 'segment', 'assignedTo', 'status', 'referrer', 'referredBy', 'kwpMin', 'kwpMax', 'closeFrom', 'closeTo']}
-          >
-            {/* C1: Multi-status filter */}
-            <FilterMultiSelect
-              paramName="status"
-              label="Status"
-              options={STATUS_FILTER_OPTIONS}
-            />
-
-            <FilterSelect paramName="source" className="w-36 h-9 text-sm">
-              <option value="">All Sources</option>
-              <option value="referral">Referral</option>
-              <option value="website">Website</option>
-              <option value="builder_tie_up">Builder Tie-up</option>
-              <option value="channel_partner">Channel Partner</option>
-              <option value="cold_call">Cold Call</option>
-              <option value="exhibition">Exhibition</option>
-              <option value="social_media">Social Media</option>
-              <option value="walkin">Walk-in</option>
-            </FilterSelect>
-
-            <FilterSelect paramName="segment" className="w-36 h-9 text-sm">
-              <option value="">All Segments</option>
-              <option value="residential">Residential</option>
-              <option value="commercial">Commercial</option>
-              <option value="industrial">Industrial</option>
-            </FilterSelect>
-
-            {/* C4: Referrer filter */}
-            <FilterSelect paramName="referrer" className="w-48 h-9 text-sm">
-              {referrerOptions.map((opt) => (
-                <option
-                  key={opt.value || 'all'}
-                  value={opt.value}
-                  disabled={opt.disabled}
-                >
-                  {opt.label}
-                </option>
-              ))}
-            </FilterSelect>
-
-            {/* C2: "Referred by Clients" quick-filter chip */}
-            <FilterSelect paramName="referredBy" className="w-44 h-9 text-sm">
-              <option value="">All Referrals</option>
-              <option value="clients">Referred by Clients</option>
-            </FilterSelect>
-
-            {/* C2: kWp range filter */}
-            <FilterRange
-              label="kWp"
-              minParam="kwpMin"
-              maxParam="kwpMax"
-              type="number"
-              minPlaceholder="Min"
-              maxPlaceholder="Max"
-            />
-
-            {/* C3: Closing date range filter */}
-            <FilterRange
-              label="Closing"
-              minParam="closeFrom"
-              maxParam="closeTo"
-              type="date"
-            />
-
-            <SearchInput
-              placeholder="Search name or phone..."
-              className="w-56 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       {(closingParam || referredByParam) && (
         <div className="flex items-center gap-2">
@@ -348,6 +349,6 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
         employees={employees}
         partnerOptions={partnerCellOptions}
       />
-    </div>
+    </ListPageShell>
   );
 }
