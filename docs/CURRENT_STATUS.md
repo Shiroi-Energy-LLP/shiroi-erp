@@ -4,7 +4,7 @@
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
 > **"Last updated" is ONE line — replace it each session, never stack updates.** (This file reached 110 KB / a single 59 KB "Last updated" essay before the 2026-06-19 reset; detail belongs in the changelog + review docs, not here.)
 
-> **Last updated: 2026-06-19** — docs lean-reset (CHANGELOG 320→40 KB + this file; spec `2026-06-19-docs-lean-reset-design.md`); page-load perf-audit implementation in flight (mig 190 pg_trgm + the [G1] request-scoped session cache shipped today).
+> **Last updated: 2026-06-21** — BOM + voucher import pipeline shipped to dev (mig 198; `/bom-review/import` upload→parse→match→review→confirm; 48 se-master-file sheets staged in `pending_bom_imports` for Manivel to review/confirm). Spec `2026-06-21-bom-voucher-import-design.md`.
 
 ---
 
@@ -28,6 +28,7 @@
 
 | Item | Status |
 |------|--------|
+| **BOM + voucher import** (`spec 2026-06-21-bom-voucher-import-design.md`) | Shipped to dev (mig 198). `/bom-review/import` upload→parse→fuzzy-match→review→confirm pipeline live; 48 se-master-file sheets staged (`pending_bom_imports`) awaiting Manivel's per-sheet review/confirm; confirmed sheets cascade into `project_bois` + `project_boq_items` (contracted + actual + voucher). Phase-2: bulk rough-sheet voucher backfill + minting the ~40% missing projects (composes with `/om/import-review`). |
 | **Page-load perf audit** (`docs/reviews/2026-06-19-page-load-perf-audit.md`) | In progress, dev-only. Shipped: mig 190 (pg_trgm search + tasks/milestone index), [G1] request-scoped session `cache()`, mig 192 (`/procurement/orders` pagination + `get_purchase_order_status_counts` RPC for the dashboard KPIs). Pending: dev compute upsize (Vivek's call) + the remaining round-trip/cold-plan items. |
 | **Docs lean-reset** (`spec 2026-06-19-docs-lean-reset-design.md`) | ~Done. CHANGELOG 320→40 KB, this file reset, advisory CI length-check added. |
 | **Theming → Solar Gold** | Token swap + 384-hex colour-shift + whole-rupee money shipped (June 18). Pending Vivek call: status-colour + label-map centralization (blocked on the label-wording decision). |
@@ -49,7 +50,7 @@
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **190** (2026-06-19 — pg_trgm search + tasks/milestone index) | None |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **198** (2026-06-21 — BOM + voucher import) | None |
 | **Prod** (`kfkydkwycgijvexqiysc`) | ~012 (last coordinated window) | **013–190** waiting on the next prod window. The live ERP at `erp.shiroienergy.com` points at **dev** Supabase, so this gap doesn't block users today. |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee-testing week (the Zoho-import tables are dev-only and won't all move).

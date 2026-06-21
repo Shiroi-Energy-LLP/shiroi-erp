@@ -9501,6 +9501,126 @@ export type Database = {
           }
           ]
       }
+      pending_bom_imports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          header: Json
+          id: string
+          import_batch_id: string
+          import_error: string | null
+          imported_at: string | null
+          imported_boi_id: string | null
+          imported_project_id: string | null
+          line_count: number
+          match_candidates: Json
+          match_confidence: string
+          match_score: number
+          matched_project_id: string | null
+          normalized_name: string
+          parsed_lines: Json
+          project_name: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sheet_name: string
+          source_file_name: string
+          status_review: string
+          summary: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          header?: Json
+          id?: string
+          import_batch_id: string
+          import_error?: string | null
+          imported_at?: string | null
+          imported_boi_id?: string | null
+          imported_project_id?: string | null
+          line_count?: number
+          match_candidates?: Json
+          match_confidence?: string
+          match_score?: number
+          matched_project_id?: string | null
+          normalized_name: string
+          parsed_lines?: Json
+          project_name: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sheet_name: string
+          source_file_name: string
+          status_review?: string
+          summary?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          header?: Json
+          id?: string
+          import_batch_id?: string
+          import_error?: string | null
+          imported_at?: string | null
+          imported_boi_id?: string | null
+          imported_project_id?: string | null
+          line_count?: number
+          match_candidates?: Json
+          match_confidence?: string
+          match_score?: number
+          matched_project_id?: string | null
+          normalized_name?: string
+          parsed_lines?: Json
+          project_name?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sheet_name?: string
+          source_file_name?: string
+          status_review?: string
+          summary?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_bom_imports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_bom_imports_imported_boi_id_fkey"
+            columns: ["imported_boi_id"]
+            isOneToOne: false
+            referencedRelation: "project_bois"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_bom_imports_imported_project_id_fkey"
+            columns: ["imported_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_bom_imports_matched_project_id_fkey"
+            columns: ["matched_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_bom_imports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       pending_project_imports: {
         Row: {
           acdb_sn: string | null
@@ -11039,6 +11159,10 @@ export type Database = {
       }
       project_boq_items: {
         Row: {
+          actual_quantity: number | null
+          actual_total_price: number | null
+          actual_unit_price: number | null
+          bill_status: string
           boi_id: string | null
           bom_line_id: string | null
           brand: string | null
@@ -11065,8 +11189,13 @@ export type Database = {
           updated_at: string
           vendor_id: string | null
           vendor_name: string | null
+          voucher_no: string | null
         }
         Insert: {
+          actual_quantity?: number | null
+          actual_total_price?: number | null
+          actual_unit_price?: number | null
+          bill_status?: string
           boi_id?: string | null
           bom_line_id?: string | null
           brand?: string | null
@@ -11093,8 +11222,13 @@ export type Database = {
           updated_at?: string
           vendor_id?: string | null
           vendor_name?: string | null
+          voucher_no?: string | null
         }
         Update: {
+          actual_quantity?: number | null
+          actual_total_price?: number | null
+          actual_unit_price?: number | null
+          bill_status?: string
           boi_id?: string | null
           bom_line_id?: string | null
           brand?: string | null
@@ -11121,6 +11255,7 @@ export type Database = {
           updated_at?: string
           vendor_id?: string | null
           vendor_name?: string | null
+          voucher_no?: string | null
         }
         Relationships: [
           {
@@ -18913,6 +19048,10 @@ export type Database = {
     }
     Functions: {
       ack_sync_batch: { Args: { p_results: Json }; Returns: undefined }
+      approve_bom_import: {
+        Args: { p_id: string; p_lines: Json; p_project_id: string }
+        Returns: string
+      }
       approve_pending_import: { Args: { p_id: string }; Returns: string }
       assign_orphan_invoice: {
         Args: {
@@ -19713,6 +19852,15 @@ export type Database = {
           kept_project_id: string
           kept_score: number
           success: boolean
+        }[]
+      }
+      match_project_by_name: {
+        Args: { p_limit?: number; p_name: string }
+        Returns: {
+          customer_name: string
+          project_id: string
+          project_number: string
+          score: number
         }[]
       }
       plant_monitoring_detect_brand: {

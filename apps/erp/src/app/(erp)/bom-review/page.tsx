@@ -1,7 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 import Link from 'next/link';
 import { Card, CardContent, Badge, Eyebrow, EmptyState } from '@repo/ui';
-import { ListChecks, Flag } from 'lucide-react';
+import { ListChecks, Flag, Upload } from 'lucide-react';
 import { BomReviewTable } from './bom-review-table';
 
 export const metadata = { title: 'BOM Review' };
@@ -54,12 +54,21 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <Eyebrow className="mb-1">BOM REVIEW</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-n-950">BOM Line Items Review</h1>
-        <p className="text-sm text-n-500">
-          Review and fix BOM data across all proposals. Double-click any cell to edit.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Eyebrow className="mb-1">BOM REVIEW</Eyebrow>
+          <h1 className="text-2xl font-heading font-bold text-n-950">BOM Line Items Review</h1>
+          <p className="text-sm text-n-500">
+            Review and fix BOM data across all proposals. Double-click any cell to edit.
+          </p>
+        </div>
+        <Link
+          href="/bom-review/import"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-shiroi-gold text-shiroi-ink text-xs font-medium hover:bg-shiroi-gold/90"
+        >
+          <Upload className="h-3.5 w-3.5" />
+          Import from Excel
+        </Link>
       </div>
 
       {/* Summary Cards */}
