@@ -33,7 +33,7 @@ export function TaskStatusToggle({ taskId, isCompleted }: TaskStatusToggleProps)
     <button onClick={handleClick} disabled={saving} className="cursor-pointer" title="Click to toggle status">
       <Badge
         variant={isCompleted ? 'success' : 'error'}
-        className="text-[10px] px-1.5 py-0 hover:opacity-80 transition-opacity"
+        className="text-xs px-2.5 py-1 hover:opacity-80 transition-opacity"
       >
         {saving ? '...' : isCompleted ? 'Closed' : 'Open'}
       </Badge>

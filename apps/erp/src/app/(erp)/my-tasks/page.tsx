@@ -2,6 +2,7 @@ import { getCurrentEmployeeId } from '@/lib/auth';
 import { getMyTasksDetailed } from '@/lib/all-tasks-queries';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { TasksTable } from '@/components/tasks/tasks-table';
+import { QuickAddMyTask } from '@/components/tasks/quick-add-my-task';
 import { KpiCard } from '@/components/kpi-card';
 import { Card, CardContent, Eyebrow } from '@repo/ui';
 import { ListPageShell } from '@/components/list-page-shell';
@@ -43,7 +44,15 @@ export default async function MyTasksPage() {
   const closed = total - open;
 
   return (
-    <ListPageShell>
+    <ListPageShell
+      header={
+        <QuickAddMyTask
+          employees={employees}
+          projects={projects}
+          currentUserId={employeeId}
+        />
+      }
+    >
       <div>
         <Eyebrow className="mb-1">MY TASKS</Eyebrow>
         <h1 className="text-2xl font-bold text-n-950">My Tasks</h1>
