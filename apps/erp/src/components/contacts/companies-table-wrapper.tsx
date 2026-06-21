@@ -40,6 +40,7 @@ export function CompaniesTableWrapper({
 
   return (
     <DataTable
+      containedScroll
       entityType="companies"
       allColumns={COMPANY_COLUMNS}
       visibleColumns={visibleColumns}

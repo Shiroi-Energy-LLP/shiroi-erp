@@ -40,6 +40,7 @@ export function ContactsTableWrapper({
 
   return (
     <DataTable
+      containedScroll
       entityType="contacts"
       allColumns={CONTACT_COLUMNS}
       visibleColumns={visibleColumns}

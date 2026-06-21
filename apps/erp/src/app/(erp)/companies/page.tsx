@@ -3,7 +3,8 @@ import { getCompanies } from '@/lib/contacts-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { CompaniesTableWrapper } from '@/components/contacts/companies-table-wrapper';
 import { COMPANY_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Eyebrow } from '@repo/ui';
+import { Button, Eyebrow } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
@@ -48,33 +49,33 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
     : getDefaultColumns('companies');
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">COMPANIES</Eyebrow>
-          <h1 className="text-2xl font-bold text-n-950">Companies</h1>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/companies" filterParams={['search', 'segment']}>
+              <FilterSelect paramName="segment" className="w-40 h-9 text-sm">
+                <option value="">All Segments</option>
+                <option value="residential">Residential</option>
+                <option value="commercial">Commercial</option>
+                <option value="industrial">Industrial</option>
+              </FilterSelect>
+              <SearchInput
+                placeholder="Search by name, city, or GSTIN..."
+                className="w-64 h-9 text-sm"
+              />
+            </FilterBar>
+          </div>
+          <Link href="/companies/new">
+            <Button>New Company</Button>
+          </Link>
         </div>
-        <Link href="/companies/new">
-          <Button>New Company</Button>
-        </Link>
+      }
+    >
+      <div>
+        <Eyebrow className="mb-1">COMPANIES</Eyebrow>
+        <h1 className="text-2xl font-bold text-n-950">Companies</h1>
       </div>
-
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/companies" filterParams={['search', 'segment']}>
-            <FilterSelect paramName="segment" className="w-40 h-9 text-sm">
-              <option value="">All Segments</option>
-              <option value="residential">Residential</option>
-              <option value="commercial">Commercial</option>
-              <option value="industrial">Industrial</option>
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search by name, city, or GSTIN..."
-              className="w-64 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       <CompaniesTableWrapper
         data={result.data}
@@ -89,6 +90,6 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
         activeViewId={params.view ?? activeView?.id ?? null}
         visibleColumns={visibleColumns}
       />
-    </div>
+    </ListPageShell>
   );
 }
