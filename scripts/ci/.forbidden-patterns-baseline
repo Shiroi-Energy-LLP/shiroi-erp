@@ -8,7 +8,6 @@ R13|apps/erp/src/lib/pm-queries.ts:96:      .select('id', { count: 'exact', head
 R15|apps/erp/src/app/(auth)/login/login-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/app/(erp)/admin/rag-debug/ingest-state-actions.ts:10:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/bom-review/page.tsx:1:import { createClient } from '@repo/supabase/server';
-R15|apps/erp/src/app/(erp)/daily-reports/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/data-quality/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/deliveries/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/design/page.tsx:2:import { createClient } from '@repo/supabase/server';
@@ -25,7 +24,6 @@ R15|apps/erp/src/app/(erp)/my-reports/page.tsx:1:import { createClient } from '@
 R15|apps/erp/src/app/(erp)/om/visits/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/projects/[id]/page.tsx:4:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/proposals/[id]/page.tsx:3:import { createClient } from '@repo/supabase/server';
-R15|apps/erp/src/app/(erp)/qc-gates/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/tasks/[id]/page.tsx:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/vendor-bills/review/page.tsx:14:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/api/integrations/sungrow/authorize/route.ts:17:import { createClient } from '@repo/supabase/server';
