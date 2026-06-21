@@ -1,13 +1,22 @@
 import * as React from 'react';
 import { cn } from '../lib/utils';
 
-const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
+const Table = React.forwardRef<
+  HTMLTableElement,
+  React.HTMLAttributes<HTMLTableElement> & { stickyHeader?: boolean }
+>(({ className, stickyHeader, ...props }, ref) => {
+  const table = <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />;
+  // stickyHeader: drop the inner overflow box so a `sticky top-0` <TableHeader>
+  // anchors to the PAGE scroll container (ListPageShell list pages) and freezes
+  // there. Default keeps the self-contained scrollable bordered box.
+  return stickyHeader ? (
+    table
+  ) : (
     <div className="relative w-full overflow-x-auto overflow-auto rounded-lg border border-n-200">
-      <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
+      {table}
     </div>
-  )
-);
+  );
+});
 Table.displayName = 'Table';
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(

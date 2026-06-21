@@ -11,6 +11,7 @@ import {
   CardContent,
   Button,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { BookOpen } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -97,59 +98,55 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-heading font-bold text-n-900">
-            Price Book{' '}
-            <span className="text-sm font-normal text-n-500">({total} items)</span>
-          </h1>
-        </div>
-        <div className="flex items-center gap-2">
-          {canManageLists && (
-            <Link href="/price-book/settings">
-              <Button size="sm" variant="ghost" className="text-xs h-8">Manage lists</Button>
-            </Link>
-          )}
-          <AddPriceBookItemDialog
-            categories={itemCategories.map((c) => ({ value: c.value, label: c.label }))}
-            units={itemUnits.map((u) => u.value)}
-            canManageLists={canManageLists}
-          />
-        </div>
-      </div>
-
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/price-book" filterParams={['search', 'category', 'brand', 'vendor']}>
-            <FilterSelect paramName="category" className="w-44 text-xs h-8">
-              <option value="">All Categories</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>{formatCategory(c)}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="brand" className="w-36 text-xs h-8">
-              <option value="">All Brands</option>
-              {brands.map((b) => (
-                <option key={b} value={b}>{b}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="vendor" className="w-44 text-xs h-8">
-              <option value="">All Vendors</option>
-              {vendors.map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search item, brand, vendor..."
-              className="w-52 h-8 text-xs"
-              debounceMs={200}
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/price-book" filterParams={['search', 'category', 'brand', 'vendor']}>
+              <FilterSelect paramName="category" className="w-44 text-xs h-8">
+                <option value="">All Categories</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>{formatCategory(c)}</option>
+                ))}
+              </FilterSelect>
+              <FilterSelect paramName="brand" className="w-36 text-xs h-8">
+                <option value="">All Brands</option>
+                {brands.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </FilterSelect>
+              <FilterSelect paramName="vendor" className="w-44 text-xs h-8">
+                <option value="">All Vendors</option>
+                {vendors.map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </FilterSelect>
+              <SearchInput
+                placeholder="Search item, brand, vendor..."
+                className="w-52 h-8 text-xs"
+                debounceMs={200}
+              />
+            </FilterBar>
+          </div>
+          <div className="flex items-center gap-2">
+            {canManageLists && (
+              <Link href="/price-book/settings">
+                <Button size="sm" variant="ghost" className="text-xs h-8">Manage lists</Button>
+              </Link>
+            )}
+            <AddPriceBookItemDialog
+              categories={itemCategories.map((c) => ({ value: c.value, label: c.label }))}
+              units={itemUnits.map((u) => u.value)}
+              canManageLists={canManageLists}
             />
-          </FilterBar>
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      }
+    >
+      <h1 className="text-lg font-heading font-bold text-n-900">
+        Price Book{' '}
+        <span className="text-sm font-normal text-n-500">({total} items)</span>
+      </h1>
 
       {/* Table */}
       <Card>
@@ -165,9 +162,8 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm [&_td]:align-top">
-                <thead>
+            <table className="w-full text-sm [&_td]:align-top">
+              <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-10 text-right">S.No</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Category</th>
@@ -248,8 +244,7 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
                     );
                   })}
                 </tbody>
-              </table>
-            </div>
+            </table>
           )}
 
           {/* Pagination */}
@@ -278,6 +273,6 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

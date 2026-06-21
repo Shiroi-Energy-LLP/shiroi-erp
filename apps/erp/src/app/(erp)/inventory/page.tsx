@@ -17,6 +17,7 @@ import {
   TableHead,
   TableCell,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { Package, Scissors, AlertTriangle, Ruler } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -87,8 +88,39 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
 
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <ListPageShell
+      header={
+        <FilterBar basePath="/inventory" filterParams={['search', 'category', 'location', 'condition', 'cut_length']}>
+          <SearchInput
+            placeholder="Description, brand, serial..."
+            className="w-64 h-9 text-sm"
+          />
+          <FilterSelect paramName="category" className="w-40 h-9 text-sm">
+            <option value="">All Categories</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
+            ))}
+          </FilterSelect>
+          <FilterSelect paramName="location" className="w-40 h-9 text-sm">
+            <option value="">All Locations</option>
+            {LOCATIONS.map((l) => (
+              <option key={l} value={l}>{l.replace(/_/g, ' ')}</option>
+            ))}
+          </FilterSelect>
+          <FilterSelect paramName="condition" className="w-40 h-9 text-sm">
+            <option value="">All Conditions</option>
+            {CONDITIONS.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </FilterSelect>
+          <FilterSelect paramName="cut_length" className="w-36 h-9 text-sm">
+            <option value="">All</option>
+            <option value="true">Cut-Length Only</option>
+          </FilterSelect>
+        </FilterBar>
+      }
+    >
+      {/* Title (scrolls away) */}
       <div>
         <h1 className="text-2xl font-heading font-bold text-n-950">Inventory</h1>
         <p className="text-sm text-gray-500">
@@ -171,45 +203,11 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         </Card>
       )}
 
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="pt-4">
-          <FilterBar basePath="/inventory" filterParams={['search', 'category', 'location', 'condition', 'cut_length']}>
-            <SearchInput
-              placeholder="Description, brand, serial..."
-              className="w-64 h-9 text-sm"
-            />
-            <FilterSelect paramName="category" className="w-40 h-9 text-sm">
-              <option value="">All Categories</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="location" className="w-40 h-9 text-sm">
-              <option value="">All Locations</option>
-              {LOCATIONS.map((l) => (
-                <option key={l} value={l}>{l.replace(/_/g, ' ')}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="condition" className="w-40 h-9 text-sm">
-              <option value="">All Conditions</option>
-              {CONDITIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="cut_length" className="w-36 h-9 text-sm">
-              <option value="">All</option>
-              <option value="true">Cut-Length Only</option>
-            </FilterSelect>
-          </FilterBar>
-        </CardContent>
-      </Card>
-
       {/* Stock Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          <Table stickyHeader>
+            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
               <TableRow>
                 <TableHead>Item</TableHead>
                 <TableHead>Category</TableHead>
@@ -313,6 +311,6 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

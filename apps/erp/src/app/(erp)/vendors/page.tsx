@@ -12,6 +12,7 @@ import {
   TableCell,
   Eyebrow,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { Building2 } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -54,44 +55,43 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
     : false;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">VENDORS</Eyebrow>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-n-950">Vendors</h1>
-            <Badge variant="neutral">{vendors.length}</Badge>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/vendors" filterParams={['search', 'type']}>
+              <FilterSelect paramName="type" className="w-48">
+                <option value="">All Types</option>
+                {VENDOR_TYPE_OPTIONS.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </FilterSelect>
+              <SearchInput
+                placeholder="Search company or vendor code..."
+                className="w-64 h-9 text-sm"
+              />
+            </FilterBar>
           </div>
+          {canAddVendor && <AddVendorButton />}
         </div>
-        {canAddVendor && <AddVendorButton />}
+      }
+    >
+      {/* Title (scrolls away) */}
+      <div>
+        <Eyebrow className="mb-1">VENDORS</Eyebrow>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-n-950">Vendors</h1>
+          <Badge variant="neutral">{vendors.length}</Badge>
+        </div>
       </div>
-
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-4">
-          <FilterBar basePath="/vendors" filterParams={['search', 'type']}>
-            <FilterSelect paramName="type" className="w-48">
-              <option value="">All Types</option>
-              {VENDOR_TYPE_OPTIONS.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search company or vendor code..."
-              className="w-64 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          <Table stickyHeader>
+            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
               <TableRow>
                 <TableHead>Vendor Code</TableHead>
                 <TableHead>Company Name</TableHead>
@@ -167,6 +167,6 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

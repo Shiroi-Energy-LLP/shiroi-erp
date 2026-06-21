@@ -9,6 +9,7 @@ import {
   Button,
   EmptyState,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -67,51 +68,50 @@ export default async function POListPage({ searchParams }: POListPageProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/procurement">
-            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 px-2">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
-            </Button>
-          </Link>
-          <h1 className="text-lg font-heading font-bold text-n-900">
-            All Purchase Orders
-            <span className="text-sm font-normal text-n-500 ml-2">({total})</span>
-          </h1>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/procurement/orders" filterParams={['search', 'status', 'vendor', 'project']}>
+              <FilterSelect paramName="status" className="w-36 text-xs h-8">
+                <option value="">All Status</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </FilterSelect>
+              <FilterSelect paramName="vendor" className="w-40 text-xs h-8">
+                <option value="">All Vendors</option>
+                {vendors.map((v) => (
+                  <option key={v.id} value={v.id}>{v.company_name}</option>
+                ))}
+              </FilterSelect>
+              <FilterSelect paramName="project" className="w-44 text-xs h-8">
+                <option value="">All Projects</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.project_number} — {p.customer_name}
+                  </option>
+                ))}
+              </FilterSelect>
+              <SearchInput placeholder="Search PO number..." className="w-48 h-8 text-xs" />
+            </FilterBar>
+          </div>
+          <CreatePODialog projects={projects} vendors={vendors} />
         </div>
-        <CreatePODialog projects={projects} vendors={vendors} />
+      }
+    >
+      {/* Title (scrolls away) */}
+      <div className="flex items-center gap-3">
+        <Link href="/procurement">
+          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 px-2">
+            <ArrowLeft className="h-3.5 w-3.5" /> Back
+          </Button>
+        </Link>
+        <h1 className="text-lg font-heading font-bold text-n-900">
+          All Purchase Orders
+          <span className="text-sm font-normal text-n-500 ml-2">({total})</span>
+        </h1>
       </div>
-
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/procurement/orders" filterParams={['search', 'status', 'vendor', 'project']}>
-            <FilterSelect paramName="status" className="w-36 text-xs h-8">
-              <option value="">All Status</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="vendor" className="w-40 text-xs h-8">
-              <option value="">All Vendors</option>
-              {vendors.map((v) => (
-                <option key={v.id} value={v.id}>{v.company_name}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="project" className="w-44 text-xs h-8">
-              <option value="">All Projects</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.project_number} — {p.customer_name}
-                </option>
-              ))}
-            </FilterSelect>
-            <SearchInput placeholder="Search PO number..." className="w-48 h-8 text-xs" />
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       {/* Table */}
       <Card>
@@ -125,9 +125,8 @@ export default async function POListPage({ searchParams }: POListPageProps) {
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm [&_td]:align-top">
-                <thead>
+            <table className="w-full text-sm [&_td]:align-top">
+              <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">PO Number</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Vendor</th>
@@ -159,8 +158,7 @@ export default async function POListPage({ searchParams }: POListPageProps) {
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
+            </table>
           )}
 
           {/* Pagination */}
@@ -189,6 +187,6 @@ export default async function POListPage({ searchParams }: POListPageProps) {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }
