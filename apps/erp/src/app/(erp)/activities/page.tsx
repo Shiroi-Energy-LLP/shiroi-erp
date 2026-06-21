@@ -13,6 +13,7 @@ import {
 import { getUserProfile } from '@/lib/auth';
 import { ActivitiesClient } from '@/components/projects/activities/activities-client';
 import { GlobalActivitiesFilters } from '@/components/activities/global-activities-filters';
+import { ListPageShell } from '@/components/list-page-shell';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,22 +70,31 @@ export default async function ActivitiesPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-n-500">Execution</div>
-          <h1 className="text-2xl font-semibold">Activities — All Projects</h1>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <Suspense>
+              <GlobalActivitiesFilters stages={stages} />
+            </Suspense>
+          </div>
+          {canManage && (
+            <ActivityFormDialog
+              stages={stages}
+              projects={projects}
+              trigger={<Button size="sm"><Plus className="h-3.5 w-3.5 mr-1" /> Add Activity</Button>}
+            />
+          )}
         </div>
-        {canManage && (
-          <ActivityFormDialog
-            stages={stages}
-            projects={projects}
-            trigger={<Button size="sm"><Plus className="h-3.5 w-3.5 mr-1" /> Add Activity</Button>}
-          />
-        )}
+      }
+    >
+      {/* Title — scrolls away */}
+      <div>
+        <div className="text-xs uppercase tracking-wider text-n-500">Execution</div>
+        <h1 className="text-2xl font-semibold">Activities — All Projects</h1>
       </div>
 
-      {/* Org-wide manpower + activity stats (SQL-aggregated, filter-aware) */}
+      {/* Org-wide manpower + activity stats (scroll away) */}
       <div className="flex gap-3 flex-wrap items-center">
         <Users className="h-4 w-4 text-n-400" />
         <SummaryChip label="Activities" value={summary.total_activities} color="#1A1D24" />
@@ -94,10 +104,6 @@ export default async function ActivitiesPage({ searchParams }: Props) {
         <SummaryChip label="Contractor" value={summary.total_contractor} color="#B45309" />
       </div>
 
-      <Suspense>
-        <GlobalActivitiesFilters stages={stages} />
-      </Suspense>
-
       <ActivitiesClient
         projectId=""
         rows={rows}
@@ -105,6 +111,7 @@ export default async function ActivitiesPage({ searchParams }: Props) {
         canManage={canManage}
         showProject
         clientFilters={false}
+        stickyHeader
       />
 
       <div className="flex items-center justify-between text-xs text-n-500">
@@ -117,6 +124,6 @@ export default async function ActivitiesPage({ searchParams }: Props) {
       <p className="text-[10px] text-n-400">
         Showing up to {ACTIVITIES_PAGE_SIZE} per page.
       </p>
-    </div>
+    </ListPageShell>
   );
 }

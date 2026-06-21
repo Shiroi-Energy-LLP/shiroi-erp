@@ -4,6 +4,7 @@ import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { TasksTable } from '@/components/tasks/tasks-table';
 import { KpiCard } from '@/components/kpi-card';
 import { Card, CardContent, Eyebrow } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { ClipboardList } from 'lucide-react';
 
 const TH = 'px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider';
@@ -13,7 +14,7 @@ export default async function MyTasksPage() {
 
   if (!employeeId) {
     return (
-      <div className="space-y-6">
+      <ListPageShell>
         <div>
           <Eyebrow className="mb-1">MY TASKS</Eyebrow>
           <h1 className="text-2xl font-bold text-n-950">My Tasks</h1>
@@ -27,7 +28,7 @@ export default async function MyTasksPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </ListPageShell>
     );
   }
 
@@ -42,20 +43,20 @@ export default async function MyTasksPage() {
   const closed = total - open;
 
   return (
-    <div className="space-y-6">
+    <ListPageShell>
       <div>
         <Eyebrow className="mb-1">MY TASKS</Eyebrow>
         <h1 className="text-2xl font-bold text-n-950">My Tasks</h1>
       </div>
 
-      {/* Header KPIs */}
+      {/* Header KPIs — scroll away */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard label="Total Tasks" value={total} icon="ClipboardList" />
         <KpiCard label="Open Tasks" value={open} icon="Clock" />
         <KpiCard label="Closed Tasks" value={closed} icon="CheckCircle" />
       </div>
 
-      {/* Task list */}
+      {/* Task list — column header freezes at the top of the scroll region */}
       <Card>
         <CardContent className="p-0">
           {tasks.length === 0 ? (
@@ -67,27 +68,25 @@ export default async function MyTasksPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-n-200 bg-n-50 text-left">
-                    <th className={TH}>Project</th>
-                    <th className={TH}>Task Name</th>
-                    <th className={TH}>Assigned To</th>
-                    <th className={TH}>Status</th>
-                    <th className={TH}>Priority</th>
-                    <th className={TH}>Due Date</th>
-                    <th className={TH}>Notes</th>
-                    <th className={TH}>Done By</th>
-                    <th className={`${TH} w-16`}>Actions</th>
-                  </tr>
-                </thead>
-                <TasksTable tasks={tasks} employees={employees} projects={projects} />
-              </table>
-            </div>
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
+                <tr className="border-b border-n-200 bg-n-50 text-left">
+                  <th className={TH}>Project</th>
+                  <th className={TH}>Task Name</th>
+                  <th className={TH}>Assigned To</th>
+                  <th className={TH}>Status</th>
+                  <th className={TH}>Priority</th>
+                  <th className={TH}>Due Date</th>
+                  <th className={TH}>Notes</th>
+                  <th className={TH}>Done By</th>
+                  <th className={`${TH} w-16`}>Actions</th>
+                </tr>
+              </thead>
+              <TasksTable tasks={tasks} employees={employees} projects={projects} />
+            </table>
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

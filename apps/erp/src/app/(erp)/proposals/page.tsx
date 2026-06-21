@@ -3,7 +3,8 @@ import { getProposals } from '@/lib/proposals-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ProposalsTableWrapper } from '@/components/proposals/proposals-table-wrapper';
 import { getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Eyebrow } from '@repo/ui';
+import { Button, Eyebrow } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
@@ -54,47 +55,47 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
     : getDefaultColumns('proposals');
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">PROPOSALS</Eyebrow>
-          <h1 className="text-2xl font-bold text-n-950">Proposals</h1>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/proposals" filterParams={['search', 'status', 'systemType', 'isBudgetary']}>
+              <FilterSelect paramName="status" className="w-36 h-9 text-sm">
+                <option value="">All Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="sent">Sent</option>
+                <option value="accepted">Accepted</option>
+                <option value="rejected">Rejected</option>
+                <option value="expired">Expired</option>
+                <option value="revised">Revised</option>
+              </FilterSelect>
+              <FilterSelect paramName="systemType" className="w-32 h-9 text-sm">
+                <option value="">All Systems</option>
+                <option value="on_grid">On-Grid</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="off_grid">Off-Grid</option>
+              </FilterSelect>
+              <FilterSelect paramName="isBudgetary" className="w-32 h-9 text-sm">
+                <option value="">All Types</option>
+                <option value="true">Budgetary</option>
+                <option value="false">Detailed</option>
+              </FilterSelect>
+              <SearchInput
+                placeholder="Search proposal #..."
+                className="w-48 h-9 text-sm"
+              />
+            </FilterBar>
+          </div>
+          <Link href="/proposals/new">
+            <Button>New Proposal</Button>
+          </Link>
         </div>
-        <Link href="/proposals/new">
-          <Button>New Proposal</Button>
-        </Link>
+      }
+    >
+      <div>
+        <Eyebrow className="mb-1">PROPOSALS</Eyebrow>
+        <h1 className="text-2xl font-bold text-n-950">Proposals</h1>
       </div>
-
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/proposals" filterParams={['search', 'status', 'systemType', 'isBudgetary']}>
-            <FilterSelect paramName="status" className="w-36 h-9 text-sm">
-              <option value="">All Statuses</option>
-              <option value="draft">Draft</option>
-              <option value="sent">Sent</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-              <option value="expired">Expired</option>
-              <option value="revised">Revised</option>
-            </FilterSelect>
-            <FilterSelect paramName="systemType" className="w-32 h-9 text-sm">
-              <option value="">All Systems</option>
-              <option value="on_grid">On-Grid</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="off_grid">Off-Grid</option>
-            </FilterSelect>
-            <FilterSelect paramName="isBudgetary" className="w-32 h-9 text-sm">
-              <option value="">All Types</option>
-              <option value="true">Budgetary</option>
-              <option value="false">Detailed</option>
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search proposal #..."
-              className="w-48 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       <ProposalsTableWrapper
         data={result.data}
@@ -109,6 +110,6 @@ export default async function ProposalsPage({ searchParams }: ProposalsPageProps
         activeViewId={params.view ?? activeView?.id ?? null}
         visibleColumns={visibleColumns}
       />
-    </div>
+    </ListPageShell>
   );
 }

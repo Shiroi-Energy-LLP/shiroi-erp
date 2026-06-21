@@ -46,10 +46,14 @@ interface ActivitiesClientProps {
   /** Global view: show the Project column + skip client-side filters (server filters instead). */
   showProject?: boolean;
   clientFilters?: boolean;
+  /** Global list page only: freeze the column header on scroll — drops the inner
+   *  horizontal-scroll box so the header anchors to the page's scroll region.
+   *  Left false for the per-project Activities tab (unchanged behaviour). */
+  stickyHeader?: boolean;
 }
 
 export function ActivitiesClient({
-  projectId, rows, stages, canManage, showProject = false, clientFilters = true,
+  projectId, rows, stages, canManage, showProject = false, clientFilters = true, stickyHeader = false,
 }: ActivitiesClientProps) {
   const [from, setFrom] = React.useState('');
   const [to, setTo] = React.useState('');
@@ -107,9 +111,9 @@ export function ActivitiesClient({
         </div>
       )}
 
-      <div className="overflow-x-auto border border-n-200 rounded-lg">
+      <div className={stickyHeader ? 'border border-n-200 rounded-lg' : 'overflow-x-auto border border-n-200 rounded-lg'}>
         <table className="w-full text-sm [&_td]:align-top">
-          <thead>
+          <thead className={stickyHeader ? 'sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]' : undefined}>
             <tr className="border-b border-n-200 bg-n-50">
               <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[30px]">#</th>
               <th className="px-2 py-1.5 text-left text-[10px] font-medium text-n-500 w-[90px]">Date</th>

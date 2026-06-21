@@ -38,6 +38,7 @@ export function ProposalsTableWrapper({
 
   return (
     <DataTable
+      containedScroll
       entityType="proposals"
       allColumns={PROPOSAL_COLUMNS}
       visibleColumns={visibleColumns}
