@@ -14,6 +14,7 @@ import {
   EmptyState,
   Eyebrow,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { FileText } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -49,39 +50,38 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
   ]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">INVOICES</Eyebrow>
-          <h1 className="text-2xl font-heading font-bold text-n-950">Invoices</h1>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/invoices" filterParams={['search', 'status']}>
+              <FilterSelect paramName="status" className="w-44">
+                <option value="">All Statuses</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </FilterSelect>
+              <SearchInput
+                placeholder="Search invoice number..."
+                className="w-60 h-9 text-sm"
+              />
+            </FilterBar>
+          </div>
+          <CreateInvoiceDialog projects={projects} />
         </div>
-        <CreateInvoiceDialog projects={projects} />
+      }
+    >
+      {/* Title (scrolls away) */}
+      <div>
+        <Eyebrow className="mb-1">INVOICES</Eyebrow>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Invoices</h1>
       </div>
-
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-4">
-          <FilterBar basePath="/invoices" filterParams={['search', 'status']}>
-            <FilterSelect paramName="status" className="w-44">
-              <option value="">All Statuses</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search invoice number..."
-              className="w-60 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          <Table stickyHeader>
+            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
               <TableRow>
                 <TableHead>Invoice Number</TableHead>
                 <TableHead>Project</TableHead>
@@ -145,6 +145,6 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

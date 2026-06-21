@@ -13,6 +13,7 @@ import {
   EmptyState,
   Eyebrow,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { DollarSign } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -38,30 +39,27 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
   });
 
   return (
-    <div className="space-y-6">
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-4">
-          <FilterBar basePath="/payments/receipts" filterParams={['search', 'type']}>
-            <FilterSelect paramName="type" className="w-44">
-              <option value="">All Types</option>
-              {TYPE_OPTIONS.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search receipt/reference..."
-              className="w-60 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
-
+    <ListPageShell
+      header={
+        <FilterBar basePath="/payments/receipts" filterParams={['search', 'type']}>
+          <FilterSelect paramName="type" className="w-44">
+            <option value="">All Types</option>
+            {TYPE_OPTIONS.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </FilterSelect>
+          <SearchInput
+            placeholder="Search receipt/reference..."
+            className="w-60 h-9 text-sm"
+          />
+        </FilterBar>
+      }
+    >
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          <Table stickyHeader>
+            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
               <TableRow>
                 <TableHead>Receipt #</TableHead>
                 <TableHead>Project</TableHead>
@@ -121,6 +119,6 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }
