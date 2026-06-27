@@ -7,6 +7,7 @@ import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { emitErpEvent } from '@/lib/n8n/emit';
 import { matchProjectIdsByText } from '@/lib/helpers/project-search-ids';
 import { sanitizeForIlike } from '@/lib/helpers/sanitize-or-filter';
+import { getCurrentEmployeeId } from '@/lib/auth';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Row types
@@ -15,7 +16,45 @@ import { sanitizeForIlike } from '@/lib/helpers/sanitize-or-filter';
 type ServiceTicket = Database['public']['Tables']['om_service_tickets']['Row'];
 type ServiceTicketInsert = Database['public']['Tables']['om_service_tickets']['Insert'];
 type ServiceTicketUpdate = Database['public']['Tables']['om_service_tickets']['Update'];
+type TicketEvent = Database['public']['Tables']['om_ticket_events']['Row'];
+type TicketEventInsert = Database['public']['Tables']['om_ticket_events']['Insert'];
 export type TicketStatus = Database['public']['Enums']['ticket_status'];
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Append a `system` event to the ticket timeline (status change, edits, etc.).
+ * Best-effort + non-blocking: a failed log must never fail the parent mutation,
+ * so we swallow errors here. `actorId` is the acting employee (NEVER-DO: *_by
+ * columns are employees.id, resolved via getCurrentEmployeeId — not the auth uid).
+ */
+async function logSystemEvent(
+  supabase: SupabaseServerClient,
+  ticketId: string,
+  body: string,
+  actorId: string | null,
+): Promise<void> {
+  const op = '[logSystemEvent]';
+  const insert: TicketEventInsert = {
+    ticket_id: ticketId,
+    entry_type: 'system',
+    body,
+    created_by: actorId,
+  };
+  const { error } = await supabase.from('om_ticket_events').insert(insert);
+  if (error) {
+    console.error(`${op} Failed (non-blocking):`, { ticketId, code: error.code, message: error.message });
+  }
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
+  assigned: 'Assigned',
+  in_progress: 'In Progress',
+  resolved: 'Resolved',
+  closed: 'Closed',
+  escalated: 'Escalated',
+};
 
 // SLA defaults per severity — centralized so createServiceTicket and
 // updateServiceTicket agree.
@@ -103,6 +142,8 @@ export async function createServiceTicket(input: {
     return err(error?.message ?? 'Failed to create ticket', error?.code);
   }
 
+  await logSystemEvent(supabase, data.id, 'Ticket created', employee.id);
+
   revalidatePath('/om/tickets');
 
   void emitOmTicketCreated(data.id);
@@ -166,10 +207,13 @@ async function emitOmTicketCreated(ticketId: string): Promise<void> {
 
 export async function updateServiceTicket(input: {
   ticketId: string;
+  projectId?: string;
+  projectNameCustom?: string;
   title?: string;
   description?: string;
   issueType?: string;
   severity?: string;
+  status?: TicketStatus;
   assignedTo?: string;
   serviceAmount?: number;
   resolutionNotes?: string;
@@ -181,17 +225,64 @@ export async function updateServiceTicket(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return err('Not authenticated');
 
+  // Load current row so the system-event log can summarise what actually changed.
+  const { data: current, error: loadError } = await supabase
+    .from('om_service_tickets')
+    .select('title, issue_type, severity, status, assigned_to, service_amount, project_id, project_name_custom')
+    .eq('id', input.ticketId)
+    .maybeSingle();
+  if (loadError) {
+    console.error(`${op} Load failed:`, { code: loadError.code, message: loadError.message });
+    return err(loadError.message, loadError.code);
+  }
+  if (!current) return err('Ticket not found');
+
   const updateData: ServiceTicketUpdate = {};
-  if (input.title !== undefined) updateData.title = input.title;
+  const changes: string[] = [];
+
+  // Project reassignment: a project id and a free-text name are mutually exclusive
+  // (CHECK om_service_tickets_project_or_custom — exactly one is non-null).
+  if (input.projectId !== undefined && input.projectId) {
+    updateData.project_id = input.projectId;
+    updateData.project_name_custom = null;
+    if (input.projectId !== current.project_id) changes.push('project reassigned');
+  } else if (input.projectNameCustom !== undefined && input.projectNameCustom.trim()) {
+    updateData.project_id = null;
+    updateData.project_name_custom = input.projectNameCustom.trim();
+    if (input.projectNameCustom.trim() !== current.project_name_custom) changes.push('project name updated');
+  }
+
+  if (input.title !== undefined && input.title !== current.title) {
+    updateData.title = input.title;
+    changes.push('title');
+  }
   if (input.description !== undefined) updateData.description = input.description || '';
-  if (input.issueType !== undefined) updateData.issue_type = input.issueType;
-  if (input.severity !== undefined) {
+  if (input.issueType !== undefined && input.issueType !== current.issue_type) {
+    updateData.issue_type = input.issueType;
+    changes.push(`issue type → ${input.issueType.replace(/_/g, ' ')}`);
+  }
+  if (input.severity !== undefined && input.severity !== current.severity) {
     updateData.severity = input.severity;
     updateData.sla_hours = slaHoursForSeverity(input.severity);
+    changes.push(`severity → ${input.severity}`);
   }
-  if (input.assignedTo !== undefined) updateData.assigned_to = input.assignedTo || null;
-  if (input.serviceAmount !== undefined) updateData.service_amount = input.serviceAmount;
+  if (input.assignedTo !== undefined && (input.assignedTo || null) !== current.assigned_to) {
+    updateData.assigned_to = input.assignedTo || null;
+    changes.push(input.assignedTo ? 'reassigned' : 'unassigned');
+  }
+  if (input.serviceAmount !== undefined && input.serviceAmount !== Number(current.service_amount)) {
+    updateData.service_amount = input.serviceAmount;
+    changes.push('service amount');
+  }
   if (input.resolutionNotes !== undefined) updateData.resolution_notes = input.resolutionNotes || null;
+
+  // Status edits go through the same resolution-stamping logic as the inline toggle.
+  let statusChanged = false;
+  if (input.status !== undefined && input.status !== current.status) {
+    applyStatusTransition(updateData, input.status, await getCurrentEmployeeId());
+    statusChanged = true;
+    changes.push(`status → ${STATUS_LABELS[input.status] ?? input.status}`);
+  }
 
   const { error } = await supabase
     .from('om_service_tickets')
@@ -203,13 +294,47 @@ export async function updateServiceTicket(input: {
     return err(error.message, error.code);
   }
 
+  if (changes.length > 0) {
+    await logSystemEvent(supabase, input.ticketId, `Ticket updated: ${changes.join(', ')}`, await getCurrentEmployeeId());
+  }
+  if (statusChanged && (input.status === 'resolved' || input.status === 'closed')) {
+    void emitOmTicketResolved(input.ticketId);
+  }
+
   revalidatePath('/om/tickets');
+  revalidatePath(`/om/tickets/${input.ticketId}`);
   return ok(undefined);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
 // Toggle Ticket Status
 // ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Stamp resolution/close fields on an update payload for a status transition.
+ * Shared by the inline toggle (updateTicketStatus) and the detail-page edit
+ * (updateServiceTicket) so both agree on resolved_at/resolved_by/closed_at.
+ */
+function applyStatusTransition(
+  updateData: ServiceTicketUpdate,
+  newStatus: TicketStatus,
+  actorId: string | null,
+): void {
+  updateData.status = newStatus;
+  const nowIso = new Date().toISOString();
+  if (newStatus === 'resolved') {
+    updateData.resolved_at = nowIso;
+    if (actorId) updateData.resolved_by = actorId;
+  } else if (newStatus === 'closed') {
+    updateData.closed_at = nowIso;
+    updateData.resolved_at = nowIso;
+    if (actorId) updateData.resolved_by = actorId;
+  } else if (newStatus === 'open') {
+    updateData.resolved_at = null;
+    updateData.resolved_by = null;
+    updateData.closed_at = null;
+  }
+}
 
 export async function updateTicketStatus(
   ticketId: string,
@@ -222,32 +347,9 @@ export async function updateTicketStatus(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return err('Not authenticated');
 
-  const updateData: ServiceTicketUpdate = { status: newStatus };
-
-  if (newStatus === 'resolved' || newStatus === 'closed') {
-    const { data: emp } = await supabase
-      .from('employees')
-      .select('id')
-      .eq('profile_id', user.id)
-      .maybeSingle();
-
-    const nowIso = new Date().toISOString();
-    if (newStatus === 'resolved') {
-      updateData.resolved_at = nowIso;
-      if (emp) updateData.resolved_by = emp.id;
-    }
-    if (newStatus === 'closed') {
-      updateData.closed_at = nowIso;
-      updateData.resolved_at = nowIso;
-      if (emp) updateData.resolved_by = emp.id;
-    }
-  }
-
-  if (newStatus === 'open') {
-    updateData.resolved_at = null;
-    updateData.resolved_by = null;
-    updateData.closed_at = null;
-  }
+  const actorId = await getCurrentEmployeeId();
+  const updateData: ServiceTicketUpdate = {};
+  applyStatusTransition(updateData, newStatus, actorId);
 
   const { error } = await supabase
     .from('om_service_tickets')
@@ -259,11 +361,14 @@ export async function updateTicketStatus(
     return err(error.message, error.code);
   }
 
+  await logSystemEvent(supabase, ticketId, `Status changed to ${STATUS_LABELS[newStatus] ?? newStatus}`, actorId);
+
   if (newStatus === 'resolved' || newStatus === 'closed') {
     void emitOmTicketResolved(ticketId);
   }
 
   revalidatePath('/om/tickets');
+  revalidatePath(`/om/tickets/${ticketId}`);
   return ok(undefined);
 }
 
@@ -323,28 +428,46 @@ async function emitOmTicketResolved(ticketId: string): Promise<void> {
 
 export async function deleteServiceTicket(ticketId: string): Promise<ActionResult<void>> {
   const op = '[deleteServiceTicket]';
-  console.log(`${op} Closing ticket: ${ticketId}`);
+  console.log(`${op} Hard-deleting ticket: ${ticketId}`);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return err('Not authenticated');
 
-  const update: ServiceTicketUpdate = {
-    status: 'closed',
-    closed_at: new Date().toISOString(),
-  };
+  // Gather every Storage path owned by this ticket (ticket-level docs + per-event
+  // attachments) so we can clean up the bucket before the row + events cascade away.
+  const { data: ticket } = await supabase
+    .from('om_service_tickets')
+    .select('attachment_paths')
+    .eq('id', ticketId)
+    .maybeSingle();
+  const { data: events } = await supabase
+    .from('om_ticket_events')
+    .select('attachment_path')
+    .eq('ticket_id', ticketId);
 
+  const paths = [
+    ...(ticket?.attachment_paths ?? []),
+    ...(events ?? []).map((e) => e.attachment_path).filter((p): p is string => !!p),
+  ];
+  if (paths.length > 0) {
+    // Best-effort: a Storage failure must not block the row delete.
+    const { error: storageError } = await supabase.storage.from('project-files').remove(paths);
+    if (storageError) {
+      console.error(`${op} Storage cleanup failed (non-blocking):`, { ticketId, message: storageError.message });
+    }
+  }
+
+  // Hard delete — om_ticket_events rows cascade via the FK (ON DELETE CASCADE).
   const { error } = await supabase
     .from('om_service_tickets')
-    .update(update)
+    .delete()
     .eq('id', ticketId);
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return err(error.message, error.code);
   }
-
-  void emitOmTicketResolved(ticketId);
 
   revalidatePath('/om/tickets');
   return ok(undefined);
@@ -447,4 +570,250 @@ export async function getServiceTicketAmountTotal(): Promise<number> {
     return 0;
   }
   return Number(data ?? 0);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPIs — open / closed counts + total amount in one SQL call (NEVER-DO #12)
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface TicketKpis {
+  openCount: number;
+  closedCount: number;
+  totalAmount: number;
+}
+
+export async function getServiceTicketKpis(): Promise<TicketKpis> {
+  const op = '[getServiceTicketKpis]';
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('get_service_ticket_kpis');
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { openCount: 0, closedCount: 0, totalAmount: 0 };
+  }
+  // RETURNS TABLE → a one-row array.
+  const row = Array.isArray(data) ? data[0] : data;
+  return {
+    openCount: Number(row?.open_count ?? 0),
+    closedCount: Number(row?.closed_count ?? 0),
+    totalAmount: Number(row?.total_amount ?? 0),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Ticket detail (single ticket + ordered timeline)
+// ═══════════════════════════════════════════════════════════════════════
+
+export type TicketEventRow = Pick<
+  TicketEvent,
+  'id' | 'entry_type' | 'body' | 'attachment_path' | 'attachment_name' | 'created_by' | 'created_at'
+> & {
+  author: { full_name: string } | null;
+};
+
+export type TicketDetail = ServiceTicket & {
+  projects: { project_number: string | null; customer_name: string } | null;
+  assignee: { full_name: string } | null;
+  resolved_by_employee: { full_name: string } | null;
+  events: TicketEventRow[];
+};
+
+export async function getTicketDetail(ticketId: string): Promise<TicketDetail | null> {
+  const op = '[getTicketDetail]';
+  const supabase = await createClient();
+
+  const { data: ticket, error } = await supabase
+    .from('om_service_tickets')
+    .select(
+      '*, projects!om_service_tickets_project_id_fkey(project_number, customer_name), assignee:employees!om_service_tickets_assigned_to_fkey(full_name), resolved_by_employee:employees!om_service_tickets_resolved_by_fkey(full_name)',
+    )
+    .eq('id', ticketId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return null;
+  }
+  if (!ticket) return null;
+
+  const { data: events, error: eventsError } = await supabase
+    .from('om_ticket_events')
+    .select('id, entry_type, body, attachment_path, attachment_name, created_by, created_at, author:employees!om_ticket_events_created_by_fkey(full_name)')
+    .eq('ticket_id', ticketId)
+    .order('created_at', { ascending: false });
+
+  if (eventsError) {
+    console.error(`${op} Events query failed:`, { code: eventsError.code, message: eventsError.message });
+  }
+
+  return {
+    ...(ticket as ServiceTicket),
+    projects: (ticket as TicketDetail).projects ?? null,
+    assignee: (ticket as TicketDetail).assignee ?? null,
+    resolved_by_employee: (ticket as TicketDetail).resolved_by_employee ?? null,
+    events: (events as TicketEventRow[] | null) ?? [],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Timeline — manual notes
+// ═══════════════════════════════════════════════════════════════════════
+
+export async function addTicketEvent(input: {
+  ticketId: string;
+  body: string;
+  attachmentPath?: string;
+  attachmentName?: string;
+}): Promise<ActionResult<void>> {
+  const op = '[addTicketEvent]';
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  if (!input.body.trim() && !input.attachmentPath) {
+    return err('Add a note or attach a file');
+  }
+
+  const actorId = await getCurrentEmployeeId();
+  const insert: TicketEventInsert = {
+    ticket_id: input.ticketId,
+    entry_type: 'note',
+    body: input.body.trim() || '(attachment)',
+    attachment_path: input.attachmentPath ?? null,
+    attachment_name: input.attachmentName ?? null,
+    created_by: actorId,
+  };
+
+  const { error } = await supabase.from('om_ticket_events').insert(insert);
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return err(error.message, error.code);
+  }
+
+  revalidatePath(`/om/tickets/${input.ticketId}`);
+  return ok(undefined);
+}
+
+export async function deleteTicketEvent(
+  eventId: string,
+  ticketId: string,
+): Promise<ActionResult<void>> {
+  const op = '[deleteTicketEvent]';
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  // Clean up the entry's attachment (best-effort) before deleting the row.
+  const { data: event } = await supabase
+    .from('om_ticket_events')
+    .select('attachment_path, entry_type')
+    .eq('id', eventId)
+    .maybeSingle();
+
+  if (event?.entry_type === 'system') {
+    return err('System events cannot be deleted');
+  }
+  if (event?.attachment_path) {
+    const { error: storageError } = await supabase.storage.from('project-files').remove([event.attachment_path]);
+    if (storageError) {
+      console.error(`${op} Storage cleanup failed (non-blocking):`, { eventId, message: storageError.message });
+    }
+  }
+
+  const { error } = await supabase.from('om_ticket_events').delete().eq('id', eventId);
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return err(error.message, error.code);
+  }
+
+  revalidatePath(`/om/tickets/${ticketId}`);
+  return ok(undefined);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Ticket-level supporting documents
+// ═══════════════════════════════════════════════════════════════════════
+
+export async function addTicketAttachment(input: {
+  ticketId: string;
+  path: string;
+  name: string;
+}): Promise<ActionResult<void>> {
+  const op = '[addTicketAttachment]';
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  const { data: ticket, error: loadError } = await supabase
+    .from('om_service_tickets')
+    .select('attachment_paths, attachment_names')
+    .eq('id', input.ticketId)
+    .maybeSingle();
+  if (loadError) {
+    console.error(`${op} Load failed:`, { code: loadError.code, message: loadError.message });
+    return err(loadError.message, loadError.code);
+  }
+  if (!ticket) return err('Ticket not found');
+
+  const paths = [...(ticket.attachment_paths ?? []), input.path];
+  const names = [...(ticket.attachment_names ?? []), input.name];
+
+  const { error } = await supabase
+    .from('om_service_tickets')
+    .update({ attachment_paths: paths, attachment_names: names })
+    .eq('id', input.ticketId);
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return err(error.message, error.code);
+  }
+
+  await logSystemEvent(supabase, input.ticketId, `Document added: ${input.name}`, await getCurrentEmployeeId());
+
+  revalidatePath(`/om/tickets/${input.ticketId}`);
+  return ok(undefined);
+}
+
+export async function removeTicketAttachment(input: {
+  ticketId: string;
+  path: string;
+}): Promise<ActionResult<void>> {
+  const op = '[removeTicketAttachment]';
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  const { data: ticket, error: loadError } = await supabase
+    .from('om_service_tickets')
+    .select('attachment_paths, attachment_names')
+    .eq('id', input.ticketId)
+    .maybeSingle();
+  if (loadError) {
+    console.error(`${op} Load failed:`, { code: loadError.code, message: loadError.message });
+    return err(loadError.message, loadError.code);
+  }
+  if (!ticket) return err('Ticket not found');
+
+  const paths = ticket.attachment_paths ?? [];
+  const names = ticket.attachment_names ?? [];
+  const idx = paths.indexOf(input.path);
+  if (idx === -1) return ok(undefined); // already gone
+
+  const nextPaths = paths.filter((_, i) => i !== idx);
+  const nextNames = names.filter((_, i) => i !== idx);
+
+  const { error: storageError } = await supabase.storage.from('project-files').remove([input.path]);
+  if (storageError) {
+    console.error(`${op} Storage cleanup failed (non-blocking):`, { message: storageError.message });
+  }
+
+  const { error } = await supabase
+    .from('om_service_tickets')
+    .update({ attachment_paths: nextPaths, attachment_names: nextNames })
+    .eq('id', input.ticketId);
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return err(error.message, error.code);
+  }
+
+  revalidatePath(`/om/tickets/${input.ticketId}`);
+  return ok(undefined);
 }

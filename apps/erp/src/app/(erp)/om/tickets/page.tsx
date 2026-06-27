@@ -1,15 +1,15 @@
 import * as React from 'react';
-import { getAllTickets, getServiceTicketAmountTotal } from '@/lib/service-ticket-actions';
+import { getAllTickets, getServiceTicketKpis } from '@/lib/service-ticket-actions';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { formatDate, formatINR as formatINRBase } from '@repo/ui/formatters';
 import { CreateTicketDialog } from '@/components/om/create-ticket-dialog';
 import { EditTicketDialog } from '@/components/om/edit-ticket-dialog';
 import { DeleteTicketButton } from '@/components/om/delete-ticket-button';
 import { TicketStatusToggle } from '@/components/om/ticket-status-toggle';
+import { TicketProjectFilter } from '@/components/om/ticket-project-filter';
 import {
   Card,
   CardContent,
-  Badge,
   Button,
 } from '@repo/ui';
 import { ListPageShell } from '@/components/list-page-shell';
@@ -17,8 +17,10 @@ import { Wrench } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
+import { ISSUE_TYPES, issueTypeLabel } from '@/lib/ticket-constants';
 import Link from 'next/link';
 
+// Filter-specific status options: 'open' means "all active" (see getAllTickets).
 const STATUS_OPTIONS = [
   { value: 'open', label: 'Open (All Active)' },
   { value: 'assigned', label: 'Assigned' },
@@ -27,36 +29,6 @@ const STATUS_OPTIONS = [
   { value: 'resolved', label: 'Resolved' },
   { value: 'closed', label: 'Closed' },
 ];
-
-const SEVERITY_OPTIONS = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-];
-
-const ISSUE_TYPES = [
-  { value: 'no_generation', label: 'No Generation' },
-  { value: 'low_generation', label: 'Low Generation' },
-  { value: 'inverter_fault', label: 'Inverter Fault' },
-  { value: 'panel_damage', label: 'Panel Damage' },
-  { value: 'wiring_issue', label: 'Wiring Issue' },
-  { value: 'earthing_issue', label: 'Earthing Issue' },
-  { value: 'monitoring_offline', label: 'Monitoring Offline' },
-  { value: 'physical_damage', label: 'Physical Damage' },
-  { value: 'warranty_claim', label: 'Warranty Claim' },
-  { value: 'billing_issue', label: 'Billing Issue' },
-  { value: 'other', label: 'Other' },
-];
-
-function severityVariant(severity: string): 'error' | 'warning' | 'info' | 'outline' {
-  switch (severity) {
-    case 'critical': return 'error';
-    case 'high': return 'warning';
-    case 'medium': return 'info';
-    default: return 'outline';
-  }
-}
 
 function formatINR(amount: number): string {
   if (!amount) return '—';
@@ -80,7 +52,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  const [{ tickets, total }, employees, projects, totalServiceAmount] = await Promise.all([
+  const [{ tickets, total }, employees, projects, kpis] = await Promise.all([
     getAllTickets({
       status: params.status || undefined,
       severity: params.severity || undefined,
@@ -93,7 +65,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
     }),
     getActiveEmployees(),
     getActiveProjects(),
-    getServiceTicketAmountTotal(),
+    getServiceTicketKpis(),
   ]);
 
   const totalPages = Math.ceil(total / perPage);
@@ -118,16 +90,11 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
       header={
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <FilterBar basePath="/om/tickets" filterParams={['search', 'status', 'severity', 'issue_type', 'project', 'assigned_to']}>
+            <FilterBar basePath="/om/tickets" filterParams={['search', 'status', 'issue_type', 'project', 'assigned_to']}>
+              <TicketProjectFilter projects={projects} />
               <FilterSelect paramName="status" className="w-36 text-xs h-8">
                 <option value="">All Status</option>
                 {STATUS_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </FilterSelect>
-              <FilterSelect paramName="severity" className="w-28 text-xs h-8">
-                <option value="">All Severity</option>
-                {SEVERITY_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </FilterSelect>
@@ -145,7 +112,7 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
               </FilterSelect>
               <SearchInput
                 placeholder="Search customer, project, or ticket…"
-                className="w-64 h-8 text-xs"
+                className="w-56 h-8 text-xs"
               />
             </FilterBar>
           </div>
@@ -153,17 +120,33 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
         </div>
       }
     >
-      {/* Title + total service amount — scroll away */}
-      <div className="flex items-center justify-between gap-4">
+      {/* Title + KPI cards — scroll away */}
+      <div className="space-y-3">
         <h1 className="text-lg font-heading font-bold text-n-900">
           Service Tickets{' '}
           <span className="text-sm font-normal text-n-500">
             ({total} total)
           </span>
         </h1>
-        <div className="rounded-md border border-n-200 bg-n-50 px-3 py-1.5 text-right">
-          <div className="text-[10px] uppercase tracking-wider text-n-500">Total Service Amount</div>
-          <div className="text-sm font-bold text-n-900 tabular-nums">{formatINR(totalServiceAmount)}</div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Card>
+            <CardContent className="py-3">
+              <div className="text-xs text-n-500 uppercase tracking-wider">Open Services</div>
+              <div className="text-2xl font-heading font-bold text-n-900 mt-1">{kpis.openCount}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="py-3">
+              <div className="text-xs text-n-500 uppercase tracking-wider">Closed Services</div>
+              <div className="text-2xl font-heading font-bold text-n-900 mt-1">{kpis.closedCount}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="py-3">
+              <div className="text-xs text-n-500 uppercase tracking-wider">Total Service Amount</div>
+              <div className="text-2xl font-heading font-bold text-n-900 mt-1 tabular-nums">{formatINR(kpis.totalAmount)}</div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -187,13 +170,11 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Title</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Issue Type</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Severity</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Status</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Assigned To</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Service Amt</th>
+                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Status</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Created</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">SLA Due</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Resolved By</th>
+                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Done By</th>
+                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Amount (₹)</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-16">Actions</th>
                   </tr>
                 </thead>
@@ -224,21 +205,25 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                           )}
                         </td>
 
-                        {/* Title */}
-                        <td className="px-2 py-1.5 font-medium text-n-900">
-                          <span title={ticket.title}>{ticket.title}</span>
+                        {/* Title — links to detail page */}
+                        <td className="px-2 py-1.5 font-medium">
+                          <Link
+                            href={`/om/tickets/${ticket.id}`}
+                            className="text-shiroi-gold-dark hover:underline"
+                            title={ticket.title}
+                          >
+                            {ticket.title}
+                          </Link>
                         </td>
 
                         {/* Issue Type */}
-                        <td className="px-2 py-1.5 text-n-600 capitalize">
-                          {ticket.issue_type?.replace(/_/g, ' ') ?? <span className="text-n-300">—</span>}
+                        <td className="px-2 py-1.5 text-n-600">
+                          {ticket.issue_type ? issueTypeLabel(ticket.issue_type) : <span className="text-n-300">—</span>}
                         </td>
 
-                        {/* Severity */}
-                        <td className="px-2 py-1.5 whitespace-nowrap">
-                          <Badge variant={severityVariant(ticket.severity)} className="text-[10px] px-1.5 py-0 capitalize">
-                            {ticket.severity}
-                          </Badge>
+                        {/* Assigned To */}
+                        <td className="px-2 py-1.5 text-n-700">
+                          {assigneeName ?? <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Status — inline toggle */}
@@ -250,35 +235,19 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                           />
                         </td>
 
-                        {/* Assigned To */}
-                        <td className="px-2 py-1.5 text-n-700">
-                          {assigneeName ?? <span className="text-n-300">—</span>}
-                        </td>
-
-                        {/* Service Amount */}
-                        <td className="px-2 py-1.5 text-n-700 font-medium whitespace-nowrap tabular-nums">
-                          {ticket.service_amount > 0 ? formatINR(ticket.service_amount) : <span className="text-n-300">—</span>}
-                        </td>
-
                         {/* Created */}
                         <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                           {formatDate(ticket.created_at)}
                         </td>
 
-                        {/* SLA Due */}
-                        <td className="px-2 py-1.5 whitespace-nowrap">
-                          {ticket.sla_deadline ? (
-                            <span className={ticket.sla_breached ? 'text-red-600 font-medium' : 'text-n-600'}>
-                              {formatDate(ticket.sla_deadline)}
-                            </span>
-                          ) : (
-                            <span className="text-n-300">—</span>
-                          )}
-                        </td>
-
-                        {/* Resolved By */}
+                        {/* Done By */}
                         <td className="px-2 py-1.5 text-n-600">
                           {resolvedByName ?? <span className="text-n-300">—</span>}
+                        </td>
+
+                        {/* Amount */}
+                        <td className="px-2 py-1.5 text-n-700 font-medium whitespace-nowrap tabular-nums">
+                          {ticket.service_amount > 0 ? formatINR(ticket.service_amount) : <span className="text-n-300">—</span>}
                         </td>
 
                         {/* Actions */}

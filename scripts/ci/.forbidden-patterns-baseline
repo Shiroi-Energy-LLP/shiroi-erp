@@ -43,6 +43,9 @@ R15|apps/erp/src/components/leads/lead-files-list.tsx:4:import { createClient } 
 R15|apps/erp/src/components/leads/lead-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/status-change.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/om/amc-visit-tracker.tsx:7:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/om/attachment-link.tsx:4:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/om/ticket-attachments.tsx:5:import { createClient } from '@repo/supabase/client';
+R15|apps/erp/src/components/om/ticket-timeline.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/projects/completion/milestone-photos-panel.tsx:15:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/projects/detail/documents-tab.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/components/projects/forms/liaison-form.tsx:7:import { createClient } from '@repo/supabase/client';

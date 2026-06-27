@@ -8509,6 +8509,8 @@ export type Database = {
       om_service_tickets: {
         Row: {
           assigned_to: string | null
+          attachment_names: string[]
+          attachment_paths: string[]
           auto_created_ir_test: boolean
           closed_at: string | null
           closes_automation_pause: boolean
@@ -8545,6 +8547,8 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          attachment_names?: string[]
+          attachment_paths?: string[]
           auto_created_ir_test?: boolean
           closed_at?: string | null
           closes_automation_pause?: boolean
@@ -8581,6 +8585,8 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          attachment_names?: string[]
+          attachment_paths?: string[]
           auto_created_ir_test?: boolean
           closed_at?: string | null
           closes_automation_pause?: boolean
@@ -8673,6 +8679,54 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      om_ticket_events: {
+        Row: {
+          attachment_name: string | null
+          attachment_path: string | null
+          body: string
+          created_at: string
+          created_by: string | null
+          entry_type: string
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          body: string
+          created_at?: string
+          created_by?: string | null
+          entry_type: string
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          entry_type?: string
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "om_ticket_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "om_ticket_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "om_service_tickets"
+            referencedColumns: ["id"]
+          }
+          ]
       }
       om_visit_checklist_items: {
         Row: {
@@ -19713,6 +19767,14 @@ export type Database = {
         }[]
       }
       get_service_ticket_amount_total: { Args: never; Returns: number }
+      get_service_ticket_kpis: {
+        Args: never
+        Returns: {
+          closed_count: number
+          open_count: number
+          total_amount: number
+        }[]
+      }
       get_team_attendance_for_month: {
         Args: { p_month: number; p_year: number }
         Returns: {

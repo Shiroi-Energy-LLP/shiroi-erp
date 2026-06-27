@@ -17,12 +17,14 @@ export function DeleteTicketButton({ ticketId, ticketTitle }: DeleteTicketButton
 
   async function handleDelete() {
     const label = ticketTitle ? `"${ticketTitle}"` : 'this ticket';
-    if (!confirm(`Close ${label}? This will mark it as closed.`)) return;
+    if (!confirm(`Delete ${label}? This permanently removes the ticket, its timeline, and attachments. This cannot be undone.`)) return;
     setDeleting(true);
     const result = await deleteServiceTicket(ticketId);
     setDeleting(false);
     if (result.success) {
       router.refresh();
+    } else {
+      alert(result.error ?? 'Failed to delete ticket');
     }
   }
 
@@ -33,7 +35,7 @@ export function DeleteTicketButton({ ticketId, ticketTitle }: DeleteTicketButton
       className="h-6 w-6 p-0 text-n-400 hover:text-red-600"
       onClick={handleDelete}
       disabled={deleting}
-      title="Close ticket"
+      title="Delete ticket"
     >
       <Trash2 className="h-3 w-3" />
     </Button>
