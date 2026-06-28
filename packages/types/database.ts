@@ -4567,6 +4567,54 @@ export type Database = {
         }
         Relationships: []
       }
+      inverter_readings_2026_07: {
+        Row: {
+          ac_current_a: number | null
+          ac_frequency_hz: number | null
+          ac_power_kw: number | null
+          ac_voltage_v: number | null
+          dc_power_kw: number | null
+          energy_today_kwh: number | null
+          energy_total_kwh: number | null
+          error_code: string | null
+          inverter_id: string
+          raw_payload: Json | null
+          recorded_at: string
+          status: string | null
+          temperature_c: number | null
+        }
+        Insert: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id: string
+          raw_payload?: Json | null
+          recorded_at: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Update: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id?: string
+          raw_payload?: Json | null
+          recorded_at?: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Relationships: []
+      }
       inverter_readings_daily: {
         Row: {
           day: string
@@ -4731,6 +4779,33 @@ export type Database = {
         Relationships: []
       }
       inverter_string_readings_2026_06: {
+        Row: {
+          current_a: number | null
+          inverter_id: string
+          power_kw: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v: number | null
+        }
+        Insert: {
+          current_a?: number | null
+          inverter_id: string
+          power_kw?: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v?: number | null
+        }
+        Update: {
+          current_a?: number | null
+          inverter_id?: string
+          power_kw?: number | null
+          recorded_at?: string
+          string_number?: number
+          voltage_v?: number | null
+        }
+        Relationships: []
+      }
+      inverter_string_readings_2026_07: {
         Row: {
           current_a: number | null
           inverter_id: string
@@ -6316,6 +6391,7 @@ export type Database = {
           channel_partner_id: string | null
           city: string
           close_probability: number | null
+          closed_date: string | null
           company_id: string | null
           consultant_commission_amount: number | null
           consultant_commission_locked_at: string | null
@@ -6374,6 +6450,7 @@ export type Database = {
           channel_partner_id?: string | null
           city?: string
           close_probability?: number | null
+          closed_date?: string | null
           company_id?: string | null
           consultant_commission_amount?: number | null
           consultant_commission_locked_at?: string | null
@@ -6432,6 +6509,7 @@ export type Database = {
           channel_partner_id?: string | null
           city?: string
           close_probability?: number | null
+          closed_date?: string | null
           company_id?: string | null
           consultant_commission_amount?: number | null
           consultant_commission_locked_at?: string | null
@@ -20155,6 +20233,7 @@ export type Database = {
           assigned_to_name: string
           city: string
           close_probability: number
+          closed_date: string
           company_id: string
           company_name: string
           created_at: string

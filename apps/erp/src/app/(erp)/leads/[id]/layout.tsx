@@ -100,6 +100,11 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
                 Expected close: {formatDate(lead.expected_close_date)}
               </span>
             )}
+            {lead.closed_date && (
+              <span className="text-sm text-n-500">
+                Closed: {formatDate(lead.closed_date)}
+              </span>
+            )}
             {lead.close_probability != null && lead.close_probability > 0 && (
               <span className="text-sm font-medium text-n-600">
                 {lead.close_probability}% probability
