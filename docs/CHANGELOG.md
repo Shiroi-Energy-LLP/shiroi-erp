@@ -8,6 +8,10 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ---
 
+## July 2026
+
+- **[2026-07-01]** chore(docs): repo token-optimization pass — slimmed always-loaded `CLAUDE.md` (env catalog → master-ref §3), added `docs/INDEX.md` one-line router over the 140 specs/plans/reviews (`pnpm docs:index`), moved 37 MB Zoho `.xls` → gitignored `data/` (docs tree 45→7.6 MB). → spec `2026-07-01-token-optimization-restructure-design.md` · module: cross-cutting
+
 ## June 2026
 
 - **[2026-06-27]** feat(om/tickets): service-ticket detail page + combined timeline + KPIs. Clicking a ticket **Title** opens `/om/tickets/[id]` — all-fields edit panel (incl. project reassignment + status), ticket-level supporting documents (multi-upload), and a combined **day-by-day timeline** (`om_ticket_events`, `entry_type ∈ note|system`): manual progress notes (optional one file each) interleaved with auto system events (created / status change / edits / docs). List trimmed to 9 cols (Project, Title→detail link, Issue Type, Assigned To, Status, Created, Done By=resolved_by, Amount, Actions) — dropped Severity + SLA Due columns (still editable); 3 KPI cards (Open / Closed / Total Service Amount via new `get_service_ticket_kpis()` RPC); dedicated project-autosearch filter (`TicketProjectFilter`). **Delete is now a hard DELETE** (events cascade + best-effort Storage cleanup) behind a confirm — new `tickets_delete` RLS policy. Attachments → `project-files` bucket (client upload + signed-URL view; +3 baseline R15 entries, established Storage pattern). → mig 199 (dev) · spec `2026-06-27-service-ticket-detail-and-timeline-design.md` · module: om

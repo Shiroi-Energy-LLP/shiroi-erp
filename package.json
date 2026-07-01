@@ -8,6 +8,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
+    "docs:index": "node scripts/build-docs-index.mjs",
     "rag:ingest-docs": "tsx scripts/rag/ingest-docs.ts",
     "rag:ingest-proposals": "tsx scripts/rag/ingest-proposals.ts",
     "rag:ingest-service-tickets": "tsx scripts/rag/ingest-service-tickets.ts",

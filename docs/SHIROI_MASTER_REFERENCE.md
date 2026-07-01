@@ -139,7 +139,45 @@ The old `npx supabase gen types --project-id` route 403'd on the stale `supabase
 
 ### Env var name list
 
-CLAUDE.md lists the names. Key operational notes:
+CLAUDE.md lists the names grouped + a pointer here. **This section is the authoritative annotated catalog** (moved out of CLAUDE.md 2026-07-01 so the always-loaded startup brief stays lean — the annotations are needed only when actually wiring an integration). Values live in `.env.local` (never committed).
+
+```
+NEXT_PUBLIC_SUPABASE_URL              (dev: actqtzoxjilqnldnacqz.supabase.co)
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  (sb_publishable_...)
+SUPABASE_SECRET_KEY                   (sb_secret_...)
+PROD_SUPABASE_URL                     (prod: kfkydkwycgijvexqiysc.supabase.co)
+PROD_SUPABASE_PUBLISHABLE_KEY
+PROD_SUPABASE_SECRET_KEY
+SUPABASE_ACCESS_TOKEN                 (full-scope PAT "shiroi-erp-mgmt" → Supabase Management API at api.supabase.com. Works where the old "supabase login" CLI token 403'd. Use to set Edge secrets, deploy functions, and regen types programmatically — NO Dashboard needed. See CLAUDE.md "Regenerating database.ts" + scripts/set-fimer-edge-secrets.ts)
+ANTHROPIC_API_KEY
+PVWATTS_API_KEY
+PVLIB_MICROSERVICE_URL
+N8N_WEBHOOK_SECRET                    (shared secret for every n8n webhook; matched via Header Auth credential as `x-webhook-secret`)
+N8N_EVENT_BUS_URL                     (single-ingress router webhook: ERP fires all events here → n8n Switch-routes to downstream workflows; if unset, emitErpEvent is a silent no-op)
+N8N_BUG_REPORT_WEBHOOK_URL            (legacy standalone webhook for /settings bug reports — predates event bus; still live)
+N8N_API_KEY                           (n8n REST API key for programmatic workflow push from scripts/push-n8n-workflows.ts)
+NEXT_PUBLIC_SENTRY_DSN + SENTRY_DSN + SENTRY_ORG + SENTRY_PROJECT
+AI_PROVIDER                           (anthropic [default] | openrouter — switches all AI calls)
+AI_MODEL                              (model ID override; default: claude-sonnet-4-20250514 for anthropic, anthropic/claude-sonnet-4-5 for openrouter)
+AI_MAX_TOKENS                         (optional; default 1024)
+OPENROUTER_API_KEY                    (required when AI_PROVIDER=openrouter — get from openrouter.ai)
+SHIROI_GSTIN                          (Shiroi Energy LLP GSTIN — required for e-invoice generation)
+SHIROI_ADDRESS_LINE1                  (registered address line 1 for e-invoice seller details)
+SHIROI_CITY                           (default: Chennai)
+SHIROI_STATE_CODE                     (default: 33 — Tamil Nadu)
+SHIROI_PINCODE                        (default: 600002)
+SHIROI_ACCOUNTS_EMAIL                 (accounts email for e-invoice seller details)
+NEXT_PUBLIC_ERP_URL                   (base URL for share links; default: https://erp.shiroienergy.com)
+FIMER_CRED_SHIROIENERGY               (JSON blob for Aurora Vision: {api_key, username, password} — Manivel master account, ~12 plants)
+FIMER_CRED_CHEMFABALKALIS             (same JSON shape, Chemfab Alkalis sub-account, 1 plant)
+FIMER_CRED_HARSHA                     (same JSON shape, Harsha residential 2 kW — EID lookup pending)
+FIMER_CRED_BOSSSHYAM                  (same JSON shape, Baskar residential 2.5 kW — EID lookup pending)
+FIMER_CRED_SIDDHARTH                  (same JSON shape, Siddarth residential 1 kW — EID lookup pending)
+FIMER_CRED_EDISONSCHOOL               (same JSON shape, Edison School 48 kW)
+FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW — EID lookup pending)
+```
+
+Key operational notes:
 
 - **Supabase key format (locked March 2026):** `sb_publishable_…` replaces legacy `anon`; `sb_secret_…` replaces legacy `service_role`. Never use the legacy names in new code.
 - **Edge Function limitation:** Edge Functions currently still take JWTs via legacy keys. Workaround is documented where Edge Functions are used.

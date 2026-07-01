@@ -4,7 +4,7 @@
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
 > **"Last updated" is ONE line — replace it each session, never stack updates.** (This file reached 110 KB / a single 59 KB "Last updated" essay before the 2026-06-19 reset; detail belongs in the changelog + review docs, not here.)
 
-> **Last updated: 2026-06-21** — BOM + voucher import pipeline shipped to dev (mig 198; `/bom-review/import` upload→parse→match→review→confirm; 48 se-master-file sheets staged in `pending_bom_imports` for Manivel to review/confirm). Spec `2026-06-21-bom-voucher-import-design.md`.
+> **Last updated: 2026-07-01** — Repo token-optimization pass (docs-layer only): `CLAUDE.md` slimmed (env catalog → master-ref §3), `docs/INDEX.md` one-line-per-doc router added (`pnpm docs:index`), 37 MB Zoho `.xls` moved out of `docs/` → gitignored `data/`. Spec `2026-07-01-token-optimization-restructure-design.md`. (Prior: BOM + voucher import shipped to dev, mig 198.)
 
 ---
 
