@@ -20225,6 +20225,16 @@ export type Database = {
           }
           ]
       }
+      v_digest_leads_closing_this_week: {
+        Row: {
+          customer_name: string | null
+          estimated_size_kwp: number | null
+          expected_close_date: string | null
+          lead_id: string | null
+          owner_name: string | null
+        }
+        Relationships: []
+      }
       v_digest_leads_new_24h: {
         Row: {
           assigned_employee_id: string | null
@@ -20265,6 +20275,16 @@ export type Database = {
           phone: string | null
           status: Database["public"]["Enums"]["lead_status"] | null
           status_updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_digest_leads_won_last_week: {
+        Row: {
+          closed_date: string | null
+          customer_name: string | null
+          estimated_size_kwp: number | null
+          lead_id: string | null
+          owner_name: string | null
         }
         Relationships: []
       }

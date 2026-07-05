@@ -1,7 +1,87 @@
 import { describe, it, expect } from 'vitest';
-import { formatActionBlock } from './briefing-action-block';
+import {
+  formatActionBlock,
+  formatFounderActionBlock,
+  formatSalesActionBlock,
+} from './briefing-action-block';
 
-describe('formatActionBlock', () => {
+describe('formatFounderActionBlock', () => {
+  it('renders closed-last-week, work-done, closing-this-week and won-MTD', () => {
+    const out = formatFounderActionBlock({
+      wonLastWeek: [{ customer_name: 'Acme', owner_name: 'Prem' }],
+      tasksDone24h: [{ title: 'Send revised BOQ to Zeta' }],
+      closingThisWeek: [{ customer_name: 'Beta', owner_name: 'Prem', expected_close_date: '2026-07-08' }],
+      wonCount: 4,
+      wonValue: 12000000,
+    });
+    expect(out).toContain('Closed last week (1)');
+    expect(out).toContain('Acme (Prem)');
+    expect(out).toContain('Work done 24h (1)');
+    expect(out).toContain('Send revised BOQ to Zeta');
+    expect(out).toContain('Closing this week (1)');
+    expect(out).toContain('Beta (08 Jul)');
+    expect(out).toContain('Won this month: ₹1.2Cr');
+    expect(out).not.toContain('follow-up');
+    expect(out).not.toContain('\t');
+  });
+
+  it('renders graceful empties', () => {
+    const out = formatFounderActionBlock({
+      wonLastWeek: [], tasksDone24h: [], closingThisWeek: [], wonCount: 0, wonValue: 0,
+    });
+    expect(out).toContain('Closed last week (0)');
+    expect(out).toContain('Work done 24h (0)');
+    expect(out).toContain('Closing this week (0)');
+    expect(out).toContain('(none forecast)');
+  });
+
+  it('caps lists at 5 with a +N more tail', () => {
+    const wonLastWeek = Array.from({ length: 9 }, (_, i) => ({
+      customer_name: `C${i}`, owner_name: 'Prem',
+    }));
+    const out = formatFounderActionBlock({
+      wonLastWeek, tasksDone24h: [], closingThisWeek: [], wonCount: 0, wonValue: 0,
+    });
+    expect(out).toContain('Closed last week (9)');
+    expect(out).toContain('…+4 more');
+    expect(out).not.toContain('C5');
+  });
+});
+
+describe('formatSalesActionBlock', () => {
+  it('flags follow-up-overdue leads and lists closing-this-week reminders', () => {
+    const out = formatSalesActionBlock({
+      followupOverdue: [
+        { customer_name: 'Acme', owner_name: 'Prem', followup_overdue_days: 3, close_overdue_days: 0 },
+      ],
+      closingThisWeek: [
+        { customer_name: 'Beta', owner_name: 'Prem', expected_close_date: '2026-07-10' },
+      ],
+    });
+    expect(out).toContain('⚠ Follow-up overdue (1)');
+    expect(out).toContain('Acme — 3d overdue');
+    expect(out).toContain('Closing this week (1)');
+    expect(out).toContain('Beta (10 Jul)');
+  });
+
+  it('renders graceful empties', () => {
+    const out = formatSalesActionBlock({ followupOverdue: [], closingThisWeek: [] });
+    expect(out).toContain('(all follow-ups on time)');
+    expect(out).toContain('(none forecast)');
+  });
+
+  it('caps lists at 8 with a +N more tail', () => {
+    const followupOverdue = Array.from({ length: 11 }, (_, i) => ({
+      customer_name: `C${i}`, owner_name: 'Prem', followup_overdue_days: 1, close_overdue_days: 0,
+    }));
+    const out = formatSalesActionBlock({ followupOverdue, closingThisWeek: [] });
+    expect(out).toContain('Follow-up overdue (11)');
+    expect(out).toContain('…+3 more');
+    expect(out).not.toContain('C9');
+  });
+});
+
+describe('formatActionBlock (legacy — project_manager digest)', () => {
   it('renders overdue, today, and won-MTD sections compactly', () => {
     const out = formatActionBlock({
       overdue: [
