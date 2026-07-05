@@ -324,13 +324,13 @@ export async function getStepExecutionData(projectId: string) {
       .eq('project_id', projectId),
     supabase
       .from('tasks')
-      .select('id, title, milestone_id, assigned_to, assigned_date, priority, due_date, is_completed, completed_at, completed_by, remarks, category, employees!project_tasks_assigned_to_fkey(full_name), completedByEmployee:employees!project_tasks_completed_by_fkey(full_name)')
+      .select('id, title, milestone_id, assigned_to, assigned_date, priority, due_date, is_completed, completed_at, completed_by, remarks, category, employees:employee_directory!project_tasks_assigned_to_fkey(full_name), completedByEmployee:employee_directory!project_tasks_completed_by_fkey(full_name)')
       .eq('project_id', projectId)
       .is('deleted_at', null)
       .order('due_date', { ascending: true, nullsFirst: false }),
     supabase
       .from('tasks')
-      .select('id, title, milestone_id, assigned_to, assigned_date, priority, due_date, is_completed, completed_at, completed_by, remarks, category, employees!project_tasks_assigned_to_fkey(full_name), completedByEmployee:employees!project_tasks_completed_by_fkey(full_name)')
+      .select('id, title, milestone_id, assigned_to, assigned_date, priority, due_date, is_completed, completed_at, completed_by, remarks, category, employees:employee_directory!project_tasks_assigned_to_fkey(full_name), completedByEmployee:employee_directory!project_tasks_completed_by_fkey(full_name)')
       .eq('entity_type', 'project')
       .eq('entity_id', projectId)
       .is('project_id', null)

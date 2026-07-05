@@ -8,6 +8,10 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ---
 
+## July 2026
+
+- **[2026-07-05]** fix(tasks): non-founder/HR roles couldn't assign tasks to anyone outside self + direct reports — `employees_read` RLS emptied every assignee dropdown and blanked assignee names in task lists (Manivel/Prem couldn't cross-assign). New names-only `employee_directory` view (id, full_name, is_active; bypasses employees RLS by design); `getActiveEmployeesForSelect` + all `tasks` employee embeds now read the view. → mig 201 (dev)
+
 ## June 2026
 
 - **[2026-06-28]** feat(sales): separate a lead's actual close date from its forecast. New `leads.closed_date` (indexed) holds the real Won date; on Won the status trigger now stamps `closed_date` + **clears** `expected_close_date` (reversing mig 179's stamp) **and** `next_followup_date`, and soft-closes the open `lead_followup` task. `expected_close_date` is now forecast-only so the "what's closing when" filter no longer shows already-Won deals. Task→lead follow-up mirror skips Won leads (no resurrection). Backfilled 385 Won leads (281 got a closed_date from the old stamp/history; expected+followup cleared). `closed_date` added to `search_leads_by_query` + as a toggle column ("Closed Date") + lead detail/header. → mig 200 (dev) · module: sales

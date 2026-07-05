@@ -21,9 +21,13 @@ export interface TaskFilters {
  * constraints kept the OLD names, so every PostgREST embed MUST use the
  * `project_tasks_*_fkey` hint. A wrong/absent hint returns a SILENT empty
  * join (PGRST200) — the root cause of the historical "tasks don't show" bugs.
+ *
+ * Employee names embed via employee_directory (mig 201) instead of employees:
+ * employees_read RLS hides most rows from non-founder/HR viewers, which
+ * blanked assignee names. The view is names-only and readable by everyone.
  */
 const TASK_SELECT =
-  '*, assignee:employees!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name), completed_by_employee:employees!project_tasks_completed_by_fkey(full_name), milestone:project_milestones!project_tasks_milestone_id_fkey(milestone_name)';
+  '*, assignee:employee_directory!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name), completed_by_employee:employee_directory!project_tasks_completed_by_fkey(full_name), milestone:project_milestones!project_tasks_milestone_id_fkey(milestone_name)';
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
