@@ -60,6 +60,7 @@ ZOHO_BOOKS_ORG_ID
 ZOHO_DC                                (default 'in' → accounts.zoho.in + www.zohoapis.in)
 ZOHO_DEFAULT_EXPENSE_ACCOUNT_ID        (fallback Zoho expense account for voucher push)
 ZOHO_PAID_THROUGH_ACCOUNT_ID           (Zoho paid-through account for voucher push)
+ZOHO_PULL_SINCE                        (optional 'YYYY-MM-DD'; cold-scan guard — see §4 payments note)
 ```
 
 Access token fetched once per invocation (`POST accounts.zoho.in/oauth/v2/token`, grant_type=refresh_token) and held in memory; never persisted. *Deviation from the 2026-04 spec (§12 "tokens live only in n8n"):* the intent there was "never in the ERP DB / source code", which still holds — Edge secrets are the established equivalent store, and moving Zoho calls out of n8n JSON into typed Deno code makes the mapping logic reviewable and testable.
@@ -98,6 +99,12 @@ Targets and keys (mirrors the XLS import's column semantics — `scripts/zoho-im
 
 Every run writes one row per entity to `zoho_sync_runs` and updates `zoho_sync_state`.
 
+**As-built notes (v1 scope):**
+- **Line items are not pulled.** Zoho list endpoints carry no lines; per-record detail calls would blow the rate budget. `zoho_invoice_line_items` / `vendor_bill_items` are not populated by the live sync (the XLS backfill's rows remain). Invoice/bill list rows carry no tax split either → inserts land `total_amount` exact, GST columns 0.
+- **Credit notes are the one detail-call exception** (invoice linkage exists only in the detail response; trivially few records). Insert-only, like the backfill.
+- **Payments grain caveat:** the XLS backfill keyed customer/vendor payments per *allocation*; the API lists per *parent payment*, so the zoho-id conflict key alone cannot dedupe a cold scan against backfilled history. Guards: customer payments also skip parent payment numbers already present in backfill receipts, and `ZOHO_PULL_SINCE` skips cold-scan rows older than the given date for customerpayments / vendorpayments / expenses. **Set `ZOHO_PULL_SINCE` to the XLS export date (2026-04-17) before first activation** — vendor payments have no other cold-scan guard.
+- Contacts are link-only (never inserted/edited by the pull); vendors link by GSTIN/fuzzy match, else are created.
+
 ## 5. Outbound push (ERP → Zoho) — vouchers ONLY
 
 - **The only write surface is the voucher push.** The 8 non-expense enqueue triggers (invoices, customer_payments, contacts, vendors, projects, purchase_orders, vendor_bills, vendor_payments) are **dropped** in mig 199 — with Zoho as inbound source of truth, echoing ERP copies back would create duplicates. Existing pending non-expense queue rows are marked `skipped`. The expense trigger (`expenses_sync_enqueue`) stays as-is.
@@ -134,7 +141,7 @@ Types regenerated in the same commit (NEVER-DO #20) via Management API + `script
 
 1. Create a Zoho **self client** at `api-console.zoho.in` → client id + secret; generate a grant code for scope `ZohoBooks.fullaccess.all` (or granular read scopes + `ZohoBooks.expenses.CREATE/UPDATE`); exchange for a **refresh token**.
 2. Pick the Zoho expense account + paid-through account ids for voucher push.
-3. Run `npx tsx scripts/set-zoho-edge-secrets.ts` (reads `.env.local`, sets the §3 secrets via the Management API PAT) and deploy the function.
+3. Run `npx tsx scripts/set-zoho-edge-secrets.ts` (reads `.env.local`, sets the §3 secrets via the Management API PAT — dry-run by default, `--apply` to write) and deploy the function. **Include `ZOHO_PULL_SINCE=2026-04-17`** (XLS backfill export date) to prevent cold-scan duplicates on payments/expenses.
 4. Import workflow 63 into n8n and activate.
 5. First cold pull runs over a few cycles; then check `/settings/zoho-sync`.
 

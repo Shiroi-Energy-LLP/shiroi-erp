@@ -10,6 +10,7 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ## July 2026
 
+- **[2026-07-16]** feat(finance): Zoho Books **live API sync** — inbound pull of all 12 finance modules (15-min n8n cron → `zoho-sync` Edge Function, watermark-incremental, upsert on `zoho_*_id`) + outbound write restricted to **approved expense vouchers only** (8 non-voucher enqueue triggers dropped; 644 stale queue rows skipped); `/settings/zoho-sync` admin UI. Go-live needs Zoho self-client creds (spec §9). → mig 203 (dev) · spec `2026-07-16-zoho-live-api-sync-design.md` · module: finance
 - **[2026-07-05]** feat(sales): morning digests reshaped per Vivek's spec — founder 7AM block now = leads closed last week (names, via `closed_date`) + work done (24h completed tasks) + leads closing this week (names); follow-up sections dropped. Prem's 8AM block = follow-up-overdue leads flagged + closing-this-week reminder. PM block unchanged. New views `v_digest_leads_won_last_week` + `v_digest_leads_closing_this_week`; `buildActionBlock(role)`. → mig 202 (dev)
 - **[2026-07-05]** fix(tasks): non-founder/HR roles couldn't assign tasks to anyone outside self + direct reports — `employees_read` RLS emptied every assignee dropdown and blanked assignee names in task lists (Manivel/Prem couldn't cross-assign). New names-only `employee_directory` view (id, full_name, is_active; bypasses employees RLS by design); `getActiveEmployeesForSelect` + all `tasks` employee embeds now read the view. → mig 201 (dev)
 
