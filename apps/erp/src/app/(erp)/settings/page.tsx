@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getUserProfile } from '@/lib/auth';
 import { listMyBugReports, listAllUsers } from '@/lib/settings-queries';
@@ -16,6 +17,7 @@ export default async function SettingsPage() {
   if (!profile) redirect('/login');
 
   const isFounder = profile.role === 'founder';
+  const canSeeZohoSync = profile.role === 'founder' || profile.role === 'finance';
 
   const [myReports, users, systemSettings] = await Promise.all([
     listMyBugReports(),
@@ -62,6 +64,24 @@ export default async function SettingsPage() {
           </TabsContent>
         )}
       </Tabs>
+
+      {/* Integrations — sub-pages with their own server-side role gates */}
+      {canSeeZohoSync && (
+        <div className="mt-6 flex items-center justify-between rounded-md border border-n-200 bg-white p-4">
+          <div>
+            <h2 className="text-sm font-semibold text-n-900">Zoho Books Sync</h2>
+            <p className="text-xs text-n-500">
+              Live sync status per entity, voucher push health, and manual sync trigger.
+            </p>
+          </div>
+          <Link
+            href="/settings/zoho-sync"
+            className="text-sm font-medium text-shiroi-gold-dark underline-offset-4 hover:underline"
+          >
+            Open →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
