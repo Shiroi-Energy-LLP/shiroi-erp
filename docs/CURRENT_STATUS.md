@@ -4,7 +4,7 @@
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
 > **"Last updated" is ONE line — replace it each session, never stack updates.** (This file reached 110 KB / a single 59 KB "Last updated" essay before the 2026-06-19 reset; detail belongs in the changelog + review docs, not here.)
 
-> **Last updated: 2026-06-21** — BOM + voucher import pipeline shipped to dev (mig 198; `/bom-review/import` upload→parse→match→review→confirm; 48 se-master-file sheets staged in `pending_bom_imports` for Manivel to review/confirm). Spec `2026-06-21-bom-voucher-import-design.md`.
+> **Last updated: 2026-07-17** — founder 7AM digest v3 (mig 203, dev): work-done lines carry lead/project names, new Won-yesterday + Due-before-today sections. n8n workflow 19 JSON updated in-repo — needs a push to the droplet (`scripts/push-n8n-workflows.ts`) to update the live fallback path.
 
 ---
 
@@ -50,7 +50,7 @@
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **198** (2026-06-21 — BOM + voucher import) | None |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **203** (2026-07-17 — morning-digest v3 views) | None |
 | **Prod** (`kfkydkwycgijvexqiysc`) | ~012 (last coordinated window) | **013–190** waiting on the next prod window. The live ERP at `erp.shiroienergy.com` points at **dev** Supabase, so this gap doesn't block users today. |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee-testing week (the Zoho-import tables are dev-only and won't all move).

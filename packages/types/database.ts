@@ -19623,6 +19623,7 @@ export type Database = {
           account_id: string
           account_name: string
           account_type: string
+          erp_expense_category: string | null
           imported_at: string
           is_active: boolean
           parent_account: string | null
@@ -19632,6 +19633,7 @@ export type Database = {
           account_id: string
           account_name: string
           account_type: string
+          erp_expense_category?: string | null
           imported_at?: string
           is_active?: boolean
           parent_account?: string | null
@@ -19641,6 +19643,7 @@ export type Database = {
           account_id?: string
           account_name?: string
           account_type?: string
+          erp_expense_category?: string | null
           imported_at?: string
           is_active?: boolean
           parent_account?: string | null
@@ -19972,6 +19975,75 @@ export type Database = {
         }
         Relationships: []
       }
+      zoho_sync_runs: {
+        Row: {
+          entity: string | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          mode: string
+          rows_fetched: number
+          rows_upserted: number
+          started_at: string
+          status: string | null
+        }
+        Insert: {
+          entity?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          mode: string
+          rows_fetched?: number
+          rows_upserted?: number
+          started_at?: string
+          status?: string | null
+        }
+        Update: {
+          entity?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          rows_fetched?: number
+          rows_upserted?: number
+          started_at?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      zoho_sync_state: {
+        Row: {
+          entity: string
+          last_error: string | null
+          last_run_at: string | null
+          last_run_status: string | null
+          page_cursor: number
+          total_rows_synced: number
+          updated_at: string
+          watermark: string | null
+        }
+        Insert: {
+          entity: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_run_status?: string | null
+          page_cursor?: number
+          total_rows_synced?: number
+          updated_at?: string
+          watermark?: string | null
+        }
+        Update: {
+          entity?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_run_status?: string | null
+          page_cursor?: number
+          total_rows_synced?: number
+          updated_at?: string
+          watermark?: string | null
+        }
+        Relationships: []
+      }
       zoho_tax_codes: {
         Row: {
           imported_at: string
@@ -20288,6 +20360,16 @@ export type Database = {
         }
         Relationships: []
       }
+      v_digest_leads_won_yesterday: {
+        Row: {
+          closed_date: string | null
+          customer_name: string | null
+          estimated_size_kwp: number | null
+          lead_id: string | null
+          owner_name: string | null
+        }
+        Relationships: []
+      }
       v_digest_leave_pending: {
         Row: {
           days_pending: number | null
@@ -20454,6 +20536,19 @@ export type Database = {
         }
         Relationships: []
       }
+      v_digest_tasks_done_24h: {
+        Row: {
+          assignee_name: string | null
+          category: string | null
+          completed_at: string | null
+          customer_name: string | null
+          entity_type: string | null
+          id: string | null
+          project_number: string | null
+          title: string | null
+        }
+        Relationships: []
+      }
       v_digest_vendor_payments_due_7d: {
         Row: {
           amount_outstanding: number | null
@@ -20477,7 +20572,6 @@ export type Database = {
       }
     }
     Functions: {
-      ack_sync_batch: { Args: { p_results: Json }; Returns: undefined }
       approve_bom_import: {
         Args: { p_id: string; p_lines: Json; p_project_id: string }
         Returns: string
@@ -20496,16 +20590,20 @@ export type Database = {
           success: boolean
         }[]
       }
-      claim_next_sync_batch: {
-        Args: { p_batch_size?: number; p_entity_type: string }
+      claim_zoho_voucher_batch: {
+        Args: { p_limit?: number }
         Returns: {
-          attempt_count: number
-          created_at: string
-          entity_id: string
-          entity_type: string
-          id: string
-          operation: string
-          payload: Json
+          action: string
+          amount: number
+          category_code: string
+          description: string
+          expense_date: string
+          expense_id: string
+          queue_id: string
+          retry_count: number
+          voucher_number: string
+          zoho_expense_id: string
+          zoho_project_id: string
         }[]
       }
       compute_lead_margin_band: {

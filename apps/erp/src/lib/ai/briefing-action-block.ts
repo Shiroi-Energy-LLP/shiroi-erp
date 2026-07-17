@@ -28,6 +28,8 @@ export interface ClosingLeadRow {
 }
 export interface TaskDoneRow {
   title: string | null;
+  customer_name: string | null;
+  project_number: string | null;
 }
 
 export interface ActionBlockData {
@@ -37,8 +39,9 @@ export interface ActionBlockData {
   wonValue: number;
 }
 export interface FounderActionBlockData {
-  wonLastWeek: WonLeadRow[];
   tasksDone24h: TaskDoneRow[];
+  wonYesterday: WonLeadRow[];
+  dueBeforeToday: OverdueRow[];
   closingThisWeek: ClosingLeadRow[];
   wonCount: number;
   wonValue: number;
@@ -67,20 +70,37 @@ function pushCapped<T>(lines: string[], rows: T[], cap: number, render: (r: T) =
 }
 
 /**
- * Founder (Vivek) block — Jul-04 spec: leads closed last week (names), work
- * done, leads closing this week (names). No follow-up sections. Lists capped
- * at 5 so the block + AI short stay inside the 900-char WhatsApp body.
+ * Founder (Vivek) block — Jul-17 spec: work done in 24h with the lead/project
+ * name on every line ("what project was followed up yesterday"), leads Won
+ * yesterday, all leads whose follow-up/close date is before today, leads
+ * closing this week. Replaces the Jul-04 "Closed last week" list (Won
+ * yesterday + Won MTD cover it). Lists capped so the block + AI short stay
+ * inside the 900-char WhatsApp body.
  */
 export function formatFounderActionBlock(d: FounderActionBlockData): string {
   const lines: string[] = [];
 
-  lines.push(`✅ Closed last week (${d.wonLastWeek.length})`);
-  if (d.wonLastWeek.length === 0) lines.push('(none)');
-  pushCapped(lines, d.wonLastWeek, 5, (w) => `• ${w.customer_name ?? '—'} (${w.owner_name ?? 'unassigned'})`);
-
   lines.push(`🛠 Work done 24h (${d.tasksDone24h.length})`);
   if (d.tasksDone24h.length === 0) lines.push('(none)');
-  pushCapped(lines, d.tasksDone24h, 5, (t) => `• ${(t.title ?? '—').slice(0, 45)}`);
+  pushCapped(lines, d.tasksDone24h, 5, (t) => {
+    const title = (t.title ?? '—').slice(0, 28);
+    const name = t.customer_name ?? t.project_number;
+    return name ? `• ${title} — ${name.slice(0, 24)}` : `• ${title}`;
+  });
+
+  lines.push(`🏆 Won yesterday (${d.wonYesterday.length})`);
+  if (d.wonYesterday.length === 0) lines.push('(none)');
+  pushCapped(lines, d.wonYesterday, 5, (w) => `• ${w.customer_name ?? '—'} (${w.owner_name ?? 'unassigned'})`);
+
+  lines.push(`⏰ Due before today (${d.dueBeforeToday.length})`);
+  if (d.dueBeforeToday.length === 0) lines.push('(nothing overdue)');
+  pushCapped(lines, d.dueBeforeToday, 8, (o) => {
+    const which =
+      (o.followup_overdue_days ?? 0) > 0
+        ? `f/up ${o.followup_overdue_days}d`
+        : `close ${o.close_overdue_days}d`;
+    return `• ${o.customer_name ?? '—'} (${which})`;
+  });
 
   lines.push(`📈 Closing this week (${d.closingThisWeek.length})`);
   if (d.closingThisWeek.length === 0) lines.push('(none forecast)');
@@ -145,30 +165,31 @@ export async function buildActionBlock(role: RecipientRole): Promise<ActionBlock
   const admin = createAdminClient();
 
   if (role === 'founder') {
-    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const [won, tasksDone, closing, wonMtd] = await Promise.all([
-      admin.from('v_digest_leads_won_last_week').select('customer_name, owner_name').limit(50),
+    const [tasksDone, wonYesterday, overdue, closing, wonMtd] = await Promise.all([
+      // View joins each completed task to its lead/project so every line
+      // carries the customer name (mig 203); 24h window computed in SQL.
+      admin.from('v_digest_tasks_done_24h').select('title, customer_name, project_number').limit(50),
+      admin.from('v_digest_leads_won_yesterday').select('customer_name, owner_name').limit(50),
       admin
-        .from('tasks')
-        .select('title')
-        .eq('is_completed', true)
-        .gte('completed_at', since24h)
-        .is('deleted_at', null)
+        .from('v_digest_leads_overdue')
+        .select('customer_name, owner_name, followup_overdue_days, close_overdue_days')
         .limit(50),
       admin.from('v_digest_leads_closing_this_week').select('customer_name, owner_name, expected_close_date').limit(50),
       admin.rpc('get_won_value_mtd'),
     ]);
 
-    if (won.error) console.error(`${op} won-last-week failed`, { error: won.error, timestamp: new Date().toISOString() });
     if (tasksDone.error) console.error(`${op} tasks-done failed`, { error: tasksDone.error, timestamp: new Date().toISOString() });
+    if (wonYesterday.error) console.error(`${op} won-yesterday failed`, { error: wonYesterday.error, timestamp: new Date().toISOString() });
+    if (overdue.error) console.error(`${op} due-before-today failed`, { error: overdue.error, timestamp: new Date().toISOString() });
     if (closing.error) console.error(`${op} closing-this-week failed`, { error: closing.error, timestamp: new Date().toISOString() });
     if (wonMtd.error) console.error(`${op} wonMtd failed`, { error: wonMtd.error, timestamp: new Date().toISOString() });
 
     const wonRow = (wonMtd.data as Array<{ won_count: number; won_value: number }> | null)?.[0];
     return {
       text: formatFounderActionBlock({
-        wonLastWeek: won.data ?? [],
         tasksDone24h: tasksDone.data ?? [],
+        wonYesterday: wonYesterday.data ?? [],
+        dueBeforeToday: overdue.data ?? [],
         closingThisWeek: closing.data ?? [],
         wonCount: Number(wonRow?.won_count ?? 0),
         wonValue: Number(wonRow?.won_value ?? 0),

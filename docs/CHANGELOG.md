@@ -10,6 +10,7 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ## July 2026
 
+- **[2026-07-17]** feat(sales): founder 7AM digest v3 per Vivek — "Work done 24h" lines now carry the lead/project customer name (new `v_digest_tasks_done_24h`; bare titles like "to follow" were meaningless), plus new "Won yesterday" (`v_digest_leads_won_yesterday`) and "Due before today" (reuses `v_digest_leads_overdue`) sections; "Closed last week" dropped (covered by Won yesterday + Won MTD). n8n wf-19 fallback uses the view too. → mig 203 (dev)
 - **[2026-07-05]** feat(sales): morning digests reshaped per Vivek's spec — founder 7AM block now = leads closed last week (names, via `closed_date`) + work done (24h completed tasks) + leads closing this week (names); follow-up sections dropped. Prem's 8AM block = follow-up-overdue leads flagged + closing-this-week reminder. PM block unchanged. New views `v_digest_leads_won_last_week` + `v_digest_leads_closing_this_week`; `buildActionBlock(role)`. → mig 202 (dev)
 - **[2026-07-05]** fix(tasks): non-founder/HR roles couldn't assign tasks to anyone outside self + direct reports — `employees_read` RLS emptied every assignee dropdown and blanked assignee names in task lists (Manivel/Prem couldn't cross-assign). New names-only `employee_directory` view (id, full_name, is_active; bypasses employees RLS by design); `getActiveEmployeesForSelect` + all `tasks` employee embeds now read the view. → mig 201 (dev)
 
