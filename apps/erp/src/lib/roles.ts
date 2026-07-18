@@ -137,7 +137,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',     items: [ITEMS.settings] },
   ],
   om_technician: [
-    { label: 'Overview',     items: [ITEMS.dashboard] },
+    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.importReview, ITEMS.inverters] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Account',      items: [ITEMS.settings] },
@@ -167,7 +167,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   purchase_officer: [
-    { label: 'Overview',         items: [ITEMS.dashboard] },
+    { label: 'Overview',         items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.deliveries, ITEMS.inventory] },
     { label: 'Expenses',         items: [ITEMS.expenses] },
     { label: 'Vendor Management', items: [ITEMS.vendors, ITEMS.priceBook] },
@@ -176,7 +176,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',          items: [ITEMS.settings] },
   ],
   finance: [
-    { label: 'Overview',     items: [ITEMS.dashboard] },
+    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Cash',          items: [ITEMS.cashFlow] },
     { label: 'Billing',      items: [ITEMS.invoices, ITEMS.payments] },
     { label: 'Vendor',       items: [ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.msmeCompliance] },
@@ -187,7 +187,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   hr_manager: [
-    { label: 'Overview',            items: [ITEMS.dashboard] },
+    { label: 'Overview',            items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'People',              items: [ITEMS.employees] },
     { label: 'Expenses',            items: [ITEMS.expenses] },
     { label: 'Leave & Attendance',  items: [ITEMS.leave] },
