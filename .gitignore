@@ -78,3 +78,11 @@ scripts/data/master-projects-import-plan-*.md
 # plaintext portal passwords. The script loads it at runtime; never commit it.
 scripts/data/plant-credentials-dump.tsv
 scripts/data/plant-credentials-dump-*.tsv
+
+# design-sync (staged scripts, build output, machine state)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+packages/ui/dist/
