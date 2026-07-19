@@ -85,3 +85,11 @@ scripts/data/plant-credentials-dump-*.tsv
 # The README pointer IS tracked so the location is discoverable.
 /data/*
 !/data/README.md
+
+# design-sync (staged scripts, build output, machine state)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+packages/ui/dist/

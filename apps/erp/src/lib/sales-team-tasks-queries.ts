@@ -47,7 +47,7 @@ export async function getSalesTeamTasks(opts: {
   let query = supabase
     .from('tasks')
     .select(
-      'id, title, category, entity_type, entity_id, assigned_to, due_date, is_completed, priority, created_at, assignee:employees!project_tasks_assigned_to_fkey(full_name)',
+      'id, title, category, entity_type, entity_id, assigned_to, due_date, is_completed, priority, created_at, assignee:employee_directory!project_tasks_assigned_to_fkey(full_name)',
     )
     .is('deleted_at', null)
     .or(

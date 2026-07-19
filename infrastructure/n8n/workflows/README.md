@@ -127,6 +127,15 @@ Pre-reqs for Tier 6:
 - **57:** Create a private Supabase Storage bucket named `n8n-backups` (Supabase dashboard → Storage → New bucket). Restore procedure: download the latest `.tar.gz`, verify `sha256sum`, `tar xzf` into a fresh `~/.n8n` volume, restart the container.
 - **58:** In Sentry, configure an Alert Rule → Send notification via webhook → `https://n8n.shiroienergy.com/webhook/sentry-alert`, with a custom header `x-webhook-secret: <N8N_WEBHOOK_SECRET>`. Set the alert rule to fatal/error level only; the Switch double-filters in case of misconfiguration.
 
+### Integration crons (60+)
+
+| File | Trigger | Purpose |
+|------|---------|---------|
+| `60-inverter-poll-cron.json` | Every 5 min, 05–19 IST | POSTs the `inverter-poll` Edge Function (service-role Bearer) |
+| `61-sungrow-token-refresh.json` | Cron | Sungrow iSolarCloud session keep-alive |
+| `63-zoho-sync-cron.json` | Every 15 min | POSTs the `zoho-sync` Edge Function with `{"mode":"both"}` — voucher push + inbound Zoho Books pull. Error path emits `zoho_sync.error` to the event bus. Replaces `62-zoho-live-sync.json` (deleted 2026-07-16 — inactive scaffold, outbound-only/wrong direction, called a nonexistent `claim_zoho_sync_batch` RPC; see `docs/superpowers/specs/2026-07-16-zoho-live-api-sync-design.md`). |
+| `64`–`72` | Various | AI/reporting/ingest crons — see each file's `meta.notes` |
+
 ### Still unbuilt
 
 - Tier 3 monitoring (`29`–`37`)

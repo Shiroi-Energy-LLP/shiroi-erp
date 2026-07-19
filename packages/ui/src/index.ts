@@ -23,6 +23,11 @@ export * from './components/eyebrow';
 export * from './components/breadcrumb';
 export * from './components/skip-to-content';
 export * from './components/form';
+export * from './components/kpi-card';
+export * from './components/field-hint';
+export * from './components/card-label';
+export * from './components/info-box';
+export * from './components/stage-indicator';
 
 // Utilities
 export * from './lib/utils';

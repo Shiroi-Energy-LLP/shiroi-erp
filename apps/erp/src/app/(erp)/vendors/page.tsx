@@ -149,16 +149,9 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                       {vendor.phone ?? '---'}
                     </TableCell>
                     <TableCell>
-                      <span className="flex items-center gap-1.5">
-                        <span
-                          className={`inline-block h-2 w-2 rounded-full ${
-                            vendor.is_active ? 'bg-[#16A34A]' : 'bg-[#DC2626]'
-                          }`}
-                        />
-                        <span className="text-sm text-n-500">
-                          {vendor.is_active ? 'Yes' : 'No'}
-                        </span>
-                      </span>
+                      <Badge dot variant={vendor.is_active ? 'success' : 'error'}>
+                        {vendor.is_active ? 'Yes' : 'No'}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))

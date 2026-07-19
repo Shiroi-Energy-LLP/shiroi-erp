@@ -62,9 +62,11 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Deterministic action block (overdue deals, today's follow-ups, won MTD).
-  // Computed fresh every call ("today" data); appended below the AI narrative by n8n.
-  const actionBlock = await buildActionBlock();
+  // Deterministic, role-scoped action block (founder: closed-last-week + work
+  // done + closing-this-week; sales head: follow-up-overdue + closing-this-week;
+  // PM: legacy overdue/follow-ups/won-MTD). Computed fresh every call ("today"
+  // data); prepended to the AI narrative by n8n.
+  const actionBlock = await buildActionBlock(role);
 
   // ── Step 1: Check cache (idempotent) ─────────────────────────────────────
   const { data: existing, error: cacheError } = await admin

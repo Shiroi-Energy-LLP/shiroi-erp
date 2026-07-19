@@ -233,7 +233,7 @@ export async function getLeadTasks(
 
   const { data, error } = await supabase
     .from('tasks')
-    .select('*, assigned:employees!project_tasks_assigned_to_fkey(full_name), creator:employees!project_tasks_created_by_fkey(full_name)')
+    .select('*, assigned:employee_directory!project_tasks_assigned_to_fkey(full_name), creator:employee_directory!project_tasks_created_by_fkey(full_name)')
     .eq('entity_type', 'lead')
     .eq('entity_id', leadId)
     .is('deleted_at', null)

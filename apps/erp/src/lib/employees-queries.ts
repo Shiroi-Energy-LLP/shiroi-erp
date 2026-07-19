@@ -12,12 +12,16 @@ export type EmployeeSelectOption = { id: string; full_name: string };
  * filtered by task / project / role despite their names; they all return every
  * active employee. Those five now delegate here. Returns [] on error so a
  * transient failure renders an empty dropdown rather than crashing the page.
+ *
+ * Reads employee_directory (mig 201), not employees: employees_read RLS limits
+ * non-founder/HR roles to self + direct reports, which emptied the dropdown
+ * for everyone else. The view exposes names only, bypassing that policy safely.
  */
 export async function getActiveEmployeesForSelect(): Promise<EmployeeSelectOption[]> {
   const op = '[getActiveEmployeesForSelect]';
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from('employees')
+    .from('employee_directory')
     .select('id, full_name')
     .eq('is_active', true)
     .order('full_name', { ascending: true });

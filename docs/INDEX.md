@@ -8,8 +8,9 @@
 
 ## Specs — design docs (the *what* & *why*)
 
-_49 files in `docs/superpowers/specs/`_
+_50 files in `docs/superpowers/specs/`_
 
+- `2026-07-16` **Zoho Books Live API Sync — Design (2026-07-16)** — a live API connection with Zoho Books so that all finance entries flow Zoho → ERP on a schedule, plus a write API used… · `2026-07-16-zoho-live-api-sync-design.md`
 - `2026-07-01` **Repo Structure — Token-Optimization Restructure — Design Spec** — _cross-cutting / docs + repo…_ · **✅ Implemented (docs-layer changes only; no…** · `2026-07-01-token-optimization-restructure-design.md`
 - `2026-06-27` **Service Ticket Module — Detail Page, Timeline, KPIs & Filters** — _O&M (/om/tickets)_ · `2026-06-27-service-ticket-detail-and-timeline-design.md`
 - `2026-06-21` **BOM + Voucher Import — Design Spec** — **Approved (Vivek), ready for implementation** · an upload → parse → auto-match → human-review → confirm pipeline that · `2026-06-21-bom-voucher-import-design.md`
@@ -111,7 +112,7 @@ _44 files in `docs/superpowers/plans/`_
 
 ## Reviews — audits & multi-area sweeps
 
-_12 files in `docs/reviews/`_
+_14 files in `docs/reviews/`_
 
 - `2026-06-19` **Page-Load Performance Audit & Suggested Changes** — `2026-06-19-page-load-perf-audit.md`
 - `2026-06-18` **UI Theming Audit — How Centralized Are Colours & Fonts?** — `2026-06-18-ui-theming-audit.md`
@@ -120,6 +121,8 @@ _12 files in `docs/reviews/`_
 - `2026-06-18` **ERP-wide Redundancy Sweep — Findings** — `2026-06-18-erp-redundancy-sweep.md`
 - `2026-06-16` **Overnight build — Manivel sheet reconciliation + Command Center (2026-06-16)** — `2026-06-16-overnight-reconciliation-build.md`
 - `2026-06-15` **Manivel Sheet ↔ ERP Reconciliation (2026-06-15)** — `2026-06-15-manivel-erp-reconciliation.md`
+- `2026-06-10` **Deep Review — Security, Live DB, Tests, Deps, n8n, A11y, DR/DPDP — June 10, 2026** — `2026-06-10-deep-review-security-ops-data.md`
+- `2026-06-10` **Codebase + Module-by-Module Review — June 10, 2026** — `2026-06-10-codebase-and-module-review.md`
 - `2026-06-06` **Credential Leak Remediation — 2026-06-06** — `2026-06-06-credential-leak-remediation.md`
 - `2026-05-30` **Comprehensive Overnight Review — 2026-05-30** — `2026-05-30-overnight-comprehensive-review.md`
 - `2026-05-25` **Drive Folder Backfill Design Note — 2026-05-25** — `2026-05-25-drive-folder-backfill-design.md`
