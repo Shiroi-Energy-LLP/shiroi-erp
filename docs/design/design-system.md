@@ -693,6 +693,24 @@ For single-series charts, use `#E08A00` with `--solar-bg` as the area fill.
 
 ---
 
+## Shared component library — `@repo/ui` additions (2026-07-19)
+
+Higher-level ERP patterns that had been hand-rolled across pages are now real, tokenised `@repo/ui` components (shadcn + CVA idiom, `shiroi-*`/`n-*`/`status-*` tokens, no inline styles). They sync into the "Shiroi Energy Design System" Claude Design project via `/design-sync`.
+
+| Component | Purpose | Key props |
+|-----------|---------|-----------|
+| `KpiCard` | Dashboard metric tile (promoted from `apps/erp`) | `label, value, unit?, trend?, subNote?, icon?, className?` · `trend.positiveIsGood` controls green/red so a *down* on cost reads green; `trend.direction` adds `'flat'`; `icon` is a string key (RSC-safe) |
+| `InfoBox` | Soft tinted callout, 3px left accent | `variant: info\|success\|warning\|error`, `title?`, `icon?` (default per-variant lucide; `null` suppresses). `role` alert/status by variant |
+| `StageIndicator` | Generic routing-free stage stepper (sibling of the route-aware app `ProjectStepper`) | `stages[], currentIndex, onStageClick?` |
+| `FieldHint` | Standalone form hint/error text for non-RHF forms (complements `FormMessage`/`FormDescription`) | `error?` |
+| `CardLabel` | Uppercase micro section-label inside cards (distinct from gold `Eyebrow`) | `underline?` |
+
+Small additive props on existing primitives: `Badge` `dot?` (leading `bg-current` status dot) · `Label` `required?` (destructive asterisk) · `Card` `interactive?` (hover-lift/clickable variant). All default off — existing usages unchanged.
+
+Proven in situ: KPI tiles (`pipeline-summary`, `payments`, all dashboards + command-center/reconciliation import repointed off the deleted app copy), warning callouts (`proposal-gate-banner`, `leads/[id]/layout`, `orphan-banner`), `Card interactive` + `CardLabel` (`payments`), `Badge dot` (`vendors`), `FieldHint` (`financial-box`).
+
+---
+
 ## Contact & Addresses
 
 **Registered Address:**

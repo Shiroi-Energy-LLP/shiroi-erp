@@ -4,7 +4,7 @@
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
 > **"Last updated" is ONE line — replace it each session, never stack updates.** (This file reached 110 KB / a single 59 KB "Last updated" essay before the 2026-06-19 reset; detail belongs in the changelog + review docs, not here.)
 
-> **Last updated: 2026-07-17** — founder 7AM digest v3 (mig 203, dev): work-done lines carry lead/project names, new Won-yesterday + Due-before-today sections. n8n workflow 19 JSON updated in-repo — needs a push to the droplet (`scripts/push-n8n-workflows.ts`) to update the live fallback path.
+> **Last updated: 2026-07-19** — founder 7AM digest v3 (mig 204, dev — renumbered from 203 after the tasks-RLS migration took that number): work-done lines carry lead/project names, new Won-yesterday + Due-before-today sections. n8n workflow 19 JSON updated in-repo — needs a push to the droplet (`scripts/push-n8n-workflows.ts`) to update the live fallback path.
 
 ---
 
@@ -50,7 +50,7 @@
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **203** (2026-07-17 — morning-digest v3 views) | None |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **204** (2026-07-17 — morning-digest v3 views; 203 = 2026-07-18 tasks-write RLS) | None |
 | **Prod** (`kfkydkwycgijvexqiysc`) | ~012 (last coordinated window) | **013–190** waiting on the next prod window. The live ERP at `erp.shiroienergy.com` points at **dev** Supabase, so this gap doesn't block users today. |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee-testing week (the Zoho-import tables are dev-only and won't all move).

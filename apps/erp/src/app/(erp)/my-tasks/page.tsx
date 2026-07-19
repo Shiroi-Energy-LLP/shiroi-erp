@@ -3,8 +3,7 @@ import { getMyTasksDetailed } from '@/lib/all-tasks-queries';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { TasksTable } from '@/components/tasks/tasks-table';
 import { QuickAddMyTask } from '@/components/tasks/quick-add-my-task';
-import { KpiCard } from '@/components/kpi-card';
-import { Card, CardContent, Eyebrow } from '@repo/ui';
+import { KpiCard, Card, CardContent, Eyebrow } from '@repo/ui';
 import { ListPageShell } from '@/components/list-page-shell';
 import { ClipboardList } from 'lucide-react';
 

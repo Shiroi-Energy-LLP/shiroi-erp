@@ -1,9 +1,9 @@
 import { getUserProfile } from '@/lib/auth';
 import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
 import { getPurchaseDashboardData } from '@/lib/purchase-queries';
-import { KpiCard } from '@/components/kpi-card';
 import { MyTasks } from '@/components/my-tasks';
 import {
+  KpiCard,
   Card,
   CardHeader,
   CardTitle,
