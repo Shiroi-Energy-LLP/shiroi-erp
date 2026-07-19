@@ -1,6 +1,7 @@
--- Migration 204 — morning-digest v3 (Vivek's July-17 message spec).
--- (Authored as 203; renumbered to 204 — mig 203 was taken by the Jul-18
--- tasks-write RLS migration that landed on main first. Applied to dev Jul-17
+-- Migration 205 — morning-digest v3 (Vivek's July-17 message spec).
+-- (Authored as 203; renumbered 203→204→205 — mig 203 went to the Jul-18
+-- tasks-write RLS migration and mig 204 to the Jul-16 Zoho live-sync migration,
+-- both of which landed on main first. Applied to dev Jul-17
 -- as "morning_digest_work_done_names_won_yesterday".)
 -- 1. "Work done" lines must carry the lead/project (customer) name — bare task
 --    titles like "to follow" were meaningless in the 7AM WhatsApp digest.

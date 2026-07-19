@@ -1,0 +1,100 @@
+{
+  "name": "63 — Zoho sync cron (every 15 min)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        },
+        "timezone": "Asia/Kolkata"
+      },
+      "id": "node-cron",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/zoho-sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"mode\": \"both\" }",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 30000
+        }
+      },
+      "id": "node-http-sync",
+      "name": "POST zoho-sync Edge Function",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [250, 300],
+      "notes": "The Edge Function replies 202 immediately and runs the sync via EdgeRuntime.waitUntil, so a 30s node timeout is plenty. Run detail lands in zoho_sync_runs / zoho_sync_state (visible at /settings/zoho-sync)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_EVENT_BUS_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: 'zoho_sync.error', error: $json.error ?? $json.message ?? 'zoho-sync invocation failed', timestamp: $now.toISO() }) }}"
+      },
+      "id": "notify-error-bus",
+      "name": "Notify Error Bus",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 480]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [{ "node": "POST zoho-sync Edge Function", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST zoho-sync Edge Function": {
+      "error": [
+        [{ "node": "Notify Error Bus", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "REPLACE_WITH_GLOBAL_ERROR_HANDLER_WORKFLOW_ID",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {},
+  "meta": {
+    "notes": "Replaces 62 — Zoho Live Sync (deleted 2026-07-16; wrong direction, called a nonexistent RPC). Spec: docs/superpowers/specs/2026-07-16-zoho-live-api-sync-design.md.\n\nPENDING MANUAL STEPS before activating:\n1. Deploy the zoho-sync Edge Function (supabase functions deploy zoho-sync --no-verify-jwt).\n2. Set the Zoho Edge secrets: pnpm tsx scripts/set-zoho-edge-secrets.ts --apply (reads ZOHO_* from .env.local; needs SUPABASE_ACCESS_TOKEN).\n3. Confirm SUPABASE_URL and SUPABASE_SERVICE_KEY (sb_secret_*) env vars exist on the n8n droplet (/opt/shiroi-automation/.env) — force-recreate the container after edits.\n4. Confirm N8N_EVENT_BUS_URL + N8N_WEBHOOK_SECRET env vars exist (error path).\n5. Import via pnpm tsx scripts/push-n8n-workflows.ts, then activate in the n8n UI (activation is a deliberate UI step — never flip active in JSON).\n6. First cold pull converges over several 15-min cycles (page budget); watch /settings/zoho-sync.\n\nArchitecture:\n- Every 15 min POST {\"mode\":\"both\"} → zoho-sync Edge Function (service-role Bearer)\n- Function does voucher PUSH first, then inbound PULL for all 12 entities\n- Function answers 202 and works in the background; failures of the HTTP call itself go to the ERP event bus as zoho_sync.error"
+  }
+}
