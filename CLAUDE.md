@@ -15,8 +15,10 @@
 | Business rules, roles, DB spine, cross-cutting gotchas (CEIG/IR/MSME/sum-to-100%), full coding standards | `docs/SHIROI_MASTER_REFERENCE.md` |
 | Details on a specific module: workflow, screens, tables, key files, past decisions | `docs/modules/<module>.md` (sales, design, projects, purchase, finance, om, liaison, hr, inventory, contacts) |
 | When did we ship X / which migration was X in | `docs/CHANGELOG.md` (grep by date or keyword) |
-| Full spec for a completed/in-flight feature | `docs/superpowers/specs/` |
-| Implementation plan for a feature in flight | `docs/superpowers/plans/` |
+| **Which** spec/plan/review covers X (1-line-per-doc router — read THIS before opening a heavy doc) | `docs/INDEX.md` (regen: `node scripts/build-docs-index.mjs`) |
+| Full spec for a completed/in-flight feature | `docs/superpowers/specs/` (find it via `docs/INDEX.md` first) |
+| Implementation plan for a feature in flight | `docs/superpowers/plans/` (find it via `docs/INDEX.md` first) |
+| Legacy one-time import data (Zoho `.xls`, etc.) | `data/` (gitignored — not in the docs tree, not context) |
 | Design system, colours, typography, brand | `docs/design/design-system.md` + `docs/design/brand-guide.html` |
 | DB schema source of truth | `supabase/migrations/` (numbered, append-only) |
 | Generated TS types from schema | `packages/types/database.ts` — **never edit by hand** |
@@ -88,42 +90,20 @@ shiroi-erp/                          ← pnpm workspace, Turborepo
 
 ---
 
-## ENVIRONMENT VARIABLES (names only — values in `.env.local`)
+## ENVIRONMENT VARIABLES (names only — values in `.env.local`, never committed)
+
+> Names grouped below for quick reference. **Full annotated catalog** (what each does, FIMER account map, PAT usage) lives in `docs/SHIROI_MASTER_REFERENCE.md` §3 → "Env var name list" — load it only when wiring an integration.
 
 ```
-NEXT_PUBLIC_SUPABASE_URL              (dev: actqtzoxjilqnldnacqz.supabase.co)
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  (sb_publishable_...)
-SUPABASE_SECRET_KEY                   (sb_secret_...)
-PROD_SUPABASE_URL                     (prod: kfkydkwycgijvexqiysc.supabase.co)
-PROD_SUPABASE_PUBLISHABLE_KEY
-PROD_SUPABASE_SECRET_KEY
-SUPABASE_ACCESS_TOKEN                 (full-scope PAT "shiroi-erp-mgmt" → Supabase Management API at api.supabase.com. Works where the old "supabase login" CLI token 403'd. Use to set Edge secrets, deploy functions, and regen types programmatically — NO Dashboard needed. See "Regenerating database.ts" below + scripts/set-fimer-edge-secrets.ts)
-ANTHROPIC_API_KEY
-PVWATTS_API_KEY
-PVLIB_MICROSERVICE_URL
-N8N_WEBHOOK_SECRET                    (shared secret for every n8n webhook; matched via Header Auth credential as `x-webhook-secret`)
-N8N_EVENT_BUS_URL                     (single-ingress router webhook: ERP fires all events here → n8n Switch-routes to downstream workflows; if unset, emitErpEvent is a silent no-op)
-N8N_BUG_REPORT_WEBHOOK_URL            (legacy standalone webhook for /settings bug reports — predates event bus; still live)
-N8N_API_KEY                           (n8n REST API key for programmatic workflow push from scripts/push-n8n-workflows.ts)
-NEXT_PUBLIC_SENTRY_DSN + SENTRY_DSN + SENTRY_ORG + SENTRY_PROJECT
-AI_PROVIDER                           (anthropic [default] | openrouter — switches all AI calls)
-AI_MODEL                              (model ID override; default: claude-sonnet-4-20250514 for anthropic, anthropic/claude-sonnet-4-5 for openrouter)
-AI_MAX_TOKENS                         (optional; default 1024)
-OPENROUTER_API_KEY                    (required when AI_PROVIDER=openrouter — get from openrouter.ai)
-SHIROI_GSTIN                          (Shiroi Energy LLP GSTIN — required for e-invoice generation)
-SHIROI_ADDRESS_LINE1                  (registered address line 1 for e-invoice seller details)
-SHIROI_CITY                           (default: Chennai)
-SHIROI_STATE_CODE                     (default: 33 — Tamil Nadu)
-SHIROI_PINCODE                        (default: 600002)
-SHIROI_ACCOUNTS_EMAIL                 (accounts email for e-invoice seller details)
-NEXT_PUBLIC_ERP_URL                   (base URL for share links; default: https://erp.shiroienergy.com)
-FIMER_CRED_SHIROIENERGY               (JSON blob for Aurora Vision: {api_key, username, password} — Manivel master account, ~12 plants)
-FIMER_CRED_CHEMFABALKALIS             (same JSON shape, Chemfab Alkalis sub-account, 1 plant)
-FIMER_CRED_HARSHA                     (same JSON shape, Harsha residential 2 kW — EID lookup pending)
-FIMER_CRED_BOSSSHYAM                  (same JSON shape, Baskar residential 2.5 kW — EID lookup pending)
-FIMER_CRED_SIDDHARTH                  (same JSON shape, Siddarth residential 1 kW — EID lookup pending)
-FIMER_CRED_EDISONSCHOOL               (same JSON shape, Edison School 48 kW)
-FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW — EID lookup pending)
+Supabase   NEXT_PUBLIC_SUPABASE_URL · NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY · SUPABASE_SECRET_KEY
+           PROD_SUPABASE_URL · PROD_SUPABASE_PUBLISHABLE_KEY · PROD_SUPABASE_SECRET_KEY · SUPABASE_ACCESS_TOKEN (mgmt PAT)
+AI         ANTHROPIC_API_KEY · AI_PROVIDER · AI_MODEL · AI_MAX_TOKENS · OPENROUTER_API_KEY
+n8n        N8N_WEBHOOK_SECRET · N8N_EVENT_BUS_URL · N8N_BUG_REPORT_WEBHOOK_URL · N8N_API_KEY
+Sim        PVWATTS_API_KEY · PVLIB_MICROSERVICE_URL
+Sentry     NEXT_PUBLIC_SENTRY_DSN · SENTRY_DSN · SENTRY_ORG · SENTRY_PROJECT
+e-invoice  SHIROI_GSTIN · SHIROI_ADDRESS_LINE1 · SHIROI_CITY · SHIROI_STATE_CODE · SHIROI_PINCODE · SHIROI_ACCOUNTS_EMAIL
+Misc       NEXT_PUBLIC_ERP_URL
+FIMER      FIMER_CRED_{SHIROIENERGY,CHEMFABALKALIS,HARSHA,BOSSSHYAM,SIDDHARTH,EDISONSCHOOL,SRIRAMSV}  (per-account JSON blobs)
 ```
 
 **Key format:** new Supabase only. `sb_publishable_` replaces legacy `anon`. `sb_secret_` replaces legacy `service_role`. Never use legacy names.
@@ -186,7 +166,7 @@ FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW 
 3. **Schema lookup before query writing.** Before writing `.from('table').select('col_a, col_b')` or `.eq('col', x)`, confirm each table and column exists in `supabase/migrations/` or `packages/types/database.ts`. Speculative column names cost a debug cycle (NEVER-DO #20 inverse; master ref §4.14).
 4. **End-of-task sequence — strict order, no skipping, no reordering:**
    1. **Run all four CI gates locally first.** `pnpm check-types && pnpm lint && bash scripts/ci/check-forbidden-patterns.sh && pnpm build` (the exact set `.github/workflows/ci.yml` runs). `pnpm build` was added 2026-05-24 because three Vercel deploys failed in a row — check-types alone misses Next.js client/server boundary violations. **Read the actual stdout of each command** — background-task notifications can report `exit code 0` even when the real exit is non-zero (master ref §4.15). Grep the tail for `error TS`, `Failed:`, `ELIFECYCLE`, or `Build failed`. If anything fails, fix it locally — never push a red branch.
-   2. **Update docs only after all gates are green.** Append **one line** to `docs/CHANGELOG.md` (hard cap ~400 chars — if the change needs a paragraph, write `docs/reviews/<date>-<topic>.md` or the spec and link the basename; never inline prose. The advisory `scripts/ci/check-changelog-entry-length.sh` warns on over-long entries but never fails the build); update `docs/CURRENT_STATUS.md` if in-flight work changed; update the relevant `docs/modules/<module>.md` if the module gained a capability, a new table, or a significant decision. Multi-area reviews go in `docs/reviews/YYYY-MM-DD-<topic>.md` (not inline in the changelog). **Do not grow CLAUDE.md** — if something feels like it belongs here, it probably belongs in the master reference or a module doc.
+   2. **Update docs only after all gates are green.** Append **one line** to `docs/CHANGELOG.md` (hard cap ~400 chars — if the change needs a paragraph, write `docs/reviews/<date>-<topic>.md` or the spec and link the basename; never inline prose. The advisory `scripts/ci/check-changelog-entry-length.sh` warns on over-long entries but never fails the build); update `docs/CURRENT_STATUS.md` if in-flight work changed; update the relevant `docs/modules/<module>.md` if the module gained a capability, a new table, or a significant decision. Multi-area reviews go in `docs/reviews/YYYY-MM-DD-<topic>.md` (not inline in the changelog). If you **added or renamed** a spec/plan/review, run `pnpm docs:index` so `docs/INDEX.md` (the one-line-per-doc router) stays current. **Do not grow CLAUDE.md** — if something feels like it belongs here, it probably belongs in the master reference or a module doc. Large binary/import dumps go in gitignored `data/`, never in `docs/`.
    3. **Push to main, and always push to the git remote — not just commit locally.** `git add` → `git commit` → `git push origin main`. A local commit that hasn't reached the remote isn't done.
 
 ---

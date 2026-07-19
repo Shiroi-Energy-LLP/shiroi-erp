@@ -4,7 +4,7 @@
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
 > **"Last updated" is ONE line — replace it each session, never stack updates.** (This file reached 110 KB / a single 59 KB "Last updated" essay before the 2026-06-19 reset; detail belongs in the changelog + review docs, not here.)
 
-> **Last updated: 2026-07-19** — merged PRs #14/#13/#10/#11 to main. Founder 7AM digest v3 (mig 205, dev): work-done lines carry lead/project names, new Won-yesterday + Due-before-today sections — n8n workflow 19 JSON updated in-repo, needs a `scripts/push-n8n-workflows.ts` push to update the live fallback. Zoho Books live API sync (mig 204, dev; inbound pull + voucher-only write-back; `/settings/zoho-sync`) — awaiting Vivek's Zoho self-client creds + edge-fn/n8n deploy for go-live. Spec `2026-07-16-zoho-live-api-sync-design.md`.
+> **Last updated: 2026-07-19** — merged PRs #14/#13/#10/#11 + docs PRs #9/#6/#4 to main. Founder 7AM digest v3 (mig 205, dev): work-done lines carry lead/project names, new Won-yesterday + Due-before-today sections — n8n workflow 19 JSON updated in-repo, needs a `scripts/push-n8n-workflows.ts` push to update the live fallback. Zoho Books live API sync (mig 204, dev; inbound pull + voucher-only write-back; `/settings/zoho-sync`) — awaiting Vivek's Zoho self-client creds + edge-fn/n8n deploy for go-live. Spec `2026-07-16-zoho-live-api-sync-design.md`.
 
 ---
 

@@ -79,6 +79,13 @@ scripts/data/master-projects-import-plan-*.md
 scripts/data/plant-credentials-dump.tsv
 scripts/data/plant-credentials-dump-*.tsv
 
+# Legacy one-time import data (Zoho .xls exports, etc.) — relocated out of the
+# docs/ tree 2026-07-01 so it stops bloating find/Glob/agent context. Kept on
+# local disk only; not tracked. Re-export from Zoho Books if ever needed again.
+# The README pointer IS tracked so the location is discoverable.
+/data/*
+!/data/README.md
+
 # design-sync (staged scripts, build output, machine state)
 .ds-sync/
 ds-bundle/
