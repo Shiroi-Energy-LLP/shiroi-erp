@@ -41,7 +41,7 @@ const SCOPE_COLORS: Record<ScopeOwner, string> = {
   shiroi: 'bg-status-success-bg text-status-success-text',
   client: 'bg-status-info-bg text-status-info-text',
   builder: 'bg-status-warning-bg text-status-warning-text',
-  excluded: 'bg-status-neutral-bg text-[#6B7280]',
+  excluded: 'bg-status-neutral-bg text-n-500',
 };
 
 const SCOPE_LABEL: Record<ScopeOwner, string> = {
@@ -100,7 +100,7 @@ export function BOMTable({ lines }: { lines: BOMLine[] }) {
                 <TableCell className="text-right font-mono">{formatINR(line.unit_price)}</TableCell>
                 <TableCell className="text-right font-mono font-medium">{formatINR(line.total_price)}</TableCell>
                 <TableCell>
-                  <span className="text-xs">{GST_LABEL[line.gst_type]}</span>
+                  <span>{GST_LABEL[line.gst_type]}</span>
                 </TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${SCOPE_COLORS[line.scope_owner]}`}>

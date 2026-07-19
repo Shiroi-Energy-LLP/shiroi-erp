@@ -32,7 +32,8 @@ export const ITEM_CATEGORY_VALUES: ReadonlyArray<ItemCategory> =
   BOI_CATEGORIES.map((c) => c.value);
 
 export function getCategoryLabel(value: string): string {
-  return BOI_CATEGORIES.find((c) => c.value === value)?.label ?? value.replace(/_/g, ' ');
+  return BOI_CATEGORIES.find((c) => c.value === value)?.label ??
+    value.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
 /**

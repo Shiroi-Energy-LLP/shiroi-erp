@@ -149,7 +149,7 @@ FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW 
 
 ---
 
-## NEVER DO (21 rules — rationale in master reference §4.8 + §4.12–4.15)
+## NEVER DO (25 rules — rationale in master reference §4.8 + §4.12–4.19)
 
 1. Never hardcode env variables, API keys, or Supabase project IDs.
 2. Never commit `.env.local`.
@@ -172,6 +172,10 @@ FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW 
 19. Never throw from a server action — return `ActionResult<T>`.
 20. Never ship schema changes without regenerating types in the same commit.
 21. Never import runtime values from `-queries.ts` files in a `'use client'` component — `import type` only. Extract shared constants (label maps, enum orders, weight maps) to `<domain>-constants.ts` with no server imports. The queries file re-exports from there. `pnpm check-types` does NOT catch the boundary violation; only `pnpm build` does. (Master ref §4.13.)
+22. Never cache authenticated identity/role outside a **request-scoped React `cache()`**. No `unstable_cache`, module scope, or any cross-request store for `auth.getUser()`/profile/role — it bleeds one user's session into another. Server actions always re-resolve identity server-side; never trust a client-passed `role`/`userId`. (Master ref §4.17.)
+23. Never ship a user-facing text search as leading-wildcard `col ILIKE '%term%'` without a `pg_trgm` GIN index on the searched column — it forces a sequential scan. (Master ref §4.18 sibling; NEVER-DO #17 extension.)
+24. Never perform a DB write (INSERT/UPDATE/DELETE) during a server-component / page render. Writes belong in explicit actions triggered by user intent — a GET that mutates isn't idempotent (prefetch + concurrent renders double-fire). (Master ref §4.17 sibling.)
+25. Never use a bare `.limit(N)` on a list that can exceed N rows without pagination (`count: 'estimated'` + `.range()`) — it silently hides rows. (Master ref §4.18 sibling.)
 
 ---
 
@@ -182,7 +186,7 @@ FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW 
 3. **Schema lookup before query writing.** Before writing `.from('table').select('col_a, col_b')` or `.eq('col', x)`, confirm each table and column exists in `supabase/migrations/` or `packages/types/database.ts`. Speculative column names cost a debug cycle (NEVER-DO #20 inverse; master ref §4.14).
 4. **End-of-task sequence — strict order, no skipping, no reordering:**
    1. **Run all four CI gates locally first.** `pnpm check-types && pnpm lint && bash scripts/ci/check-forbidden-patterns.sh && pnpm build` (the exact set `.github/workflows/ci.yml` runs). `pnpm build` was added 2026-05-24 because three Vercel deploys failed in a row — check-types alone misses Next.js client/server boundary violations. **Read the actual stdout of each command** — background-task notifications can report `exit code 0` even when the real exit is non-zero (master ref §4.15). Grep the tail for `error TS`, `Failed:`, `ELIFECYCLE`, or `Build failed`. If anything fails, fix it locally — never push a red branch.
-   2. **Update docs only after all gates are green.** Append one line to `docs/CHANGELOG.md`; update `docs/CURRENT_STATUS.md` if in-flight work changed; update the relevant `docs/modules/<module>.md` if the module gained a capability, a new table, or a significant decision. Multi-area reviews go in `docs/reviews/YYYY-MM-DD-<topic>.md` (not inline in the changelog). **Do not grow CLAUDE.md** — if something feels like it belongs here, it probably belongs in the master reference or a module doc.
+   2. **Update docs only after all gates are green.** Append **one line** to `docs/CHANGELOG.md` (hard cap ~400 chars — if the change needs a paragraph, write `docs/reviews/<date>-<topic>.md` or the spec and link the basename; never inline prose. The advisory `scripts/ci/check-changelog-entry-length.sh` warns on over-long entries but never fails the build); update `docs/CURRENT_STATUS.md` if in-flight work changed; update the relevant `docs/modules/<module>.md` if the module gained a capability, a new table, or a significant decision. Multi-area reviews go in `docs/reviews/YYYY-MM-DD-<topic>.md` (not inline in the changelog). **Do not grow CLAUDE.md** — if something feels like it belongs here, it probably belongs in the master reference or a module doc.
    3. **Push to main, and always push to the git remote — not just commit locally.** `git add` → `git commit` → `git push origin main`. A local commit that hasn't reached the remote isn't done.
 
 ---

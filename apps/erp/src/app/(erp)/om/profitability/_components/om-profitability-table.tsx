@@ -78,7 +78,7 @@ export function OmProfitabilityTable({ rows }: { rows: ProfitabilityRow[] }) {
             {filtered.map((row) => (
               <TableRow key={row.project_id}>
                 <TableCell className="font-mono text-sm">{row.project_number}</TableCell>
-                <TableCell className="max-w-[160px] truncate">{row.customer_name}</TableCell>
+                <TableCell className="max-w-[240px]">{row.customer_name}</TableCell>
                 <TableCell className="text-right">{Number(row.system_size_kwp).toFixed(1)}</TableCell>
                 <TableCell className="text-right">{row.ticket_count}</TableCell>
                 <TableCell className="text-right">

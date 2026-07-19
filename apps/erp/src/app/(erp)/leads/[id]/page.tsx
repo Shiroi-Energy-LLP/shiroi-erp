@@ -66,6 +66,9 @@ export default async function LeadDetailsTab({ params }: LeadDetailPageProps) {
               <InfoRow label="Est. Size" value={`${lead.estimated_size_kwp} kWp`} />
             )}
             <InfoRow label="Expected Close" value={lead.expected_close_date ? formatDate(lead.expected_close_date) : null} />
+            {lead.closed_date && (
+              <InfoRow label="Closed On" value={formatDate(lead.closed_date)} />
+            )}
             <InfoRow label="Probability" value={lead.close_probability != null && lead.close_probability > 0 ? `${lead.close_probability}%` : null} />
             {lead.next_followup_date && (
               <InfoRow label="Next Follow-up" value={formatDate(lead.next_followup_date)} />

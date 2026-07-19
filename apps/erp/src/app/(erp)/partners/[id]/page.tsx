@@ -21,7 +21,7 @@ import {
   TableHead,
   TableCell,
 } from '@repo/ui';
-import { formatDate, formatDateFromTimestamp } from '@repo/ui/formatters';
+import { formatINR, formatDate, formatDateFromTimestamp } from '@repo/ui/formatters';
 import { MarkPayoutPaidButton } from '@/components/partners/mark-payout-paid-button';
 import { PartnerActionMenu } from '@/components/partners/partner-action-menu';
 
@@ -44,15 +44,6 @@ const COMMISSION_TYPE_LABELS: Record<string, string> = {
   percentage_of_revenue: '% of Revenue',
   fixed_per_deal: 'Fixed per Deal',
 };
-
-function formatINR(value: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 interface PartnerDetailProps {
   params: Promise<{ id: string }>;
@@ -275,7 +266,7 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
                     <TableCell className="font-medium">
                       <Link
                         href={`/sales/${l.id}`}
-                        className="text-shiroi-green hover:underline"
+                        className="text-shiroi-gold-dark hover:underline"
                       >
                         {l.customer_name}
                       </Link>

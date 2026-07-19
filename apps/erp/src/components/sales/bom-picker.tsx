@@ -23,6 +23,7 @@ import {
   removeBomLine,
   updateBomLineQuantity,
 } from '@/lib/quote-actions';
+import { formatINR } from '@repo/ui/formatters';
 
 export interface BomLineRow {
   id: string;
@@ -51,15 +52,6 @@ interface BomPickerProps {
   priceBookOptions: PriceBookOption[];
   /** When true, the picker is disabled (e.g. proposal already sent). */
   readOnly?: boolean;
-}
-
-function formatINR(n: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
 }
 
 export function BomPicker({
@@ -190,7 +182,7 @@ export function BomPicker({
                       key={p.id}
                       onClick={() => setSelectedPriceBookId(p.id)}
                       className={`cursor-pointer px-3 py-2 text-xs hover:bg-n-100 ${
-                        selectedPriceBookId === p.id ? 'bg-shiroi-green/10 ring-1 ring-shiroi-green/30' : ''
+                        selectedPriceBookId === p.id ? 'bg-shiroi-gold/10 ring-1 ring-shiroi-gold/30' : ''
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">

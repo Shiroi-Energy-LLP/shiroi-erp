@@ -216,7 +216,7 @@ export async function StepCommissioning({ projectId }: StepCommissioningProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <table className="w-full text-[11px]">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
                     <th className="px-3 py-1.5 text-left text-[10px] font-medium text-n-500">
@@ -241,13 +241,13 @@ export async function StepCommissioning({ projectId }: StepCommissioningProps) {
                     <tr key={idx} className="border-b border-n-50 last:border-b-0">
                       <td className="px-3 py-1.5">{row.inverter_no}</td>
                       <td className="px-3 py-1.5">{row.string_no}</td>
-                      <td className="px-3 py-1.5 text-right font-mono">
+                      <td className="px-3 py-1.5 text-right font-mono whitespace-nowrap">
                         {row.vmp || '—'}
                       </td>
-                      <td className="px-3 py-1.5 text-right font-mono">
+                      <td className="px-3 py-1.5 text-right font-mono whitespace-nowrap">
                         {row.isc || '—'}
                       </td>
-                      <td className="px-3 py-1.5 text-center">
+                      <td className="px-3 py-1.5 text-center whitespace-nowrap">
                         {row.polarity_ok ? (
                           <span className="text-green-700 font-semibold">OK</span>
                         ) : (

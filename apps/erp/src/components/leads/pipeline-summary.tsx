@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Card, CardContent } from '@repo/ui';
+import { KpiCard } from '@repo/ui';
 import { shortINR } from '@repo/ui/formatters';
 import type { StageCounts } from '@/lib/leads-pipeline-queries';
 import type { PipelineCloseWindow } from '@/lib/leads-pipeline-queries';
@@ -37,67 +37,39 @@ export function PipelineSummary({
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
       {/* 1 — Active Leads */}
-      <Card>
-        <CardContent className="pt-4 pb-3">
-          <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Active Leads</div>
-          <div className="text-2xl font-bold text-n-900 mt-1">{activeLeads}</div>
-        </CardContent>
-      </Card>
+      <KpiCard label="Active Leads" value={activeLeads} />
 
       {/* 2 — Weighted Pipeline */}
-      <Card>
-        <CardContent className="pt-4 pb-3">
-          <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Weighted Pipeline</div>
-          <div className="text-2xl font-bold text-n-900 mt-1">{shortINR(totalWeighted)}</div>
-        </CardContent>
-      </Card>
+      <KpiCard label="Weighted Pipeline" value={shortINR(totalWeighted)} />
 
       {/* 3 — Closing This Week (clickable) */}
       <Link href={weekUrl} className="block">
-        <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-transparent hover:border-shiroi-green/40">
-          <CardContent className="pt-4 pb-3">
-            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">
-              Closing This Week
-            </div>
-            <div className="text-2xl font-bold text-n-900 mt-1">{closingThisWeek.leadCount}</div>
-            {(closingThisWeek.totalKwp > 0 || closingThisWeek.totalValue > 0) && (
-              <div className="text-xs text-n-500 mt-0.5 space-x-2">
-                <span>{closingThisWeek.totalKwp.toFixed(1)} kWp</span>
-                <span>·</span>
-                <span>{shortINR(closingThisWeek.totalValue)}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <KpiCard
+          label="Closing This Week"
+          value={closingThisWeek.leadCount}
+          subNote={
+            closingThisWeek.totalKwp > 0 || closingThisWeek.totalValue > 0
+              ? `${closingThisWeek.totalKwp.toFixed(1)} kWp · ${shortINR(closingThisWeek.totalValue)}`
+              : undefined
+          }
+        />
       </Link>
 
       {/* 4 — Closing This Month (clickable) */}
       <Link href={monthUrl} className="block">
-        <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-transparent hover:border-shiroi-green/40">
-          <CardContent className="pt-4 pb-3">
-            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">
-              Closing This Month
-            </div>
-            <div className="text-2xl font-bold text-n-900 mt-1">{closingThisMonth.leadCount}</div>
-            {(closingThisMonth.totalKwp > 0 || closingThisMonth.totalValue > 0) && (
-              <div className="text-xs text-n-500 mt-0.5 space-x-2">
-                <span>{closingThisMonth.totalKwp.toFixed(1)} kWp</span>
-                <span>·</span>
-                <span>{shortINR(closingThisMonth.totalValue)}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <KpiCard
+          label="Closing This Month"
+          value={closingThisMonth.leadCount}
+          subNote={
+            closingThisMonth.totalKwp > 0 || closingThisMonth.totalValue > 0
+              ? `${closingThisMonth.totalKwp.toFixed(1)} kWp · ${shortINR(closingThisMonth.totalValue)}`
+              : undefined
+          }
+        />
       </Link>
 
       {/* 5 — Won */}
-      <Card>
-        <CardContent className="pt-4 pb-3">
-          <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Won</div>
-          <div className="text-2xl font-bold text-shiroi-green mt-1">{wonCount}</div>
-          <div className="text-xs text-n-500">{shortINR(wonValue)}</div>
-        </CardContent>
-      </Card>
+      <KpiCard label="Won" value={wonCount} subNote={shortINR(wonValue)} />
     </div>
   );
 }

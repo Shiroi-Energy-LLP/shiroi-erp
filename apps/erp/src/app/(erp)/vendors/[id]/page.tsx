@@ -58,7 +58,7 @@ export default async function VendorDetailPage({ params }: PageProps) {
         <div className="flex items-start justify-between">
           <div>
             <Eyebrow className="mb-1">VENDOR</Eyebrow>
-            <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
+            <h1 className="text-2xl font-heading font-bold text-n-950">
               {vendor.company_name}
             </h1>
             <p className="text-muted-foreground font-mono text-sm mt-1">{vendor.vendor_code}</p>
@@ -231,7 +231,7 @@ export default async function VendorDetailPage({ params }: PageProps) {
                     {bills.map(b => (
                       <TableRow key={b.id}>
                         <TableCell className="font-mono text-sm">
-                          <Link href={`/vendor-bills/${b.id}`} className="text-[#00B050] hover:underline">
+                          <Link href={`/vendor-bills/${b.id}`} className="text-shiroi-gold-dark hover:underline">
                             {b.bill_number}
                           </Link>
                         </TableCell>

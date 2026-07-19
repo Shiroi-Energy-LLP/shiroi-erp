@@ -208,7 +208,7 @@ export function EditableField({
   // Editing mode ─────────────────────────────────
   const editor = (() => {
     const baseCls =
-      'h-8 text-sm border border-shiroi-green rounded px-2 bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-green w-full';
+      'h-8 text-sm border border-shiroi-gold rounded px-2 bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-gold w-full';
 
     if (type === 'select') {
       return (
@@ -268,7 +268,7 @@ export function EditableField({
             type="button"
             onClick={() => void save(draft)}
             disabled={saving}
-            className="h-7 w-7 flex items-center justify-center rounded border border-shiroi-green bg-shiroi-green text-white hover:opacity-90 disabled:opacity-50"
+            className="h-7 w-7 flex items-center justify-center rounded border border-shiroi-gold bg-shiroi-gold text-shiroi-ink hover:opacity-90 disabled:opacity-50"
             title="Save (Enter)"
           >
             <Check className="h-3.5 w-3.5" />

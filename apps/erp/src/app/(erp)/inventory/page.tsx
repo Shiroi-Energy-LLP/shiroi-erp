@@ -17,6 +17,7 @@ import {
   TableHead,
   TableCell,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { Package, Scissors, AlertTriangle, Ruler } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -87,10 +88,41 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
 
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <ListPageShell
+      header={
+        <FilterBar basePath="/inventory" filterParams={['search', 'category', 'location', 'condition', 'cut_length']}>
+          <SearchInput
+            placeholder="Description, brand, serial..."
+            className="w-64 h-9 text-sm"
+          />
+          <FilterSelect paramName="category" className="w-40 h-9 text-sm">
+            <option value="">All Categories</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
+            ))}
+          </FilterSelect>
+          <FilterSelect paramName="location" className="w-40 h-9 text-sm">
+            <option value="">All Locations</option>
+            {LOCATIONS.map((l) => (
+              <option key={l} value={l}>{l.replace(/_/g, ' ')}</option>
+            ))}
+          </FilterSelect>
+          <FilterSelect paramName="condition" className="w-40 h-9 text-sm">
+            <option value="">All Conditions</option>
+            {CONDITIONS.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </FilterSelect>
+          <FilterSelect paramName="cut_length" className="w-36 h-9 text-sm">
+            <option value="">All</option>
+            <option value="true">Cut-Length Only</option>
+          </FilterSelect>
+        </FilterBar>
+      }
+    >
+      {/* Title (scrolls away) */}
       <div>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Inventory</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Inventory</h1>
         <p className="text-sm text-gray-500">
           {summary.totalPieces} items total · {summary.cutLengthPieces} cut-length · {summary.scrapPieces} scrapped
         </p>
@@ -101,7 +133,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <Package className="h-8 w-8 text-[#00B050]" />
+              <Package className="h-8 w-8 text-shiroi-gold-dark" />
               <div>
                 <p className="text-2xl font-bold font-mono">{summary.totalPieces}</p>
                 <p className="text-xs text-muted-foreground">Total Pieces</p>
@@ -171,45 +203,11 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         </Card>
       )}
 
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="pt-4">
-          <FilterBar basePath="/inventory" filterParams={['search', 'category', 'location', 'condition', 'cut_length']}>
-            <SearchInput
-              placeholder="Description, brand, serial..."
-              className="w-64 h-9 text-sm"
-            />
-            <FilterSelect paramName="category" className="w-40 h-9 text-sm">
-              <option value="">All Categories</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="location" className="w-40 h-9 text-sm">
-              <option value="">All Locations</option>
-              {LOCATIONS.map((l) => (
-                <option key={l} value={l}>{l.replace(/_/g, ' ')}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="condition" className="w-40 h-9 text-sm">
-              <option value="">All Conditions</option>
-              {CONDITIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="cut_length" className="w-36 h-9 text-sm">
-              <option value="">All</option>
-              <option value="true">Cut-Length Only</option>
-            </FilterSelect>
-          </FilterBar>
-        </CardContent>
-      </Card>
-
       {/* Stock Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          <Table stickyHeader>
+            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
               <TableRow>
                 <TableHead>Item</TableHead>
                 <TableHead>Category</TableHead>
@@ -233,7 +231,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                 pieces.map((piece) => (
                   <TableRow key={piece.id}>
                     <TableCell>
-                      <Link href={`/inventory/${piece.id}`} className="text-[#00B050] hover:underline font-medium">
+                      <Link href={`/inventory/${piece.id}`} className="text-shiroi-gold-dark hover:underline font-medium">
                         {piece.item_description}
                       </Link>
                       {piece.brand && (
@@ -258,7 +256,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     </TableCell>
                     <TableCell className="text-sm">
                       {piece.projects ? (
-                        <Link href={`/projects/${piece.project_id}`} className="text-[#00B050] hover:underline">
+                        <Link href={`/projects/${piece.project_id}`} className="text-shiroi-gold-dark hover:underline">
                           {piece.projects.project_number}
                         </Link>
                       ) : '—'}
@@ -277,7 +275,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                                     ? 'bg-[#991B1B]'
                                     : piece.current_length_m <= piece.minimum_usable_length_m * 2
                                     ? 'bg-[#EA580C]'
-                                    : 'bg-[#00B050]'
+                                    : 'bg-[#16A34A]'
                                 }`}
                                 style={{
                                   width: `${Math.min(100, ((piece.current_length_m) / (piece.original_length_m ?? piece.current_length_m)) * 100)}%`,
@@ -313,6 +311,6 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

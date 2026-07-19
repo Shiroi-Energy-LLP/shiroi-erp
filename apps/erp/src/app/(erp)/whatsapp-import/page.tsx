@@ -1,15 +1,9 @@
 import { getQueueItems, getQueueStats } from '@/lib/whatsapp-import-queries';
 import Link from 'next/link';
 import { BulkActionTable } from '@/components/whatsapp-import/bulk-action-table';
+import { WHATSAPP_PROFILE_LABELS as PROFILE_LABELS } from '@/lib/label-constants';
 
 export const metadata = { title: 'WhatsApp Import Queue' };
-
-const PROFILE_LABELS: Record<string, string> = {
-  marketing: 'Marketing',
-  llp: 'LLP / Purchase',
-  shiroi_energy: 'Shiroi Energy ⚡',
-  site: 'Site',
-};
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   customer_payment: { label: 'Payment',      color: 'bg-green-100 text-green-800' },

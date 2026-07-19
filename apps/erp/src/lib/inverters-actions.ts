@@ -7,6 +7,16 @@ import { ok, err, type ActionResult } from '@/lib/types/actions';
 import type { Database } from '@repo/types/database';
 import { getAdapter } from '@repo/inverter-adapters/factory';
 import type { AdapterCredentials } from '@repo/inverter-adapters/base';
+import { getAllProjectsForInverters } from './inverters-queries';
+
+/**
+ * Projects for the Add Inverter dialog's picker — fetched on dialog-open.
+ * Perf [G5]: was eagerly loaded on every /om/inverters render (up to 1,000 rows)
+ * even with the dialog closed. Thin wrapper so the client dialog can fetch lazily.
+ */
+export async function listProjectsForInverterDialog() {
+  return getAllProjectsForInverters();
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // Row types

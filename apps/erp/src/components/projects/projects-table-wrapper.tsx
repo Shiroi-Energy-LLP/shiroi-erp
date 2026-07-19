@@ -9,6 +9,8 @@ import { updateCellValue, bulkUpdateField } from '@/lib/inline-edit-actions';
 interface ProjectsTableWrapperProps {
   /** Filter bar JSX rendered from the server page (FilterBar + FilterSelect + SearchInput) */
   filterBar: React.ReactNode;
+  /** Status-count + total-system-size dashboard, rendered above the filter bar. */
+  summaryHeader?: React.ReactNode;
   data: any[];
   total: number;
   page: number;
@@ -35,6 +37,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 
 export function ProjectsTableWrapper({
   filterBar,
+  summaryHeader,
   data,
   total,
   page,
@@ -86,18 +89,20 @@ export function ProjectsTableWrapper({
   }
 
   return (
-    <>
+    // Fill main's viewport height so the table scrolls inside its own frame
+    // (filter bar + column header stay fixed) instead of the whole page scrolling.
+    <div className="flex h-full min-h-0 flex-col">
       {/*
-        Sticky header: filter bar + (conditional) bulk action bar.
-        `-mx-4 lg:-mx-6` extends the white background into main's p-4/p-6 padding area
-        so the sticky band visually spans the full horizontal length of the content column,
-        no gray strips on either side as rows scroll underneath.
+        Filter bar + (conditional) bulk action bar — the ONLY fixed band.
+        `-mt-4 lg:-mt-6` pulls it flush under the "Projects" topbar (merged white
+        header); `-mx-4 lg:-mx-6` spans the full content width. The KPIs, Views
+        and rows all scroll below it.
       */}
-      <div className="sticky top-0 z-30 -mx-4 lg:-mx-6 bg-white border-b border-n-200 shadow-sm">
+      <div className="shrink-0 -mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b border-n-200 bg-white">
         <div className="px-4 lg:px-6 py-3">{filterBar}</div>
         {selectedIds.length > 0 && (
-          <div className="border-t border-n-200 px-4 lg:px-6 py-2 bg-shiroi-green/5 flex items-center gap-3 flex-wrap">
-            <span className="text-xs text-shiroi-green font-semibold">
+          <div className="border-t border-n-200 px-4 lg:px-6 py-2 bg-shiroi-gold/5 flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-shiroi-gold-dark font-semibold">
               {selectedIds.length} selected
             </span>
             <div className="flex items-center gap-2">
@@ -106,7 +111,7 @@ export function ProjectsTableWrapper({
                 disabled={bulkBusy}
                 defaultValue=""
                 onChange={handleBulkStatus}
-                className="h-7 text-xs border border-n-300 rounded px-2 bg-white hover:border-shiroi-green focus:outline-none focus:ring-1 focus:ring-shiroi-green disabled:opacity-50"
+                className="h-7 text-xs border border-n-300 rounded px-2 bg-white hover:border-shiroi-gold focus:outline-none focus:ring-1 focus:ring-shiroi-gold disabled:opacity-50"
               >
                 <option value="" disabled>
                   {bulkBusy ? 'Updating…' : 'Pick a status'}
@@ -134,30 +139,36 @@ export function ProjectsTableWrapper({
         )}
       </div>
 
-      {/* Spacing between the sticky band and the table */}
-      <div className="h-4" />
-
-      <DataTable
-        entityType="projects"
-        allColumns={PROJECT_COLUMNS}
-        visibleColumns={visibleColumns}
-        data={data}
-        total={total}
-        page={page}
-        pageSize={pageSize}
-        totalPages={totalPages}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-        currentFilters={currentFilters}
-        views={views}
-        activeViewId={activeViewId}
-        linkPrefix="/projects"
-        linkField="project_number"
-        onSelectionChange={setSelectedIds}
-        selectedIds={selectedIds}
-        onCellEdit={handleCellEdit}
-        bulkActions={null}
-      />
-    </>
+      {/* Scroll region: KPIs + Views + rows all scroll; the column header freezes
+          at the top (just under the fixed filter band) once the KPIs/Views pass. */}
+      <div className="min-h-0 flex-1 overflow-auto">
+        <div className="space-y-4 pt-4">
+          {summaryHeader}
+          <DataTable
+            containedScroll
+            entityType="projects"
+            allColumns={PROJECT_COLUMNS}
+            visibleColumns={visibleColumns}
+            data={data}
+            total={total}
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            currentFilters={currentFilters}
+            views={views}
+            activeViewId={activeViewId}
+            linkPrefix="/projects"
+            linkField="customer_project"
+            prefetch={false}
+            onSelectionChange={setSelectedIds}
+            selectedIds={selectedIds}
+            onCellEdit={handleCellEdit}
+            bulkActions={null}
+          />
+        </div>
+      </div>
+    </div>
   );
 }

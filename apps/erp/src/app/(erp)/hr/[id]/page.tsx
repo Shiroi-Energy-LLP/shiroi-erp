@@ -59,7 +59,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
       />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">
+          <h1 className="text-2xl font-bold text-n-950">
             {employee.full_name}
           </h1>
           <p className="text-sm text-gray-500">
@@ -274,7 +274,7 @@ function InfoItem({ label, value }: { label: string; value: string | null | unde
   return (
     <div>
       <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-sm font-medium text-[#1A1D24]">{value ?? '—'}</p>
+      <p className="text-sm font-medium text-n-950">{value ?? '—'}</p>
     </div>
   );
 }

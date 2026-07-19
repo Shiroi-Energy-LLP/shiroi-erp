@@ -36,7 +36,7 @@ export default async function ProfitabilityPage() {
       {/* Header */}
       <div>
         <Eyebrow className="mb-1">FINANCE</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Profitability (V2)</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Profitability (V2)</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Live from <code className="font-mono text-xs">get_project_profitability_v2</code> — includes Zoho historical data
         </p>
@@ -103,7 +103,7 @@ export default async function ProfitabilityPage() {
                     <TableCell>
                       <Link
                         href={`/projects/${proj.project_id}`}
-                        className="text-[#00B050] hover:underline font-medium font-mono text-sm"
+                        className="text-shiroi-gold-dark hover:underline font-medium font-mono text-sm"
                       >
                         {proj.project_number}
                       </Link>

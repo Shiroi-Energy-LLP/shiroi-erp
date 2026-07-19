@@ -37,7 +37,7 @@ export default async function EditReportPage({ params }: EditReportPageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-[#1A1D24]">Edit Daily Site Report</h2>
+        <h2 className="text-lg font-semibold text-n-950">Edit Daily Site Report</h2>
         <p className="text-sm text-muted-foreground">
           Editing report for {report.report_date}
         </p>

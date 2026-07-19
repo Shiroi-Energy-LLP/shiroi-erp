@@ -8,6 +8,7 @@ import { normalizePhone } from '@/lib/leads-helpers';
 import { ReferrerPicker } from '@/components/leads/referrer-picker';
 import { CompanyPicker } from '@/components/leads/company-picker';
 import { triggerLeadScore } from '@/lib/ai/trigger-lead-score';
+import { SYSTEM_TYPE_OPTIONS as SYSTEM_TYPES } from '@/lib/label-constants';
 import type { PartnerPickerOption } from '@/lib/partners-queries';
 import type { Database } from '@repo/types/database';
 
@@ -30,12 +31,6 @@ const SOURCES: { value: LeadSource; label: string }[] = [
   { value: 'exhibition', label: 'Exhibition' },
   { value: 'social_media', label: 'Social Media' },
   { value: 'walkin', label: 'Walk-in' },
-];
-
-const SYSTEM_TYPES: { value: SystemType; label: string }[] = [
-  { value: 'on_grid', label: 'On Grid' },
-  { value: 'hybrid', label: 'Hybrid' },
-  { value: 'off_grid', label: 'Off Grid' },
 ];
 
 const STATES = [

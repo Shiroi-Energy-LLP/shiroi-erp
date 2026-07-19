@@ -6,11 +6,19 @@ import { BulkApproveBar } from './bulk-approve-bar';
 import type { PendingImport, PendingChild } from '@/lib/import-review-queries';
 import { getPendingChildren } from '@/lib/import-review-queries';
 
-interface Props {
-  items: PendingImport[];
+interface ProjectOpt {
+  id: string;
+  customer_name: string;
+  project_number: string | null;
+  project_name?: string | null;
 }
 
-export function ImportReviewList({ items }: Props) {
+interface Props {
+  items: PendingImport[];
+  projects: ProjectOpt[];
+}
+
+export function ImportReviewList({ items, projects }: Props) {
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
   function toggle(id: string) {
@@ -41,6 +49,7 @@ export function ImportReviewList({ items }: Props) {
             selected={selected.has(row.id)}
             onToggleSelect={() => toggle(row.id)}
             fetchChildren={fetchChildren}
+            projects={projects}
           />
         ))}
       </div>

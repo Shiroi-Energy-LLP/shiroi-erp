@@ -30,7 +30,7 @@ export function SectionClientDiscussion({
 }) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 p-3 rounded-lg border border-n-200 hover:bg-[#F8F9FA] transition-colors">
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-n-200 hover:bg-n-050 transition-colors">
         <Checkbox
           id="mounting_procedure_explained"
           checked={cs.mounting_procedure_explained}
@@ -40,12 +40,12 @@ export function SectionClientDiscussion({
           <Label htmlFor="mounting_procedure_explained" className="mb-0 font-medium">
             Mounting Procedure Explained
           </Label>
-          <p className="text-xs text-[#7C818E]">
+          <p className="text-xs text-n-500">
             Customer has been explained the mounting procedure and structure installation process
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-3 p-3 rounded-lg border border-n-200 hover:bg-[#F8F9FA] transition-colors">
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-n-200 hover:bg-n-050 transition-colors">
         <Checkbox
           id="fixing_arrangement_discussed"
           checked={cs.fixing_arrangement_discussed}
@@ -55,7 +55,7 @@ export function SectionClientDiscussion({
           <Label htmlFor="fixing_arrangement_discussed" className="mb-0 font-medium">
             Fixing Arrangement Discussed
           </Label>
-          <p className="text-xs text-[#7C818E]">
+          <p className="text-xs text-n-500">
             Panel fixing arrangement, clamps, and structure anchoring details discussed with client
           </p>
         </div>
@@ -79,7 +79,7 @@ export function SectionEquipment({
 }) {
   return (
     <>
-      <p className="text-xs text-[#7C818E] mb-4">
+      <p className="text-xs text-n-500 mb-4">
         For each equipment item, toggle whether the location has been finalized and upload a photo of the selected location.
       </p>
       <div className="space-y-3">
@@ -181,7 +181,7 @@ export function SectionAcRouting({
           <Label htmlFor="ac_routing_finalized" className="mb-0 font-medium">
             AC Routing Finalized
           </Label>
-          <p className="text-xs text-[#7C818E]">
+          <p className="text-xs text-n-500">
             AC cable routing from inverter to distribution board has been planned and confirmed
           </p>
         </div>
@@ -273,7 +273,7 @@ export function SectionDeviations({
             id="routing_changes"
             name="routing_changes"
             rows={2}
-            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold"
             defaultValue={existing?.routing_changes ?? ''}
             placeholder="Any changes to planned cable routing..."
           />
@@ -284,7 +284,7 @@ export function SectionDeviations({
             id="cable_size_changes"
             name="cable_size_changes"
             rows={2}
-            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold"
             defaultValue={existing?.cable_size_changes ?? ''}
             placeholder="Any changes to cable sizing..."
           />
@@ -295,7 +295,7 @@ export function SectionDeviations({
             id="other_special_requests"
             name="other_special_requests"
             rows={2}
-            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+            className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold"
             defaultValue={existing?.other_special_requests ?? ''}
             placeholder="Any other special requirements or client requests..."
           />
@@ -322,7 +322,7 @@ export function SectionSignatures({
           id="notes"
           name="notes"
           rows={3}
-          className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00B050]"
+          className="w-full rounded-md border border-n-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold"
           defaultValue={existing?.notes ?? ''}
           placeholder="Additional survey observations..."
         />

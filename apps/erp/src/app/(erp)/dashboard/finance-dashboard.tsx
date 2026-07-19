@@ -1,6 +1,6 @@
 import { getUserProfile } from '@/lib/auth';
 import { getFinanceDashboardData } from '@/lib/finance-queries';
-import { KpiCard } from '@/components/kpi-card';
+import { KpiCard } from '@repo/ui';
 import { MyTasks } from '@/components/my-tasks';
 import { CashAlertTable } from './cash-alert-table';
 import { shortINR } from '@repo/ui/formatters';
@@ -15,7 +15,7 @@ export async function FinanceDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Finance Dashboard</h1>
+      <h1 className="text-2xl font-heading font-bold text-n-950">Finance Dashboard</h1>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4">

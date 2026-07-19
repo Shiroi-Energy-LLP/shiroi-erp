@@ -40,6 +40,7 @@ export function CompaniesTableWrapper({
 
   return (
     <DataTable
+      containedScroll
       entityType="companies"
       allColumns={COMPANY_COLUMNS}
       visibleColumns={visibleColumns}
@@ -60,7 +61,7 @@ export function CompaniesTableWrapper({
       onCellEdit={handleCellEdit}
       bulkActions={
         selectedIds.length > 0 ? (
-          <span className="text-xs text-shiroi-green font-medium ml-2">
+          <span className="text-xs text-shiroi-gold-dark font-medium ml-2">
             {selectedIds.length} selected
           </span>
         ) : null

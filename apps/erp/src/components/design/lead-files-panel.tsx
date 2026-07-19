@@ -255,10 +255,10 @@ export function LeadFilesPanel({ leadId, readOnly = false }: LeadFilesPanelProps
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-10 bg-[#F5F6F8] rounded-lg animate-pulse" />
+        <div className="h-10 bg-n-100 rounded-lg animate-pulse" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-32 bg-[#F5F6F8] rounded-lg animate-pulse" />
+            <div key={i} className="h-32 bg-n-100 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -269,7 +269,7 @@ export function LeadFilesPanel({ leadId, readOnly = false }: LeadFilesPanelProps
     <div className="space-y-4">
       {/* Upload bar */}
       {!readOnly && (
-        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#DFE2E8]">
+        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-n-200">
           <Select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -297,8 +297,8 @@ export function LeadFilesPanel({ leadId, readOnly = false }: LeadFilesPanelProps
             className="hidden"
             onChange={handleFileInput}
           />
-          <span className="text-xs text-[#7C818E]">{totalFiles} files total</span>
-          {moving && <span className="text-xs text-[#7C818E]">Moving...</span>}
+          <span className="text-xs text-n-500">{totalFiles} files total</span>
+          {moving && <span className="text-xs text-n-500">Moving...</span>}
         </div>
       )}
 

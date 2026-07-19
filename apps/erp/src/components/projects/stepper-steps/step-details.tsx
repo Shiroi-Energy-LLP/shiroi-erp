@@ -71,7 +71,7 @@ export async function StepDetails({ projectId }: StepDetailsProps) {
               />
             </div>
           ) : (
-            <p className="text-sm text-[#7C818E]">
+            <p className="text-sm text-n-500">
               Contract value: {formatINR(project.contracted_value)}. Detailed cash position not yet computed.
             </p>
           )}
@@ -84,8 +84,8 @@ export async function StepDetails({ projectId }: StepDetailsProps) {
 function InfoRow({ label, value, mono, capitalize: cap }: { label: string; value: string | null | undefined; mono?: boolean; capitalize?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className="text-[#7C818E]">{label}</span>
-      <span className={`font-medium text-[#1A1D24] ${mono ? 'font-mono' : ''} ${cap ? 'capitalize' : ''}`}>
+      <span className="text-n-500">{label}</span>
+      <span className={`font-medium text-n-950 ${mono ? 'font-mono' : ''} ${cap ? 'capitalize' : ''}`}>
         {value || '\u2014'}
       </span>
     </div>
@@ -95,8 +95,8 @@ function InfoRow({ label, value, mono, capitalize: cap }: { label: string; value
 function FinanceItem({ label, value, highlight }: { label: string; value: number; highlight?: 'positive' | 'negative' }) {
   return (
     <div>
-      <div className="text-xs text-[#7C818E] mb-0.5">{label}</div>
-      <div className={`text-sm font-mono font-medium ${highlight === 'negative' ? 'text-[#991B1B]' : highlight === 'positive' ? 'text-[#065F46]' : 'text-[#1A1D24]'}`}>
+      <div className="text-xs text-n-500 mb-0.5">{label}</div>
+      <div className={`text-sm font-mono font-medium ${highlight === 'negative' ? 'text-[#991B1B]' : highlight === 'positive' ? 'text-[#065F46]' : 'text-n-950'}`}>
         {formatINR(value)}
       </div>
     </div>

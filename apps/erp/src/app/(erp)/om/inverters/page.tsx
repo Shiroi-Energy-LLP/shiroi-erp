@@ -3,7 +3,6 @@ import {
   listInverters,
   listRecentPollFailures,
   listInverterMonitoringCredentials,
-  getAllProjectsForInverters,
   getCurrentUserRole,
 } from '@/lib/inverters-queries';
 import { InverterTable } from './_components/inverter-table';
@@ -18,10 +17,9 @@ export default async function InvertersPage() {
   if (!userId) redirect('/login');
   if (!role || !ALLOWED_ROLES.includes(role)) redirect('/dashboard');
 
-  const [inverters, failures, allProjects, monitoringCredentials] = await Promise.all([
+  const [inverters, failures, monitoringCredentials] = await Promise.all([
     listInverters(),
     listRecentPollFailures(20),
-    getAllProjectsForInverters(),
     listInverterMonitoringCredentials(),
   ]);
 
@@ -37,10 +35,7 @@ export default async function InvertersPage() {
             Manage inverter master records, polling configuration, and health status.
           </p>
         </div>
-        <AddInverterDialog
-          projects={allProjects}
-          monitoringCredentials={monitoringCredentials}
-        />
+        <AddInverterDialog monitoringCredentials={monitoringCredentials} />
       </div>
 
       <InverterTable inverters={inverters} monitoringCredentials={monitoringCredentials} />

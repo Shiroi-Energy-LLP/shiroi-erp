@@ -3,18 +3,19 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { getSessionContext } from '@/lib/auth';
 
 export async function getMyViews(entityType: string) {
   const op = '[getMyViews]';
+  // Shares the request-scoped session resolution (NEVER-DO #22 / master-ref §4.17).
+  const { userId } = await getSessionContext();
+  if (!userId) return [];
+
   const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
-
   const { data, error } = await supabase
     .from('table_views')
     .select('*')
-    .or(`owner_id.eq.${user.id},visibility.eq.everyone`)
+    .or(`owner_id.eq.${userId},visibility.eq.everyone`)
     .eq('entity_type', entityType)
     .order('position', { ascending: true });
 

@@ -135,7 +135,7 @@ export function CorrectionForm({ reportId, projectId, report }: CorrectionFormPr
           {selectedField && (
             <div className="space-y-2">
               <Label>Original Value</Label>
-              <div className="px-3 py-2 bg-[#F5F5F5] rounded-md text-sm font-mono">
+              <div className="px-3 py-2 bg-n-100 rounded-md text-sm font-mono">
                 {originalValue || '(empty)'}
               </div>
             </div>

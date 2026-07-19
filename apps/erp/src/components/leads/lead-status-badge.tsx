@@ -21,7 +21,7 @@ const STATUS_PALETTE: Record<LeadStatus, { bg: string; text: string }> = {
   proposal_sent:          { bg: '#FCE7F3', text: '#9D174D' }, // legacy — same as detailed_proposal_sent
   negotiation:            { bg: '#FFE4E6', text: '#9F1239' },
   closure_soon:           { bg: '#FFEDD5', text: '#9A3412' },
-  won:                    { bg: '#DCFCE7', text: '#166534' },
+  won:                    { bg: '#F0FDF4', text: '#16A34A' },
   lost:                   { bg: '#FEE2E2', text: '#991B1B' },
   on_hold:                { bg: '#F1F3F5', text: '#6B7280' },
   disqualified:           { bg: '#F1F3F5', text: '#6B7280' }, // same as on_hold

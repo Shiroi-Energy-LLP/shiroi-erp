@@ -23,7 +23,11 @@ export function QuickAddTask({ leadId, employees, currentUserId }: QuickAddTaskP
     return `${y}-${m}-${d}`;
   });
   const [priority, setPriority] = useState('medium');
-  const [category, setCategory] = useState('call');
+  // Default to 'lead_followup' (the canonical "follow-up"). As of mig 197 the lead's
+  // Next Follow-up date mirrors the earliest open lead task of ANY type, so picking
+  // Call / Site-visit / Document still drives the date — it is NOT an opt-out.
+  // (mig 193 added the task→lead mirror; mig 197 broadened it past lead_followup.)
+  const [category, setCategory] = useState('lead_followup');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   function handleSubmit(e: React.FormEvent) {

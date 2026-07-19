@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getProject, getProjectChangeOrders } from '@/lib/projects-queries';
+import { getProjectHeader, getProjectChangeOrders } from '@/lib/projects-queries';
 import { formatINR, toIST, formatDate } from '@repo/ui/formatters';
 import Decimal from 'decimal.js';
 import {
@@ -23,7 +23,7 @@ interface ChangeOrdersPageProps {
 export default async function ChangeOrdersPage({ params }: ChangeOrdersPageProps) {
   const { id } = await params;
   const [project, changeOrders] = await Promise.all([
-    getProject(id),
+    getProjectHeader(id),
     getProjectChangeOrders(id),
   ]);
 

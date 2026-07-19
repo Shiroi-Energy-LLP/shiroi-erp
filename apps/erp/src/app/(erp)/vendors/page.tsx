@@ -12,6 +12,7 @@ import {
   TableCell,
   Eyebrow,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { Building2 } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -54,44 +55,43 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
     : false;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">VENDORS</Eyebrow>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-[#1A1D24]">Vendors</h1>
-            <Badge variant="neutral">{vendors.length}</Badge>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/vendors" filterParams={['search', 'type']}>
+              <FilterSelect paramName="type" className="w-48">
+                <option value="">All Types</option>
+                {VENDOR_TYPE_OPTIONS.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </FilterSelect>
+              <SearchInput
+                placeholder="Search company or vendor code..."
+                className="w-64 h-9 text-sm"
+              />
+            </FilterBar>
           </div>
+          {canAddVendor && <AddVendorButton />}
         </div>
-        {canAddVendor && <AddVendorButton />}
+      }
+    >
+      {/* Title (scrolls away) */}
+      <div>
+        <Eyebrow className="mb-1">VENDORS</Eyebrow>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-n-950">Vendors</h1>
+          <Badge variant="neutral">{vendors.length}</Badge>
+        </div>
       </div>
-
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-4">
-          <FilterBar basePath="/vendors" filterParams={['search', 'type']}>
-            <FilterSelect paramName="type" className="w-48">
-              <option value="">All Types</option>
-              {VENDOR_TYPE_OPTIONS.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search company or vendor code..."
-              className="w-64 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          <Table stickyHeader>
+            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
               <TableRow>
                 <TableHead>Vendor Code</TableHead>
                 <TableHead>Company Name</TableHead>
@@ -108,11 +108,11 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                 <TableRow>
                   <TableCell colSpan={8} className="py-16">
                     <div className="flex flex-col items-center justify-center text-center">
-                      <Building2 className="h-12 w-12 text-[#9CA0AB] opacity-50 mb-4" />
-                      <h2 className="text-lg font-heading font-bold text-[#1A1D24]">
+                      <Building2 className="h-12 w-12 text-n-400 opacity-50 mb-4" />
+                      <h2 className="text-lg font-heading font-bold text-n-950">
                         No Vendors Found
                       </h2>
-                      <p className="text-sm text-[#7C818E] max-w-[320px] mt-1">
+                      <p className="text-sm text-n-500 max-w-[320px] mt-1">
                         {params.type || params.search
                           ? 'Try adjusting your filters.'
                           : 'No vendors have been added yet.'}
@@ -124,7 +124,7 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                 vendors.map((vendor) => (
                   <TableRow key={vendor.id}>
                     <TableCell>
-                      <span className="text-[#00B050] font-medium">
+                      <span className="text-shiroi-gold-dark font-medium">
                         {vendor.vendor_code ?? '---'}
                       </span>
                     </TableCell>
@@ -142,23 +142,16 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
                       {vendor.is_msme ? (
                         <Badge variant="success">MSME</Badge>
                       ) : (
-                        <span className="text-sm text-[#7C818E]">---</span>
+                        <span className="text-sm text-n-500">---</span>
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-sm">
                       {vendor.phone ?? '---'}
                     </TableCell>
                     <TableCell>
-                      <span className="flex items-center gap-1.5">
-                        <span
-                          className={`inline-block h-2 w-2 rounded-full ${
-                            vendor.is_active ? 'bg-[#00B050]' : 'bg-[#DC2626]'
-                          }`}
-                        />
-                        <span className="text-sm text-[#7C818E]">
-                          {vendor.is_active ? 'Yes' : 'No'}
-                        </span>
-                      </span>
+                      <Badge dot variant={vendor.is_active ? 'success' : 'error'}>
+                        {vendor.is_active ? 'Yes' : 'No'}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))
@@ -167,6 +160,6 @@ export default async function VendorsPage({ searchParams }: VendorsPageProps) {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

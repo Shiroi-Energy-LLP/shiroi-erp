@@ -14,15 +14,7 @@ import {
 } from '@repo/ui';
 import { listPendingClosureApprovals } from '@/lib/closure-queries';
 import { ClosureApprovalActions } from './closure-approval-actions';
-
-function formatINR(n: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+import { formatINR } from '@repo/ui/formatters';
 
 /**
  * Founder-only panel showing pending amber-band closure approval requests.
@@ -65,7 +57,7 @@ export async function ClosureApprovalsPanel() {
                 <TableCell>
                   <Link
                     href={`/sales/${a.lead_id}`}
-                    className="text-shiroi-green hover:underline font-medium"
+                    className="text-shiroi-gold-dark hover:underline font-medium"
                   >
                     {a.lead_customer_name}
                   </Link>

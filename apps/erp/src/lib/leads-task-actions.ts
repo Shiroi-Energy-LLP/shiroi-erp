@@ -4,6 +4,7 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { requireAuthUser } from '@/lib/auth';
+import { createTask } from '@/lib/tasks-actions';
 import type { Database } from '@repo/types/database';
 
 type TaskRow = Database['public']['Tables']['tasks']['Row'] & {
@@ -29,39 +30,29 @@ export async function createLeadTask(input: CreateLeadTaskInput): Promise<Action
   if (!input.assignedTo) return err('Assignee is required', 'MISSING_ASSIGNEE');
   if (!input.dueDate) return err('Due date is required', 'MISSING_DUE_DATE');
 
-  const authed = await requireAuthUser();
-  if (!authed.success) return authed;
-  const { user, supabase } = authed.data;
-
-  // Get current user's employee record
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
-  if (!employee) return err('Employee record not found', 'EMPLOYEE_MISSING');
-
-  const { error } = await supabase.from('tasks').insert({
-    id: crypto.randomUUID(),
+  // Thin wrapper over the universal createTask (tasks-actions.ts), scoped to the
+  // lead entity. createTask handles auth + created_by + the insert (and already
+  // revalidates /tasks + /my-tasks); we keep the lead-specific validation codes
+  // and add the lead tasks page.
+  const result = await createTask({
     title: input.title,
-    description: input.description || null,
-    entity_type: 'lead',
-    entity_id: input.leadId,
-    assigned_to: input.assignedTo,
-    created_by: employee.id,
-    due_date: input.dueDate,
+    description: input.description,
+    entityType: 'lead',
+    entityId: input.leadId,
     priority: input.priority ?? 'medium',
+    dueDate: input.dueDate,
+    assignedTo: input.assignedTo,
     category: input.category ?? 'general',
-    is_completed: false,
   });
 
-  if (error) {
-    console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
-    return err(error.message, error.code);
-  }
+  if (!result.success) return err(result.error, result.code);
 
   revalidatePath(`/leads/${input.leadId}/tasks`);
-  revalidatePath('/my-tasks');
+  revalidatePath(`/sales/${input.leadId}/tasks`);
+  // A new lead_followup task drives leads.next_followup_date via the mig-193
+  // trigger; bust the list caches so the "Next Follow-up" column reflects it.
+  revalidatePath('/leads');
+  revalidatePath('/sales');
   return ok(undefined);
 }
 
@@ -96,7 +87,12 @@ export async function completeLeadTask(taskId: string, leadId: string): Promise<
   }
 
   revalidatePath(`/leads/${leadId}/tasks`);
+  revalidatePath(`/sales/${leadId}/tasks`);
   revalidatePath('/my-tasks');
+  // Completing a lead_followup task rolls leads.next_followup_date to the next
+  // open follow-up (or clears it) via the mig-193 trigger; refresh list caches.
+  revalidatePath('/leads');
+  revalidatePath('/sales');
   return ok(undefined);
 }
 
@@ -237,7 +233,7 @@ export async function getLeadTasks(
 
   const { data, error } = await supabase
     .from('tasks')
-    .select('*, assigned:employees!project_tasks_assigned_to_fkey(full_name), creator:employees!project_tasks_created_by_fkey(full_name)')
+    .select('*, assigned:employee_directory!project_tasks_assigned_to_fkey(full_name), creator:employee_directory!project_tasks_created_by_fkey(full_name)')
     .eq('entity_type', 'lead')
     .eq('entity_id', leadId)
     .is('deleted_at', null)

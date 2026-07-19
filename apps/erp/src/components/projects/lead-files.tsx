@@ -116,9 +116,9 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <FileText className="h-4 w-4 text-[#7C818E]" />
+          <FileText className="h-4 w-4 text-n-500" />
           Lead Files
-          <span className="text-xs text-[#7C818E] font-normal">({files.length})</span>
+          <span className="text-xs text-n-500 font-normal">({files.length})</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -131,7 +131,7 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
 
           return (
             <div key={key}>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7C818E] mb-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-n-500 mb-1.5">
                 {label} ({groupFiles.length})
               </p>
               <div className="space-y-1">
@@ -141,18 +141,18 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
                   return (
                     <div
                       key={file.id}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-[#F5F6F8] group text-sm"
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-n-100 group text-sm"
                     >
-                      <Icon className="h-3.5 w-3.5 text-[#9CA0AB] flex-shrink-0" />
+                      <Icon className="h-3.5 w-3.5 text-n-400 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
                         <button
                           onClick={() => isImage ? openImage(file) : handleDownload(file.name)}
-                          className="text-[#00B050] hover:underline truncate block text-left text-[13px]"
+                          className="text-shiroi-gold-dark hover:underline truncate block text-left text-[13px]"
                           title={file.name}
                         >
                           {file.name.replace(/^\d+_/, '')}
                         </button>
-                        <span className="text-[11px] text-[#9CA0AB]">
+                        <span className="text-[11px] text-n-400">
                           {formatFileSize(file.size)}
                           {file.created_at && ` · ${formatDateFromTimestamp(file.created_at)}`}
                         </span>
@@ -166,7 +166,7 @@ export function LeadFiles({ leadId, files }: LeadFilesProps) {
                         />
                         <button
                           onClick={() => isImage ? openImage(file) : handleDownload(file.name)}
-                          className="p-1 text-[#7C818E] hover:text-[#00B050]"
+                          className="p-1 text-n-500 hover:text-shiroi-gold-dark"
                           title={isImage ? 'View' : 'Download'}
                         >
                           <Download className="h-3.5 w-3.5" />

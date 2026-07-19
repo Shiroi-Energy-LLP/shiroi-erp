@@ -31,7 +31,7 @@ export function CandidatesPane({ zohoCustomerName }: Props) {
   }, [search]);
 
   if (!zohoCustomerName) {
-    return <Card><CardContent className="py-8 text-center text-[#7C818E] text-xs">Pick a customer →</CardContent></Card>;
+    return <Card><CardContent className="py-8 text-center text-n-500 text-xs">Pick a customer →</CardContent></Card>;
   }
 
   return (
@@ -46,7 +46,7 @@ export function CandidatesPane({ zohoCustomerName }: Props) {
           {loading ? (
             <Skeleton className="h-32" />
           ) : likely.length === 0 ? (
-            <Card><CardContent className="py-6 text-center text-xs text-[#7C818E]">
+            <Card><CardContent className="py-6 text-center text-xs text-n-500">
               No likely matches. Try &quot;Search all&quot; or mark these invoices as &quot;No ERP match&quot;.
             </CardContent></Card>
           ) : (

@@ -1,132 +1,100 @@
-import { getUserProfile } from '@/lib/auth';
-import { getMyTasks } from '@/lib/tasks-queries';
-import { formatDate } from '@repo/ui/formatters';
-import { redirect } from 'next/navigation';
-import { TaskCompletionToggle } from '@/components/projects/forms/task-completion-toggle';
-import {
-  Card,
-  CardContent,
-  Badge,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-  Eyebrow,
-} from '@repo/ui';
-import { CheckSquare } from 'lucide-react';
-import Link from 'next/link';
+import { getCurrentEmployeeId } from '@/lib/auth';
+import { getMyTasksDetailed } from '@/lib/all-tasks-queries';
+import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
+import { TasksTable } from '@/components/tasks/tasks-table';
+import { QuickAddMyTask } from '@/components/tasks/quick-add-my-task';
+import { KpiCard, Card, CardContent, Eyebrow } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
+import { ClipboardList } from 'lucide-react';
+
+const TH = 'px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider';
 
 export default async function MyTasksPage() {
-  const profile = await getUserProfile();
-  if (!profile) redirect('/login');
+  const employeeId = await getCurrentEmployeeId();
 
-  const tasks = await getMyTasks(profile.id);
-  const pendingCount = tasks.filter((t) => !t.is_completed).length;
-  const completedCount = tasks.filter((t) => t.is_completed).length;
-
-  function priorityVariant(priority: string): 'default' | 'secondary' | 'destructive' | 'outline' {
-    switch (priority) {
-      case 'critical': return 'destructive';
-      case 'high': return 'destructive';
-      case 'medium': return 'secondary';
-      default: return 'outline';
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+  if (!employeeId) {
+    return (
+      <ListPageShell>
         <div>
           <Eyebrow className="mb-1">MY TASKS</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">
-            My Tasks{' '}
-            <span className="text-base font-normal text-[#7C818E]">
-              ({pendingCount} pending, {completedCount} done)
-            </span>
-          </h1>
+          <h1 className="text-2xl font-bold text-n-950">My Tasks</h1>
         </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center text-n-500">
+            <ClipboardList className="h-10 w-10 text-n-300" />
+            <p className="text-sm max-w-[360px]">
+              Your login isn&rsquo;t linked to an employee record yet, so we can&rsquo;t load your
+              tasks. Ask an admin to link your profile to an employee.
+            </p>
+          </CardContent>
+        </Card>
+      </ListPageShell>
+    );
+  }
+
+  const [tasks, employees, projects] = await Promise.all([
+    getMyTasksDetailed(employeeId),
+    getActiveEmployees(),
+    getActiveProjects(),
+  ]);
+
+  const total = tasks.length;
+  const open = tasks.filter((t) => !t.is_completed).length;
+  const closed = total - open;
+
+  return (
+    <ListPageShell
+      header={
+        <QuickAddMyTask
+          employees={employees}
+          projects={projects}
+          currentUserId={employeeId}
+        />
+      }
+    >
+      <div>
+        <Eyebrow className="mb-1">MY TASKS</Eyebrow>
+        <h1 className="text-2xl font-bold text-n-950">My Tasks</h1>
       </div>
 
+      {/* Header KPIs — scroll away */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KpiCard label="Total Tasks" value={total} icon="ClipboardList" />
+        <KpiCard label="Open Tasks" value={open} icon="Clock" />
+        <KpiCard label="Closed Tasks" value={closed} icon="CheckCircle" />
+      </div>
+
+      {/* Task list — column header freezes at the top of the scroll region */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-8"></TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Entity Type</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tasks.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <CheckSquare className="h-8 w-8 text-muted-foreground/50" />
-                      No open tasks assigned to you.
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                tasks.map((task) => {
-                  const isOverdue = task.due_date && !task.is_completed && new Date(task.due_date) < new Date();
-                  return (
-                    <TableRow key={task.id} className={task.is_completed ? 'opacity-60' : ''}>
-                      <TableCell>
-                        <TaskCompletionToggle
-                          taskId={task.id}
-                          isCompleted={task.is_completed}
-                          projectId={task.project_id ?? undefined}
-                        />
-                      </TableCell>
-                      <TableCell className={`font-medium ${task.is_completed ? 'line-through text-n-400' : ''}`}>
-                        {task.title}
-                      </TableCell>
-                      <TableCell>
-                        {task.project_id ? (
-                          <Link href={`/projects/${task.project_id}`} className="text-p-600 hover:underline text-xs">
-                            View Project
-                          </Link>
-                        ) : (
-                          <span className="text-[#9CA0AB]">{'\u2014'}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {task.entity_type?.replace(/_/g, ' ') ?? '\u2014'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={priorityVariant(task.priority)}>
-                          {task.priority.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {task.due_date ? (
-                          <span className={isOverdue ? 'text-[#991B1B] font-medium' : ''}>
-                            {formatDate(task.due_date)}
-                          </span>
-                        ) : '\u2014'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={task.is_completed ? 'default' : isOverdue ? 'destructive' : 'secondary'}>
-                          {task.is_completed ? 'Done' : isOverdue ? 'Overdue' : 'Open'}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+          {tasks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <ClipboardList className="h-10 w-10 text-n-300 mb-3" />
+              <h2 className="text-sm font-heading font-bold text-n-700">No Tasks Assigned</h2>
+              <p className="text-xs text-n-500 max-w-[320px] mt-1">
+                You have no tasks assigned to you right now.
+              </p>
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
+                <tr className="border-b border-n-200 bg-n-50 text-left">
+                  <th className={TH}>Project</th>
+                  <th className={TH}>Task Name</th>
+                  <th className={TH}>Assigned To</th>
+                  <th className={TH}>Status</th>
+                  <th className={TH}>Priority</th>
+                  <th className={TH}>Due Date</th>
+                  <th className={TH}>Notes</th>
+                  <th className={TH}>Done By</th>
+                  <th className={`${TH} w-16`}>Actions</th>
+                </tr>
+              </thead>
+              <TasksTable tasks={tasks} employees={employees} projects={projects} />
+            </table>
+          )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

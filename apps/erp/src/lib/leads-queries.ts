@@ -1,6 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { formatCustomerProject } from './customer-project';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
@@ -77,7 +78,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
 
   let query = supabase
     .from('leads')
-    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, close_probability, is_archived, assigned_to, created_at, ai_score, ai_score_reason, project_name, company_id, employees!leads_assigned_to_fkey(full_name), channel_partners!leads_channel_partner_id_fkey(partner_name, is_internal), companies!leads_company_id_fkey(name)', { count: 'estimated' })
+    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, closed_date, close_probability, is_archived, assigned_to, created_at, ai_score, ai_score_reason, project_name, company_id, employees!leads_assigned_to_fkey(full_name), channel_partners!leads_channel_partner_id_fkey(partner_name, is_internal), companies!leads_company_id_fkey(name)', { count: 'estimated' })
     .is('deleted_at', null)
     .order(sortCol, { ascending: sortDir });
 
@@ -300,19 +301,12 @@ export async function leadHasDetailedProposal(leadId: string): Promise<boolean> 
   return !!data;
 }
 
-export async function getSalesEngineers() {
-  const op = '[getSalesEngineers]';
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name');
-  if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
-    throw new Error(`Failed to load sales engineers: ${error.message}`);
-  }
-  return data ?? [];
+// Active-employee dropdown — delegates to the shared helper. The name is
+// historical: it returns ALL active employees, not just sales engineers
+// (2026-06-19 sweep §3). Now returns [] on error (was: threw) — an empty
+// dropdown beats crashing the page render on a transient failure.
+export async function getSalesEngineers(): Promise<{ id: string; full_name: string }[]> {
+  return getActiveEmployeesForSelect();
 }
 
 /**

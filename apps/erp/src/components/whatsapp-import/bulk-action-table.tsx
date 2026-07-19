@@ -14,13 +14,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@repo/ui';
 import { Check, X } from 'lucide-react';
 import { batchApproveQueueItems, batchRejectQueueItems } from '@/lib/whatsapp-import-actions';
-
-const PROFILE_LABELS: Record<string, string> = {
-  marketing: 'Marketing',
-  llp: 'LLP / Purchase',
-  shiroi_energy: 'Shiroi Energy ⚡',
-  site: 'Site',
-};
+import { WHATSAPP_PROFILE_LABELS as PROFILE_LABELS } from '@/lib/label-constants';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   customer_payment: { label: 'Payment',      color: 'bg-green-100 text-green-800' },
@@ -216,7 +210,7 @@ export function BulkActionTable({ items, status }: BulkActionTableProps) {
 
       {/* Table */}
       <div className="border rounded-lg overflow-hidden bg-white">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm [&_td]:align-top">
           <thead className="bg-gray-50 border-b">
             <tr>
               {canBulkAct && (
@@ -274,14 +268,14 @@ export function BulkActionTable({ items, status }: BulkActionTableProps) {
                       />
                     </td>
                   )}
-                  <td className="py-3 px-4 text-gray-500 text-xs">
+                  <td className="py-3 px-4 text-gray-500 whitespace-nowrap">
                     {new Date(item.message_timestamp).toLocaleDateString('en-IN', {
                       day: '2-digit', month: 'short', year: '2-digit',
                       timeZone: 'Asia/Kolkata',
                     })}
                   </td>
-                  <td className="py-3 px-4 text-gray-700 text-xs truncate max-w-[140px]">{item.sender_name}</td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4 text-gray-700 max-w-[140px]">{item.sender_name}</td>
+                  <td className="py-3 px-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${cfg.color}`}>
                       {cfg.label}
                     </span>
@@ -289,25 +283,25 @@ export function BulkActionTable({ items, status }: BulkActionTableProps) {
                       <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700">₹</span>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-gray-700 text-xs max-w-[160px]">
+                  <td className="py-3 px-4 text-gray-700 max-w-[160px]">
                     {item.matched_project_name
-                      ? <span className="truncate block">{item.matched_project_name}</span>
+                      ? <span className="block">{item.matched_project_name}</span>
                       : <span className="text-red-400 italic">unmatched</span>
                     }
                   </td>
-                  <td className={`py-3 px-4 font-mono text-xs font-semibold ${confColor}`}>
+                  <td className={`py-3 px-4 font-mono font-semibold whitespace-nowrap ${confColor}`}>
                     {(conf * 100).toFixed(0)}%
                   </td>
-                  <td className="py-3 px-4 text-gray-600 text-xs max-w-[200px]">
-                    <span className="truncate block">{summary}</span>
+                  <td className="py-3 px-4 text-gray-600 max-w-[200px]">
+                    <span className="block">{summary}</span>
                   </td>
-                  <td className="py-3 px-4 text-xs text-gray-400">
+                  <td className="py-3 px-4 text-gray-400">
                     {PROFILE_LABELS[item.chat_profile] ?? item.chat_profile}
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-right whitespace-nowrap">
                     <Link
                       href={`/whatsapp-import/${item.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      className="text-blue-600 hover:text-blue-800 font-medium"
                     >
                       Review →
                     </Link>

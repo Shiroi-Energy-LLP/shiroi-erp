@@ -47,7 +47,7 @@ export async function MyTasks({ employeeId }: { employeeId: string }) {
                 const overdue = isTaskOverdue(task.due_date);
                 return (
                   <TableRow key={task.id}>
-                    <TableCell className="font-medium text-n-900 max-w-[240px] truncate">
+                    <TableCell className="font-medium text-n-900">
                       {task.title}
                     </TableCell>
                     <TableCell>{formatEntityType(task.entity_type)}</TableCell>

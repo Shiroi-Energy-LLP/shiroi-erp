@@ -1,13 +1,22 @@
 import * as React from 'react';
 import { cn } from '../lib/utils';
 
-const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
+const Table = React.forwardRef<
+  HTMLTableElement,
+  React.HTMLAttributes<HTMLTableElement> & { stickyHeader?: boolean }
+>(({ className, stickyHeader, ...props }, ref) => {
+  const table = <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />;
+  // stickyHeader: drop the inner overflow box so a `sticky top-0` <TableHeader>
+  // anchors to the PAGE scroll container (ListPageShell list pages) and freezes
+  // there. Default keeps the self-contained scrollable bordered box.
+  return stickyHeader ? (
+    table
+  ) : (
     <div className="relative w-full overflow-x-auto overflow-auto rounded-lg border border-n-200">
-      <table ref={ref} className={cn('w-full caption-bottom text-[13px]', className)} {...props} />
+      {table}
     </div>
-  )
-);
+  );
+});
 Table.displayName = 'Table';
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
@@ -36,7 +45,7 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
     <tr
       ref={ref}
       className={cn(
-        'h-11 border-b border-n-150 transition-colors duration-100 hover:bg-n-050 even:bg-n-050 data-[state=selected]:bg-[rgba(0,176,80,0.08)] data-[state=selected]:border-l-[3px] data-[state=selected]:border-l-shiroi-green',
+        'h-11 border-b border-n-150 transition-colors duration-100 hover:bg-n-050 even:bg-n-050 data-[state=selected]:bg-[rgba(224,138,0,0.08)] data-[state=selected]:border-l-[3px] data-[state=selected]:border-l-shiroi-gold',
         className
       )}
       {...props}
@@ -50,7 +59,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        'h-11 px-3.5 text-left align-middle font-heading text-[10px] font-bold uppercase tracking-wider text-n-300 first:rounded-tl-md last:rounded-tr-md [&:has([role=checkbox])]:pr-0',
+        'h-11 px-3.5 text-left align-middle whitespace-nowrap font-heading text-[10px] font-bold uppercase tracking-wider text-n-300 first:rounded-tl-md last:rounded-tr-md [&:has([role=checkbox])]:pr-0',
         className
       )}
       {...props}
@@ -61,7 +70,7 @@ TableHead.displayName = 'TableHead';
 
 const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(
   ({ className, ...props }, ref) => (
-    <td ref={ref} className={cn('h-11 px-3.5 align-middle text-n-700 [&:has([role=checkbox])]:pr-0', className)} {...props} />
+    <td ref={ref} className={cn('h-11 px-3.5 py-2 align-top text-n-700 whitespace-normal break-words [&:has([role=checkbox])]:pr-0', className)} {...props} />
   )
 );
 TableCell.displayName = 'TableCell';

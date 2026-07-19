@@ -3,6 +3,9 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { emitErpEvent } from '@/lib/n8n/emit';
+import { createTask, toggleTaskStatus } from '@/lib/tasks-actions';
+import { getCurrentEmployeeId } from '@/lib/auth';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 // Extracted from project-dc-actions.ts (item 15a, 2026-06-06) to keep that
 // file under the 500-LOC ceiling. Milestones + tasks + the employee dropdown
@@ -225,43 +228,26 @@ export async function createQuickTask(input: {
   const op = '[createQuickTask]';
   console.log(`${op} Creating task for project: ${input.projectId}`);
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  // Thin wrapper over the universal createTask (tasks-actions.ts). Quick tasks
+  // auto-assign to the creator when no assignee is picked, scope to the project
+  // entity, and additionally revalidate the project page.
+  const assignedTo = input.assignedTo || (await getCurrentEmployeeId()) || undefined;
 
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
+  const result = await createTask({
+    title: input.title,
+    entityType: 'project',
+    entityId: input.projectId,
+    projectId: input.projectId,
+    milestoneId: input.milestoneId,
+    priority: input.priority ?? 'medium',
+    dueDate: input.dueDate,
+    assignedTo,
+  });
 
-  if (!employee) return { success: false, error: 'Employee not found' };
-
-  const { data: task, error } = await supabase
-    .from('tasks')
-    .insert({
-      project_id: input.projectId,
-      milestone_id: input.milestoneId || null,
-      title: input.title,
-      priority: input.priority || 'medium',
-      due_date: input.dueDate || null,
-      entity_type: 'project',
-      entity_id: input.projectId,
-      created_by: employee.id,
-      assigned_to: input.assignedTo || employee.id,
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    console.error(`${op} Insert failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
-  }
+  if (!result.success) return { success: false, error: result.error };
 
   revalidatePath(`/projects/${input.projectId}`);
-  revalidatePath('/tasks');
-  revalidatePath('/my-tasks');
-  return { success: true, taskId: task?.id };
+  return { success: true, taskId: result.data.taskId };
 }
 
 // ── Task: Toggle completion ──
@@ -274,51 +260,24 @@ export async function toggleTaskCompletion(input: {
   const op = '[toggleTaskCompletion]';
   console.log(`${op} Setting task ${input.taskId} to ${input.isCompleted ? 'completed' : 'pending'}`);
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  // Thin wrapper over the universal toggleTaskStatus (tasks-actions.ts) so the
+  // `completed_by` write is preserved — the old local copy omitted it, leaving
+  // Execution-tab closures without a closer (2026-06-18 redundancy sweep §3).
+  // toggleTaskStatus already revalidates /tasks + /my-tasks; we add the project.
+  const result = await toggleTaskStatus(input.taskId, input.isCompleted);
 
-  const updateData: Record<string, unknown> = {
-    is_completed: input.isCompleted,
-  };
-  if (input.isCompleted) {
-    updateData.completed_at = new Date().toISOString();
-  } else {
-    updateData.completed_at = null;
-  }
-
-  const { error } = await supabase
-    .from('tasks')
-    .update(updateData as any)
-    .eq('id', input.taskId);
-
-  if (error) {
-    console.error(`${op} Update failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
-  }
+  if (!result.success) return { success: false, error: result.error };
 
   if (input.projectId) {
     revalidatePath(`/projects/${input.projectId}`);
   }
-  revalidatePath('/tasks');
-  revalidatePath('/my-tasks');
   return { success: true };
 }
 
 // ── Employees: Get active list for dropdowns ──
 
+// Active-employee dropdown — delegates to the shared helper (the name implied a
+// project filter that never existed; 2026-06-19 sweep §3).
 export async function getActiveEmployeesForProject(): Promise<{ id: string; full_name: string }[]> {
-  const op = '[getActiveEmployeesForProject]';
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name');
-
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return [];
-  }
-  return data ?? [];
+  return getActiveEmployeesForSelect();
 }

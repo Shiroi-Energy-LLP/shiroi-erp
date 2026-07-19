@@ -34,13 +34,13 @@ export function BoiCategoryFilter({ categories, boiId }: BoiCategoryFilterProps)
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-[10px] font-medium text-[#7C818E] uppercase tracking-wide">Filter:</span>
+      <span className="text-[10px] font-medium text-n-500 uppercase tracking-wide">Filter:</span>
       <button
         onClick={() => handleChange('')}
         className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
           current === ''
-            ? 'bg-[#1A1D24] text-white'
-            : 'bg-[#F5F6F8] text-[#7C818E] hover:bg-[#ECEEF2]'
+            ? 'bg-n-950 text-white'
+            : 'bg-n-100 text-n-500 hover:bg-n-150'
         }`}
       >
         All
@@ -51,8 +51,8 @@ export function BoiCategoryFilter({ categories, boiId }: BoiCategoryFilterProps)
           onClick={() => handleChange(cat)}
           className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
             current === cat
-              ? 'bg-[#1A1D24] text-white'
-              : 'bg-[#F5F6F8] text-[#7C818E] hover:bg-[#ECEEF2]'
+              ? 'bg-n-950 text-white'
+              : 'bg-n-100 text-n-500 hover:bg-n-150'
           }`}
         >
           {labelMap[cat] ?? cat.replace(/_/g, ' ')}

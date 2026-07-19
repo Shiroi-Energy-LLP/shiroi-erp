@@ -369,7 +369,7 @@ export async function StepLiaison({ projectId, readOnly = false }: StepLiaisonPr
           <CardContent className="p-0">
             {documents.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="w-full text-[11px]">
+                <table className="w-full text-sm [&_td]:align-top">
                   <thead>
                     <tr className="border-b border-n-200 bg-n-50">
                       <th className="px-3 py-1 text-left text-[10px] font-medium text-n-500">Type</th>
@@ -382,7 +382,7 @@ export async function StepLiaison({ projectId, readOnly = false }: StepLiaisonPr
                       <tr key={doc.id} className="border-b border-n-50 last:border-b-0">
                         <td className="px-3 py-1 text-n-500 capitalize">{doc.document_type.replace(/_/g, ' ')}</td>
                         <td className="px-3 py-1 text-n-900">{doc.document_name}</td>
-                        <td className="px-3 py-1">
+                        <td className="px-3 py-1 whitespace-nowrap">
                           <Badge
                             variant={doc.status === 'accepted' ? 'success' : doc.status === 'rejected' ? 'destructive' : 'warning'}
                             className="text-[9px]"

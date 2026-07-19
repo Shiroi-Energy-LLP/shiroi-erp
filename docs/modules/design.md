@@ -5,14 +5,14 @@
 
 ## Overview
 
-The Design module is where the Designer (and Marketing Manager) turn a site-surveyed lead into a buildable technical package: AutoCAD layouts, PVsyst simulations, panel/inverter specs, and a price-book-gated BOM. It is the engineering gate between the Sales "quick quote" stage and the "detailed proposal" send. The workspace lives at `/design/[leadId]` and auto-creates a draft detailed proposal on entry so every BOM line is tied to a real proposal row from the first click.
+The Design module is where the Designer (and Marketing Manager) turn a site-surveyed lead into a buildable technical package: AutoCAD layouts, PVsyst simulations, panel/inverter specs, and a price-book-gated BOM. It is the engineering gate between the Sales "quick quote" stage and the "detailed proposal" send. The workspace lives at `/design/[leadId]`; the designer clicks **Start Detailed Proposal** to create the draft (an explicit action — not auto-created on entry, per NEVER-DO #24), after which every BOM line is tied to a real proposal row.
 
 ## User Flow
 
 - Lead reaches `site_survey_done` → sales/marketing team routes the lead to `/design`.
 - `/design` list page shows all leads with `status IN (site_survey_done, design_in_progress)`, sorted by oldest-first so nothing rots in the queue.
 - `/design/[leadId]` is the per-lead workspace:
-  - On entry: if the lead is in Path B and has no `draft_proposal_id`, `createDraftDetailedProposal(leadId)` fires and stashes the new proposal's id back on the lead.
+  - If the lead is in Path B (`site_survey_scheduled` / `site_survey_done` / `design_in_progress`) and has no `draft_proposal_id`, the BOM section shows a **Start Detailed Proposal** button. Clicking it runs `createDraftDetailedProposal(leadId)` (idempotent), stashes the new proposal's id back on the lead, then `router.refresh()` reveals the BomPicker. Never auto-created during render (NEVER-DO #24 — a GET must not write; the action also fires the `proposal.requested` n8n event that WhatsApps the design head).
   - **Lead Files Panel:** drag-drop category grid scoped to `proposal-files/leads/{leadId}/{category}/`. Six categories — `drawings`, `pvsyst`, `photos`, `specs`, `proposal`, `misc`. Reuses `CategoryBox` + `PhotoSlideshow` from `components/projects/project-files/parts-boxes.tsx` so the visual pattern matches the project Documents tab.
   - **BomPicker:** price-book-gated editor. Searchable typeahead over `price_book` (50-result cap, filter by description / brand / category), qty input, inline row qty edit, Trash2 remove. Every new line carries `price_book_id`. Legacy free-text rows show a warning chip.
   - **Design Notes Editor:** textarea with blur-save + a "Mark Design Confirmed" button that stays disabled until all preconditions are satisfied — inline blocker-reasons list shows exactly what's missing.
@@ -59,7 +59,7 @@ apps/erp/src/components/
 - `CategoryBox` + `PhotoSlideshow` come from `components/projects/project-files/parts-boxes.tsx`. Reusing them across `lead-files-panel` keeps the visual pattern single-source — don't reimplement.
 - `proposal-files` bucket storage RLS was rebuilt in migration 052 to include `marketing_manager` + `designer` on INSERT / UPDATE / DELETE. Earlier migrations only covered the legacy sales_engineer role.
 - **Design notes are NOT committed to proposals.** They live on `leads.design_notes` so they persist even if the draft proposal is discarded and recreated.
-- `draft_proposal_id` FK on `leads` points at the auto-created detailed draft. If that proposal is manually deleted, the FK goes stale — the workspace will recreate on next entry.
+- `draft_proposal_id` FK on `leads` points at the detailed draft created via the **Start Detailed Proposal** button. If that proposal is manually deleted, the FK goes stale — the workspace shows the Start button again so the designer can recreate it.
 - Legacy (pre-migration-053) BOM lines may be free-text without `price_book_id`. BomPicker flags them with a warning chip; the designer has to re-add them from the price book before confirmation.
 
 ## Past Decisions & Specs

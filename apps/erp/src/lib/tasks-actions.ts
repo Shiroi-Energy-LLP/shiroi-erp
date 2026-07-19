@@ -4,6 +4,7 @@ import type { Database } from '@repo/types/database';
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Row types
@@ -30,7 +31,7 @@ export async function createTask(input: {
   category?: string;
   remarks?: string;
   milestoneId?: string;
-}): Promise<ActionResult<void>> {
+}): Promise<ActionResult<{ taskId: string }>> {
   const op = '[createTask]';
   console.log(`${op} Starting: ${input.title}`);
 
@@ -49,8 +50,10 @@ export async function createTask(input: {
   if (!input.assignedTo) return err('Tasks must have an assignee');
 
   const today = new Date().toISOString().split('T')[0]!;
+  const id = crypto.randomUUID();
 
   const insert: TaskInsert = {
+    id,
     title: input.title,
     description: input.description || null,
     entity_type: input.entityType,
@@ -75,7 +78,7 @@ export async function createTask(input: {
 
   revalidatePath('/tasks');
   revalidatePath('/my-tasks');
-  return ok(undefined);
+  return ok({ taskId: id });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -288,28 +291,17 @@ export async function getWorkLogs(taskId: string): Promise<WorkLogRow[]> {
 // Helpers
 // ═══════════════════════════════════════════════════════════════════════
 
+// Active-employee dropdown — delegates to the shared helper (2026-06-19 sweep §3).
 export async function getActiveEmployees(): Promise<{ id: string; full_name: string }[]> {
-  const op = '[getActiveEmployees]';
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name');
-
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return [];
-  }
-  return data ?? [];
+  return getActiveEmployeesForSelect();
 }
 
-export async function getActiveProjects(): Promise<{ id: string; project_number: string; customer_name: string }[]> {
+export async function getActiveProjects(): Promise<{ id: string; project_number: string; customer_name: string; project_name: string | null }[]> {
   const op = '[getActiveProjects]';
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name')
+    .select('id, project_number, customer_name, project_name')
     .is('deleted_at', null)
     .order('customer_name', { ascending: true });
 
@@ -317,7 +309,7 @@ export async function getActiveProjects(): Promise<{ id: string; project_number:
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
     return [];
   }
-  return data ?? [];
+  return (data ?? []).map((p) => ({ ...p, project_name: p.project_name ?? null }));
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -337,6 +329,26 @@ export async function getMilestonesForProject(
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+  return data ?? [];
+}
+
+/**
+ * Milestones ordered by milestone_order for the /tasks create dialog picker.
+ */
+export async function getProjectMilestonesLite(
+  projectId: string,
+): Promise<{ id: string; milestone_name: string }[]> {
+  const op = '[getProjectMilestonesLite]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('project_milestones')
+    .select('id, milestone_name')
+    .eq('project_id', projectId)
+    .order('milestone_order', { ascending: true });
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message, projectId });
     return [];
   }
   return data ?? [];

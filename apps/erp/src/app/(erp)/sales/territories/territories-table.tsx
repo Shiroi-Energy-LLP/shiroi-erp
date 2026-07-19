@@ -415,7 +415,7 @@ export function TerritoriesTable({ territories, employees }: TerritoriesTablePro
                     <TableCell className="font-medium">
                       <Link
                         href={`/sales/territories/${t.id}`}
-                        className="text-shiroi-green hover:underline"
+                        className="text-shiroi-gold-dark hover:underline"
                       >
                         {t.territory_name}
                       </Link>

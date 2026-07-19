@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { upsertLeadFollowupTask } from '@/lib/leads-task-actions';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { requireAuthUser } from '@/lib/auth';
+import { fyToOrderDate } from '@/lib/helpers/fiscal-year';
 
 /** Map entity types to their database table names */
 const ENTITY_TABLE_MAP: Record<string, string> = {
@@ -35,6 +36,16 @@ export async function updateCellValue(input: {
 
   const { entityType, rowId, value } = input;
   let { field } = input;
+  let outValue: string | number | boolean | null = value;
+
+  // Projects "Year" cell edits the fiscal year: store order_date = 1-Apr of the FY
+  // start (keeps the FY filter + status-summary header reading the same field).
+  if (entityType === 'projects' && field === 'year') {
+    const iso = typeof value === 'string' ? fyToOrderDate(value) : null;
+    if (!iso) return err('Pick a valid fiscal year', 'INVALID_FY');
+    field = 'order_date';
+    outValue = iso;
+  }
 
   // Map display field names to actual DB column names
   const FIELD_ALIAS_MAP: Record<string, Record<string, string>> = {
@@ -68,7 +79,7 @@ export async function updateCellValue(input: {
 
   const { data: updatedRows, error } = await supabase
     .from(tableName as any)
-    .update({ [field]: value } as any)
+    .update({ [field]: outValue } as any)
     .eq('id', rowId)
     .select('id');
 

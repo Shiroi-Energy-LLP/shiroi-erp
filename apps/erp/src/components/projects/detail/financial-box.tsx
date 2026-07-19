@@ -3,6 +3,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  FieldHint,
 } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { EditableField } from './editable-field';
@@ -27,7 +28,8 @@ const ALLOWED_ROLES = new Set<string>([
   'sales_engineer', // marketing manager proxy until the DB role is added
 ]);
 
-const EDIT_ALLOWED_ROLES = new Set<string>(['founder', 'finance']);
+// Mirrors PROJECT_VALUE_EDIT_ROLES in project-detail-actions.ts (server gate).
+const EDIT_ALLOWED_ROLES = new Set<string>(['project_manager', 'founder']);
 
 export function FinancialBox({
   projectId,
@@ -64,7 +66,7 @@ export function FinancialBox({
             <div className="text-xs text-n-500">Order Value (from final proposal)</div>
             {!canEditOrder && (
               <div className="flex items-center gap-1 text-[10px] text-n-500">
-                <Lock className="h-3 w-3" /> PM approval required
+                <Lock className="h-3 w-3" /> Editable by PM only
               </div>
             )}
           </div>
@@ -94,7 +96,7 @@ export function FinancialBox({
 
         {/* Actual expenses breakdown */}
         <div className="space-y-2">
-          <div className="text-xs text-n-500">Actual Expenses (from BOQ + vouchers)</div>
+          <FieldHint>Actual Expenses (from BOQ + vouchers)</FieldHint>
           <div className="text-lg font-mono font-semibold text-n-900">
             {formatINR(actualExpenses)}
           </div>
@@ -112,7 +114,7 @@ export function FinancialBox({
 
         {/* Margin */}
         <div>
-          <div className="text-xs text-n-500">Projected Margin</div>
+          <FieldHint>Projected Margin</FieldHint>
           <div className={`text-lg font-mono font-semibold ${marginColor}`}>
             {formatINR(marginAmount)}{' '}
             <span className="text-sm">({marginPct.toFixed(1)}%)</span>

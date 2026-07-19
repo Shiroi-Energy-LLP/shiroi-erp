@@ -1,5 +1,5 @@
 import { createClient } from '@repo/supabase/server';
-import { getUserProfile } from './auth';
+import { getUserProfile, getCurrentEmployeeId } from './auth';
 import type { Database } from '@repo/types/database';
 
 type LeaveType = Database['public']['Enums']['leave_type'];
@@ -138,9 +138,14 @@ export async function getEmployeeCompensation(employeeId: string) {
     return null;
   }
 
-  // Role gate: only founder, hr_manager, or self
+  // Role gate: founder, hr_manager, or the employee themselves. `isSelf` MUST
+  // compare the caller's employees.id to the target employeeId — NOT profiles.id
+  // (the known FK footgun: *_by/employee ids key off employees(id), not the auth
+  // uid; see memory/project_employee_id_vs_profile_id). The old profile.id check
+  // never matched, so self-view was dead — this restores it (2026-06-19).
   const allowedRoles: string[] = ['founder', 'hr_manager'];
-  const isSelf = profile.id === employeeId;
+  const callerEmployeeId = await getCurrentEmployeeId();
+  const isSelf = callerEmployeeId != null && callerEmployeeId === employeeId;
   if (!allowedRoles.includes(profile.role) && !isSelf) {
     console.warn(`${op} Access denied: role=${profile.role}, isSelf=${isSelf}`);
     return null;

@@ -71,7 +71,7 @@ export default async function VendorPaymentsPage() {
     <div className="space-y-6">
       <div>
         <Eyebrow className="mb-1">FINANCE</Eyebrow>
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Vendor Payments</h1>
+        <h1 className="text-2xl font-bold text-n-950">Vendor Payments</h1>
       </div>
 
       {/* MSME overdue alert strip */}
@@ -158,7 +158,7 @@ export default async function VendorPaymentsPage() {
                       {payment.vendor_bill_id && payment.vendor_bills ? (
                         <Link
                           href={`/vendor-bills/${payment.vendor_bill_id}`}
-                          className="text-[#00B050] hover:underline"
+                          className="text-shiroi-gold-dark hover:underline"
                         >
                           {payment.vendor_bills.bill_number}
                         </Link>

@@ -78,7 +78,7 @@ export function AssignModal({ open, onClose, entity, project, onSuccess }: Props
           ?
         </p>
         {entity.kind === 'invoice' && (
-          <p className="text-xs text-[#7C818E]">
+          <p className="text-xs text-n-500">
             Linked customer payments will cascade to the same project.
           </p>
         )}

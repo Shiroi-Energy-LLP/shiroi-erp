@@ -2,15 +2,17 @@ import { createClient } from '@repo/supabase/server';
 
 import { MS_PER_DAY } from '@/lib/helpers/time-helpers';
 
-import { getPurchaseOrders, getMSMEAlertPOs } from './procurement-queries';
-import type { POListItem } from './procurement-queries';
+import { getPurchaseOrders, getPurchaseOrderStatusCounts, getMSMEAlertPOs } from './procurement-queries';
+import type { POListItem, POListRow } from './procurement-queries';
+
+const RECENT_PO_LIMIT = 10;
 
 export interface PurchaseDashboardData {
   pendingPOCount: number;
   activePOCount: number;
   pendingDeliveries: number;
   msmeAlertCount: number;
-  recentPOs: POListItem[];
+  recentPOs: POListRow[];
   msmeAlertPOs: POListItem[];
   employeeId: string | null;
 }
@@ -34,18 +36,16 @@ export async function getPurchaseDashboardData(profileId: string): Promise<Purch
   }
   const employeeId = emp?.id ?? null;
 
-  // Fetch PO data and MSME alerts in parallel
-  const [allPOs, msmeAlertPOs] = await Promise.all([
-    getPurchaseOrders(),
+  // Status KPIs come from a single COUNT(*) FILTER RPC over the FULL table — the
+  // old path derived them from a .limit(100)-capped getPurchaseOrders() fetch and
+  // undercounted (NEVER-DO #12/#13). Recent POs + MSME alerts fetched in parallel.
+  const [counts, recent, msmeAlertPOs] = await Promise.all([
+    getPurchaseOrderStatusCounts(),
+    getPurchaseOrders({ page: 1, per_page: RECENT_PO_LIMIT }),
     getMSMEAlertPOs(),
   ]);
 
-  // Categorize POs
-  const pendingPOCount = allPOs.filter((po) => po.status === 'draft' || po.status === 'pending_approval').length;
-  const activePOCount = allPOs.filter((po) => po.status === 'approved' || po.status === 'partially_delivered').length;
-  const pendingDeliveries = allPOs.filter(
-    (po) => po.status === 'approved' && !po.actual_delivery_date,
-  ).length;
+  const { pendingPOCount, activePOCount, pendingDeliveries } = counts;
 
   // Filter MSME alerts: 40+ days since delivery
   const today = Date.now();
@@ -61,7 +61,7 @@ export async function getPurchaseDashboardData(profileId: string): Promise<Purch
     activePOCount,
     pendingDeliveries,
     msmeAlertCount: msmeUrgent.length,
-    recentPOs: allPOs.slice(0, 10),
+    recentPOs: recent.rows,
     msmeAlertPOs: msmeUrgent,
     employeeId,
   };

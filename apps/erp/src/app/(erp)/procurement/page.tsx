@@ -8,6 +8,7 @@ import {
   Button,
   Eyebrow,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { ShoppingCart, Package, ArrowRight } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -86,23 +87,44 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-heading font-bold text-n-900">
-            Purchase Module{' '}
-            <span className="text-sm font-normal text-n-500">
-              ({total} projects)
-            </span>
-          </h1>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/procurement" filterParams={['search', 'status', 'priority']}>
+              <FilterSelect paramName="status" className="w-36 text-xs h-8">
+                <option value="">All Status</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </FilterSelect>
+              <FilterSelect paramName="priority" className="w-28 text-xs h-8">
+                <option value="">All Priority</option>
+                {PRIORITY_OPTIONS.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </FilterSelect>
+              <SearchInput
+                placeholder="Search project..."
+                className="w-52 h-8 text-xs"
+              />
+            </FilterBar>
+          </div>
+          <Link href="/procurement/orders">
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1">
+              <Package className="h-3.5 w-3.5" /> View All POs
+            </Button>
+          </Link>
         </div>
-        <Link href="/procurement/orders">
-          <Button size="sm" variant="outline" className="h-8 text-xs gap-1">
-            <Package className="h-3.5 w-3.5" /> View All POs
-          </Button>
-        </Link>
-      </div>
+      }
+    >
+      {/* Title (scrolls away) */}
+      <h1 className="text-lg font-heading font-bold text-n-900">
+        Purchase Module{' '}
+        <span className="text-sm font-normal text-n-500">
+          ({total} projects)
+        </span>
+      </h1>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-3">
@@ -126,30 +148,6 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/procurement" filterParams={['search', 'status', 'priority']}>
-            <FilterSelect paramName="status" className="w-36 text-xs h-8">
-              <option value="">All Status</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="priority" className="w-28 text-xs h-8">
-              <option value="">All Priority</option>
-              {PRIORITY_OPTIONS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search project..."
-              className="w-52 h-8 text-xs"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
-
       {/* Table */}
       <Card>
         <CardContent className="p-0">
@@ -164,9 +162,8 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
+            <table className="w-full text-sm [&_td]:align-top">
+              <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
                   <tr className="border-b border-n-200 bg-n-50 text-left">
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-10">S.No</th>
                     <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project Name</th>
@@ -183,36 +180,36 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
                 <tbody>
                   {items.map((item, idx) => (
                     <tr key={item.project_id} className="border-b border-n-100 hover:bg-n-50">
-                      <td className="px-2 py-1.5 text-[11px] text-n-400 font-mono">
+                      <td className="px-2 py-1.5 text-n-400 font-mono whitespace-nowrap">
                         {(currentPage - 1) * perPage + idx + 1}
                       </td>
-                      <td className="px-2 py-1.5 text-[11px]">
+                      <td className="px-2 py-1.5">
                         <Link
                           href={`/procurement/project/${item.project_id}`}
                           className="text-p-600 hover:underline"
                         >
                           <div className="font-medium leading-tight">{item.project_number}</div>
-                          <div className="text-n-500 text-[10px] leading-tight truncate max-w-[160px]">{item.customer_name}</div>
+                          <div className="text-n-500 text-[10px] leading-tight max-w-[160px]">{item.customer_name}</div>
                         </Link>
                       </td>
-                      <td className="px-2 py-1.5 text-[11px] text-n-600 font-mono">{item.item_count}</td>
-                      <td className="px-2 py-1.5 text-[11px] text-n-600 font-mono">{item.po_count}</td>
-                      <td className="px-2 py-1.5 text-[10px] text-n-500">
+                      <td className="px-2 py-1.5 text-n-600 font-mono whitespace-nowrap">{item.item_count}</td>
+                      <td className="px-2 py-1.5 text-n-600 font-mono whitespace-nowrap">{item.po_count}</td>
+                      <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                         {item.boq_sent_to_purchase_at
                           ? formatDate(item.boq_sent_to_purchase_at)
                           : <span className="text-n-300">—</span>}
                       </td>
-                      <td className="px-2 py-1.5 text-[11px] text-right font-mono font-medium">
+                      <td className="px-2 py-1.5 text-right font-mono font-medium whitespace-nowrap">
                         {formatINR(item.total_with_tax)}
                       </td>
-                      <td className="px-2 py-1.5">{getStatusBadge(item.procurement_status)}</td>
-                      <td className="px-2 py-1.5">{getPriorityBadge(item.procurement_priority)}</td>
-                      <td className="px-2 py-1.5 text-[10px] text-n-500">
+                      <td className="px-2 py-1.5 whitespace-nowrap">{getStatusBadge(item.procurement_status)}</td>
+                      <td className="px-2 py-1.5 whitespace-nowrap">{getPriorityBadge(item.procurement_priority)}</td>
+                      <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
                         {item.procurement_received_date
                           ? formatDate(item.procurement_received_date)
                           : <span className="text-n-300">—</span>}
                       </td>
-                      <td className="px-2 py-1.5">
+                      <td className="px-2 py-1.5 whitespace-nowrap">
                         <Link href={`/procurement/project/${item.project_id}`}>
                           <ArrowRight className="h-3.5 w-3.5 text-n-400 hover:text-p-600" />
                         </Link>
@@ -220,8 +217,7 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
+            </table>
           )}
 
           {/* Pagination */}
@@ -250,6 +246,6 @@ export default async function ProcurementPage({ searchParams }: ProcurementPageP
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

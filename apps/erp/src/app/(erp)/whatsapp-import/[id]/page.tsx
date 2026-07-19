@@ -1,18 +1,12 @@
 import { notFound } from 'next/navigation';
 import { getQueueItem } from '@/lib/whatsapp-import-queries';
 import { approveQueueItem, rejectQueueItem } from '@/lib/whatsapp-import-actions';
+import { WHATSAPP_PROFILE_LABELS as PROFILE_LABELS } from '@/lib/label-constants';
 import Link from 'next/link';
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
-
-const PROFILE_LABELS: Record<string, string> = {
-  marketing: 'Marketing',
-  llp: 'LLP / Purchase',
-  shiroi_energy: 'Shiroi Energy ⚡',
-  site: 'Site',
-};
 
 export default async function QueueItemDetailPage({ params }: PageProps) {
   const { id } = await params;

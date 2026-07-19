@@ -77,6 +77,7 @@ export function LeadsTableWrapper({
 
   return (
     <DataTable
+      containedScroll
       entityType="leads"
       allColumns={LEAD_COLUMNS}
       visibleColumns={visibleColumns}

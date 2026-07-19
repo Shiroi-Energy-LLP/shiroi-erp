@@ -29,6 +29,7 @@ export type InverterBrand =
   | 'huawei'
   | 'fronius'
   | 'solarman'
+  | 'deye'
   | 'goodwe'
   | 'fimer'
   | 'polycab'

@@ -32,15 +32,15 @@ import { CutLengthTab } from '@/components/projects/cut-length/cut-length-tab';
 // S15 — B3 plant performance anomaly alerts
 import { PerformanceTab } from '@/components/projects/performance/performance-tab';
 import { getCutRecordsForProject, getProjectCableSummary } from '@/lib/inventory-queries';
-// C9 — Completion checklist
-import { CompletionChecklist } from '@/components/projects/completion/completion-checklist';
+// Progress tab — milestone-weighted completion (mig 173) + milestone photos
+import { MilestoneProgressPanel } from '@/components/projects/completion/milestone-progress-panel';
 import { MilestonePhotosPanel } from '@/components/projects/completion/milestone-photos-panel';
-import { getProjectCompletionItems, getProjectCompletionPct } from '@/lib/project-completion-queries';
 // C12 — DC Certificates
 import { DcCertificatesPanel } from '@/components/projects/certificates/dc-certificates-panel';
 import { getDcCertificatesForProject } from '@/lib/dc-certificate-queries';
 // S5 — F7 BOQ variance narrative
 import { BoqVarianceCard } from '@/components/projects/detail/boq-variance-card';
+import { DeleteProjectCard } from '@/components/projects/detail/delete-project-card';
 
 interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
@@ -209,6 +209,11 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
             />
           </CardContent>
         </Card>
+
+        {/* Danger zone — soft delete (PM + founder only) */}
+        {viewerRole && ['founder', 'project_manager'].includes(viewerRole) && (
+          <DeleteProjectCard projectId={id} projectNumber={(project as any).project_number ?? ''} />
+        )}
       </div>
     </div>
 
@@ -282,21 +287,11 @@ async function TabContent({ projectId, tab }: { projectId: string; tab: string }
       );
     }
 
-    // ── C9: Completion checklist + E9 milestone photos ──────────────────
+    // ── Progress: milestone-weighted completion + E9 milestone photos ────
     case 'completion': {
-      const viewerRole = await getCurrentUserRoleForProject();
-      const [items, completionPct] = await Promise.all([
-        getProjectCompletionItems(projectId),
-        getProjectCompletionPct(projectId),
-      ]);
       return (
         <div className="space-y-4">
-          <CompletionChecklist
-            projectId={projectId}
-            items={items}
-            completionPct={completionPct}
-            viewerRole={viewerRole}
-          />
+          <MilestoneProgressPanel projectId={projectId} />
           <MilestonePhotosPanel projectId={projectId} />
         </div>
       );

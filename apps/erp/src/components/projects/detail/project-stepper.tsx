@@ -57,13 +57,13 @@ export function ProjectStepper({ projectId, completedStages }: ProjectStepperPro
             const isActive = activeTab === stage.queryTab;
             const isDone = !!completedStages[stage.queryTab];
             const stateCls = isActive
-              ? 'border-shiroi-green bg-shiroi-green/10 text-shiroi-green'
+              ? 'border-shiroi-gold bg-shiroi-gold/10 text-shiroi-gold-dark'
               : isDone
                 ? 'border-shiroi-green/40 bg-white text-shiroi-green hover:bg-shiroi-green/5'
                 : 'border-n-200 bg-white text-n-500 hover:bg-n-50';
 
             const dotCls = isActive
-              ? 'bg-shiroi-green text-white'
+              ? 'bg-shiroi-gold text-shiroi-ink'
               : isDone
                 ? 'bg-shiroi-green text-white'
                 : 'bg-n-200 text-n-600';

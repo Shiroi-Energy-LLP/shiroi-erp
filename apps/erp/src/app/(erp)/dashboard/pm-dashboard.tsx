@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getUserProfile } from '@/lib/auth';
 import { getPMDashboardData } from '@/lib/pm-queries';
 import { getProjectsWithNoReportToday } from '@/lib/dashboard-queries';
-import { KpiCard } from '@/components/kpi-card';
+import { KpiCard } from '@repo/ui';
 import { MyTasks } from '@/components/my-tasks';
 import { PMDonutChart } from '@/components/dashboard/pm-donut-chart';
 import { OperationsWidget } from '@/components/dashboard/operations-widget';
@@ -35,7 +35,7 @@ export async function PMDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
+      <h1 className="text-2xl font-heading font-bold text-n-950">
         {greeting}, {firstName}
       </h1>
 

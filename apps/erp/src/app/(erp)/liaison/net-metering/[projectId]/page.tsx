@@ -33,11 +33,11 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/liaison/net-metering" className="text-sm text-[#00B050] hover:underline">&larr; Back to Net Metering</Link>
-          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">
+          <Link href="/liaison/net-metering" className="text-sm text-shiroi-gold-dark hover:underline">&larr; Back to Net Metering</Link>
+          <h1 className="text-2xl font-bold text-n-950 mt-1">
             {project?.project_number} — {project?.customer_name}
           </h1>
-          <p className="text-sm text-[#7C818E]">
+          <p className="text-sm text-n-500">
             {project?.system_size_kwp} kWp {project?.system_type?.replace(/_/g, ' ')} · {project?.site_city}
           </p>
         </div>
@@ -82,7 +82,7 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
         </CardHeader>
         <CardContent>
           {documents.length === 0 ? (
-            <p className="text-sm text-[#9CA0AB] text-center py-4">No documents uploaded yet.</p>
+            <p className="text-sm text-n-400 text-center py-4">No documents uploaded yet.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -119,19 +119,19 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
         </CardHeader>
         <CardContent>
           {objections.length === 0 ? (
-            <p className="text-sm text-[#9CA0AB] text-center py-4">No objections raised.</p>
+            <p className="text-sm text-n-400 text-center py-4">No objections raised.</p>
           ) : (
             <div className="space-y-3">
               {objections.map((obj: any) => (
-                <div key={obj.id} className="rounded-md border border-[#DFE2E8] p-3 text-sm space-y-1">
+                <div key={obj.id} className="rounded-md border border-n-200 p-3 text-sm space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-medium capitalize">{obj.objection_source} — {obj.objection_type?.replace(/_/g, ' ')}</span>
                     <Badge variant={obj.resolved ? 'success' : 'error'} className="capitalize">
                       {obj.resolved ? 'Resolved' : 'Open'}
                     </Badge>
                   </div>
-                  <p className="text-[#3F424D]">{obj.objection_description}</p>
-                  <p className="text-xs text-[#9CA0AB]">
+                  <p className="text-n-700">{obj.objection_description}</p>
+                  <p className="text-xs text-n-400">
                     Raised: {formatDate(obj.objection_date)}
                     {obj.resolved_date && ` · Resolved: ${formatDate(obj.resolved_date)}`}
                     {obj.days_open != null && ` · ${obj.days_open} days`}

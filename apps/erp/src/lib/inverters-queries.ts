@@ -2,6 +2,7 @@
 
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { getSessionContext } from '@/lib/auth';
 
 // ═══════════════════════════════════════════════════════════════════════
 // getCurrentUserRole — role guard helper for the inverters page
@@ -11,17 +12,9 @@ export async function getCurrentUserRole(): Promise<{
   userId: string | null;
   role: string | null;
 }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { userId: null, role: null };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  return { userId: user.id, role: profile?.role ?? null };
+  // Shares the request-scoped session resolution (NEVER-DO #22 / master-ref §4.17).
+  const { userId, role } = await getSessionContext();
+  return { userId, role };
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -33,7 +26,7 @@ export type InverterPollFailureRow = Database['public']['Tables']['inverter_poll
 export type InverterMonitoringCredentialRow =
   Database['public']['Tables']['inverter_monitoring_credentials']['Row'];
 
-type ProjectLite = { id: string; customer_name: string; project_number: string | null };
+type ProjectLite = { id: string; customer_name: string; project_number: string | null; project_name?: string | null };
 
 export type InverterWithProject = InverterRow & {
   projects: ProjectLite | null;
@@ -173,7 +166,7 @@ export async function getAllProjectsForInverters(): Promise<ProjectLite[]> {
 
   const { data, error } = await supabase
     .from('projects')
-    .select('id, customer_name, project_number')
+    .select('id, customer_name, project_number, project_name')
     .order('customer_name', { ascending: true })
     .limit(1000);
 
@@ -186,5 +179,6 @@ export async function getAllProjectsForInverters(): Promise<ProjectLite[]> {
     id: p.id,
     customer_name: p.customer_name ?? '',
     project_number: p.project_number ?? null,
+    project_name: p.project_name ?? null,
   }));
 }

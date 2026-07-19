@@ -13,8 +13,7 @@ import {
 } from '@/lib/cached-dashboard-queries';
 import { getUserProfile } from '@/lib/auth';
 import { shortINR } from '@repo/ui/formatters';
-import { Eyebrow, Badge } from '@repo/ui';
-import { KpiCard } from '@/components/kpi-card';
+import { Eyebrow, Badge, KpiCard } from '@repo/ui';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import Link from 'next/link';
 
@@ -83,7 +82,7 @@ export async function FounderDashboard() {
   return (
     <div className="space-y-6">
       <Eyebrow className="mb-1">DASHBOARD</Eyebrow>
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Good morning, {firstName}</h1>
+      <h1 className="text-2xl font-heading font-bold text-n-950">Good morning, {firstName}</h1>
       <DataReviewBanner />
       {payrollDays >= 0 && payrollDays <= 5 && (
         <div className="rounded-md bg-[#FFFBEB] border border-[#FACB01] px-4 py-2 text-sm font-medium text-[#92400E]">
@@ -146,12 +145,12 @@ export async function FounderDashboard() {
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-[#1A1D24]">{amcSummary.completed}</span>
+                <span className="text-2xl font-bold text-n-950">{amcSummary.completed}</span>
                 <span className="text-sm text-n-500">/ {amcSummary.scheduled} visits</span>
               </div>
-              <div className="mt-2 h-1.5 rounded-full bg-[#E5E7EB] overflow-hidden">
+              <div className="mt-2 h-1.5 rounded-full bg-n-200 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-shiroi-green transition-all duration-300"
+                  className="h-full rounded-full bg-shiroi-gold transition-all duration-300"
                   style={{ width: `${amcSummary.scheduled > 0 ? Math.round((amcSummary.completed / amcSummary.scheduled) * 100) : 0}%` }}
                 />
               </div>

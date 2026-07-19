@@ -16,7 +16,7 @@ import { fimerAdapter, fimerAuthenticate, _statusFromPower } from './fimer';
 import { InvalidCredentialsError, AdapterError } from './base';
 
 const VALID_CREDS = {
-  api_key: 'fa1d0f38-cf72-4257-95d3-66a13d55cba6-0c81',
+  api_key: 'test-api-key',
   oauth_token: 'session-token-abc123',
   api_base: 'https://api.auroravision.net/api/rest',
   rated_capacity_kw: '25',
@@ -61,18 +61,18 @@ describe('fimerAuthenticate', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     const token = await fimerAuthenticate({
-      apiKey: 'fa1d0f38-cf72-4257-95d3-66a13d55cba6-0c81',
-      username: 'Shiroienergy',
-      password: 'Solar@123',
+      apiKey: 'test-api-key',
+      username: 'test-user',
+      password: 'test-pass',
     });
 
     expect(token).toBe('Kl0V4qUUpr5b...real-token');
     const [url, init] = mockFetch.mock.calls[0]!;
     expect(url).toBe('https://api.auroravision.net/api/rest/authenticate');
     const headers = init?.headers as Record<string, string>;
-    expect(headers['X-AuroraVision-ApiKey']).toBe('fa1d0f38-cf72-4257-95d3-66a13d55cba6-0c81');
+    expect(headers['X-AuroraVision-ApiKey']).toBe('test-api-key');
     expect(headers['Authorization']).toBe(
-      'Basic ' + Buffer.from('Shiroienergy:Solar@123').toString('base64'),
+      'Basic ' + Buffer.from('test-user:test-pass').toString('base64'),
     );
   });
 
@@ -232,9 +232,9 @@ describe('fimerAdapter.healthCheck', () => {
   it('returns ok=true when /authenticate returns a token', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(jsonResponse({ result: 'token-abcdef0123456789' })));
     const r = await fimerAdapter.healthCheck({
-      api_key: 'fa1d0f38-cf72-4257-95d3-66a13d55cba6-0c81',
-      username: 'Shiroienergy',
-      password: 'Solar@123',
+      api_key: 'test-api-key',
+      username: 'test-user',
+      password: 'test-pass',
     });
     expect(r.ok).toBe(true);
     expect(r.message).toMatch(/token-ab/);   // adapter shows first 8 chars

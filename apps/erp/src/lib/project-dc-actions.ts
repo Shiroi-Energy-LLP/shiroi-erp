@@ -283,6 +283,22 @@ export async function submitDeliveryChallan(input: {
     return { success: false, error: error.message };
   }
 
+  // Auto-advance linked BOQ items ready_to_dispatch → delivered (mig 176).
+  // Best-effort: dispatch already succeeded; a failure here is logged and the
+  // PM can still set the status by hand on the BOQ tab.
+  const { data: deliveredCount, error: rpcError } = await supabase.rpc(
+    'mark_dc_boq_items_delivered',
+    { p_dc_id: input.challanId },
+  );
+  if (rpcError) {
+    console.error(`${op} mark_dc_boq_items_delivered failed (non-blocking):`, {
+      code: rpcError.code, message: rpcError.message, challanId: input.challanId,
+      timestamp: new Date().toISOString(),
+    });
+  } else {
+    console.log(`${op} BOQ items auto-delivered: ${deliveredCount ?? 0}`);
+  }
+
   revalidatePath(`/projects/${input.projectId}`);
   return { success: true };
 }

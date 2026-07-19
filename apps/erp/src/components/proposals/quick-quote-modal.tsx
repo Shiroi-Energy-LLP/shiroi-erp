@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Label, Card, CardContent } from '@repo/ui';
 import { createBudgetaryQuoteAction } from '@/lib/proposal-actions';
+import { SYSTEM_TYPE_OPTIONS as SYSTEM_TYPES } from '@/lib/label-constants';
 
 interface QuickQuoteModalProps {
   leadId: string;
@@ -12,12 +13,6 @@ interface QuickQuoteModalProps {
   defaultSegment: string | null;
   onClose: () => void;
 }
-
-const SYSTEM_TYPES = [
-  { value: 'on_grid', label: 'On Grid' },
-  { value: 'hybrid', label: 'Hybrid' },
-  { value: 'off_grid', label: 'Off Grid' },
-];
 
 const STRUCTURE_TYPES = [
   { value: 'flush_mount', label: 'Flush Mount (Flat Roof)' },
@@ -91,7 +86,7 @@ export function QuickQuoteModal({ leadId, defaultSystemType, defaultSizeKwp, def
       <Card className="w-full max-w-lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-[#1A1D24]">Quick Budgetary Quote</h2>
+            <h2 className="text-lg font-bold text-n-950">Quick Budgetary Quote</h2>
             <Button variant="ghost" size="sm" onClick={onClose}>✕</Button>
           </div>
 

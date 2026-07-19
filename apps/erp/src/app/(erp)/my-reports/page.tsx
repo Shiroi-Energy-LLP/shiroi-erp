@@ -41,7 +41,7 @@ export default async function MyReportsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Eyebrow className="mb-1">MY REPORTS</Eyebrow>
-        <h1 className="text-2xl font-bold text-[#1A1D24]">My Reports</h1>
+        <h1 className="text-2xl font-bold text-n-950">My Reports</h1>
       </div>
 
       <Card>
@@ -74,7 +74,7 @@ export default async function MyReportsPage() {
                       {report.projects?.project_number ? (
                         <Link
                           href={`/projects/${report.project_id}/reports/${report.id}`}
-                          className="text-[#00B050] hover:underline"
+                          className="text-shiroi-gold-dark hover:underline"
                         >
                           {formatDate(report.report_date)}
                         </Link>

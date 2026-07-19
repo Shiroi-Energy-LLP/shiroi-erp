@@ -10,14 +10,18 @@ O&M is the post-handover side of the system — everything that happens after a 
 ## Screens / Routes
 
 - `/om/visits` — scheduled + past visits
-- `/om/tickets` — service ticket list (TKT-NNN format, padStart 3 digits)
-  - 12-column table: Ticket #, Project, Title, Issue Type, Severity, Status, Assigned To, Service Amount, Created, SLA Due, Resolved By, Actions
+- `/om/tickets` — service ticket list (ticket numbers still mint internally as TKT-NNN but are **no longer displayed** — column removed 2026-06-11 per Vivek; `created_at` auto-records and shows as Created)
+  - **9-column table (trimmed 2026-06-27, mig 199):** Project, **Title (links to `/om/tickets/[id]`)**, Issue Type, Assigned To, Status, Created, **Done By** (= `resolved_by`), **Amount (₹)**, Actions. Severity + SLA Due columns dropped from the list (severity still fully editable in the form + shown on the detail page).
+  - **3 KPI cards (2026-06-27):** Open Services / Closed Services / Total Service Amount, from `get_service_ticket_kpis()` (one SQL call: Open = status NOT IN (resolved,closed), Closed = IN (resolved,closed), plus `SUM(service_amount)`). Replaced the standalone Total-Amount header stat (`get_service_ticket_amount_total()` RPC retained for back-compat).
   - Inline status toggle (6 statuses: open/assigned/in_progress/resolved/closed/escalated — auto-sets `resolved_at`/`resolved_by`, `closed_at`)
-  - Edit dialog, Delete (soft via status=closed)
-  - Filters: status, severity, issue_type, engineer, project, search
+  - Edit dialog (quick edit), **Delete = hard DELETE (2026-06-27)** behind a confirm — permanently removes the ticket, cascades `om_ticket_events`, best-effort `project-files` Storage cleanup; needs the new `tickets_delete` RLS policy (founder/PM/om_technician). Closing a ticket stays a *status* via the inline toggle.
+  - Filters: **project (dedicated autosearch combobox `TicketProjectFilter` → `?project=`, added 2026-06-27)**, status, issue_type, engineer, and a **live search box** that filters the table as you type — matches ticket title / free-text `project_name_custom` / the linked project's customer + number (uses the shared `matchProjectIdsByText` helper over `search_projects_lite`). (The severity filter was dropped 2026-06-27 alongside the column.)
+  - Create dialog: project picked via the searchable `ProjectCombobox` (customer – project name, number badge) — replaced the plain dropdown 2026-06-11
+  - **Detail page `/om/tickets/[id]` (2026-06-27, mig 199):** opened from the Title. Header (ticket #, status toggle, meta grid incl. severity/SLA/done-by/amount) + hard-delete. Three sections: (1) **all-fields edit panel** (`TicketEditPanel` → `updateServiceTicket`, now also accepts project reassignment + status, logs a system event summarising changed fields); (2) **Supporting Documents** — ticket-level multi-file upload (`attachment_paths`/`attachment_names TEXT[]` on `om_service_tickets`); (3) **Work Progress & Activity** — a combined reverse-chron timeline from `om_ticket_events` (`entry_type ∈ note|system`): manual notes (each with an optional single file) interleaved with auto system events (create / status change / edits / doc add). Composer at top; system rows are non-deletable, manual notes are. All mutations `revalidatePath` both `/om/tickets` and `/om/tickets/[id]` so list + detail stay in sync. Files live in `project-files` (client-side upload + short-lived signed-URL view via `AttachmentLink`). Shared option lists/label maps live in `lib/ticket-constants.ts` (client-safe, no server imports — NEVER-DO #21).
+  - **2026-06-16 (mig 183):** closed/resolved rows are no longer struck-through/dimmed — the inline status badge already reads "Closed" (the `line-through`/`opacity-50` was removed). Tickets can be raised against a **free-text project name** (Service/AMC/misc not in the projects list): `project_id` is nullable with a `project_name_custom` fallback (CHECK one-of-two); the create dialog uses `ProjectCombobox.allowCustom` and the list shows the custom label when there's no linked project.
 - `/om/amc` — contract-centric AMC table
   - 9 columns: Project Name clickable, Category Free/Paid, Scheduled Visits X/Y expandable, Status Open/Closed toggle, Next AMC Date, Completed Date, Notes, Actions, Report
-  - Create AMC: Free = auto-creates 3 visits, Paid = prompts duration/visits/amount
+  - Create AMC: Free = auto-creates 3 visits, Paid = prompts duration/visits/amount; project picked via `ProjectCombobox` (2026-06-11 — keeps the Free→commissioned-only list switch + commissioned-date autofill)
   - `AmcVisitTracker` per-contract expandable sub-table with inline status + edit panel (work done, issues, resolution, customer feedback, report file upload to `project-files` bucket)
 - `/om/plant-monitoring` — credential storage + future inverter live data
   - 3 summary cards (total, per-brand, missing credentials)
@@ -54,7 +58,8 @@ O&M is the post-handover side of the system — everything that happens after a 
 
 ## Key Tables
 
-- `om_service_tickets` (TKT-NNN, `service_amount NUMERIC(14,2)`, `closed_at`, `resolution_notes`)
+- `om_service_tickets` (TKT-NNN, `service_amount NUMERIC(14,2)`, `closed_at`, `resolution_notes`; `attachment_paths`/`attachment_names TEXT[]` for ticket-level docs — mig 199)
+- `om_ticket_events` (mig 199 — combined detail-page timeline: `entry_type` note|system, `body`, optional `attachment_path`/`attachment_name`, `created_by` → employees; FK `ticket_id` ON DELETE CASCADE; index `(ticket_id, created_at DESC)`; RLS read founder/PM/om_tech/finance, insert+delete founder/PM/om_tech)
 - `om_contracts` (`amc_category`, `amc_duration_months`, `annual_value`)
 - `om_visit_schedules` (`scheduled_date`, `visit_number`, `status`)
 - `om_visit_reports` (`work_done`, `issues_identified`, `resolution_details`, `customer_feedback`, `completed_by`, `report_file_paths TEXT[]`)

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getProject, getProjectDelays } from '@/lib/projects-queries';
+import { getProjectHeader, getProjectDelays } from '@/lib/projects-queries';
 import { DelayResponsibilityBadge } from '@/components/projects/delay-responsibility-badge';
 import { formatDate } from '@repo/ui/formatters';
 import {
@@ -23,7 +23,7 @@ interface DelaysPageProps {
 export default async function DelaysPage({ params }: DelaysPageProps) {
   const { id } = await params;
   const [project, delays] = await Promise.all([
-    getProject(id),
+    getProjectHeader(id),
     getProjectDelays(id),
   ]);
 

@@ -14,7 +14,7 @@ import {
 
 // ── Create Invoice ──
 
-export async function createInvoice(input: {
+type CreateInvoiceInput = {
   projectId: string;
   invoiceType: 'proforma' | 'tax_invoice' | 'credit_note';
   milestoneName?: string;
@@ -26,8 +26,21 @@ export async function createInvoice(input: {
   invoiceDate: string;
   dueDate: string;
   notes?: string;
-}): Promise<ActionResult<{ invoiceId: string }>> {
-  const op = '[createInvoice]';
+};
+
+/**
+ * Canonical invoice write. createInvoice (general /invoices flow, project picker)
+ * and raiseProjectInvoice (project-detail dialog, fixed project) both delegate
+ * here — they were byte-identical inserts into `invoices` with the same
+ * generate_doc_number('INV') numbering and revalidations; the only difference was
+ * the return shape (raiseProjectInvoice also returns invoiceNumber). No n8n emit
+ * on either path, so this merge carries no notification divergence (master-ref
+ * §4.19; locked by __tests__/invoice-write-wrappers.test.ts).
+ */
+export async function createCustomerInvoice(
+  input: CreateInvoiceInput,
+): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
+  const op = '[createCustomerInvoice]';
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -44,7 +57,7 @@ export async function createInvoice(input: {
 
   // Generate invoice number using DB function
   const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'INV' });
-  const invoiceNumber = docNum || `SHIROI/INV/${new Date().getFullYear()}/TEMP`;
+  const invoiceNumber = (docNum as string | null) || `SHIROI/INV/${new Date().getFullYear()}/TEMP`;
 
   const { data, error } = await supabase
     .from('invoices')
@@ -69,21 +82,33 @@ export async function createInvoice(input: {
     .select('id')
     .single();
 
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return err(error.message, error.code);
+  if (error || !data) {
+    console.error(`${op} Insert failed:`, { code: error?.code, message: error?.message, projectId: input.projectId });
+    return err(error?.message ?? 'Failed to create invoice', error?.code);
   }
 
   revalidatePath('/invoices');
   revalidatePath('/cash');
   revalidatePath('/payments/reconciliation');
   revalidatePath(`/projects/${input.projectId}`);
-  return ok({ invoiceId: data?.id ?? '' });
+  return ok({ invoiceId: data.id, invoiceNumber });
+}
+
+/**
+ * General /invoices-page invoice entry (project picker). Thin wrapper over
+ * createCustomerInvoice; preserves the historical {invoiceId}-only return.
+ */
+export async function createInvoice(
+  input: CreateInvoiceInput,
+): Promise<ActionResult<{ invoiceId: string }>> {
+  const res = await createCustomerInvoice(input);
+  if (!res.success) return res;
+  return ok({ invoiceId: res.data.invoiceId });
 }
 
 // ── Record Customer Payment ──
 
-export async function recordPayment(input: {
+type RecordPaymentInput = {
   projectId: string;
   invoiceId?: string;
   amount: number;
@@ -93,8 +118,24 @@ export async function recordPayment(input: {
   bankName?: string;
   isAdvance?: boolean;
   notes?: string;
-}): Promise<ActionResult<{ paymentId: string }>> {
-  const op = '[recordPayment]';
+};
+
+/**
+ * Canonical customer-payment write. recordPayment (general /payments flow) and
+ * recordProjectPayment (project-detail flow) both delegate here — they were
+ * byte-identical copies whose ONLY behavioural difference was the n8n emit
+ * (`customer_payment.received` → salesperson commission tracking + customer
+ * ping). That difference is now the explicit `notify` option, so the merge
+ * cannot silently leak the notification into the project-detail flow or drop it
+ * from the payments flow (master-ref §4.19; regression-locked in
+ * __tests__/payment-write-wrappers.test.ts).
+ */
+export async function recordCustomerPayment(
+  input: RecordPaymentInput,
+  opts: { notify?: boolean } = {},
+): Promise<ActionResult<{ paymentId: string }>> {
+  const op = '[recordCustomerPayment]';
+  const notify = opts.notify ?? true;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -110,7 +151,7 @@ export async function recordPayment(input: {
 
   // Generate receipt number
   const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'REC' });
-  const receiptNumber = docNum || `SHIROI/REC/${new Date().getFullYear()}/TEMP`;
+  const receiptNumber = (docNum as string | null) || `SHIROI/REC/${new Date().getFullYear()}/TEMP`;
 
   const { data, error } = await supabase
     .from('customer_payments')
@@ -131,9 +172,9 @@ export async function recordPayment(input: {
     .select('id')
     .single();
 
-  if (error) {
-    console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return err(error.message, error.code);
+  if (error || !data) {
+    console.error(`${op} Insert failed:`, { code: error?.code, message: error?.message, projectId: input.projectId });
+    return err(error?.message ?? 'Failed to record payment', error?.code);
   }
 
   // If linked to an invoice, update the invoice amounts
@@ -166,9 +207,21 @@ export async function recordPayment(input: {
   revalidatePath('/payments/reconciliation');
   if (input.projectId) revalidatePath(`/projects/${input.projectId}`);
 
-  if (data?.id) void emitCustomerPaymentReceived(data.id);
+  // The ONLY historical divergence: the general /payments flow emitted the n8n
+  // event (commission + customer ping); the project-detail flow did not.
+  if (notify && data.id) void emitCustomerPaymentReceived(data.id);
 
-  return ok({ paymentId: data?.id ?? '' });
+  return ok({ paymentId: data.id });
+}
+
+/**
+ * General /payments-page payment entry — emits the n8n commission/ping event.
+ * Thin wrapper over recordCustomerPayment (notify: true).
+ */
+export async function recordPayment(
+  input: RecordPaymentInput,
+): Promise<ActionResult<{ paymentId: string }>> {
+  return recordCustomerPayment(input, { notify: true });
 }
 
 async function emitCustomerPaymentReceived(paymentId: string): Promise<void> {
@@ -320,166 +373,23 @@ export async function recordVendorPayment(input: {
   return ok(undefined);
 }
 
-// ── Project-context: Raise Invoice (ActionResult<T> pattern) ──
-// Used by project detail raise-invoice dialog — pre-scoped to a project.
-
-export async function raiseProjectInvoice(input: {
-  projectId: string;
-  invoiceType: 'proforma' | 'tax_invoice' | 'credit_note';
-  milestoneName?: string;
-  subtotalSupply: number;
-  subtotalWorks: number;
-  gstSupplyAmount: number;
-  gstWorksAmount: number;
-  totalAmount: number;
-  invoiceDate: string;
-  dueDate: string;
-  notes?: string;
-}): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
-  const op = '[raiseProjectInvoice]';
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
-
-  const { data: employee, error: empError } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
-
-  if (empError || !employee) {
-    console.error(`${op} Employee lookup failed:`, { empError, timestamp: new Date().toISOString() });
-    return err('Employee profile not found');
-  }
-
-  const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'INV' });
-  const invoiceNumber = (docNum as string | null) || `SHIROI/INV/${new Date().getFullYear()}/TEMP`;
-
-  const { data, error } = await supabase
-    .from('invoices')
-    .insert({
-      project_id: input.projectId,
-      raised_by: employee.id,
-      invoice_number: invoiceNumber,
-      invoice_type: input.invoiceType,
-      milestone_name: input.milestoneName || null,
-      subtotal_supply: input.subtotalSupply,
-      subtotal_works: input.subtotalWorks,
-      gst_supply_amount: input.gstSupplyAmount,
-      gst_works_amount: input.gstWorksAmount,
-      total_amount: input.totalAmount,
-      amount_outstanding: input.totalAmount,
-      invoice_date: input.invoiceDate,
-      due_date: input.dueDate,
-      status: 'draft',
-      notes: input.notes || null,
-      erp_created: true,
-    })
-    .select('id')
-    .single();
-
-  if (error || !data) {
-    console.error(`${op} Insert failed:`, { code: error?.code, message: error?.message, projectId: input.projectId, timestamp: new Date().toISOString() });
-    return err(error?.message ?? 'Failed to create invoice');
-  }
-
-  revalidatePath('/invoices');
-  revalidatePath('/cash');
-  revalidatePath('/payments/reconciliation');
-  revalidatePath(`/projects/${input.projectId}`);
-
-  return ok({ invoiceId: data.id, invoiceNumber });
+// ── Project-context: Raise Invoice ──
+// Project-detail dialog — pre-scoped to a project. Thin wrapper over
+// createCustomerInvoice (also returns invoiceNumber, which the dialog renders).
+export async function raiseProjectInvoice(
+  input: CreateInvoiceInput,
+): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
+  return createCustomerInvoice(input);
 }
 
-// ── Project-context: Record Payment (ActionResult<T> pattern) ──
-// Used by project detail record-payment dialog — pre-scoped to a project.
-
-export async function recordProjectPayment(input: {
-  projectId: string;
-  invoiceId?: string;
-  amount: number;
-  paymentDate: string;
-  paymentMethod: 'bank_transfer' | 'upi' | 'cheque' | 'cash' | 'dd';
-  paymentReference?: string;
-  bankName?: string;
-  isAdvance?: boolean;
-  notes?: string;
-}): Promise<ActionResult<{ paymentId: string }>> {
-  const op = '[recordProjectPayment]';
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
-
-  const { data: employee, error: empError } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
-
-  if (empError || !employee) {
-    console.error(`${op} Employee lookup failed:`, { empError, timestamp: new Date().toISOString() });
-    return err('Employee profile not found');
-  }
-
-  const { data: docNum } = await supabase.rpc('generate_doc_number', { doc_type: 'REC' });
-  const receiptNumber = (docNum as string | null) || `SHIROI/REC/${new Date().getFullYear()}/TEMP`;
-
-  const { data, error } = await supabase
-    .from('customer_payments')
-    .insert({
-      project_id: input.projectId,
-      invoice_id: input.invoiceId || null,
-      recorded_by: employee.id,
-      receipt_number: receiptNumber,
-      amount: input.amount,
-      payment_date: input.paymentDate,
-      payment_method: input.paymentMethod,
-      payment_reference: input.paymentReference || null,
-      bank_name: input.bankName || null,
-      is_advance: input.isAdvance ?? false,
-      notes: input.notes || null,
-      erp_recorded: true,
-    })
-    .select('id')
-    .single();
-
-  if (error || !data) {
-    console.error(`${op} Insert failed:`, { code: error?.code, message: error?.message, projectId: input.projectId, timestamp: new Date().toISOString() });
-    return err(error?.message ?? 'Failed to record payment');
-  }
-
-  // If linked to an invoice, update the invoice amounts
-  if (input.invoiceId) {
-    const { data: invoice } = await supabase
-      .from('invoices')
-      .select('amount_paid, total_amount')
-      .eq('id', input.invoiceId)
-      .single();
-
-    if (invoice) {
-      const newPaid = Number(invoice.amount_paid) + input.amount;
-      const newOutstanding = Number(invoice.total_amount) - newPaid;
-      const newStatus = newOutstanding <= 0 ? 'paid' : newPaid > 0 ? 'partially_paid' : 'sent';
-      await supabase
-        .from('invoices')
-        .update({
-          amount_paid: newPaid,
-          amount_outstanding: Math.max(0, newOutstanding),
-          status: newStatus,
-        })
-        .eq('id', input.invoiceId);
-    }
-  }
-
-  revalidatePath('/payments');
-  revalidatePath('/invoices');
-  revalidatePath('/cash');
-  revalidatePath('/payments/reconciliation');
-  revalidatePath(`/projects/${input.projectId}`);
-
-  return ok({ paymentId: data.id });
+// ── Project-context: Record Payment ──
+// Project-detail dialog — pre-scoped to a project, per-invoice settlement.
+// Does NOT emit the n8n event (preserves this flow's historical behaviour).
+// Thin wrapper over recordCustomerPayment (notify: false).
+export async function recordProjectPayment(
+  input: RecordPaymentInput,
+): Promise<ActionResult<{ paymentId: string }>> {
+  return recordCustomerPayment(input, { notify: false });
 }
 
 // ── GST E-Invoice Generation ──

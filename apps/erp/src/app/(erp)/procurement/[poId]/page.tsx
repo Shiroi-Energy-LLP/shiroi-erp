@@ -10,7 +10,7 @@ import { DataFlagButton } from '@/components/data-flag-button';
 import { PoRateInlineEdit } from '@/components/procurement/po-rate-inline-edit';
 import { PoDownloadButton } from '@/components/procurement/po-download-button';
 import { PoDeleteButton } from '@/components/procurement/po-delete-button';
-import { formatDate } from '@repo/ui/formatters';
+import { formatDate, formatINR as formatINRBase } from '@repo/ui/formatters';
 
 function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -23,7 +23,7 @@ function statusVariant(status: string): 'default' | 'secondary' | 'destructive' 
 
 function formatINR(amount: number | null): string {
   if (!amount) return '—';
-  return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return formatINRBase(amount);
 }
 
 interface PageProps {
@@ -50,14 +50,14 @@ export default async function PODetailPage({ params }: PageProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link href="/procurement" className="text-sm text-[#00B050] hover:underline">
+        <Link href="/procurement" className="text-sm text-shiroi-gold-dark hover:underline">
           &larr; Back to Purchase Orders
         </Link>
         <div className="flex items-center gap-3 mt-1">
           <Eyebrow className="mb-0">PURCHASE ORDER</Eyebrow>
           <DataFlagButton entityType="po" entityId={poId} />
         </div>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">{po.po_number}</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">{po.po_number}</h1>
         <div className="flex items-center gap-2 mt-2">
           <PoDownloadButton poId={poId} poNumber={po.po_number ?? ''} />
           {(po.status === 'draft' || po.status === 'sent') && (
@@ -70,24 +70,24 @@ export default async function PODetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4 space-y-2">
-            <h3 className="text-xs font-bold text-[#7C818E] uppercase">Vendor</h3>
-            <p className="text-sm font-medium text-[#1A1D24]">{po.vendors?.company_name ?? '—'}</p>
-            {po.vendors?.contact_person && <p className="text-xs text-[#7C818E]">{po.vendors.contact_person}</p>}
-            {po.vendors?.phone && <p className="text-xs text-[#7C818E]">{po.vendors.phone}</p>}
-            {po.vendors?.gstin && <p className="text-xs text-[#7C818E]">GSTIN: {po.vendors.gstin}</p>}
+            <h3 className="text-xs font-bold text-n-500 uppercase">Vendor</h3>
+            <p className="text-sm font-medium text-n-950">{po.vendors?.company_name ?? '—'}</p>
+            {po.vendors?.contact_person && <p className="text-xs text-n-500">{po.vendors.contact_person}</p>}
+            {po.vendors?.phone && <p className="text-xs text-n-500">{po.vendors.phone}</p>}
+            {po.vendors?.gstin && <p className="text-xs text-n-500">GSTIN: {po.vendors.gstin}</p>}
             {po.vendors?.is_msme && <Badge variant="outline" className="text-xs mt-1">MSME</Badge>}
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-4 space-y-2">
-            <h3 className="text-xs font-bold text-[#7C818E] uppercase">Project</h3>
+            <h3 className="text-xs font-bold text-n-500 uppercase">Project</h3>
             {po.projects ? (
               <>
-                <Link href={`/projects/${po.project_id}`} className="text-sm font-medium text-[#00B050] hover:underline">
+                <Link href={`/projects/${po.project_id}`} className="text-sm font-medium text-shiroi-gold-dark hover:underline">
                   {po.projects.project_number}
                 </Link>
-                <p className="text-xs text-[#7C818E]">{po.projects.customer_name}</p>
+                <p className="text-xs text-n-500">{po.projects.customer_name}</p>
                 {po.project_id && (
                   <Link
                     href={`/procurement/reconciliation/${po.project_id}`}
@@ -105,20 +105,20 @@ export default async function PODetailPage({ params }: PageProps) {
 
         <Card>
           <CardContent className="pt-4 space-y-2">
-            <h3 className="text-xs font-bold text-[#7C818E] uppercase">Order Details</h3>
+            <h3 className="text-xs font-bold text-n-500 uppercase">Order Details</h3>
             <div className="flex items-center gap-2">
               <Badge variant={statusVariant(po.status)}>{po.status?.replace(/_/g, ' ')}</Badge>
             </div>
-            <p className="text-sm"><span className="text-[#7C818E]">PO Date:</span> {po.po_date ? formatDate(po.po_date) : '—'}</p>
-            <p className="text-sm"><span className="text-[#7C818E]">Total:</span> <span className="font-bold">{formatINR(po.total_amount)}</span></p>
+            <p className="text-sm"><span className="text-n-500">PO Date:</span> {po.po_date ? formatDate(po.po_date) : '—'}</p>
+            <p className="text-sm"><span className="text-n-500">Total:</span> <span className="font-bold">{formatINR(po.total_amount)}</span></p>
             {po.expected_delivery_date && (
-              <p className="text-sm"><span className="text-[#7C818E]">Expected Delivery:</span> {formatDate(po.expected_delivery_date)}</p>
+              <p className="text-sm"><span className="text-n-500">Expected Delivery:</span> {formatDate(po.expected_delivery_date)}</p>
             )}
             {po.actual_delivery_date && (
-              <p className="text-sm"><span className="text-[#7C818E]">Actual Delivery:</span> {formatDate(po.actual_delivery_date)}</p>
+              <p className="text-sm"><span className="text-n-500">Actual Delivery:</span> {formatDate(po.actual_delivery_date)}</p>
             )}
-            {po.preparer && <p className="text-xs text-[#7C818E]">Prepared by: {po.preparer.full_name}</p>}
-            {po.approver && <p className="text-xs text-[#7C818E]">Approved by: {po.approver.full_name}</p>}
+            {po.preparer && <p className="text-xs text-n-500">Prepared by: {po.preparer.full_name}</p>}
+            {po.approver && <p className="text-xs text-n-500">Approved by: {po.approver.full_name}</p>}
           </CardContent>
         </Card>
       </div>
@@ -126,7 +126,7 @@ export default async function PODetailPage({ params }: PageProps) {
       {/* Line Items */}
       <Card>
         <CardContent className="pt-4">
-          <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+          <h2 className="text-sm font-heading font-bold text-n-950 mb-3">
             Line Items ({items.length})
           </h2>
           <div className="overflow-x-auto">
@@ -190,7 +190,7 @@ export default async function PODetailPage({ params }: PageProps) {
       {deliveryChallans.length > 0 && (
         <Card>
           <CardContent className="pt-4">
-            <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+            <h2 className="text-sm font-heading font-bold text-n-950 mb-3">
               Delivery Challans ({deliveryChallans.length})
             </h2>
             <Table>
@@ -227,7 +227,7 @@ export default async function PODetailPage({ params }: PageProps) {
       {payments.length > 0 && (
         <Card>
           <CardContent className="pt-4">
-            <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+            <h2 className="text-sm font-heading font-bold text-n-950 mb-3">
               Vendor Payments ({payments.length})
             </h2>
             <Table>
@@ -259,13 +259,13 @@ export default async function PODetailPage({ params }: PageProps) {
       {/* Associated Vendor Bills */}
       <Card>
         <CardContent className="pt-4">
-          <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">
+          <h2 className="text-sm font-heading font-bold text-n-950 mb-3">
             Associated Vendor Bills ({linkedBills.length})
           </h2>
           {linkedBills.length === 0 ? (
             <p className="text-xs text-gray-400 py-3">
               No vendor bills linked to this PO yet. Bills are linked automatically when imported from Zoho, or can be linked manually from the{' '}
-              <Link href="/vendor-bills" className="text-[#00B050] hover:underline">vendor bills page</Link>.
+              <Link href="/vendor-bills" className="text-shiroi-gold-dark hover:underline">vendor bills page</Link>.
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -285,7 +285,7 @@ export default async function PODetailPage({ params }: PageProps) {
                   {linkedBills.map((bill) => (
                     <TableRow key={bill.id}>
                       <TableCell>
-                        <Link href={`/vendor-bills/${bill.id}`} className="text-sm font-mono text-[#00B050] hover:underline">
+                        <Link href={`/vendor-bills/${bill.id}`} className="text-sm font-mono text-shiroi-gold-dark hover:underline">
                           {bill.bill_number}
                         </Link>
                       </TableCell>
@@ -318,8 +318,8 @@ export default async function PODetailPage({ params }: PageProps) {
       {po.notes && (
         <Card>
           <CardContent className="pt-4">
-            <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-2">Notes</h2>
-            <p className="text-sm text-[#7C818E] whitespace-pre-wrap">{po.notes}</p>
+            <h2 className="text-sm font-heading font-bold text-n-950 mb-2">Notes</h2>
+            <p className="text-sm text-n-500 whitespace-pre-wrap">{po.notes}</p>
           </CardContent>
         </Card>
       )}

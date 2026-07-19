@@ -8,35 +8,7 @@ import {
 } from '@repo/ui';
 import { Pencil } from 'lucide-react';
 import { updatePriceBookItem } from '@/lib/price-book-actions';
-
-const CATEGORY_OPTIONS: { value: string; label: string }[] = [
-  { value: 'solar_panel', label: 'Solar Panel' },
-  { value: 'inverter', label: 'Inverter' },
-  { value: 'battery', label: 'Battery' },
-  { value: 'mounting_structure', label: 'Mounting Structure' },
-  { value: 'dc_cable', label: 'DC Cable' },
-  { value: 'dc_access', label: 'DC Accessories' },
-  { value: 'ac_cable', label: 'AC Cable' },
-  { value: 'dcdb', label: 'DCDB' },
-  { value: 'acdb', label: 'ACDB' },
-  { value: 'lt_panel', label: 'LT Panel' },
-  { value: 'conduit', label: 'Conduit' },
-  { value: 'earthing', label: 'Earthing' },
-  { value: 'earth_access', label: 'Earthing Accessories' },
-  { value: 'net_meter', label: 'Net Meter' },
-  { value: 'civil_work', label: 'Civil Work' },
-  { value: 'installation_labour', label: 'Installation Labour' },
-  { value: 'transport', label: 'Transport' },
-  { value: 'miscellaneous', label: 'Miscellaneous' },
-  { value: 'walkway', label: 'Walkway' },
-  { value: 'gi_cable_tray', label: 'GI Cable Tray' },
-  { value: 'handrail', label: 'Handrail' },
-  { value: 'panel', label: 'Panel' },
-  { value: 'structure', label: 'Structure' },
-  { value: 'other', label: 'Other' },
-];
-
-const UNIT_OPTIONS = ['Nos', 'Mtrs', 'Kgs', 'Set', 'Lot', 'LS', 'Sq.Ft', 'Rft', 'Pair'];
+import { addItemCategory, addItemUnit } from '@/lib/item-catalog-actions';
 
 interface PriceBookItem {
   id: string;
@@ -56,13 +28,94 @@ interface PriceBookItem {
 
 interface EditPriceBookItemDialogProps {
   item: PriceBookItem;
+  categories: { value: string; label: string }[];
+  units: string[];
+  canManageLists: boolean;
 }
 
-export function EditPriceBookItemDialog({ item }: EditPriceBookItemDialogProps) {
+export function EditPriceBookItemDialog({ item, categories, units, canManageLists }: EditPriceBookItemDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Controlled category/unit (to support dynamic list updates)
+  const [selectedCategory, setSelectedCategory] = React.useState(item.item_category);
+  const [selectedUnit, setSelectedUnit] = React.useState(item.unit);
+
+  // Inline add category state
+  const [addingCategory, setAddingCategory] = React.useState(false);
+  const [newCategoryLabel, setNewCategoryLabel] = React.useState('');
+  const [savingCategory, setSavingCategory] = React.useState(false);
+
+  // Inline add unit state
+  const [addingUnit, setAddingUnit] = React.useState(false);
+  const [newUnitValue, setNewUnitValue] = React.useState('');
+  const [savingUnit, setSavingUnit] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!open) {
+      setSelectedCategory(item.item_category);
+      setSelectedUnit(item.unit);
+      setAddingCategory(false);
+      setNewCategoryLabel('');
+      setAddingUnit(false);
+      setNewUnitValue('');
+      setError(null);
+    }
+  }, [open, item]);
+
+  async function handleCategoryChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value;
+    if (val === '__add__' && canManageLists) {
+      setAddingCategory(true);
+      setSelectedCategory('');
+    } else {
+      setSelectedCategory(val);
+      setAddingCategory(false);
+    }
+  }
+
+  async function handleSaveCategory() {
+    if (!newCategoryLabel.trim()) return;
+    setSavingCategory(true);
+    const result = await addItemCategory({ label: newCategoryLabel.trim() });
+    setSavingCategory(false);
+    if (result.success) {
+      setSelectedCategory(result.data.value);
+      setAddingCategory(false);
+      setNewCategoryLabel('');
+      router.refresh();
+    } else {
+      setError(result.error ?? 'Failed to add category');
+    }
+  }
+
+  async function handleUnitChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value;
+    if (val === '__add__' && canManageLists) {
+      setAddingUnit(true);
+      setSelectedUnit('');
+    } else {
+      setSelectedUnit(val);
+      setAddingUnit(false);
+    }
+  }
+
+  async function handleSaveUnit() {
+    if (!newUnitValue.trim()) return;
+    setSavingUnit(true);
+    const result = await addItemUnit({ value: newUnitValue.trim() });
+    setSavingUnit(false);
+    if (result.success) {
+      setSelectedUnit(result.data.value);
+      setAddingUnit(false);
+      setNewUnitValue('');
+      router.refresh();
+    } else {
+      setError(result.error ?? 'Failed to add unit');
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -77,13 +130,14 @@ export function EditPriceBookItemDialog({ item }: EditPriceBookItemDialogProps) 
     const result = await updatePriceBookItem({
       id: item.id,
       data: {
-        item_category: form.get('item_category') as string,
+        item_category: selectedCategory,
         item_description: form.get('item_description') as string,
         brand: (form.get('brand') as string) || null,
         model: (form.get('model') as string) || null,
-        unit: form.get('unit') as string,
+        unit: selectedUnit,
         base_price: parseFloat(basePriceRaw) || 0,
         gst_rate: parseFloat(gstRateRaw) || 18,
+        gst_type: (form.get('gst_type') as string) || item.gst_type || 'supply',
         hsn_code: (form.get('hsn_code') as string) || null,
         vendor_name: (form.get('vendor_name') as string) || null,
         default_qty: parseFloat(defaultQtyRaw) || null,
@@ -116,19 +170,53 @@ export function EditPriceBookItemDialog({ item }: EditPriceBookItemDialogProps) 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="edit-pb-category" className="text-xs">Category *</Label>
-              <Select id="edit-pb-category" name="item_category" required defaultValue={item.item_category} className="h-9 text-xs">
-                {CATEGORY_OPTIONS.map((c) => (
+              <Select id="edit-pb-category" value={selectedCategory} onChange={handleCategoryChange} required className="h-9 text-xs">
+                {categories.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
+                {canManageLists && <option value="__add__">+ Add new category…</option>}
               </Select>
+              {addingCategory && (
+                <div className="flex items-center gap-1 mt-1">
+                  <Input
+                    value={newCategoryLabel}
+                    onChange={(e) => setNewCategoryLabel(e.target.value)}
+                    placeholder="Category label"
+                    className="h-7 text-xs flex-1"
+                  />
+                  <Button type="button" size="sm" className="h-7 text-xs px-2" onClick={handleSaveCategory} disabled={savingCategory || !newCategoryLabel.trim()}>
+                    {savingCategory ? '…' : 'Save'}
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => { setAddingCategory(false); setNewCategoryLabel(''); }}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="edit-pb-unit" className="text-xs">Unit *</Label>
-              <Select id="edit-pb-unit" name="unit" required defaultValue={item.unit} className="h-9 text-xs">
-                {UNIT_OPTIONS.map((u) => (
+              <Select id="edit-pb-unit" value={selectedUnit} onChange={handleUnitChange} required className="h-9 text-xs">
+                {units.map((u) => (
                   <option key={u} value={u}>{u}</option>
                 ))}
+                {canManageLists && <option value="__add__">+ Add new unit…</option>}
               </Select>
+              {addingUnit && (
+                <div className="flex items-center gap-1 mt-1">
+                  <Input
+                    value={newUnitValue}
+                    onChange={(e) => setNewUnitValue(e.target.value)}
+                    placeholder="Unit value"
+                    className="h-7 text-xs flex-1"
+                  />
+                  <Button type="button" size="sm" className="h-7 text-xs px-2" onClick={handleSaveUnit} disabled={savingUnit || !newUnitValue.trim()}>
+                    {savingUnit ? '…' : 'Save'}
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => { setAddingUnit(false); setNewUnitValue(''); }}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -169,6 +257,15 @@ export function EditPriceBookItemDialog({ item }: EditPriceBookItemDialogProps) 
               <Label htmlFor="edit-pb-hsn" className="text-xs">HSN Code</Label>
               <Input id="edit-pb-hsn" name="hsn_code" defaultValue={item.hsn_code ?? ''} placeholder="e.g. 8541" className="h-9 text-xs font-mono" />
             </div>
+          </div>
+
+          {/* GST Type */}
+          <div>
+            <Label htmlFor="edit-pb-gst_type" className="text-xs">GST Type</Label>
+            <Select id="edit-pb-gst_type" name="gst_type" defaultValue={item.gst_type ?? 'supply'} className="h-9 text-xs">
+              <option value="supply">Supply (goods — 5% HSN 8541)</option>
+              <option value="works_contract">Works Contract (service — 18%)</option>
+            </Select>
           </div>
 
           {/* Vendor + Default Qty */}

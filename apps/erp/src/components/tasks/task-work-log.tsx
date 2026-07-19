@@ -111,7 +111,7 @@ export function TaskWorkLog({ taskId }: { taskId: string }) {
                   name="description"
                   required
                   rows={2}
-                  className="w-full rounded-md border border-n-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+                  className="w-full rounded-md border border-n-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
                   placeholder="What was done today..."
                 />
               </div>

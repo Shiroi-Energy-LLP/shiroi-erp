@@ -130,7 +130,7 @@ export function LeadsTable({ leads, employees }: LeadsTableProps) {
                 <TableCell>
                   <Link
                     href={`/leads/${lead.id}`}
-                    className="text-shiroi-green hover:underline font-medium"
+                    className="text-shiroi-gold-dark hover:underline font-medium"
                   >
                     {lead.customer_name}
                   </Link>

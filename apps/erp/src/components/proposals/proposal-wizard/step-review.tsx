@@ -190,7 +190,7 @@ export function StepReview(props: StepReviewProps) {
             <CardTitle className="text-base">Notes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-[#3E3E3E] whitespace-pre-wrap">{props.notes}</p>
+            <p className="text-sm text-n-700 whitespace-pre-wrap">{props.notes}</p>
           </CardContent>
         </Card>
       )}

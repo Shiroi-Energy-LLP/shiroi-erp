@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
 import { getEmployee, getLeaveBalances } from '@/lib/hr-queries';
 import { formatDate } from '@repo/ui/formatters';
+import { LEAVE_TYPE_LABELS } from '@/lib/label-constants';
 import {
   Card,
   CardHeader,
@@ -17,17 +18,6 @@ import { CompensationView } from '@/components/hr/compensation-view';
 interface EmployeeProfilePageProps {
   params: Promise<{ id: string }>;
 }
-
-const LEAVE_TYPE_LABELS: Record<string, string> = {
-  casual: 'Casual Leave',
-  sick: 'Sick Leave',
-  earned: 'Earned Leave',
-  maternity: 'Maternity Leave',
-  paternity: 'Paternity Leave',
-  compensatory: 'Comp Off',
-  loss_of_pay: 'Loss of Pay',
-  other: 'Other',
-};
 
 export default async function EmployeeProfilePage({ params }: EmployeeProfilePageProps) {
   await requireRole(['founder', 'hr_manager']);
@@ -53,7 +43,7 @@ export default async function EmployeeProfilePage({ params }: EmployeeProfilePag
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">{employee.full_name}</h1>
+          <h1 className="text-2xl font-bold text-n-950">{employee.full_name}</h1>
           <p className="text-sm text-gray-500">
             {employee.employee_code} &middot; {employee.designation ?? 'No designation'} &middot; {employee.department ?? 'No department'}
           </p>
@@ -64,7 +54,7 @@ export default async function EmployeeProfilePage({ params }: EmployeeProfilePag
           </Badge>
           <Link
             href={`/hr/${id}`}
-            className="text-sm text-[#00B050] hover:underline"
+            className="text-sm text-shiroi-gold-dark hover:underline"
           >
             Full Detail &rarr;
           </Link>
@@ -141,15 +131,15 @@ export default async function EmployeeProfilePage({ params }: EmployeeProfilePag
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Bank IFSC</p>
-                  <p className="text-sm font-medium text-[#1A1D24]">{employee.bank_ifsc ?? '—'}</p>
+                  <p className="text-sm font-medium text-n-950">{employee.bank_ifsc ?? '—'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Bank Name</p>
-                  <p className="text-sm font-medium text-[#1A1D24]">{employee.bank_name ?? '—'}</p>
+                  <p className="text-sm font-medium text-n-950">{employee.bank_name ?? '—'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">ESIC Number</p>
-                  <p className="text-sm font-medium text-[#1A1D24]">{employee.esic_number ?? '—'}</p>
+                  <p className="text-sm font-medium text-n-950">{employee.esic_number ?? '—'}</p>
                 </div>
               </div>
             </CardContent>
@@ -195,7 +185,7 @@ function InfoItem({ label, value }: { label: string; value: string | null | unde
   return (
     <div>
       <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-sm font-medium text-[#1A1D24]">{value ?? '—'}</p>
+      <p className="text-sm font-medium text-n-950">{value ?? '—'}</p>
     </div>
   );
 }

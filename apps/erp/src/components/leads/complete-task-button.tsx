@@ -22,7 +22,7 @@ export function CompleteTaskButton({ taskId, leadId }: CompleteTaskButtonProps) 
       type="button"
       onClick={handleClick}
       disabled={isPending}
-      className="text-xs text-n-500 hover:text-shiroi-green border border-n-200 rounded px-2 py-1 disabled:opacity-50"
+      className="text-xs text-n-500 hover:text-shiroi-gold-dark border border-n-200 rounded px-2 py-1 disabled:opacity-50"
     >
       {isPending ? '...' : 'Done'}
     </button>

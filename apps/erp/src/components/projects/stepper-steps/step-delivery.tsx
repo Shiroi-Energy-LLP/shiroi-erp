@@ -34,8 +34,8 @@ export async function StepDelivery({ projectId }: StepDeliveryProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <Truck className="w-12 h-12 text-red-400 opacity-50 mb-3" />
-        <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">Failed to Load</h3>
-        <p className="text-[13px] text-[#7C818E]">Could not load delivery data. Please refresh the page.</p>
+        <h3 className="text-lg font-bold font-heading text-n-950 mb-1">Failed to Load</h3>
+        <p className="text-[13px] text-n-500">Could not load delivery data. Please refresh the page.</p>
       </div>
     );
   }
@@ -110,7 +110,7 @@ export async function StepDelivery({ projectId }: StepDeliveryProps) {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
+              <table className="w-full text-sm [&_td]:align-top">
                 <thead>
                   <tr className="border-b border-n-200 bg-n-50">
                     <th className="px-2 py-2 text-left text-[10px] font-medium text-n-500 w-[60px]">DC #</th>
@@ -146,7 +146,7 @@ export async function StepDelivery({ projectId }: StepDeliveryProps) {
               <Truck className="h-4 w-4 text-n-500" />
               <CardTitle className="text-base">Vendor Incoming Challans</CardTitle>
             </div>
-            <span className="text-sm font-mono text-[#7C818E]">{vendorChallans.length} DCs</span>
+            <span className="text-sm font-mono text-n-500">{vendorChallans.length} DCs</span>
           </CardHeader>
           <CardContent>
             <Table>
@@ -186,9 +186,9 @@ export async function StepDelivery({ projectId }: StepDeliveryProps) {
       {/* Empty state */}
       {!hasOutgoing && !hasVendor && (
         <div className="flex flex-col items-center justify-center py-16">
-          <Truck className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Delivery Challans</h3>
-          <p className="text-[13px] text-[#7C818E] max-w-md text-center">
+          <Truck className="w-12 h-12 text-n-500 opacity-50 mb-3" />
+          <h3 className="text-lg font-bold font-heading text-n-950 mb-1">No Delivery Challans</h3>
+          <p className="text-[13px] text-n-500 max-w-md text-center">
             Create a DC above when items are &quot;Ready to Dispatch&quot; in the BOQ tab.
             DCs are auto-numbered (DC-001, DC-002, etc.) and can be downloaded as PDF.
           </p>

@@ -24,7 +24,7 @@ function formatStatus(status: string): string {
 
 export function TodayPriorities({ projects }: TodayPrioritiesProps) {
   return (
-    <Card className="bg-[#001F0D] border-[#003D1A]">
+    <Card className="bg-shiroi-ink border-[#3A2A08]">
       <CardHeader className="pb-3">
         <CardTitle className="text-base text-white flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-[#FCA524]" />
@@ -33,7 +33,7 @@ export function TodayPriorities({ projects }: TodayPrioritiesProps) {
       </CardHeader>
       <CardContent>
         {projects.length === 0 ? (
-          <p className="text-sm text-[#6B7280] py-4 text-center">
+          <p className="text-sm text-n-500 py-4 text-center">
             All caught up. No priorities for today.
           </p>
         ) : (
@@ -42,7 +42,7 @@ export function TodayPriorities({ projects }: TodayPrioritiesProps) {
               <Link
                 key={project.id}
                 href={`/projects/${project.id}`}
-                className="block rounded-md bg-[#003D1A] p-3 hover:bg-[#004D22] transition-colors"
+                className="block rounded-md bg-[#5C3206] p-3 hover:bg-shiroi-gold-deep transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -51,8 +51,8 @@ export function TodayPriorities({ projects }: TodayPrioritiesProps) {
                     </p>
                     <p className="text-xs text-n-400">{project.customer_name}</p>
                     <div className="flex items-center gap-1 mt-1">
-                      <MapPin className="h-3 w-3 text-[#6B7280]" />
-                      <span className="text-[11px] text-[#6B7280]">{project.city}</span>
+                      <MapPin className="h-3 w-3 text-n-500" />
+                      <span className="text-[11px] text-n-500">{project.city}</span>
                     </div>
                   </div>
                   <Badge className="bg-[#FEF3C7] text-status-warning-text text-[9px] border-0">

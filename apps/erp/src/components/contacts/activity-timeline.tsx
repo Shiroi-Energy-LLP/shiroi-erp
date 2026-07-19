@@ -14,7 +14,7 @@ const ACTIVITY_TYPE_CONFIG: Record<string, { label: string; icon: React.ElementT
   note: { label: 'Note', icon: MessageSquare, color: '#7C818E' },
   call: { label: 'Call', icon: Phone, color: '#2563EB' },
   email: { label: 'Email', icon: Mail, color: '#9333EA' },
-  meeting: { label: 'Meeting', icon: Users, color: '#00B050' },
+  meeting: { label: 'Meeting', icon: Users, color: '#16A34A' },
   site_visit: { label: 'Site Visit', icon: MapPin, color: '#EA580C' },
   whatsapp: { label: 'WhatsApp', icon: MessageCircle, color: '#25D366' },
   task: { label: 'Task', icon: CheckSquare, color: '#0891B2' },
@@ -84,7 +84,7 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
       <CardContent>
         {/* Add Activity Form */}
         {showForm && (
-          <form onSubmit={handleAdd} className="mb-4 rounded-lg border border-n-200 p-4 bg-[#FAFBFC] space-y-3">
+          <form onSubmit={handleAdd} className="mb-4 rounded-lg border border-n-200 p-4 bg-n-050 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Type</Label>
@@ -114,7 +114,7 @@ export function ActivityTimeline({ activities, entityType, entityId }: ActivityT
               <textarea
                 name="body"
                 rows={3}
-                className="flex w-full rounded-md border-[1.5px] border-n-200 bg-white px-3 py-2 text-[13px] text-n-900 focus-visible:outline-none focus-visible:border-shiroi-green focus-visible:shadow-[0_0_0_3px_rgba(0,176,80,0.1)]"
+                className="flex w-full rounded-md border-[1.5px] border-n-200 bg-white px-3 py-2 text-[13px] text-n-900 focus-visible:outline-none focus-visible:border-shiroi-gold focus-visible:shadow-[0_0_0_3px_rgba(224,138,0,0.22)]"
                 placeholder="What happened?"
               />
             </div>

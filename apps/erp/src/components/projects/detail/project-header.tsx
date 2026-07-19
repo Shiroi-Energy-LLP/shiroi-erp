@@ -83,11 +83,11 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
     <div className="flex items-center justify-between gap-4 flex-wrap">
       <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-3">
-          <Link href="/projects" className="text-sm text-n-500 hover:text-shiroi-green">
+          <Link href="/projects" className="text-sm text-n-500 hover:text-shiroi-gold-dark">
             Projects
           </Link>
           <span className="text-n-400">/</span>
-          <h1 className="text-2xl font-bold text-[#1A1D24] font-mono truncate">
+          <h1 className="text-2xl font-bold text-n-950 font-mono truncate">
             {project.project_number}
           </h1>
         </div>
@@ -121,7 +121,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             value={project.status}
             disabled={busy}
             onChange={handleStatusChange}
-            className={`h-9 text-sm font-medium rounded-md border px-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-shiroi-green/30 ${STATUS_STYLES[project.status]} disabled:opacity-60`}
+            className={`h-9 text-sm font-medium rounded-md border px-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30 ${STATUS_STYLES[project.status]} disabled:opacity-60`}
           >
             {STATUS_ORDER.map((s) => (
               <option key={s} value={s}>
@@ -133,7 +133,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
         </div>
 
         <div className="text-right border-l border-n-200 pl-3">
-          <div className="text-2xl font-bold text-[#1A1D24]">{project.completion_pct}%</div>
+          <div className="text-2xl font-bold text-n-950">{project.completion_pct}%</div>
           <div className="text-xs text-n-500">Complete</div>
         </div>
       </div>

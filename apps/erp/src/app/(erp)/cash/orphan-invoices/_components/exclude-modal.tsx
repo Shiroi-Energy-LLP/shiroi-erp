@@ -68,7 +68,7 @@ export function ExcludeModal({ open, onClose, entity, onSuccess }: Props) {
           <strong>{entity.kind === 'invoice' ? entity.number : entity.ref}</strong>{' '}
           ({formatINR(Number(entity.total))}) as <em>excluded from cash</em>?
         </p>
-        <p className="text-xs text-[#7C818E]">
+        <p className="text-xs text-n-500">
           The row stays in the DB for audit but does not move any project&apos;s cash position.
           {entity.kind === 'invoice' && ' Linked payments are excluded too.'} Undo from the
           Excluded tab.

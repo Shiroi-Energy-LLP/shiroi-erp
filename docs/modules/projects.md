@@ -20,11 +20,14 @@ Status is editable in-place in the `ProjectHeader` dropdown. Change is audited t
 ### 1. Details
 
 Editable boxes on the Details tab:
-- **FinancialBox** — role-gated (PM / founder / finance / marketing). Contracted value, actual BOQ total, approved site expenses, margin %.
+- **FinancialBox** — visible to PM / founder / finance / marketing; **Project Value (`contracted_value`) is editable by PM + founder only** (2026-06-11 — server gate in `updateProjectField` + matching client gate; the old client≠server mismatch where finance saw the editor is fixed). Shows contracted value, actual BOQ total, approved site expenses, margin %.
 - **SystemConfigBox** — size (kWp), type (`on_grid` / `off_grid` / `hybrid`), mounting (`elevated` / `low_raise` / `minirail` / `long_rail` / `customized`), panel / inverter / battery / cable brand+model, `scope_la` / `scope_civil` / `scope_meter` (`shiroi` | `client`), remarks.
 - **CustomerInfoBox** — debounced contact picker → `primary_contact_id` FK, site + billing address, Google Maps link.
 - **TimelineTeamBox** — 6 date fields (order_date, planned_start, etc.) + PM + site_supervisor dropdowns.
-- **CompanyProjectEditor** (mig 172) — links the project to a `companies` record (`projects.company_id`) + sets `projects.project_name` via the reusable `CompanyPicker` (shared with leads). Won deals inherit both automatically: `create_project_from_accepted_proposal` now copies `company_id` + `project_name` from the lead. The `/projects` list shows a default **"Customer — Project"** column (`company.name ?? customer_name`, + ` — project_name`); `project_name` is inline-editable there; `project_number` stays the row link. Old projects (pre-mig-172) display the fallback customer_name until the Phase-2 backfill links them.
+- **DeleteProjectCard** (2026-06-11, mig 177) — danger-zone card, PM + founder only. Soft delete: type the exact `project_number` to confirm → `deleted_at` + `deleted_by` set, project vanishes from every list and the detail page 404s (`getProject` filters deleted). No restore UI by design — restore is a DB operation. Hard delete is impossible regardless (RESTRICT FKs from invoices/payments/POs/site reports/…).
+- **List search (2026-06-11):** the /projects search box is a typeahead (`ProjectsSearchBox` → `search_projects_lite` RPC) — suggestions show "Customer – Project Name" + number and jump straight to the project; the list filter itself resolves ids via the same RPC (injection-safe, replaces the old `.or()` ILIKE; `project_name` is now searchable). `ProjectCombobox` (expenses/activities/OM/tickets/AMC dialogs) also searches + displays `project_name`.
+- **List header dashboard + ops columns (2026-06-16, mig 185).** Above the table sits a `ProjectsSummaryHeader` strip: a **Total System Size** stat (summed `system_size_kwp`) + a count chip for every status. Fed by `get_project_status_summary(p_fy)` (per-status `COUNT`+`SUM(kwp)` with a `TOTAL` row via GROUPING SETS; same `order_date`/`created_at` FY logic as the list), so it **recomputes when the FY filter changes** — the page is a server component, no client state. Default columns are **Customer—Project · Location · Size · Status · Notes · Activities · Year** (`getDefaultColumns('projects')`; the leading **Project #** column was dropped from the default set on 2026-06-18 when the row link moved to Customer—Project — see below): **Notes** (`notes`) is inline-editable + word-wraps (`ColumnDef.wrap`); **Activities** (`fieldType:'activities_link'`) links to `/projects/[id]?tab=execution`; **Year** is now an editable **FY dropdown** (`fieldType:'fy'`) — saving writes `order_date = '<FYstart>-04-01'` (the `year`→`order_date` map + `fyToOrderDate` transform live in `updateCellValue`; shared `lib/helpers/fiscal-year.ts` with 8 vitest). Adding/saving custom column sets is unchanged (saved views, mig 178).
+- **CompanyProjectEditor** (mig 172) — links the project to a `companies` record (`projects.company_id`) + sets `projects.project_name` via the reusable `CompanyPicker` (shared with leads). Won deals inherit both automatically: `create_project_from_accepted_proposal` now copies `company_id` + `project_name` from the lead. The `/projects` list shows a default **"Customer — Project"** column (`company.name ?? customer_name`, + ` — project_name`); `project_name` is inline-editable there. **(2026-06-18) "Customer — Project" is now the row link** (`linkField="customer_project"`, frozen-first column) and **`project_number` is hidden by default** — when toggled back on via the column picker it renders as a plain prefix-stripped code (`formatProjectNumber`), no longer a second link. Old projects (pre-mig-172) display the fallback customer_name until the Phase-2 backfill links them.
 
 ### 2. Survey
 
@@ -34,6 +37,8 @@ Full survey form (~1,191 LOC, split per CLAUDE.md rule #14 into 5 modules under 
 
 Multi-version BOI (BOI-1, BOI-2, ...) with `draft → submitted → approved → locked` workflow (migration 036). `boi_id` FK on `project_boq_items`. 14 Manivel-curated categories. Inline add/delete for draft BOIs only; once locked, a new BOI-N can be created. Prepared-by / approved-by / locked-by attribution displayed per version.
 
+**Per-item edit in ANY state (2026-06-11, mig 175).** PM + founder can edit item fields (description / brand / model / qty / unit / rate / GST) via a pencil dialog regardless of BOI status — including `locked`. The guardrail replacing hard immutability is the append-only audit table `project_boq_item_history` (who / when / field old→new as JSONB): `updateBoiItem` (project-bom-actions.ts) writes the audit row FIRST and aborts the edit if that insert fails. A history (clock) icon per row lazy-loads the trail via the `getBoiItemHistory` server action. Diff computed by the pure helper `boq-item-diff.ts` (vitest-covered, normalizes Postgres NUMERIC strings). Locked BOIs show an amber "edits remain possible and are recorded" hint to PM/founder.
+
 At the bottom of the BOI step: **Estimated Site Expenses (General)** — single `EditableField` over `projects.estimated_site_expenses_budget` (migration 034). This is the baseline for BOQ margin calc + Actuals variance.
 
 ### 4. BOQ (Bill of Quantities — Budget Analysis)
@@ -42,7 +47,11 @@ At the bottom of the BOI step: **Estimated Site Expenses (General)** — single 
 - **Send to Purchase** — bulk updates items `yet_to_finalize → yet_to_place`; feeds `/procurement/project/[id]`.
 - **Auto-Price from Price Book** — 4-strategy layered matching in `applyPriceBookRates` (`project-step-actions.ts`): (1) normalized-exact (whitespace+punct strip, lowercase), (2) substring either direction, (3) Jaccard token overlap ≥0.3, (4) single-candidate fallback when category has exactly one entry.
 
-BOQ quantity is inline-editable (double-click cell, auto-recalculates `total_price`). Marking "BOQ Complete" sets `boq_completed` on the project.
+BOQ quantity is inline-editable (double-click cell, auto-recalculates `total_price`). A visible **pencil Edit dialog** per row (2026-06-11, `BoqEditButton` in boq-variance-form.tsx) exposes the same `updateBoqItem` fields discoverably (description / brand / model / qty / rate / GST — no unit). Marking "BOQ Complete" sets `boq_completed` on the project.
+
+**Download BOQ PDF (2026-06-16).** A `BoqDownloadButton` sits in the BOQ card header (alongside Auto-Price / Send to Purchase). It renders `lib/pdf/boq-pdf.tsx` client-side via `@react-pdf/renderer` `pdf().toBlob()` (no server route / storage) — line items + project number/customer (from `getProjectHeader`) + generator name (from `getUserProfile`). It's the same component the procurement BOQ view already used; this just surfaces it inside the project module.
+
+**Auto-deliver on DC dispatch (2026-06-11, mig 176).** When a Delivery Challan flips `draft → dispatched` (`submitDeliveryChallan`), the `mark_dc_boq_items_delivered(p_dc_id)` RPC advances that DC's linked BOQ items `ready_to_dispatch → delivered` — guarded so items in any other status are untouched. Best-effort: an RPC failure logs but doesn't roll back the dispatch. Caveat (flagged in spec): a partial-qty dispatch still delivers the whole line; cumulative-qty semantics (`dispatched_qty ≥ quantity`) is a deferred refinement.
 
 ### 5. Delivery (Delivery Challans)
 
@@ -50,7 +59,13 @@ A DC is a ship-to-site docket. PM selects items from the "Ready to Dispatch" poo
 
 DC PDF via `@react-pdf/renderer` at `GET /api/projects/[id]/dc/[dcId]` — Shiroi company header with GSTIN, DC-001/002 sequential numbering, 4-col item table (S.No / Item Description / HSN Code / Quantity), T&C section, Engineer + Client signature lines. Status flow: `draft → dispatched → delivered`.
 
-### 6. Execution (10 milestones + tasks)
+### 6. Execution (10 milestones + tasks + activities)
+
+**Tasks | Activities sub-tabs (2026-06-11).** The Execution tab now has a client-side toggle (`ExecutionSubTabs`, both views server-rendered, CSS visibility only):
+- **Tasks & Milestones** — the execution task table (listed **first**) + the milestone table below it (reordered 2026-06-18; see §6 layout note). The header "Overall %" is now the **milestone-weighted** number from `get_project_completion_pct` (mig 173) — same figure as the Progress tab and the `projects.completion_pct` cache. The task fetch in `getStepExecutionData` is hardened with a second merged query so universal-entity tasks (`entity_type='project'`, `project_id NULL`) are always visible (two `.eq` queries, no `.or()` interpolation).
+- **Activities** (mig 174) — daily site activity log: Date · Stage (FK to `execution_milestones_master`, **or a free-text custom stage** via "Other (type below)…" → `stage_custom`, mig 177 — master list untouched, summary/stage filters operate on master stages only) · Done By (free text — crews aren't employees) · Description (word-wrapped) · **SE / OS / Contractor** manpower counts (SE = Shiroi, OS = outsourced) · Notes. Summary chips (totals via `get_project_activities_summary` RPC — SQL aggregation, never JS). Client-side filters: date range / stage / manpower type. PM + founder add/edit/soft-delete (`deleted_at`; RLS has no DELETE policy); all employees read. Files: `project-activities-{constants,queries,actions}.ts` + `components/projects/activities/`. A **global `/activities` page** (nav: founder / PM / site_supervisor) shows all projects consolidated with a Project column (**project name only** — `project_name ?? customer_name`, no number sub-line, per Vivek 2026-06-11), server-side filters (a **live search box** matching customer / project / activity-description text — replaced the click-to-apply project combobox 2026-06-18 so the table filters as you type, like /projects; uses the shared `matchProjectIdsByText` helper over `search_projects_lite`) + date range / stage + pagination, org-wide manpower stats, and an **Add Activity** button (PM/founder) whose dialog includes a project picker. (The summary chips stay scoped to project/date/stage, not the text search.)
+
+**Task writes route through one universal pair (2026-06-18).** The Execution-tab task controls delegate to the universal `tasks-actions.ts` set rather than carrying their own copies. `toggleTaskCompletion` (the Open/Closed dropdown in `execution-task-row.tsx` + the completion circle in `task-completion-toggle.tsx`) wraps `toggleTaskStatus`, which **records `completed_by`** — the old local copy silently dropped that write, so tasks closed from a project page never recorded who closed them (2026-06-18 redundancy sweep §3). `createQuickTask` wraps `createTask` (entity `'project'`, auto-assigns to the creator when no assignee is picked, returns the new id); the lead-side `createLeadTask` and the universal `createTask` (now generates its UUID client-side and returns `taskId`) round out the collapse. Return shapes + revalidate paths unchanged; regression-locked by `__tests__/task-write-wrappers.test.ts` (14 cases).
 
 #### Tamil voice-to-text site reports (B1, May 2026)
 
@@ -94,11 +109,11 @@ Milestones come from `execution_milestones_master` (migration 042) — a lookup 
 9. Handover
 10. Follow-ups
 
-11-col task table per project: Task Name, Milestone, Assigned To, Assigned Date, Status (Open/Closed inline toggle), Priority, Due Date, Notes, Done By, Activity Log (expandable row), Actions. Per-milestone completion % auto-calculated from task completion ratio. Planned / Actual milestone dates editable. Tasks without a `milestone_id` appear in a separate "Other Tasks" group so nothing is invisible.
+**Layout (2026-06-18): Tasks first, Milestones below.** The 11-col task table (Task Name, Milestone, Assigned To, Assigned Date, Status (Open/Closed inline toggle), Priority, Due Date, Notes, Done By, Activity Log (expandable row), Actions) + the "Create Execution Task" button render **above** the Milestone Tracking table and **always render — even when no milestones are seeded**. Previously `step-execution.tsx` early-returned a full-tab "No Milestones — Seed Default Milestones" empty state whenever `project_milestones` was empty, which hid the task table and the +Task button entirely (two live dev projects had their tasks invisible this way despite being correctly linked and visible on `/tasks` — the bug behind "tasks added but don't show on the project page"). A **single** task table now lists every project task; milestone-less ones show `—` in the Milestone column (the old separate "Other Tasks" group, which rendered them a redundant second time, was removed). Milestone Tracking sits **below**: per-milestone completion % auto-calculated from task completion ratio, Planned / Actual milestone dates editable, and when nothing is seeded the card shows the "Seed Default Milestones" button + hint inline (instead of taking over the whole tab).
 
-### 7. Actuals (read-only; entry via `/expenses`)
+### 7. Actuals (read-only list; voucher entry inline or via `/expenses`)
 
-**Voucher entry** now happens in the standalone `/expenses` module (migration 066). The Actuals tab embeds a read-only `SiteExpensesReadonly` view filtered to the project. To submit a voucher, go to `/expenses` → `+ Add Expense` and select this project. Vouchers flow through the 3-stage project-linked workflow (submitted → verified → approved).
+**Voucher entry** lives in the standalone `/expenses` module (migration 066). The Actuals tab embeds a read-only `SiteExpensesReadonly` view filtered to the project, plus (2026-06-11) a **"+ Add Expense" button** that opens `AddExpenseDialog` with the project pre-selected and locked (`defaultProjectId` + `lockProject` props). The dialog's project picker on `/expenses` is now the searchable `ProjectCombobox` with an explicit "General expense (no project)" checkbox — the old empty-selection-silently-means-general behavior was a bug, now a validation error. Vouchers flow through the 3-stage project-linked workflow (submitted → verified → approved).
 
 BOQ quantity is editable by PM here (click-to-edit). Lock mechanism: `actuals_locked` + `actuals_locked_at` + `actuals_locked_by` on `projects` (migration 038). Locking makes BOI / BOQ / Actuals read-only. Margin color coding: green ≥15%, amber ≥5%, red <5%.
 
@@ -134,7 +149,9 @@ Status: `draft → submitted → finalized`. `finalized` locks the report.
 
 ### 11. Progress (tab: `?tab=completion`)
 
-New in migs 121–122. `CompletionChecklist` component — 10 weighted components per project (`project_completion_items`) with `get_project_completion_pct` RPC. See **Known Gotchas** for the `handover` weight bug.
+**Rewritten 2026-06-11 (mig 173).** `MilestoneProgressPanel` — read-only weighted-milestone breakdown: per milestone weight (new `execution_milestones_master.weight`, 10 rows summing to 100) × task completion ratio (zero-task milestones fall back to stored `project_milestones.completion_pct`), overall % from the rewritten `get_project_completion_pct` RPC. Data assembled in `getMilestoneProgressData` (project-completion-queries.ts). Tasks are edited on the Execution tab; nothing is editable here. `MilestonePhotosPanel` unchanged below it.
+
+`projects.completion_pct` is now a **trigger-maintained cache** (`fn_refresh_project_completion_pct` AFTER I/U/D on `tasks` + `project_milestones`) — it was previously never updated (header/list/stage-gating showed stale zeros; backfill 2026-06-11 took non-zero projects from 2 → 19). The manual checklist (`CompletionChecklist`, `project_completion_items`, migs 121–122) is **retired** — UI + actions + constants deleted; the table is kept (no data destruction) but nothing reads it. The legacy `project_milestone_weights` table (mig 004a, 8-name CHECK, unseeded) is also deliberately bypassed. The old `handover` weight gotcha is moot.
 
 ### 12. Free AMC
 
@@ -170,13 +187,16 @@ Drag-and-drop recategorization uses Supabase Storage `.move()` — which is an U
 - `qc_gate_inspections` — checklist JSONB includes `photos[]`, `project_info`, `approval_status`
 - `net_metering_applications` — `ceig_scope`, `ceig_required`
 - `commissioning_reports` — `string_test_data` JSONB, `monitoring_portal_*`, `performance_ratio_pct`, `engineer_signature_path`
-- `execution_milestones_master` — the 10 milestones (migration 042)
+- `execution_milestones_master` — the 10 milestones (migration 042) + `weight` INT summing to 100 (mig 173)
+- `project_activities` — daily activity log w/ SE/OS/contractor manpower counts, `stage_id` → master, soft-delete, `get_project_activities_summary` RPC (mig 174). **2026-06-16 (mig 184):** `project_id` is now nullable + a free-text `project_name_custom` fallback (CHECK one-of-two) so PMs/founders can log Service/AMC/misc activities not tied to an ERP project — via `ProjectCombobox.allowCustom` on the global /activities Add dialog; the list shows the custom label (no link) and `addProjectActivity`/`updateProjectActivity`/`deleteProjectActivity` match by activity id.
+- `project_boq_item_history` — append-only BOI item edit audit (`changes` JSONB old→new, `changed_by` → employees; mig 175)
+- `projects.completion_pct` — trigger-maintained cache of `get_project_completion_pct` (mig 173); do NOT write it by hand
 
 ## Key Files
 
 ```
 apps/erp/src/app/(erp)/projects/
-  page.tsx                    ← list with 8-status filter
+  page.tsx                    ← list with 8-status + FY (Apr–Mar, order_date) filters + typeahead search box
   [id]/page.tsx               ← detail with 13-tab workflow
 
 apps/erp/src/components/projects/
@@ -191,10 +211,22 @@ apps/erp/src/components/projects/
   project-files/{index,types,helpers,parts-rows,parts-boxes,generated-docs}.tsx
   handover-pack.tsx, lead-files.tsx
 
+apps/erp/src/components/projects/
+  activities/{activities-panel,activities-client,activity-form-dialog}.tsx   ← Activities sub-tab (mig 174)
+  execution-sub-tabs.tsx           ← Tasks | Activities toggle
+  completion/milestone-progress-panel.tsx   ← Progress tab weighted breakdown (mig 173)
+
+apps/erp/src/app/(erp)/activities/page.tsx   ← global all-projects activity log
+apps/erp/src/components/activities/global-activities-filters.tsx
+
 apps/erp/src/lib/
-  project-detail-actions.ts       ← FinancialBox gate, setProjectStatus, updateProjectField
-  project-step-actions.ts         ← applyPriceBookRates (4-strategy), sendBoqToPurchase, BOI workflow
-  project-stepper-queries.ts      ← parallelized per-step data fetch
+  project-detail-actions.ts       ← Project Value PM-only gate, setProjectStatus, updateProjectField
+  project-step-actions.ts         ← barrel; applyPriceBookRates (4-strategy), sendBoqToPurchase, BOI workflow
+  project-bom-actions.ts          ← BOI CRUD + updateBoiItem (audited, any state) + getBoiItemHistory (mig 175)
+  project-activities-{constants,queries,actions}.ts   ← Activities data layer (mig 174)
+  project-completion-queries.ts   ← getProjectCompletionPct + getMilestoneProgressData (mig 173)
+  boq-item-diff.ts (+ .test.ts)   ← pure audit-diff helper
+  project-stepper-queries.ts      ← parallelized per-step data fetch (+ entity-task merge)
   projects-queries.ts, pm-queries.ts, project-stages.ts, project-status-helpers.ts
   site-expenses-actions.ts        ← submit/approve/reject vouchers
 

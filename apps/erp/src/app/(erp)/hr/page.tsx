@@ -37,7 +37,7 @@ export default async function HRListPage() {
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">HR OVERVIEW</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">HR Master</h1>
+          <h1 className="text-2xl font-bold text-n-950">HR Master</h1>
         </div>
         <div className="flex gap-2">
           <Link href="/hr/leave">
@@ -57,7 +57,7 @@ export default async function HRListPage() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-gray-500">Active Employees</p>
-            <p className="text-2xl font-bold text-[#1A1D24]">{activeCount}</p>
+            <p className="text-2xl font-bold text-n-950">{activeCount}</p>
             <p className="text-xs text-gray-400 mt-1">
               {employees.length - activeCount} inactive
             </p>
@@ -77,7 +77,7 @@ export default async function HRListPage() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-gray-500">Total Employees</p>
-            <p className="text-2xl font-bold text-[#1A1D24]">{employees.length}</p>
+            <p className="text-2xl font-bold text-n-950">{employees.length}</p>
             <p className="text-xs text-gray-400 mt-1">All time</p>
           </CardContent>
         </Card>
@@ -118,7 +118,7 @@ export default async function HRListPage() {
                       <TableCell>
                         <Link
                           href={`/hr/${emp.id}`}
-                          className="text-[#00B050] hover:underline font-medium"
+                          className="text-shiroi-gold-dark hover:underline font-medium"
                         >
                           {emp.employee_code}
                         </Link>

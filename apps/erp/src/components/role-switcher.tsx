@@ -36,7 +36,7 @@ export function RoleSwitcher({ currentViewAs }: RoleSwitcherProps) {
       <select
         value={currentViewAs ?? 'founder'}
         onChange={handleChange}
-        className="appearance-none bg-n-100 border border-n-200 rounded-md text-xs font-medium text-n-600 pl-2 pr-6 py-1.5 cursor-pointer hover:bg-[#E8EAEF] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FACB01] focus:ring-offset-1"
+        className="appearance-none bg-n-100 border border-n-200 rounded-md text-xs font-medium text-n-600 pl-2 pr-6 py-1.5 cursor-pointer hover:bg-n-150 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FACB01] focus:ring-offset-1"
       >
         {VIEWABLE_ROLES.map((role) => (
           <option key={role.value} value={role.value}>

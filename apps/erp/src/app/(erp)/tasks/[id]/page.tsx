@@ -30,7 +30,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
   const { data: task, error } = await supabase
     .from('tasks')
     .select(
-      'id, title, description, priority, due_date, is_completed, completed_at, remarks, category, entity_type, entity_id, project_id, assigned_to, assignee:employees!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name), completed_by_employee:employees!project_tasks_completed_by_fkey(full_name)',
+      'id, title, description, priority, due_date, is_completed, completed_at, remarks, category, entity_type, entity_id, project_id, assigned_to, assignee:employee_directory!project_tasks_assigned_to_fkey(full_name), project:projects!project_tasks_project_id_fkey(project_number, customer_name), completed_by_employee:employee_directory!project_tasks_completed_by_fkey(full_name)',
     )
     .eq('id', id)
     .is('deleted_at', null)
@@ -86,7 +86,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
           </div>
           <Link
             href="/tasks"
-            className="text-xs text-shiroi-green hover:underline"
+            className="text-xs text-shiroi-gold-dark hover:underline"
           >
             ← Back to Tasks
           </Link>
@@ -106,7 +106,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
               <span className="text-n-500 shrink-0">Project</span>
               <Link
                 href={`/projects/${task.project_id}`}
-                className="text-shiroi-green hover:underline text-right"
+                className="text-shiroi-gold-dark hover:underline text-right"
               >
                 {projectInfo.customer_name}
                 {projectInfo.project_number ? ` (${projectInfo.project_number})` : ''}

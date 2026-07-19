@@ -82,8 +82,8 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
       {/* Header */}
       <div>
         <Eyebrow className="mb-1">LIAISON</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Liaison</h1>
-        <p className="text-sm text-[#7C818E] mt-1">
+        <h1 className="text-2xl font-heading font-bold text-n-950">Liaison</h1>
+        <p className="text-sm text-n-500 mt-1">
           CEIG clearances, TNEB net-metering applications, and follow-up tracking.
         </p>
       </div>
@@ -96,14 +96,14 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
           const href = card.key === 'all' ? '/liaison' : `/liaison?filter=${card.key}`;
           return (
             <Link key={card.key} href={href} className="block group">
-              <Card className={`transition-shadow hover:shadow-md ${isActive ? 'ring-2 ring-[#00B050]' : ''}`}>
+              <Card className={`transition-shadow hover:shadow-md ${isActive ? 'ring-2 ring-shiroi-gold' : ''}`}>
                 <CardContent className="flex items-center gap-3 p-4">
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.bgColor}`}>
                     <Icon className={`h-4 w-4 ${card.iconColor}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs text-[#7C818E] leading-tight">{card.label}</p>
-                    <p className="text-xl font-heading font-bold text-[#1A1D24]">
+                    <p className="text-xs text-n-500 leading-tight">{card.label}</p>
+                    <p className="text-xl font-heading font-bold text-n-950">
                       {summary[card.summaryKey]}
                     </p>
                   </div>
@@ -120,7 +120,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
           <span className="text-xs text-n-600">
             Filtered: {CARD_DEFS.find((c) => c.key === activeFilter)?.label}
           </span>
-          <Link href="/liaison" className="text-xs text-[#00B050] hover:underline">
+          <Link href="/liaison" className="text-xs text-shiroi-gold-dark hover:underline">
             × Clear
           </Link>
         </div>
@@ -130,7 +130,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm [&_td]:align-top">
               <thead className="bg-n-50 border-b-2 border-n-200 sticky top-0">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-n-600 uppercase tracking-wider">Project</th>
@@ -155,13 +155,13 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                     return (
                       <tr
                         key={app.id}
-                        className={`h-10 border-b border-n-100 hover:bg-[#00B050]/[0.04] ${i % 2 === 1 ? 'bg-n-50/30' : ''}`}
+                        className={`h-10 border-b border-n-100 hover:bg-shiroi-gold/[0.04] ${i % 2 === 1 ? 'bg-n-50/30' : ''}`}
                       >
                         <td className="px-3 py-2">
                           {app.projects ? (
                             <Link
                               href={`/liaison/net-metering/${app.project_id}`}
-                              className="font-medium text-n-900 hover:text-[#00B050] hover:underline"
+                              className="font-medium text-n-900 hover:text-shiroi-gold-dark hover:underline"
                             >
                               {app.projects.project_number} — {app.projects.customer_name}
                             </Link>
@@ -169,7 +169,7 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                             <span className="text-n-400">—</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono tabular-nums text-n-600">
+                        <td className="px-3 py-2 text-right font-mono tabular-nums text-n-600 whitespace-nowrap">
                           {app.projects?.system_size_kwp != null
                             ? Number(app.projects.system_size_kwp).toFixed(1)
                             : '—'}
@@ -187,10 +187,10 @@ export default async function LiaisonPage({ searchParams }: LiaisonPageProps) {
                             {app.awaiting_client_details && <AwaitingClientBadge />}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-n-600 font-mono tabular-nums text-xs">
+                        <td className="px-3 py-2 text-n-600 font-mono tabular-nums whitespace-nowrap">
                           {app.discom_application_date ? formatDate(app.discom_application_date) : '—'}
                         </td>
-                        <td className={`px-3 py-2 font-mono tabular-nums text-xs ${followupOverdue ? 'text-red-600 font-semibold' : 'text-n-600'}`}>
+                        <td className={`px-3 py-2 font-mono tabular-nums whitespace-nowrap ${followupOverdue ? 'text-red-600 font-semibold' : 'text-n-600'}`}>
                           {followupDate ? formatDate(app.next_followup_date) : '—'}
                         </td>
                       </tr>

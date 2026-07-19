@@ -3,7 +3,8 @@ import { getContacts } from '@/lib/contacts-queries';
 import { getMyViews } from '@/lib/views-actions';
 import { ContactsTableWrapper } from '@/components/contacts/contacts-table-wrapper';
 import { CONTACT_COLUMNS, getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Eyebrow } from '@repo/ui';
+import { Button, Eyebrow } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
@@ -67,33 +68,33 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
     : getDefaultColumns('contacts');
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">CONTACTS</Eyebrow>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">Contacts</h1>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/contacts" filterParams={['search', 'stage']}>
+              <SearchInput
+                placeholder="Search by name, phone, or email..."
+                className="w-72 h-9 text-sm"
+              />
+              <FilterSelect paramName="stage" className="w-40 h-9 text-sm">
+                <option value="">All Stages</option>
+                {LIFECYCLE_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </FilterSelect>
+            </FilterBar>
+          </div>
+          <Link href="/contacts/new">
+            <Button>New Contact</Button>
+          </Link>
         </div>
-        <Link href="/contacts/new">
-          <Button>New Contact</Button>
-        </Link>
+      }
+    >
+      <div>
+        <Eyebrow className="mb-1">CONTACTS</Eyebrow>
+        <h1 className="text-2xl font-bold text-n-950">Contacts</h1>
       </div>
-
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/contacts" filterParams={['search', 'stage']}>
-            <SearchInput
-              placeholder="Search by name, phone, or email..."
-              className="w-72 h-9 text-sm"
-            />
-            <FilterSelect paramName="stage" className="w-40 h-9 text-sm">
-              <option value="">All Stages</option>
-              {LIFECYCLE_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </FilterSelect>
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       <ContactsTableWrapper
         data={flatData}
@@ -108,6 +109,6 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
         activeViewId={params.view ?? activeView?.id ?? null}
         visibleColumns={visibleColumns}
       />
-    </div>
+    </ListPageShell>
   );
 }

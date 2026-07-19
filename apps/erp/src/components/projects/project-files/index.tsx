@@ -251,10 +251,10 @@ export function ProjectFiles({
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-10 bg-[#F5F6F8] rounded-lg animate-pulse" />
+        <div className="h-10 bg-n-100 rounded-lg animate-pulse" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-32 bg-[#F5F6F8] rounded-lg animate-pulse" />
+            <div key={i} className="h-32 bg-n-100 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -264,7 +264,7 @@ export function ProjectFiles({
   return (
     <div className="space-y-4">
       {/* Upload bar */}
-      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#DFE2E8]">
+      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-n-200">
         <Select
           value={selectedCategory}
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCategory(e.target.value)}
@@ -291,10 +291,10 @@ export function ProjectFiles({
             </span>
           </Button>
         </label>
-        <span className="text-[11px] text-[#9CA0AB] hidden md:inline">
+        <span className="text-[11px] text-n-400 hidden md:inline">
           {moving ? 'Moving file...' : 'Drag files between boxes to recategorize'}
         </span>
-        {totalFiles > 0 && <span className="text-[11px] text-[#9CA0AB] ml-auto">{totalFiles} files</span>}
+        {totalFiles > 0 && <span className="text-[11px] text-n-400 ml-auto">{totalFiles} files</span>}
       </div>
 
       {/* Row 1: Handover + Customer Documents */}
@@ -325,9 +325,9 @@ export function ProjectFiles({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Camera className="h-4 w-4 text-[#7C818E]" />
+              <Camera className="h-4 w-4 text-n-500" />
               Site Photos
-              <span className="text-xs text-[#9CA0AB] font-normal">({allPhotos.length})</span>
+              <span className="text-xs text-n-400 font-normal">({allPhotos.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -335,7 +335,7 @@ export function ProjectFiles({
             {/* File list below slideshow for management */}
             <div
               className={`space-y-0.5 max-h-[160px] overflow-y-auto rounded border border-dashed p-2 transition-all ${
-                dragOverCategory === 'photos' ? 'border-[#00B050] bg-[#00B050]/5' : 'border-[#DFE2E8]'
+                dragOverCategory === 'photos' ? 'border-shiroi-gold bg-shiroi-gold/5' : 'border-n-200'
               }`}
               onDragOver={(e) => {
                 e.preventDefault();
@@ -345,7 +345,7 @@ export function ProjectFiles({
               onDragLeave={() => setDragOverCategory(null)}
               onDrop={(e) => handleDrop(e, 'photos')}
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA0AB] mb-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-n-400 mb-1">
                 Files ({(files['photos']?.length ?? 0) + (files['whatsapp']?.length ?? 0)})
                 <span className="font-normal ml-1">— drag to recategorize</span>
               </p>
@@ -372,7 +372,7 @@ export function ProjectFiles({
                 />
               ))}
               {(files['photos']?.length ?? 0) + (files['whatsapp']?.length ?? 0) === 0 && (
-                <p className="text-[11px] text-[#C8CBD0] text-center py-2">Drag photos here</p>
+                <p className="text-[11px] text-n-300 text-center py-2">Drag photos here</p>
               )}
             </div>
           </CardContent>

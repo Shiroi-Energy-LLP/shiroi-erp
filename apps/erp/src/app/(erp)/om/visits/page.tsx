@@ -71,11 +71,11 @@ export default async function OmVisitsPage() {
   } catch {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">O&M Visits</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">O&M Visits</h1>
         <Card>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-sm text-[#7C818E]">No data available. Could not load visit data.</p>
+              <p className="text-sm text-n-500">No data available. Could not load visit data.</p>
             </div>
           </CardContent>
         </Card>
@@ -101,9 +101,9 @@ export default async function OmVisitsPage() {
       <div className="flex items-center justify-between">
         <div>
           <Eyebrow className="mb-1">O&M VISITS</Eyebrow>
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
+          <h1 className="text-2xl font-heading font-bold text-n-950">
             O&M Visits{' '}
-            <span className="text-base font-normal text-[#7C818E]">
+            <span className="text-base font-normal text-n-500">
               ({scheduled.length} scheduled, {visits.length} reports)
             </span>
           </h1>
@@ -115,7 +115,7 @@ export default async function OmVisitsPage() {
         <div className="flex gap-3 flex-wrap">
           <div className="px-4 py-3 bg-white border border-n-200 rounded-lg min-w-[100px]">
             <div className="text-xs text-n-500 mb-0.5">Total Scheduled</div>
-            <div className="text-xl font-bold text-[#1A1D24]">{scheduled.length}</div>
+            <div className="text-xl font-bold text-n-950">{scheduled.length}</div>
           </div>
           <div className="px-4 py-3 bg-white border border-green-200 rounded-lg min-w-[100px]">
             <div className="text-xs text-green-600 mb-0.5">Completed</div>
