@@ -7,12 +7,21 @@ import { ChevronDown, ChevronRight, ExternalLink, CheckCircle2, XCircle, AlertTr
 import { approvePendingImport, rejectPendingImport, updatePendingImportField } from '@/lib/import-review-actions';
 import type { PendingImport, PendingChild } from '@/lib/import-review-queries';
 import { useRouter } from 'next/navigation';
+import { LinkProjectDialog } from './link-project-dialog';
+
+interface ProjectOpt {
+  id: string;
+  customer_name: string;
+  project_number: string | null;
+  project_name?: string | null;
+}
 
 interface Props {
   row: PendingImport;
   selected: boolean;
   onToggleSelect: () => void;
   fetchChildren: (id: string) => Promise<PendingChild[]>;
+  projects: ProjectOpt[];
 }
 
 function formatINR(amt: number | null): string {
@@ -58,7 +67,7 @@ function PasswordField({ value, label }: { value: string | null; label: string }
   );
 }
 
-export function ImportRowCard({ row, selected, onToggleSelect, fetchChildren }: Props) {
+export function ImportRowCard({ row, selected, onToggleSelect, fetchChildren, projects }: Props) {
   const router = useRouter();
   const [expanded, setExpanded] = React.useState(false);
   const [pendingAction, setPendingAction] = React.useState<'approve' | 'reject' | null>(null);
@@ -133,7 +142,7 @@ export function ImportRowCard({ row, selected, onToggleSelect, fetchChildren }: 
               {row.matched_project_id && row.matched_customer_name && (
                 <Link
                   href={`/projects/${row.matched_project_id}`}
-                  className="text-[10px] text-[#00B050] hover:underline inline-flex items-center gap-0.5"
+                  className="text-[10px] text-shiroi-gold-dark hover:underline inline-flex items-center gap-0.5"
                   target="_blank"
                 >
                   → {row.matched_customer_name}
@@ -190,10 +199,11 @@ export function ImportRowCard({ row, selected, onToggleSelect, fetchChildren }: 
                   {pendingAction === 'reject' ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
                   Reject
                 </Button>
+                <LinkProjectDialog importId={row.id} importName={row.project_name} projects={projects} />
               </div>
             )}
             {row.status_review === 'imported' && row.imported_project_id && (
-              <Link href={`/projects/${row.imported_project_id}`} className="text-[#00B050] text-[11px] hover:underline inline-flex items-center gap-1" target="_blank">
+              <Link href={`/projects/${row.imported_project_id}`} className="text-[#16A34A] text-[11px] hover:underline inline-flex items-center gap-1" target="_blank">
                 <CheckCircle2 className="h-3 w-3" /> Imported
               </Link>
             )}
@@ -242,10 +252,10 @@ function ExpandedDetails({ row, children_ }: { row: PendingImport; children_: Pe
         <KV label="Address" value={row.address_line1} />
         <KV label="City/State" value={[row.city, row.state, row.pincode].filter(Boolean).join(', ')} />
         {row.google_maps_url && (
-          <KV label="Map" value={<a href={row.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-[#00B050] hover:underline inline-flex items-center gap-0.5">link <ExternalLink className="h-2.5 w-2.5" /></a>} />
+          <KV label="Map" value={<a href={row.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-shiroi-gold-dark hover:underline inline-flex items-center gap-0.5">link <ExternalLink className="h-2.5 w-2.5" /></a>} />
         )}
         {row.folder_link && (
-          <KV label="Folder" value={<a href={row.folder_link} target="_blank" rel="noopener noreferrer" className="text-[#00B050] hover:underline inline-flex items-center gap-0.5">link <ExternalLink className="h-2.5 w-2.5" /></a>} />
+          <KV label="Folder" value={<a href={row.folder_link} target="_blank" rel="noopener noreferrer" className="text-shiroi-gold-dark hover:underline inline-flex items-center gap-0.5">link <ExternalLink className="h-2.5 w-2.5" /></a>} />
         )}
       </div>
 
@@ -253,7 +263,7 @@ function ExpandedDetails({ row, children_ }: { row: PendingImport; children_: Pe
         <SectionTitle>Portal credentials</SectionTitle>
         <KV label="Brand" value={row.portal_brand} />
         {row.portal_url && (
-          <KV label="URL" value={<a href={row.portal_url} target="_blank" rel="noopener noreferrer" className="text-[#00B050] hover:underline inline-flex items-center gap-0.5 break-all">{row.portal_url} <ExternalLink className="h-2.5 w-2.5 flex-shrink-0" /></a>} />
+          <KV label="URL" value={<a href={row.portal_url} target="_blank" rel="noopener noreferrer" className="text-shiroi-gold-dark hover:underline inline-flex items-center gap-0.5 break-all">{row.portal_url} <ExternalLink className="h-2.5 w-2.5 flex-shrink-0" /></a>} />
         )}
         <KV label="Username" value={<span className="font-mono">{row.portal_username}</span>} />
         <PasswordField label="Password" value={row.portal_password} />

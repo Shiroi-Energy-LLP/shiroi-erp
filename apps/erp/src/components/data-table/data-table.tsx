@@ -5,27 +5,22 @@ import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Card, CardContent, Button, Badge, Checkbox, Input,
-  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+  TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@repo/ui';
-import { formatProjectNumber } from '@repo/ui/formatters';
+import { formatProjectNumber, formatDateFromTimestamp } from '@repo/ui/formatters';
 import {
   ChevronUp, ChevronDown, Columns3,
-  ArrowUpDown, Check, X, Loader2,
+  ArrowUpDown, Check, X, Loader2, ClipboardList,
 } from 'lucide-react';
 import { ColumnPicker } from './column-picker';
 import { ViewTabs } from './view-tabs';
 import type { ColumnDef } from './column-config';
+import { fyOptions } from '@/lib/helpers/fiscal-year';
 import { LeadStatusBadge } from '@/components/leads/lead-status-badge';
+import { LeadScoreBadge } from '@/components/leads/lead-score-badge';
 import type { Database } from '@repo/types/database';
 
 // ── Formatters ──
-
-function formatDate(val: string | null): string {
-  if (!val) return '—';
-  return new Date(val).toLocaleDateString('en-IN', {
-    timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric',
-  });
-}
 
 function formatCurrency(val: number | null): string {
   if (val == null) return '—';
@@ -51,15 +46,15 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   design_confirmed: { bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
   proposal_sent: { bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' },
   negotiation: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
-  won: { bg: '#F0FDF4', text: '#00B050', border: '#86EFAC' },
-  converted: { bg: '#F0FDF4', text: '#00B050', border: '#86EFAC' },
+  won: { bg: '#F0FDF4', text: '#16A34A', border: '#86EFAC' },
+  converted: { bg: '#F0FDF4', text: '#16A34A', border: '#86EFAC' },
   lost: { bg: '#F5F5F5', text: '#525252', border: '#D4D4D4' },
   on_hold: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
   disqualified: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   // Proposal statuses
   draft: { bg: '#F5F6F8', text: '#7C818E', border: '#DFE2E8' },
   sent: { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
-  accepted: { bg: '#F0FDF4', text: '#00B050', border: '#BBF7D0' },
+  accepted: { bg: '#F0FDF4', text: '#16A34A', border: '#BBF7D0' },
   rejected: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   expired: { bg: '#F5F5F5', text: '#525252', border: '#D4D4D4' },
   revised: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
@@ -67,7 +62,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   order_received: { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
   yet_to_start: { bg: '#F5F6F8', text: '#525252', border: '#DFE2E8' },
   in_progress: { bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' },
-  completed: { bg: '#F0FDF4', text: '#00B050', border: '#BBF7D0' },
+  completed: { bg: '#F0FDF4', text: '#16A34A', border: '#BBF7D0' },
   holding_shiroi: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
   holding_client: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
   waiting_net_metering: { bg: '#FAF5FF', text: '#7C3AED', border: '#DDD6FE' },
@@ -136,11 +131,39 @@ function InlineEditInput({
           }}
           onKeyDown={handleKeyDown}
           onBlur={onCancel}
-          className="h-7 rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+          className="h-7 rounded border border-shiroi-gold/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
           disabled={saving}
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
+      </div>
+    );
+  }
+
+  // Fiscal-year dropdown — projects "Year" column; the save handler maps it to order_date.
+  if (fieldType === 'fy') {
+    const now = new Date();
+    const opts = fyOptions(now.getUTCFullYear(), now.getUTCMonth());
+    return (
+      <div className="flex items-center gap-1">
+        <select
+          ref={inputRef as React.RefObject<HTMLSelectElement>}
+          value={localValue}
+          onChange={(e) => {
+            setLocalValue(e.target.value);
+            onSave(e.target.value);
+          }}
+          onKeyDown={handleKeyDown}
+          onBlur={onCancel}
+          className="h-7 rounded border border-shiroi-gold/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
+          disabled={saving}
+        >
+          {!opts.includes(localValue) && <option value={localValue}>{localValue || '—'}</option>}
+          {opts.map((fy) => (
+            <option key={fy} value={fy}>{`FY ${fy}`}</option>
           ))}
         </select>
         {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
@@ -159,7 +182,7 @@ function InlineEditInput({
           onChange={(e) => setLocalValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => handleSave()}
-          className="h-7 rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+          className="h-7 rounded border border-shiroi-gold/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
           disabled={saving}
         />
         {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
@@ -179,7 +202,7 @@ function InlineEditInput({
         onChange={(e) => setLocalValue(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={() => handleSave()}
-        className="h-7 w-full min-w-[80px] max-w-[200px] rounded border border-shiroi-green/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+        className="h-7 w-full min-w-[80px] max-w-[200px] rounded border border-shiroi-gold/40 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
         disabled={saving}
       />
       {saving && <Loader2 className="h-3 w-3 animate-spin text-n-400" />}
@@ -205,6 +228,13 @@ interface DataTableProps {
   activeViewId: string | null;
   linkPrefix: string;
   linkField: string;
+  /**
+   * When false, row detail links don't prefetch (on hover/viewport). Set false on
+   * large lists backed by a constrained DB to avoid a prefetch storm — each
+   * prefetch renders the detail route's layout query (e.g. getProjectHeader).
+   * Default true (Next.js default behaviour).
+   */
+  prefetch?: boolean;
   idField?: string;
   bulkActions?: React.ReactNode;
   onSelectionChange?: (ids: string[]) => void;
@@ -218,6 +248,14 @@ interface DataTableProps {
    * overrides whatever the column's static `options` prop says.
    */
   dynamicOptions?: Record<string, { value: string; label: string }[]>;
+  /**
+   * When true, the table renders inside a bounded, internally-scrolling frame so
+   * the filter bar + column-header row stay fixed while only the body scrolls
+   * (the page itself doesn't scroll). The parent MUST give this component a
+   * bounded height — a `flex-1 min-h-0` wrapper inside a `flex h-full flex-col`
+   * page. Default false = legacy whole-page scroll.
+   */
+  containedScroll?: boolean;
 }
 
 export function DataTable({
@@ -236,10 +274,12 @@ export function DataTable({
   activeViewId,
   linkPrefix,
   linkField,
+  prefetch = true,
   idField = 'id',
   bulkActions,
   onSelectionChange,
   selectedIds = [],
+  containedScroll = false,
   onCellEdit,
   dynamicOptions,
 }: DataTableProps) {
@@ -323,6 +363,23 @@ export function DataTable({
 
   // ── Inline editing ──
 
+  // Optimistic inline edits: reflect the saved value immediately and close the
+  // editor, then persist in the background — so an edit doesn't visibly freeze on
+  // the DB round-trip + page revalidation. Overlay is keyed by row id → { field: value }.
+  const [optimisticEdits, setOptimisticEdits] = React.useState<Record<string, Record<string, unknown>>>({});
+  // Server data is authoritative: when a fresh `data` snapshot arrives (after the
+  // server action revalidates the page), drop the overlays.
+  React.useEffect(() => {
+    setOptimisticEdits({});
+  }, [data]);
+  const displayData = React.useMemo(() => {
+    if (Object.keys(optimisticEdits).length === 0) return data;
+    return data.map((r) => {
+      const patch = optimisticEdits[String(r[idField])];
+      return patch ? { ...r, ...patch } : r;
+    });
+  }, [data, optimisticEdits, idField]);
+
   function handleCellClick(rowId: string, col: ColumnDef) {
     if (!col.editable || !onCellEdit) return;
     // Don't edit link fields — they navigate
@@ -344,12 +401,32 @@ export function DataTable({
       if (isNaN(parsedValue)) parsedValue = null;
     }
 
+    // Optimistic: reflect the value and close the editor now; persist in the
+    // background. 'referrer' is skipped because its cell renders from
+    // referrer_name/referrer_is_internal rather than the column key.
+    const optimistic = col?.key !== 'referrer';
+    if (optimistic) {
+      setOptimisticEdits((m) => ({ ...m, [rowId]: { ...m[rowId], [field]: parsedValue } }));
+    }
+    setEditingCell(null);
+
     const result = await onCellEdit(rowId, field, parsedValue);
     if (!result.success) {
+      // Roll back the optimistic value and surface the error.
+      if (optimistic) {
+        setOptimisticEdits((m) => {
+          const rowPatch = { ...m[rowId] };
+          delete rowPatch[field];
+          const next = { ...m };
+          if (Object.keys(rowPatch).length === 0) delete next[rowId];
+          else next[rowId] = rowPatch;
+          return next;
+        });
+      }
       setEditError(result.error ?? 'Failed to save');
       setTimeout(() => setEditError(null), 3000);
     }
-    setEditingCell(null);
+    // On success the overlay persists until the revalidated `data` arrives, then clears.
   }
 
   // ── Cell renderer ──
@@ -384,12 +461,12 @@ export function DataTable({
     const editableProps = isEditable
       ? {
           onDoubleClick: () => handleCellClick(rowId, col),
-          className: 'cursor-text hover:bg-shiroi-green/5 rounded px-1 -mx-1 transition-colors',
+          className: 'cursor-text hover:bg-shiroi-gold/5 rounded px-1 -mx-1 transition-colors',
           title: 'Double-click to edit',
         }
       : {};
 
-    // Referrer column — shows VIP badge for internal partners, "+ Set" when
+    // Referrer column — shows MGMT REF badge for internal partners, "+ Set" when
     // null. Double-click anywhere on the cell opens an inline select populated
     // with the partner list (passed in via DataTable's `dynamicOptions` prop).
     // The save handler in leads-table-wrapper translates the column key
@@ -401,7 +478,7 @@ export function DataTable({
       const editProps = canEdit
         ? {
             onDoubleClick: () => handleCellClick(rowId, col),
-            className: 'cursor-text hover:bg-shiroi-green/[0.08] rounded px-1 -mx-1 transition-colors',
+            className: 'cursor-text hover:bg-shiroi-gold/[0.08] rounded px-1 -mx-1 transition-colors',
             title: 'Double-click to change referrer',
           }
         : {};
@@ -409,22 +486,29 @@ export function DataTable({
         return (
           <span
             {...editProps}
-            className={`${editProps.className ?? ''} inline-flex items-center text-xs text-shiroi-green/70 hover:text-shiroi-green`}
+            className={`${editProps.className ?? ''} inline-flex items-center text-xs text-shiroi-gold-dark/70 hover:text-shiroi-gold-dark`}
           >
             + Set referrer
           </span>
         );
       }
-      // Compact badge mode (per Vivek): show just "VIP" for internal, "CUSTOMER"
+      // Compact badge mode (per Vivek): show "MGMT REF" for internal, "CUSTOMER"
       // for external. Hover surfaces the full partner name via title.
       const pillClass = isInternal
-        ? 'inline-flex items-center justify-center rounded-full h-6 min-w-[72px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-status-success-bg text-status-success-text'
-        : 'inline-flex items-center justify-center rounded-full h-6 min-w-[72px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-[#FCE7F3] text-[#9D174D]';
+        ? 'inline-flex items-center justify-center rounded-full h-6 min-w-[88px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-status-success-bg text-status-success-text'
+        : 'inline-flex items-center justify-center rounded-full h-6 min-w-[88px] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] bg-[#FCE7F3] text-[#9D174D]';
       return (
         <span {...editProps} className={`${editProps.className ?? ''} inline-flex items-center`} title={referrerName}>
-          <span className={pillClass}>{isInternal ? 'VIP' : 'Customer'}</span>
+          <span className={pillClass}>{isInternal ? 'MGMT REF' : 'Customer'}</span>
         </span>
       );
+    }
+
+    // AI lead score — uses LeadScoreBadge (0-30 gray / 31-60 yellow /
+    // 61-85 green / 86-100 red "HOT"). Renders "—" placeholder for null.
+    if (col.key === 'ai_score') {
+      const num = val == null ? null : Number(val);
+      return <LeadScoreBadge score={Number.isFinite(num) ? num : null} />;
     }
 
     // Link field — always links to detail page
@@ -435,7 +519,8 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
-          className="font-medium text-shiroi-green hover:underline"
+          prefetch={prefetch}
+          className="font-medium text-shiroi-gold-dark hover:underline"
         >
           {displayVal}
         </Link>
@@ -479,7 +564,7 @@ export function DataTable({
     if (col.format === 'currency') return <span {...editableProps} className={`text-sm font-mono ${editableProps.className ?? ''}`}>{formatCurrency(val as number)}</span>;
 
     // Date
-    if (col.format === 'date') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatDate(val as string)}</span>;
+    if (col.format === 'date') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatDateFromTimestamp(val as string)}</span>;
 
     // Percentage
     if (col.format === 'percentage') return <span {...editableProps} className={`text-sm ${editableProps.className ?? ''}`}>{formatPercentage(val as number)}</span>;
@@ -498,10 +583,43 @@ export function DataTable({
       return (
         <Link
           href={`${linkPrefix}/${row[idField]}`}
-          className="font-medium text-shiroi-green hover:underline"
+          prefetch={prefetch}
+          className="font-medium text-shiroi-gold-dark hover:underline"
         >
           {displayVal}
         </Link>
+      );
+    }
+
+    // Project # on the projects list — the row link is now Customer — Project, so this
+    // column (hidden by default) renders as a plain, prefix-stripped code rather than a
+    // second link. Scoped to projects so the purchase-orders project_number cell is untouched.
+    if (col.key === 'project_number' && entityType === 'projects') {
+      return <span className="text-sm">{formatProjectNumber(val as string | null)}</span>;
+    }
+
+    // Activities — link to the project's Execution → Activities sub-tab.
+    if (col.fieldType === 'activities_link') {
+      return (
+        <Link
+          href={`${linkPrefix}/${row[idField]}?tab=execution`}
+          prefetch={prefetch}
+          className="inline-flex items-center gap-1 text-xs text-shiroi-gold-dark hover:underline"
+        >
+          <ClipboardList className="h-3.5 w-3.5" /> Activities
+        </Link>
+      );
+    }
+
+    // Wrapping text (e.g. Notes) — multi-line instead of overflowing on one row.
+    if (col.wrap) {
+      return (
+        <span
+          {...editableProps}
+          className={`block whitespace-normal break-words text-sm ${editableProps.className ?? ''}`}
+        >
+          {val != null && String(val).trim() !== '' ? String(val) : '—'}
+        </span>
       );
     }
 
@@ -551,13 +669,15 @@ export function DataTable({
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table — in containedScroll mode the wrapper has NO overflow box, so the
+          sticky header anchors to the page's scroll container (the wrapper around
+          the KPIs + table) and freezes there once the KPIs/Views scroll past. */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          <div className={containedScroll ? undefined : 'overflow-x-auto'}>
+            <table className="w-full caption-bottom text-sm">
               <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
-                <TableRow className={entityType === 'leads' ? 'bg-gradient-to-b from-n-50 to-white border-b-2 border-n-200 [&_th]:text-[10px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.08em] [&_th]:text-n-600 [&_th]:h-11' : 'bg-[#F5F6F8]'}>
+                <TableRow className={entityType === 'leads' ? 'bg-gradient-to-b from-n-50 to-white border-b-2 border-n-200 [&_th]:text-[10px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.08em] [&_th]:text-n-600 [&_th]:h-11' : 'bg-n-100'}>
                   {/* Checkbox header */}
                   {onSelectionChange && (
                     <TableHead className="w-8 border-r border-n-100 px-3">
@@ -581,9 +701,9 @@ export function DataTable({
                           <span className="inline-flex flex-col">
                             {sortColumn === col.sortKey ? (
                               sortDirection === 'asc' ? (
-                                <ChevronUp className="h-3 w-3 text-shiroi-green" />
+                                <ChevronUp className="h-3 w-3 text-shiroi-gold-dark" />
                               ) : (
-                                <ChevronDown className="h-3 w-3 text-shiroi-green" />
+                                <ChevronDown className="h-3 w-3 text-shiroi-gold-dark" />
                               )
                             ) : (
                               <ArrowUpDown className="h-3 w-3 opacity-30" />
@@ -606,7 +726,7 @@ export function DataTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data.map((row) => {
+                  displayData.map((row) => {
                     const rowId = String(row[idField]);
                     const isSelected = selectedIds.includes(rowId);
 
@@ -618,9 +738,9 @@ export function DataTable({
                     // referrer-cell dblclick handler below.
                     const leadsRowClass = entityType === 'leads'
                       ? (isSelected
-                          ? 'h-12 bg-shiroi-green/[0.08] border-l-2 border-l-shiroi-green'
-                          : 'h-12 hover:bg-shiroi-green/[0.06] border-l-2 border-l-transparent transition-colors')
-                      : (isSelected ? 'bg-shiroi-green/5' : 'hover:bg-n-050');
+                          ? 'h-12 bg-shiroi-gold/[0.08] border-l-2 border-l-shiroi-gold'
+                          : 'h-12 hover:bg-shiroi-gold/[0.06] border-l-2 border-l-transparent transition-colors')
+                      : (isSelected ? 'bg-shiroi-gold/5' : 'hover:bg-n-050');
 
                     return (
                       <TableRow
@@ -637,10 +757,11 @@ export function DataTable({
                           </TableCell>
                         )}
                         {visibleColumnDefs.map((col) => {
-                          // Per-column cell class hooks
-                          let cellClass = entityType === 'leads' ? 'px-3 py-2' : 'py-2';
+                          // Per-column cell class hooks. align-top so wrapped
+                          // multi-line cells line up with single-line neighbours.
+                          let cellClass = entityType === 'leads' ? 'px-3 py-2 align-top' : 'py-2 align-top';
                           if (entityType === 'leads') {
-                            if (col.key === 'customer_name') {
+                            if (col.key === 'customer_name' || col.key === 'customer_project') {
                               cellClass += ' font-medium text-n-900';
                             } else if (
                               col.fieldType === 'number' ||
@@ -649,10 +770,18 @@ export function DataTable({
                               cellClass += ' font-mono tabular-nums text-right';
                             }
                           } else {
-                            if (col.key === 'customer_name') cellClass += ' font-medium';
+                            if (col.key === 'customer_name' || col.key === 'customer_project') cellClass += ' font-medium';
                             if (col.fieldType === 'phone') cellClass += ' tabular-nums';
                             if (col.fieldType === 'number' || col.format === 'currency') cellClass += ' text-right tabular-nums';
                           }
+                          // Table standard: numbers, dates, status badges stay on one
+                          // line; text columns wrap. (Wrap-flagged columns always wrap.)
+                          const keepOneLine = !col.wrap && (
+                            col.fieldType === 'number' || col.fieldType === 'phone' ||
+                            col.fieldType === 'badge' || col.format === 'currency' ||
+                            col.format === 'date' || col.format === 'percentage'
+                          );
+                          if (keepOneLine) cellClass += ' whitespace-nowrap';
                           return (
                             <TableCell key={col.key} className={cellClass}>
                               {renderCell(row, col)}
@@ -664,7 +793,7 @@ export function DataTable({
                   })
                 )}
               </TableBody>
-            </Table>
+            </table>
           </div>
         </CardContent>
       </Card>

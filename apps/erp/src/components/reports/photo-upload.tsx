@@ -188,7 +188,7 @@ export function PhotoUpload({ projectId, reportDate, onPhotosChange }: PhotoUplo
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {photos.map((photo, index) => (
             <div key={photo.storagePath} className="space-y-2">
-              <div className="relative aspect-square rounded-md overflow-hidden bg-[#F5F5F5] border">
+              <div className="relative aspect-square rounded-md overflow-hidden bg-n-100 border">
                 <img
                   src={photo.previewUrl}
                   alt={photo.fileName}

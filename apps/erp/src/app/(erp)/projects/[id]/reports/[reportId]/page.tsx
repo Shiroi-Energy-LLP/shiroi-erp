@@ -42,7 +42,7 @@ export default async function ReportDetailPage({ params }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-[#1A1D24]">Daily Site Report</h2>
+          <h2 className="text-lg font-semibold text-n-950">Daily Site Report</h2>
           <p className="text-sm text-muted-foreground">
             {formatDate(report.report_date)} — submitted by {submitterName}
           </p>
@@ -201,7 +201,7 @@ function MetricCard({ label, value, capitalize: cap }: { label: string; value: s
     <Card>
       <CardContent className="p-4">
         <div className="text-xs text-muted-foreground mb-0.5">{label}</div>
-        <div className={`text-lg font-bold text-[#1A1D24] font-mono ${cap ? 'capitalize' : ''}`}>
+        <div className={`text-lg font-bold text-n-950 font-mono ${cap ? 'capitalize' : ''}`}>
           {value}
         </div>
       </CardContent>

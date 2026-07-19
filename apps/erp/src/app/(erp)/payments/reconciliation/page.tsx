@@ -4,6 +4,7 @@ import {
   computeReconciliationKpis,
 } from '@/lib/receivables-reconciliation-queries';
 import { formatINR, shortINR, formatDate } from '@repo/ui/formatters';
+import { STATUS_LABELS as STATUS_LABEL } from '@/lib/project-status-helpers';
 import {
   Card,
   CardContent,
@@ -17,17 +18,6 @@ import {
   EmptyState,
 } from '@repo/ui';
 import { AlertCircle, CheckCircle2, FileText } from 'lucide-react';
-
-const STATUS_LABEL: Record<string, string> = {
-  order_received:       'Order Received',
-  yet_to_start:         'Yet to Start',
-  in_progress:          'In Progress',
-  completed:            'Completed',
-  holding_shiroi:       'Holding (Shiroi)',
-  holding_client:       'Holding (Client)',
-  waiting_net_metering: 'Net Metering',
-  meter_client_scope:   'Meter (Client)',
-};
 
 function outstandingColor(outstanding: number, daysOverdue: number): string {
   if (outstanding === 0) return 'text-n-400';
@@ -117,7 +107,7 @@ export default async function ReconciliationPage() {
                     return (
                       <TableRow key={row.project_id}>
                         <TableCell>
-                          <Link href={`/projects/${row.project_id}`} className="hover:text-shiroi-green">
+                          <Link href={`/projects/${row.project_id}`} className="hover:text-shiroi-gold-dark">
                             <div className="text-xs font-mono text-n-500">{row.project_number}</div>
                             <div className="text-sm font-medium text-n-900 max-w-[180px] truncate">
                               {row.customer_name}
@@ -166,7 +156,7 @@ export default async function ReconciliationPage() {
                           <div className="flex items-center gap-2">
                             <Link
                               href={`/projects/${row.project_id}?tab=finance`}
-                              className="text-xs text-shiroi-green hover:underline whitespace-nowrap"
+                              className="text-xs text-shiroi-gold-dark hover:underline whitespace-nowrap"
                             >
                               {row.invoice_count === 0 ? 'Raise Invoice' : 'View'}
                             </Link>

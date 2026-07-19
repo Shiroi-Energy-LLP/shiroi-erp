@@ -109,6 +109,55 @@ function syntheticReading(ratedCapacityKw: number): NormalizedReading {
   };
 }
 
+// ─── Time bounds ────────────────────────────────────────────────────────────
+// These two constants guarantee the function ALWAYS returns before the n8n HTTP
+// Request node gives up. n8n's "The connection was aborted, perhaps the server
+// is offline" is what you get when the request outlives the node's timeout — the
+// function keeps running and still logs a 200, but n8n has already marked the
+// cron execution as failed.
+//
+// FETCH_TIMEOUT_MS caps any single vendor call so one hung endpoint (FIMER,
+// Sungrow, Growatt) can't stall the whole sequential batch. POLL_BUDGET_MS caps
+// the cumulative wall-clock: once exceeded we stop starting new inverters and
+// defer them to the next cycle (they keep their old last_poll_at and sort first
+// next time). Worst case ≈ POLL_BUDGET_MS + one inverter's fetches, comfortably
+// under the n8n node timeout.
+const FETCH_TIMEOUT_MS = 10_000;
+const POLL_BUDGET_MS = 30_000;
+
+// fetch() with an AbortController-based timeout. Deno's fetch never times out on
+// its own, so a vendor endpoint that accepts the connection but never responds
+// would otherwise block until the platform wall-clock limit.
+async function fetchWithTimeout(
+  input: string,
+  init: RequestInit = {},
+  timeoutMs = FETCH_TIMEOUT_MS,
+): Promise<Response> {
+  // @ts-expect-error — AbortSignal.timeout is available in the Deno runtime
+  return await fetch(input, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+}
+
+// ─── Reading-timestamp guard ────────────────────────────────────────────────
+// SYNC WITH packages/inverter-adapters/src/base.ts :: clampRecordedAt
+//
+// A vendor datalogger with a misconfigured clock can report a recorded_at
+// outside the live partition range of inverter_readings (RANGE-partitioned by
+// month, NO default partition). The out-of-range row has nowhere to go, so the
+// upsert hard-errors ("no partition of relation ... found for row") on every
+// poll and the reading is lost (plant 10467798, 2026-06-09). The poll is
+// real-time, so clamp implausible stamps to poll time; the kept range
+// [now-36h, now+1h] always maps to the current or previous month. The original
+// vendor value survives in raw_payload for diagnosis.
+function clampRecordedAt(recordedAt: string, now: Date): string {
+  const FUTURE_GRACE_MS = 60 * 60 * 1000; // 1 hour
+  const PAST_GRACE_MS = 36 * 60 * 60 * 1000; // 36 hours
+  const t = new Date(recordedAt).getTime();
+  if (!Number.isFinite(t)) return now.toISOString();
+  if (t > now.getTime() + FUTURE_GRACE_MS) return now.toISOString();
+  if (t < now.getTime() - PAST_GRACE_MS) return now.toISOString();
+  return new Date(t).toISOString();
+}
+
 // ─── Growatt adapter (inlined from packages/inverter-adapters/src/growatt.ts) ─
 // SYNC WITH packages/inverter-adapters/src/growatt.ts
 
@@ -402,7 +451,7 @@ async function growattLogin(
   body.set('userName', username);
   body.set('password', hashedPassword);
 
-  const response = await fetch(`${GROWATT_BASE_URL}newTwoLoginAPI.do`, {
+  const response = await fetchWithTimeout(`${GROWATT_BASE_URL}newTwoLoginAPI.do`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
@@ -433,7 +482,7 @@ async function growattGetDeviceList(
 ): Promise<GrowattDevice[]> {
   const op = '[growattGetDeviceList]';
   const url = `${GROWATT_BASE_URL}newTwoPlantAPI.do?op=getAllDeviceList&plantId=${plantId}&language=1`;
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method: 'GET',
     headers: { Cookie: cookieHeader },
   });
@@ -473,7 +522,7 @@ async function fetchGrowattReadingViaInstallerToken(
 
   const base = (apiBase || 'https://openapi.growatt.com').replace(/\/$/, '');
   const url = `${base}/v1/plant/data?plant_id=${encodeURIComponent(inv.monitoring_site_id)}`;
-  const res = await fetch(url, { headers: { token } });
+  const res = await fetchWithTimeout(url, { headers: { token } });
   if (!res.ok) {
     throw new Error(`Growatt installer-token HTTP ${res.status} for plant ${inv.monitoring_site_id}`);
   }
@@ -659,7 +708,7 @@ async function sungrowPost<T>(
     sys_code: '901',
   };
   if (token) headers.token = token;
-  const res = await fetch(`${base.replace(/\/$/, '')}${path}`, {
+  const res = await fetchWithTimeout(`${base.replace(/\/$/, '')}${path}`, {
     method: 'POST', headers, body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Sungrow HTTP ${res.status} from ${path}`);
@@ -790,7 +839,7 @@ interface FimerCreds {
 
 async function fimerAuthenticate(creds: FimerCreds): Promise<string> {
   const basic = 'Basic ' + btoa(`${creds.username}:${creds.password}`);
-  const res = await fetch(`${FIMER_API_BASE}/authenticate`, {
+  const res = await fetchWithTimeout(`${FIMER_API_BASE}/authenticate`, {
     method: 'GET',
     headers: {
       Authorization: basic,
@@ -814,7 +863,7 @@ function fimerYyyymmdd(d: Date): string {
 }
 
 async function fimerGet<T>(path: string, apiKey: string, token: string): Promise<{ result?: T }> {
-  const res = await fetch(`${FIMER_API_BASE}${path}`, {
+  const res = await fetchWithTimeout(`${FIMER_API_BASE}${path}`, {
     headers: {
       'X-AuroraVision-ApiKey': apiKey,
       'X-AuroraVision-Token': token,
@@ -916,6 +965,25 @@ async function fetchGoodweReading(inv: InverterDue): Promise<NormalizedReading> 
   return syntheticReading(inv.rated_capacity_kw);
 }
 
+// ─── Error message normalizer ───────────────────────────────────────────────
+// Supabase/PostgREST throws plain objects ({ message, details, code }); String()
+// on those yields a useless "[object Object]" in inverter_poll_failures. Prefer
+// .message, fall back to JSON so failures are legible.
+function toErrorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === 'string') return e;
+  if (e && typeof e === 'object') {
+    const m = (e as Record<string, unknown>).message;
+    if (typeof m === 'string' && m.length > 0) return m;
+    try {
+      return JSON.stringify(e);
+    } catch {
+      return String(e);
+    }
+  }
+  return String(e);
+}
+
 // ─── Main handler ──────────────────────────────────────────────────────────
 
 // @ts-expect-error — Deno global
@@ -1000,12 +1068,23 @@ Deno.serve(async (req: Request) => {
 
   let succeeded = 0;
   let failed = 0;
+  let processed = 0;
 
   // Session cache for Growatt: shared across all inverters in this poll cycle.
   // Reduces logins from N-inverters-per-customer to 1-per-customer-per-cycle.
   const growattSessions = newGrowattSessionCache();
 
   for (const inv of inverters) {
+    // Stop starting new inverters once the wall-clock budget is spent so the
+    // function always returns before the n8n HTTP node times out. Deferred
+    // inverters keep their old last_poll_at and sort first next cycle, so the
+    // fleet is still covered — just spread across cycles instead of overrunning
+    // the node timeout in one shot.
+    if (Date.now() - startedAt > POLL_BUDGET_MS) {
+      console.warn(`${op} time budget ${POLL_BUDGET_MS}ms reached after ${processed} inverter(s); deferring ${inverters.length - processed} to next cycle`);
+      break;
+    }
+    processed++;
     try {
       let reading: NormalizedReading;
 
@@ -1128,6 +1207,17 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
+      // Guard against datalogger clock errors: a future/garbage recorded_at has
+      // no partition and would hard-error the upsert every cycle (2026-06-09).
+      const polledAt = new Date();
+      const safeRecordedAt = clampRecordedAt(reading.recorded_at, polledAt);
+      if (safeRecordedAt !== reading.recorded_at) {
+        console.warn(
+          `${op} inverter ${inv.id} (${inv.brand}): implausible recorded_at=${reading.recorded_at} → clamped to ${safeRecordedAt}`,
+        );
+      }
+      reading.recorded_at = safeRecordedAt;
+
       // Upsert reading
       const { error: upsertError } = await supabase.from('inverter_readings').upsert(
         { inverter_id: inv.id, ...reading },
@@ -1148,7 +1238,7 @@ Deno.serve(async (req: Request) => {
       succeeded++;
     } catch (e) {
       failed++;
-      const message = e instanceof Error ? e.message : String(e);
+      const message = toErrorMessage(e);
       console.error(`${op} inverter ${inv.id} (${inv.brand}) failed:`, message);
 
       await supabase.from('inverter_poll_failures').insert({
@@ -1166,9 +1256,11 @@ Deno.serve(async (req: Request) => {
   }
 
   const summary = {
-    processed: inverters.length,
+    due: inverters.length,
+    processed,
     succeeded,
     failed,
+    deferred: inverters.length - processed,
     duration_ms: Date.now() - startedAt,
   };
   console.log(`${op} done`, summary);

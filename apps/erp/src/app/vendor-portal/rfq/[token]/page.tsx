@@ -8,6 +8,7 @@
 import { validateToken, type PublicRfqShape } from '@/lib/vendor-portal-queries';
 import { markInvitationViewed } from '@/lib/vendor-portal-actions';
 import { QuoteSubmitForm } from './_client/quote-submit-form';
+import { formatINR } from '@repo/ui/formatters';
 
 type PageProps = { params: { token: string } };
 
@@ -179,13 +180,4 @@ function ReadOnlyQuoteSummary({ rfq }: { rfq: PublicRfqShape }) {
       </table>
     </div>
   );
-}
-
-function formatINR(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
 }

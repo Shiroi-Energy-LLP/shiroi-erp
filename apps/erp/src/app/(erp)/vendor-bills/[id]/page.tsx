@@ -114,7 +114,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
         <div className="flex items-start justify-between">
           <div>
             <Eyebrow className="mb-1">VENDOR BILL</Eyebrow>
-            <h1 className="text-2xl font-heading font-bold text-[#1A1D24] font-mono">
+            <h1 className="text-2xl font-heading font-bold text-n-950 font-mono">
               {bill.bill_number}
             </h1>
           </div>
@@ -134,11 +134,11 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
 
       {/* ── AI Extraction Review Section (only when pending_review) ──────────── */}
       {isPendingReview && (
-        <Card className="border-2 border-[#00B050] bg-[#f0faf4]">
+        <Card className="border-2 border-shiroi-gold bg-shiroi-solar-bg">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Bot className="h-5 w-5 text-[#00B050]" />
+                <Bot className="h-5 w-5 text-shiroi-gold-dark" />
                 AI Extraction Review
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -176,7 +176,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* Left: AI-extracted fields */}
               <div className="space-y-3 text-sm">
-                <h3 className="font-semibold text-[#1A1D24]">AI-Extracted Fields</h3>
+                <h3 className="font-semibold text-n-950">AI-Extracted Fields</h3>
                 <div className="rounded-md border bg-white p-4 space-y-2">
                   {aiData?.vendor_name_extracted && (
                     <div className="flex justify-between">
@@ -241,7 +241,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
 
               {/* Right: PDF viewer */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-[#1A1D24] text-sm">Original PDF</h3>
+                <h3 className="font-semibold text-n-950 text-sm">Original PDF</h3>
                 {pdfSignedUrl ? (
                   <div className="rounded-md border overflow-hidden bg-gray-50">
                     <iframe
@@ -255,7 +255,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
                         href={pdfSignedUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-[#00B050] hover:underline flex items-center gap-1"
+                        className="text-xs text-shiroi-gold-dark hover:underline flex items-center gap-1"
                       >
                         <FileText className="h-3 w-3" />
                         Open in new tab
@@ -296,7 +296,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="font-semibold">
-                <Link href={`/vendors/${vendor?.id}`} className="hover:underline text-[#00B050]">
+                <Link href={`/vendors/${vendor?.id}`} className="hover:underline text-shiroi-gold-dark">
                   {vendor?.company_name ?? '—'}
                 </Link>
               </div>
@@ -333,7 +333,7 @@ export default async function VendorBillDetailPage({ params }: PageProps) {
               {project && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Project</span>
-                  <Link href={`/projects/${bill.project_id}`} className="hover:underline text-[#00B050]">
+                  <Link href={`/projects/${bill.project_id}`} className="hover:underline text-shiroi-gold-dark">
                     {project.project_number}
                   </Link>
                 </div>

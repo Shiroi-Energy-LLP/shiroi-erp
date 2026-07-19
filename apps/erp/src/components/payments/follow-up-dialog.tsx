@@ -87,7 +87,7 @@ export function FollowUpDialog({ milestone, projectCustomerName }: FollowUpDialo
                 type="date"
                 value={expectedDate}
                 onChange={(e) => setExpectedDate(e.target.value)}
-                className="w-full rounded-md border border-n-300 px-3 py-1.5 text-sm text-n-900 focus:outline-none focus:ring-2 focus:ring-shiroi-green"
+                className="w-full rounded-md border border-n-300 px-3 py-1.5 text-sm text-n-900 focus:outline-none focus:ring-2 focus:ring-shiroi-gold"
               />
             </div>
 
@@ -101,7 +101,7 @@ export function FollowUpDialog({ milestone, projectCustomerName }: FollowUpDialo
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
                 placeholder="e.g. Customer said payment will come after Diwali..."
-                className="w-full rounded-md border border-n-300 px-3 py-1.5 text-sm text-n-900 placeholder:text-n-400 focus:outline-none focus:ring-2 focus:ring-shiroi-green resize-none"
+                className="w-full rounded-md border border-n-300 px-3 py-1.5 text-sm text-n-900 placeholder:text-n-400 focus:outline-none focus:ring-2 focus:ring-shiroi-gold resize-none"
               />
             </div>
 

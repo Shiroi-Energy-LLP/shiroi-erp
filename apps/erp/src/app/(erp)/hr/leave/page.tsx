@@ -6,6 +6,7 @@ import {
   getLeaveCalendar,
 } from '@/lib/hr-queries';
 import { formatDate } from '@repo/ui/formatters';
+import { LEAVE_TYPE_LABELS } from '@/lib/label-constants';
 import {
   Card,
   CardContent,
@@ -22,17 +23,6 @@ import {
 } from '@repo/ui';
 import { CalendarCheck, CalendarDays } from 'lucide-react';
 import { LeaveActionButtons } from '@/components/hr/leave-action-buttons';
-
-const LEAVE_TYPE_LABELS: Record<string, string> = {
-  casual: 'Casual',
-  sick: 'Sick',
-  earned: 'Earned',
-  maternity: 'Maternity',
-  paternity: 'Paternity',
-  compensatory: 'Comp Off',
-  loss_of_pay: 'LOP',
-  other: 'Other',
-};
 
 function leaveStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -62,10 +52,10 @@ export default async function LeaveManagementPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr" className="text-sm text-[#00B050] hover:underline">
+          <Link href="/hr" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to HR
           </Link>
-          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">Leave Management</h1>
+          <h1 className="text-2xl font-bold text-n-950 mt-1">Leave Management</h1>
           <p className="text-sm text-gray-500">
             Approve requests, track balances, view team calendar
           </p>
@@ -147,7 +137,7 @@ export default async function LeaveManagementPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-[#00B050]" />
+            <CalendarDays className="h-5 w-5 text-shiroi-gold-dark" />
             On Leave This Month
             <span className="text-sm font-normal text-gray-500 ml-1">
               {new Date(year, month - 1, 1).toLocaleString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })}
@@ -208,7 +198,7 @@ export default async function LeaveManagementPage() {
 
       {/* All requests link */}
       <div className="text-center">
-        <Link href="/hr/leave/all" className="text-sm text-[#00B050] hover:underline">
+        <Link href="/hr/leave/all" className="text-sm text-shiroi-gold-dark hover:underline">
           View all leave requests &rarr;
         </Link>
       </div>

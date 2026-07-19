@@ -48,12 +48,12 @@ describe('navSectionsForRole', () => {
     ]);
   });
 
-  it('founder sees Dashboard + My Tasks in Overview', () => {
+  it('founder sees Command Center + Dashboard + My Tasks in Overview', () => {
     const sections = navSectionsForRole('founder' as AppRole);
     const overview = sections.find((s) => s.label === 'Overview');
     expect(overview).toBeDefined();
-    expect(overview!.items).toHaveLength(2);
-    expect(overview!.items.map((i) => i.label)).toEqual(['Dashboard', 'My Tasks']);
+    expect(overview!.items).toHaveLength(3);
+    expect(overview!.items.map((i) => i.label)).toEqual(['Command Center', 'Dashboard', 'My Tasks']);
   });
 
   it('designer returns Overview + Design + Expenses + Reference + Sales (R/O) + Projects (R/O) + Account', () => {
@@ -161,7 +161,7 @@ describe('navItemsForRole (backward compat)', () => {
   it('returns flat array of items for founder', () => {
     const items = navItemsForRole('founder' as AppRole);
     expect(items.length).toBeGreaterThan(0);
-    expect(items.at(0)?.label).toBe('Dashboard');
+    expect(items.at(0)?.label).toBe('Command Center');
     // Should be a flat array with href and icon on every item
     expect(items.every((i) => 'href' in i && 'icon' in i)).toBe(true);
   });

@@ -1,0 +1,75 @@
+/* Shiroi Energy — Color tokens
+   SOLAR GOLD system: 95% light workspace. The brand is solar gold, drawn
+   from the sun logo — applied intentionally (lines, icons, badges, KPI
+   accents, buttons), never as a large background fill in the content area.
+   Gold fills carry DARK INK text (white-on-gold fails contrast); text links
+   and eyebrows use the deeper brand-dark. The two dark surfaces (sidebar,
+   table header) are a WARM near-black. Green is no longer the brand hue —
+   it is reserved as a status signal (live / healthy / paid / generating). */
+
+:root {
+  /* ── BRAND (solar gold) ── */
+  --brand:        #E08A00;   /* Primary fills — buttons, active nav, icons, accents */
+  --brand-hover:  #C77606;   /* Button hover (darker gold) */
+  --brand-dark:   #B45309;   /* Link text, eyebrows, emphasis on light — AA on white */
+  --brand-deep:   #7A3D06;   /* Reserved — deep emphasis */
+  --brand-night:  #1F1709;   /* Ink text on gold fills; reserved warm near-black */
+
+  /* Brand gold tints (translucent — for active states / rings) */
+  --brand-12:     rgba(224,138,0,.16);   /* Active nav background */
+  --brand-08:     rgba(224,138,0,.08);   /* Selected table row */
+  --brand-ring:   rgba(224,138,0,.22);   /* Input focus ring */
+
+  /* ── SOLAR ACCENT (brighter marigold from the logo) ── */
+  --solar:        #F0B429;   /* Solar CTA / highlights / solar-themed glyphs */
+  --solar-light:  #F7D070;   /* Solar hover-light */
+  --solar-hover:  #E5A825;   /* Solar CTA hover */
+  --solar-bg:     #FCF3E2;   /* Solar background tint (warm, very light) */
+
+  /* ── NEUTRALS ──
+     Warm sand/stone at the light end; warm near-black dark surfaces.
+     Mid/dark text steps stay neutral for maximum legibility. */
+  --n950: #16130D;   /* Sidebar background — warm near-black */
+  --n900: #221C12;   /* Table header background — warm */
+  --n800: #2D3039;   /* Heavy text (rarely used) */
+  --n700: #3F424D;   /* Primary body text on white — high contrast */
+  --n600: #5A5E6B;   /* Secondary text, descriptions */
+  --n500: #7C818E;   /* Muted text, labels, captions, placeholders */
+  --n400: #9CA0AB;   /* Disabled text, timestamps */
+  --n300: #C2BBAE;   /* Border emphasis (hover), warm */
+  --n200: #E5DFD3;   /* Default borders, dividers, input borders — warm */
+  --n150: #EDE8DD;   /* Subtle borders, zebra stripe borders — warm */
+  --n100: #F4F0E7;   /* Zebra stripes, input backgrounds, sunken — warm */
+  --n050: #FBF8F2;   /* Content area background (lightest, warm cream) */
+  --white: #FFFFFF;  /* Card backgrounds, header, modals, inputs */
+
+  /* ── STATUS — each has bg / text / border (green now = live/healthy) ── */
+  --success-bg:  #ECFDF5;  --success-text:  #065F46;  --success-border:  #A7F3D0;
+  --warning-bg:  #FFFBEB;  --warning-text:  #92400E;  --warning-border:  #FDE68A;
+  --error-bg:    #FEF2F2;  --error-text:    #991B1B;  --error-border:    #FECACA;
+  --error-hover: #FEE2E2;
+  --info-bg:     #EFF6FF;  --info-text:     #1E40AF;  --info-border:     #BFDBFE;
+  --progress-bg: #FFF7ED;  --progress-text: #9A3412;  --progress-border: #FED7AA;
+  --neutral-bg:  #F3F2EE;  --neutral-text:  #4B5563;  --neutral-border:  #D8D2C6;
+  --destructive: #DC2626;  /* Hard delete / required asterisk / error border */
+
+  /* ── CHART SEQUENCE (multi-series) ── */
+  --chart-1: #E08A00;  /* Brand gold */
+  --chart-2: #0EA5C2;  /* Cyan — from the logo / grid + net metering */
+  --chart-3: #16A34A;  /* Green — generation / healthy */
+  --chart-4: #9333EA;  /* Purple */
+  --chart-5: #EF4444;  /* Red */
+  --chart-6: #F0B429;  /* Solar light */
+
+  /* ── SEMANTIC ALIASES (shadcn-compatible) ── */
+  --background:      var(--n050);
+  --surface-card:    var(--white);
+  --surface-sunken:  var(--n100);
+  --text-body:       var(--n700);
+  --text-heading:    var(--n900);
+  --text-muted:      var(--n500);
+  --text-on-brand:   var(--brand-night);  /* dark ink on gold fills */
+  --border-default:  var(--n200);
+  --border-subtle:   var(--n150);
+  --ring:            var(--brand);
+}

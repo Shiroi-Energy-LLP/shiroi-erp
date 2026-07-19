@@ -8,6 +8,7 @@ import {
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
 import { createServiceTicket } from '@/lib/service-ticket-actions';
+import { ProjectCombobox } from '@/components/forms/project-combobox';
 
 const ISSUE_TYPES = [
   { value: 'no_generation', label: 'No Generation' },
@@ -32,7 +33,7 @@ const SEVERITY_OPTIONS = [
 
 interface CreateTicketDialogProps {
   employees: { id: string; full_name: string }[];
-  projects: { id: string; project_number: string; customer_name: string }[];
+  projects: { id: string; project_number: string | null; customer_name: string; project_name?: string | null }[];
 }
 
 export function CreateTicketDialog({ employees, projects }: CreateTicketDialogProps) {
@@ -40,22 +41,32 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [projectId, setProjectId] = React.useState('');
+  const [customProject, setCustomProject] = React.useState('');
+
+  React.useEffect(() => {
+    if (!open) {
+      setProjectId('');
+      setCustomProject('');
+      setError(null);
+    }
+  }, [open]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
     setError(null);
 
-    const form = new FormData(e.currentTarget);
-    const projectId = form.get('projectId') as string;
-    if (!projectId) {
-      setError('Project is required');
+    if (!projectId && !customProject.trim()) {
+      setError('Pick a project or type a project name');
       setSaving(false);
       return;
     }
 
+    const form = new FormData(e.currentTarget);
     const result = await createServiceTicket({
-      projectId,
+      projectId: projectId || undefined,
+      projectNameCustom: projectId ? undefined : customProject.trim() || undefined,
       title: form.get('title') as string,
       description: form.get('description') as string,
       issueType: form.get('issueType') as string,
@@ -85,13 +96,16 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="projectId">Project *</Label>
-            <Select id="projectId" name="projectId" required defaultValue="">
-              <option value="" disabled>Select a project...</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.project_number} — {p.customer_name}</option>
-              ))}
-            </Select>
+            <Label>Project *</Label>
+            <ProjectCombobox
+              projects={projects}
+              value={projectId}
+              onChange={setProjectId}
+              allowCustom
+              customValue={customProject}
+              onCustomChange={setCustomProject}
+              placeholder="Search project, or type a new name (Service/AMC/misc)…"
+            />
           </div>
           <div>
             <Label htmlFor="title">Title *</Label>
@@ -104,7 +118,7 @@ export function CreateTicketDialog({ employees, projects }: CreateTicketDialogPr
               name="description"
               required
               rows={3}
-              className="w-full rounded-md border border-n-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+              className="w-full rounded-md border border-n-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
               placeholder="Detailed description of the issue..."
             />
           </div>

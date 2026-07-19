@@ -4,6 +4,7 @@ import type { Database } from '@repo/types/database';
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Public-facing types (used by UI components)
@@ -83,9 +84,9 @@ export async function createDataFlag(input: {
 }): Promise<ActionResult<void>> {
   const op = '[createDataFlag]';
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const insert: DataFlagInsert = {
     entity_type: input.entityType,
@@ -117,9 +118,9 @@ export async function resolveDataFlag(input: {
 }): Promise<ActionResult<void>> {
   const op = '[resolveDataFlag]';
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const update: DataFlagUpdate = {
     resolved_by: user.id,
@@ -313,9 +314,9 @@ export async function verifyEntityData(input: {
 }): Promise<ActionResult<void>> {
   const op = '[verifyEntityData]';
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   const verifiedPayload = {
     data_verified_by: user.id,

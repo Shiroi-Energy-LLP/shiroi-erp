@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Excel Quote Parser
@@ -22,48 +22,69 @@ export type ParsedQuoteRow = {
   gstRate?: number;
 };
 
+// ─── Cell value normalisation ─────────────────────────────────────────────────
+// exceljs cell.value can be: null | number | string | boolean | Date |
+//   { formula, result } (formula cell) | { richText: [...] } | { text, hyperlink }
+// We extract the underlying number or string before applying business logic.
+
+function cellRawValue(cell: ExcelJS.Cell): unknown {
+  const v = cell.value;
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean') return v;
+  if (typeof v === 'object') {
+    // Formula cell: { formula: '...', result: <value> }
+    if ('result' in v) return (v as { formula: string; result: unknown }).result ?? null;
+    // Rich text: { richText: [{ text: '...' }, ...] }
+    if ('richText' in v) {
+      const rt = (v as { richText: Array<{ text: string }> }).richText;
+      return rt.map((r) => r.text).join('');
+    }
+    // Hyperlink: { text: '...', hyperlink: '...' }
+    if ('text' in v) return (v as { text: string }).text;
+  }
+  return null;
+}
+
+function isBlank(raw: unknown): boolean {
+  return raw === null || raw === undefined || raw === '';
+}
+
 export async function parseQuoteExcel(buffer: ArrayBuffer): Promise<
   | { ok: true; rows: ParsedQuoteRow[]; warnings: string[] }
   | { ok: false; error: string }
 > {
   const op = '[parseQuoteExcel]';
   try {
-    const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+    const wb = new ExcelJS.Workbook();
+    // exceljs declares its own `Buffer` interface that extends ArrayBuffer.
+    // Passing the ArrayBuffer directly satisfies that interface without needing
+    // Node's Buffer.from() conversion (which produces Uint8Array, not ArrayBuffer).
+    await wb.xlsx.load(buffer as unknown as Parameters<typeof wb.xlsx.load>[0]);
 
-    const sheetName = workbook.SheetNames[0];
-    if (!sheetName) {
+    const ws = wb.worksheets[0];
+    if (!ws) {
       return { ok: false, error: 'Excel file has no sheets' };
     }
-
-    const sheet = workbook.Sheets[sheetName];
-    if (!sheet) {
-      return { ok: false, error: 'Could not read sheet from Excel file' };
-    }
-
-    // Convert to 2D array (header row at index 0, data from index 1)
-    const rawRows: unknown[][] = XLSX.utils.sheet_to_json(sheet, {
-      header: 1,
-      defval: null,
-    }) as unknown[][];
 
     const rows: ParsedQuoteRow[] = [];
     const warnings: string[] = [];
 
-    // Start from row index 1 (skip header)
-    for (let i = 1; i < rawRows.length; i++) {
-      const rawRow = rawRows[i];
-      if (!rawRow) continue;
+    // exceljs rows are 1-based. Row 1 = header (skipped). Data starts at row 2.
+    // ws.rowCount is the last row with data; iterate from 2 to rowCount inclusive.
+    // We use i as the 0-based data-array index (mirrors the original: i=1 for
+    // row 2, so `isFinite(sNo) ? sNo : i` gives the correct fallback).
+    for (let r = 2; r <= ws.rowCount; r++) {
+      const i = r - 1; // 0-based data index (matches original loop variable i)
+      const rowNum = r; // 1-based spreadsheet row for user-facing messages
 
-      const rowNum = i + 1; // 1-based for user-facing messages
-
-      const rawSNo = rawRow[0];
-      const rawDesc = rawRow[1];
-      const rawPrice = rawRow[2];
-      const rawGst = rawRow[3];
+      const rawSNo = cellRawValue(ws.getRow(r).getCell(1));
+      const rawDesc = cellRawValue(ws.getRow(r).getCell(2));
+      const rawPrice = cellRawValue(ws.getRow(r).getCell(3));
+      const rawGst = cellRawValue(ws.getRow(r).getCell(4));
 
       // Stop if both S.No and description are missing (end of data)
-      const sNoMissing = rawSNo === null || rawSNo === undefined || rawSNo === '';
-      const descMissing = rawDesc === null || rawDesc === undefined || rawDesc === '';
+      const sNoMissing = isBlank(rawSNo);
+      const descMissing = isBlank(rawDesc);
       if (sNoMissing && descMissing) {
         break;
       }
@@ -77,7 +98,7 @@ export async function parseQuoteExcel(buffer: ArrayBuffer): Promise<
         : '';
 
       // Validate unit price
-      if (rawPrice === null || rawPrice === undefined || rawPrice === '') {
+      if (isBlank(rawPrice)) {
         warnings.push(`Row ${rowNum}: unit_price missing or invalid`);
         continue;
       }
@@ -89,7 +110,7 @@ export async function parseQuoteExcel(buffer: ArrayBuffer): Promise<
 
       // Parse GST rate — default 18 if absent
       let gstRate = 18;
-      if (rawGst !== null && rawGst !== undefined && rawGst !== '') {
+      if (!isBlank(rawGst)) {
         const parsed = typeof rawGst === 'number' ? rawGst : Number(rawGst);
         if (!isFinite(parsed)) {
           warnings.push(`Row ${rowNum}: gst_rate is not a valid number, defaulting to 18`);

@@ -61,7 +61,7 @@ export default async function MSMECompliancePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Eyebrow className="mb-1">MSME COMPLIANCE</Eyebrow>
-        <h1 className="text-2xl font-bold text-[#1A1D24]">MSME Compliance</h1>
+        <h1 className="text-2xl font-bold text-n-950">MSME Compliance</h1>
       </div>
 
       <Card>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isValidTransition, normalizePhone } from './leads-helpers';
+import { isValidTransition, normalizePhone, resolveReferrerFilter } from './leads-helpers';
 
 describe('isValidTransition', () => {
   it('allows new → contacted', () => {
@@ -49,5 +49,22 @@ describe('normalizePhone', () => {
   });
   it('returns 10 digits unchanged', () => {
     expect(normalizePhone('9876543210')).toBe('9876543210');
+  });
+});
+
+describe('resolveReferrerFilter', () => {
+  it('none → noReferrer flag', () => {
+    expect(resolveReferrerFilter('none', ['a'], ['b'])).toEqual({ noReferrer: true });
+  });
+  it('mgmt → internal ids', () => {
+    expect(resolveReferrerFilter('mgmt', ['a', 'c'], ['b'])).toEqual({ referrerIds: ['a', 'c'] });
+  });
+  it('customer → external ids', () => {
+    expect(resolveReferrerFilter('customer', ['a'], ['b', 'd'])).toEqual({ referrerIds: ['b', 'd'] });
+  });
+  it('empty / unknown / undefined → no filter', () => {
+    expect(resolveReferrerFilter('', ['a'], ['b'])).toEqual({});
+    expect(resolveReferrerFilter(undefined, ['a'], ['b'])).toEqual({});
+    expect(resolveReferrerFilter('internal_all', ['a'], ['b'])).toEqual({});
   });
 });

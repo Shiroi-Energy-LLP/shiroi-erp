@@ -157,7 +157,7 @@ export function NetMeteringDetail({ projectId, application, ceigRequired }: NetM
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* CEIG Section */}
         {ceigRequired && (
-          <Card className={application.ceig_status === 'approved' ? 'border-[#00B050]/30' : 'border-[#EA580C]/30'}>
+          <Card className={application.ceig_status === 'approved' ? 'border-[#16A34A]/30' : 'border-[#EA580C]/30'}>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Shield className="h-4 w-4" />
@@ -212,7 +212,7 @@ export function NetMeteringDetail({ projectId, application, ceigRequired }: NetM
         )}
 
         {/* DISCOM/TNEB Section */}
-        <Card className={ceigBlocked ? 'border-[#DFE2E8] opacity-75' : ''}>
+        <Card className={ceigBlocked ? 'border-n-200 opacity-75' : ''}>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Zap className="h-4 w-4" />
@@ -268,7 +268,7 @@ export function NetMeteringDetail({ projectId, application, ceigRequired }: NetM
             <CardTitle className="text-base flex items-center gap-2">
               <Gauge className="h-4 w-4" />
               Net Meter
-              {application.net_meter_installed && <CheckCircle2 className="h-4 w-4 text-[#00B050] ml-auto" />}
+              {application.net_meter_installed && <CheckCircle2 className="h-4 w-4 text-[#16A34A] ml-auto" />}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -308,15 +308,15 @@ export function NetMeteringDetail({ projectId, application, ceigRequired }: NetM
           <CardContent className="space-y-3">
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="text-[#7C818E] text-xs">Last Followup</span>
+                <span className="text-n-500 text-xs">Last Followup</span>
                 <p className="font-mono">{application.last_followup_date ?? '—'}</p>
               </div>
               <div>
-                <span className="text-[#7C818E] text-xs">Next Followup</span>
+                <span className="text-n-500 text-xs">Next Followup</span>
                 <p className="font-mono">{application.next_followup_date ?? '—'}</p>
               </div>
               <div>
-                <span className="text-[#7C818E] text-xs">Total Followups</span>
+                <span className="text-n-500 text-xs">Total Followups</span>
                 <p className="font-mono">{application.followup_count}</p>
               </div>
             </div>

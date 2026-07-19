@@ -128,18 +128,60 @@ CLAUDE.md §WORKFLOW step 3 is the authoritative form; recap here so it travels 
 
 ### Type generation
 
-```bash
-npx supabase gen types typescript --project-id actqtzoxjilqnldnacqz --schema public > packages/types/database.ts
+Use the **Supabase Management API + the `SUPABASE_ACCESS_TOKEN` PAT** in `.env.local` (full one-liner in CLAUDE.md → "Regenerating database.ts"; then run `node scripts/strip-view-fk-entries.mjs` + `pnpm check-types`):
+
+```
+GET https://api.supabase.com/v1/projects/<ref>/types/typescript
+Authorization: Bearer $SUPABASE_ACCESS_TOKEN      → 200  { "types": "..." }
 ```
 
-A commit that changes schema but not types is incomplete (NEVER-DO #20).
+The old `npx supabase gen types --project-id` route 403'd on the stale `supabase login` CLI token; the PAT works — no Dashboard, no MCP (confirmed 2026-06-08). A commit that changes schema but not types is incomplete (NEVER-DO #20).
 
 ### Env var name list
 
-CLAUDE.md lists the names. Key operational notes:
+CLAUDE.md lists the names grouped + a pointer here. **This section is the authoritative annotated catalog** (moved out of CLAUDE.md 2026-07-01 so the always-loaded startup brief stays lean — the annotations are needed only when actually wiring an integration). Values live in `.env.local` (never committed).
+
+```
+NEXT_PUBLIC_SUPABASE_URL              (dev: actqtzoxjilqnldnacqz.supabase.co)
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  (sb_publishable_...)
+SUPABASE_SECRET_KEY                   (sb_secret_...)
+PROD_SUPABASE_URL                     (prod: kfkydkwycgijvexqiysc.supabase.co)
+PROD_SUPABASE_PUBLISHABLE_KEY
+PROD_SUPABASE_SECRET_KEY
+SUPABASE_ACCESS_TOKEN                 (full-scope PAT "shiroi-erp-mgmt" → Supabase Management API at api.supabase.com. Works where the old "supabase login" CLI token 403'd. Use to set Edge secrets, deploy functions, and regen types programmatically — NO Dashboard needed. See CLAUDE.md "Regenerating database.ts" + scripts/set-fimer-edge-secrets.ts)
+ANTHROPIC_API_KEY
+PVWATTS_API_KEY
+PVLIB_MICROSERVICE_URL
+N8N_WEBHOOK_SECRET                    (shared secret for every n8n webhook; matched via Header Auth credential as `x-webhook-secret`)
+N8N_EVENT_BUS_URL                     (single-ingress router webhook: ERP fires all events here → n8n Switch-routes to downstream workflows; if unset, emitErpEvent is a silent no-op)
+N8N_BUG_REPORT_WEBHOOK_URL            (legacy standalone webhook for /settings bug reports — predates event bus; still live)
+N8N_API_KEY                           (n8n REST API key for programmatic workflow push from scripts/push-n8n-workflows.ts)
+NEXT_PUBLIC_SENTRY_DSN + SENTRY_DSN + SENTRY_ORG + SENTRY_PROJECT
+AI_PROVIDER                           (anthropic [default] | openrouter — switches all AI calls)
+AI_MODEL                              (model ID override; default: claude-sonnet-4-20250514 for anthropic, anthropic/claude-sonnet-4-5 for openrouter)
+AI_MAX_TOKENS                         (optional; default 1024)
+OPENROUTER_API_KEY                    (required when AI_PROVIDER=openrouter — get from openrouter.ai)
+SHIROI_GSTIN                          (Shiroi Energy LLP GSTIN — required for e-invoice generation)
+SHIROI_ADDRESS_LINE1                  (registered address line 1 for e-invoice seller details)
+SHIROI_CITY                           (default: Chennai)
+SHIROI_STATE_CODE                     (default: 33 — Tamil Nadu)
+SHIROI_PINCODE                        (default: 600002)
+SHIROI_ACCOUNTS_EMAIL                 (accounts email for e-invoice seller details)
+NEXT_PUBLIC_ERP_URL                   (base URL for share links; default: https://erp.shiroienergy.com)
+FIMER_CRED_SHIROIENERGY               (JSON blob for Aurora Vision: {api_key, username, password} — Manivel master account, ~12 plants)
+FIMER_CRED_CHEMFABALKALIS             (same JSON shape, Chemfab Alkalis sub-account, 1 plant)
+FIMER_CRED_HARSHA                     (same JSON shape, Harsha residential 2 kW — EID lookup pending)
+FIMER_CRED_BOSSSHYAM                  (same JSON shape, Baskar residential 2.5 kW — EID lookup pending)
+FIMER_CRED_SIDDHARTH                  (same JSON shape, Siddarth residential 1 kW — EID lookup pending)
+FIMER_CRED_EDISONSCHOOL               (same JSON shape, Edison School 48 kW)
+FIMER_CRED_SRIRAMSV                   (same JSON shape, Sriram residential 4 kW — EID lookup pending)
+```
+
+Key operational notes:
 
 - **Supabase key format (locked March 2026):** `sb_publishable_…` replaces legacy `anon`; `sb_secret_…` replaces legacy `service_role`. Never use the legacy names in new code.
 - **Edge Function limitation:** Edge Functions currently still take JWTs via legacy keys. Workaround is documented where Edge Functions are used.
+- **Supabase admin ops via PAT (2026-06-08):** `SUPABASE_ACCESS_TOKEN` (full-scope PAT `shiroi-erp-mgmt`) in `.env.local` drives the **Management API** (`api.supabase.com`) — set Edge Function secrets, regen types, deploy functions — programmatically, **no Dashboard**. Confirmed: secrets (`POST .../secrets` → 201) + type-gen (`GET .../types/typescript` → 200). The old "CLI 403-locked / Dashboard-only" framing was the stale `supabase login` token, not a hard limit. Helper: `scripts/set-fimer-edge-secrets.ts`.
 
 ---
 
@@ -206,7 +248,7 @@ Mobile writes hit WatermelonDB first and sync to Supabase in the background. On 
 
 Import `Database['public']['Tables']['x']['Row' | 'Insert' | 'Update']` explicitly. If the generated type is wrong, **regenerate `database.ts`**. Every `as any` compounds schema-drift risk: the audit found that every one of the 576 violations started with "just one cast".
 
-### 4.8 NEVER-DO rules 11–21 — why they exist
+### 4.8 NEVER-DO rules 11–25 — why they exist
 
 CLAUDE.md carries the authoritative list. Each rule is calibrated to a concrete April 14, 2026 audit finding or subsequent incident:
 
@@ -223,6 +265,10 @@ CLAUDE.md carries the authoritative list. Each rule is calibrated to a concrete 
 | 19 | No throws from server actions | Opaque "An error occurred" in production |
 | 20 | Regenerate types with every schema change | Types out of sync = silent runtime failures |
 | 21 | No runtime imports from `-queries.ts` in `'use client'` components | 2026-05-24 Vercel deploy failed three times in a row — see §4.13 |
+| 22 | No caching auth identity/role outside request-scoped React `cache()` | 2026-06-19 perf audit [G1]: a module-scope / `unstable_cache` memo of `auth.getUser()` bleeds one user's session+role into another — see §4.17 |
+| 23 | No leading-wildcard `ILIKE '%term%'` search without a `pg_trgm` GIN index | 2026-06-19 perf audit [G2]: every search box was a seq scan (`/contacts` 32 ms over 1,390 rows) |
+| 24 | No DB write during a server-component / page render | 2026-06-19 perf audit: `createDraftDetailedProposal` INSERTed on GET → prefetch/concurrent renders double-fire (non-idempotent) |
+| 25 | No bare `.limit(N)` on a list that can exceed N without pagination | 2026-06-19 perf audit: `/procurement/orders` silently showed 100 of 2,041 POs |
 
 Enforcement: CI runs `pnpm check-types` + `pnpm lint` + `scripts/ci/check-forbidden-patterns.sh` + `pnpm build`. The forbidden-pattern baseline grandfathers existing violations and blocks new ones; it only ratchets down. `pnpm build` (added 2026-05-24) catches every client/server boundary violation that check-types misses — see §4.13.
 
@@ -370,6 +416,47 @@ Key files:
 - `apps/erp/src/lib/ai/knowledge-qa-rate-limit.ts` — 30 q/day rate limiter
 - `apps/erp/src/lib/ai/ask-action.ts` — server action wrapper + audit log
 - `apps/erp/src/app/(erp)/ask/page.tsx` + `_client/ask-form.tsx` — UI
+
+### 4.17 Session/identity resolution — cache once, never cross-request (NEVER-DO #22, June 19, 2026)
+
+`supabase.auth.getUser()` is a **network round-trip to the GoTrue auth server** that *validates* the token (never `getSession()`, which only decodes the cookie). It is both the most security-critical call and, when duplicated, the biggest page-load cost — the 2026-06-19 perf audit found pages resolving the profile/role 2–3× per render (`/hr/[id]` did it 3×).
+
+**The pattern:** one resolver, wrapped in **React `cache()`**, threaded into every role helper:
+
+```ts
+// auth.ts
+import { cache } from 'react';
+export const getSessionContext = cache(async () => {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();   // the ONE validated network call
+  if (!user) return { userId: null, role: null, employeeId: null, profile: null };
+  const { data: profile } = await supabase.from('profiles')
+    .select('id, role, full_name, email, is_active').eq('id', user.id).maybeSingle();
+  return { userId: user.id, role: profile?.role ?? null, profile };
+});
+```
+
+**Two non-negotiables — both are security, not just perf:**
+
+1. **Request-scoped only.** `cache()` from `react` is discarded after each request. **NEVER** memoize identity in `unstable_cache` (`next/cache`), a module-level variable, a global `Map`, or any cross-request store — those persist between requests and **serve one employee's identity and role to the next** (auth bypass / session bleed). This is NEVER-DO #22.
+2. **Server actions re-resolve, never trust the client.** Threading `{ userId, role }` into *server* helpers/components is correct. A `role` that has passed through a client component must never be trusted by a server action — the action calls `getSessionContext()` (now cheap) and re-derives the role server-side. `requireRole()` must keep its redirect semantics (`/login` if no profile, `/dashboard` if role not allowed).
+
+**Corollary — extracted on-demand fetches re-assert the gate.** Many list/option fetches are gated at the *page* level (the page checks `ALLOWED_ROLES` before calling), **not by RLS** — RLS restricts rows, not "who may pull the all-projects list." When the perf work moves such a fetch into an on-dialog-open server action (audit [G5]), that new action is a fresh entry point: it **must re-apply the page's role gate**, or any authenticated user can call it and enumerate everything. Verify the source uses the RLS-enforced server client (`@repo/supabase/server`), never the admin/secret key, before exposing it to a client-triggered path.
+
+### 4.18 Counts — exact vs estimated vs FILTER-RPC (clarifies NEVER-DO #13)
+
+NEVER-DO #13 bans `count: 'exact'` on tables >1k rows (it forces a full scan). The correct replacement depends on *what the number means*:
+
+- **Pagination total** ("≈2,000 results", page X of Y) → `count: 'estimated'` (planner `reltuples`; fast, approximate — fine because nobody acts on the exact value).
+- **Business / compliance count** (verified-record counts on `/data-quality`, MSME alert counts, "47 leads need closure") → a dedicated `COUNT(*) FILTER (WHERE …)` **RPC** that returns every bucket in one pass. **Never** `estimated` here — `reltuples` is stale between `ANALYZE`s and can even be `-1` on a freshly-loaded table, and a wrong compliance number is worse than a slow one.
+
+So the rule is not "always estimated" — it's "estimated for pagination, a single grouped RPC for anything with business meaning, exact never on a big table."
+
+### 4.19 De-duplication safety — diff side-effects, not just the insert (June 19, 2026)
+
+When collapsing two same-table write paths into one shared action (the 2026-06-18 redundancy sweep flagged several), a byte-identical `INSERT` column-set does **not** prove the functions are equivalent. Diff the **side effects** first: n8n event emits, status updates, notifications, audit rows, revalidation paths, signed-URL creation.
+
+Proof case: `recordPayment` and `recordProjectPayment` insert identical `customer_payments` rows, but only `recordPayment` fires `emitCustomerPaymentReceived` (n8n `customer_payment.received` → salesperson commission tracking + WhatsApp). A naive merge would either leak that notification into the project-detail flow or silently drop commission attribution from the `/payments` flow. Safe merges that span divergent side-effects pass the difference as an explicit parameter (e.g. `notify: boolean`) whose default preserves today's behaviour — and are locked by a regression test (model: `__tests__/task-write-wrappers.test.ts`).
 
 ---
 
@@ -699,7 +786,7 @@ Default weights: delivery 15% · structure 15% · panels 25% · electrical 20% �
 
 **No Figma.** Claude writes screen specs and working Next.js/Tailwind components directly; v0.dev for visually complex ones. Screens are production code from the start.
 
-Design system: Shiroi Brand Guide V6. `packages/ui` holds tokens, shadcn/ui overrides, Tailwind config. Full detail: `docs/design/design-system.md` + `docs/design/brand-guide.html`.
+Design system: **Solar Gold (V3, June 2026)** — the brand hue is solar gold `#E08A00` (gold fills carry dark ink `#1F1709`; links/text on light use `#B45309`), green is reserved as a **status-only** signal (`#16A34A`/`--success-*`), fonts are Archivo (headings) · IBM Plex Sans (body + tabular figures) · Rajdhani (lockup), and surfaces are warm (cream page `#FBF8F2`, warm near-black sidebar `#16130D`). `packages/ui` holds tokens, shadcn/ui overrides, Tailwind config. Full detail: `docs/design/design-system.md` (V3.0) + reference bundle `docs/design/solar-gold/`. (Superseded: V2 eco-green `#00B050` + DM Sans/Inter/JetBrains Mono.)
 
 ### Three surfaces, three philosophies
 

@@ -30,7 +30,7 @@ export default async function NewReportPage({ params }: NewReportPageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-[#1A1D24]">New Daily Site Report</h2>
+        <h2 className="text-lg font-semibold text-n-950">New Daily Site Report</h2>
         <p className="text-sm text-muted-foreground">
           {project.project_number} - {project.customer_name}
         </p>
@@ -38,7 +38,6 @@ export default async function NewReportPage({ params }: NewReportPageProps) {
 
       <ReportForm
         projectId={id}
-        userId={profile.id}
         defaultDate={today}
         defaultWorkersCount={lastReport?.workers_count ?? 0}
         defaultSupervisorsCount={lastReport?.supervisors_count ?? 0}

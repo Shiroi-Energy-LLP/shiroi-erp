@@ -16,8 +16,12 @@ export interface ColumnDef {
   sortable?: boolean;
   /** Can this cell be inline-edited? */
   editable?: boolean;
-  /** Field type for inline edit and filter operators */
-  fieldType: 'text' | 'number' | 'date' | 'select' | 'badge' | 'currency' | 'phone' | 'email' | 'link';
+  /** Let the cell wrap onto multiple lines instead of truncating (e.g. Notes). */
+  wrap?: boolean;
+  /** Field type for inline edit and filter operators.
+   *  'fy' = fiscal-year dropdown (writes order_date); 'activities_link' = link to the
+   *  project's Execution → Activities tab. */
+  fieldType: 'text' | 'number' | 'date' | 'select' | 'badge' | 'currency' | 'phone' | 'email' | 'link' | 'fy' | 'activities_link';
   /** Options for select-type fields */
   options?: { value: string; label: string }[];
   /** Format function name (handled in renderer) */
@@ -31,7 +35,10 @@ export type EntityType = 'leads' | 'proposals' | 'projects' | 'contacts' | 'comp
 // ── Leads columns ──
 
 export const LEAD_COLUMNS: ColumnDef[] = [
-  { key: 'customer_name', label: 'Customer Name', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'text', frozen: true },
+  { key: 'customer_project', label: 'Customer — Project', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text', frozen: true },
+  { key: 'customer_name', label: 'Customer Name', sortKey: 'customer_name', defaultVisible: false, sortable: true, editable: true, fieldType: 'text' },
+  { key: 'company_name', label: 'Company', defaultVisible: false, sortable: false, editable: false, fieldType: 'text' },
+  { key: 'project_name', label: 'Project Name', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
   { key: 'phone', label: 'Phone', defaultVisible: true, sortable: false, editable: true, fieldType: 'phone' },
   { key: 'email', label: 'Email', defaultVisible: false, sortable: false, editable: true, fieldType: 'email' },
   { key: 'city', label: 'City', sortKey: 'city', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
@@ -46,7 +53,7 @@ export const LEAD_COLUMNS: ColumnDef[] = [
       { value: 'social_media', label: 'Social Media' }, { value: 'walkin', label: 'Walk-in' },
     ] },
   // Referrer: flattened from channel_partners embed. Custom renderer in
-  // data-table.tsx handles VIP badge. Inline-edit options are injected at
+  // data-table.tsx handles MGMT REF badge. Inline-edit options are injected at
   // runtime via DataTable's `dynamicOptions` prop (the partners list isn't
   // static so it can't live in column-config).
   { key: 'referrer', label: 'Referrer', sortKey: 'referrer_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'select' },
@@ -74,6 +81,11 @@ export const LEAD_COLUMNS: ColumnDef[] = [
       { value: 'lost', label: 'Lost' },
       { value: 'on_hold', label: 'On Hold' },
     ] },
+  // AI lead score — sits between Status and Expected Close per Vivek's preference.
+  // Custom render path in data-table.tsx delegates to <LeadScoreBadge /> (0-30
+  // gray, 31-60 yellow, 61-85 green, 86-100 red "HOT"). No inline edit — score
+  // is computed by the Wave 2-4 lead-scorer.
+  { key: 'ai_score', label: 'Score', sortKey: 'ai_score', defaultVisible: true, sortable: true, editable: false, fieldType: 'number' },
   { key: 'assigned_to_name', label: 'Assigned To', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
   { key: 'created_at', label: 'Created', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'date', format: 'date' },
   { key: 'estimated_size_kwp', label: 'System Size (kWp)', sortKey: 'estimated_size_kwp', defaultVisible: true, sortable: true, editable: true, fieldType: 'number' },
@@ -82,17 +94,21 @@ export const LEAD_COLUMNS: ColumnDef[] = [
   { key: 'is_qualified', label: 'Qualified', defaultVisible: false, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }] },
   { key: 'expected_close_date', label: 'Expected Close', sortKey: 'expected_close_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'date', format: 'date' },
+  { key: 'closed_date', label: 'Closed Date', sortKey: 'closed_date', defaultVisible: false, sortable: true, editable: false, fieldType: 'date', format: 'date' },
   { key: 'close_probability', label: 'Probability %', sortKey: 'close_probability', defaultVisible: true, sortable: true, editable: true, fieldType: 'number', format: 'percentage' },
   { key: 'weighted_value', label: 'Weighted Value', defaultVisible: false, sortable: false, editable: false, fieldType: 'currency', format: 'currency' },
   { key: 'next_followup_date', label: 'Next Follow-up', sortKey: 'next_followup_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'date', format: 'date' },
-  { key: 'ai_score', label: 'AI Score', sortKey: 'ai_score', defaultVisible: true, sortable: true, editable: false, fieldType: 'badge' },
 ];
 
 // ── Proposals columns ──
 
 export const PROPOSAL_COLUMNS: ColumnDef[] = [
   { key: 'proposal_number', label: 'Proposal #', sortKey: 'proposal_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
-  { key: 'customer_name', label: 'Customer', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
+  // Combined "Customer — Project" from the linked lead (company ?? customer_name, plus project_name).
+  // Computed in proposals-queries via formatCustomerProject; the search_proposals RPC (mig 178) returns
+  // the lead's company + project name. Display-only — the row link stays proposal_number.
+  { key: 'customer_project', label: 'Customer — Project', defaultVisible: true, sortable: false, editable: false, fieldType: 'text' },
+  { key: 'customer_name', label: 'Customer Name', defaultVisible: false, sortable: true, editable: false, fieldType: 'text' },
   { key: 'proposal_type', label: 'Type', sortKey: 'is_budgetary', defaultVisible: true, sortable: true, editable: false, fieldType: 'select',
     options: [{ value: 'detailed', label: 'Detailed' }, { value: 'budgetary', label: 'Budgetary' }] },
   { key: 'system_type', label: 'System', sortKey: 'system_type', defaultVisible: true, sortable: true, editable: true, fieldType: 'select',
@@ -115,8 +131,12 @@ export const PROPOSAL_COLUMNS: ColumnDef[] = [
 // ── Projects columns ──
 
 export const PROJECT_COLUMNS: ColumnDef[] = [
-  { key: 'project_number', label: 'Project #', sortKey: 'project_number', defaultVisible: true, sortable: true, editable: false, fieldType: 'link', frozen: true },
-  { key: 'customer_name', label: 'Customer', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: true, fieldType: 'link' },
+  { key: 'customer_project', label: 'Customer — Project', sortKey: 'customer_name', defaultVisible: true, sortable: true, editable: false, fieldType: 'text', frozen: true },
+  // Project # is the row link no longer; Customer — Project is. Hidden by default, plain code when toggled on.
+  { key: 'project_number', label: 'Project #', sortKey: 'project_number', defaultVisible: false, sortable: true, editable: false, fieldType: 'text' },
+  { key: 'customer_name', label: 'Customer', sortKey: 'customer_name', defaultVisible: false, sortable: true, editable: true, fieldType: 'link' },
+  { key: 'company_name', label: 'Company', defaultVisible: false, sortable: false, editable: false, fieldType: 'text' },
+  { key: 'project_name', label: 'Project Name', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
   { key: 'site_city', label: 'Location', sortKey: 'site_city', defaultVisible: true, sortable: true, editable: true, fieldType: 'text' },
   { key: 'system_size_kwp', label: 'Size (kWp)', sortKey: 'system_size_kwp', defaultVisible: true, sortable: true, editable: true, fieldType: 'number' },
   { key: 'status', label: 'Status', sortKey: 'status', defaultVisible: true, sortable: true, editable: true, fieldType: 'badge',
@@ -130,7 +150,9 @@ export const PROJECT_COLUMNS: ColumnDef[] = [
       { value: 'waiting_net_metering', label: 'Waiting for Net Metering' },
       { value: 'meter_client_scope', label: 'Meter - Client Scope' },
     ] },
-  { key: 'year', label: 'Year', sortKey: 'created_at', defaultVisible: true, sortable: true, editable: false, fieldType: 'text' },
+  { key: 'notes', label: 'Notes', defaultVisible: true, sortable: false, editable: true, fieldType: 'text', wrap: true, width: '220px' },
+  { key: 'activities', label: 'Activities', defaultVisible: true, sortable: false, editable: false, fieldType: 'activities_link' },
+  { key: 'year', label: 'Year', sortKey: 'order_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'fy' },
   { key: 'remarks', label: 'Remarks', defaultVisible: false, sortable: false, editable: true, fieldType: 'text' },
   { key: 'system_type', label: 'System Type', sortKey: 'system_type', defaultVisible: false, sortable: true, editable: true, fieldType: 'select',
     options: [{ value: 'on_grid', label: 'On-Grid' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'off_grid', label: 'Off-Grid' }] },

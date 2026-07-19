@@ -1852,7 +1852,7 @@ git commit -m "feat(sungrow): Connect Sungrow button on /om/plant-monitoring"
 
 Browser redirects to `web3.isolarcloud.com.hk` authorize page.
 
-- [ ] **Step 4: Manivel logs in with manivel@shiroienergy.com / shiro@2025**
+- [ ] **Step 4: Manivel logs in with manivel@shiroienergy.com / <password in .env.local>**
 
 iSolarCloud asks: "Allow Shiroi Energy LLP developer app to read plant data?" → Manivel clicks Allow.
 

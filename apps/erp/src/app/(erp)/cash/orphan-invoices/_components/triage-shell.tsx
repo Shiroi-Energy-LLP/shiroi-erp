@@ -118,11 +118,11 @@ function KpiCard({
             {icon}
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#1A1D24]">{count}</p>
+            <p className="text-2xl font-bold text-n-950">{count}</p>
             {total !== null && (
-              <p className="text-xs text-[#7C818E]">{shortINR(Number(total))}</p>
+              <p className="text-xs text-n-500">{shortINR(Number(total))}</p>
             )}
-            <p className="text-xs text-[#7C818E]">{label}</p>
+            <p className="text-xs text-n-500">{label}</p>
           </div>
         </div>
       </CardContent>
@@ -135,7 +135,7 @@ function EmptyDone() {
     <Card>
       <CardContent className="py-16 text-center">
         <p className="text-2xl">All Zoho imports attributed.</p>
-        <p className="text-sm text-[#7C818E] mt-2">Check the Audit log tab for the decision history.</p>
+        <p className="text-sm text-n-500 mt-2">Check the Audit log tab for the decision history.</p>
       </CardContent>
     </Card>
   );

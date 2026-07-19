@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { formatINR } from '@repo/ui/formatters';
+import { formatRate } from '@repo/ui/formatters';
 import { updatePoLineItemRate } from '@/lib/po-actions';
 
 interface PoRateInlineEditProps {
@@ -44,7 +44,7 @@ export function PoRateInlineEdit({ poId, itemId, currentRate }: PoRateInlineEdit
         onDoubleClick={() => { setEditing(true); setValue(currentRate.toString()); }}
         title="Double-click to edit rate"
       >
-        {formatINR(currentRate)}
+        {formatRate(currentRate)}
       </span>
     );
   }

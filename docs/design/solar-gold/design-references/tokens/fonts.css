@@ -1,0 +1,9 @@
+/* Shiroi Energy — Webfonts (Solar Gold revision)
+   Three families, loaded from Google Fonts.
+   - Archivo        → ERP headings, KPI values, card titles, labels/eyebrows, table headers
+   - IBM Plex Sans  → body text, table cells, form inputs, AND figures (IDs, currency,
+                      capacity) via tabular figures — its plain round zero replaces the
+                      old dotted-zero monospace
+   - Rajdhani       → brand name "SHIROI ENERGY" lockup ONLY */
+
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Rajdhani:wght@500;600;700&display=swap");

@@ -1,4 +1,5 @@
 import { createClient } from '@repo/supabase/server';
+import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 
 export interface VendorFilters {
   type?: string;
@@ -20,9 +21,8 @@ export async function getVendors(filters: VendorFilters = {}) {
     query = query.eq('vendor_type', filters.type);
   }
   if (filters.search) {
-    query = query.or(
-      `company_name.ilike.%${filters.search}%,vendor_code.ilike.%${filters.search}%`
-    );
+    const s = sanitizeForIlike(filters.search);
+    query = query.or(`company_name.ilike.${s},vendor_code.ilike.${s}`);
   }
 
   const { data, error } = await query;

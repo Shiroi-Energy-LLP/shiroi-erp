@@ -11,6 +11,7 @@ import {
   confirmProjectReview,
   markProjectDuplicate,
 } from '@/lib/data-review-actions';
+import { verifyEntityData } from '@/lib/data-flag-actions';
 import { DuplicateSearch } from './duplicate-search';
 
 interface Props {
@@ -55,6 +56,21 @@ export function ProjectEditRow({ row, onDone }: Props) {
     });
   };
 
+  const handleVerifyData = () => {
+    startTransition(async () => {
+      const result = await verifyEntityData({
+        entityType: 'project',
+        entityId: row.id,
+      });
+      if (!result.success) {
+        addToast({ title: result.error ?? 'Verify failed', variant: 'destructive' });
+        return;
+      }
+      addToast({ title: `${row.project_number} data verified`, variant: 'success' });
+      onDone();
+    });
+  };
+
   const handleDuplicateMerge = async (
     canonicalId: string,
     notes: string,
@@ -80,7 +96,7 @@ export function ProjectEditRow({ row, onDone }: Props) {
   return (
     <div className="space-y-4">
       {/* Source info */}
-      <div className="text-xs text-[#7C818E] space-y-0.5">
+      <div className="text-xs text-n-500 space-y-0.5">
         {row.pv_ref_in_notes && (
           <p>PV ref: <span className="font-mono">{row.pv_ref_in_notes}</span></p>
         )}
@@ -111,7 +127,7 @@ export function ProjectEditRow({ row, onDone }: Props) {
       {/* Edit inputs */}
       <div className="flex items-end gap-4">
         <div>
-          <label className="text-xs font-medium text-[#7C818E] mb-1 block">
+          <label className="text-xs font-medium text-n-500 mb-1 block">
             System size (kWp)
           </label>
           <Input
@@ -125,7 +141,7 @@ export function ProjectEditRow({ row, onDone }: Props) {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-[#7C818E] mb-1 block">
+          <label className="text-xs font-medium text-n-500 mb-1 block">
             Order value (₹)
           </label>
           <Input
@@ -165,6 +181,14 @@ export function ProjectEditRow({ row, onDone }: Props) {
           onClick={() => setDupOpen(true)}
         >
           Mark Duplicate
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isPending}
+          onClick={handleVerifyData}
+        >
+          Verify data quality
         </Button>
       </div>
 

@@ -79,9 +79,9 @@ export function ContactForm({ contact }: ContactFormProps) {
         notes: form.get('notes') as string,
       });
       setLoading(false);
-      if (res.success && res.contactId) {
+      if (res.success) {
         addToast({ variant: 'success', title: 'Contact saved', description: 'The contact has been saved successfully.' });
-        router.push(`/contacts/${res.contactId}`);
+        router.push(`/contacts/${res.data.contactId}`);
       } else {
         const errMsg = res.error ?? 'Failed to create contact';
         setError(errMsg);
@@ -159,7 +159,7 @@ export function ContactForm({ contact }: ContactFormProps) {
               name="notes"
               rows={3}
               defaultValue={contact?.notes ?? ''}
-              className="flex w-full rounded-md border-[1.5px] border-[#DFE2E8] bg-white px-3 py-2 text-[13px] text-[#1A1D24] focus-visible:outline-none focus-visible:border-[#00B050] focus-visible:shadow-[0_0_0_3px_rgba(0,176,80,0.1)]"
+              className="flex w-full rounded-md border-[1.5px] border-n-200 bg-white px-3 py-2 text-[13px] text-n-900 focus-visible:outline-none focus-visible:border-shiroi-gold focus-visible:shadow-[0_0_0_3px_rgba(224,138,0,0.22)]"
               placeholder="Any notes about this contact..."
             />
           </div>

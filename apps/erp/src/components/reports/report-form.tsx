@@ -16,7 +16,6 @@ import { submitReportAction } from './report-actions';
 
 interface ReportFormProps {
   projectId: string;
-  userId: string;
   defaultDate: string;
   defaultWorkersCount: number;
   defaultSupervisorsCount: number;
@@ -54,7 +53,6 @@ const WEATHER_OPTIONS = [
 
 export function ReportForm({
   projectId,
-  userId,
   defaultDate,
   defaultWorkersCount,
   defaultSupervisorsCount,
@@ -112,7 +110,6 @@ export function ReportForm({
         const result = await submitReportAction({
           reportId: existingReport?.id,
           projectId,
-          userId,
           reportDate,
           panelsInstalledToday,
           panelsInstalledCumulative: previousCumulativePanels + panelsInstalledToday,
@@ -133,7 +130,7 @@ export function ReportForm({
           photos: uploadedPhotos,
         });
 
-        if (result.error) {
+        if (!result.success) {
           setError(result.error);
           return;
         }

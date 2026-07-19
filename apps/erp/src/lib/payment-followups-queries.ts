@@ -54,8 +54,8 @@ export async function getPaymentFollowups(): Promise<PaymentFollowupRow[]> {
         `
         id, title, description, category, priority, due_date, is_completed, completed_at, created_at,
         project_id,
-        projects!tasks_project_id_fkey(project_number, customer_name, status),
-        assigned_employee:employees!tasks_assigned_to_fkey(full_name)
+        projects!project_tasks_project_id_fkey(project_number, customer_name, status),
+        assigned_employee:employee_directory!project_tasks_assigned_to_fkey(full_name)
       `,
       )
       .in('category', ['payment_followup', 'payment_escalation'])

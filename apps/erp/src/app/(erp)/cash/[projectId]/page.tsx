@@ -60,7 +60,7 @@ export default async function ProjectCashPage({ params }: ProjectCashPageProps) 
       />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1D24]">
+          <h1 className="text-2xl font-bold text-n-950">
             {project?.project_number ?? 'Project'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -92,7 +92,7 @@ export default async function ProjectCashPage({ params }: ProjectCashPageProps) 
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-gray-500">Contracted Value</p>
-            <p className="text-2xl font-bold text-[#1A1D24]">
+            <p className="text-2xl font-bold text-n-950">
               {formatINR(cashPosition.total_contracted)}
             </p>
           </CardContent>

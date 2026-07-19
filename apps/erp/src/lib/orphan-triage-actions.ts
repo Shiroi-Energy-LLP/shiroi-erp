@@ -4,6 +4,7 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 // Triage access. project_manager is included so PMs (Manivel et al.) can do
 // the BOM/attribution review alongside Prem (marketing_manager) and Vivek.
@@ -19,9 +20,9 @@ interface CallerContext {
 }
 
 async function requireTriageRole(): Promise<ActionResult<CallerContext>> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated', 'unauthenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')

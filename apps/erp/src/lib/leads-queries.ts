@@ -1,10 +1,12 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { formatCustomerProject } from './customer-project';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 type LeadStatus = Database['public']['Enums']['lead_status'];
 
 // Re-export pure helpers for convenience
-export { isValidTransition, normalizePhone, getValidNextStatuses } from './leads-helpers';
+export { isValidTransition, normalizePhone, getValidNextStatuses, resolveReferrerFilter } from './leads-helpers';
 
 export interface LeadFilters {
   status?: LeadStatus | LeadStatus[];
@@ -15,6 +17,8 @@ export interface LeadFilters {
   referrer?: string;
   /** Resolved list of channel_partner IDs for 'internal_all' sentinel */
   referrerIds?: string[];
+  /** Leads-page "No referrer" bucket → channel_partner_id IS NULL */
+  noReferrer?: boolean;
   /**
    * "Referred by Clients" filter: source='referral' AND channel_partner_id IS NOT NULL
    * AND that partner has is_internal=FALSE. Callers must pass externalPartnerIds
@@ -74,7 +78,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
 
   let query = supabase
     .from('leads')
-    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, close_probability, is_archived, assigned_to, created_at, ai_score, ai_score_reason, employees!leads_assigned_to_fkey(full_name), channel_partners!leads_channel_partner_id_fkey(partner_name, is_internal)', { count: 'estimated' })
+    .select('id, customer_name, phone, email, city, state, segment, source, status, estimated_size_kwp, address_line1, pincode, is_qualified, next_followup_date, expected_close_date, closed_date, close_probability, is_archived, assigned_to, created_at, ai_score, ai_score_reason, project_name, company_id, employees!leads_assigned_to_fkey(full_name), channel_partners!leads_channel_partner_id_fkey(partner_name, is_internal), companies!leads_company_id_fkey(name)', { count: 'estimated' })
     .is('deleted_at', null)
     .order(sortCol, { ascending: sortDir });
 
@@ -142,6 +146,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   if (filters.referrerIds && filters.referrerIds.length > 0) {
     query = query.in('channel_partner_id', filters.referrerIds);
   }
+  if (filters.noReferrer) query = query.is('channel_partner_id', null);
   if (filters.referredBy === 'clients') {
     // source='referral' AND channel_partner_id IS NOT NULL AND partner is external
     query = query.eq('source', 'referral').not('channel_partner_id', 'is', null);
@@ -169,12 +174,15 @@ export async function getLeads(filters: LeadFilters = {}): Promise<PaginatedLead
   const rows = (data ?? []).map((lead) => {
     const emp = lead.employees as { full_name: string } | null;
     const cp = lead.channel_partners as { partner_name: string; is_internal: boolean } | null;
+    const co = lead.companies as { name: string } | null;
     return {
       ...lead,
       assigned_to_name: emp?.full_name ?? '—',
       weighted_value: (lead.estimated_size_kwp ?? 0) * 60000 * (lead.close_probability ?? 0) / 100,
       referrer_name: cp?.partner_name ?? null,
       referrer_is_internal: cp != null ? !!cp.is_internal : null,
+      company_name: co?.name ?? null,
+      customer_project: formatCustomerProject({ companyName: co?.name ?? null, customerName: lead.customer_name, projectName: lead.project_name }),
     };
   });
 
@@ -293,19 +301,12 @@ export async function leadHasDetailedProposal(leadId: string): Promise<boolean> 
   return !!data;
 }
 
-export async function getSalesEngineers() {
-  const op = '[getSalesEngineers]';
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name');
-  if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
-    throw new Error(`Failed to load sales engineers: ${error.message}`);
-  }
-  return data ?? [];
+// Active-employee dropdown — delegates to the shared helper. The name is
+// historical: it returns ALL active employees, not just sales engineers
+// (2026-06-19 sweep §3). Now returns [] on error (was: threw) — an empty
+// dropdown beats crashing the page render on a transient failure.
+export async function getSalesEngineers(): Promise<{ id: string; full_name: string }[]> {
+  return getActiveEmployeesForSelect();
 }
 
 /**
@@ -404,6 +405,7 @@ async function getLeadsViaSearchRpc(
     p_close_to: closeTo,
     p_referrer_ids: referrerIds,
     p_referrer_id: referrerId,
+    p_no_referrer: !!filters.noReferrer,
     p_referred_by_clients: filters.referredBy === 'clients',
     p_external_partner_ids:
       filters.externalPartnerIds && filters.externalPartnerIds.length > 0
@@ -429,6 +431,7 @@ async function getLeadsViaSearchRpc(
   const stripped = rows.map(({ total_count: _tc, ...rest }) => ({
     ...rest,
     assigned_to_name: rest.assigned_to_name ?? '—',
+    customer_project: formatCustomerProject({ companyName: rest.company_name ?? null, customerName: rest.customer_name, projectName: rest.project_name ?? null }),
   }));
   return { data: stripped, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }

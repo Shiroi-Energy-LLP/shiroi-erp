@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@repo/ui';
 import { Upload } from 'lucide-react';
 import { listPendingImports, getImportSummary, type ListFilters } from '@/lib/import-review-queries';
+import { getAllActiveProjects } from '@/lib/plant-monitoring-queries';
 import { ImportReviewList } from './_components/import-review-list';
 import { FilterBar } from '@/components/filter-bar';
 import { FilterSelect } from '@/components/filter-select';
@@ -85,9 +86,10 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
     per_page: perPage,
   };
 
-  const [{ items, total }, summary] = await Promise.all([
+  const [{ items, total }, summary, projects] = await Promise.all([
     listPendingImports(filters),
     getImportSummary(),
+    getAllActiveProjects(),
   ]);
 
   const totalPages = Math.ceil(total / perPage);
@@ -160,7 +162,7 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
         <Card>
           <CardContent className="py-3">
             <div className="text-xs text-n-500 uppercase tracking-wider">Imported</div>
-            <div className="text-2xl font-heading font-bold text-[#00B050] mt-1">{summary.imported}</div>
+            <div className="text-2xl font-heading font-bold text-[#16A34A] mt-1">{summary.imported}</div>
             {summary.errors > 0 && (
               <div className="text-[10px] text-red-600 mt-0.5">{summary.errors} errors</div>
             )}
@@ -176,7 +178,7 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
             href={tabUrl(tab.value)}
             className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
               currentStatus === tab.value
-                ? 'border-[#00B050] text-[#00B050]'
+                ? 'border-shiroi-gold text-shiroi-gold-dark'
                 : 'border-transparent text-n-500 hover:text-n-900'
             }`}
           >
@@ -220,7 +222,7 @@ export default async function ImportReviewPage({ searchParams }: PageProps) {
           </CardContent>
         </Card>
       ) : (
-        <ImportReviewList items={items} />
+        <ImportReviewList items={items} projects={projects} />
       )}
 
       {/* Pagination */}

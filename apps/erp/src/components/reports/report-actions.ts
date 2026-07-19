@@ -1,11 +1,12 @@
 'use server';
 
 import { createReport, updateReport, createSitePhoto } from '@/lib/site-report-queries';
+import { getCurrentEmployeeId } from '@/lib/auth';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 interface SubmitReportInput {
   reportId?: string;
   projectId: string;
-  userId: string;
   reportDate: string;
   panelsInstalledToday: number;
   panelsInstalledCumulative: number;
@@ -33,16 +34,26 @@ interface SubmitReportInput {
 
 export async function submitReportAction(
   input: SubmitReportInput,
-): Promise<{ error?: string; reportId?: string }> {
+): Promise<ActionResult<{ reportId: string }>> {
   const op = '[submitReportAction]';
   console.log(`${op} Starting for project: ${input.projectId}`);
 
   try {
     if (!input.reportDate) {
-      return { error: 'Report date is required.' };
+      return err('Report date is required.', 'MISSING_DATE');
     }
     if (!input.workDescription) {
-      return { error: 'Work description is required.' };
+      return err('Work description is required.', 'MISSING_DESCRIPTION');
+    }
+
+    // submitted_by / uploaded_by are FKs to employees(id) — resolve the
+    // employee id from the session. Never trust a client-passed identity.
+    const employeeId = await getCurrentEmployeeId();
+    if (!employeeId) {
+      return err(
+        'Your account is not linked to an employee record, so the report cannot be attributed to you. Ask an admin to link your login to an employee.',
+        'NO_EMPLOYEE',
+      );
     }
 
     let reportId: string;
@@ -74,7 +85,7 @@ export async function submitReportAction(
       const result = await createReport({
         id: crypto.randomUUID(),
         project_id: input.projectId,
-        submitted_by: input.userId,
+        submitted_by: employeeId,
         report_date: input.reportDate,
         panels_installed_today: input.panelsInstalledToday,
         panels_installed_cumulative: input.panelsInstalledCumulative,
@@ -104,7 +115,7 @@ export async function submitReportAction(
         id: crypto.randomUUID(),
         daily_report_id: reportId,
         project_id: input.projectId,
-        uploaded_by: input.userId,
+        uploaded_by: employeeId,
         file_name: photo.fileName,
         storage_path: photo.storagePath,
         file_size_bytes: photo.fileSizeBytes,
@@ -114,13 +125,13 @@ export async function submitReportAction(
       });
     }
 
-    return { reportId };
-  } catch (error) {
+    return ok({ reportId });
+  } catch (e) {
     console.error(`${op} Failed:`, {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+      error: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
       timestamp: new Date().toISOString(),
     });
-    return { error: error instanceof Error ? error.message : 'Failed to submit report.' };
+    return err(e instanceof Error ? e.message : 'Failed to submit report.', 'REPORT_FAILED');
   }
 }

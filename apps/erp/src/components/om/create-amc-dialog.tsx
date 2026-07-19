@@ -7,15 +7,17 @@ import {
   Button, Input, Label, Select,
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
-import { createAmcSchedule } from '@/lib/amc-actions';
+import { createAmcSchedule, getCommissionedProjects, getAllProjectsForAmc } from '@/lib/amc-actions';
+import { ProjectCombobox } from '@/components/forms/project-combobox';
+
+type CommProject = { id: string; project_number: string; customer_name: string; project_name: string | null; commissioned_date: string | null };
+type AllProject = { id: string; project_number: string; customer_name: string; project_name: string | null };
 
 interface CreateAmcDialogProps {
-  commissionedProjects: { id: string; project_number: string; customer_name: string; commissioned_date: string | null }[];
-  allProjects: { id: string; project_number: string; customer_name: string }[];
   employees: { id: string; full_name: string }[];
 }
 
-export function CreateAmcDialog({ commissionedProjects, allProjects, employees }: CreateAmcDialogProps) {
+export function CreateAmcDialog({ employees }: CreateAmcDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -23,6 +25,10 @@ export function CreateAmcDialog({ commissionedProjects, allProjects, employees }
   const [category, setCategory] = React.useState<'free_amc' | 'paid_amc'>('free_amc');
   const [selectedProject, setSelectedProject] = React.useState('');
   const [assignedTo, setAssignedTo] = React.useState('');
+  // Perf [G5]: project lists fetched on first dialog-open, not on every /om/amc render.
+  const [commissionedProjects, setCommissionedProjects] = React.useState<CommProject[]>([]);
+  const [allProjects, setAllProjects] = React.useState<AllProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = React.useState(false);
 
   // Free AMC
   const [commDate, setCommDate] = React.useState('');
@@ -34,17 +40,7 @@ export function CreateAmcDialog({ commissionedProjects, allProjects, employees }
   const [amcAmount, setAmcAmount] = React.useState('');
 
   const isFree = category === 'free_amc';
-  const projects = isFree ? commissionedProjects : allProjects;
-
-  function handleProjectChange(projectId: string) {
-    setSelectedProject(projectId);
-    if (isFree) {
-      const project = commissionedProjects.find((p) => p.id === projectId);
-      if (project?.commissioned_date) {
-        setCommDate(project.commissioned_date);
-      }
-    }
-  }
+  const activeList = isFree ? commissionedProjects : allProjects;
 
   function handleCategoryChange(cat: string) {
     setCategory(cat as 'free_amc' | 'paid_amc');
@@ -91,8 +87,20 @@ export function CreateAmcDialog({ commissionedProjects, allProjects, employees }
     }
   }
 
+  function handleOpenChange(val: boolean) {
+    setOpen(val);
+    // Lazy-load both project lists the first time the dialog opens.
+    if (val && commissionedProjects.length === 0 && allProjects.length === 0 && !projectsLoading) {
+      setProjectsLoading(true);
+      Promise.all([getCommissionedProjects(), getAllProjectsForAmc()])
+        .then(([comm, all]) => { setCommissionedProjects(comm); setAllProjects(all); })
+        .catch(() => setError('Failed to load projects. Close and reopen to retry.'))
+        .finally(() => setProjectsLoading(false));
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5 h-8 text-xs">
           <Plus className="h-3.5 w-3.5" /> Create AMC
@@ -120,23 +128,21 @@ export function CreateAmcDialog({ commissionedProjects, allProjects, employees }
           <div className="grid grid-cols-2 gap-3">
             {/* Project */}
             <div className="col-span-2">
-              <Label htmlFor="amc-project" className="text-xs">Project *</Label>
-              <Select
-                id="amc-project"
+              <Label className="text-xs">Project *</Label>
+              <ProjectCombobox
+                projects={activeList}
                 value={selectedProject}
-                onChange={(e) => handleProjectChange(e.target.value)}
-                required
-                className="h-8 text-xs"
-              >
-                <option value="" disabled>
-                  {isFree ? 'Select commissioned project...' : 'Select project...'}
-                </option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.customer_name}
-                  </option>
-                ))}
-              </Select>
+                onChange={(id) => {
+                  setSelectedProject(id);
+                  const proj = activeList.find((p) => p.id === id);
+                  const projWithDate = proj as unknown as { commissioned_date?: string | null } | undefined;
+                  if (category === 'free_amc' && projWithDate?.commissioned_date) {
+                    setCommDate(projWithDate.commissioned_date);
+                  }
+                }}
+                placeholder={projectsLoading ? 'Loading projects…' : (isFree ? 'Search commissioned project…' : 'Search project…')}
+                inputClassName="h-8 text-xs"
+              />
             </div>
 
             {/* Assigned To */}

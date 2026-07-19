@@ -6,7 +6,7 @@ export default async function NewProposalPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[#1A1D24]">New Proposal</h1>
+      <h1 className="text-2xl font-bold text-n-950">New Proposal</h1>
       <ProposalWizard leads={leads} />
     </div>
   );

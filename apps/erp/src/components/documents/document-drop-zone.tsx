@@ -185,7 +185,7 @@ export function DocumentDropZone({ entityType, entityId, onUploaded }: DocumentD
         onClick={() => inputRef.current?.click()}
         className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
           dragOver
-            ? 'border-shiroi-green bg-green-50'
+            ? 'border-shiroi-gold bg-shiroi-gold/5'
             : 'border-n-300 hover:border-n-400 hover:bg-n-50'
         }`}
       >
@@ -197,9 +197,9 @@ export function DocumentDropZone({ entityType, entityId, onUploaded }: DocumentD
           className="sr-only"
           onChange={(e) => addFiles(e.target.files)}
         />
-        <Upload className={`h-7 w-7 mx-auto mb-2 ${dragOver ? 'text-shiroi-green' : 'text-n-400'}`} />
+        <Upload className={`h-7 w-7 mx-auto mb-2 ${dragOver ? 'text-shiroi-gold-dark' : 'text-n-400'}`} />
         <p className="text-sm font-medium text-n-700">
-          Drop files here or <span className="text-shiroi-green">browse</span>
+          Drop files here or <span className="text-shiroi-gold-dark">browse</span>
         </p>
         <p className="text-xs text-n-400 mt-1">
           PDF, images, XLSX, DWG, SKP — max 20 MB each
@@ -231,7 +231,7 @@ export function DocumentDropZone({ entityType, entityId, onUploaded }: DocumentD
                 <select
                   value={pf.category}
                   onChange={(e) => updateCategory(pf.id, e.target.value as DocumentCategory)}
-                  className="text-xs rounded border border-n-300 px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-green/40"
+                  className="text-xs rounded border border-n-300 px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-gold/40"
                 >
                   {SELECTABLE_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -269,7 +269,7 @@ export function DocumentDropZone({ entityType, entityId, onUploaded }: DocumentD
             <button
               onClick={uploadAll}
               disabled={uploading}
-              className="w-full mt-1 h-9 rounded-lg bg-shiroi-green text-white text-sm font-medium hover:bg-[#007A38] disabled:opacity-50 transition-colors"
+              className="w-full mt-1 h-9 rounded-lg bg-shiroi-gold text-shiroi-ink text-sm font-medium hover:bg-shiroi-gold-hover disabled:opacity-50 transition-colors"
             >
               {uploading ? 'Uploading…' : `Upload ${pendingCount} file${pendingCount !== 1 ? 's' : ''}`}
             </button>

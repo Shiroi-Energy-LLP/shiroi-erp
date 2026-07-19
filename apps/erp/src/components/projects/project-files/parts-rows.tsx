@@ -55,7 +55,7 @@ export function HandoverBox({
     <Card className="flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
-          <Package className="h-4 w-4 text-[#7C818E]" />
+          <Package className="h-4 w-4 text-n-500" />
           Handover Pack
           {pack && <Badge variant="success" className="text-[10px]">v{pack.version}</Badge>}
         </CardTitle>
@@ -64,7 +64,7 @@ export function HandoverBox({
         {error && <p className="text-xs text-[#991B1B]">{error}</p>}
         {pack ? (
           <>
-            <div className="flex items-center gap-1.5 text-[11px] text-[#9CA0AB]">
+            <div className="flex items-center gap-1.5 text-[11px] text-n-400">
               <Clock className="h-3 w-3" />
               {formatDateTime(pack.generated_at)}
             </div>
@@ -81,7 +81,7 @@ export function HandoverBox({
           </>
         ) : (
           <>
-            <p className="text-xs text-[#9CA0AB]">
+            <p className="text-xs text-n-400">
               Compile project data into a customer-ready document.
             </p>
             <Button
@@ -127,10 +127,10 @@ export function FileRow({
     <div
       draggable={true}
       onDragStart={(e) => onDragStart(e, file, category)}
-      className="flex items-center gap-1.5 rounded px-1.5 py-1 hover:bg-[#F5F6F8] group text-xs cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-1.5 rounded px-1.5 py-1 hover:bg-n-100 group text-xs cursor-grab active:cursor-grabbing"
     >
-      <GripVertical className="h-3 w-3 text-[#C8CBD0] flex-shrink-0 opacity-0 group-hover:opacity-100 pointer-events-none" />
-      <Icon className="h-3 w-3 text-[#9CA0AB] flex-shrink-0 pointer-events-none" />
+      <GripVertical className="h-3 w-3 text-n-300 flex-shrink-0 opacity-0 group-hover:opacity-100 pointer-events-none" />
+      <Icon className="h-3 w-3 text-n-400 flex-shrink-0 pointer-events-none" />
       <span
         role="button"
         tabIndex={0}
@@ -141,13 +141,13 @@ export function FileRow({
             else onDownload(file);
           }
         }}
-        className="text-[#00B050] hover:underline truncate text-left flex-1 text-[12px] cursor-pointer select-none"
+        className="text-shiroi-gold-dark hover:underline truncate text-left flex-1 text-[12px] cursor-pointer select-none"
         title={file.name}
         draggable={false}
       >
         {file.name.replace(/^\d+_/, '')}
       </span>
-      <span className="text-[10px] text-[#C8CBD0] hidden sm:inline flex-shrink-0 pointer-events-none">
+      <span className="text-[10px] text-n-300 hidden sm:inline flex-shrink-0 pointer-events-none">
         {formatFileSize(file.metadata?.size)}
       </span>
       <div
@@ -162,7 +162,7 @@ export function FileRow({
             if (isImage) onOpenImage(file);
             else onDownload(file);
           }}
-          className="p-0.5 text-[#7C818E] hover:text-[#00B050]"
+          className="p-0.5 text-n-500 hover:text-shiroi-gold-dark"
           title={isImage ? 'View' : 'Download'}
         >
           <Download className="h-3 w-3" />
@@ -173,7 +173,7 @@ export function FileRow({
             e.stopPropagation();
             onDelete(file);
           }}
-          className="p-0.5 text-[#7C818E] hover:text-[#991B1B]"
+          className="p-0.5 text-n-500 hover:text-[#991B1B]"
           title="Delete"
         >
           <Trash2 className="h-3 w-3" />
@@ -203,11 +203,11 @@ export function GeneratedDocRow({
   downloadUrl?: string;
 }) {
   return (
-    <div className="flex items-center gap-1.5 rounded px-1.5 py-1 hover:bg-[#F5F6F8] group text-xs">
+    <div className="flex items-center gap-1.5 rounded px-1.5 py-1 hover:bg-n-100 group text-xs">
       <DocIcon className="h-3 w-3 text-[#5A8DEE] flex-shrink-0" />
-      <span className="text-[12px] text-[#3A3D44] truncate flex-1 font-medium">{label}</span>
+      <span className="text-[12px] text-n-800 truncate flex-1 font-medium">{label}</span>
       {sublabel && (
-        <span className="text-[10px] text-[#9CA0AB] flex-shrink-0 hidden sm:inline">
+        <span className="text-[10px] text-n-400 flex-shrink-0 hidden sm:inline">
           {sublabel}
         </span>
       )}
@@ -221,7 +221,7 @@ export function GeneratedDocRow({
           href={downloadUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-0.5 text-[#7C818E] hover:text-[#00B050] opacity-0 group-hover:opacity-100 flex-shrink-0"
+          className="p-0.5 text-n-500 hover:text-shiroi-gold-dark opacity-0 group-hover:opacity-100 flex-shrink-0"
           title="Download PDF"
         >
           <FileDown className="h-3 w-3" />
@@ -256,11 +256,11 @@ export function LeadFileRow({
   }
 
   return (
-    <div className="flex items-center gap-1.5 rounded px-1.5 py-1 hover:bg-[#F5F6F8] group text-xs">
-      <Icon className="h-3 w-3 text-[#9CA0AB] flex-shrink-0" />
+    <div className="flex items-center gap-1.5 rounded px-1.5 py-1 hover:bg-n-100 group text-xs">
+      <Icon className="h-3 w-3 text-n-400 flex-shrink-0" />
       <button
         onClick={() => (isImage ? onOpenImage(-1) : handleDownload())}
-        className="text-[#00B050] hover:underline truncate text-left flex-1 text-[12px]"
+        className="text-shiroi-gold-dark hover:underline truncate text-left flex-1 text-[12px]"
         title={file.name}
       >
         {file.name.replace(/^\d+_/, '')}
@@ -271,7 +271,7 @@ export function LeadFileRow({
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0">
         <button
           onClick={handleDownload}
-          className="p-0.5 text-[#7C818E] hover:text-[#00B050]"
+          className="p-0.5 text-n-500 hover:text-shiroi-gold-dark"
           title="Download"
         >
           <Download className="h-3 w-3" />

@@ -43,7 +43,7 @@ export default async function TrainingPage() {
   } catch {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Training</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Training</h1>
         <Card>
           <CardContent>
             <EmptyState
@@ -62,10 +62,10 @@ export default async function TrainingPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr" className="text-sm text-[#00B050] hover:underline">
+          <Link href="/hr" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to HR
           </Link>
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Training</h1>
+          <h1 className="text-2xl font-heading font-bold text-n-950 mt-1">Training</h1>
           <p className="text-sm text-gray-500">
             {assessments.length} assessment{assessments.length !== 1 ? 's' : ''}
           </p>

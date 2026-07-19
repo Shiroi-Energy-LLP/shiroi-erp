@@ -7,6 +7,7 @@ interface ProjectOpt {
   id: string;
   customer_name: string;
   project_number: string | null;
+  project_name?: string | null;
 }
 
 export interface ProjectComboboxProps {
@@ -22,6 +23,13 @@ export interface ProjectComboboxProps {
   /** Tailwind classes for the visible input — controls height + text size.
    *  Default: 'h-9 text-sm' (dialog size). Pass 'h-8 text-xs' for filter bar. */
   inputClassName?: string;
+  /** Enable free-text entry: when the typed name matches no project, offer
+   *  "Use '<typed>'" which calls onCustomChange instead of selecting a project id.
+   *  Used by Activities + Service Tickets to capture Service/AMC/misc work. */
+  allowCustom?: boolean;
+  /** Current free-text project name (shown when no project id is selected). */
+  customValue?: string;
+  onCustomChange?: (name: string) => void;
 }
 
 export function ProjectCombobox({
@@ -32,6 +40,9 @@ export function ProjectCombobox({
   placeholder = 'Search projects…',
   className,
   inputClassName = 'h-9 text-sm',
+  allowCustom = false,
+  customValue = '',
+  onCustomChange,
 }: ProjectComboboxProps) {
   const [query, setQuery] = React.useState('');
   const [open, setOpen] = React.useState(false);
@@ -51,7 +62,8 @@ export function ProjectCombobox({
       .filter(
         (p) =>
           p.customer_name.toLowerCase().includes(lower) ||
-          (p.project_number?.toLowerCase().includes(lower) ?? false),
+          (p.project_number?.toLowerCase().includes(lower) ?? false) ||
+          (p.project_name?.toLowerCase().includes(lower) ?? false),
       )
       .slice(0, 50);
   }, [query, projects]);
@@ -85,9 +97,20 @@ export function ProjectCombobox({
 
   function handleClear() {
     onChange('');
+    if (allowCustom) onCustomChange?.('');
     setQuery('');
     setHighlighted(-1);
     inputRef.current?.focus();
+  }
+
+  function handleUseCustom() {
+    const customName = query.trim();
+    if (!customName) return;
+    onChange('');
+    onCustomChange?.(customName);
+    setQuery('');
+    setOpen(false);
+    setHighlighted(-1);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -115,7 +138,9 @@ export function ProjectCombobox({
   }
 
   // Show selected project name in input; otherwise show live query
-  const displayValue = selectedProject ? selectedProject.customer_name : query;
+  const displayValue = selectedProject
+    ? `${selectedProject.customer_name}${selectedProject.project_name ? ' – ' + selectedProject.project_name : ''}`
+    : query || (allowCustom ? customValue : '');
 
   return (
     <div ref={containerRef} className={`relative ${className ?? ''}`}>
@@ -133,9 +158,9 @@ export function ProjectCombobox({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`w-full pl-8 pr-8 border border-n-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-green ${inputClassName}`}
+          className={`w-full pl-8 pr-8 border border-n-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-shiroi-gold ${inputClassName}`}
         />
-        {(value || query) && (
+        {(value || query || (allowCustom && customValue)) && (
           <button
             type="button"
             onClick={handleClear}
@@ -149,14 +174,14 @@ export function ProjectCombobox({
 
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-md border border-n-200 bg-white shadow-md max-h-60 overflow-y-auto">
-          {filtered.length === 0 ? (
+          {filtered.length === 0 && !allowCustom ? (
             <div className="px-3 py-4 text-center">
               <p className="text-xs text-n-500">No projects found.</p>
               <a
                 href="/projects/new"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-shiroi-green hover:underline mt-1 inline-block"
+                className="text-xs text-shiroi-gold-dark hover:underline mt-1 inline-block"
               >
                 Create a new project →
               </a>
@@ -179,7 +204,7 @@ export function ProjectCombobox({
                       : 'text-n-700 hover:bg-n-050'
                   }`}
                 >
-                  <span className="truncate text-sm">{project.customer_name}</span>
+                  <span className="truncate text-sm">{project.customer_name}{project.project_name ? ` – ${project.project_name}` : ''}</span>
                   {project.project_number && (
                     <span className="ml-2 text-[10px] text-n-400 flex-shrink-0 font-mono">
                       {project.project_number}
@@ -188,6 +213,23 @@ export function ProjectCombobox({
                 </li>
               ))}
             </ul>
+          )}
+          {allowCustom && query.trim() && (
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault(); // prevent input blur before the click fires
+                handleUseCustom();
+              }}
+              className="w-full text-left px-3 py-2 text-xs text-shiroi-gold-dark hover:bg-n-50 border-t border-n-100"
+            >
+              Use “{query.trim()}” as project name
+            </button>
+          )}
+          {allowCustom && filtered.length === 0 && !query.trim() && (
+            <div className="px-3 py-3 text-center text-xs text-n-500">
+              Type a project name to search or add a new one…
+            </div>
           )}
         </div>
       )}

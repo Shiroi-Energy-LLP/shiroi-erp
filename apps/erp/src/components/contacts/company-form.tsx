@@ -94,9 +94,9 @@ export function CompanyForm({ company }: CompanyFormProps) {
         notes: form.get('notes') as string,
       });
       setLoading(false);
-      if (res.success && res.companyId) {
+      if (res.success) {
         addToast({ variant: 'success', title: 'Company saved', description: 'The company has been saved successfully.' });
-        router.push(`/companies/${res.companyId}`);
+        router.push(`/companies/${res.data.companyId}`);
       } else {
         const errMsg = res.error ?? 'Failed to create company';
         setError(errMsg);
@@ -191,7 +191,7 @@ export function CompanyForm({ company }: CompanyFormProps) {
               name="notes"
               rows={3}
               defaultValue={company?.notes ?? ''}
-              className="flex w-full rounded-md border-[1.5px] border-[#DFE2E8] bg-white px-3 py-2 text-[13px] text-[#1A1D24] focus-visible:outline-none focus-visible:border-[#00B050] focus-visible:shadow-[0_0_0_3px_rgba(0,176,80,0.1)]"
+              className="flex w-full rounded-md border-[1.5px] border-n-200 bg-white px-3 py-2 text-[13px] text-n-900 focus-visible:outline-none focus-visible:border-shiroi-gold focus-visible:shadow-[0_0_0_3px_rgba(224,138,0,0.22)]"
               placeholder="Any notes about this company..."
             />
           </div>

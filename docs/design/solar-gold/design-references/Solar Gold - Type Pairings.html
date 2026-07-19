@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shiroi ERP — Solar Gold Type Pairings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Rajdhani:wght@600;700&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: #ECE7DD;
+    font-family: 'Inter', sans-serif;
+    min-width: 100%; min-height: 100vh; width: max-content;
+    padding: 48px; box-sizing: border-box;
+  }
+  .page-head { width: 760px; margin-bottom: 36px; }
+  .page-head h1 { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: #1A1407; margin: 0 0 8px; letter-spacing: -.01em; }
+  .page-head p { font-size: 14px; line-height: 1.6; color: #6B5E48; margin: 0; }
+  .page-head .rec { margin-top: 12px; font-size: 13px; color: #8A5A0C; font-weight: 600; }
+
+  .row { display: flex; flex-direction: row; align-items: flex-start; gap: 36px; }
+  .col { flex: none; display: flex; flex-direction: column; }
+  .flabel { margin-bottom: 14px; padding-left: 2px; }
+  .flabel .name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #1A1407; display: flex; align-items: center; gap: 9px; }
+  .flabel .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fff; background: #B07408; padding: 2px 7px; border-radius: 999px; }
+  .flabel .stack-line { font-size: 12px; color: #8A7A5E; margin-top: 4px; }
+
+  .card {
+    width: 620px; min-height: 760px;
+    background: #FBF8F2; border: 1px solid #E6DCC8; border-radius: 4px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(40,30,10,.08), 0 8px 28px rgba(40,30,10,.10);
+    font-family: var(--b);
+  }
+  /* wordmark strip — unchanged Rajdhani lockup on dark warm sidebar */
+  .strip { height: 64px; background: #16130D; display: flex; align-items: center; gap: 12px; padding: 0 24px; }
+  .strip .mark { width: 30px; height: 30px; }
+  .strip .wm { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 17px; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.95); }
+  .strip .note { margin-left: auto; font-family: var(--b); font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .1em; }
+
+  .body { padding: 26px; display: flex; flex-direction: column; gap: 22px; }
+
+  .eyebrow { font-family: var(--h); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .15em; color: #B07408; }
+  .h1 { font-family: var(--h); font-size: 34px; font-weight: 700; color: #1A1407; margin: 6px 0 0; letter-spacing: -.015em; line-height: 1.05; }
+  .h2 { font-family: var(--h); font-size: 19px; font-weight: 700; color: #221B0E; margin: 0; letter-spacing: -.01em; }
+  .lead { font-size: 14px; line-height: 1.65; color: #4F4636; margin: 0; max-width: 52ch; }
+
+  .divider { height: 1px; background: #ECE3D2; }
+
+  /* numerals showcase */
+  .nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .nstat .nlab { font-family: var(--h); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: #9A8A6E; margin-bottom: 5px; }
+  .nstat .nval { font-family: var(--m); font-size: 26px; font-weight: 600; color: #1A1407; letter-spacing: -.02em; font-feature-settings: "tnum" 1; }
+
+  /* mini table */
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #221B0E; color: rgba(255,255,255,.8); font-family: var(--h); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; text-align: left; padding: 8px 12px; }
+  thead th.r { text-align: right; }
+  tbody td { padding: 9px 12px; font-size: 13px; color: #4F4636; border-top: 1px solid #ECE3D2; }
+  tbody tr:nth-child(even) { background: #F5EFE2; }
+  td.mono { font-family: var(--m); font-size: 12.5px; font-feature-settings: "tnum" 1; }
+  td.r { text-align: right; }
+  td.gap { color: #B91C1C; font-weight: 600; }
+  .tbl-wrap { border: 1px solid #ECE3D2; border-radius: 10px; overflow: hidden; }
+
+  .btnrow { display: flex; align-items: center; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; height: 38px; padding: 0 18px; border-radius: 8px; background: #E08A00; color: #fff; font-family: var(--h); font-size: 14px; font-weight: 600; border: none; }
+  .btn.ghost { background: transparent; color: #B07408; border: 1.5px solid #E6Cf9a; }
+
+  .pangram { font-family: var(--h); font-size: 15px; color: #6B5E48; font-weight: 500; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Solar Gold — type pairings</h1>
+    <p>The locked Solar Gold palette, shown with four heading/body/numeral systems applied to the real type hierarchy: the eyebrow, the dashboard greeting, a section title, body copy, KPI numerals and a currency table. The <strong>Rajdhani wordmark</strong> (top strip) stays the same in all four — it's tied to the logo lockup.</p>
+    <p class="rec">My pick: <strong>Option 2 · Archivo</strong> — it has the industrial, engineered confidence an EPC brand should carry, while staying perfectly legible in dense tables.</p>
+  </div>
+
+  <div class="row" id="row"></div>
+
+  <script>
+  const OPTS = [
+    {
+      name: 'Option 1 · Space Grotesk',
+      tag: 'Engineered',
+      stack: 'Headings: Space Grotesk · Body: Inter · Numbers: JetBrains Mono',
+      h: "'Space Grotesk'", b: "'Inter'", m: "'JetBrains Mono'",
+    },
+    {
+      name: 'Option 2 · Archivo',
+      tag: 'Recommended',
+      stack: 'Headings: Archivo · Body: Inter · Numbers: IBM Plex Mono',
+      h: "'Archivo'", b: "'Inter'", m: "'IBM Plex Mono'", rec: true,
+    },
+    {
+      name: 'Option 3 · Sora',
+      tag: 'Modern / friendly',
+      stack: 'Headings: Sora · Body: Hanken Grotesk · Numbers: Spline Sans Mono',
+      h: "'Sora'", b: "'Hanken Grotesk'", m: "'Spline Sans Mono'",
+    },
+    {
+      name: 'Option 4 · Bricolage Grotesque',
+      tag: 'Editorial / characterful',
+      stack: 'Headings: Bricolage Grotesque · Body: Inter · Numbers: JetBrains Mono',
+      h: "'Bricolage Grotesque'", b: "'Inter'", m: "'JetBrains Mono'",
+    },
+  ];
+
+  const MARK = `<svg class="mark" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" fill="#F0B429"/>${Array.from({length:12},(_,i)=>{const a=i*30*Math.PI/180;const x1=12+6*Math.cos(a),y1=12+6*Math.sin(a),x2=12+9.4*Math.cos(a),y2=12+9.4*Math.sin(a);return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="#F0B429" stroke-width="1.6" stroke-linecap="round"/>`}).join('')}</svg>`;
+
+  function cardHTML(o) {
+    return `<div class="card" style="--h:${o.h},sans-serif; --b:${o.b},sans-serif; --m:${o.m},monospace;">
+      <div class="strip">${MARK}<span class="wm">Shiroi Energy</span><span class="note">Rajdhani · unchanged</span></div>
+      <div class="body">
+        <div>
+          <div class="eyebrow">Dashboard</div>
+          <h1 class="h1">Good morning, Vivek</h1>
+        </div>
+        <p class="lead">Net metering with TNEB cleared for three sites today. Two proposals are awaiting your approval, and the payroll export is due in three days.</p>
+        <div class="divider"></div>
+        <div class="nums">
+          <div class="nstat"><div class="nlab">Cash invested</div><div class="nval">₹42.6 L</div></div>
+          <div class="nstat"><div class="nlab">Pipeline</div><div class="nval">₹12.4 Cr</div></div>
+          <div class="nstat"><div class="nlab">Active plants</div><div class="nval">103</div></div>
+        </div>
+        <div>
+          <h2 class="h2" style="margin-bottom:12px;">Cash-negative projects</h2>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Project</th><th>Client</th><th class="r">Invested</th><th class="r">Gap</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">PV-0421</td><td>Anand Residence</td><td class="r mono">₹6.4 L</td><td class="r mono gap">−₹4.4 L</td></tr>
+                <tr><td class="mono">PV-0418</td><td>Sai Textiles</td><td class="r mono">₹54.0 L</td><td class="r mono gap">−₹14.0 L</td></tr>
+                <tr><td class="mono">PV-0410</td><td>Lakshmi Mills</td><td class="r mono">₹98.0 L</td><td class="r mono gap">−₹28.0 L</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="btn">Approve proposal</button>
+          <button class="btn ghost">View AMC schedule</button>
+        </div>
+        <div class="divider"></div>
+        <div class="pangram">12.45 kWp installed · 1,24,000 kWh generated · 21 Mar 2025</div>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('row').innerHTML = OPTS.map(o => `
+    <div class="col">
+      <div class="flabel">
+        <span class="name">${o.name} <span class="tag" style="${o.rec?'':'background:#9A8A6E'}">${o.tag}</span></span>
+        <div class="stack-line">${o.stack}</div>
+      </div>
+      ${cardHTML(o)}
+    </div>`).join('');
+  </script>
+</body>
+</html>

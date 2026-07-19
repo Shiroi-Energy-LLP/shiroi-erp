@@ -26,7 +26,7 @@ export default async function EmployeesPage() {
   } catch {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Employees</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Employees</h1>
         <Card>
           <CardContent>
             <EmptyState
@@ -45,11 +45,11 @@ export default async function EmployeesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr" className="text-sm text-[#00B050] hover:underline">
+          <Link href="/hr" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to HR
           </Link>
           <Eyebrow className="mb-1">EMPLOYEES</Eyebrow>
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24] mt-1">Employees</h1>
+          <h1 className="text-2xl font-heading font-bold text-n-950 mt-1">Employees</h1>
         </div>
         <Link href="/hr/employees/new">
           <Button>New Employee</Button>
@@ -97,7 +97,7 @@ export default async function EmployeesPage() {
                     <TableCell>
                       <Link
                         href={`/hr/employees/${emp.id}`}
-                        className="text-[#00B050] hover:underline font-medium"
+                        className="text-shiroi-gold-dark hover:underline font-medium"
                       >
                         {emp.full_name}
                       </Link>

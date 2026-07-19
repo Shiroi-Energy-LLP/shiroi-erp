@@ -42,5 +42,14 @@ export { growattAdapter, mapGrowattStatus } from './growatt';
 export { smaAdapter } from './sma';
 export { huaweiAdapter } from './huawei';
 export { solarmanAdapter } from './solarman';
+export {
+  deyeAdapter,
+  deyeAuthenticate,
+  deyeFetchCompanyId,
+  deyeListStationsWithDevices,
+  deyeFetchDeviceLatest,
+  deyeReadingFromDeviceData,
+} from './deye';
+export type { DeyeDeviceData, DeyeMeasure, DeyeStationWithDevices, DeyeStationDevice, DeyeAuthInput } from './deye';
 export { goodweAdapter } from './goodwe';
 export { getAdapter, allBrands } from './factory';

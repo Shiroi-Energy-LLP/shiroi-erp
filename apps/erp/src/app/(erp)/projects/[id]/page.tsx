@@ -2,6 +2,9 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects-queries';
 import { createClient } from '@repo/supabase/server';
+import { getCompanyOptions } from '@/lib/contacts-queries';
+import { CompanyProjectEditor } from '@/components/leads/company-project-editor';
+import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import {
   getCurrentUserRoleForProject,
   getActiveEmployeesLite,
@@ -29,14 +32,15 @@ import { CutLengthTab } from '@/components/projects/cut-length/cut-length-tab';
 // S15 — B3 plant performance anomaly alerts
 import { PerformanceTab } from '@/components/projects/performance/performance-tab';
 import { getCutRecordsForProject, getProjectCableSummary } from '@/lib/inventory-queries';
-// C9 — Completion checklist
-import { CompletionChecklist } from '@/components/projects/completion/completion-checklist';
-import { getProjectCompletionItems, getProjectCompletionPct } from '@/lib/project-completion-queries';
+// Progress tab — milestone-weighted completion (mig 173) + milestone photos
+import { MilestoneProgressPanel } from '@/components/projects/completion/milestone-progress-panel';
+import { MilestonePhotosPanel } from '@/components/projects/completion/milestone-photos-panel';
 // C12 — DC Certificates
 import { DcCertificatesPanel } from '@/components/projects/certificates/dc-certificates-panel';
 import { getDcCertificatesForProject } from '@/lib/dc-certificate-queries';
 // S5 — F7 BOQ variance narrative
 import { BoqVarianceCard } from '@/components/projects/detail/boq-variance-card';
+import { DeleteProjectCard } from '@/components/projects/detail/delete-project-card';
 
 interface ProjectDetailPageProps {
   params: Promise<{ id: string }>;
@@ -67,11 +71,12 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
   }
 
   // Details tab — fetch everything the new boxes need in parallel
-  const [project, viewerRole, employees, financials] = await Promise.all([
+  const [project, viewerRole, employees, financials, companies] = await Promise.all([
     getProject(id),
     getCurrentUserRoleForProject(),
     getActiveEmployeesLite(),
     getProjectFinancials(id),
+    getCompanyOptions(),
   ]);
 
   if (!project) {
@@ -188,6 +193,27 @@ export default async function ProjectDetailPage({ params, searchParams }: Projec
             viewerRole={viewerRole}
           />
         )}
+
+        {/* Company & Project Name linkage */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Company &amp; Project</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CompanyProjectEditor
+              entityType="project"
+              entityId={id}
+              companyId={(project as any).company_id ?? null}
+              projectName={(project as any).project_name ?? null}
+              companies={companies}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Danger zone — soft delete (PM + founder only) */}
+        {viewerRole && ['founder', 'project_manager'].includes(viewerRole) && (
+          <DeleteProjectCard projectId={id} projectNumber={(project as any).project_number ?? ''} />
+        )}
       </div>
     </div>
 
@@ -261,20 +287,13 @@ async function TabContent({ projectId, tab }: { projectId: string; tab: string }
       );
     }
 
-    // ── C9: Completion checklist ─────────────────────────────────────────
+    // ── Progress: milestone-weighted completion + E9 milestone photos ────
     case 'completion': {
-      const viewerRole = await getCurrentUserRoleForProject();
-      const [items, completionPct] = await Promise.all([
-        getProjectCompletionItems(projectId),
-        getProjectCompletionPct(projectId),
-      ]);
       return (
-        <CompletionChecklist
-          projectId={projectId}
-          items={items}
-          completionPct={completionPct}
-          viewerRole={viewerRole}
-        />
+        <div className="space-y-4">
+          <MilestoneProgressPanel projectId={projectId} />
+          <MilestonePhotosPanel projectId={projectId} />
+        </div>
       );
     }
 

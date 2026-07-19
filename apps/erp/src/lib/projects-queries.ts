@@ -1,15 +1,43 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { formatCustomerProject } from './customer-project';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
 export interface ProjectFilters {
   status?: ProjectStatus;
   search?: string;
+  fy?: string;
   page?: number;
   pageSize?: number;
   sort?: string;
   dir?: 'asc' | 'desc';
+}
+
+export interface ProjectStatusSummaryRow {
+  status: string; // a project_status value, or 'TOTAL' for the grand-total row
+  project_count: number;
+  total_kwp: number;
+}
+
+/**
+ * Per-status counts + summed system size for the projects-list header, FY-filtered
+ * with the same order_date/created_at logic the list uses. Includes a 'TOTAL' row
+ * (SQL GROUPING SETS) so the total system size never touches JS (NEVER-DO #12).
+ */
+export async function getProjectStatusSummary(fy?: string): Promise<ProjectStatusSummaryRow[]> {
+  const op = '[getProjectStatusSummary]';
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('get_project_status_summary', { p_fy: fy ?? undefined });
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message, fy });
+    return [];
+  }
+  return (data ?? []).map((r: { status: string; project_count: number; total_kwp: number | string }) => ({
+    status: r.status,
+    project_count: Number(r.project_count ?? 0),
+    total_kwp: Number(r.total_kwp ?? 0),
+  }));
 }
 
 export interface PaginatedResult<T> {
@@ -33,7 +61,7 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   let query = supabase
     .from('projects')
     .select(
-      'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, site_city, advance_amount, customer_phone, notes, employees!projects_project_manager_id_fkey(full_name)',
+      'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, site_city, advance_amount, customer_phone, notes, project_name, company_id, employees!projects_project_manager_id_fkey(full_name), companies!projects_company_id_fkey(name)',
       { count: 'estimated' },
     )
     .is('deleted_at', null);
@@ -44,10 +72,30 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   query = query.order(sortCol, { ascending: sortAsc });
 
   if (filters.status) query = query.eq('status', filters.status);
-  if (filters.search) {
+  if (filters.fy && /^\d{4}-\d{2}$/.test(filters.fy)) {
+    const startYear = parseInt(filters.fy.slice(0, 4), 10);
+    const fyFrom = `${startYear}-04-01`;
+    const fyTo = `${startYear + 1}-04-01`;
+    // Internally generated dates — safe to interpolate (not user text).
     query = query.or(
-      `project_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`,
+      `and(order_date.gte.${fyFrom},order_date.lt.${fyTo}),and(order_date.is.null,created_at.gte.${fyFrom},created_at.lt.${fyTo})`,
     );
+  }
+  if (filters.search) {
+    // Injection-safe: resolve matching ids via RPC, then filter by id.
+    // Also makes project_name searchable (spec 2026-06-11 #3).
+    const { data: hits, error: searchErr } = await supabase.rpc('search_projects_lite', {
+      p_query: filters.search.trim(),
+      p_limit: 500,
+    });
+    if (searchErr) {
+      console.error(`${op} search RPC failed:`, { code: searchErr.code, message: searchErr.message });
+    }
+    const ids = (hits ?? []).map((h: { id: string }) => h.id);
+    if (ids.length === 0) {
+      return { data: [], total: 0, page, pageSize, totalPages: 0 };
+    }
+    query = query.in('id', ids);
   }
 
   query = query.range(from, to);
@@ -59,13 +107,15 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   }
 
   const total = count ?? 0;
-  return {
-    data: data ?? [],
-    total,
-    page,
-    pageSize,
-    totalPages: Math.ceil(total / pageSize),
-  };
+  const rows = (data ?? []).map((p) => {
+    const co = p.companies as { name: string } | null;
+    return {
+      ...p,
+      company_name: co?.name ?? null,
+      customer_project: formatCustomerProject({ companyName: co?.name ?? null, customerName: p.customer_name, projectName: p.project_name }),
+    };
+  });
+  return { data: rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
 /**
@@ -108,10 +158,15 @@ export async function getProject(id: string) {
   // The page calls notFound() when this returns null.
   const { data, error } = await supabase
     .from('projects')
-    .select(
-      '*, employees!projects_project_manager_id_fkey(full_name), pm_supervisor:employees!projects_site_supervisor_id_fkey(full_name), project_milestones(*, project_completion_components(*)), project_delay_log(*, employees!project_delay_log_logged_by_fkey(full_name), project_milestones!project_delay_log_milestone_id_fkey(milestone_name)), project_change_orders(*, preparer:employees!project_change_orders_prepared_by_fkey(full_name), approver:employees!project_change_orders_approved_by_internal_fkey(full_name))',
-    )
+    // Perf audit: the project detail (Details tab) — getProject's only caller — reads
+    // only scalar columns (via `*`). The 5 nested embeds this used to pull
+    // (project_milestones+components, project_delay_log+joins, project_change_orders+joins,
+    // plus the two employee joins) are all unused here; the milestones/delays/change-order
+    // sub-routes and the layout header fetch their own data. Dropping them removes the
+    // module's heaviest embed fan-out from the detail page.
+    .select('*')
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (error) {

@@ -44,7 +44,7 @@ export function CollapsibleSection({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 bg-[#F8F9FA] hover:bg-[#F0F1F3] transition-colors text-left"
+        className="w-full flex items-center justify-between px-4 py-3 bg-n-050 hover:bg-n-100 transition-colors text-left"
       >
         <div className="flex items-center gap-3">
           <span
@@ -54,12 +54,12 @@ export function CollapsibleSection({
           >
             {isComplete ? <Check className="h-3.5 w-3.5" /> : num}
           </span>
-          <span className="text-sm font-semibold text-[#1A1D24]">{title}</span>
+          <span className="text-sm font-semibold text-n-950">{title}</span>
         </div>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-[#7C818E]" />
+          <ChevronUp className="h-4 w-4 text-n-500" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-[#7C818E]" />
+          <ChevronDown className="h-4 w-4 text-n-500" />
         )}
       </button>
       {isOpen && <div className="px-4 py-4 bg-white border-t border-n-200">{children}</div>}
@@ -159,14 +159,14 @@ export function PhotoUpload({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="text-xs text-[#7C818E] hover:text-[#1A1D24] flex items-center gap-1 border border-dashed border-n-300 rounded px-2 py-1 hover:border-n-400 transition-colors"
+            className="text-xs text-n-500 hover:text-n-950 flex items-center gap-1 border border-dashed border-n-300 rounded px-2 py-1 hover:border-n-400 transition-colors"
           >
             <Upload className="h-3 w-3" /> Upload photo
           </button>
         )}
         {uploading && (
-          <span className="text-xs text-[#7C818E] flex items-center gap-1">
-            <span className="h-3 w-3 border border-n-400 border-t-[#00B050] rounded-full animate-spin" />
+          <span className="text-xs text-n-500 flex items-center gap-1">
+            <span className="h-3 w-3 border border-n-400 border-t-shiroi-gold rounded-full animate-spin" />
             Uploading...
           </span>
         )}
@@ -193,11 +193,11 @@ export function ProgressBar({ completed, total }: { completed: number; total: nu
     <div className="flex items-center gap-3 mb-4">
       <div className="flex-1 h-2 bg-n-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-[#00B050] rounded-full transition-all duration-300"
+          className="h-full bg-shiroi-gold rounded-full transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs font-medium text-[#7C818E] whitespace-nowrap">
+      <span className="text-xs font-medium text-n-500 whitespace-nowrap">
         {pct}% complete ({completed}/{total})
       </span>
     </div>

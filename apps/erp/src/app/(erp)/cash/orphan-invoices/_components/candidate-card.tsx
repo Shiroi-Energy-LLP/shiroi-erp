@@ -26,26 +26,26 @@ export function CandidateCard({ project }: Props) {
         <div className="flex justify-between items-start">
           <div>
             <p className="text-xs font-bold">{project.customer_name}</p>
-            <p className="text-[10px] text-[#7C818E]">{project.project_number}</p>
+            <p className="text-[10px] text-n-500">{project.project_number}</p>
           </div>
           <Badge variant="outline" className="text-[9px]">{project.status}</Badge>
         </div>
-        <div className="text-[10px] text-[#7C818E]">
+        <div className="text-[10px] text-n-500">
           {project.system_size_kwp ? `${project.system_size_kwp} kWp` : '—'} · {project.system_type ?? '—'}
         </div>
         <div className="grid grid-cols-2 gap-1 text-[10px]">
-          <div><span className="text-[#7C818E]">Contracted</span> <span className="font-mono">{shortINR(Number(project.contracted_value))}</span></div>
-          <div><span className="text-[#7C818E]">Invoiced</span> <span className="font-mono">{shortINR(Number(project.total_invoiced))}</span></div>
-          <div><span className="text-[#7C818E]">Received</span> <span className="font-mono">{shortINR(Number(project.total_received))}</span></div>
+          <div><span className="text-n-500">Contracted</span> <span className="font-mono">{shortINR(Number(project.contracted_value))}</span></div>
+          <div><span className="text-n-500">Invoiced</span> <span className="font-mono">{shortINR(Number(project.total_invoiced))}</span></div>
+          <div><span className="text-n-500">Received</span> <span className="font-mono">{shortINR(Number(project.total_received))}</span></div>
           <div>
-            <span className="text-[#7C818E]">Net</span>{' '}
+            <span className="text-n-500">Net</span>{' '}
             <span className={`font-mono font-bold ${net < 0 ? 'text-red-600' : 'text-green-700'}`}>
               {shortINR(net)}
             </span>
           </div>
         </div>
         {project.actual_start_date && (
-          <p className="text-[9px] text-[#7C818E]">
+          <p className="text-[9px] text-n-500">
             Started {formatDate(project.actual_start_date)}
             {project.actual_end_date && ` · Completed ${formatDate(project.actual_end_date)}`}
           </p>

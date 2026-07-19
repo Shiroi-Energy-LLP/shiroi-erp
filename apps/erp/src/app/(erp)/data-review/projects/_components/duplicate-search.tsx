@@ -90,8 +90,8 @@ export function DuplicateSearch({
         {/* Header */}
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-base font-semibold text-[#1A1D24]">Mark as Duplicate</h2>
-            <p className="text-xs text-[#7C818E]">
+            <h2 className="text-base font-semibold text-n-950">Mark as Duplicate</h2>
+            <p className="text-xs text-n-500">
               Searching for the canonical project that <span className="font-mono">{currentProjectNumber}</span> duplicates.
               The lower-scored project will be soft-deleted.
             </p>
@@ -99,7 +99,7 @@ export function DuplicateSearch({
           <button
             type="button"
             onClick={onClose}
-            className="ml-3 text-[#7C818E] hover:text-[#1A1D24]"
+            className="ml-3 text-n-500 hover:text-n-950"
           >
             <X className="h-5 w-5" />
           </button>
@@ -114,23 +114,23 @@ export function DuplicateSearch({
             className="pr-8"
           />
           {searching && (
-            <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-[#7C818E]" />
+            <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-n-500" />
           )}
         </div>
 
         {/* Results list */}
         {!selected && results.length > 0 && (
-          <ul className="mb-4 max-h-48 overflow-y-auto rounded-md border border-[#E5E7EB]">
+          <ul className="mb-4 max-h-48 overflow-y-auto rounded-md border border-n-200">
             {results.map((r) => (
               <li key={r.id}>
                 <button
                   type="button"
                   onClick={() => { setSelected(r); setResults([]); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#F9FAFB] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-n-050 transition-colors"
                 >
-                  <span className="font-mono text-xs text-[#7C818E] shrink-0">{r.project_number}</span>
-                  <span className="flex-1 truncate text-[#1A1D24]">{r.customer_name}</span>
-                  <span className="text-xs text-[#7C818E]">{r.system_size_kwp} kWp</span>
+                  <span className="font-mono text-xs text-n-500 shrink-0">{r.project_number}</span>
+                  <span className="flex-1 truncate text-n-950">{r.customer_name}</span>
+                  <span className="text-xs text-n-500">{r.system_size_kwp} kWp</span>
                 </button>
               </li>
             ))}
@@ -139,8 +139,8 @@ export function DuplicateSearch({
 
         {/* Comparison panel */}
         {selected && (
-          <div className="mb-4 rounded-md border border-[#E5E7EB] p-3 space-y-2">
-            <h3 className="text-xs font-semibold text-[#7C818E] uppercase tracking-wide">Score comparison</h3>
+          <div className="mb-4 rounded-md border border-n-200 p-3 space-y-2">
+            <h3 className="text-xs font-semibold text-n-500 uppercase tracking-wide">Score comparison</h3>
             <div className="grid grid-cols-2 gap-3">
               <ScoreCard
                 label={currentProjectNumber}
@@ -164,7 +164,7 @@ export function DuplicateSearch({
             <button
               type="button"
               onClick={() => { setSelected(null); setQuery(''); setScoreB(null); }}
-              className="text-xs text-[#7C818E] underline"
+              className="text-xs text-n-500 underline"
             >
               Change selection
             </button>
@@ -174,11 +174,11 @@ export function DuplicateSearch({
         {/* Notes */}
         {selected && (
           <div className="mb-4">
-            <label className="text-xs font-medium text-[#7C818E] mb-1 block">
+            <label className="text-xs font-medium text-n-500 mb-1 block">
               Reason for merging (required)
             </label>
             <textarea
-              className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1A1D24]"
+              className="w-full rounded-md border border-n-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-n-950"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -218,13 +218,13 @@ function ScoreCard({
   isCanonical: boolean;
 }) {
   return (
-    <div className={`rounded-md border p-2 ${isCanonical ? 'border-green-400 bg-green-50' : 'border-[#E5E7EB] bg-[#F9FAFB]'}`}>
-      <p className="font-mono text-xs font-semibold text-[#1A1D24]">{label}</p>
-      <p className="text-[10px] text-[#7C818E] truncate">{subtitle}</p>
-      <p className="text-lg font-bold text-[#1A1D24] mt-1">
+    <div className={`rounded-md border p-2 ${isCanonical ? 'border-green-400 bg-green-50' : 'border-n-200 bg-n-050'}`}>
+      <p className="font-mono text-xs font-semibold text-n-950">{label}</p>
+      <p className="text-[10px] text-n-500 truncate">{subtitle}</p>
+      <p className="text-lg font-bold text-n-950 mt-1">
         {score === null ? <Loader2 className="h-4 w-4 animate-spin" /> : score}
       </p>
-      <p className="text-[10px] text-[#7C818E]">data-richness score</p>
+      <p className="text-[10px] text-n-500">data-richness score</p>
     </div>
   );
 }

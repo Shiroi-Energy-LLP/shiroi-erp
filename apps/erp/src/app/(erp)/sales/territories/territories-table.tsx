@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   Badge,
   Button,
@@ -411,7 +412,14 @@ export function TerritoriesTable({ territories, employees }: TerritoriesTablePro
                     key={t.id}
                     className={t.active ? undefined : 'opacity-50'}
                   >
-                    <TableCell className="font-medium">{t.territory_name}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/sales/territories/${t.id}`}
+                        className="text-shiroi-gold-dark hover:underline"
+                      >
+                        {t.territory_name}
+                      </Link>
+                    </TableCell>
                     <TableCell>
                       <CityChips cities={t.cities} />
                     </TableCell>

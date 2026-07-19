@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getNetMeteringApplication, getLiaisonDocuments, getLiaisonObjections } from '@/lib/liaison-queries';
 import { NetMeteringDetail } from '@/components/liaison/net-metering-detail';
+import { AwaitingClientToggle } from '@/components/liaison/awaiting-client-toggle';
+import { ObjectionForm } from '@/components/liaison/objection-form';
 import { formatDate } from '@repo/ui/formatters';
 import {
   Card, CardHeader, CardTitle, CardContent, Badge, Button,
@@ -31,18 +33,40 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/liaison/net-metering" className="text-sm text-[#00B050] hover:underline">&larr; Back to Net Metering</Link>
-          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">
+          <Link href="/liaison/net-metering" className="text-sm text-shiroi-gold-dark hover:underline">&larr; Back to Net Metering</Link>
+          <h1 className="text-2xl font-bold text-n-950 mt-1">
             {project?.project_number} — {project?.customer_name}
           </h1>
-          <p className="text-sm text-[#7C818E]">
+          <p className="text-sm text-n-500">
             {project?.system_size_kwp} kWp {project?.system_type?.replace(/_/g, ' ')} · {project?.site_city}
           </p>
         </div>
-        <Link href={`/projects/${projectId}`}>
-          <Button variant="outline" size="sm">View Project</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <AwaitingClientToggle
+            projectId={projectId}
+            isAwaiting={Boolean((application as any).awaiting_client_details)}
+            currentNote={(application as any).awaiting_client_note ?? null}
+          />
+          <Link href={`/projects/${projectId}`}>
+            <Button variant="outline" size="sm">View Project</Button>
+          </Link>
+        </div>
       </div>
+
+      {/* Awaiting-client banner (visible when flag is on) */}
+      {(application as any).awaiting_client_details && (
+        <div className="flex items-start gap-2 rounded-md border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-sm text-[#92400E]">
+          <span className="font-medium">Awaiting client</span>
+          {(application as any).awaiting_client_note && (
+            <span className="text-[#92400E]/80">— {(application as any).awaiting_client_note}</span>
+          )}
+          {(application as any).awaiting_client_since && (
+            <span className="ml-auto text-xs text-[#92400E]/70">
+              Since {formatDate((application as any).awaiting_client_since)}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Editable status panels */}
       <NetMeteringDetail
@@ -58,7 +82,7 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
         </CardHeader>
         <CardContent>
           {documents.length === 0 ? (
-            <p className="text-sm text-[#9CA0AB] text-center py-4">No documents uploaded yet.</p>
+            <p className="text-sm text-n-400 text-center py-4">No documents uploaded yet.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -95,19 +119,19 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
         </CardHeader>
         <CardContent>
           {objections.length === 0 ? (
-            <p className="text-sm text-[#9CA0AB] text-center py-4">No objections raised.</p>
+            <p className="text-sm text-n-400 text-center py-4">No objections raised.</p>
           ) : (
             <div className="space-y-3">
               {objections.map((obj: any) => (
-                <div key={obj.id} className="rounded-md border border-[#DFE2E8] p-3 text-sm space-y-1">
+                <div key={obj.id} className="rounded-md border border-n-200 p-3 text-sm space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-medium capitalize">{obj.objection_source} — {obj.objection_type?.replace(/_/g, ' ')}</span>
                     <Badge variant={obj.resolved ? 'success' : 'error'} className="capitalize">
                       {obj.resolved ? 'Resolved' : 'Open'}
                     </Badge>
                   </div>
-                  <p className="text-[#3F424D]">{obj.objection_description}</p>
-                  <p className="text-xs text-[#9CA0AB]">
+                  <p className="text-n-700">{obj.objection_description}</p>
+                  <p className="text-xs text-n-400">
                     Raised: {formatDate(obj.objection_date)}
                     {obj.resolved_date && ` · Resolved: ${formatDate(obj.resolved_date)}`}
                     {obj.days_open != null && ` · ${obj.days_open} days`}
@@ -116,6 +140,7 @@ export default async function NetMeteringDetailPage({ params }: PageProps) {
               ))}
             </div>
           )}
+          <ObjectionForm projectId={projectId} netMeteringId={(application as any).id} />
         </CardContent>
       </Card>
     </div>

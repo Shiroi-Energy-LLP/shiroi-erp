@@ -8,6 +8,7 @@
  * the 500-LOC rule.
  */
 import { formatINR } from '@repo/ui/formatters';
+import { SYSTEM_TYPE_OPTIONS } from '@/lib/label-constants';
 import type { Database } from '@repo/types/database';
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -66,11 +67,7 @@ export const STEPS = [
   'Review',
 ] as const;
 
-export const SYSTEM_TYPES: { value: SystemType; label: string }[] = [
-  { value: 'on_grid', label: 'On Grid' },
-  { value: 'hybrid', label: 'Hybrid' },
-  { value: 'off_grid', label: 'Off Grid' },
-];
+export const SYSTEM_TYPES = SYSTEM_TYPE_OPTIONS;
 
 export const SCOPE_OWNERS: { value: ScopeOwner; label: string }[] = [
   { value: 'shiroi', label: 'Shiroi' },

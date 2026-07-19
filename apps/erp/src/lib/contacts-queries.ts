@@ -143,6 +143,17 @@ export async function searchContacts(query: string) {
 
 // ── Companies ──
 
+export async function getCompanyOptions(): Promise<{ id: string; name: string }[]> {
+  const op = '[getCompanyOptions]';
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('companies').select('id, name').order('name');
+  if (error) {
+    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load companies: ${error.message}`);
+  }
+  return data ?? [];
+}
+
 export interface CompanyFilters {
   search?: string;
   segment?: string;

@@ -98,6 +98,69 @@ export async function createLead(
 }
 
 /**
+ * Rename a lead (correct a mis-typed customer name) from the lead detail page.
+ *
+ * Single-lead UPDATE — relies on the `leads` UPDATE RLS (founder,
+ * marketing_manager, sales_engineer per mig 088) for authorization, plus the
+ * mandatory zero-rows guard: Supabase returns success on RLS-blocked UPDATEs,
+ * so we `.select('id')` and treat an empty result as "Update blocked"
+ * (silent-RLS-failure footgun documented in docs/modules/sales.md).
+ */
+export async function renameLead(
+  leadId: string,
+  newName: string,
+): Promise<ActionResult<void>> {
+  const op = '[renameLead]';
+  try {
+    if (!leadId) return err('Missing lead ID');
+
+    const trimmed = newName.trim();
+    if (!trimmed) return err('Name cannot be empty');
+    if (trimmed.length > 150) return err('Name is too long (max 150 characters)');
+
+    const supabase = await createClient();
+
+    const { data: updatedRows, error } = await supabase
+      .from('leads')
+      .update({ customer_name: trimmed, updated_at: new Date().toISOString() })
+      .eq('id', leadId)
+      .select('id');
+
+    if (error) {
+      console.error(`${op} Failed`, {
+        code: error.code,
+        message: error.message,
+        leadId,
+        timestamp: new Date().toISOString(),
+      });
+      return err(error.message, error.code);
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      console.error(`${op} 0 rows affected — RLS blocked or lead missing`, {
+        leadId,
+        timestamp: new Date().toISOString(),
+      });
+      return err('Update blocked — permission denied or lead missing', 'NO_ROWS_AFFECTED');
+    }
+
+    // Propagate the corrected name to the detail header, breadcrumb, and both list tables.
+    revalidatePath(`/sales/${leadId}`);
+    revalidatePath(`/leads/${leadId}`);
+    revalidatePath('/sales');
+    revalidatePath('/leads');
+    return ok(undefined);
+  } catch (e) {
+    console.error(`${op} threw`, {
+      error: e instanceof Error ? e.message : String(e),
+      leadId,
+      timestamp: new Date().toISOString(),
+    });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+/**
  * Tiny invalidation helper called from client components (e.g. status-change.tsx)
  * that write lead.status directly via the browser Supabase client.
  * Those components cannot call revalidateTag themselves — so they call this
@@ -321,6 +384,68 @@ export async function mergeLeads(
 
   revalidatePath('/leads');
   return ok(null);
+}
+
+/**
+ * Update the linked company and project name on a lead.
+ *
+ * Uses the silent-RLS zero-rows guard: Supabase returns success on
+ * RLS-blocked UPDATEs, so we `.select('id')` and treat an empty result
+ * as "Update blocked" (see renameLead for the same pattern).
+ */
+export async function updateLeadCompanyProject(
+  leadId: string,
+  input: { companyId: string | null; projectName: string | null },
+): Promise<ActionResult<void>> {
+  const op = '[updateLeadCompanyProject]';
+  try {
+    if (!leadId) return err('Missing lead ID');
+
+    const trimmedProjectName = input.projectName?.trim() || null;
+
+    const supabase = await createClient();
+
+    const { data: updatedRows, error } = await supabase
+      .from('leads')
+      .update({
+        company_id: input.companyId,
+        project_name: trimmedProjectName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', leadId)
+      .select('id');
+
+    if (error) {
+      console.error(`${op} Failed`, {
+        code: error.code,
+        message: error.message,
+        leadId,
+        timestamp: new Date().toISOString(),
+      });
+      return err(error.message, error.code);
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      console.error(`${op} 0 rows affected — RLS blocked or lead missing`, {
+        leadId,
+        timestamp: new Date().toISOString(),
+      });
+      return err('Update blocked — permission denied or row missing', 'NO_ROWS_AFFECTED');
+    }
+
+    revalidatePath(`/sales/${leadId}`);
+    revalidatePath(`/leads/${leadId}`);
+    revalidatePath('/sales');
+    revalidatePath('/leads');
+    return ok(undefined);
+  } catch (e) {
+    console.error(`${op} threw`, {
+      error: e instanceof Error ? e.message : String(e),
+      leadId,
+      timestamp: new Date().toISOString(),
+    });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
 }
 
 export async function archiveLead(leadId: string): Promise<ActionResult<null>> {

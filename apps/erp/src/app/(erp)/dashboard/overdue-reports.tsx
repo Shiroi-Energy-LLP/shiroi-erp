@@ -57,7 +57,7 @@ export function OverdueReports({ projects }: { projects: OverdueProject[] }) {
             {projects.map((p) => (
               <TableRow key={p.id}>
                 <TableCell>
-                  <Link href={`/projects/${p.id}`} className="text-[#00B050] hover:underline font-medium">
+                  <Link href={`/projects/${p.id}`} className="text-shiroi-gold-dark hover:underline font-medium">
                     {p.project_number}
                   </Link>
                 </TableCell>

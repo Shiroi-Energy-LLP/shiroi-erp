@@ -8,7 +8,7 @@ import type { Database } from '@repo/types/database';
 // ═══════════════════════════════════════════════════════════════════════
 
 type CredRow = Database['public']['Tables']['plant_monitoring_credentials']['Row'];
-type ProjectLite = { id: string; customer_name: string; project_number: string | null };
+type ProjectLite = { id: string; customer_name: string; project_number: string | null; project_name?: string | null };
 
 // Note: post-mig-158 the table stores password_encrypted (BYTEA) but the
 // search RPC returns a decrypted plaintext `password` field for UI display.
@@ -123,7 +123,7 @@ export async function getProjectsWithCredentials(): Promise<ProjectLite[]> {
 
   const { data, error } = await supabase
     .from('plant_monitoring_credentials')
-    .select('project_id, projects!plant_monitoring_credentials_project_id_fkey(id, customer_name, project_number)')
+    .select('project_id, projects!plant_monitoring_credentials_project_id_fkey(id, customer_name, project_number, project_name)')
     .is('deleted_at', null)
     .not('project_id', 'is', null)
     .limit(500)
@@ -144,6 +144,7 @@ export async function getProjectsWithCredentials(): Promise<ProjectLite[]> {
         id: p.id,
         customer_name: p.customer_name ?? '',
         project_number: p.project_number ?? null,
+        project_name: p.project_name ?? null,
       });
     }
   }
@@ -160,7 +161,7 @@ export async function getAllActiveProjects(): Promise<ProjectLite[]> {
 
   const { data, error } = await supabase
     .from('projects')
-    .select('id, customer_name, project_number')
+    .select('id, customer_name, project_number, project_name')
     .order('customer_name', { ascending: true })
     .limit(1000);
 
@@ -173,6 +174,7 @@ export async function getAllActiveProjects(): Promise<ProjectLite[]> {
     id: p.id,
     customer_name: p.customer_name ?? '',
     project_number: p.project_number ?? null,
+    project_name: p.project_name ?? null,
   }));
 }
 

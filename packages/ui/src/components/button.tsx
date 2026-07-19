@@ -8,12 +8,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-shiroi-green text-white hover:bg-shiroi-green-hover',
+        default: 'bg-shiroi-gold text-shiroi-ink hover:bg-shiroi-gold-hover',
         destructive: 'bg-status-error-bg text-status-error-text border border-status-error-border hover:bg-status-error-hover',
-        outline: 'border border-shiroi-green border-[1.5px] bg-white text-shiroi-green hover:bg-status-success-bg',
+        outline: 'border border-shiroi-gold border-[1.5px] bg-white text-shiroi-gold-dark hover:bg-shiroi-solar-bg',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'border border-n-200 bg-white text-n-700 hover:bg-n-050 hover:border-n-300',
-        link: 'text-shiroi-green-dark underline-offset-4 hover:underline',
+        link: 'text-shiroi-gold-dark underline-offset-4 hover:underline',
         solar: 'bg-shiroi-solar text-n-950 hover:bg-[#E5A825]',
       },
       size: {

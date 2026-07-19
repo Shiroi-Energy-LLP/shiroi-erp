@@ -4,7 +4,6 @@ import { getLeads, getSalesEngineers } from '@/lib/leads-queries';
 import type { LeadFilters } from '@/lib/leads-queries';
 import {
   getLeadStageCounts,
-  getLeadsClosingBetween,
   getPipelineCloseWindow,
 } from '@/lib/leads-pipeline-queries';
 import { getInternalReferrers, getReferralPartners, getExternalPartnerIds } from '@/lib/partners-queries';
@@ -13,7 +12,8 @@ import { LeadsTableWrapper } from '@/components/leads/leads-table-wrapper';
 import { LeadStageNav } from '@/components/leads/lead-stage-nav';
 import { PipelineSummary } from '@/components/leads/pipeline-summary';
 import { getDefaultColumns } from '@/components/data-table/column-config';
-import { Button, Card, CardContent, Eyebrow } from '@repo/ui';
+import { Button, Eyebrow } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
@@ -101,26 +101,13 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
   const referrerParam = params.referrer;
   const referredByParam = params.referredBy === 'clients' ? 'clients' as const : undefined;
 
-  // Stage 1 — parallel fetches that don't depend on each other
-  const [
-    views,
-    stageCounts,
-    closingThisWeek,
-    employees,
-    internalReferrers,
-    externalReferrers,
-    closingThisWeekWindow,
-    closingThisMonthWindow,
-    externalPartnerIds,
-  ] = await Promise.all([
-    getMyViews('leads'),
-    getLeadStageCounts(),
-    getLeadsClosingBetween(weekStart, weekEnd),
-    getSalesEngineers(),
+  // Pre-resolve the two fetches getLeads may depend on. internalReferrers is
+  // needed for the referrer dropdown regardless; externalPartnerIds only for the
+  // "referred by clients" filter. Resolving them first lets getLeads (the heaviest
+  // query) run in the SAME parallel batch as the summary fetches below, instead of
+  // waterfalling sequentially after all of them.
+  const [internalReferrers, externalPartnerIds] = await Promise.all([
     getInternalReferrers(),
-    getReferralPartners(),
-    getPipelineCloseWindow(weekStart, weekEnd),
-    getPipelineCloseWindow(monthStart, monthEnd),
     referredByParam === 'clients' ? getExternalPartnerIds() : Promise.resolve([] as string[]),
   ]);
 
@@ -154,8 +141,27 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     dir: (params.dir as 'asc' | 'desc') || undefined,
   };
 
-  // Stage 2 — getLeads (may depend on internalReferrers for referrerIds)
-  const result = await getLeads(leadsFilters);
+  // Main batch — getLeads (the heaviest query) now runs in parallel with the
+  // summary/display fetches rather than waterfalling after them.
+  // (The redundant getLeadsClosingBetween scan was dropped: the "closing this week"
+  // count comes from closingThisWeekWindow.leadCount, which the week RPC returns.)
+  const [
+    views,
+    stageCounts,
+    employees,
+    externalReferrers,
+    closingThisWeekWindow,
+    closingThisMonthWindow,
+    result,
+  ] = await Promise.all([
+    getMyViews('leads'),
+    getLeadStageCounts(),
+    getSalesEngineers(),
+    getReferralPartners(),
+    getPipelineCloseWindow(weekStart, weekEnd),
+    getPipelineCloseWindow(monthStart, monthEnd),
+    getLeads(leadsFilters),
+  ]);
 
   const currentFilters: Record<string, string> = {};
   if (params.status) currentFilters.status = params.status;
@@ -191,32 +197,109 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
 
   // Build referrer CELL-EDIT dropdown options (used by the inline-edit select
   // in the Referrer column on each row). No sentinel values — just a "no
-  // referrer" empty choice, then VIP-prefixed internal partners, then
+  // referrer" empty choice, then MGMT REF-prefixed internal partners, then
   // external ones. Translates to channel_partner_id on save in the wrapper.
   const partnerCellOptions: { value: string; label: string }[] = [
     { value: '', label: '— No referrer —' },
-    ...internalReferrers.map((r) => ({ value: r.id, label: `[VIP] ${r.partner_name}` })),
+    ...internalReferrers.map((r) => ({ value: r.id, label: `[MGMT REF] ${r.partner_name}` })),
     ...externalReferrers.map((r) => ({ value: r.id, label: r.partner_name })),
   ];
 
   return (
-    <div className="space-y-4">
-      <ProposalGateBanner />
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">SALES PIPELINE</Eyebrow>
-          <h1 className="text-2xl font-bold text-n-900">Sales</h1>
-        </div>
-        <div className="flex items-center gap-2">
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar
+              basePath="/sales"
+              filterParams={['search', 'source', 'segment', 'assignedTo', 'status', 'referrer', 'referredBy', 'kwpMin', 'kwpMax', 'closeFrom', 'closeTo']}
+            >
+              {/* C1: Multi-status filter */}
+              <FilterMultiSelect
+                paramName="status"
+                label="Status"
+                options={STATUS_FILTER_OPTIONS}
+              />
+
+              <FilterSelect paramName="source" className="w-36 h-9 text-sm">
+                <option value="">All Sources</option>
+                <option value="referral">Referral</option>
+                <option value="website">Website</option>
+                <option value="builder_tie_up">Builder Tie-up</option>
+                <option value="channel_partner">Channel Partner</option>
+                <option value="cold_call">Cold Call</option>
+                <option value="exhibition">Exhibition</option>
+                <option value="social_media">Social Media</option>
+                <option value="walkin">Walk-in</option>
+              </FilterSelect>
+
+              <FilterSelect paramName="segment" className="w-36 h-9 text-sm">
+                <option value="">All Segments</option>
+                <option value="residential">Residential</option>
+                <option value="commercial">Commercial</option>
+                <option value="industrial">Industrial</option>
+              </FilterSelect>
+
+              {/* C4: Referrer filter */}
+              <FilterSelect paramName="referrer" className="w-48 h-9 text-sm">
+                {referrerOptions.map((opt) => (
+                  <option
+                    key={opt.value || 'all'}
+                    value={opt.value}
+                    disabled={opt.disabled}
+                  >
+                    {opt.label}
+                  </option>
+                ))}
+              </FilterSelect>
+
+              {/* C2: "Referred by Clients" quick-filter chip */}
+              <FilterSelect paramName="referredBy" className="w-44 h-9 text-sm">
+                <option value="">All Referrals</option>
+                <option value="clients">Referred by Clients</option>
+              </FilterSelect>
+
+              {/* C2: kWp range filter */}
+              <FilterRange
+                label="kWp"
+                minParam="kwpMin"
+                maxParam="kwpMax"
+                type="number"
+                minPlaceholder="Min"
+                maxPlaceholder="Max"
+              />
+
+              {/* C3: Closing date range filter */}
+              <FilterRange
+                label="Closing"
+                minParam="closeFrom"
+                maxParam="closeTo"
+                type="date"
+              />
+
+              <SearchInput
+                placeholder="Search name or phone..."
+                className="w-56 h-9 text-sm"
+              />
+            </FilterBar>
+          </div>
           <Link href="/sales/new">
             <Button>New Lead</Button>
           </Link>
         </div>
+      }
+    >
+      <ProposalGateBanner />
+
+      {/* Title (scrolls away) */}
+      <div>
+        <Eyebrow className="mb-1">SALES PIPELINE</Eyebrow>
+        <h1 className="text-2xl font-bold text-n-900">Sales</h1>
       </div>
 
       <PipelineSummary
         stageCounts={stageCounts}
-        closingThisWeekCount={closingThisWeek.length}
+        closingThisWeekCount={closingThisWeekWindow.leadCount}
         weekStart={weekStart}
         weekEnd={weekEnd}
         monthStart={monthStart}
@@ -230,89 +313,12 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
         basePath="/sales"
       />
 
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar
-            basePath="/sales"
-            filterParams={['search', 'source', 'segment', 'assignedTo', 'status', 'referrer', 'referredBy', 'kwpMin', 'kwpMax', 'closeFrom', 'closeTo']}
-          >
-            {/* C1: Multi-status filter */}
-            <FilterMultiSelect
-              paramName="status"
-              label="Status"
-              options={STATUS_FILTER_OPTIONS}
-            />
-
-            <FilterSelect paramName="source" className="w-36 h-9 text-sm">
-              <option value="">All Sources</option>
-              <option value="referral">Referral</option>
-              <option value="website">Website</option>
-              <option value="builder_tie_up">Builder Tie-up</option>
-              <option value="channel_partner">Channel Partner</option>
-              <option value="cold_call">Cold Call</option>
-              <option value="exhibition">Exhibition</option>
-              <option value="social_media">Social Media</option>
-              <option value="walkin">Walk-in</option>
-            </FilterSelect>
-
-            <FilterSelect paramName="segment" className="w-36 h-9 text-sm">
-              <option value="">All Segments</option>
-              <option value="residential">Residential</option>
-              <option value="commercial">Commercial</option>
-              <option value="industrial">Industrial</option>
-            </FilterSelect>
-
-            {/* C4: Referrer filter */}
-            <FilterSelect paramName="referrer" className="w-48 h-9 text-sm">
-              {referrerOptions.map((opt) => (
-                <option
-                  key={opt.value || 'all'}
-                  value={opt.value}
-                  disabled={opt.disabled}
-                >
-                  {opt.label}
-                </option>
-              ))}
-            </FilterSelect>
-
-            {/* C2: "Referred by Clients" quick-filter chip */}
-            <FilterSelect paramName="referredBy" className="w-44 h-9 text-sm">
-              <option value="">All Referrals</option>
-              <option value="clients">Referred by Clients</option>
-            </FilterSelect>
-
-            {/* C2: kWp range filter */}
-            <FilterRange
-              label="kWp"
-              minParam="kwpMin"
-              maxParam="kwpMax"
-              type="number"
-              minPlaceholder="Min"
-              maxPlaceholder="Max"
-            />
-
-            {/* C3: Closing date range filter */}
-            <FilterRange
-              label="Closing"
-              minParam="closeFrom"
-              maxParam="closeTo"
-              type="date"
-            />
-
-            <SearchInput
-              placeholder="Search name or phone..."
-              className="w-56 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
-
       {(closingParam || referredByParam) && (
         <div className="flex items-center gap-2">
           {closingParam && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-shiroi-green/40 bg-shiroi-green/10 px-3 py-1 text-xs font-medium text-shiroi-green">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-shiroi-gold/40 bg-shiroi-gold/10 px-3 py-1 text-xs font-medium text-shiroi-gold-dark">
               {closingParam === 'this_week' ? 'Closing this week' : 'Closing this month'}
-              <Link href="/sales" className="ml-1 text-shiroi-green/70 hover:text-shiroi-green" aria-label="Clear filter">
+              <Link href="/sales" className="ml-1 text-shiroi-gold-dark/70 hover:text-shiroi-gold-dark" aria-label="Clear filter">
                 ×
               </Link>
             </span>
@@ -343,6 +349,6 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
         employees={employees}
         partnerOptions={partnerCellOptions}
       />
-    </div>
+    </ListPageShell>
   );
 }

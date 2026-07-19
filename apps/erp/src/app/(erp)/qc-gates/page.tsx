@@ -1,4 +1,4 @@
-import { createClient } from '@repo/supabase/server';
+import { listQCGateInspections } from '@/lib/qc-gates-queries';
 import { formatDate } from '@repo/ui/formatters';
 import {
   Card,
@@ -16,22 +16,7 @@ import {
 import { FileCheck } from 'lucide-react';
 
 export default async function QCGatesPage() {
-  const op = '[QCGatesPage]';
-  const supabase = await createClient();
-
-  const { data: inspections, error } = await supabase
-    .from('qc_gate_inspections')
-    .select(
-      '*, projects!qc_gate_inspections_project_id_fkey(project_number, customer_name), inspector:employees!qc_gate_inspections_inspected_by_fkey(full_name)',
-    )
-    .order('inspection_date', { ascending: false })
-    .limit(100);
-
-  if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
-  }
-
-  const rows = inspections ?? [];
+  const rows = await listQCGateInspections();
 
   function resultVariant(result: string | null): 'default' | 'secondary' | 'destructive' | 'outline' {
     switch (result) {
@@ -46,7 +31,7 @@ export default async function QCGatesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Eyebrow className="mb-1">QUALITY CONTROL</Eyebrow>
-        <h1 className="text-2xl font-bold text-[#1A1D24]">QC Gate Inspections</h1>
+        <h1 className="text-2xl font-bold text-n-950">QC Gate Inspections</h1>
       </div>
 
       <Card>

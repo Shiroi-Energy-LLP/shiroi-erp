@@ -69,7 +69,7 @@ export function LeadStageNav({ stageCounts, basePath }: LeadStageNavProps) {
           href={base}
           className={`whitespace-nowrap px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             !activeStatus && !isArchived
-              ? 'border-shiroi-green text-shiroi-green'
+              ? 'border-shiroi-gold text-shiroi-gold-dark'
               : 'border-transparent text-n-500 hover:text-n-900 hover:border-n-300'
           }`}
         >
@@ -92,7 +92,7 @@ export function LeadStageNav({ stageCounts, basePath }: LeadStageNavProps) {
               href={`${base}?status=${status}`}
               className={`whitespace-nowrap px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${sectionBorder} ${
                 isActive
-                  ? 'border-b-shiroi-green text-shiroi-green'
+                  ? 'border-b-shiroi-gold text-shiroi-gold-dark'
                   : 'border-b-transparent text-n-500 hover:text-n-900 hover:border-b-n-300'
               }`}
               title={section === 'A' ? 'Path A (Quick)' : section === 'B' ? 'Path B (Detailed)' : undefined}
@@ -101,7 +101,7 @@ export function LeadStageNav({ stageCounts, basePath }: LeadStageNavProps) {
               {count > 0 && (
                 <span
                   className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-shiroi-green/10 text-shiroi-green' : 'bg-n-100 text-n-500'
+                    isActive ? 'bg-shiroi-gold/10 text-shiroi-gold-dark' : 'bg-n-100 text-n-500'
                   }`}
                 >
                   {count}
@@ -116,7 +116,7 @@ export function LeadStageNav({ stageCounts, basePath }: LeadStageNavProps) {
           href={`${base}?archived=true`}
           className={`whitespace-nowrap px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             isArchived
-              ? 'border-shiroi-green text-shiroi-green'
+              ? 'border-shiroi-gold text-shiroi-gold-dark'
               : 'border-transparent text-n-500 hover:text-n-900 hover:border-n-300'
           }`}
         >

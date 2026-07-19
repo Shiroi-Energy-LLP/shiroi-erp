@@ -12,7 +12,7 @@ HR owns the employee lifecycle from auth-user creation through onboarding, leave
 - `/hr` — founder/hr_manager dashboard. KPI cards (active employees, blocking-cert warnings, total). Employee table with cert-expiry badge. Link-out to Payroll Export.
 - `/hr/employees` — employee list with `New Employee` button + `DeactivateEmployeeButton` per row (soft deactivate via `is_active = false` + ban auth user).
 - `/hr/employees/new` — auth user + profile + employee triple-insert flow (founder / hr_manager only). Generates 12-char temp password; shown once to the creator.
-- `/hr/[id]` — single employee detail page (certifications + leave history; compensation gated by `getEmployeeCompensation` role check).
+- `/hr/[id]` — single employee detail page (certifications + leave history; compensation gated by `getEmployeeCompensation` role check — founder / hr_manager **or self**; the self-check resolves the caller's `employees.id` via `getCurrentEmployeeId()`, fixed 2026-06-19 from a dead `profiles.id === employeeId` comparison that had silently disabled self-view).
 - `/hr/leave` — leave management dashboard (C5). Pending approvals table with Approve/Reject buttons; team calendar for current month. HR/founder only.
 - `/hr/leave/all` — full leave request history (200 most recent, all statuses).
 - `/hr/employees/[id]` — full employee profile (C6). Personal info, contact, bank/identity (sensitive fields masked with reveal toggle), leave balances, compensation. HR/founder only.

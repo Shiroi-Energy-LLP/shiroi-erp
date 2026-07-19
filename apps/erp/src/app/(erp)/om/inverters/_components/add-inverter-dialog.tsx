@@ -7,7 +7,7 @@ import {
   Button, Input, Label,
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
-import { createInverter } from '@/lib/inverters-actions';
+import { createInverter, listProjectsForInverterDialog } from '@/lib/inverters-actions';
 import { ProjectCombobox } from '@/components/forms/project-combobox';
 import type { InverterMonitoringCredentialRow } from '@/lib/inverters-queries';
 
@@ -30,20 +30,24 @@ interface ProjectOpt {
   id: string;
   customer_name: string;
   project_number: string | null;
+  project_name?: string | null;
 }
 
 interface AddInverterDialogProps {
-  projects: ProjectOpt[];
   monitoringCredentials: InverterMonitoringCredentialRow[];
 }
 
-export function AddInverterDialog({ projects, monitoringCredentials }: AddInverterDialogProps) {
+export function AddInverterDialog({ monitoringCredentials }: AddInverterDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [projectId, setProjectId] = React.useState('');
   const [brand, setBrand] = React.useState('');
+  // Perf [G5]: the project list is fetched on first dialog-open, not on every
+  // /om/inverters render (was ~1,000 rows eagerly loaded with the dialog closed).
+  const [projects, setProjects] = React.useState<ProjectOpt[]>([]);
+  const [projectsLoading, setProjectsLoading] = React.useState(false);
 
   // Filter monitoring credentials by selected brand
   const filteredCredentials = React.useMemo(
@@ -53,7 +57,16 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
 
   function handleOpenChange(val: boolean) {
     setOpen(val);
-    if (!val) {
+    if (val) {
+      // Lazy-load the project list the first time the dialog opens.
+      if (projects.length === 0 && !projectsLoading) {
+        setProjectsLoading(true);
+        listProjectsForInverterDialog()
+          .then(setProjects)
+          .catch(() => setError('Failed to load projects. Close and reopen to retry.'))
+          .finally(() => setProjectsLoading(false));
+      }
+    } else {
       setProjectId('');
       setBrand('');
       setError(null);
@@ -118,7 +131,7 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
               value={projectId}
               onChange={setProjectId}
               name="project_id"
-              placeholder="Search by customer name or project number…"
+              placeholder={projectsLoading ? 'Loading projects…' : 'Search by customer name or project number…'}
               className="w-full"
             />
           </div>
@@ -132,7 +145,7 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
               required
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+              className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
             >
               <option value="">Select brand…</option>
               {INVERTER_BRANDS.map((b) => (
@@ -204,7 +217,7 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
               <select
                 id="monitoring_credentials_id"
                 name="monitoring_credentials_id"
-                className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-green"
+                className="w-full h-9 rounded-md border border-n-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-shiroi-gold"
               >
                 <option value="">None</option>
                 {filteredCredentials.map((c) => (
@@ -284,11 +297,11 @@ export function AddInverterDialog({ projects, monitoringCredentials }: AddInvert
               <Label>Polling Enabled</Label>
               <div className="flex gap-3 mt-1">
                 <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                  <input type="radio" name="polling_enabled" value="true" defaultChecked className="accent-shiroi-green" />
+                  <input type="radio" name="polling_enabled" value="true" defaultChecked className="accent-shiroi-gold" />
                   Yes
                 </label>
                 <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                  <input type="radio" name="polling_enabled" value="false" className="accent-shiroi-green" />
+                  <input type="radio" name="polling_enabled" value="false" className="accent-shiroi-gold" />
                   No
                 </label>
               </div>

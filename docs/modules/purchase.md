@@ -62,6 +62,8 @@ BOQ (yet_to_finalize) → Send to Purchase (yet_to_place) → Vendor Assigned �
 - PO totals compute on save: subtotal + per-rate-band GST split (intra-state Tamil Nadu = 50/50 CGST/SGST) + round-off.
 - PO status enum includes `approved`, `dispatched`, `acknowledged`, `cancelled`. Cancel is a soft delete — no `deleted_at` column on `purchase_orders`.
 - Price Book (252 active rows, Manivel's sheet) is the rate source of truth for auto-pricing and PO creation.
+- **Categories + units are DB-managed since mig 177 (2026-06-11):** `item_categories` (seeded Manivel-15; `price_book.item_category` is now an FK to it — the old CHECK constraint is gone) + `item_units` (seeded with Vivek's canonical list + every in-use value). Add/Edit dialogs load both lists from the DB and offer inline "+ Add new…" for founder/PM/purchase-officer; full management (add + activate/deactivate) at `/price-book/settings`. This also fixed a real bug: the dialogs' old hardcoded legacy category list violated the mig-057 CHECK, so saving most categories failed. BOI/BOQ item forms consume the same lists (props with constants fallback); `getCategoryLabel` title-cases unknown values.
+- **Add/Edit fixed for PMs (mig 182, 2026-06-16).** Manivel hit `new row violates row-level security policy for table "price_book"` because `price_book_write` (mig 052) granted INSERT/UPDATE to founder/sales_engineer/purchase_officer/marketing_manager/designer but **not `project_manager`** — yet the server action `assertCanEditPriceBook` allows founder/project_manager/purchase_officer/finance, and the UI is gated to founder/PM/purchase_officer. Mig 182 realigns the policy to that editor set (founder, project_manager, purchase_officer, finance) **with an explicit `WITH CHECK`** (mig 052 had `USING`-only). A second latent bug: the Add dialog never sent the `NOT NULL gst_type` (enum `supply`/`works_contract`) — a **GST Type** select was added to both Add + Edit dialogs and `createPriceBookItem` now defaults it to `'supply'`. Net effect: PMs can add/edit all fields and save.
 
 ## Key Tables
 
@@ -72,11 +74,12 @@ BOQ (yet_to_finalize) → Send to Purchase (yet_to_place) → Vendor Assigned �
 - `rfq_invitations` (migration 060) — one row per (rfq, vendor). `access_token` (UUID) is the vendor-portal key. `status` (pending/sent/viewed/submitted/expired), `sent_via_channels` (array of 'email'/'whatsapp'/'copy_link'), `submission_mode` (vendor_portal/manual/excel).
 - `rfq_vendor_quotes` (migration 060) — vendor's submitted line-level prices.
 - `procurement_audit_log` (migration 060) — append-only audit trail. `entity_type` + `entity_id` + `action` + `actor_id` + `old_value` + `new_value` + `reason`.
-- `project_boq_items` — `vendor_id` FK from migration 041, owns `procurement_status`.
+- `project_boq_items` — `vendor_id` FK from migration 041, owns `procurement_status`. **Mig 198** added the actual-spend + voucher track: `actual_quantity`, `actual_unit_price`, `actual_total_price`, `voucher_no`, `bill_status` (`need_bill`/`submitted`/`na`, default `na`) — populated by the BOM import (see section below); all nullable so legacy rows are untouched.
 - `vendors` — 108+ seeded vendors, MSME flag, GSTIN, category.
 - `vendor_payments` — per-tranche payments, 45-day MSME SLA clock.
 - `notifications` — `recipient_employee_id`, `notification_type`, `title`, `body`, `entity_type`, `entity_id`.
 - `delivery_challans` — consumed by the projects module DC step (see projects doc).
+- `pending_bom_imports` (**mig 198**) — staging for the BOM + voucher import; one row per uploaded project sheet (parsed lines + header + summary as JSONB, fuzzy-match candidates, lifecycle `pending`/`imported`/`rejected`/`error`). Founder/PM RLS + `service_role` for the seed script. Reviewed at `/bom-review/import`; `approve_bom_import` cascades a confirmed row into a `project_bois` + its `project_boq_items`. See the BOM Import section below.
 
 ## Key Files
 
@@ -173,6 +176,7 @@ apps/erp/src/app/api/procurement/[poId]/pdf/route.ts
 - **PO PDF** requires `@react-pdf/renderer` listed in `experimental.serverComponentsExternalPackages` in `apps/erp/next.config.js` (shared with all other PDF routes — see projects module Known Gotchas).
 - **"Send to Purchase" from BOQ** is bulk (`yet_to_finalize` → `yet_to_place`) and lives in the project BOQ step, not here. Entry point is `sendBoqToPurchase` in `project-step-actions.ts`.
 - **PO cancel** is a status flip to `cancelled`, not a row delete — `purchase_orders` has no `deleted_at` column. The PO stays in the flat list (`/procurement/orders`) with a cancelled badge for audit.
+- **PO list is paginated** (mig 192, June 2026). `getPurchaseOrders(filters)` returns `{ rows, total }` — a trimmed select (only the ~7 displayed cols + vendor/project embeds), `count:'estimated'` + `.range()`, 50/page; the page has a filter-preserving pager. It used to be a bare `.limit(100)` that silently hid ~1,950 of ~2,046 POs. The **purchase dashboard** (`purchase-queries.ts::getPurchaseDashboardData`) gets its three status KPIs from RPC **`get_purchase_order_status_counts`** (one `COUNT(*) FILTER` pass, SECURITY INVOKER) and its "recent POs" from `getPurchaseOrders({ per_page: 10 })` — never aggregate PO buckets in JS over a capped fetch again (NEVER-DO #12/#13/#25).
 - **Vendor assignment on a received item** should be blocked upstream; the BOQ row is effectively locked once it moves past `ordered`.
 
 ## C1 Additions (Migration 123, May 2026)
@@ -220,6 +224,20 @@ Findings from `docs/reviews/2026-05-24-comprehensive-review.md`:
 - **`fn_get_po_bill_reconciliation` now gates by role** — original mig 123 RPC was `SECURITY DEFINER` with no project access check, meaning any authenticated user could read any project's vendor financials by URL-guessing the `projectId`. Mig 135 wraps the function body with `IF role NOT IN ('founder','finance','project_manager','purchase_officer') THEN RAISE` and adds `SET search_path = public, pg_temp`.
 - **Material requisition notifications no longer silently drop** — `submitMaterialRequisition` / `reviewMaterialRequisition` / `convertRequisitionToPO` were inserting `notification_type='material_requisition'` and `entity_type='material_requisition'`, neither of which exist in the `notifications` CHECK constraint (mig 014). Every insert failed with 23514, silently logged-and-continued. Now using `notification_type='approval_required'` (for PM ping + PO pending approval) / `'info'` (for requester reply) and dropping `entity_type` entirely (`entity_id` still preserves the requisition / PO id for deep-linking).
 - **Reviewer != requester check** — `reviewMaterialRequisition` now rejects an approve/reject attempt if the calling employee is the same one who submitted the requisition. Founder is exempt (override path).
+
+## BOM + Voucher Import (Migration 198, 2026-06-21)
+
+Bulk-loads Shiroi's hand-maintained per-project BOM sheets (the `se-master-file` workbook — one "Bill Of Materials" sheet per project, ~48) into `project_boq_items`, capturing the **actual** spend track and **voucher/bill** status that previously lived nowhere (the contracted side was already in `proposal_bom_lines`). Mirrors the historical-plants importer (`pending_project_imports` / `/om/import-review`); targets the procurement side, attaches to **existing projects only**.
+
+**Pipeline:** upload at `/bom-review/import` (founder/PM) → `parseBomWorkbook` (client-side `exceljs`) → `seedBomImports` stages one `pending_bom_imports` row per sheet, fuzzy-matching to a project via the `match_project_by_name` pg_trgm RPC → reviewer fixes the project match (`<ProjectCombobox>` + candidate chips) and edits any parsed cell (incl. `voucher_no` + `bill_status`) → **Confirm** calls `approve_bom_import(id, projectId, lines)` (SECURITY DEFINER, founder/PM), which creates one `project_bois` container (status `locked`, provenance in `notes`) + its `project_boq_items` rows, then marks the staging row `imported`. **Skip** is a plain RLS `UPDATE` to `rejected`. On error the row is flagged `error` with `import_error`.
+
+**Tolerant parser** (`apps/erp/src/lib/bom-sheet-parser.ts`, shared browser + Node): anchors the table on the `Items`+`Qty`/`Rate` header row (column offsets drift between sheets), classifies category-header vs item rows, splits the contracted (1st Qty/Units/Rate/Gst/Amount/Total block) and actual (2nd block) tracks, normalises GST fractions (0.18→18), reconstructs GST-inclusive totals when the cell is an uncached Excel formula, and emits warnings instead of throwing (surfaced in the upload preview + review UI). Unit-tested in `apps/erp/src/lib/__tests__/bom-sheet-parser.test.ts`.
+
+**Matching is never blind-written** — confidence bands (`exact ≥0.85` / `fuzzy ≥0.45` / `none`) only pre-select a default; the reviewer confirms each sheet. Seed the initial batch with `scripts/seed-bom-imports.ts` (`--dry-run` supported; idempotent on `(source_file_name, sheet_name)`). 48 sheets are staged on dev awaiting Manivel's review.
+
+**Key files:** `bom-sheet-parser.ts`, `bom-import-actions.ts` (`seedBomImports` / `approveBomImport` / `rejectBomImport`), `bom-import-queries.ts`, `bom-import-constants.ts` (client-safe label/option maps — NEVER-DO #21), `app/(erp)/bom-review/import/` (server page + `_components/bom-upload-dialog.tsx` / `bom-import-list.tsx` / `bom-import-row-card.tsx`), `scripts/seed-bom-imports.ts`. Entry button on `/bom-review`. Spec: `docs/superpowers/specs/2026-06-21-bom-voucher-import-design.md`.
+
+**Phase-2 (not built):** automated rough-sheet voucher consolidation (fuzzy MT/VN → line mapping); minting the ~40% of sheets with no matching project (stays `/om/import-review`'s job — create the project there, attach its BOM here).
 
 ## Past Decisions & Specs
 

@@ -5,6 +5,8 @@ import { createClient } from '@repo/supabase/server';
 import { ActualsLockButton, EditableQtyCell } from '@/components/projects/forms/actuals-controls';
 import { SiteExpensesReadonly } from '@/components/projects/site-expenses-readonly';
 import { FileText, Receipt, TrendingUp, Lock } from 'lucide-react';
+import { AddExpenseDialog } from '@/components/expenses/add-expense-dialog';
+import { getActiveCategories } from '@/lib/expense-categories-queries';
 
 interface StepActualsProps {
   projectId: string;
@@ -13,7 +15,7 @@ interface StepActualsProps {
 export async function StepActuals({ projectId }: StepActualsProps) {
   const supabase = await createClient();
 
-  const [{ data: boqItems }, { data: project }] = await Promise.all([
+  const [{ data: boqItems }, { data: project }, categories] = await Promise.all([
     supabase
       .from('project_boq_items')
       .select(
@@ -26,6 +28,7 @@ export async function StepActuals({ projectId }: StepActualsProps) {
       .select('contracted_value, project_number, customer_name, actuals_locked, actuals_locked_at, actuals_locked_by')
       .eq('id', projectId)
       .maybeSingle(),
+    getActiveCategories(),
   ]);
 
   const items = (boqItems as {
@@ -212,10 +215,22 @@ export async function StepActuals({ projectId }: StepActualsProps) {
 
       {/* Site expenses — read-only embed from /expenses module */}
       <section>
-        <h3 className="font-semibold mb-2 text-base">Site expenses</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-base">Site expenses</h3>
+          <AddExpenseDialog
+            projects={[{
+              id: projectId,
+              project_number: projectData?.project_number ?? null,
+              customer_name: projectData?.customer_name ?? null,
+            }]}
+            categories={categories.map((c) => ({ id: c.id, label: c.label }))}
+            defaultProjectId={projectId}
+            lockProject
+          />
+        </div>
         <p className="text-xs text-n-500 mb-2">
-          To submit a voucher, go to{' '}
-          <Link href="/expenses" className="text-blue-600 hover:underline">/expenses</Link> and select this project.
+          Vouchers flow through submitted → verified → approved. Full module at{' '}
+          <Link href="/expenses" className="text-blue-600 hover:underline">/expenses</Link>.
         </p>
         <SiteExpensesReadonly projectId={projectId} />
       </section>

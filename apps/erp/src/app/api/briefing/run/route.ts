@@ -3,6 +3,7 @@ import { createAdminClient } from '@repo/supabase/admin';
 import { gatherBriefingKpis } from '@/lib/ai/briefing-kpis';
 import { narrateBriefing } from '@/lib/ai/briefing-narrator';
 import { getAiConfig } from '@/lib/ai/ai-config';
+import { buildActionBlock } from '@/lib/ai/briefing-action-block';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,12 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
+  // Deterministic, role-scoped action block (founder: closed-last-week + work
+  // done + closing-this-week; sales head: follow-up-overdue + closing-this-week;
+  // PM: legacy overdue/follow-ups/won-MTD). Computed fresh every call ("today"
+  // data); prepended to the AI narrative by n8n.
+  const actionBlock = await buildActionBlock(role);
+
   // ── Step 1: Check cache (idempotent) ─────────────────────────────────────
   const { data: existing, error: cacheError } = await admin
     .from('executive_briefing_log')
@@ -88,6 +95,7 @@ export async function POST(req: NextRequest) {
       narrative: existing.ai_narrative,
       whatsapp_short: (snapshot?.whatsapp_short as string | undefined) ?? existing.ai_narrative.slice(0, 497) + '…',
       kpi_snapshot: snapshot,
+      action_block: actionBlock.text,
     });
   }
 
@@ -155,6 +163,7 @@ export async function POST(req: NextRequest) {
     narrative: briefing.narrative,
     whatsapp_short: briefing.whatsapp_short,
     kpi_snapshot: kpiSnapshot,
+    action_block: actionBlock.text,
   });
 }
 

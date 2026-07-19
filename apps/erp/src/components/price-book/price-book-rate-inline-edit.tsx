@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { formatINR } from '@repo/ui/formatters';
+import { formatRate } from '@repo/ui/formatters';
 import { updatePriceBookItem } from '@/lib/price-book-actions';
 
 interface PriceBookRateInlineEditProps {
@@ -57,7 +57,7 @@ export function PriceBookRateInlineEdit({ id, currentRate }: PriceBookRateInline
         onDoubleClick={() => { setEditing(true); setValue(currentRate.toString()); }}
         title="Double-click to edit rate"
       >
-        {formatINR(currentRate)}
+        {formatRate(currentRate)}
       </span>
     );
   }

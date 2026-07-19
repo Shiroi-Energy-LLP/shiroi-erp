@@ -16,6 +16,7 @@ import {
   EmptyState,
   Eyebrow,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { FileText, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { FilterBar } from '@/components/filter-bar';
 import { FilterSelect } from '@/components/filter-select';
@@ -53,11 +54,22 @@ export default async function VendorBillsPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <ListPageShell
+      header={
+        <FilterBar basePath="/vendor-bills" filterParams={['status']}>
+          <FilterSelect paramName="status" className="w-44">
+            <option value="">All Statuses</option>
+            {STATUS_OPTIONS.map(s => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </FilterSelect>
+        </FilterBar>
+      }
+    >
+      {/* Title (scrolls away) */}
       <div>
         <Eyebrow className="mb-1">FINANCE</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Vendor Bills</h1>
+        <h1 className="text-2xl font-heading font-bold text-n-950">Vendor Bills</h1>
       </div>
 
       {/* KPI cards */}
@@ -99,7 +111,7 @@ export default async function VendorBillsPage({ searchParams }: PageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold font-mono text-[#1A1D24]">
+            <p className="text-2xl font-bold font-mono text-n-950">
               {bills.filter(b => b.source === 'zoho_import').length}
             </p>
             <p className="text-xs text-muted-foreground mt-1">imported from Zoho Books</p>
@@ -107,25 +119,11 @@ export default async function VendorBillsPage({ searchParams }: PageProps) {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-4">
-          <FilterBar basePath="/vendor-bills" filterParams={['status']}>
-            <FilterSelect paramName="status" className="w-44">
-              <option value="">All Statuses</option>
-              {STATUS_OPTIONS.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </FilterSelect>
-          </FilterBar>
-        </CardContent>
-      </Card>
-
       {/* Bills table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          <Table stickyHeader>
+            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
               <TableRow>
                 <TableHead>Bill #</TableHead>
                 <TableHead>Vendor</TableHead>
@@ -154,7 +152,7 @@ export default async function VendorBillsPage({ searchParams }: PageProps) {
                     <TableCell className="font-mono text-sm">
                       <Link
                         href={`/vendor-bills/${bill.id}`}
-                        className="text-[#00B050] hover:underline"
+                        className="text-shiroi-gold-dark hover:underline"
                       >
                         {bill.bill_number}
                       </Link>
@@ -200,6 +198,6 @@ export default async function VendorBillsPage({ searchParams }: PageProps) {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

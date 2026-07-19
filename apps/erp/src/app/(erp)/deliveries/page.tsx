@@ -46,7 +46,7 @@ export default async function DeliveriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Eyebrow className="mb-1">DELIVERIES</Eyebrow>
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Delivery Challans</h1>
+        <h1 className="text-2xl font-bold text-n-950">Delivery Challans</h1>
       </div>
 
       <Card>

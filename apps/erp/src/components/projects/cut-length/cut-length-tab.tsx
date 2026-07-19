@@ -143,7 +143,7 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
               <select
                 value={materialType}
                 onChange={(e) => setMaterialType(e.target.value as MaterialType)}
-                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30"
+                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30"
               >
                 {(Object.keys(MATERIAL_LABELS) as MaterialType[]).map((k) => (
                   <option key={k} value={k}>{MATERIAL_LABELS[k]}</option>
@@ -158,7 +158,7 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
                 placeholder="e.g. 6mm², Black or 25mm PVC"
                 value={specification}
                 onChange={(e) => setSpecification(e.target.value)}
-                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30"
+                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30"
                 required
               />
             </div>
@@ -172,7 +172,7 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
                 placeholder="0.00"
                 value={lengthMeters}
                 onChange={(e) => setLengthMeters(e.target.value)}
-                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30"
+                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30"
                 required
               />
             </div>
@@ -186,7 +186,7 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
                 placeholder="—"
                 value={quantityRolls}
                 onChange={(e) => setQuantityRolls(e.target.value)}
-                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30"
+                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30"
               />
             </div>
 
@@ -196,7 +196,7 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
                 type="date"
                 value={cutDate}
                 onChange={(e) => setCutDate(e.target.value)}
-                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30"
+                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30"
                 required
               />
             </div>
@@ -206,7 +206,7 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
               <select
                 value={projectStage}
                 onChange={(e) => setProjectStage(e.target.value)}
-                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30"
+                className="w-full h-9 rounded-md border border-n-300 px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30"
               >
                 <option value="">— select —</option>
                 {STAGE_OPTIONS.map((s) => (
@@ -222,7 +222,7 @@ function RecordDialog({ projectId, onClose, onSaved }: RecordDialogProps) {
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
                 placeholder="Optional notes"
-                className="w-full rounded-md border border-n-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-green/30 resize-none"
+                className="w-full rounded-md border border-n-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-shiroi-gold/30 resize-none"
               />
             </div>
           </div>
@@ -329,7 +329,7 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
         </div>
       ) : (
         <div className="rounded-lg border border-n-200 overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm [&_td]:align-top">
             <thead>
               <tr className="bg-n-50 border-b border-n-200">
                 <th className="px-3 py-2.5 text-left text-xs font-medium text-n-500 uppercase tracking-wide">Material</th>
@@ -351,8 +351,8 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
                     </div>
                   </td>
                   <td className="px-3 py-2.5 text-n-600">{r.specification}</td>
-                  <td className="px-3 py-2.5 text-right font-mono font-medium text-n-800">{Number(r.length_meters).toFixed(2)}</td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-2.5 text-right font-mono font-medium text-n-800 whitespace-nowrap">{Number(r.length_meters).toFixed(2)}</td>
+                  <td className="px-3 py-2.5 whitespace-nowrap">
                     {r.project_stage ? (
                       <Badge variant="outline" className="text-[10px]">
                         {STAGE_OPTIONS.find((s) => s.value === r.project_stage)?.label ?? r.project_stage}
@@ -361,12 +361,12 @@ export function CutLengthTab({ projectId, records, summary, canDelete }: CutLeng
                       <span className="text-n-400">—</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-n-600 text-xs">{formatDate(r.cut_date)}</td>
-                  <td className="px-3 py-2.5 text-n-500 text-xs">
+                  <td className="px-3 py-2.5 text-n-600 whitespace-nowrap">{formatDate(r.cut_date)}</td>
+                  <td className="px-3 py-2.5 text-n-500">
                     {r.profiles?.full_name ?? '—'}
                   </td>
                   {canDelete && (
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-3 py-2.5 text-right whitespace-nowrap">
                       <button
                         onClick={() => setPendingDeleteId(r.id)}
                         disabled={deletingId === r.id}

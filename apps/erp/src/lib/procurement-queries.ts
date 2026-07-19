@@ -1,5 +1,6 @@
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
+import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 
 type PurchaseOrderRow = Database['public']['Tables']['purchase_orders']['Row'];
 type VendorRow = Database['public']['Tables']['vendors']['Row'];
@@ -17,6 +18,23 @@ type VendorPaymentRow = Database['public']['Tables']['vendor_payments']['Row'];
 
 export interface POListItem extends PurchaseOrderRow {
   vendors: Pick<VendorRow, 'company_name' | 'is_msme'> | null;
+  projects: Pick<ProjectRow, 'project_number' | 'customer_name'> | null;
+}
+
+/**
+ * Trimmed PO row for the paginated orders list + the dashboard's "recent POs" —
+ * only the columns those two surfaces render. Unlike POListItem it does NOT
+ * extend the full PurchaseOrderRow, because getPurchaseOrders no longer does a
+ * SELECT * (the trimmed select wouldn't satisfy the full-row shape).
+ */
+export interface POListRow {
+  id: string;
+  po_number: string;
+  po_date: string;
+  status: string;
+  total_amount: number;
+  amount_outstanding: number;
+  vendors: Pick<VendorRow, 'company_name'> | null;
   projects: Pick<ProjectRow, 'project_number' | 'customer_name'> | null;
 }
 
@@ -102,10 +120,10 @@ export async function getPurchaseRequests(filters: ProcurementFilters = {}): Pro
   if (filters.status) query = query.eq('procurement_status', filters.status);
   if (filters.priority) query = query.eq('procurement_priority', filters.priority);
   if (filters.projectId) query = query.eq('id', filters.projectId);
-  if (filters.search)
-    query = query.or(
-      `project_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`,
-    );
+  if (filters.search) {
+    const s = sanitizeForIlike(filters.search);
+    query = query.or(`project_number.ilike.${s},customer_name.ilike.${s}`);
+  }
 
   const { data: projects, error, count } = await query;
   if (error) {
@@ -119,57 +137,17 @@ export async function getPurchaseRequests(filters: ProcurementFilters = {}): Pro
 
   const projectIds = projects.map((p) => p.id);
 
-  // Fetch BOQ item aggregates per project
-  const { data: boqAggs } = await supabase
-    .from('project_boq_items')
-    .select('project_id, procurement_status, quantity, unit_price, gst_rate, total_price')
-    .in('project_id', projectIds)
-    .neq('procurement_status', 'yet_to_finalize');
-
-  // Fetch PO count per project
-  const { data: poRows } = await supabase
-    .from('purchase_orders')
-    .select('project_id')
-    .in('project_id', projectIds)
-    .neq('status', 'cancelled');
-
-  // Build aggregates
-  const boqByProject: Record<string, {
-    totalAmount: number;
-    totalWithTax: number;
-    count: number;
-    yetToPlace: number;
-    orderPlaced: number;
-    received: number;
-    ready: number;
-  }> = {};
-
-  for (const item of boqAggs ?? []) {
-    const pid = item.project_id;
-    if (!boqByProject[pid]) {
-      boqByProject[pid] = { totalAmount: 0, totalWithTax: 0, count: 0, yetToPlace: 0, orderPlaced: 0, received: 0, ready: 0 };
-    }
-    const qty = Number(item.quantity || 0);
-    const rate = Number(item.unit_price || 0);
-    const amt = qty * rate;
-    boqByProject[pid].totalAmount += amt;
-    boqByProject[pid].totalWithTax += Number(item.total_price || 0);
-    boqByProject[pid].count++;
-    if (item.procurement_status === 'yet_to_place') boqByProject[pid].yetToPlace++;
-    if (item.procurement_status === 'order_placed') boqByProject[pid].orderPlaced++;
-    if (item.procurement_status === 'received') boqByProject[pid].received++;
-    if (item.procurement_status === 'ready_to_dispatch' || item.procurement_status === 'delivered')
-      boqByProject[pid].ready++;
-  }
-
-  const poCountByProject: Record<string, number> = {};
-  for (const po of poRows ?? []) {
-    if (!po.project_id) continue;
-    poCountByProject[po.project_id] = (poCountByProject[po.project_id] || 0) + 1;
-  }
+  // mig 196: one SQL pass returns per-project BOQ amounts + status buckets + PO
+  // count for the visible page, replacing two unbounded `.in(projectIds)` reads
+  // (project_boq_items + purchase_orders) plus JS reduce loops (NEVER-DO #12).
+  const { data: aggs } = await supabase.rpc('get_purchase_request_aggregates', {
+    p_project_ids: projectIds,
+  });
+  const aggByProject = new Map<string, NonNullable<typeof aggs>[number]>();
+  for (const a of aggs ?? []) aggByProject.set(a.project_id, a);
 
   const items: PurchaseRequestItem[] = projects.map((p) => {
-    const agg = boqByProject[p.id] || { totalAmount: 0, totalWithTax: 0, count: 0, yetToPlace: 0, orderPlaced: 0, received: 0, ready: 0 };
+    const agg = aggByProject.get(p.id);
     return {
       project_id: p.id,
       project_number: p.project_number ?? '',
@@ -178,14 +156,14 @@ export async function getPurchaseRequests(filters: ProcurementFilters = {}): Pro
       procurement_status: p.procurement_status,
       procurement_priority: p.procurement_priority,
       procurement_received_date: p.procurement_received_date,
-      total_amount: agg.totalAmount,
-      total_with_tax: agg.totalWithTax,
-      item_count: agg.count,
-      po_count: poCountByProject[p.id] || 0,
-      items_yet_to_place: agg.yetToPlace,
-      items_order_placed: agg.orderPlaced,
-      items_received: agg.received,
-      items_ready: agg.ready,
+      total_amount: Number(agg?.total_amount ?? 0),
+      total_with_tax: Number(agg?.total_with_tax ?? 0),
+      item_count: Number(agg?.item_count ?? 0),
+      po_count: Number(agg?.po_count ?? 0),
+      items_yet_to_place: Number(agg?.items_yet_to_place ?? 0),
+      items_order_placed: Number(agg?.items_order_placed ?? 0),
+      items_received: Number(agg?.items_received ?? 0),
+      items_ready: Number(agg?.items_ready ?? 0),
     };
   });
 
@@ -292,18 +270,32 @@ export async function getEmployeeIdForProfile(profileId: string): Promise<string
 // Existing PO Queries (preserved for PO detail page)
 // ---------------------------------------------------------------------------
 
-export async function getPurchaseOrders(filters: ProcurementFilters = {}): Promise<POListItem[]> {
+const PO_LIST_PAGE_SIZE = 50;
+
+/**
+ * Paginated PO list. Selects only the columns the list/dashboard render and uses
+ * count: 'estimated' + .range() (NEVER-DO #13/#25 — a bare .limit(100) silently
+ * hid 1,900+ of ~2,000 POs). Returns { rows, total } so callers can page.
+ */
+export async function getPurchaseOrders(
+  filters: ProcurementFilters = {},
+): Promise<{ rows: POListRow[]; total: number }> {
   const op = '[getPurchaseOrders]';
   console.log(`${op} Starting`);
 
   const supabase = await createClient();
+  const page = filters.page ?? 1;
+  const perPage = filters.per_page ?? PO_LIST_PAGE_SIZE;
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
   let query = supabase
     .from('purchase_orders')
     .select(
-      '*, vendors!purchase_orders_vendor_id_fkey(company_name, is_msme), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
+      'id, po_number, po_date, status, total_amount, amount_outstanding, vendors!purchase_orders_vendor_id_fkey(company_name), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
+      { count: 'estimated' },
     )
-    .order('po_date', { ascending: false })
-    .limit(100);
+    .order('po_date', { ascending: false });
 
   if (filters.status) {
     query = query.eq('status', filters.status);
@@ -315,19 +307,51 @@ export async function getPurchaseOrders(filters: ProcurementFilters = {}): Promi
     query = query.eq('vendor_id', filters.vendorId);
   }
   if (filters.search) {
-    query = query.or(
-      `po_number.ilike.%${filters.search}%`,
-    );
+    query = query.or(`po_number.ilike.${sanitizeForIlike(filters.search)}`);
   }
 
-  const { data, error } = await query;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message });
     throw new Error(`Failed to load purchase orders: ${error.message}`);
   }
 
-  return (data ?? []) as unknown as POListItem[];
+  return { rows: (data ?? []) as unknown as POListRow[], total: count ?? 0 };
+}
+
+export interface POStatusCounts {
+  pendingPOCount: number;
+  activePOCount: number;
+  pendingDeliveries: number;
+}
+
+/**
+ * PO status KPI buckets for the purchase dashboard, counted in one SQL pass over
+ * the full table (mig 192 get_purchase_order_status_counts). Replaces deriving
+ * them from a .limit(100)-capped getPurchaseOrders() + JS .filter().length,
+ * which undercounted on ~2,000 POs (NEVER-DO #12/#13).
+ */
+export async function getPurchaseOrderStatusCounts(): Promise<POStatusCounts> {
+  const op = '[getPurchaseOrderStatusCounts]';
+  console.log(`${op} Starting`);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('get_purchase_order_status_counts');
+
+  if (error) {
+    console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
+    throw new Error(`Failed to load purchase order status counts: ${error.message}`);
+  }
+
+  const row = data?.[0];
+  return {
+    pendingPOCount: Number(row?.pending_count ?? 0),
+    activePOCount: Number(row?.active_count ?? 0),
+    pendingDeliveries: Number(row?.pending_deliveries ?? 0),
+  };
 }
 
 export async function getPurchaseOrder(id: string): Promise<PODetail | null> {
@@ -377,11 +401,14 @@ export async function getMSMEAlertPOs(): Promise<POListItem[]> {
 
   const supabase = await createClient();
 
+  // is_msme is filtered IN SQL via an !inner vendor join (was: fetch every
+  // outstanding-delivered PO, including non-MSME, then .filter() in JS).
   const { data, error } = await supabase
     .from('purchase_orders')
     .select(
-      '*, vendors!purchase_orders_vendor_id_fkey(company_name, is_msme), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
+      '*, vendors!purchase_orders_vendor_id_fkey!inner(company_name, is_msme), projects!purchase_orders_project_id_fkey(project_number, customer_name)',
     )
+    .eq('vendors.is_msme', true)
     .gt('amount_outstanding', 0)
     .not('actual_delivery_date', 'is', null)
     .order('actual_delivery_date', { ascending: true });
@@ -391,8 +418,7 @@ export async function getMSMEAlertPOs(): Promise<POListItem[]> {
     throw new Error(`Failed to load MSME alert POs: ${error.message}`);
   }
 
-  const allPOs = (data ?? []) as unknown as POListItem[];
-  return allPOs.filter((po) => po.vendors?.is_msme === true);
+  return (data ?? []) as unknown as POListItem[];
 }
 
 export async function getVendorsList(): Promise<Pick<VendorRow, 'id' | 'company_name'>[]> {

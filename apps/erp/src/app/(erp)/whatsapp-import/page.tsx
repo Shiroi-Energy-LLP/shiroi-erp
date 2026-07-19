@@ -1,14 +1,9 @@
 import { getQueueItems, getQueueStats } from '@/lib/whatsapp-import-queries';
 import Link from 'next/link';
+import { BulkActionTable } from '@/components/whatsapp-import/bulk-action-table';
+import { WHATSAPP_PROFILE_LABELS as PROFILE_LABELS } from '@/lib/label-constants';
 
 export const metadata = { title: 'WhatsApp Import Queue' };
-
-const PROFILE_LABELS: Record<string, string> = {
-  marketing: 'Marketing',
-  llp: 'LLP / Purchase',
-  shiroi_energy: 'Shiroi Energy ⚡',
-  site: 'Site',
-};
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   customer_payment: { label: 'Payment',      color: 'bg-green-100 text-green-800' },
@@ -27,33 +22,6 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 
 interface PageProps {
   searchParams: Promise<{ status?: string; profile?: string; type?: string; page?: string }>;
-}
-
-function extractSummary(data: Record<string, unknown>, type: string): string {
-  switch (type) {
-    case 'customer_payment':
-    case 'vendor_payment':
-      if (data['amount']) return `₹${Number(data['amount']).toLocaleString('en-IN')}`;
-      return 'Payment';
-    case 'task':
-      return String(data['title'] ?? 'Task').slice(0, 60);
-    case 'activity':
-      return String(data['title'] ?? data['body'] ?? 'Activity').slice(0, 60);
-    case 'purchase_order':
-      return String(data['po_number'] ?? data['pdf_filename'] ?? 'PO').slice(0, 60);
-    case 'boq_item':
-      return String(data['item_description'] ?? 'BOQ item').slice(0, 60);
-    case 'contact':
-      return `${data['name'] ?? ''} ${data['phone'] ?? ''}`.trim().slice(0, 60);
-    case 'daily_report':
-      return String(data['work_description'] ?? 'Daily report').slice(0, 60);
-    case 'milestone_update':
-      return String(data['milestone_name'] ?? 'Milestone').slice(0, 60);
-    case 'delivery':
-      return String(data['item_description'] ?? 'Delivery').slice(0, 60);
-    default:
-      return JSON.stringify(data).slice(0, 60);
-  }
 }
 
 export default async function WhatsAppImportPage({ searchParams }: PageProps) {
@@ -139,79 +107,8 @@ export default async function WhatsAppImportPage({ searchParams }: PageProps) {
         <span className="text-sm text-gray-400 self-center">{total.toLocaleString()} total</span>
       </div>
 
-      {/* Table */}
-      <div className="border rounded-lg overflow-hidden bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="text-left py-3 px-4 font-medium text-gray-600 w-32">Date</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-600 w-36">Sender</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-600 w-28">Type</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-600">Project Match</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-600 w-20">Conf.</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-600">Summary</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-600 w-28">Chat</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-600 w-20">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {items.length === 0 && (
-              <tr>
-                <td colSpan={8} className="text-center py-16 text-gray-400">
-                  No items in this queue
-                </td>
-              </tr>
-            )}
-            {items.map(item => {
-              const cfg = TYPE_CONFIG[item.extraction_type] ?? { label: item.extraction_type, color: 'bg-gray-100 text-gray-500' };
-              const conf = item.confidence_score ?? 0;
-              const confColor = conf >= 0.85 ? 'text-green-600' : conf >= 0.60 ? 'text-yellow-600' : 'text-red-500';
-              const summary = extractSummary(item.extracted_data, item.extraction_type);
-
-              return (
-                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-4 text-gray-500 text-xs">
-                    {new Date(item.message_timestamp).toLocaleDateString('en-IN', {
-                      day: '2-digit', month: 'short', year: '2-digit',
-                      timeZone: 'Asia/Kolkata'
-                    })}
-                  </td>
-                  <td className="py-3 px-4 text-gray-700 text-xs truncate max-w-[140px]">{item.sender_name}</td>
-                  <td className="py-3 px-4">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${cfg.color}`}>
-                      {cfg.label}
-                    </span>
-                    {item.requires_finance_review && (
-                      <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700">₹</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-gray-700 text-xs max-w-[160px]">
-                    {item.matched_project_name
-                      ? <span className="truncate block">{item.matched_project_name}</span>
-                      : <span className="text-red-400 italic">unmatched</span>
-                    }
-                  </td>
-                  <td className={`py-3 px-4 font-mono text-xs font-semibold ${confColor}`}>
-                    {(conf * 100).toFixed(0)}%
-                  </td>
-                  <td className="py-3 px-4 text-gray-600 text-xs max-w-[200px]">
-                    <span className="truncate block">{summary}</span>
-                  </td>
-                  <td className="py-3 px-4 text-xs text-gray-400">
-                    {PROFILE_LABELS[item.chat_profile] ?? item.chat_profile}
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <Link href={`/whatsapp-import/${item.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium">
-                      Review →
-                    </Link>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {/* Table with bulk-select */}
+      <BulkActionTable items={items} status={status} />
 
       {/* Pagination */}
       {totalPages > 1 && (

@@ -1,8 +1,8 @@
 import { getUserProfile } from '@/lib/auth';
 import { getSalesDashboardData } from '@/lib/sales-queries';
-import { KpiCard } from '@/components/kpi-card';
 import { MyTasks } from '@/components/my-tasks';
 import {
+  KpiCard,
   Card,
   CardHeader,
   CardTitle,
@@ -34,7 +34,7 @@ const FUNNEL_COLORS: Record<string, string> = {
   proposal_sent: 'bg-[#EDE9FE] text-[#5B21B6]',
   negotiation: 'bg-[#FFF7ED] text-[#9A3412]',
   won: 'bg-[#D1FAE5] text-[#065F46]',
-  on_hold: 'bg-[#F1F3F5] text-[#4B5563]',
+  on_hold: 'bg-n-100 text-n-600',
 };
 
 export async function SalesDashboard() {
@@ -45,7 +45,7 @@ export async function SalesDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Sales Dashboard</h1>
+      <h1 className="text-2xl font-heading font-bold text-n-950">Sales Dashboard</h1>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4">
@@ -81,7 +81,7 @@ export async function SalesDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Phone className="h-4 w-4 text-[#00B050]" />
+                <Phone className="h-4 w-4 text-shiroi-gold-dark" />
                 Follow-ups Today
               </CardTitle>
               <Badge variant={data.followUpsToday.length > 0 ? 'warning' : 'neutral'}>
@@ -108,7 +108,7 @@ export async function SalesDashboard() {
                   <TableBody>
                     {data.followUpsToday.map((lead) => (
                       <TableRow key={lead.id}>
-                        <TableCell className="font-medium text-[#1A1D24]">
+                        <TableCell className="font-medium text-n-950">
                           {lead.customer_name}
                         </TableCell>
                         <TableCell>{lead.phone}</TableCell>
@@ -145,16 +145,16 @@ export async function SalesDashboard() {
                   {data.leadFunnel.map(({ status, count }) => (
                     <div
                       key={status}
-                      className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2"
+                      className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2"
                     >
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                          FUNNEL_COLORS[status] ?? 'bg-[#F1F3F5] text-[#4B5563]'
+                          FUNNEL_COLORS[status] ?? 'bg-n-100 text-n-600'
                         }`}
                       >
                         {formatStatus(status)}
                       </span>
-                      <span className="font-heading text-lg font-bold text-[#111318]">
+                      <span className="font-heading text-lg font-bold text-n-950">
                         {count}
                       </span>
                     </div>

@@ -44,33 +44,28 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
 
   const supabase = await createClient();
 
-  // ── Summary stats ──
-  // Cast supabase to any for new tables/columns not yet in generated types
+  // ── Summary stats (mig 194) ──
+  // One KPI RPC replaces 6 count:'exact' (3 on data_flags + 3 verified-record counts
+  // on leads/projects/proposals). The by-entity breakdown stays on its own RPC.
+  // `sb` (any) is retained only for the flags-list query below (data_flags columns
+  // are still cast).
   const sb = supabase as any;
-  const [totalRes, unresolvedRes, resolvedWeekRes, summaryRes, verifiedRes] = await Promise.all([
-    sb.from('data_flags').select('*', { count: 'exact', head: true }),
-    sb.from('data_flags').select('*', { count: 'exact', head: true }).is('resolved_at', null),
-    (() => {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return sb.from('data_flags').select('*', { count: 'exact', head: true })
-        .not('resolved_at', 'is', null).gte('resolved_at', weekAgo.toISOString());
-    })(),
+  const [kpiRes, summaryRes] = await Promise.all([
+    supabase.rpc('get_data_quality_summary'),
     sb.rpc('get_data_flag_summary'),
-    // Count verified records (data_verified_at not yet in generated types)
-    Promise.all([
-      sb.from('leads').select('*', { count: 'exact', head: true }).not('data_verified_at', 'is', null),
-      sb.from('projects').select('*', { count: 'exact', head: true }).not('data_verified_at', 'is', null),
-      sb.from('proposals').select('*', { count: 'exact', head: true }).not('data_verified_at', 'is', null),
-    ]),
   ]);
 
-  const totalFlags = totalRes.count ?? 0;
-  const unresolvedFlags = unresolvedRes.count ?? 0;
-  const resolvedThisWeek = resolvedWeekRes.count ?? 0;
+  const kpi = (kpiRes.data ?? {}) as unknown as {
+    total_flags: number;
+    unresolved_flags: number;
+    resolved_this_week: number;
+    verified_records: number;
+  };
+  const totalFlags = kpi.total_flags ?? 0;
+  const unresolvedFlags = kpi.unresolved_flags ?? 0;
+  const resolvedThisWeek = kpi.resolved_this_week ?? 0;
+  const totalVerified = kpi.verified_records ?? 0;
   const summary = (summaryRes.data ?? []) as { entity_type: string; total_flags: number; unresolved_flags: number; resolved_flags: number }[];
-  const [verifiedLeads, verifiedProjects, verifiedProposals] = verifiedRes;
-  const totalVerified = (verifiedLeads.count ?? 0) + (verifiedProjects.count ?? 0) + (verifiedProposals.count ?? 0);
 
   // ── Flags list ──
   let flagsQuery = sb
@@ -95,8 +90,8 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
       {/* Header */}
       <div>
         <Eyebrow className="mb-1">DATA QUALITY</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Data Quality Dashboard</h1>
-        <p className="text-sm text-[#7C818E]">
+        <h1 className="text-2xl font-heading font-bold text-n-950">Data Quality Dashboard</h1>
+        <p className="text-sm text-n-500">
           Flag issues, verify data, track cleanup progress
         </p>
       </div>
@@ -110,8 +105,8 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                 <Flag className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-heading font-bold text-[#1A1D24]">{unresolvedFlags}</p>
-                <p className="text-xs text-[#7C818E]">Unresolved Flags</p>
+                <p className="text-2xl font-heading font-bold text-n-950">{unresolvedFlags}</p>
+                <p className="text-xs text-n-500">Unresolved Flags</p>
               </div>
             </div>
           </CardContent>
@@ -124,8 +119,8 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-heading font-bold text-[#1A1D24]">{resolvedThisWeek}</p>
-                <p className="text-xs text-[#7C818E]">Resolved This Week</p>
+                <p className="text-2xl font-heading font-bold text-n-950">{resolvedThisWeek}</p>
+                <p className="text-xs text-n-500">Resolved This Week</p>
               </div>
             </div>
           </CardContent>
@@ -138,8 +133,8 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                 <BarChart3 className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-heading font-bold text-[#1A1D24]">{totalFlags}</p>
-                <p className="text-xs text-[#7C818E]">Total Flags (All Time)</p>
+                <p className="text-2xl font-heading font-bold text-n-950">{totalFlags}</p>
+                <p className="text-xs text-n-500">Total Flags (All Time)</p>
               </div>
             </div>
           </CardContent>
@@ -152,8 +147,8 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               </div>
               <div>
-                <p className="text-2xl font-heading font-bold text-[#1A1D24]">{totalVerified}</p>
-                <p className="text-xs text-[#7C818E]">Records Verified</p>
+                <p className="text-2xl font-heading font-bold text-n-950">{totalVerified}</p>
+                <p className="text-xs text-n-500">Records Verified</p>
               </div>
             </div>
           </CardContent>
@@ -164,7 +159,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
       {summary.length > 0 && (
         <Card>
           <CardContent className="pt-4">
-            <h2 className="text-sm font-heading font-bold text-[#1A1D24] mb-3">Flags by Entity Type</h2>
+            <h2 className="text-sm font-heading font-bold text-n-950 mb-3">Flags by Entity Type</h2>
             <div className="flex flex-wrap gap-3">
               {summary.map((s) => (
                 <Link
@@ -188,12 +183,12 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-sm text-[#7C818E]">Filter:</span>
+        <span className="text-sm text-n-500">Filter:</span>
         <Link
           href="/data-quality"
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
             !entityTypeFilter && !flagTypeFilter
-              ? 'bg-[#00B050] text-white'
+              ? 'bg-shiroi-gold text-shiroi-ink'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
@@ -205,7 +200,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
             href={`/data-quality?entity_type=${et}`}
             className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
               entityTypeFilter === et
-                ? 'bg-[#00B050] text-white'
+                ? 'bg-shiroi-gold text-shiroi-ink'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -227,7 +222,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b text-left text-xs font-medium text-[#7C818E]">
+                  <tr className="border-b text-left text-xs font-medium text-n-500">
                     <th className="px-4 py-3">Entity</th>
                     <th className="px-4 py-3">Type</th>
                     <th className="px-4 py-3">Field</th>
@@ -245,7 +240,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
                     return (
                       <tr key={flag.id} className="border-b last:border-0 hover:bg-gray-50">
                         <td className="px-4 py-3">
-                          <Link href={href} className="text-sm text-[#00B050] hover:underline capitalize">
+                          <Link href={href} className="text-sm text-shiroi-gold-dark hover:underline capitalize">
                             {flag.entity_type.replace(/_/g, ' ')}
                           </Link>
                           <p className="text-xs text-gray-400 font-mono">{flag.entity_id.slice(0, 8)}...</p>
@@ -290,7 +285,7 @@ export default async function DataQualityPage({ searchParams }: PageProps) {
               Previous
             </Link>
           )}
-          <span className="px-3 py-1 text-sm text-[#7C818E]">
+          <span className="px-3 py-1 text-sm text-n-500">
             Page {page} of {totalPages}
           </span>
           {page < totalPages && (

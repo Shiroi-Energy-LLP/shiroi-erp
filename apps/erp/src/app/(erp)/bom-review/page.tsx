@@ -1,7 +1,7 @@
 import { createClient } from '@repo/supabase/server';
 import Link from 'next/link';
 import { Card, CardContent, Badge, Eyebrow, EmptyState } from '@repo/ui';
-import { ListChecks, Flag } from 'lucide-react';
+import { ListChecks, Flag, Upload } from 'lucide-react';
 import { BomReviewTable } from './bom-review-table';
 
 export const metadata = { title: 'BOM Review' };
@@ -19,38 +19,23 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
 
   const supabase = await createClient();
 
-  // ── Summary stats ──
-  const { count: totalCount } = await supabase
-    .from('proposal_bom_lines')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: withRateCount } = await supabase
-    .from('proposal_bom_lines')
-    .select('*', { count: 'exact', head: true })
-    .gt('unit_price', 0);
-
-  const { count: noRateCount } = await supabase
-    .from('proposal_bom_lines')
-    .select('*', { count: 'exact', head: true })
-    .eq('unit_price', 0);
-
-  // ── Flags count for BOM items ──
-  const { count: flaggedCount } = await (supabase as any)
-    .from('data_flags')
-    .select('*', { count: 'exact', head: true })
-    .eq('entity_type', 'bom_item')
-    .is('resolved_at', null);
-
-  // ── Category breakdown ──
-  const { data: catData } = await supabase
-    .from('proposal_bom_lines')
-    .select('item_category');
-
-  const categoryCounts: Record<string, number> = {};
-  (catData ?? []).forEach((row: any) => {
-    const cat = row.item_category ?? 'unknown';
-    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-  });
+  // ── Summary stats (mig 194) ──
+  // One RPC returns the four counts + per-category breakdown in a single pass,
+  // replacing 3 count:'exact' on proposal_bom_lines (~24.7k rows) + a data_flags
+  // count + an unbounded item_category scan that pulled every row into Node.
+  const { data: summaryRaw } = await supabase.rpc('get_bom_review_summary');
+  const summary = (summaryRaw ?? {}) as unknown as {
+    total: number;
+    with_rate: number;
+    no_rate: number;
+    flagged: number;
+    category_counts: Record<string, number>;
+  };
+  const totalCount = summary.total ?? 0;
+  const withRateCount = summary.with_rate ?? 0;
+  const noRateCount = summary.no_rate ?? 0;
+  const flaggedCount = summary.flagged ?? 0;
+  const categoryCounts: Record<string, number> = summary.category_counts ?? {};
 
   // ── Paginated BOM lines ──
   let query = supabase
@@ -69,22 +54,31 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <Eyebrow className="mb-1">BOM REVIEW</Eyebrow>
-        <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">BOM Line Items Review</h1>
-        <p className="text-sm text-[#7C818E]">
-          Review and fix BOM data across all proposals. Double-click any cell to edit.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Eyebrow className="mb-1">BOM REVIEW</Eyebrow>
+          <h1 className="text-2xl font-heading font-bold text-n-950">BOM Line Items Review</h1>
+          <p className="text-sm text-n-500">
+            Review and fix BOM data across all proposals. Double-click any cell to edit.
+          </p>
+        </div>
+        <Link
+          href="/bom-review/import"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-shiroi-gold text-shiroi-ink text-xs font-medium hover:bg-shiroi-gold/90"
+        >
+          <Upload className="h-3.5 w-3.5" />
+          Import from Excel
+        </Link>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <p className="text-2xl font-heading font-bold text-[#1A1D24]">
+            <p className="text-2xl font-heading font-bold text-n-950">
               {(totalCount ?? 0).toLocaleString('en-IN')}
             </p>
-            <p className="text-xs text-[#7C818E]">Total BOM Lines</p>
+            <p className="text-xs text-n-500">Total BOM Lines</p>
           </CardContent>
         </Card>
         <Card>
@@ -92,7 +86,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
             <p className="text-2xl font-heading font-bold text-green-600">
               {(withRateCount ?? 0).toLocaleString('en-IN')}
             </p>
-            <p className="text-xs text-[#7C818E]">With Rate</p>
+            <p className="text-xs text-n-500">With Rate</p>
           </CardContent>
         </Card>
         <Card>
@@ -100,7 +94,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
             <p className="text-2xl font-heading font-bold text-orange-600">
               {(noRateCount ?? 0).toLocaleString('en-IN')}
             </p>
-            <p className="text-xs text-[#7C818E]">Missing Rate</p>
+            <p className="text-xs text-n-500">Missing Rate</p>
           </CardContent>
         </Card>
         <Card>
@@ -108,18 +102,18 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
             <p className="text-2xl font-heading font-bold text-red-600">
               {flaggedCount ?? 0}
             </p>
-            <p className="text-xs text-[#7C818E]">Flagged Items</p>
+            <p className="text-xs text-n-500">Flagged Items</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Category Filter */}
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-sm text-[#7C818E]">Category:</span>
+        <span className="text-sm text-n-500">Category:</span>
         <Link
           href="/bom-review"
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-            !categoryFilter ? 'bg-[#00B050] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            !categoryFilter ? 'bg-shiroi-gold text-shiroi-ink' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           All ({totalCount?.toLocaleString('en-IN')})
@@ -132,7 +126,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
               key={cat}
               href={`/bom-review?category=${cat}`}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                categoryFilter === cat ? 'bg-[#00B050] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                categoryFilter === cat ? 'bg-shiroi-gold text-shiroi-ink' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {cat.replace(/_/g, ' ')} ({count.toLocaleString('en-IN')})
@@ -166,7 +160,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
               Previous
             </Link>
           )}
-          <span className="px-3 py-1 text-sm text-[#7C818E]">
+          <span className="px-3 py-1 text-sm text-n-500">
             Page {page} of {totalPages}
           </span>
           {page < totalPages && (

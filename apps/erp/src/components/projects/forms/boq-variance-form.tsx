@@ -4,10 +4,11 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Select } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
-import { RefreshCw, Save, Plus, X, Trash2, Check, Send } from 'lucide-react';
+import { RefreshCw, Save, Plus, X, Trash2, Check, Send, Pencil } from 'lucide-react';
 import { seedBoqFromBom, updateCostVariance, updateBoqItemStatus, updateBoqItem, addBoqItem, deleteBoqItem, completeBoq, updateProjectCostManual, sendBoqToPurchase, applyPriceBookRates, updateEstimatedSiteExpenses } from '@/lib/project-step-actions';
 import { BOI_CATEGORIES } from '@/lib/boi-constants';
 import { ItemCombobox, type ItemSuggestion } from '@/components/forms/item-combobox';
+import { BOQ_STATUS_OPTIONS } from '@/lib/label-constants';
 
 interface BoqActionsProps {
   projectId: string;
@@ -49,22 +50,13 @@ export function BoqSeedButton({ projectId, hasBomLines, hasVariances }: BoqActio
 }
 
 // BOQ item status dropdown — used in step-boq.tsx
-const BOQ_STATUS_OPTIONS = [
-  { value: 'yet_to_finalize', label: 'Yet to Finalize' },
-  { value: 'yet_to_place', label: 'Yet to Place' },
-  { value: 'order_placed', label: 'Order Placed' },
-  { value: 'received', label: 'Received' },
-  { value: 'ready_to_dispatch', label: 'Ready to Dispatch' },
-  { value: 'delivered', label: 'Delivered' },
-];
-
 const STATUS_DOT_COLORS: Record<string, string> = {
   yet_to_finalize: '#7C818E',
   yet_to_place: '#B45309',
   order_placed: '#2563EB',
   received: '#059669',
   ready_to_dispatch: '#7C3AED',
-  delivered: '#00B050',
+  delivered: '#16A34A',
 };
 
 interface BoqItemStatusSelectProps {
@@ -191,10 +183,16 @@ const GST_RATES = ['0', '5', '12', '18', '28'];
 export function BoqAddItemRow({
   projectId,
   suggestions,
+  categories,
+  units: unitsProp,
 }: {
   projectId: string;
   suggestions: ItemSuggestion[];
+  categories?: { value: string; label: string }[];
+  units?: string[];
 }) {
+  const cats = categories ?? BOI_CATEGORIES;
+  const unitList = unitsProp ?? UNITS;
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -257,7 +255,7 @@ export function BoqAddItemRow({
             className="text-xs h-8 w-[140px]"
           >
             <option value="">Category...</option>
-            {BOI_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {cats.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5">
@@ -302,7 +300,7 @@ export function BoqAddItemRow({
               onChange={(e) => setRow({ ...row, unit: e.target.value })}
               className="text-xs h-8 w-[60px]"
             >
-              {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+              {unitList.map((u) => <option key={u} value={u}>{u}</option>)}
             </Select>
           </div>
         </td>
@@ -714,5 +712,124 @@ export function BoqCategoryFilter({
         return <option key={cat} value={cat}>{label}</option>;
       })}
     </Select>
+  );
+}
+
+// ── BOQ Edit dialog — same fields as the inline double-click editor, but
+// discoverable (spec req 3: "Provide an Edit option for each item").
+// Note: updateBoqItem's patch has no `unit` field, so Unit is not editable here.
+
+const BOQ_EDIT_GST_RATES = ['0', '5', '12', '18', '28'];
+
+interface BoqEditableItem {
+  id: string;
+  item_description: string | null;
+  brand: string | null;
+  model: string | null;
+  quantity: number;
+  unit_price: number;
+  gst_rate: number;
+}
+
+export function BoqEditButton({ projectId, item }: { projectId: string; item: BoqEditableItem }) {
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [form, setForm] = React.useState({
+    item_description: item.item_description ?? '',
+    brand: item.brand ?? '',
+    model: item.model ?? '',
+    quantity: String(item.quantity ?? ''),
+    unit_price: String(item.unit_price ?? ''),
+    gst_rate: String(item.gst_rate ?? '18'),
+  });
+
+  async function handleSave() {
+    if (!form.item_description.trim() || !form.quantity) {
+      setError('Description and Qty are required');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    const result = await updateBoqItem({
+      projectId,
+      itemId: item.id,
+      data: {
+        item_description: form.item_description,
+        brand: form.brand || null,
+        model: form.model || null,
+        quantity: parseFloat(form.quantity),
+        unit_price: parseFloat(form.unit_price) || 0,
+        gst_rate: parseFloat(form.gst_rate) || 0,
+      },
+    });
+    setSaving(false);
+    if (result.success) {
+      setOpen(false);
+      router.refresh();
+    } else {
+      setError(result.error ?? 'Failed to save');
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button
+        size="sm" variant="ghost"
+        className="h-7 w-7 p-0 text-n-400 hover:text-n-700"
+        title="Edit item"
+        onClick={() => setOpen(true)}
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </Button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setOpen(false)}>
+      <div className="bg-white rounded-lg shadow-lg p-4 w-[440px] space-y-3" onClick={(e) => e.stopPropagation()}>
+        <h4 className="text-sm font-semibold text-n-900">Edit BOQ item</h4>
+        <p className="text-[11px] text-n-500">Same fields as the inline double-click editor.</p>
+        <div>
+          <label className="block text-[10px] text-n-500 mb-0.5">Description *</label>
+          <Input value={form.item_description}
+            onChange={(e) => setForm({ ...form, item_description: e.target.value })} className="text-xs h-8" />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Brand</label>
+            <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} className="text-xs h-8" />
+          </div>
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Model</label>
+            <Input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} className="text-xs h-8" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Qty *</label>
+            <Input type="number" step="0.01" value={form.quantity}
+              onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="text-xs h-8" />
+          </div>
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Rate</label>
+            <Input type="number" step="0.01" value={form.unit_price}
+              onChange={(e) => setForm({ ...form, unit_price: e.target.value })} className="text-xs h-8" />
+          </div>
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">GST %</label>
+            <Select value={form.gst_rate} onChange={(e) => setForm({ ...form, gst_rate: e.target.value })} className="text-xs h-8">
+              {BOQ_EDIT_GST_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}
+            </Select>
+          </div>
+        </div>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+        <div className="flex justify-end gap-2 pt-1">
+          <Button size="sm" variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
+          <Button size="sm" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
+        </div>
+      </div>
+    </div>
   );
 }

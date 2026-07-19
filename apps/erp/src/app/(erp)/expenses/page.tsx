@@ -61,11 +61,11 @@ export default async function ExpensesPage({ searchParams }: Props) {
 
   const { data: projectsData } = await supabase
     .from('projects')
-    .select('id, project_number, customer_name')
+    .select('id, project_number, customer_name, project_name')
     .order('created_at', { ascending: false })
     .limit(500);
   const projectOpts = (projectsData ?? []).map((p) => ({
-    id: p.id, project_number: p.project_number, customer_name: p.customer_name,
+    id: p.id, project_number: p.project_number, customer_name: p.customer_name, project_name: p.project_name,
   }));
 
   const currentPage = filters.page ?? 1;

@@ -52,7 +52,7 @@ export function AuditLogTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-sm text-[#7C818E]">
+      <div className="flex items-center justify-center py-12 text-sm text-n-500">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading audit logâ€¦
       </div>
     );
@@ -61,7 +61,7 @@ export function AuditLogTab() {
   if (rows.length === 0) {
     return (
       <Card>
-        <CardContent className="py-12 text-center text-sm text-[#7C818E]">
+        <CardContent className="py-12 text-center text-sm text-n-500">
           No decisions logged yet.
         </CardContent>
       </Card>
@@ -72,9 +72,9 @@ export function AuditLogTab() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-md border border-[#E5E7EB] overflow-hidden">
+      <div className="rounded-md border border-n-200 overflow-hidden">
         {/* Header */}
-        <div className="grid grid-cols-[1.5fr_2fr_2fr_3fr_1.5fr_1fr] gap-3 bg-[#F9FAFB] px-4 py-2 text-xs font-semibold text-[#7C818E] uppercase tracking-wide">
+        <div className="grid grid-cols-[1.5fr_2fr_2fr_3fr_1.5fr_1fr] gap-3 bg-n-050 px-4 py-2 text-xs font-semibold text-n-500 uppercase tracking-wide">
           <span>Date</span>
           <span>Project #</span>
           <span>Customer</span>
@@ -86,10 +86,10 @@ export function AuditLogTab() {
         {rows.map((row) => (
           <div
             key={row.id}
-            className="border-t border-[#E5E7EB] grid grid-cols-[1.5fr_2fr_2fr_3fr_1.5fr_1fr] gap-3 px-4 py-3 items-start"
+            className="border-t border-n-200 grid grid-cols-[1.5fr_2fr_2fr_3fr_1.5fr_1fr] gap-3 px-4 py-3 items-start"
           >
             {/* Date */}
-            <span className="text-xs text-[#7C818E]">
+            <span className="text-xs text-n-500">
               {new Date(row.made_at).toLocaleString('en-IN', {
                 day: '2-digit', month: 'short', year: '2-digit',
                 hour: '2-digit', minute: '2-digit',
@@ -97,16 +97,16 @@ export function AuditLogTab() {
             </span>
 
             {/* Project # */}
-            <span className="font-mono text-xs text-[#1A1D24]">{row.project_number}</span>
+            <span className="font-mono text-xs text-n-950">{row.project_number}</span>
 
             {/* Customer */}
-            <span className="text-xs text-[#1A1D24] truncate">{row.customer_name}</span>
+            <span className="text-xs text-n-950 truncate">{row.customer_name}</span>
 
             {/* Decision details */}
             <div className="space-y-0.5">
               <DecisionChip decision={row.decision} />
               {row.decision === 'confirmed' && (
-                <p className="text-[10px] text-[#7C818E]">
+                <p className="text-[10px] text-n-500">
                   {row.prev_size_kwp !== row.new_size_kwp && (
                     <span>kWp: {row.prev_size_kwp} â†’ {row.new_size_kwp} Â· </span>
                   )}
@@ -116,7 +116,7 @@ export function AuditLogTab() {
                 </p>
               )}
               {row.decision === 'duplicate' && (
-                <p className="text-[10px] text-[#7C818E]">
+                <p className="text-[10px] text-n-500">
                   Score: {row.losing_score} (this) vs {row.winning_score} (kept)
                   {row.notes && ` Â· ${row.notes}`}
                 </p>
@@ -124,7 +124,7 @@ export function AuditLogTab() {
             </div>
 
             {/* Made by (UUID short) */}
-            <span className="font-mono text-[10px] text-[#7C818E]">
+            <span className="font-mono text-[10px] text-n-500">
               {row.made_by.slice(0, 8)}â€¦
             </span>
 
@@ -152,7 +152,7 @@ export function AuditLogTab() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-[#7C818E]">
+        <div className="flex items-center justify-between text-sm text-n-500">
           <span>Page {page + 1} of {totalPages} ({totalRows} total)</span>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>

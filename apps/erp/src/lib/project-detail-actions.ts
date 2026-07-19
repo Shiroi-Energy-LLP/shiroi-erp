@@ -4,6 +4,8 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { emitErpEvent } from './n8n/emit';
+import { getSessionContext, getCurrentEmployeeId } from '@/lib/auth';
+import { getActiveEmployeesForSelect } from './employees-queries';
 
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
@@ -68,49 +70,20 @@ const EDITABLE_PROJECT_FIELDS = new Set<string>([
 ]);
 
 /**
- * Fields that require elevated roles. Checked alongside the generic
- * updater below.
+ * Project Value (contracted_value) is PM-owned: only the project manager
+ * may edit it, with founder as the standing override (2026-06-10 spec).
  */
-const FINANCIAL_FIELDS = new Set<string>([
-  'contracted_value',
-]);
-
-const ALLOWED_FINANCIAL_ROLES = new Set<string>([
-  'founder',
-  'project_manager',
-  'finance',
-  // "marketing_manager" is not a DB role yet — sales_engineer covers
-  // the marketing team until that role is created.
-  'sales_engineer',
-]);
+const PROJECT_VALUE_FIELD = 'contracted_value';
+const PROJECT_VALUE_EDIT_ROLES = new Set<string>(['project_manager', 'founder']);
 
 // ── Primitive: load the caller's role ──────────────────────────────
-async function getCallerRole(): Promise<{
-  userId: string;
-  role: string | null;
-  employeeId: string | null;
-}> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { userId: '', role: null, employeeId: null };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('profile_id', user.id)
-    .maybeSingle();
-
-  return {
-    userId: user.id,
-    role: (profile?.role as string) ?? null,
-    employeeId: employee?.id ?? null,
-  };
+// Role-only, sharing the request-scoped session resolution (NEVER-DO #22 /
+// master-ref §4.17). The employees-id lookup that used to live here was unused
+// by the role-gated callers; the one caller that needs it (deleteProject's
+// deleted_by) resolves it via getCurrentEmployeeId() only after its role gate.
+async function getCallerRole(): Promise<{ userId: string; role: string | null }> {
+  const { userId, role } = await getSessionContext();
+  return { userId: userId ?? '', role };
 }
 
 /**
@@ -134,12 +107,12 @@ export async function updateProjectField(input: {
   const { userId, role } = await getCallerRole();
   if (!userId) return { success: false, error: 'Not authenticated' };
 
-  if (FINANCIAL_FIELDS.has(field)) {
-    if (!role || !ALLOWED_FINANCIAL_ROLES.has(role)) {
+  if (field === PROJECT_VALUE_FIELD) {
+    if (!role || !PROJECT_VALUE_EDIT_ROLES.has(role)) {
       console.warn(`${op} Role ${role} blocked from editing ${field}`);
       return {
         success: false,
-        error: 'Only PMs, finance, and founders can edit financial fields',
+        error: 'Only the Project Manager can edit the Project Value.',
       };
     }
   }
@@ -376,18 +349,49 @@ export async function getCurrentUserRoleForProject(): Promise<string | null> {
  * Returns active employees for the project-manager / site-supervisor
  * pickers. Light shape so the dropdown stays fast.
  */
+// Active-employee dropdown — delegates to the shared helper (2026-06-19 sweep §3).
 export async function getActiveEmployeesLite(): Promise<{ id: string; full_name: string }[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name', { ascending: true });
-  if (error) {
-    console.error('[getActiveEmployeesLite] Failed:', error.message);
-    return [];
+  return getActiveEmployeesForSelect();
+}
+
+const PROJECT_DELETE_ROLES = new Set<string>(['founder', 'project_manager']);
+
+/**
+ * Soft delete (deleted_at + deleted_by). Hard delete is impossible anyway —
+ * a dozen RESTRICT FKs (invoices, payments, POs…) reference projects.
+ * Restore is DB-only by design (2026-06-11 spec).
+ */
+export async function deleteProject(input: {
+  projectId: string;
+  confirmNumber: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const op = '[deleteProject]';
+  const { role } = await getCallerRole();
+  if (!role || !PROJECT_DELETE_ROLES.has(role)) {
+    return { success: false, error: 'Only Project Managers and Founders can delete projects.' };
   }
-  return (data ?? []) as { id: string; full_name: string }[];
+  const employeeId = await getCurrentEmployeeId();
+  const supabase = await createClient();
+  const { data: project, error: readErr } = await supabase
+    .from('projects')
+    .select('project_number, deleted_at')
+    .eq('id', input.projectId)
+    .maybeSingle();
+  if (readErr || !project) return { success: false, error: readErr?.message ?? 'Project not found' };
+  if (project.deleted_at) return { success: false, error: 'Project is already deleted.' };
+  if ((project.project_number ?? '') !== input.confirmNumber.trim()) {
+    return { success: false, error: 'Confirmation text does not match the project number.' };
+  }
+  const { error } = await supabase
+    .from('projects')
+    .update({ deleted_at: new Date().toISOString(), deleted_by: employeeId ?? null } as any)
+    .eq('id', input.projectId);
+  if (error) {
+    console.error(`${op} Soft delete failed:`, { code: error.code, message: error.message, projectId: input.projectId });
+    return { success: false, error: error.message };
+  }
+  revalidatePath('/projects');
+  return { success: true };
 }
 
 /**
@@ -418,6 +422,31 @@ export async function searchContactsLite(
   return (data ?? []) as { id: string; name: string; phone: string | null; email: string | null }[];
 }
 
+export interface ProjectSearchHit {
+  id: string;
+  project_number: string | null;
+  customer_name: string | null;
+  project_name: string | null;
+}
+
+export async function searchProjectsLite(query: string): Promise<ProjectSearchHit[]> {
+  const op = '[searchProjectsLite]';
+  const supabase = await createClient();
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+  const { data, error } = await supabase.rpc('search_projects_lite', {
+    p_query: trimmed,
+    p_limit: 8,
+  });
+  if (error) {
+    console.error(`${op} RPC failed:`, { code: error.code, message: error.message });
+    return [];
+  }
+  return (data ?? []).map((r: { id: string; project_number: string | null; customer_name: string | null; project_name: string | null }) => ({
+    id: r.id, project_number: r.project_number, customer_name: r.customer_name, project_name: r.project_name,
+  }));
+}
+
 /**
  * Totals for the Financial box:
  *   - contracted_value (from project)
@@ -434,41 +463,25 @@ export async function getProjectFinancials(projectId: string): Promise<{
 }> {
   const supabase = await createClient();
 
-  const [{ data: project }, { data: boqItems }, { data: siteExpenses }] = await Promise.all([
-    supabase.from('projects').select('contracted_value').eq('id', projectId).maybeSingle(),
-    supabase
-      .from('project_boq_items')
-      .select('total_price, quantity, unit_price')
-      .eq('project_id', projectId),
-    supabase
-      .from('expenses')
-      .select('amount, status')
-      .eq('project_id', projectId)
-      .in('status', ['approved']),
-  ]);
-
-  const contractedValue = Number(project?.contracted_value ?? 0);
-  const boqTotal = (boqItems ?? []).reduce((sum, item: any) => {
-    const itemTotal =
-      typeof item.total_price === 'number'
-        ? item.total_price
-        : Number(item.quantity ?? 0) * Number(item.unit_price ?? 0);
-    return sum + (Number.isFinite(itemTotal) ? itemTotal : 0);
-  }, 0);
-  const siteExpensesTotal = (siteExpenses ?? []).reduce(
-    (sum, e: any) => sum + Number(e.amount ?? 0),
-    0,
-  );
-  const actualExpenses = boqTotal + siteExpensesTotal;
-  const marginAmount = contractedValue - actualExpenses;
-  const marginPct = contractedValue > 0 ? (marginAmount / contractedValue) * 100 : 0;
+  // mig 195: one SQL pass (contracted value + BOQ total + approved site-expense
+  // total + margin) replaces 3 parallel reads + a JS .reduce over money rows
+  // (NEVER-DO #12). Returns zeros for a missing / RLS-filtered project.
+  const { data } = await supabase.rpc('get_project_financials', { p_project_id: projectId });
+  const f = (data ?? {}) as unknown as {
+    contracted_value: number;
+    boq_total: number;
+    site_expenses_total: number;
+    actual_expenses: number;
+    margin_amount: number;
+    margin_pct: number;
+  };
 
   return {
-    contractedValue,
-    actualExpenses,
-    boqTotal,
-    siteExpensesTotal,
-    marginAmount,
-    marginPct,
+    contractedValue: Number(f.contracted_value ?? 0),
+    actualExpenses: Number(f.actual_expenses ?? 0),
+    boqTotal: Number(f.boq_total ?? 0),
+    siteExpensesTotal: Number(f.site_expenses_total ?? 0),
+    marginAmount: Number(f.margin_amount ?? 0),
+    marginPct: Number(f.margin_pct ?? 0),
   };
 }

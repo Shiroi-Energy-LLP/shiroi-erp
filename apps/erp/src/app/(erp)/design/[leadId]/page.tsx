@@ -2,9 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLead } from '@/lib/leads-queries';
 import { getDesignWorkspaceData, getProposalBomLines } from '@/lib/design-queries';
-import { createDraftDetailedProposal } from '@/lib/quote-actions';
 import { LeadFilesPanel } from '@/components/design/lead-files-panel';
 import { BomPicker } from '@/components/sales/bom-picker';
+import { StartDetailedProposalButton } from '@/components/sales/start-detailed-proposal-button';
 import { DesignNotesEditor } from '@/components/design/design-notes-editor';
 import {
   Card,
@@ -33,21 +33,15 @@ export default async function DesignWorkspacePage({ params }: DesignWorkspacePro
   // Parallel reads for the header + BOM picker.
   const { survey, leadMeta, priceBookItems } = await getDesignWorkspaceData(leadId);
 
-  // If the lead doesn't have a draft proposal yet, auto-create one now so
-  // the designer can start composing BOM. This is the same action the Quote
-  // tab calls when the sales engineer clicks "Start Detailed Proposal".
-  let draftProposalId = leadMeta?.draft_proposal_id ?? null;
-  if (
-    !draftProposalId &&
-    (lead.status === 'site_survey_scheduled' ||
-      lead.status === 'site_survey_done' ||
-      lead.status === 'design_in_progress')
-  ) {
-    const createResult = await createDraftDetailedProposal(leadId);
-    if (createResult.success) {
-      draftProposalId = createResult.data.proposalId;
-    }
-  }
+  // Draft proposal resolution. The draft is created on an explicit click
+  // (StartDetailedProposalButton) — never auto-created during render
+  // (NEVER-DO #24: a GET must not write; prefetch / concurrent renders would
+  // double-fire the INSERT and the proposal.requested n8n event).
+  const draftProposalId = leadMeta?.draft_proposal_id ?? null;
+  const canStartProposal =
+    lead.status === 'site_survey_scheduled' ||
+    lead.status === 'site_survey_done' ||
+    lead.status === 'design_in_progress';
 
   const bomLines = await getProposalBomLines(draftProposalId);
   const bomLineCount = bomLines.length;
@@ -149,6 +143,21 @@ export default async function DesignWorkspacePage({ params }: DesignWorkspacePro
           bomLines={bomLines}
           priceBookOptions={priceBookItems}
         />
+      ) : canStartProposal ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Bill of Materials</CardTitle>
+          </CardHeader>
+          <CardContent className="py-6 text-center space-y-3">
+            <p className="text-sm text-n-600">
+              Start the detailed proposal to create a draft and open the BOM editor. This also
+              notifies the design head to assign a designer.
+            </p>
+            <div className="flex justify-center">
+              <StartDetailedProposalButton leadId={leadId} />
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <Card>
           <CardContent className="py-8 text-center text-sm text-n-500">

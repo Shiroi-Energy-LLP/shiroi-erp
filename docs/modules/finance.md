@@ -29,6 +29,15 @@ Finance Module V2 shipped overnight. Key additions on top of V1:
 - `/cash` — Zoho V2 summary panel (AR/AP bills/AP POs/reconciliation flags)
 - `/dashboard` (founder) — Zoho sync health card (pending/dead queue counts)
 
+## Zoho Books Live API Sync (July 16, 2026 — mig 204, spec `2026-07-16-zoho-live-api-sync-design.md`)
+
+Direction inverted vs the 2026-04 design: **Zoho Books is the inbound source of truth for finance entries; the ERP writes back only approved expense vouchers.**
+
+- **Inbound:** `supabase/functions/zoho-sync` (fired every 15 min by n8n workflow 63) pulls all 12 Zoho modules incrementally (`last_modified_time` watermark in `zoho_sync_state`, page-budgeted) and upserts on the `zoho_*_id` keys, `source='zoho_import'`. ERP-owned columns (project_id, attribution, workflow status) are never clobbered; `customer_payments` insert-only (Tier 3); expense echo-guard skips `source='erp'` rows. Line items + tax splits are NOT pulled (list endpoints don't carry them).
+- **Outbound (vouchers only):** the mig-069 expense enqueue trigger feeds `zoho_sync_queue`; `claim_zoho_voucher_batch()` claims rows whose expense is `approved`; the function POSTs/PUTs `/books/v3/expenses` and stamps `zoho_expense_id` back. The 8 non-expense enqueue triggers were **dropped** in mig 204 (644 stale queue rows parked `skipped`). Account mapping: `zoho_account_codes.erp_expense_category` ↔ `expense_categories.code`, fallback `ZOHO_DEFAULT_EXPENSE_ACCOUNT_ID`.
+- **Admin:** `/settings/zoho-sync` (founder + finance) — watermarks, run history, voucher-push health, manual trigger (`triggerZohoSync` action).
+- **Go-live (pending Vivek):** Zoho self-client creds → `scripts/set-zoho-edge-secrets.ts` (**set `ZOHO_PULL_SINCE=2026-04-17`** — payments grain caveat, spec §4) → deploy function → activate workflow 63. n8n workflow 62 (old outbound scaffold) deleted.
+
 ## Overview
 
 The finance module owns every rupee in and out of Shiroi — customer invoicing with GST splits and FY-aware document numbering, Tier-3 immutable customer payment records that cascade consultant commission payouts, vendor payment tracking with MSME 45-day statutory SLA alerts, and a PM-facing site-expense voucher approval queue. Payment follow-up tasks are materialised automatically by DB triggers per proposal milestone SLA, escalated hourly via `pg_cron`, and surfaced as a dedicated tab in `/payments`. All dashboard aggregations run through SQL RPCs (never JS `.reduce()` over money rows) and are wrapped in `unstable_cache` for the founder dashboard hot path.
@@ -95,7 +104,8 @@ C2 + C3 + C4 shipped via migration 118.
 - `vendor_bills` — V2: bill headers with `balance_due` generated column, cascaded by `recalc_vendor_bill_totals()` trigger.
 - `vendor_bill_items` — line items per bill (taxable_amount, CGST/SGST/IGST per line).
 - `vendor_payments` — per-bill or per-PO tracking, MSME 45-day SLA; `project_id` NOT NULL (derived from linked bill or PO).
-- `zoho_sync_queue` — outbound sync queue; `status` enum: pending/in_progress/done/dead; claimed via `claim_next_sync_batch()` with SKIP LOCKED.
+- `zoho_sync_queue` — outbound sync queue, **vouchers (expenses) only since mig 204**; `status` enum: pending/syncing/synced/failed/skipped (the earlier pending/in_progress/done/dead description matched the stale mig-072 RPCs, dropped in 204); claimed via `claim_zoho_voucher_batch()` with SKIP LOCKED.
+- `zoho_sync_state` / `zoho_sync_runs` — inbound live-sync watermarks per Zoho module + run log (mig 204; applied to dev as `203_zoho_live_api_sync` before main's mig 203 landed — file renumbered to 204). Surfaced at `/settings/zoho-sync`.
 - `zoho_project_mapping` — 12 auto-matched + 76 pending manual review. `match_method`: auto/manual/fuzzy.
 - `reconciliation_discrepancies` — ERP vs Zoho XLS delta rows per project/metric/date.
 - `project_site_expenses` — voucher workflow (voucher_number, expense_category, status, submitted_by/at, approved_by/at, rejected_reason, receipt_file_path).
@@ -177,6 +187,10 @@ Note: no `RecordVendorPaymentDialog` component yet — vendor payments are logge
 **Server action** at `apps/erp/src/lib/finance-actions.ts` — `generateEInvoice(invoiceId)` is a **stub** until GSP onboarding completes. Currently it builds the payload, persists `e_invoice_status='pending'` on the invoice, and returns `err()` — the GSP API call is the missing piece. Vivek must complete GSP signup (e.g. ClearTax, IRISIRP, etc.), set `SHIROI_GSTIN` + seller address env vars, then implement the GSP HTTP call inside the stub.
 
 **Env vars** introduced for e-invoice seller block: `SHIROI_GSTIN`, `SHIROI_ADDRESS_LINE1`, `SHIROI_CITY`, `SHIROI_STATE_CODE` (default `33` = Tamil Nadu), `SHIROI_PINCODE` (default `600002`), `SHIROI_ACCOUNTS_EMAIL`.
+
+## Payment follow-up back-fill (June 13, 2026)
+
+One-off reconciliation of Vivek's external "Payment followup" sheet into **dev** (no migration, no schema change). 12 `customer_payments` back-filled (₹28,90,336; receipts `SHIROI/REC/2026-27/0025–0036`; `payment_method='bank_transfer'`; `payment_date=2026-06-13`; `erp_recorded=true`; source `erp`; back-fill note — the sheet carried only cumulative totals, so receipt/date/method were stamped). The sheet diverged from the ERP **both ways**: 9 projects already had received ≥ the sheet (sheet was stale — not lowered, since `customer_payments` is Tier-3 immutable; Vivek's sheet was refreshed from the ERP instead). **Zero consultant payouts** spawned — none of the 12 leads carry a channel-partner commission, so `fn_create_consultant_payout_on_customer_payment` returns early (the `payment_method` CHECK also forced `bank_transfer` over a literal `'adjustment'`). **6 open items** were pushed as `notifications` (type `alert`) to Prem (`marketing_manager`) + Manivel (`project_manager`): create Lancor-Ananda / Dhandapani-BCPL / Sribala-BCPL via the normal lead→proposal→order flow then record (₹1.08L / ₹1.10L / ₹2.11L); identify BCPL + Murali-Pammal (blank sheet "received"); obtain Radiance Splendour's revised contract value (extra scope — ERP received ₹71.7L > contract ₹61L) and raise `contracted_value`. Re-apply the 12 payments to prod at the eventual cutover. Build scripts: `scripts/build-payment-reconciliation.py` + `scripts/build-payment-followup-refreshed.py`. See CHANGELOG 2026-06-13.
 
 ## Past Decisions & Specs
 

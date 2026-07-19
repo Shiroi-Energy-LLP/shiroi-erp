@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getProjectMilestones, getProject } from '@/lib/projects-queries';
+import { getProjectMilestones, getProjectHeader } from '@/lib/projects-queries';
 import { calcWeightedCompletion } from '@/lib/completion-calc';
 import { MilestoneStatusBadge } from '@/components/projects/milestone-status-badge';
 import { formatDate } from '@repo/ui/formatters';
@@ -18,7 +18,7 @@ interface MilestonesPageProps {
 export default async function MilestonesPage({ params }: MilestonesPageProps) {
   const { id } = await params;
   const [project, milestones] = await Promise.all([
-    getProject(id),
+    getProjectHeader(id),
     getProjectMilestones(id),
   ]);
 
@@ -36,14 +36,14 @@ export default async function MilestonesPage({ params }: MilestonesPageProps) {
         <CardContent>
           <div className="flex items-center gap-6">
             <div>
-              <div className="text-3xl font-bold text-[#1A1D24]">{project.completion_pct}%</div>
+              <div className="text-3xl font-bold text-n-950">{project.completion_pct}%</div>
               <div className="text-xs text-muted-foreground">Weighted Completion</div>
             </div>
-            <div className="flex-1 h-3 rounded-full bg-[#E5E7EB] overflow-hidden">
+            <div className="flex-1 h-3 rounded-full bg-n-200 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
                   project.completion_pct >= 100 ? 'bg-[#065F46]' :
-                  project.completion_pct >= 50 ? 'bg-[#00B050]' : 'bg-[#FCA524]'
+                  project.completion_pct >= 50 ? 'bg-[#16A34A]' : 'bg-[#FCA524]'
                 }`}
                 style={{ width: `${Math.min(project.completion_pct, 100)}%` }}
               />
@@ -71,14 +71,14 @@ export default async function MilestonesPage({ params }: MilestonesPageProps) {
                   {/* Step indicator */}
                   <div className="flex flex-col items-center">
                     <MilestoneStepIcon status={milestone.status} order={milestone.milestone_order} />
-                    {!isLast && <div className="w-0.5 h-8 bg-[#E5E7EB] mt-1" />}
+                    {!isLast && <div className="w-0.5 h-8 bg-n-200 mt-1" />}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <h3 className="text-sm font-medium text-[#1A1D24]">
+                        <h3 className="text-sm font-medium text-n-950">
                           {milestone.milestone_name}
                         </h3>
                         <MilestoneStatusBadge status={milestone.status} />
@@ -95,12 +95,12 @@ export default async function MilestonesPage({ params }: MilestonesPageProps) {
                     </div>
 
                     {/* Progress bar */}
-                    <div className="mt-2 w-full h-1.5 rounded-full bg-[#E5E7EB] overflow-hidden">
+                    <div className="mt-2 w-full h-1.5 rounded-full bg-n-200 overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
                           milestone.status === 'blocked' ? 'bg-[#991B1B]' :
                           milestone.status === 'completed' ? 'bg-[#065F46]' :
-                          milestone.status === 'in_progress' ? 'bg-[#00B050]' : 'bg-[#BFC3CC]'
+                          milestone.status === 'in_progress' ? 'bg-[#16A34A]' : 'bg-n-300'
                         }`}
                         style={{ width: `${Math.min(milestone.completion_pct, 100)}%` }}
                       />
@@ -154,7 +154,7 @@ export default async function MilestonesPage({ params }: MilestonesPageProps) {
                         <div className="text-xs font-medium text-muted-foreground">Components</div>
                         {milestone.project_completion_components.map((comp) => (
                           <div key={comp.id} className="flex items-center justify-between text-xs">
-                            <span className="text-[#3E3E3E]">{comp.component_name}</span>
+                            <span className="text-n-700">{comp.component_name}</span>
                             <div className="flex items-center gap-2">
                               {comp.requires_photo && (
                                 <span className={comp.photo_verified ? 'text-[#065F46]' : 'text-[#9A3412]'}>
@@ -197,9 +197,9 @@ function MilestoneStepIcon({ status, order }: { status: string; order: number })
   const baseClasses = 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold';
   const statusClasses =
     status === 'completed' ? 'bg-[#065F46] text-white' :
-    status === 'in_progress' ? 'bg-[#00B050] text-white' :
+    status === 'in_progress' ? 'bg-[#16A34A] text-white' :
     status === 'blocked' ? 'bg-[#991B1B] text-white' :
-    'bg-[#E5E7EB] text-[#7C818E]';
+    'bg-n-200 text-n-500';
 
   return (
     <div className={`${baseClasses} ${statusClasses}`}>

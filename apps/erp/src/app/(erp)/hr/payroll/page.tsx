@@ -20,10 +20,10 @@ export default async function PayrollExportPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/hr" className="text-sm text-[#00B050] hover:underline">
+          <Link href="/hr" className="text-sm text-shiroi-gold-dark hover:underline">
             &larr; Back to HR
           </Link>
-          <h1 className="text-2xl font-bold text-[#1A1D24] mt-1">Payroll Export</h1>
+          <h1 className="text-2xl font-bold text-n-950 mt-1">Payroll Export</h1>
           <p className="text-sm text-gray-500">
             Generate Zoho-compatible CSV for monthly payroll processing
           </p>

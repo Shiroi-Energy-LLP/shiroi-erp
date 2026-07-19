@@ -141,7 +141,7 @@ export function FeedbackTab({ myReports }: FeedbackTabProps) {
               onChange={(e) => setDescription(e.target.value)}
               disabled={pending}
               rows={5}
-              className="w-full rounded-md border border-n-300 bg-white px-3 py-2 text-sm text-n-900 placeholder:text-n-400 focus:outline-none focus:ring-2 focus:ring-shiroi-green focus:border-transparent"
+              className="w-full rounded-md border border-n-300 bg-white px-3 py-2 text-sm text-n-900 placeholder:text-n-400 focus:outline-none focus:ring-2 focus:ring-shiroi-gold focus:border-transparent"
               placeholder="What happened? What did you expect to happen?"
             />
             <p className="text-xs text-n-500">

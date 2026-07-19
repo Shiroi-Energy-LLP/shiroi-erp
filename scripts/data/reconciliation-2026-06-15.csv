@@ -1,0 +1,265 @@
+sheetNo,sheetName,sheetSize,sheetStatus,sheetYear,sheetProjectCost,sheetActualCost,bucket,matchScore,nearTie,sizeMatch,erpNumber,erpName,erpSize,erpStatus,erpOrderYear,erpContracted,valueDiff,yearDiff
+1,BBCL Midland,50,Completed,2022,0,0,auto,1,true,false,SHIROI/PROJ/2026-27/0028,BBCL Midland,5,completed,,0,0,
+2,Zebronics,9.9,Completed,2023,,,likely,0.588,false,false,SHIROI/PROJ/2026-27/0022,M/s. Zebronics,5,completed,,0,,
+3,Dr Sivabalan,,Completed,2024,,,auto,1,false,false,SHIROI/PROJ/2025-26/0145,Dr. Sivabalan,5,completed,2025,217892,,2024->2025
+4,Indus Allaiance,2,Completed,2024,,,ambiguous,0.46,false,true,SHIROI/PROJ/2026-27/0373,Indus Alliance M.S.Nagar,2,completed,,145000,,
+5,Mr Srinivasan,9.8,Completed,2024,,,likely,0.607,false,false,SHIROI/PROJ/2025-26/0204,Mr. Srinivasan 4KW,5,completed,2025,314064,,2024->2025
+6,Ramaniyam Subham,2.2,Completed,2024,,,ambiguous,0.637,true,false,SHIROI/PROJ/2025-26/0143,Ramaniyam - Sastha,5,completed,2025,0,,2024->2025
+7,Ramaniyam Sasta,3.3,Completed,2024,,,likely,0.797,false,false,SHIROI/PROJ/2025-26/0143,Ramaniyam - Sastha,5,completed,2025,0,,2024->2025
+8,Ramaniya Syndicate,5.4,Completed,2024,,,auto,0.805,false,true,SHIROI/PROJ/2025-26/0157,Ramaniyam - Syndicate,5,completed,2025,267830,,2024->2025
+9,DRA Homes,25,Completed,2024,,,likely,0.661,false,false,SHIROI/PROJ/2026-27/0359,DVR homes,2,completed,,165000,,
+10,Mr Rajesh,10,Completed,2024,,,ambiguous,0.708,true,false,SHIROI/PROJ/2026-27/0044,Dr ramesh,5,order_received,,346815,,
+11,Dr Sridhar,7,Completed,2024,,,auto,1,false,true,SHIROI/PROJ/2024-25/0036,Dr Sridhar,7,completed,2026,578955,,2024->2026
+12,Mr Varun,4.32,Completed,2024,,,sheet-only,0.319,true,true,SHIROI/PROJ/2025-26/0102,Mr Chandran,4.4,completed,2025,311398,,2024->2025
+13,Mr Muthu,10,Completed,2024,,,sheet-only,0.283,true,false,SHIROI/PROJ/2026-27/0266,Mr Murali,4.8,completed,2026,347601,,2024->2026
+14,Lancor TCP Altura,20,Completed,2024,,,likely,0.667,false,false,SHIROI/PROJ/2025-26/0140,Lancor - Altura,5,completed,2025,323416,,2024->2025
+15,Sribalaji Lancor,4.69,Completed,2024,,,ambiguous,0.382,true,true,SHIROI/PROJ/2025-26/0180,"Mr. Srinivasan. T, L & T",5,completed,2025,349999.7,,2024->2025
+16,L&T,7.7,Completed,2024,,,likely,0.75,false,false,SHIROI/PROJ/2025-26/0180,"Mr. Srinivasan. T, L & T",5,completed,2025,349999.7,,2024->2025
+17,Navins Hanging Garden,25.85,Completed,2024,,,auto,1,false,false,SHIROI/PROJ/2025-26/0120,Navins Hanging Garden,5,completed,2025,0,,2024->2025
+18,Ramaniyam Senate,6.6,Completed,2024,,,auto,1,false,false,SHIROI/PROJ/2026-27/0019,Ramaniyam Senate,5,completed,,0,,
+19,Ramaniyam Kalpataru,3.2,Completed,2024,,,auto,1,false,false,SHIROI/PROJ/2025-26/0176,Ramaniyam - Kalpataru,5,completed,2025,0,,2024->2025
+20,SSBPL KS Avanue,4,Completed,2024,,,likely,0.531,false,false,SHIROI/PROJ/2025-26/0060,SPDPL Luz Avenue,8,completed,2026,374058,,2024->2026
+21,Chettinad Hospital,60,Completed,2024,,,likely,0.519,false,false,SHIROI/PROJ/2026-27/0364,Chettinad Cement,10,waiting_net_metering,,0,,
+22,Hari Shree Senior School,81,Completed,2024,,,ambiguous,0.354,true,false,SHIROI/PROJ/2025-26/0011,National School,15,completed,2026,497182,,2024->2026
+23,Hari Shree Junior School,9.9,Completed,2024,,,ambiguous,0.354,true,false,SHIROI/PROJ/2025-26/0011,National School,15,completed,2026,497182,,2024->2026
+24,Ceebros boulevard,82,Completed,2024,,,ambiguous,0.413,false,true,SHIROI/PROJ/2025-26/0170,Cee bros Boulevard Flat Owners Assn,81.8,completed,2025,4288168,,2024->2025
+25,Radiance Flourish,240,Completed,2024,9083344,7999931.4,auto,1,false,true,SHIROI/PROJ/2024-25/0028,Radiance Flourish,240,completed,2026,9083344,0,2024->2026
+26,Enexio Fill Factory,95.6,Completed,2024,4703752,4049053.548,auto,1,false,true,SHIROI/PROJ/2025-26/0137,Enexio fill factory_,100,completed,2025,3379341,1324411,2024->2025
+27,Abirami Eng Cons & Co,20,Meter Client Scope,2024,,,ambiguous,0.442,false,false,SHIROI/PROJ/2025-26/0136,_Abirami Engineering works,75,completed,2025,2879318.06,,2024->2025
+28,Mr Karthikeyan / TVS Hamlet,6,Completed,2024,,,ambiguous,0.5,true,false,SHIROI/PROJ/2025-26/0098,Mr Venkatesh TVS Hamlet,3.3,completed,2025,185000,,2024->2025
+29,RWD Grand Corridor,75,Completed,2024,3727996,2771837.181,auto,1,false,false,SHIROI/PROJ/2024-25/0034,RWD Grand Corridor,325,completed,2026,3727996,0,2024->2026
+30,Jains Anarghya,19,Meter Client Scope,2024,,,likely,0.5,false,true,SHIROI/PROJ/2026-27/0326,Anarghya,19,completed,,0,,
+31,Jains Aadheeswar,42,Meter Client Scope,2024,,,auto,0.744,false,true,SHIROI/PROJ/2024-25/0004,Jians Aadheeswar,42,holding_shiroi,2026,1607178,,2024->2026
+32,Jains Advaya,64,Holding from Shiroi,2024,,,ambiguous,0.5,true,true,SHIROI/PROJ/2024-25/0003,Advaya,64,holding_client,2026,2419762,,2024->2026
+33,Mr Rathinam,5,Completed,2024,,,likely,0.531,false,true,SHIROI/PROJ/2026-27/0379,Jothiram,5,yet_to_start,2026,342000,,2024->2026
+34,Mr Anandan,4,Completed,2024,240000,202105.4,ambiguous,0.531,true,true,SHIROI/PROJ/2025-26/0102,Mr Chandran,4.4,completed,2025,311398,-71398,2024->2025
+35,Ramaniyam Summit,3.3,Completed,2024,,,ambiguous,0.637,true,false,SHIROI/PROJ/2025-26/0108,Ramaniyam tulsi,5,completed,2026,307977,,2024->2026
+36,Ramaniyam Trinity,5.5,Completed,2024,,,auto,0.688,false,true,SHIROI/PROJ/2025-26/0166,Ramaniyam - Trinity (H20),5,completed,2025,337366.56,,2024->2025
+37,Mr Kannaiyan,2.2,Completed,2024,,,ambiguous,0.51,true,false,SHIROI/PROJ/2025-26/0039,Mr Kasinathan,4.42,in_progress,2025,568711,,2024->2025
+38,Mr AM Raja,3.4,Completed,2024,,,ambiguous,0.5,true,false,SHIROI/PROJ/2026-27/0023,Mr. Raja,5,completed,,0,,
+39,Mr Krishnamurthy,2,Completed,2024,,,likely,0.65,false,false,SHIROI/PROJ/2025-26/0174,Mr. Krishnamurthy 2KW,5,completed,2025,209806,,2024->2025
+40,GRN Kuyili,2,Completed,2024,,,ambiguous,0.354,true,true,SHIROI/PROJ/2026-27/0282,GRN Sri Ramkripa,2,order_received,,145000,,
+41,Geeyam Meenakshi Illam,4,Completed,2024,,,auto,1,false,false,SHIROI/PROJ/2025-26/0183,Geeyam Meenakshi Illam,5,completed,2025,568130.4,,2024->2025
+42,GK Shetty tulive Bellevue,44,Completed,2024,1916814,1518939.041,auto,1,false,false,SHIROI/PROJ/2025-26/0164,Gk Shetty-TULIVE BELLEVUE,5,completed,2025,1916814,0,2024->2025
+257,Mr Swaminathan,6,Yet to Start,2026,435000,312247.3,auto,1,false,false,SHIROI/PROJ/2026-27/0267,Swaminathan,5,waiting_net_metering,,0,435000,
+44,Prestige Hill Crest,135,Waiting for Net Meter,2024,8967231,4492644.93,auto,1,false,true,SHIROI/PROJ/2025-26/0086,Prestige Hill Crest,135,waiting_net_metering,2025,8967231,0,2024->2025
+45,Sheela Green,13.5,Completed,2024,774591,706110.8096,auto,1,false,false,SHIROI/PROJ/2024-25/0024,Sheela Green,2312.21,completed,2024,774591,0,
+46,Navins Starwood,36,Completed,2024,1795000,1224746.98,auto,1,true,false,SHIROI/PROJ/2026-27/0016,Navins Starwood,5,completed,,0,1795000,
+47,Shree Vrikshah homes,9.9,Completed,2024,390000,248761.1,likely,0.51,false,true,SHIROI/PROJ/2024-25/0022,Sri virukshah homes,10,completed,2026,390000,0,2024->2026
+48,Legendry Builders,9.9,Completed,2024,450000,302420.078,ambiguous,0.5,true,false,SHIROI/PROJ/2026-27/0017,Legendry Builders - Gopalpuram Site.,5,completed,,0,450000,
+49,Mr Srinivasan L&T,5,Completed,2024,,,auto,1,false,true,SHIROI/PROJ/2025-26/0180,"Mr. Srinivasan. T, L & T",5,completed,2025,349999.7,,2024->2025
+50,Khurinji's Iris,3,Completed,2024,,,likely,0.737,false,false,SHIROI/PROJ/2025-26/0206,Khurinji iris,5,completed,2025,251548,,2024->2025
+51,Hindu School Payalwar Street,110,Completed,2024,7532270,5496751.228,likely,0.5,false,true,SHIROI/PROJ/2024-25/0005,Payalwar Street,110,completed,2026,7532270,0,2024->2026
+52,Adroit Prosper,10,Completed,2024,501199,366961.42,auto,1,false,true,SHIROI/PROJ/2024-25/0035,Adroit Prosper,10,completed,2026,501199,0,2024->2026
+53,RCC e Constrcution,20,Completed,2024,649621,462975.4,auto,1,false,false,SHIROI/PROJ/2024-25/0021,RCC e constrcution,10,completed,2026,649621,0,2024->2026
+54,Mr Saravana Bhava,2,Completed,2024,,,ambiguous,0.486,true,false,SHIROI/PROJ/2026-27/0046,Mr. Saravanan 5KW,5,order_received,,255000,,
+55,Mr Srinivasan Madipakkam,2,Completed,2024,,,ambiguous,0.567,true,false,SHIROI/PROJ/2025-26/0032,Mr Srinivasan Adyar,6,in_progress,2026,565000,,2024->2026
+56,Ramaniyam Parampara,3.3,Completed,2024,,,auto,1,false,false,SHIROI/PROJ/2025-26/0195,Ramaniyam - Parampara,5,completed,2025,146498.64,,2024->2025
+57,Mr Ravish,3.5,Completed,2024,,,ambiguous,0.567,true,false,SHIROI/PROJ/2026-27/0044,Dr ramesh,5,order_received,,346815,,
+58,GRN Shree Nivas,2,Completed,2024,,,ambiguous,0.453,true,false,SHIROI/PROJ/2025-26/0252,GRN Sai Vijay,5,completed,2025,145000,,2024->2025
+59,GRN Mangaladev,2,Completed,2024,,,ambiguous,0.425,true,false,SHIROI/PROJ/2025-26/0205,GRN - Mangaldev Anna nagar,4,completed,2025,295000,,2024->2025
+60,Mr Bharath,5,Completed,2024,,,ambiguous,0.496,false,false,SHIROI/PROJ/2025-26/0197,/24 Mr. S. Bharath,8,completed,2025,646770,,2024->2025
+61,Mr.Anilkumar Mehta - Home,8.8,Completed,2024,,,auto,0.773,false,true,SHIROI/PROJ/2025-26/0209,G.Anilkumar Mehta Home,8.8,completed,2025,517549.66,,2024->2025
+62,Opus 96,5.9,Completed,2024,,,likely,0.667,false,false,SHIROI/PROJ/2025-26/0193,Urbanrise - Opus 96,8,completed,2025,492143,,2024->2025
+63,BEEL,3.3,Completed,2024,,,ambiguous,0.425,false,false,SHIROI/PROJ/2025-26/0194,M/s. BEEL,5,completed,2025,200642.11,,2024->2025
+64,Ramaniyam Padhuka,2.7,Completed,2024,,,auto,1,false,false,SHIROI/PROJ/2025-26/0201,Ramaniyam - Padhuka,5,completed,2025,160816,,2024->2025
+65,DMS,29,Holding from client,2024,,,auto,1,false,false,SHIROI/PROJ/2025-26/0177,DMS,25,completed,2025,1360682,,2024->2025
+66,CM Constrcution,3.3,Completed,2024,235000,215595.964,auto,0.737,false,true,SHIROI/PROJ/2024-25/0006,CM Construction,3.3,completed,2024,235000,0,
+67,Mr Muralidharan,3.3,Completed,2024,,,auto,1,false,true,SHIROI/PROJ/2025-26/0212,Muralidharan,3.3,completed,2025,238034,,2024->2025
+68,Mr Devadoss,7,Completed,2024,505000,347602.93,auto,1,false,true,SHIROI/PROJ/2024-25/0025,Mr Devadoss,7,completed,2024,505000,0,
+69,Mr Seshadri,4,Completed,2024,,,likely,0.567,false,true,SHIROI/PROJ/2025-26/0200,Mr. Seshadri 4KW,4,completed,2025,246027.35,,2024->2025
+70,SLNC,13.5,Completed,2024,877958,542179.796,auto,1,false,true,SHIROI/PROJ/2024-25/0029,SLNC,13.5,completed,2024,877958,0,
+71,Mr Lakshmanan,3.3,Completed,2024,,,ambiguous,0.425,true,true,SHIROI/PROJ/2025-26/0053,Mr Sukumaran,3.3,completed,2025,217565,,2024->2025
+72,SSBPL KP Puram,8,Completed,2024,,,likely,0.531,false,false,SHIROI/PROJ/2026-27/0024,Sumanth KP Puram,4,completed,,246000,,
+73,Mr Chakrapani,4.4,Completed,2024,255000,217981.036,auto,1,false,true,SHIROI/PROJ/2025-26/0062,Mr Chakrapani,4.4,completed,2024,255000,0,
+74,Lancor Infinys,20,Completed,2024,853575,647277.32,auto,1,false,true,SHIROI/PROJ/2024-25/0038,Lancor Infinys,20,completed,2026,853575,0,2024->2026
+75,Ramaniyam Adhri,2.2,Completed,2024,169244,98761.516,ambiguous,0.671,true,true,SHIROI/PROJ/2024-25/0016,M/s Ramaniyam Adhri,2.2,completed,2024,169244,0,
+76,Mr MV Srinivasan,13.2,Completed,2024,,,likely,0.6,false,false,SHIROI/PROJ/2026-27/0354,Murali Srinivasan,10,completed,,0,,
+77,Mr Kesav Anand,2.2,Completed,2024,,,likely,0.779,false,false,SHIROI/PROJ/2026-27/0284,Keshav Anand,3,order_received,,444784.86,,
+78,Khurinji's Acanthus,5,Completed,2024,,,auto,0.761,false,true,SHIROI/PROJ/2025-26/0228,Khurinji Acanthus,5,completed,2025,300000,,2024->2025
+79,Shree Niketan,9,Completed,2024,,,likely,0.5,false,false,SHIROI/PROJ/2025-26/0208,shree niketan- Anna nagar,5,completed,2025,95840,,2024->2025
+80,Geeyam Nandhini,4,Completed,2024,,,likely,0.567,false,true,SHIROI/PROJ/2025-26/0101,Geeyam Skandha,4.4,in_progress,2025,240000,,2024->2025
+81,4 Bricks,5,Completed,2024,,,auto,0.744,false,true,SHIROI/PROJ/2026-27/0030,4Bricks,5,completed,,0,,
+82,GRN Bakhavachalam,2,Completed,2024,,,auto,0.628,false,true,SHIROI/PROJ/2025-26/0211,GRN - Bhakthavatchalam st,2,completed,2025,145000,,2024->2025
+83,GRN CP Ramasamy,2,Completed,2024,,,auto,0.6,false,true,SHIROI/PROJ/2026-27/0025,GRN - CP Ramasamy iyer St,2,completed,,145000,,
+84,Mr Arangarajan,5,Completed,2024,,,ambiguous,0.541,true,false,SHIROI/PROJ/2025-26/0115,Maharajan,4,completed,2025,218677,,2024->2025
+85,Mr C Kumar,3.2,Completed,2024,,,ambiguous,0.472,true,true,SHIROI/PROJ/2026-27/0008,Arunkumar,3.3,completed,,195000,,
+86,Mr Sangeetha,5.5,Completed,2024,,,ambiguous,0.51,true,false,SHIROI/PROJ/2025-26/0015,M/s Geetha,1.8,completed,2026,148823,,2024->2026
+87,Navins Vyakarana,5,Completed,2024,258834,193477.132,auto,1,false,true,SHIROI/PROJ/2024-25/0020,Navins vyakarana,5,completed,2024,258834,0,
+88,Vgk Saiharithik,5,Completed,2024,316000,241858.04,auto,1,false,true,SHIROI/PROJ/2024-25/0030,Vgk Saiharithik,5,completed,2026,316000,0,2024->2026
+89,Mr Vigneswaran,3.3,Completed,2024,,,likely,0.779,false,false,SHIROI/PROJ/2025-26/0240,Mr. Vigneshwaran,5,completed,2025,159225,,2024->2025
+90,Vinayaga Infratech,5,Completed,2024,255000,169133.82,auto,0.665,false,true,SHIROI/PROJ/2025-26/0097,M/s Vinayaga Infra tech,5,completed,2025,255000,0,2024->2025
+91,Mr Ramkumar,3.3,Completed,2024,,,ambiguous,0.567,true,true,SHIROI/PROJ/2026-27/0008,Arunkumar,3.3,completed,,195000,,
+92,Ms. Sridevi,3.3,Completed,2024,,,ambiguous,0.486,false,false,SHIROI/PROJ/2024-25/0036,Dr Sridhar,7,completed,2026,578955,,2024->2026
+93,Mr Lakshman Raj,3.3,Completed,2024,,,ambiguous,0.354,true,false,SHIROI/PROJ/2025-26/0102,Mr Chandran,4.4,completed,2025,311398,,2024->2025
+94,Mr Balaji,3.3,Completed,2024,,,ambiguous,0.51,true,false,SHIROI/PROJ/2026-27/0285,Balaji 2.5,2.5,order_received,,0,,
+95,Mr Aatish,3.3,Completed,2024,,,auto,0.607,false,true,SHIROI/PROJ/2025-26/0003,Mr Sathish,3.3,completed,2026,203285,,2024->2026
+96,VGK Unity Kingdom,10,Completed,2024,507212,370536.8,auto,1,false,true,SHIROI/PROJ/2024-25/0015,Vgk Unity Kingdom,10,completed,2024,507212,0,
+97,VGK Summer Garden,20,Completed,2024,1014424,676482.7,auto,1,false,false,SHIROI/PROJ/2024-25/0048,Vgk Summer Garden,210,completed,2025,1014424,0,2024->2025
+98,"MSM Unit II, Phase III",250,Completed,2024,9562500,7351732.925,auto,1,false,true,SHIROI/PROJ/2026-27/0026,MSM Unit II Phase III,250,completed,,0,9562500,
+99,Ramaniyam Abinaya,3.3,Completed,2024,192340,111685.476,ambiguous,0.65,true,false,SHIROI/PROJ/2025-26/0022,Ramaniyam Manasa,9.8,completed,2026,456419,-264079,2024->2026
+100,Rite Choice,2,Completed,2024,,,sheet-only,0.313,true,false,SHIROI/PROJ/2026-27/0343,Sripathy associates,10,completed,,475000,,
+101,S&P Courtyard,30,On Progress,2024,1150004,1073924.1,ambiguous,0.45,false,true,SHIROI/PROJ/2024-25/0041,Courtyard,30,in_progress,2024,1150004,0,
+102,VP Jewellery,5,Completed,2024,,,auto,1,false,true,SHIROI/PROJ/2025-26/0233,VP Jewellery,5,completed,2025,160235,,2024->2025
+103,Mr Chandrasekar,3,Completed,2024,,,likely,0.567,false,false,SHIROI/PROJ/2025-26/0202,Mr. Chandrasekar 3.3KW,5,completed,2025,195000,,2024->2025
+104,SSBPL NBR 2,4.4,Completed,2024,287233,169775.476,ambiguous,0.382,true,true,SHIROI/PROJ/2024-25/0007,SSBPL New Beach road,4.4,completed,2026,287233,0,2024->2026
+105,Lancor Hiranmayi,5,Completed,2024,260000,188121.86,auto,1,false,true,SHIROI/PROJ/2024-25/0037,Lancor Hiranmayi,5,completed,2026,260000,0,2024->2026
+106,Lancor Sahana,5,Completed,2024,260000,180425.26,auto,1,true,true,SHIROI/PROJ/2024-25/0018,Lancor Sahana,5,holding_shiroi,2026,260000,0,2024->2026
+107,Lancor Ratirupa,5,Meter Client Scope,2024,260000,184514.16,auto,1,false,true,SHIROI/PROJ/2024-25/0019,Lancor Ratirupa,5,completed,2026,260000,0,2024->2026
+108,Lancor Homeleigh,5,Completed,2024,260000,186711.56,auto,0.797,false,true,SHIROI/PROJ/2024-25/0040,Lancor Jomeleigh,5,completed,2026,260000,0,2024->2026
+109,Arihanth Nahar,10,Completed,2024,533628,374043.82,ambiguous,0.789,true,true,SHIROI/PROJ/2024-25/0045,Mr Arihanth Nagar,10,completed,2026,533628,0,2024->2026
+110,Mr Ramaswamy,3.3,Completed,2024,204000,133153.512,auto,0.756,false,true,SHIROI/PROJ/2024-25/0010,Mr Ramasamy,3.3,completed,2026,204000,0,2024->2026
+111,Mr Venkateswaran RTO,7,Completed,2024,330000,246070.72,auto,1,false,true,SHIROI/PROJ/2024-25/0002,Mr Venkateswaran RTO,7,completed,2026,330000,0,2024->2026
+112,SSBPL West Mambalam,3.3,Completed,2024,146131,87434.296,likely,0.807,false,false,SHIROI/PROJ/2024-25/0008,SSBPL West mamabalam,4,completed,2026,146131,0,2024->2026
+113,Kalakchetra,10,Waiting for Net Meter,2024,633504,526763.156,auto,1,false,true,SHIROI/PROJ/2024-25/0049,Kalakchetra,10,waiting_net_metering,2026,633504,0,2024->2026
+114,Mr Venkatraman,9,Completed,2024,465000,348765.34,auto,1,false,true,SHIROI/PROJ/2024-25/0033,Mr Venkatraman,9,completed,2026,465000,0,2024->2026
+115,Ramaniyam Shyamala,3.3,Completed,2024,192340,108374.24,auto,0.695,false,true,SHIROI/PROJ/2024-25/0050,M/s Ramaniyam shyamala,3.3,completed,2026,192340,0,2024->2026
+116,DRA Urbania,67,Completed,2024,2699936,2134946.716,auto,1,false,true,SHIROI/PROJ/2024-25/0031,DRA Urbania,67.6,completed,2025,2699936,0,2024->2025
+117,Mr.Sriram Pallikaranai,4,Completed,2024,276615,249005.1906,ambiguous,0.5,true,false,SHIROI/PROJ/2025-26/0104,Mr Sriram ,6,completed,2025,315000,-38385,2024->2025
+118,Ramaniyam Sri Vaikuntam,3.3,Completed,2024,192338,126561.396,likely,0.734,false,false,SHIROI/PROJ/2025-26/0218,Ramaniyam - Srivaikuntam,5,completed,2025,191406.31,931.69,2024->2025
+119,Newry Astor,10,Completed,2024,523876,400800.442,auto,1,true,false,SHIROI/PROJ/2025-26/0111,Newry Astor ,25,waiting_net_metering,2025,523876,0,2024->2025
+120,Vaf def Aero Systems,528,Completed,2024,20256400,15566528.41,auto,0.667,false,true,SHIROI/PROJ/2025-26/0113,Vaf def Aero Systems Pt Ltd,528,completed,2026,20256400,0,2024->2026
+121,Mr Parasuraman,5,Completed,2024,280000,277485.912,auto,1,true,false,SHIROI/PROJ/2025-26/0008,Mr Parasuraman,3.62,completed,2026,430000,-150000,2024->2026
+122,Mr Palanivelan,3.3,Completed,2024,220000,192299.808,auto,1,false,true,SHIROI/PROJ/2024-25/0013,Mr Palanivelan,3.3,completed,2025,220000,0,2024->2025
+123,SSBPL SPRING SEASON,3.3,Completed,2024,146131,85334.56,auto,1,false,true,SHIROI/PROJ/2024-25/0009,SSBPL Spring Season,3.3,completed,2026,146131,0,2024->2026
+124,Luxebuilt Homes Pvt ltd,3.3,Completed,2024,98931,43395.7,auto,0.779,false,true,SHIROI/PROJ/2024-25/0001,Luze built homes pvt ltd,3.3,completed,2026,98931,0,2024->2026
+125,Lancor Lumina H2,20,Meter Client Scope,2024,799199,675807.7,auto,1,true,true,SHIROI/PROJ/2025-26/0091,Lancor Lumina H2,20,completed,2025,799199,0,2024->2025
+126,Felix Johnson,7.5,Completed,2024,376726,250895.24,auto,1,false,true,SHIROI/PROJ/2025-26/0226,Felix Johnson,8,completed,2025,454882,-78156,2024->2025
+127,Mr Elumalai,3.3,Completed,2024,210000,163096.8,auto,1,false,true,SHIROI/PROJ/2024-25/0011,Mr Elumalai,3.3,completed,2025,210000,0,2024->2025
+128,Log on infra pvt ltd (NDR),22.5,Completed,2024,916693,597921.364,ambiguous,0.496,false,false,SHIROI/PROJ/2025-26/0057,Zeneto Infra Pvt Ltd,3.3,waiting_net_metering,2026,167165,749528,2024->2026
+129,M/S Ramya,10,Completed,2024,572000,362864.04,auto,0.6,false,true,SHIROI/PROJ/2024-25/0039,M/s Ramya Olympia Panche,9.9,completed,2025,572000,0,2024->2025
+130,Mr Davidson,8.7,Completed,2024,557499,364263.796,auto,1,false,false,SHIROI/PROJ/2024-25/0012,Mr Davidson,33,completed,2025,557499,0,2024->2025
+131,Navins Sankalpa,8,Completed,2024,309999.02,244586.36,auto,1,false,false,SHIROI/PROJ/2025-26/0229,Navins Sankalpa,5,completed,2025,310000,-0.98,2024->2025
+132,Sri Ganapathy Ashram,14,Completed,2024,745000,656445.826,likely,0.667,false,false,SHIROI/PROJ/2025-26/0224,Ganapathy Sachindanada ashram,5,completed,2025,171355,573645,2024->2025
+133,Jains Aura,3,Completed,2024,170200,145345.16,likely,0.5,false,false,SHIROI/PROJ/2024-25/0043,Aura,2,completed,2025,170200,0,2024->2025
+134,Mr Manokaran,3,Completed,2025,195000,171172.38,ambiguous,0.523,true,false,SHIROI/PROJ/2025-26/0221,Mr. Manoharan 3KW,5,completed,2025,195000,0,
+135,Mr Vijay Sabapathy,10,Completed,2024,515435,370087.02,auto,1,false,true,SHIROI/PROJ/2025-26/0089,Mr Vijay Sabapathy,10,completed,2025,515435,0,2024->2025
+136,"Sri Ganapathy Ashram, Phase II",9.9,Completed,2024,466951,302342.32,ambiguous,0.44,false,false,SHIROI/PROJ/2025-26/0224,Ganapathy Sachindanada ashram,5,completed,2025,171355,295596,2024->2025
+157,Mr Venkatesh,3.3,Completed,2025,180000,161805.06,auto,1,true,true,SHIROI/PROJ/2025-26/0103,Mr Venkatesh,3.3,completed,2025,180000,0,
+138,Mr Koildhass,5,Completed,2025,254882,183782.96,auto,1,false,true,SHIROI/PROJ/2025-26/0079,Mr Koildhass,5,completed,2025,254882,0,
+139,Ramaniyam Bharadwaj,4.4,Completed,2025,221805,120080.6,auto,0.702,false,true,SHIROI/PROJ/2025-26/0087,M/s Ramaniyam Bharadwaj,4.4,completed,2025,221805,0,
+140,M/s Latha ganesh,5,Completed,2025,350283,272299.52,auto,1,false,true,SHIROI/PROJ/2025-26/0078,M/s Latha Ganesh,5,completed,2025,350283,0,
+141,Ramaniyam Nagas,3.3,Completed,2025,184340,105770.616,auto,1,false,false,SHIROI/PROJ/2025-26/0249,Ramaniyam - Nagas,5,completed,2025,172340,12000,
+142,Ramaniyam tulsi,5,Completed,2025,307977,184759.32,auto,1,false,true,SHIROI/PROJ/2025-26/0108,Ramaniyam tulsi,5,completed,2026,307977,0,2025->2026
+143,Ramaniyam Anugraha,8.8,Completed,2025,418861,265410.22,auto,1,false,true,SHIROI/PROJ/2025-26/0093,Ramaniyam Anugraha,8.8,completed,2026,418861,0,2025->2026
+144,Ramaniyam Ocean dew Block 4,8.8,Completed,2025,418861,253814.608,ambiguous,0.819,true,false,SHIROI/PROJ/2025-26/0256,Ramaniyam - Ocean Dew Block V,5,completed,2025,413056,5805,
+145,Ramaniyam Ocean dew Block 5,8.8,Completed,2025,425056,255520.62,ambiguous,0.819,true,true,SHIROI/PROJ/2025-26/0090,Ramaniyam Ocean Dev Block 5,8.8,completed,2025,425056,0,
+146,Ramaniyam Vedha,3.3,Completed,2025,184340,102648.396,ambiguous,0.65,true,false,SHIROI/PROJ/2025-26/0201,Ramaniyam - Padhuka,5,completed,2025,160816,23524,
+147,Town & Country Project,0,Completed,2025,21240,8000,ambiguous,0.346,true,false,SHIROI/PROJ/2025-26/0148,Ramaniyam - Multiple projects,5,completed,2025,337366.56,-316126.56,
+148,Nithya Akshayam,5.5,Completed,2025,323000,217251.72,ambiguous,0.4,true,true,SHIROI/PROJ/2025-26/0262,Nithya Buildrs & Developers Akshayam,5,completed,2025,323066,-66,
+149,Mr Vishnu Vijay,3.3,Completed,2025,210926,137745.14,auto,1,false,true,SHIROI/PROJ/2025-26/0077,Mr Vishnu Vijay,3.3,completed,2026,210926,0,2025->2026
+150,M/s Srividya Srikanth,3.3,Completed,2025,217532,164385.1,auto,1,true,true,SHIROI/PROJ/2025-26/0074,M/s Srividya Srikanth,3.3,completed,2025,217532,0,
+151,Mr Subramanian,6.6,Completed,2025,430000,292687.4,auto,1,true,false,SHIROI/PROJ/2026-27/0006,subramanian,2.2,order_received,,167107,262893,
+152,Mr Babu Govindrajan,3.3,Completed,2025,195000,151755.26,auto,0.8,false,true,SHIROI/PROJ/2025-26/0095,Mr Babu Govindarajan,3.3,completed,2026,195000,0,2025->2026
+153,Mr Saravanan,5,Completed,2025,251499,164932.68,auto,1,false,true,SHIROI/PROJ/2025-26/0096,Mr Saravanan,5,completed,2025,251499,0,
+154,Mr Sairam,5,Completed,2025,310233,241055.04,auto,1,true,true,SHIROI/PROJ/2025-26/0099,Mr Sairam,5,completed,2025,310233,0,
+155,Mr Sankaranarayanan,3.3,Completed,2025,195000,167824.888,auto,1,false,true,SHIROI/PROJ/2025-26/0100,Mr Sankaranarayanan,3.3,completed,2025,195000,0,
+156,DRA Skylanties,19,On Progress,2025,774973,775289.16,auto,1,false,true,SHIROI/PROJ/2025-26/0110,DRA Skylanties,19,in_progress,2026,774973,0,2025->2026
+158,Geeyam Skandha,4.4,Completed,2025,240000,139141.598,auto,1,false,true,SHIROI/PROJ/2025-26/0101,Geeyam Skandha,4.4,in_progress,2025,240000,0,
+159,Mr Chandran,4.4,Completed,2025,311398,245250.02,auto,1,false,true,SHIROI/PROJ/2025-26/0102,Mr Chandran,4.4,completed,2025,311398,0,
+160,Mr Jeyaseelan,3.3,Completed,2025,195000,177499.9,ambiguous,0.472,true,true,SHIROI/PROJ/2025-26/0105,Mr Jeyaseelan / 3.3 kWp,3.3,completed,2025,195000,0,
+161,Krishna Ekta,3.3,Holding from client,2025,172957,120578.916,auto,1,false,true,SHIROI/PROJ/2025-26/0106,Krishna Ekta,3.3,waiting_net_metering,2025,172957,0,
+162,Mr Sriram,6,Completed,2025,315000,221235.9,auto,1,true,true,SHIROI/PROJ/2025-26/0104,Mr Sriram ,6,completed,2025,315000,0,
+163,Mr Venkateshperumal,3.3,Completed,2025,211185,165575.16,auto,1,false,true,SHIROI/PROJ/2025-26/0092,Mr Venkateshperumal,3.3,completed,2025,211185,0,
+164,Mr. Ramesh Babu,3.3,Completed,2025,190000,157642.98,ambiguous,0.541,true,false,SHIROI/PROJ/2026-27/0007,Rajan babu,6,completed,,437666,-247666,
+165,DRA Optima,40,Completed,2025,1655226,1248145.54,auto,1,false,true,SHIROI/PROJ/2025-26/0085,DRA Optima,40,completed,2026,1655226,0,2025->2026
+166,Mr Sanjay,9.9,Completed,2025,585000,515082.82,auto,1,true,false,SHIROI/PROJ/2025-26/0083,Mr Sanjay ,33.3,completed,2025,585000,0,
+167,Mr Ginu Mathew,3.3,Completed,2025,190000,164949.6,auto,0.773,false,true,SHIROI/PROJ/2025-26/0081,Mr Ginu Methew,3.3,completed,2025,190000,0,
+168,Dr Ramesh,5,Completed,2025,324000,268951.2,auto,1,true,true,SHIROI/PROJ/2026-27/0044,Dr ramesh,5,order_received,,346815,-22815,
+169,Ranamaniyam Saranagati,3.3,Completed,2025,184339,111923.52,auto,0.773,false,true,SHIROI/PROJ/2025-26/0076,Ramananiyam Saranagati ,3.3,waiting_net_metering,2026,184339,0,2025->2026
+170,Pacifica Aurum,3.3,Completed,2025,202838,141870.16,auto,1,false,false,SHIROI/PROJ/2025-26/0133,Pacifica aurum,5,completed,2025,235020,-32182,
+171,Mr Prabakaran,3.3,Completed,2025,195000,180075.02,auto,1,false,true,SHIROI/PROJ/2025-26/0073,Mr Prabakaran,3.3,completed,2025,195000,0,
+172,RCC e Constrcution 2,20,Meter Client Scope,2025,328398.64,234396.31,likely,0.765,false,false,SHIROI/PROJ/2024-25/0021,RCC e constrcution,10,completed,2026,649621,-321222.36,2025->2026
+173,GRN Chakarabani street,2.2,Completed,2025,145000,79450.384,ambiguous,0.541,true,true,SHIROI/PROJ/2026-27/0043,GRN- Rajagopal Street,2,order_received,,145000,0,
+174,Mr Siva Elango,5,Completed,2025,333000,271828.7,auto,0.773,false,true,SHIROI/PROJ/2025-26/0070,Mr Siva Elengo,5,completed,2025,333000,0,
+175,Shoba Silks Pvt Ltd,100,Waiting for Net Meter,2025,3401122,2784512.12,auto,0.702,false,true,SHIROI/PROJ/2025-26/0071,Shoba Silks Private Ltd,100,waiting_net_metering,2025,3401122,0,
+176,Green Crest,9.7,Completed,2025,387000,297131.02,ambiguous,0.403,true,false,SHIROI/PROJ/2025-26/0086,Prestige Hill Crest,135,waiting_net_metering,2025,8967231,-8580231,
+177,Mr Shanmugam,5.5,Completed,2025,300000,195156.84,auto,1,false,true,SHIROI/PROJ/2025-26/0069,Mr Shanmugam,5.5,completed,2026,300000,0,2025->2026
+178,Krishnaveni,9.3,Completed,2025,483562,351484.786,auto,1,false,false,SHIROI/PROJ/2025-26/0067,Krishnaveni,3.36,completed,2026,483562,0,2025->2026
+179,Jyothiswari,2.2,Completed,2025,167790,125936.224,ambiguous,0.51,true,true,SHIROI/PROJ/2025-26/0065,M/s Jyitheswari,2.2,completed,2026,167790,0,2025->2026
+180,Mr Sivasankar,2.2,Completed,2025,168000,117715.86,auto,1,false,true,SHIROI/PROJ/2025-26/0066,Mr Sivasankar,2.2,completed,2025,168000,0,
+181,Lancor Lumina ABC,20.5,Holding from client,2025,782406,671686.7,auto,1,false,true,SHIROI/PROJ/2025-26/0064,Lancor Lumina ABC,20,holding_client,2025,782406,0,
+182,Sri krishna Sweets,20,Waiting for Net Meter,2025,998208,750629.72,auto,1,false,true,SHIROI/PROJ/2025-26/0063,Sri Krishna Sweets,20,in_progress,2025,998208,0,
+183,Mahameru,10,Waiting for Net Meter,2025,387000,334954.5,auto,1,false,true,SHIROI/PROJ/2025-26/0061,Mahameru,9.8,waiting_net_metering,2026,387000,0,2025->2026
+184,Jains Seven 77,30,Holding from client,2025,1168200,980838.86,ambiguous,0.667,true,false,SHIROI/PROJ/2025-26/0059,Seven 77,9999.99,meter_client_scope,2026,1168200,0,2025->2026
+185,SPDPL Luz Avenue,8,Completed,2025,374058,298422.96,auto,1,false,true,SHIROI/PROJ/2025-26/0060,SPDPL Luz Avenue,8,completed,2026,374058,0,2025->2026
+186,Jains Aadhidev,30,Holding from client,2025,1168200,983307.06,likely,0.729,false,false,SHIROI/PROJ/2025-26/0058,Jians Aadhidev,9999.99,waiting_net_metering,2026,1168200,0,2025->2026
+187,Mr Arjun Prasath,9.7,Completed,2025,504192,391158.78,auto,1,false,true,SHIROI/PROJ/2025-26/0056,Arjun Prasath,9.7,completed,2026,504192,0,2025->2026
+188,Zeneto infra,3.3,Waiting for Net Meter,2025,167165,115864.74,likely,0.51,false,true,SHIROI/PROJ/2025-26/0057,Zeneto Infra Pvt Ltd,3.3,waiting_net_metering,2026,167165,0,2025->2026
+189,Mr Sridhar Rajan,6,Completed,2025,429217,309169.1,auto,1,false,true,SHIROI/PROJ/2025-26/0055,Mr Sridhar Rajan,6,completed,2026,429217,0,2025->2026
+190,Mr Rangachari,8,Completed,2025,496000,368479.92,auto,1,false,false,SHIROI/PROJ/2025-26/0054,Mr Rangachari,853,completed,2025,496000,0,
+191,Mr.Sukumaran,3.3,Completed,2025,217565,159613.004999999,auto,1,false,true,SHIROI/PROJ/2025-26/0053,Mr Sukumaran,3.3,completed,2025,217565,0,
+192,Ramaniyam Nivasam,4.4,Completed,2025,221806,136826.39,auto,1,false,true,SHIROI/PROJ/2025-26/0052,Ramaniyam Nivasam,4.4,completed,2026,221806,0,2025->2026
+193,Hindu School Adyar / Service,50,Completed,2025,422276,251381.88,ambiguous,0.378,true,false,SHIROI/PROJ/2025-26/0246,Lancor Street Light Service,5,completed,2025,0,422276,
+194,GRN Ambili Srinivas,3.3,Completed,2025,208993,160335.06,auto,1,false,false,SHIROI/PROJ/2026-27/0040,GRN ambili srinivas,5,order_received,,0,208993,
+195,SPDPL Padmalaiya,4.4,Completed,2025,243001,155835.97,ambiguous,0.797,true,true,SHIROI/PROJ/2025-26/0049,SPDPL Padmalaya,4.4,waiting_net_metering,2026,243001,0,2025->2026
+196,Nirupa Properties,2.2,Completed,2025,150000,95095.2,auto,1,false,true,SHIROI/PROJ/2025-26/0051,Nirupa Properties,2.2,waiting_net_metering,2026,150000,0,2025->2026
+197,Mr.Karthikeyan / CM Constructions,4.8,Completed,2025,333000,289891.18,auto,1,true,true,SHIROI/PROJ/2025-26/0048,Mr Karthikeyan / CM Constructions,4.8,completed,2026,333000,0,2025->2026
+198,Sri krishna Sweets Factory,100,On Progress,2025,550000,456880,likely,0.667,false,false,SHIROI/PROJ/2025-26/0063,Sri Krishna Sweets,20,in_progress,2025,998208,-448208,
+199,Mr Ravi / Tiruvannamalai,10,Completed,2025,160000,110073.2,ambiguous,0.537,true,true,SHIROI/PROJ/2026-27/0310,Tiruvunamalai,10,completed,,475182.75,-315182.75,
+200,Mr.Arunkumar,3.3,Completed,2025,195000,179076.26,auto,1,true,true,SHIROI/PROJ/2026-27/0008,Arunkumar,3.3,completed,,195000,0,
+201,Rakshas Enterprises,10,Waiting for Net Meter,2025,500000,398427.54,ambiguous,0.358,true,false,SHIROI/PROJ/2025-26/0230,Shobha textiles,5,completed,2025,3101122,-2601122,
+202,Mr.Anilkumar Mehta - Office,10.5,Completed,2025,683613,456060.748,auto,0.779,false,true,SHIROI/PROJ/2025-26/0043,G.Anilkumar Mehta Office,10.5,completed,2025,683613,0,
+203,Mr.Rajan Babu,6.6,Completed,2025,437266,332728.88,auto,1,true,true,SHIROI/PROJ/2026-27/0007,Rajan babu,6,completed,,437666,-400,
+204,Ramaniyam Sankaram,4.4,Completed,2025,224989,134826.56,auto,1,false,true,SHIROI/PROJ/2025-26/0040,Ramaniyam Sankaram,4.4,completed,2025,224989,0,
+205,Mr Raja grn gopal street,10,Completed,2025,770798,469616.77,ambiguous,0.526,true,false,SHIROI/PROJ/2026-27/0043,GRN- Rajagopal Street,2,order_received,,145000,625798,
+206,Mr.Kasinathan,8.8,Completed,2025,568711,397141.63,auto,1,false,false,SHIROI/PROJ/2025-26/0039,Mr Kasinathan,4.42,in_progress,2025,568711,0,
+207,Newry Adora,20,Holding from client,2025,800788,573729,auto,1,false,true,SHIROI/PROJ/2025-26/0038,Newry Adora,20,holding_shiroi,2025,800788,0,
+208,Lancor Bagya,5,Holding from client,2025,238958,275458.4,auto,1,false,true,SHIROI/PROJ/2025-26/0037,Lancor Bagya,5,holding_shiroi,2025,238958,0,
+209,Lancor Ananda,5,Waiting for Net Meter,2025,238958,199164.76,ambiguous,0.654,true,true,SHIROI/PROJ/2024-25/0018,Lancor Sahana,5,holding_shiroi,2026,260000,-21042,2025->2026
+210,Mr Jeyakumar,4.8,Completed,2025,325000,256168.96,auto,1,false,true,SHIROI/PROJ/2025-26/0036,Mr Jeyakumar,4.8,completed,2026,325000,0,2025->2026
+211,Geeyam Suryakantham,3.3,Completed,2025,161964,104770.456,auto,1,false,true,SHIROI/PROJ/2025-26/0035,Geeyam Suryakantham,3.3,completed,2026,161964,0,2025->2026
+212,Geeyam Prasang,4.4,Completed,2025,214916,294785.4,auto,1,false,true,SHIROI/PROJ/2025-26/0034,Geeyam Prasang,4.4,completed,2025,214916,0,
+213,Mr Saravanan 4 Bricks,3.3,Waiting for Net Meter,2025,174990,92823.11,auto,1,false,true,SHIROI/PROJ/2025-26/0031,Mr Saravanan 4 Bricks,3.3,completed,2026,174990,0,2025->2026
+214,Mr Srinivasan Adyar,6,On Progress,2025,565000,516982.1,auto,1,false,true,SHIROI/PROJ/2025-26/0032,Mr Srinivasan Adyar,6,in_progress,2026,565000,0,2025->2026
+215,Mr Nitin,6,Completed,2025,400000,331811.54,auto,1,false,true,SHIROI/PROJ/2025-26/0033,Mr Nitin,6,completed,2026,400000,0,2025->2026
+216,Khurinji's the Orchid,5,Completed,2025,288905,209183.15,auto,0.75,false,true,SHIROI/PROJ/2025-26/0027,Khurinji's Orchid,5,completed,2026,288905,0,2025->2026
+217,Ramaniyam Rangavilasam,3.3,Completed,2025,224989,149587.05,auto,1,false,false,SHIROI/PROJ/2025-26/0019,Ramaniyam Rangavilasam,4.4,completed,2026,224989,0,2025->2026
+218,VM Builder,5,Completed,2025,340000,264792.32,auto,1,false,true,SHIROI/PROJ/2025-26/0122,VM Builder,5,completed,2025,340000,0,
+219,Shankaran - Shree Viruksha,8,Waiting for Net Meter,2025,642640,454863.3,likely,0.519,false,false,SHIROI/PROJ/2025-26/0028,Shankaran - Shree Viruskha Homes / 8 KWp,24,completed,2026,642640,0,2025->2026
+220,Ramaniyam Gayathri,5.4,Completed,2025,274753,174912.04,auto,1,false,true,SHIROI/PROJ/2025-26/0020,Ramaniyam Gayathri,5.4,completed,2026,274753,0,2025->2026
+221,Ramaniyam Manasa,9.8,Waiting for Net Meter,2025,456419,272022.332,auto,1,false,true,SHIROI/PROJ/2025-26/0022,Ramaniyam Manasa,9.8,completed,2026,456419,0,2025->2026
+222,Swarnalatha,4.3,Completed,2025,260000,215968.25,auto,1,false,true,SHIROI/PROJ/2025-26/0025,Swarnalatha,4.3,completed,2026,260000,0,2025->2026
+223,Adroit Prosper D Block,10,Holding from client,2025,387000,290077.18,auto,1,false,true,SHIROI/PROJ/2025-26/0024,Adroit Prosper D Block,10,completed,2026,387000,0,2025->2026
+224,Mr Sundar,5.5,Completed,2025,337761,311925.74,ambiguous,0.486,false,false,SHIROI/PROJ/2024-25/0036,Dr Sridhar,7,completed,2026,578955,-241194,2025->2026
+225,Accord Foundtaions,30.42,On Progress,2025,1585654,1441285.42,auto,0.756,false,true,SHIROI/PROJ/2025-26/0021,Accord Foundations,30.42,completed,2026,1585654,0,2025->2026
+226,Zirve Project,30,Yet to Start,2025,1129744,1476691.85,likely,0.5,false,true,SHIROI/PROJ/2025-26/0018,Zirve Project [ krishna Group ] ,30,yet_to_start,2026,1129744,0,2025->2026
+227,Ekana Cottage,8,Waiting for Net Meter,2025,300000,254505.05,auto,0.789,false,true,SHIROI/PROJ/2025-26/0026,Ekanaa Cottage,8,completed,2026,300000,0,2025->2026
+228,Mr Aditya Baskar,4.2,Completed,2025,257000,222930.41,auto,1,false,true,SHIROI/PROJ/2025-26/0017,Mr Aditya Baskar,4.2,completed,2026,257000,0,2025->2026
+229,Mr Manickam,1.2,Completed,2025,108862,93584.58,auto,1,false,true,SHIROI/PROJ/2025-26/0016,Mr Manickam,1.2,completed,2026,108862,0,2025->2026
+230,M/s Geetha Kalyan,1.8,Completed,2025,148823,121423.68,auto,0.75,false,true,SHIROI/PROJ/2025-26/0015,M/s Geetha,1.8,completed,2026,148823,0,2025->2026
+231,Syed Mubarak,6.3,Waiting for Net Meter,2025,310000,253601.44,auto,1,false,true,SHIROI/PROJ/2025-26/0014,Syed Mubarak,6.3,completed,2026,310000,0,2025->2026
+232,Mr Vasu rao,4.2,Completed,2025,253000,231337.64,auto,1,false,true,SHIROI/PROJ/2025-26/0013,Mr Vasu Rao,4,completed,2026,253000,0,2025->2026
+233,DRA Trinity,35.2,On Progress,2025,1370979,1093005.5,auto,1,false,true,SHIROI/PROJ/2025-26/0012,DRA Trinity,35.2,in_progress,2026,1370979,0,2025->2026
+234,National School,15,Waiting for Net Meter,2025,497182,455870.05,auto,1,false,true,SHIROI/PROJ/2025-26/0011,National School,15,completed,2026,497182,0,2025->2026
+235,Mr Sivasankar Home,3,Completed,2025,206880,164997.57,auto,1,false,true,SHIROI/PROJ/2025-26/0010,Mr Sivasankar Home,3,completed,2026,206880,0,2025->2026
+236,Chettinad Grinding Unit,10,Waiting for Net Meter,2025,565220,468794.4,auto,1,false,true,SHIROI/PROJ/2025-26/0009,Chettinad Grinding Unit,10,waiting_net_metering,2026,565220,0,2025->2026
+237,Mr Parasuraman 2,7.2,On Progress,2025,430000,439379.9,ambiguous,0.719,true,false,SHIROI/PROJ/2025-26/0008,Mr Parasuraman,3.62,completed,2026,430000,0,2025->2026
+238,Alamelu & Arvind,9.9,Completed,2025,492000,378161.7,sheet-only,0.331,true,false,SHIROI/PROJ/2025-26/0001,Mr Mithil & Kiran,16,waiting_net_metering,2026,900000,-408000,2025->2026
+239,Mr Solai Ayyar,8.6,Completed,2025,562662,492142.1,auto,1,false,false,SHIROI/PROJ/2025-26/0006,Mr Solai Ayyar,9.6,completed,2026,562662,0,2025->2026
+240,Ramaniyam Premasaraswathi,6.6,Waiting for Net Meter,2025,320728,236014.6,auto,0.733,false,true,SHIROI/PROJ/2025-26/0005,M/s Ramaniyam Premasaraswathi,6.6,completed,2026,320728,0,2025->2026
+241,Mr Pradip Jasiwal,8.6,Completed,2025,555964,408683.92,auto,1,false,true,SHIROI/PROJ/2025-26/0004,Mr Pradip Jasiwal,8.64,completed,2026,555964,0,2025->2026
+242,Mr Mithil & Karan,16,Waiting for Net Meter,2025,800000,727147.15,auto,0.797,false,true,SHIROI/PROJ/2025-26/0001,Mr Mithil & Kiran,16,waiting_net_metering,2026,900000,-100000,2025->2026
+243,Radiance Splendour,161,Completed,2025,7369001,6523754.331,likely,0.667,false,false,SHIROI/PROJ/2025-26/0118,Radiance Splendour - Coimbatore,141.6,in_progress,2025,6100000,1269001,
+244,S&P The Address,2.4,Waiting for Net Meter,2026,125762,100353.55,ambiguous,0.492,false,true,SHIROI/PROJ/2026-27/0319,The Address,2.4,waiting_net_metering,,125762,0,
+245,Ramaniyam Ashok Vihar,7.7,Waiting for Net Meter,2026,372351,237418.3,ambiguous,0.526,true,false,SHIROI/PROJ/2025-26/0093,Ramaniyam Anugraha,8.8,completed,2026,418861,-46510,
+246,Mr Deepak Raj,3.3,Completed,2026,205000,143312.16,ambiguous,0.51,true,true,SHIROI/PROJ/2026-27/0003,Deepak,3,completed,,228970,-23970,
+247,RCC Austrom Icon,10,Completed,2026,274442,225818,ambiguous,0.425,true,true,SHIROI/PROJ/2024-25/0021,RCC e constrcution,10,completed,2026,649621,-375179,
+248,Ramaniyam Akshayam,5.5,Waiting for Net Meter,2026,290671,227657.08,ambiguous,0.614,true,false,SHIROI/PROJ/2026-27/0312,Ramaniyam - Lakshmi,4.4,in_progress,,0,290671,
+249,Ramaniyam Radika,4.4,Waiting for Net Meter,2026,224989,167986.3,likely,0.7,false,false,SHIROI/PROJ/2025-26/0201,Ramaniyam - Padhuka,5,completed,2025,160816,64173,2026->2025
+250,M/s Deepa Balaji,3,Completed,2026,210527,164705.84,auto,0.637,false,true,SHIROI/PROJ/2026-27/0335,Deepa Balaji,3,completed,,215000,-4473,
+251,Mr Pradheep Boopathy,3,Completed,2026,210527,162022.24,sheet-only,0.3,true,false,SHIROI/PROJ/2025-26/0089,Mr Vijay Sabapathy,10,completed,2025,515435,-304908,2026->2025
+252,Mr Murali,4.8,Completed,2026,347601,237187.6,auto,1,false,true,SHIROI/PROJ/2026-27/0266,Mr Murali,4.8,completed,2026,347601,0,
+253,Ramaniyam Lakshmi,4.4,On Progress,2026,224989,148861.06,auto,1,false,true,SHIROI/PROJ/2026-27/0312,Ramaniyam - Lakshmi,4.4,in_progress,,0,224989,
+254,Navins Starwood Towers Phase III,36,Yet to Start,2026,1366267,1139746.9,auto,0.823,false,true,SHIROI/PROJ/2026-27/0345,Navins Starwood Tower Phase III,36,yet_to_start,,0,1366267,
+255,Dra Downtown,72,Holding from client,2026,2665123,234402.3,auto,1,false,true,SHIROI/PROJ/2026-27/0316,DRA Downtown,72,in_progress,,2665123,0,
+256,M/s Jayanthi,5,Yet to Start,2026,588410,283090.3,likely,0.567,false,true,SHIROI/PROJ/2026-27/0328,Jayanthi,5,in_progress,2026,588410,0,
+258,M/s Uma Maheshwari,5,Yet to Start,2026,315000,256793.4,auto,0.661,false,true,SHIROI/PROJ/2026-27/0357,Uma maheshwari,5,waiting_net_metering,,315000,0,
+259,M/s V J Saraswathi,3,Yet to Start,2026,206000,162393.06,auto,0.614,false,true,SHIROI/PROJ/2026-27/0344,VJ Saraswathi,3,waiting_net_metering,,206000,0,
+260,Mr Sri Kumar,11,Waiting for Net Meter,2026,722634,593762.5,ambiguous,0.51,true,false,SHIROI/PROJ/2026-27/0361,Dugar,7.7,completed,,496000,226634,
+261,BCPL Anusham,5,Yet to Start,2026,352750,233192.6,likely,0.5,false,false,SHIROI/PROJ/2026-27/0366,Anusham,21.6,in_progress,,1572202,-1219452,
+262,BCPL Anusham / Arjun Prasath,7,Yet to Start,2026,495000,233192.6,likely,0.5,false,false,SHIROI/PROJ/2025-26/0056,Arjun Prasath,9.7,completed,2026,504192,-9192,
+263,BCPL Anusham / Dhandapani,2.3,Yet to Start,2026,185851,233192.6,sheet-only,0.333,true,false,SHIROI/PROJ/2026-27/0366,Anusham,21.6,in_progress,,1572202,-1386351,
+264,BCPL Anusham / Ramesh,2.3,Yet to Start,2026,185851,233192.6,ambiguous,0.358,true,false,SHIROI/PROJ/2025-26/0078,M/s Latha Ganesh,5,completed,2025,350283,-164432,2026->2025
+265,BCPL Anusham / Sri Bala,5,Yet to Start,2026,352750,233192.6,ambiguous,0.382,true,false,SHIROI/PROJ/2024-25/0008,SSBPL West mamabalam,4,completed,2026,146131,206619,
+266,DRA Infinique,18,Yet to Start,2026,439897,234232.3,auto,1,false,true,SHIROI/PROJ/2026-27/0371,DRA Infinique,18,yet_to_start,,439897,0,

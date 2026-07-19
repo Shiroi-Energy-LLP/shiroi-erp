@@ -20,12 +20,12 @@ const Checkbox = React.forwardRef<
       ref={ref}
       checked={resolvedChecked}
       className={cn(
-        'peer h-4 w-4 shrink-0 rounded border-[1.5px] border-n-200 bg-white ring-offset-white transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shiroi-green focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-shiroi-green data-[state=checked]:bg-shiroi-green data-[state=indeterminate]:border-shiroi-green data-[state=indeterminate]:bg-shiroi-green',
+        'peer h-4 w-4 shrink-0 rounded border-[1.5px] border-n-200 bg-white ring-offset-white transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shiroi-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-shiroi-gold data-[state=checked]:bg-shiroi-gold data-[state=indeterminate]:border-shiroi-gold data-[state=indeterminate]:bg-shiroi-gold',
         className
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator className="flex items-center justify-center text-white">
+      <CheckboxPrimitive.Indicator className="flex items-center justify-center text-shiroi-ink">
         {resolvedChecked === 'indeterminate' ? (
           <Minus className="h-3 w-3" />
         ) : (

@@ -182,7 +182,13 @@ Style rules:
   // Use Anthropic direct API for system+user separation (callAi only supports user)
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    throw new Error(`${op} ANTHROPIC_API_KEY not set`);
+    // No Claude key → degrade to SQL-only. The briefing route still returns its
+    // deterministic action_block; the AI narrative is simply omitted. Keeps the
+    // morning digests working without a Claude dependency.
+    console.warn(`${op} ANTHROPIC_API_KEY not set — returning empty narrative (SQL-only digest)`, {
+      timestamp: new Date().toISOString(),
+    });
+    return { narrative: '', whatsapp_short: '', tokens_in: 0, tokens_out: 0 };
   }
 
   const model = config.provider === 'openrouter'
@@ -200,11 +206,13 @@ Style rules:
     totalTokensIn += result.tokens_in;
     totalTokensOut += result.tokens_out;
   } catch (e) {
-    console.error(`${op} narrative generation failed`, {
+    // AI call failed (rate limit, network, bad key) → degrade to SQL-only rather
+    // than 500-ing the route, so the action_block still reaches the digest.
+    console.error(`${op} narrative generation failed — degrading to SQL-only digest`, {
       error: e instanceof Error ? e.message : String(e),
       timestamp: new Date().toISOString(),
     });
-    throw e;
+    return { narrative: '', whatsapp_short: '', tokens_in: totalTokensIn, tokens_out: totalTokensOut };
   }
 
   // Step 4: Generate WA-short version (≤500 chars)

@@ -54,7 +54,7 @@ export function ReviewActions({ billId }: ReviewActionsProps) {
     <div className="flex items-center gap-3">
       <Button
         variant="default"
-        className="bg-[#00B050] hover:bg-[#007d38] text-white gap-2"
+        className="bg-shiroi-gold hover:bg-shiroi-gold-hover text-shiroi-ink gap-2"
         disabled={isPendingApprove || isPendingReject}
         onClick={handleApprove}
       >

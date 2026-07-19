@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent, Button, Label } from '@repo/u
 import { ShieldCheck, Check, X, Camera, Upload, Trash2 } from 'lucide-react';
 import { createClient } from '@repo/supabase/client';
 import { createQcInspection } from '@/lib/project-step-actions';
+import { SYSTEM_TYPE_LABELS } from '@/lib/label-constants';
 import {
   QC_SECTIONS,
   buildInitialChecklist,
@@ -19,12 +20,6 @@ interface QcInspectionFormProps {
   projectInfo?: QcProjectInfo;
   existingData?: QcChecklistData;
 }
-
-const SYSTEM_TYPE_LABELS: Record<string, string> = {
-  on_grid: 'On-Grid',
-  off_grid: 'Off-Grid',
-  hybrid: 'Hybrid',
-};
 
 export function QcInspectionForm({ projectId, systemType, projectInfo, existingData }: QcInspectionFormProps) {
   const router = useRouter();

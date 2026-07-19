@@ -40,8 +40,8 @@ export default async function OrphanTriagePage({
       />
       <div>
         <Eyebrow className="mb-1">CASH FLOW</Eyebrow>
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Zoho Orphan Triage</h1>
-        <p className="text-sm text-[#7C818E]">
+        <h1 className="text-2xl font-bold text-n-950">Zoho Orphan Triage</h1>
+        <p className="text-sm text-n-500">
           Attribute parent-company Zoho invoices and payments to ERP projects.
         </p>
       </div>

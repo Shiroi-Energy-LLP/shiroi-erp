@@ -142,7 +142,7 @@ export interface PartnerPickerOption {
 
 /**
  * Returns all active channel partners for the referrer combobox, grouped:
- * internal first (VIP), then external alphabetical.
+ * internal first (MGMT REF), then external alphabetical.
  */
 export async function listChannelPartnersForPicker(): Promise<PartnerPickerOption[]> {
   const op = '[listChannelPartnersForPicker]';

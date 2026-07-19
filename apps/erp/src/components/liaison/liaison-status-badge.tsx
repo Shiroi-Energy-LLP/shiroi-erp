@@ -7,7 +7,7 @@ const TNEB_STAGE_STYLES: Record<string, { bg: string; text: string; label: strin
   tneb_inspected:         { bg: '#EDE9FE', text: '#5B21B6', label: 'Inspected' },
   tneb_estimated:         { bg: '#FEF3C7', text: '#92400E', label: 'Estimated' },
   installation_completed: { bg: '#CCFBF1', text: '#0F766E', label: 'Installation Done' },
-  service_effected:       { bg: '#DCFCE7', text: '#166534', label: 'Service Effected' },
+  service_effected:       { bg: '#F0FDF4', text: '#16A34A', label: 'Service Effected' },
   rejected:               { bg: '#FEE2E2', text: '#991B1B', label: 'Rejected' },
   objection_raised:       { bg: '#FFEDD5', text: '#9A3412', label: 'Objection Raised' },
 };
@@ -17,7 +17,7 @@ const CEIG_STAGE_STYLES: Record<string, { bg: string; text: string; label: strin
   pending:              { bg: '#FEF3C7', text: '#92400E', label: 'CEIG Pending' },
   applied:              { bg: '#EFF6FF', text: '#1E40AF', label: 'CEIG Applied' },
   inspection_scheduled: { bg: '#EDE9FE', text: '#5B21B6', label: 'Inspection Sched.' },
-  approved:             { bg: '#DCFCE7', text: '#166534', label: 'CEIG Approved' },
+  approved:             { bg: '#F0FDF4', text: '#16A34A', label: 'CEIG Approved' },
   rejected:             { bg: '#FEE2E2', text: '#991B1B', label: 'CEIG Rejected' },
   reapplied:            { bg: '#FFF7ED', text: '#9A3412', label: 'Reapplied' },
 };

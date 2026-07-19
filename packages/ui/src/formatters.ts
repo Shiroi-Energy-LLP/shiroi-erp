@@ -1,4 +1,20 @@
+// Whole-rupee INR display — paise are NOT shown (rounded to the nearest rupee).
+// Org-wide policy (2026-06-18, Vivek): "full INR only, paise not needed".
+// For per-unit rates that need decimal precision (e.g. ₹14.50/Wp) use formatRate().
+// Display-only — the underlying stored/computed values keep full precision.
 export function formatINR(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+// Precise INR for unit prices / rates — shows up to 2 decimals when present
+// (e.g. ₹14.50/Wp). Use this where rounding to whole rupees would be misleading;
+// use formatINR() for amounts and totals.
+export function formatRate(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -30,7 +46,20 @@ export function formatDate(dateString: string): string {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
+}
+
+/**
+ * Format an ISO timestamp string (or Date) as Indian date "DD MMM YYYY".
+ * Use this when the input has time/timezone information that would be
+ * corrupted by formatDate's date-only `+T00:00:00+05:30` suffix.
+ */
+export function formatDateFromTimestamp(input: string | Date | null | undefined): string {
+  if (!input) return '—';
+  const d = typeof input === 'string' ? new Date(input) : input;
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
 }
 
 /**

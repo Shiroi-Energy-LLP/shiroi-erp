@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Badge } from '@repo/ui';
 import { updateCellValue } from '@/lib/inline-edit-actions';
 import { DataFlagButton } from '@/components/data-flag-button';
+import { formatINR as formatINRBase } from '@repo/ui/formatters';
 
 const CATEGORY_LABELS: Record<string, string> = {
   panel: 'Panel', inverter: 'Inverter', battery: 'Battery', structure: 'Structure',
@@ -68,7 +69,7 @@ export function BomReviewTable({ data }: { data: BomLine[] }) {
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
-          className="w-full rounded border border-[#00B050] px-2 py-1 text-sm focus:outline-none"
+          className="w-full rounded border border-shiroi-gold px-2 py-1 text-sm focus:outline-none"
           disabled={isPending}
         />
       );
@@ -85,14 +86,13 @@ export function BomReviewTable({ data }: { data: BomLine[] }) {
     );
   };
 
-  const formatINR = (amount: number) =>
-    amount > 0 ? `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : '—';
+  const formatINR = (amount: number) => (amount > 0 ? formatINRBase(amount) : '—');
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-xs font-medium text-[#7C818E]">
+          <tr className="border-b text-left text-xs font-medium text-n-500">
             <th className="px-3 py-2 w-8">#</th>
             <th className="px-3 py-2 min-w-[200px]">Item Description</th>
             <th className="px-3 py-2">Category</th>

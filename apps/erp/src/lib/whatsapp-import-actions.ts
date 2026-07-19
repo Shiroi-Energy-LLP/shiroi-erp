@@ -3,13 +3,15 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { routeLeadAndAssign } from '@/lib/ai/lead-router';
+import { requireAuthUser } from '@/lib/auth';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 async function getCurrentUserId(
-  supabase: Awaited<ReturnType<typeof createClient>>
+  _supabase: Awaited<ReturnType<typeof createClient>>
 ): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-  return user.id;
+  const authed = await requireAuthUser();
+  if (!authed.success) throw new Error('Not authenticated');
+  return authed.data.user.id;
 }
 
 async function getEmployeeId(
@@ -30,7 +32,7 @@ const MIGRATION_EMPLOYEE_ID = '589b7878-46eb-4d6c-ba24-079d167d0e89';
 export async function approveQueueItem(
   id: string,
   overrideProjectId?: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<void>> {
   const op = '[approveQueueItem]';
   const supabase = await createClient();
 
@@ -41,7 +43,7 @@ export async function approveQueueItem(
     .single();
 
   if (fetchError || !item) {
-    return { success: false, error: 'Queue item not found' };
+    return err('Queue item not found', fetchError?.code);
   }
 
   const projectId = overrideProjectId ?? (item.matched_project_id as string | null);
@@ -57,7 +59,7 @@ export async function approveQueueItem(
     switch (item.extraction_type as string) {
       case 'customer_payment': {
         if (!projectId || !data['amount']) {
-          return { success: false, error: 'Missing project or amount for payment' };
+          return err('Missing project or amount for payment', 'MISSING_FIELDS');
         }
         const receiptDate = (item.message_timestamp as string).slice(0, 10).replace(/-/g, '');
         const receiptNumber = `WA-${receiptDate}-${id.slice(0, 8).toUpperCase()}`;
@@ -329,19 +331,19 @@ export async function approveQueueItem(
       .eq('id', id);
 
     if (updateError) throw new Error(updateError.message);
-  } catch (err) {
-    console.error(`${op} Failed:`, err);
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  } catch (e) {
+    console.error(`${op} Failed:`, e);
+    return err(e instanceof Error ? e.message : 'Unknown error', 'APPROVE_FAILED');
   }
 
   revalidatePath('/whatsapp-import');
-  return { success: true };
+  return ok(undefined);
 }
 
 export async function rejectQueueItem(
   id: string,
   notes?: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<void>> {
   const op = '[rejectQueueItem]';
   const supabase = await createClient();
   const userId = await getCurrentUserId(supabase);
@@ -358,17 +360,17 @@ export async function rejectQueueItem(
 
   if (error) {
     console.error(`${op} Failed:`, error.message);
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/whatsapp-import');
-  return { success: true };
+  return ok(undefined);
 }
 
 export async function reassignProject(
   id: string,
   newProjectId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<void>> {
   const op = '[reassignProject]';
   const supabase = await createClient();
 
@@ -379,16 +381,16 @@ export async function reassignProject(
 
   if (error) {
     console.error(`${op} Failed:`, error.message);
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/whatsapp-import');
-  return { success: true };
+  return ok(undefined);
 }
 
 export async function batchApproveQueueItems(
   ids: string[]
-): Promise<{ success: boolean; approved: number; failed: number; errors: string[] }> {
+): Promise<ActionResult<{ approved: number; failed: number; errors: string[] }>> {
   const op = '[batchApproveQueueItems]';
   let approved = 0;
   let failed = 0;
@@ -406,13 +408,16 @@ export async function batchApproveQueueItems(
   }
 
   revalidatePath('/whatsapp-import');
-  return { success: failed === 0, approved, failed, errors };
+  if (failed > 0) {
+    return err(`Approved ${approved}, ${failed} failed`, 'PARTIAL_FAILURE');
+  }
+  return ok({ approved, failed, errors });
 }
 
 export async function batchRejectQueueItems(
   ids: string[],
   notes?: string
-): Promise<{ success: boolean; rejected: number; failed: number }> {
+): Promise<ActionResult<{ rejected: number; failed: number }>> {
   const op = '[batchRejectQueueItems]';
   const supabase = await createClient();
   const userId = await getCurrentUserId(supabase);
@@ -430,9 +435,9 @@ export async function batchRejectQueueItems(
 
   if (error) {
     console.error(`${op} Failed:`, error.message);
-    return { success: false, rejected: 0, failed: ids.length };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/whatsapp-import');
-  return { success: true, rejected: count ?? ids.length, failed: 0 };
+  return ok({ rejected: count ?? ids.length, failed: 0 });
 }

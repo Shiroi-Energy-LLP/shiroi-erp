@@ -26,7 +26,7 @@ export async function SiteExpensesReadonly({ projectId }: { projectId: string })
 
   return (
     <div className="border rounded overflow-hidden">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm [&_td]:align-top">
         <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
           <tr>
             <th className="px-3 py-2 text-left">Voucher</th>
@@ -41,20 +41,20 @@ export async function SiteExpensesReadonly({ projectId }: { projectId: string })
         <tbody>
           {rows.map((r) => (
             <tr key={r.id} className="border-t">
-              <td className="px-3 py-2 font-mono">
+              <td className="px-3 py-2 font-mono whitespace-nowrap">
                 <Link href={`/expenses/${r.id}`} className="text-blue-600 hover:underline">{r.voucher_number}</Link>
               </td>
               <td className="px-3 py-2">{r.submitter_name ?? '—'}</td>
               <td className="px-3 py-2">{r.category_label ?? '—'}</td>
-              <td className="px-3 py-2 max-w-xs truncate" title={r.description ?? ''}>{r.description ?? '—'}</td>
-              <td className="px-3 py-2 text-right font-mono">{formatINR(r.amount)}</td>
-              <td className="px-3 py-2"><StatusBadge status={r.status} /></td>
-              <td className="px-3 py-2 text-center text-xs text-gray-500">{r.document_count > 0 ? `📎 ${r.document_count}` : ''}</td>
+              <td className="px-3 py-2 max-w-xs" title={r.description ?? ''}>{r.description ?? '—'}</td>
+              <td className="px-3 py-2 text-right font-mono whitespace-nowrap">{formatINR(r.amount)}</td>
+              <td className="px-3 py-2 whitespace-nowrap"><StatusBadge status={r.status} /></td>
+              <td className="px-3 py-2 text-center text-xs text-gray-500 whitespace-nowrap">{r.document_count > 0 ? `📎 ${r.document_count}` : ''}</td>
             </tr>
           ))}
           <tr className="bg-gray-50 font-semibold">
             <td colSpan={4} className="px-3 py-2 text-right">Subtotal (verified + approved):</td>
-            <td className="px-3 py-2 text-right font-mono">{formatINR(subtotal)}</td>
+            <td className="px-3 py-2 text-right font-mono whitespace-nowrap">{formatINR(subtotal)}</td>
             <td colSpan={2} />
           </tr>
         </tbody>

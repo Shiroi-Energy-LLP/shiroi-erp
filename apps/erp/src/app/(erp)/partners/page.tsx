@@ -12,10 +12,12 @@ import {
   TableCell,
   Eyebrow,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
 import { Handshake } from 'lucide-react';
+import { formatINR } from '@repo/ui/formatters';
 
 const PARTNER_TYPE_LABELS: Record<string, string> = {
   individual_broker: 'Individual Broker',
@@ -49,15 +51,6 @@ function formatCommissionRate(type: string, rate: number): string {
   return String(rate);
 }
 
-function formatINR(value: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 interface PartnersPageProps {
   searchParams: Promise<{
     type?: string;
@@ -80,45 +73,40 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
   });
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Eyebrow className="mb-1">MARKETING</Eyebrow>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-n-900">Partners</h1>
-            <Badge variant="neutral">{result.total}</Badge>
-          </div>
-          <p className="text-sm text-n-500 mt-1">
-            Consultants, referrers, and other introducers who bring in leads.
-          </p>
+    <ListPageShell
+      header={
+        <FilterBar basePath="/partners" filterParams={['search', 'type', 'status']}>
+          <FilterSelect paramName="type" className="w-44 h-9 text-sm">
+            <option value="">All Types</option>
+            {PARTNER_TYPE_OPTIONS.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </FilterSelect>
+          <FilterSelect paramName="status" className="w-32 h-9 text-sm">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </FilterSelect>
+          <SearchInput
+            placeholder="Search name, contact, phone..."
+            className="w-64 h-9 text-sm"
+          />
+        </FilterBar>
+      }
+    >
+      {/* Title (scrolls away) */}
+      <div>
+        <Eyebrow className="mb-1">MARKETING</Eyebrow>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-n-900">Partners</h1>
+          <Badge variant="neutral">{result.total}</Badge>
         </div>
+        <p className="text-sm text-n-500 mt-1">
+          Consultants, referrers, and other introducers who bring in leads.
+        </p>
       </div>
-
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/partners" filterParams={['search', 'type', 'status']}>
-            <FilterSelect paramName="type" className="w-44 h-9 text-sm">
-              <option value="">All Types</option>
-              {PARTNER_TYPE_OPTIONS.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="status" className="w-32 h-9 text-sm">
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </FilterSelect>
-            <SearchInput
-              placeholder="Search name, contact, phone..."
-              className="w-64 h-9 text-sm"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
 
       {/* Table */}
       <Card>
@@ -132,8 +120,8 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
+            <Table stickyHeader>
+              <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
@@ -152,7 +140,7 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
                     <TableCell className="font-medium">
                       <Link
                         href={`/partners/${p.id}`}
-                        className="text-shiroi-green hover:underline"
+                        className="text-shiroi-gold-dark hover:underline"
                       >
                         {p.partner_name}
                       </Link>
@@ -204,6 +192,6 @@ export default async function PartnersPage({ searchParams }: PartnersPageProps) 
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

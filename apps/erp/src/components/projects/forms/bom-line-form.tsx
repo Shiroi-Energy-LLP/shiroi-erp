@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Select } from '@repo/ui';
-import { Plus, Trash2, Save, X } from 'lucide-react';
-import { addBomLine, deleteBomLine, lockBoi, unlockBoi, addBoqItem, deleteBoqItem, submitBoiVersion, approveBoiVersion, lockBoiVersion, unlockBoiVersion, createBoiVersion } from '@/lib/project-step-actions';
+import { Plus, Trash2, Save, X, Pencil, History } from 'lucide-react';
+import { addBomLine, deleteBomLine, lockBoi, unlockBoi, addBoqItem, deleteBoqItem, submitBoiVersion, approveBoiVersion, lockBoiVersion, unlockBoiVersion, createBoiVersion, updateBoiItem, getBoiItemHistory } from '@/lib/project-step-actions';
 import { Lock, Unlock, Send, CheckCircle, PlusCircle } from 'lucide-react';
 import { BOI_CATEGORIES } from '@/lib/boi-constants';
 import { ItemCombobox, type ItemSuggestion } from '@/components/forms/item-combobox';
@@ -38,7 +38,11 @@ export function BomInlineAddRow({
   projectId,
   hasProposal,
   suggestions,
-}: BomLineFormProps & { suggestions: ItemSuggestion[] }) {
+  categories,
+  units: unitsProp,
+}: BomLineFormProps & { suggestions: ItemSuggestion[]; categories?: { value: string; label: string }[]; units?: string[] }) {
+  const cats = categories ?? BOI_CATEGORIES;
+  const unitList = unitsProp ?? UNITS;
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -102,7 +106,7 @@ export function BomInlineAddRow({
             className="text-xs h-8 w-[160px]"
           >
             <option value="">Category...</option>
-            {BOI_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {cats.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5">
@@ -150,7 +154,7 @@ export function BomInlineAddRow({
             onChange={(e) => setRow({ ...row, unit: e.target.value })}
             className="text-xs h-8 w-[70px]"
           >
-            {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+            {unitList.map((u) => <option key={u} value={u}>{u}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5 text-right">
@@ -276,12 +280,18 @@ export function BoiInlineAddRow({
   boiId,
   disabled,
   suggestions,
+  categories,
+  units: unitsProp,
 }: {
   projectId: string;
   boiId?: string;
   disabled?: boolean;
   suggestions: ItemSuggestion[];
+  categories?: { value: string; label: string }[];
+  units?: string[];
 }) {
+  const cats = categories ?? BOI_CATEGORIES;
+  const unitList = unitsProp ?? UNITS;
   const router = useRouter();
   const [adding, setAdding] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -348,7 +358,7 @@ export function BoiInlineAddRow({
             className="text-xs h-8 w-[160px]"
           >
             <option value="">Category...</option>
-            {BOI_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {cats.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </Select>
         </td>
         <td className="px-3 py-1.5">
@@ -396,7 +406,7 @@ export function BoiInlineAddRow({
             onChange={(e) => setRow({ ...row, unit: e.target.value })}
             className="text-xs h-8 w-[70px]"
           >
-            {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+            {unitList.map((u) => <option key={u} value={u}>{u}</option>)}
           </Select>
         </td>
         <td></td>
@@ -561,5 +571,188 @@ export function CreateNewBoiButton({ projectId }: { projectId: string }) {
       </Button>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
+  );
+}
+
+// ── BOI Edit (any state, audited — mig 175) ──
+
+interface BoiEditableItem {
+  id: string;
+  item_description: string | null;
+  brand: string | null;
+  model: string | null;
+  quantity: number | null;
+  unit: string | null;
+  unit_price: number | null;
+  gst_rate: number | null;
+}
+
+export function BoiEditButton({ projectId, item, units: unitsProp }: { projectId: string; item: BoiEditableItem; units?: string[] }) {
+  const unitList = unitsProp ?? UNITS;
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [form, setForm] = React.useState({
+    item_description: item.item_description ?? '',
+    brand: item.brand ?? '',
+    model: item.model ?? '',
+    quantity: String(item.quantity ?? ''),
+    unit: item.unit ?? 'nos',
+    unit_price: String(item.unit_price ?? ''),
+    gst_rate: String(item.gst_rate ?? '18'),
+  });
+
+  async function handleSave() {
+    if (!form.item_description.trim() || !form.quantity) {
+      setError('Description and Qty are required');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    const result = await updateBoiItem({
+      projectId,
+      itemId: item.id,
+      data: {
+        item_description: form.item_description,
+        brand: form.brand || null,
+        model: form.model || null,
+        quantity: parseFloat(form.quantity),
+        unit: form.unit,
+        unit_price: parseFloat(form.unit_price) || 0,
+        gst_rate: parseFloat(form.gst_rate) || 0,
+      },
+    });
+    setSaving(false);
+    if (result.success) {
+      setOpen(false);
+      router.refresh();
+    } else {
+      setError(result.error ?? 'Failed to save');
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button
+        size="sm" variant="ghost"
+        className="h-7 w-7 p-0 text-n-400 hover:text-n-700"
+        title="Edit item (audited)"
+        onClick={() => setOpen(true)}
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </Button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setOpen(false)}>
+      <div className="bg-white rounded-lg shadow-lg p-4 w-[440px] space-y-3" onClick={(e) => e.stopPropagation()}>
+        <h4 className="text-sm font-semibold text-n-900">Edit BOI item</h4>
+        <p className="text-[11px] text-n-500">
+          Edits are allowed in any BOI state and recorded in the item&apos;s change history.
+        </p>
+        <div>
+          <label className="block text-[10px] text-n-500 mb-0.5">Description *</label>
+          <Input value={form.item_description}
+            onChange={(e) => setForm({ ...form, item_description: e.target.value })} className="text-xs h-8" />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Brand</label>
+            <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} className="text-xs h-8" />
+          </div>
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Model</label>
+            <Input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} className="text-xs h-8" />
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Qty *</label>
+            <Input type="number" step="0.01" value={form.quantity}
+              onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="text-xs h-8" />
+          </div>
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Unit</label>
+            <Select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="text-xs h-8">
+              {unitList.map((u) => <option key={u} value={u}>{u}</option>)}
+            </Select>
+          </div>
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">Rate</label>
+            <Input type="number" step="0.01" value={form.unit_price}
+              onChange={(e) => setForm({ ...form, unit_price: e.target.value })} className="text-xs h-8" />
+          </div>
+          <div>
+            <label className="block text-[10px] text-n-500 mb-0.5">GST %</label>
+            <Select value={form.gst_rate} onChange={(e) => setForm({ ...form, gst_rate: e.target.value })} className="text-xs h-8">
+              {GST_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}
+            </Select>
+          </div>
+        </div>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+        <div className="flex justify-end gap-2 pt-1">
+          <Button size="sm" variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
+          <Button size="sm" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── BOI item change history (lazy-loaded popover) ──
+
+export function BoiItemHistoryButton({ itemId }: { itemId: string }) {
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [entries, setEntries] = React.useState<
+    { id: string; changed_at: string; changed_by_name: string | null;
+      changes: Record<string, { old: string | number | null; new: string | number | null }> }[] | null
+  >(null);
+
+  async function toggle() {
+    if (open) { setOpen(false); return; }
+    setOpen(true);
+    if (entries === null) {
+      setLoading(true);
+      const result = await getBoiItemHistory({ itemId });
+      setLoading(false);
+      setEntries(result.success ? (result.entries ?? []) : []);
+    }
+  }
+
+  return (
+    <span className="relative inline-block">
+      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-n-300 hover:text-n-600"
+        title="Change history" onClick={toggle}>
+        <History className="h-3.5 w-3.5" />
+      </Button>
+      {open && (
+        <div className="absolute right-0 z-50 mt-1 w-[340px] rounded-md border border-n-200 bg-white shadow-md p-2 max-h-60 overflow-y-auto text-left">
+          {loading && <p className="text-[11px] text-n-400 px-1 py-2">Loading…</p>}
+          {!loading && entries !== null && entries.length === 0 && (
+            <p className="text-[11px] text-n-400 px-1 py-2">No edits recorded for this item.</p>
+          )}
+          {!loading && (entries ?? []).map((e) => (
+            <div key={e.id} className="border-b border-n-100 last:border-0 px-1 py-1.5">
+              <div className="text-[10px] text-n-500">
+                {new Date(e.changed_at).toLocaleString('en-IN', {
+                  timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                })}
+                {e.changed_by_name ? ` · ${e.changed_by_name}` : ''}
+              </div>
+              {Object.entries(e.changes).map(([field, c]) => (
+                <div key={field} className="text-[11px] text-n-700">
+                  <span className="font-medium">{field.replace(/_/g, ' ')}</span>:{' '}
+                  <span className="line-through text-n-400">{c.old ?? '—'}</span>{' → '}
+                  <span>{c.new ?? '—'}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </span>
   );
 }

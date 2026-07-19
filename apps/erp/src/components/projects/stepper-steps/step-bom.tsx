@@ -8,11 +8,14 @@ import { Package, Lock, CheckCircle2, Clock, Send } from 'lucide-react';
 import {
   BoiInlineAddRow, BoiDeleteButton,
   BoiSubmitButton, BoiApproveButton, BoiLockVersionButton, CreateNewBoiButton,
+  BoiEditButton, BoiItemHistoryButton,
 } from '@/components/projects/forms/bom-line-form';
 import { BoqSeedButton } from '@/components/projects/forms/boq-variance-form';
 import { getCategoryLabel } from '@/lib/boi-constants';
 import { getItemSuggestions } from '@/lib/item-suggestions-queries';
+import { listItemCategories, listItemUnits } from '@/lib/item-catalog-queries';
 import { BoiCategoryFilter } from '@/components/projects/forms/boi-category-filter';
+import { getCurrentUserRoleForProject } from '@/lib/project-detail-actions';
 import Link from 'next/link';
 
 interface StepBomProps {
@@ -34,12 +37,18 @@ function BoiStatusBadge({ status }: { status: string }) {
 }
 
 export async function StepBom({ projectId }: StepBomProps) {
-  const [bois, boiState, boqData, suggestions] = await Promise.all([
+  const [bois, boiState, boqData, suggestions, viewerRole, itemCategories, itemUnits] = await Promise.all([
     getBoisForProject(projectId),
     getBoiState(projectId),
     getStepBoqData(projectId),
     getItemSuggestions(),
+    getCurrentUserRoleForProject(),
+    listItemCategories(),
+    listItemUnits(),
   ]);
+  const catalogCategories = itemCategories.map((c) => ({ value: c.value, label: c.label }));
+  const catalogUnits = itemUnits.map((u) => u.value);
+  const canManageItems = !!viewerRole && ['founder', 'project_manager'].includes(viewerRole);
 
   const hasProposal = !!(boiState as any)?.proposal_id;
   const hasAnyBoi = bois.length > 0;
@@ -52,9 +61,9 @@ export async function StepBom({ projectId }: StepBomProps) {
     return (
       <div className="space-y-4">
         <div className="flex flex-col items-center justify-center py-12">
-          <Package className="w-12 h-12 text-[#7C818E] opacity-50 mb-3" />
-          <h3 className="text-lg font-bold font-heading text-[#1A1D24] mb-1">No Bill of Items</h3>
-          <p className="text-[13px] text-[#7C818E] max-w-md text-center mb-4">
+          <Package className="w-12 h-12 text-n-500 opacity-50 mb-3" />
+          <h3 className="text-lg font-bold font-heading text-n-950 mb-1">No Bill of Items</h3>
+          <p className="text-[13px] text-n-500 max-w-md text-center mb-4">
             {hasProposal
               ? 'Generate BOI from the linked proposal BOM, or create a new BOI manually.'
               : 'Create a new BOI to start adding items for this project.'}
@@ -69,17 +78,17 @@ export async function StepBom({ projectId }: StepBomProps) {
         {legacyItems.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm text-[#7C818E]">Legacy Items ({legacyItems.length})</CardTitle>
+              <CardTitle className="text-sm text-n-500">Legacy Items ({legacyItems.length})</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full text-[12px]">
+                <table className="w-full text-sm [&_td]:align-top">
                   <thead>
                     <tr className="border-b border-n-200 bg-n-50">
-                      <th className="px-2 py-1.5 text-left font-medium text-[#7C818E]">Category</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-[#7C818E]">Item</th>
-                      <th className="px-2 py-1.5 text-right font-medium text-[#7C818E]">Qty</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-[#7C818E]">Unit</th>
+                      <th className="px-2 py-1.5 text-left font-medium text-n-500">Category</th>
+                      <th className="px-2 py-1.5 text-left font-medium text-n-500">Item</th>
+                      <th className="px-2 py-1.5 text-right font-medium text-n-500">Qty</th>
+                      <th className="px-2 py-1.5 text-left font-medium text-n-500">Unit</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -87,8 +96,8 @@ export async function StepBom({ projectId }: StepBomProps) {
                       <tr key={item.id} className="border-b border-n-100">
                         <td className="px-2 py-1.5">{getCategoryLabel(item.item_category)}</td>
                         <td className="px-2 py-1.5">{item.item_description}</td>
-                        <td className="px-2 py-1.5 text-right font-mono">{item.quantity}</td>
-                        <td className="px-2 py-1.5">{item.unit}</td>
+                        <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{item.quantity}</td>
+                        <td className="px-2 py-1.5 whitespace-nowrap">{item.unit}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -115,7 +124,7 @@ export async function StepBom({ projectId }: StepBomProps) {
     <div className="space-y-4">
       {/* Header with Create New BOI button */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#1A1D24]">
+        <h3 className="text-sm font-semibold text-n-950">
           Bill of Items ({bois.length} version{bois.length !== 1 ? 's' : ''})
         </h3>
         <div className="flex items-center gap-2">
@@ -149,7 +158,7 @@ export async function StepBom({ projectId }: StepBomProps) {
                 <div className="flex items-center gap-3">
                   <CardTitle className="text-sm font-bold">BOI-{boi.boi_number}</CardTitle>
                   <BoiStatusBadge status={boi.status} />
-                  <span className="text-[11px] text-[#7C818E] font-mono">{items.length} items</span>
+                  <span className="text-[11px] text-n-500 font-mono">{items.length} items</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Workflow buttons based on status */}
@@ -169,21 +178,26 @@ export async function StepBom({ projectId }: StepBomProps) {
               </div>
 
               {/* Prepared By / Approved By */}
-              <div className="flex items-center gap-4 mt-1.5 text-[11px] text-[#7C818E]">
+              <div className="flex items-center gap-4 mt-1.5 text-[11px] text-n-500">
                 {boi.prepared_by_name && (
-                  <span>Prepared: <strong className="text-[#1A1D24]">{boi.prepared_by_name}</strong></span>
+                  <span>Prepared: <strong className="text-n-950">{boi.prepared_by_name}</strong></span>
                 )}
                 {boi.approved_by_name && (
-                  <span>Approved: <strong className="text-[#1A1D24]">{boi.approved_by_name}</strong>
+                  <span>Approved: <strong className="text-n-950">{boi.approved_by_name}</strong>
                     {boi.approved_at && ` on ${formatDate(boi.approved_at)}`}
                   </span>
                 )}
                 {boi.locked_by_name && (
-                  <span>Locked: <strong className="text-[#1A1D24]">{boi.locked_by_name}</strong>
+                  <span>Locked: <strong className="text-n-950">{boi.locked_by_name}</strong>
                     {boi.locked_at && ` on ${formatDate(boi.locked_at)}`}
                   </span>
                 )}
               </div>
+              {isLocked && canManageItems && (
+                <p className="text-[10px] text-amber-700 mt-1">
+                  Locked BOI — PM edits remain possible and are recorded in the item history.
+                </p>
+              )}
             </CardHeader>
 
             <CardContent className="p-0">
@@ -196,52 +210,56 @@ export async function StepBom({ projectId }: StepBomProps) {
 
               {/* Compact BOI Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-[12px]">
+                <table className="w-full text-sm [&_td]:align-top">
                   <thead>
-                    <tr className="border-b border-n-200 bg-[#F8F9FA]">
-                      <th className="px-2 py-1.5 text-left font-medium text-[#7C818E] w-[150px]">Category</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-[#7C818E]">Item Name</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-[#7C818E] w-[100px]">Make/Brand</th>
-                      <th className="px-2 py-1.5 text-right font-medium text-[#7C818E] w-[60px]">Qty</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-[#7C818E] w-[70px]">Unit</th>
+                    <tr className="border-b border-n-200 bg-n-050">
+                      <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[150px]">Category</th>
+                      <th className="px-2 py-1.5 text-left font-medium text-n-500">Item Name</th>
+                      <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[100px]">Make/Brand</th>
+                      <th className="px-2 py-1.5 text-right font-medium text-n-500 w-[60px]">Qty</th>
+                      <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[70px]">Unit</th>
                       <th className="px-2 py-1.5 w-8"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((item: any) => (
                       <tr key={item.id}
-                        className={`border-b border-n-100 hover:bg-[#F8F9FA] group boi-row-${boi.id}`}
+                        className={`border-b border-n-100 hover:bg-n-050 group boi-row-${boi.id}`}
                         data-category={item.item_category}>
-                        <td className="px-2 py-1 font-medium text-[#1A1D24]">
+                        <td className="px-2 py-1 font-medium text-n-950">
                           {getCategoryLabel(item.item_category)}
                         </td>
-                        <td className="px-2 py-1 text-[#3F424D]">{item.item_description}</td>
-                        <td className="px-2 py-1 text-[#7C818E]">
+                        <td className="px-2 py-1 text-n-700">{item.item_description}</td>
+                        <td className="px-2 py-1 text-n-500">
                           {[item.brand, item.model].filter(Boolean).join(' ') || '\u2014'}
                         </td>
-                        <td className="px-2 py-1 text-right font-mono text-[#3F424D]">{item.quantity}</td>
-                        <td className="px-2 py-1 text-[#7C818E]">{item.unit}</td>
-                        <td className="px-2 py-1">
-                          {canEdit && (
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <td className="px-2 py-1 text-right font-mono text-n-700 whitespace-nowrap">{item.quantity}</td>
+                        <td className="px-2 py-1 text-n-500 whitespace-nowrap">{item.unit}</td>
+                        <td className="px-2 py-1 whitespace-nowrap">
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {canManageItems && (
+                              <BoiEditButton projectId={projectId} item={item} units={catalogUnits} />
+                            )}
+                            <BoiItemHistoryButton itemId={item.id} />
+                            {canEdit && (
                               <BoiDeleteButton
                                 projectId={projectId}
                                 itemId={item.id}
                                 label={item.item_description}
                               />
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
 
                     {/* Inline add row — only for draft BOIs */}
-                    {canEdit && <BoiInlineAddRow projectId={projectId} boiId={boi.id} suggestions={suggestions} />}
+                    {canEdit && <BoiInlineAddRow projectId={projectId} boiId={boi.id} suggestions={suggestions} categories={catalogCategories} units={catalogUnits} />}
 
                     {/* Empty state */}
                     {items.length === 0 && !canEdit && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-[12px] text-[#7C818E]">
+                        <td colSpan={6} className="px-4 py-6 text-center text-n-500">
                           No items in this BOI.
                         </td>
                       </tr>

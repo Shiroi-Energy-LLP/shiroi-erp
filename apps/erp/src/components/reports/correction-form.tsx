@@ -32,11 +32,10 @@ const CORRECTABLE_FIELDS = [
 interface CorrectionFormProps {
   reportId: string;
   projectId: string;
-  userId: string;
   report: Record<string, unknown>;
 }
 
-export function CorrectionForm({ reportId, projectId, userId, report }: CorrectionFormProps) {
+export function CorrectionForm({ reportId, projectId, report }: CorrectionFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -75,14 +74,13 @@ export function CorrectionForm({ reportId, projectId, userId, report }: Correcti
         const result = await submitCorrectionAction({
           originalReportId: reportId,
           projectId,
-          requestedBy: userId,
           fieldCorrected,
           originalValue,
           correctedValue,
           correctionReason,
         });
 
-        if (result.error) {
+        if (!result.success) {
           setError(result.error);
           return;
         }
@@ -137,7 +135,7 @@ export function CorrectionForm({ reportId, projectId, userId, report }: Correcti
           {selectedField && (
             <div className="space-y-2">
               <Label>Original Value</Label>
-              <div className="px-3 py-2 bg-[#F5F5F5] rounded-md text-sm font-mono">
+              <div className="px-3 py-2 bg-n-100 rounded-md text-sm font-mono">
                 {originalValue || '(empty)'}
               </div>
             </div>

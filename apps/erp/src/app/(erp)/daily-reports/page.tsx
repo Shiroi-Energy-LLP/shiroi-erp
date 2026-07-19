@@ -1,4 +1,4 @@
-import { createClient } from '@repo/supabase/server';
+import { listDailySiteReports } from '@/lib/daily-reports-queries';
 import { formatDate, toIST } from '@repo/ui/formatters';
 import {
   Card,
@@ -16,26 +16,13 @@ import {
 import { ClipboardList } from 'lucide-react';
 
 export default async function DailyReportsPage() {
-  const op = '[DailyReportsPage]';
-  const supabase = await createClient();
-
-  const { data: reports, error } = await supabase
-    .from('daily_site_reports')
-    .select('*, projects!daily_site_reports_project_id_fkey(project_number, customer_name)')
-    .order('report_date', { ascending: false })
-    .limit(100);
-
-  if (error) {
-    console.error(`${op} Query failed:`, { code: error.code, message: error.message });
-  }
-
-  const rows = reports ?? [];
+  const rows = await listDailySiteReports();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Eyebrow className="mb-1">DAILY REPORTS</Eyebrow>
-        <h1 className="text-2xl font-bold text-[#1A1D24]">Daily Site Reports</h1>
+        <h1 className="text-2xl font-bold text-n-950">Daily Site Reports</h1>
       </div>
 
       <Card>

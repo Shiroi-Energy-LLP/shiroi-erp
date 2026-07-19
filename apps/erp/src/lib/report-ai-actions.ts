@@ -3,6 +3,7 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { callAi } from '@/lib/ai/ai-caller';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
 
 /**
  * Generate an AI narrative summary for a daily site report using Claude API.
@@ -11,11 +12,11 @@ import { callAi } from '@/lib/ai/ai-caller';
 export async function generateAINarrative(
   reportId: string,
   projectId: string
-): Promise<{ success: boolean; narrative?: string; error?: string }> {
+): Promise<ActionResult<{ narrative: string }>> {
   const op = '[generateAINarrative]';
   console.log(`${op} Starting for report: ${reportId}`);
 
-  if (!reportId) return { success: false, error: 'Missing report ID' };
+  if (!reportId) return err('Missing report ID', 'MISSING_ID');
 
   const supabase = await createClient();
 
@@ -28,7 +29,7 @@ export async function generateAINarrative(
 
   if (reportErr || !report) {
     console.error(`${op} Report fetch failed:`, reportErr?.message);
-    return { success: false, error: 'Report not found' };
+    return err('Report not found', reportErr?.code);
   }
 
   // Build the prompt
@@ -40,7 +41,7 @@ export async function generateAINarrative(
     const narrative = await callAi(prompt, { maxTokens: 500 });
 
     if (!narrative) {
-      return { success: false, error: 'AI returned empty response' };
+      return err('AI returned empty response', 'AI_EMPTY');
     }
 
     // Save narrative to the report. Cast required because database.ts types may not yet include
@@ -57,17 +58,17 @@ export async function generateAINarrative(
     if (updateErr) {
       console.error(`${op} Update failed:`, updateErr.message);
       // Still return the narrative even if save failed
-      return { success: true, narrative };
+      return ok({ narrative });
     }
 
     revalidatePath(`/projects/${projectId}/reports`);
     revalidatePath('/daily-reports');
 
     console.log(`${op} Narrative generated successfully (${narrative.length} chars)`);
-    return { success: true, narrative };
+    return ok({ narrative });
   } catch (error) {
     console.error(`${op} Failed:`, error instanceof Error ? error.message : String(error));
-    return { success: false, error: 'Failed to generate narrative' };
+    return err('Failed to generate narrative', 'AI_FAILED');
   }
 }
 

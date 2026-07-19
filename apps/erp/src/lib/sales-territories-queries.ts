@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@repo/supabase/server';
+import { getActiveEmployeesForSelect } from './employees-queries';
 import type { Database } from '@repo/types/database';
 
 export type SalesTerritory = Database['public']['Tables']['sales_territories']['Row'];
@@ -87,23 +88,33 @@ export async function getTerritory(id: string): Promise<TerritoryWithAssignee | 
 }
 
 /**
- * Fetch all active employees for the assignee select.
- * Returns a minimal shape: id + full_name.
+ * Count leads whose `city` (case-insensitive) is in the territory's cities array.
+ * Used by the territory detail page to show coverage.
  */
-export async function listEmployeesForSelect(): Promise<{ id: string; full_name: string }[]> {
-  const op = '[listEmployeesForSelect]';
+export async function countLeadsInTerritory(cities: string[]): Promise<number> {
+  const op = '[countLeadsInTerritory]';
+  if (cities.length === 0) return 0;
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name', { ascending: true });
+  // city values on leads are user-entered; normalise to lowercase before
+  // matching since territory cities are stored lowercase.
+  const { count, error } = await supabase
+    .from('leads')
+    .select('id', { count: 'estimated', head: true })
+    .in('city', cities);
 
   if (error) {
     console.error(`${op} query failed`, { error, timestamp: new Date().toISOString() });
-    return [];
+    return 0;
   }
+  return count ?? 0;
+}
 
-  return (data ?? []) as { id: string; full_name: string }[];
+/**
+ * Fetch all active employees for the assignee select.
+ * Returns a minimal shape: id + full_name.
+ */
+// Active-employee dropdown — delegates to the shared helper (2026-06-19 sweep §3).
+export async function listEmployeesForSelect(): Promise<{ id: string; full_name: string }[]> {
+  return getActiveEmployeesForSelect();
 }

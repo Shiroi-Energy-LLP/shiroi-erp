@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@repo/supabase/server';
+import { getSessionContext } from '@/lib/auth';
 
 export interface OmProfitabilityRow {
   project_id: string;
@@ -55,22 +56,10 @@ export async function getOmProfitability(
  * Returns null if unauthenticated.
  */
 export async function getCurrentUserRole(): Promise<{ userId: string; role: string } | null> {
-  const op = 'getCurrentUserRole';
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (error || !profile) {
-    console.error(`[${op}] Failed to fetch profile`, { userId: user.id, error, timestamp: new Date().toISOString() });
-    return null;
-  }
-
-  return { userId: user.id, role: profile.role as string };
+  // Shares the request-scoped session resolution (NEVER-DO #22 / master-ref §4.17).
+  // Non-null only when both the user and their profile resolve (preserves the
+  // original .single()-or-null contract this page's caller relies on).
+  const { userId, profile } = await getSessionContext();
+  if (!userId || !profile) return null;
+  return { userId, role: profile.role as string };
 }

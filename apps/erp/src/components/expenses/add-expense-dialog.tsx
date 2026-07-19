@@ -15,39 +15,39 @@ import {
   Select,
 } from '@repo/ui';
 import { submitExpense } from '@/lib/expenses-actions';
+import { ProjectCombobox } from '@/components/forms/project-combobox';
 
 interface ProjectOpt { id: string; project_number: string | null; customer_name: string | null }
 interface CategoryOpt { id: string; label: string }
 
-const GENERAL_SENTINEL = '__general__';
-
-export function AddExpenseDialog({ projects, categories }: {
+export function AddExpenseDialog({
+  projects,
+  categories,
+  defaultProjectId,
+  lockProject = false,
+}: {
   projects: ProjectOpt[];
   categories: CategoryOpt[];
+  /** Pre-select this project (e.g. when opened from a project detail page). */
+  defaultProjectId?: string;
+  /** Lock the picker to defaultProjectId — no General option, no re-pick. */
+  lockProject?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [projectId, setProjectId] = useState<string>('');
+  const [projectId, setProjectId] = useState<string>(defaultProjectId ?? '');
+  const [isGeneral, setIsGeneral] = useState(false);
   const [categoryId, setCategoryId] = useState<string>('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState<string>('');
   const [expenseDate, setExpenseDate] = useState<string>(new Date().toISOString().slice(0, 10));
 
-  function reset() {
-    setProjectId('');
-    setCategoryId('');
-    setDescription('');
-    setAmount('');
-    setExpenseDate(new Date().toISOString().slice(0, 10));
-    setError(null);
-    setSaving(false);
-  }
-
   useEffect(() => {
     if (!open) {
-      setProjectId('');
+      setProjectId(defaultProjectId ?? '');
+      setIsGeneral(false);
       setCategoryId('');
       setDescription('');
       setAmount('');
@@ -55,9 +55,17 @@ export function AddExpenseDialog({ projects, categories }: {
       setError(null);
       setSaving(false);
     }
-  }, [open]);
+  }, [open, defaultProjectId]);
 
-  const isGeneral = projectId === GENERAL_SENTINEL;
+  // ProjectCombobox requires customer_name: string — fall back to number/id.
+  const comboboxProjects = projects.map((p) => ({
+    id: p.id,
+    project_number: p.project_number,
+    customer_name: p.customer_name ?? p.project_number ?? p.id.slice(0, 8),
+  }));
+  const lockedProject = lockProject
+    ? projects.find((p) => p.id === defaultProjectId) ?? null
+    : null;
 
   async function handleSubmit() {
     setSaving(true);
@@ -66,9 +74,12 @@ export function AddExpenseDialog({ projects, categories }: {
     if (!categoryId) { setError('Category is required'); setSaving(false); return; }
     if (!Number.isFinite(amt) || amt <= 0) { setError('Amount must be positive'); setSaving(false); return; }
     if (!description.trim()) { setError('Description is required'); setSaving(false); return; }
+    if (!lockProject && !isGeneral && !projectId) {
+      setError('Pick a project, or tick "General expense"'); setSaving(false); return;
+    }
 
     const r = await submitExpense({
-      projectId: isGeneral || !projectId ? null : projectId,
+      projectId: isGeneral ? null : (projectId || null),
       categoryId,
       description,
       amount: amt,
@@ -88,28 +99,37 @@ export function AddExpenseDialog({ projects, categories }: {
         <div className="space-y-3">
           <div>
             <Label>Project</Label>
-            <Select
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-            >
-              <option value="">Select project or General</option>
-              <option value={GENERAL_SENTINEL}>— General expense (no project) —</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.project_number ?? p.id.slice(0, 8)} · {p.customer_name ?? ''}</option>
-              ))}
-            </Select>
-            {isGeneral && (
-              <p className="text-xs text-blue-600 mt-1">
-                General expenses are approved directly by the Founder (no PM verification stage).
-              </p>
+            {lockProject ? (
+              <div className="border border-n-200 rounded-md bg-n-50 px-3 py-2 text-sm text-n-700">
+                {(lockedProject?.project_number ?? '') + ' · ' + (lockedProject?.customer_name ?? '')}
+              </div>
+            ) : (
+              <>
+                <ProjectCombobox
+                  projects={comboboxProjects}
+                  value={isGeneral ? '' : projectId}
+                  onChange={(id) => { setProjectId(id); if (id) setIsGeneral(false); }}
+                  placeholder="Type to search by customer or project number…"
+                />
+                <label className="flex items-center gap-2 mt-2 text-xs text-n-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isGeneral}
+                    onChange={(e) => { setIsGeneral(e.target.checked); if (e.target.checked) setProjectId(''); }}
+                  />
+                  General expense (no project)
+                </label>
+                {isGeneral && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    General expenses are approved directly by the Founder (no PM verification stage).
+                  </p>
+                )}
+              </>
             )}
           </div>
           <div>
             <Label>Category *</Label>
-            <Select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-            >
+            <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
               <option value="">Select category</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
             </Select>

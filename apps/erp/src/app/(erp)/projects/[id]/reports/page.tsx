@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProjectReports } from '@/lib/site-report-queries';
-import { getProject } from '@/lib/projects-queries';
+import { getProjectHeader } from '@/lib/projects-queries';
 import { isReportLocked, hoursUntilLock } from '@/lib/report-lock';
 import { formatDate } from '@repo/ui/formatters';
 import {
@@ -26,7 +26,7 @@ interface ReportsPageProps {
 export default async function ReportsPage({ params }: ReportsPageProps) {
   const { id } = await params;
   const [project, reports] = await Promise.all([
-    getProject(id),
+    getProjectHeader(id),
     getProjectReports(id),
   ]);
 
@@ -39,7 +39,7 @@ export default async function ReportsPage({ params }: ReportsPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-[#1A1D24]">Daily Site Reports</h2>
+          <h2 className="text-lg font-semibold text-n-950">Daily Site Reports</h2>
           <p className="text-sm text-muted-foreground">
             {reports.length} report{reports.length !== 1 ? 's' : ''} submitted
           </p>
@@ -83,7 +83,7 @@ export default async function ReportsPage({ params }: ReportsPageProps) {
                       <TableCell className="font-mono text-sm">
                         <Link
                           href={`/projects/${id}/reports/${report.id}`}
-                          className="text-[#00B050] hover:underline"
+                          className="text-shiroi-gold-dark hover:underline"
                         >
                           {formatDate(report.report_date)}
                         </Link>
@@ -119,21 +119,21 @@ export default async function ReportsPage({ params }: ReportsPageProps) {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/projects/${id}/reports/${report.id}`}
-                            className="text-xs text-[#00B050] hover:underline"
+                            className="text-xs text-shiroi-gold-dark hover:underline"
                           >
                             View
                           </Link>
                           {locked ? (
                             <Link
                               href={`/projects/${id}/reports/${report.id}/correction`}
-                              className="text-xs text-[#7C818E] hover:underline"
+                              className="text-xs text-n-500 hover:underline"
                             >
                               Request Correction
                             </Link>
                           ) : (
                             <Link
                               href={`/projects/${id}/reports/${report.id}/edit`}
-                              className="text-xs text-[#7C818E] hover:underline"
+                              className="text-xs text-n-500 hover:underline"
                             >
                               Edit
                             </Link>
@@ -191,10 +191,10 @@ function ReportStatusIndicator({
 
   return (
     <div className="flex items-center gap-1.5">
-      <svg className="w-3.5 h-3.5 text-[#00B050]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <svg className="w-3.5 h-3.5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
       </svg>
-      <span className="text-xs text-[#00B050]">{hoursLeft}h left</span>
+      <span className="text-xs text-[#16A34A]">{hoursLeft}h left</span>
     </div>
   );
 }

@@ -102,7 +102,7 @@ export function DesignNotesEditor({
           onChange={(e) => setNotes(e.target.value)}
           onBlur={handleBlur}
           placeholder="Notes for the sales team — design rationale, assumptions, special requirements, site constraints, etc. Must be non-empty before Mark Design Confirmed."
-          className="w-full min-h-[160px] text-sm p-3 rounded border border-n-200 focus:outline-none focus:ring-2 focus:ring-shiroi-green/40 focus:border-shiroi-green"
+          className="w-full min-h-[160px] text-sm p-3 rounded border border-n-200 focus:outline-none focus:ring-2 focus:ring-shiroi-gold/40 focus:border-shiroi-gold"
         />
 
         <div className="flex items-start justify-between gap-4 pt-2 border-t border-n-100">

@@ -80,8 +80,11 @@ const ITEMS = {
   inventory:      { label: 'Inventory',          href: '/inventory',          icon: 'Package' },
   waImportQueue:  { label: 'WA Import Queue',   href: '/whatsapp-import',    icon: 'MessageSquare' },
   dataQuality:    { label: 'Data Quality',      href: '/data-quality',       icon: 'Flag' },
+  reconciliation: { label: 'Reconciliation',    href: '/reconciliation',     icon: 'ListChecks' },
+  commandCenter:  { label: 'Command Center',    href: '/command-center',     icon: 'LayoutDashboard' },
   bomReview:      { label: 'BOM Review',        href: '/bom-review',         icon: 'ListChecks' },
   expenses:       { label: 'Expenses',          href: '/expenses',           icon: 'Receipt' },
+  activities:     { label: 'Activities',        href: '/activities',         icon: 'Activity' },
   settings:       { label: 'Settings',          href: '/settings',           icon: 'Settings' },
   vendorBills:    { label: 'Vendor Bills',      href: '/vendor-bills',       icon: 'FileText' },
   vendorBillsReview: { label: 'AI Bill Review', href: '/vendor-bills/review', icon: 'FileCheck' },
@@ -95,17 +98,17 @@ const ITEMS = {
 // ---------------------------------------------------------------------------
 const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   founder: [
-    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
+    { label: 'Overview',     items: [ITEMS.commandCenter, ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Sales',        items: [ITEMS.sales, ITEMS.salesTeamTasks, ITEMS.salesPatterns, ITEMS.salesTerritories, ITEMS.partners, ITEMS.liaison] },
     { label: 'Design',       items: [ITEMS.designQueue] },
-    { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks] },
+    { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.activities] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.importReview, ITEMS.inverters] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
-    { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality, ITEMS.bomReview] },
+    { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality, ITEMS.bomReview, ITEMS.reconciliation] },
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   marketing_manager: [
@@ -121,8 +124,8 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   project_manager: [
-    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
-    { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports] },
+    { label: 'Overview',     items: [ITEMS.commandCenter, ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
+    { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports, ITEMS.activities, ITEMS.reconciliation] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Execution',    items: [ITEMS.qcGates] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.inventory] },
@@ -134,7 +137,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',     items: [ITEMS.settings] },
   ],
   om_technician: [
-    { label: 'Overview',     items: [ITEMS.dashboard] },
+    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.importReview, ITEMS.inverters] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     { label: 'Account',      items: [ITEMS.settings] },
@@ -142,7 +145,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   site_supervisor: [
     { label: 'Overview',     items: [ITEMS.dashboard] },
     { label: 'My Work',      items: [ITEMS.myReports, ITEMS.myTasks, ITEMS.expenses] },
-    { label: 'Projects',     items: [ITEMS.projects] },
+    { label: 'Projects',     items: [ITEMS.projects, ITEMS.activities] },
     { label: 'Procurement',  items: [ITEMS.matRequisitions] },
     { label: 'Account',      items: [ITEMS.settings] },
   ],
@@ -164,7 +167,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   purchase_officer: [
-    { label: 'Overview',         items: [ITEMS.dashboard] },
+    { label: 'Overview',         items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.deliveries, ITEMS.inventory] },
     { label: 'Expenses',         items: [ITEMS.expenses] },
     { label: 'Vendor Management', items: [ITEMS.vendors, ITEMS.priceBook] },
@@ -173,7 +176,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',          items: [ITEMS.settings] },
   ],
   finance: [
-    { label: 'Overview',     items: [ITEMS.dashboard] },
+    { label: 'Overview',     items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'Cash',          items: [ITEMS.cashFlow] },
     { label: 'Billing',      items: [ITEMS.invoices, ITEMS.payments] },
     { label: 'Vendor',       items: [ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.msmeCompliance] },
@@ -184,7 +187,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   hr_manager: [
-    { label: 'Overview',            items: [ITEMS.dashboard] },
+    { label: 'Overview',            items: [ITEMS.dashboard, ITEMS.myTasks] },
     { label: 'People',              items: [ITEMS.employees] },
     { label: 'Expenses',            items: [ITEMS.expenses] },
     { label: 'Leave & Attendance',  items: [ITEMS.leave] },

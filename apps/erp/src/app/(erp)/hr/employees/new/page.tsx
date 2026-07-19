@@ -13,7 +13,7 @@ export default async function NewEmployeePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[#1A1D24]">New Employee</h1>
+      <h1 className="text-2xl font-bold text-n-950">New Employee</h1>
       <CreateEmployeeForm />
     </div>
   );

@@ -5,10 +5,7 @@
       "parameters": {
         "rule": {
           "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "0 0 8 * * *"
-            }
+            { "field": "cronExpression", "expression": "0 0 8 * * *" }
           ]
         },
         "timezone": "Asia/Kolkata"
@@ -17,10 +14,7 @@
       "name": "Daily 8:00 IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        0,
-        300
-      ]
+      "position": [0, 300]
     },
     {
       "parameters": {
@@ -31,40 +25,22 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Accept", "value": "application/json" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"window_days\": 7}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
+        "options": { "response": { "response": { "responseFormat": "json" } } }
       },
       "id": "node-http-orders",
       "alwaysOutputData": true,
       "name": "Fetch expected orders (7d)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        250,
-        200
-      ],
+      "position": [250, 200],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -81,40 +57,22 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SECRET_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Accept", "value": "application/json" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"window_days\": 7}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
+        "options": { "response": { "response": { "responseFormat": "json" } } }
       },
       "id": "node-http-payments",
       "alwaysOutputData": true,
       "name": "Fetch expected payments (7d)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        250,
-        400
-      ],
+      "position": [250, 400],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_CRED_ID",
@@ -124,16 +82,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const norm = (items) => items.map(i => i.json).filter(j => j && typeof j === 'object' && Object.keys(j).length > 0);\nconst orders = norm($('Fetch expected orders (7d)').all());\nconst payments = norm($('Fetch expected payments (7d)').all());\n\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nconst fmtL = (n) => `₹${(Number(n) / 100000).toFixed(1)}L`;\nconst fmtCr = (n) => `₹${(Number(n) / 10000000).toFixed(1)}Cr`;\n\nconst ordersTotal = orders.reduce((s, o) => s + Number(o.derived_value || 0), 0);\nconst paymentsTotal = payments.reduce((s, p) => s + Number(p.amount || 0), 0);\n\nlet body = ``;\n\nbody += `\\n*Orders closing (next 7d):* ${orders.length} · ${fmtCr(ordersTotal)} total\\n`;\nif (orders.length === 0) {\n  body += `(none expected this week)\\n`;\n} else {\n  for (const [i, o] of orders.slice(0, 10).entries()) {\n    const dueLabel = (o.expected_close_date || '').slice(5);\n    body += `${i+1}. ${o.customer_name} · ${o.estimated_size_kwp || '—'}kWp · ${fmtL(o.derived_value)} · ${o.close_probability}% · ${dueLabel}\\n`;\n  }\n  if (orders.length > 10) body += `…+${orders.length - 10} more\\n`;\n}\n\nbody += `\\n*Payments expected (next 7d):* ${payments.length} · ${fmtL(paymentsTotal)} total\\n`;\nif (payments.length === 0) {\n  body += `(none scheduled)\\n`;\n} else {\n  for (const [i, p] of payments.slice(0, 10).entries()) {\n    const dueLabel = (p.expected_payment_date || '').slice(5);\n    body += `${i+1}. ${p.project_number} · ${p.customer_name} · ${fmtL(p.amount)} · ${dueLabel}\\n`;\n  }\n  if (payments.length > 10) body += `…+${payments.length - 10} more\\n`;\n}\n\nbody += `\\nOpen: https://erp.shiroienergy.com`;\n\nconst title = `📈 This week's pipeline — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone_vivek: $env.VIVEK_WHATSAPP || '',\n    to_phone_prem: $env.SALES_HEAD_WHATSAPP || '',\n  },\n}];"
+        "jsCode": "const norm = (items) => items.map(i => i.json).filter(j => j && typeof j === 'object' && Object.keys(j).length > 0);\nconst orders = norm($('Fetch expected orders (7d)').all());\nconst payments = norm($('Fetch expected payments (7d)').all());\n\nconst dateLine = DateTime.now().setZone('Asia/Kolkata').toFormat('EEE, dd LLL yyyy');\n\nconst fmtL = (n) => `₹${(Number(n) / 100000).toFixed(1)}L`;\nconst fmtCr = (n) => `₹${(Number(n) / 10000000).toFixed(1)}Cr`;\n\nconst ordersTotal = orders.reduce((s, o) => s + Number(o.derived_value || 0), 0);\nconst paymentsTotal = payments.reduce((s, p) => s + Number(p.amount || 0), 0);\n\nlet body = `📈 *This week's pipeline* — ${dateLine}\\n`;\n\nbody += `\\n*Orders closing (next 7d):* ${orders.length} · ${fmtCr(ordersTotal)} total\\n`;\nif (orders.length === 0) {\n  body += `(none expected this week)\\n`;\n} else {\n  for (const [i, o] of orders.slice(0, 10).entries()) {\n    const dueLabel = (o.expected_close_date || '').slice(5);\n    body += `${i+1}. ${o.customer_name} · ${o.estimated_size_kwp || '—'}kWp · ${fmtL(o.derived_value)} · ${o.close_probability}% · ${dueLabel}\\n`;\n  }\n  if (orders.length > 10) body += `…+${orders.length - 10} more\\n`;\n}\n\nbody += `\\n*Payments expected (next 7d):* ${payments.length} · ${fmtL(paymentsTotal)} total\\n`;\nif (payments.length === 0) {\n  body += `(none scheduled)\\n`;\n} else {\n  for (const [i, p] of payments.slice(0, 10).entries()) {\n    const dueLabel = (p.expected_payment_date || '').slice(5);\n    body += `${i+1}. ${p.project_number} · ${p.customer_name} · ${fmtL(p.amount)} · ${dueLabel}\\n`;\n  }\n  if (payments.length > 10) body += `…+${payments.length - 10} more\\n`;\n}\n\nbody += `\\nOpen: https://erp.shiroienergy.com`;\n\nconst title = `📈 This week's pipeline — ${dateLine}`;\n\nreturn [{\n  json: {\n    title,\n    body: body.slice(0, 900),\n    to_phone_vivek: $env.VIVEK_WHATSAPP || '',\n    to_phone_prem: $env.SALES_HEAD_WHATSAPP || '',\n  },\n}];"
       },
       "id": "node-compose",
       "name": "Compose digest",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        500,
-        300
-      ]
+      "position": [500, 300]
     },
     {
       "parameters": {
@@ -141,29 +96,15 @@
         "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $json.to_phone_vivek }}",
-        "template": "erp_alert_v2|en",
+        "template": "erp_alert|en",
         "components": {
           "component": [
             {
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ (((($json.title + '\\n\\n' + $json.body) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[0] || ' ').slice(0, 1000) }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ (((($json.title + '\\n\\n' + $json.body) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[1] || ' ').slice(0, 1000) }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ (((($json.title + '\\n\\n' + $json.body) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[2] || ' ').slice(0, 1000) }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ((((($json.title + '\\n\\n' + $json.body) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean)).slice(3).join(' · ')) || ' ').slice(0, 1000) }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
@@ -174,10 +115,7 @@
       "name": "Send to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        750,
-        200
-      ],
+      "position": [750, 200],
       "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
@@ -192,29 +130,15 @@
         "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $json.to_phone_prem }}",
-        "template": "erp_alert_v2|en",
+        "template": "erp_alert|en",
         "components": {
           "component": [
             {
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  {
-                    "type": "text",
-                    "text": "={{ (((($json.title + '\\n\\n' + $json.body) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[0] || ' ').slice(0, 1000) }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ (((($json.title + '\\n\\n' + $json.body) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[1] || ' ').slice(0, 1000) }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ (((($json.title + '\\n\\n' + $json.body) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[2] || ' ').slice(0, 1000) }}"
-                  },
-                  {
-                    "type": "text",
-                    "text": "={{ ((((($json.title + '\\n\\n' + $json.body) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean)).slice(3).join(' · ')) || ' ').slice(0, 1000) }}"
-                  }
+                  { "type": "text", "text": "={{ $json.title }}" },
+                  { "type": "text", "text": "={{ ($json.body || ' ').slice(0, 900) }}" }
                 ]
               }
             }
@@ -225,10 +149,7 @@
       "name": "Send to Prem",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [
-        750,
-        400
-      ],
+      "position": [750, 400],
       "executeOnce": true,
       "credentials": {
         "whatsAppApi": {
@@ -240,56 +161,19 @@
   ],
   "connections": {
     "Daily 8:00 IST": {
-      "main": [
-        [
-          {
-            "node": "Fetch expected orders (7d)",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch expected payments (7d)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Fetch expected orders (7d)", "type": "main", "index": 0 }]]
     },
     "Fetch expected orders (7d)": {
-      "main": [
-        [
-          {
-            "node": "Compose digest",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Fetch expected payments (7d)", "type": "main", "index": 0 }]]
     },
     "Fetch expected payments (7d)": {
-      "main": [
-        [
-          {
-            "node": "Compose digest",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]]
     },
     "Compose digest": {
       "main": [
         [
-          {
-            "node": "Send to Vivek",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send to Prem",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send to Vivek", "type": "main", "index": 0 },
+          { "node": "Send to Prem", "type": "main", "index": 0 }
         ]
       ]
     }

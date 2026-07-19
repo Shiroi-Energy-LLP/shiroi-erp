@@ -7,7 +7,7 @@ import { sungrowAdapter } from './sungrow';
 import { growattAdapter } from './growatt';
 import { smaAdapter } from './sma';
 import { huaweiAdapter } from './huawei';
-import { solarmanAdapter } from './solarman';
+import { deyeAdapter } from './deye';
 import { goodweAdapter } from './goodwe';
 import { fimerAdapter } from './fimer';
 
@@ -17,7 +17,8 @@ const ADAPTERS: Record<InverterBrand, InverterAdapter> = {
   sma: smaAdapter,
   huawei: huaweiAdapter,
   fronius: sungrowAdapter,      // placeholder fallback
-  solarman: solarmanAdapter,
+  solarman: deyeAdapter,        // Solarman white-label is Deye — route to the real Deye Cloud adapter
+  deye: deyeAdapter,            // real adapter (2026-06-19)
   goodwe: goodweAdapter,
   fimer: fimerAdapter,          // real adapter (2026-06-05)
   polycab: sungrowAdapter,      // placeholder fallback (skipped — no current install volume)

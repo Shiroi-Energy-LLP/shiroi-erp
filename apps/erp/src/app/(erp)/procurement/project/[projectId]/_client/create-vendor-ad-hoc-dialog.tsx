@@ -68,11 +68,7 @@ export function CreateVendorAdHocDialog({
       setError(res.error ?? 'Failed to create vendor');
       return;
     }
-    if (!res.vendorId) {
-      setError('Vendor created but no ID returned');
-      return;
-    }
-    onCreated(res.vendorId);
+    onCreated(res.data.vendorId);
   }
 
   return (

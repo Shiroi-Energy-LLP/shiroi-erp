@@ -7,9 +7,9 @@
  * Roles that may call markPaid: finance + founder.
  */
 
-import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from './types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 // ── Approve ──
 
@@ -20,9 +20,9 @@ export async function approveReferralPayout(
   try {
     if (!payoutId) return err('Missing payoutId');
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return err('Not authenticated');
+    const authed = await requireAuthUser();
+    if (!authed.success) return authed;
+    const { user, supabase } = authed.data;
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -67,9 +67,9 @@ export async function markReferralPaid(
     if (!payoutId) return err('Missing payoutId');
     if (!paymentReference?.trim()) return err('Payment reference is required');
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return err('Not authenticated');
+    const authed = await requireAuthUser();
+    if (!authed.success) return authed;
+    const { user, supabase } = authed.data;
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -140,9 +140,9 @@ export async function rejectReferralPayout(
   try {
     if (!payoutId) return err('Missing payoutId');
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return err('Not authenticated');
+    const authed = await requireAuthUser();
+    if (!authed.success) return authed;
+    const { user, supabase } = authed.data;
 
     const { data: profile } = await supabase
       .from('profiles')

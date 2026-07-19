@@ -12,6 +12,7 @@ import {
   DollarSign, Award, GraduationCap, BookOpen, Truck,
   BarChart3, CalendarCheck, Building2, Shield,
   MessageSquare, Flag, ListChecks, Receipt, Activity, Handshake, Settings, Zap,
+  Upload,
   PanelLeftClose, PanelLeftOpen, Menu,
 } from 'lucide-react';
 
@@ -22,6 +23,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   DollarSign, Award, GraduationCap, BookOpen, Truck,
   BarChart3, CalendarCheck, Building2, Shield,
   MessageSquare, Flag, ListChecks, Receipt, Activity, Handshake, Settings, Zap,
+  Upload,
 };
 
 const STORAGE_KEY = 'shiroi-sidebar-collapsed';
@@ -53,7 +55,7 @@ function SidebarNav({ role, collapsed }: { role: AppRole; collapsed: boolean }) 
                   href={item.href}
                   className={`flex items-center ${collapsed ? 'justify-center' : ''} gap-3 ${collapsed ? 'px-0 py-2' : 'px-3 py-2'} rounded-md text-[13px] font-medium transition-all duration-150 ${
                     isActive
-                      ? 'bg-[rgba(0,176,80,0.12)] border-l-[3px] border-shiroi-green text-white'
+                      ? 'bg-[rgba(224,138,0,0.16)] border-l-[3px] border-shiroi-gold text-white'
                       : 'text-[rgba(255,255,255,0.55)] hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.85)]'
                   }`}
                 >

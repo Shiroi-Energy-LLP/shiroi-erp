@@ -96,8 +96,8 @@ export default async function VendorBillAiReviewPage() {
       <div>
         <Eyebrow className="mb-1">FINANCE / AI</Eyebrow>
         <div className="flex items-center gap-3">
-          <Bot className="h-6 w-6 text-[#00B050]" />
-          <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">
+          <Bot className="h-6 w-6 text-shiroi-gold-dark" />
+          <h1 className="text-2xl font-heading font-bold text-n-950">
             Vendor Invoice AI Review
           </h1>
         </div>
@@ -116,7 +116,7 @@ export default async function VendorBillAiReviewPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold font-mono text-[#1A1D24]">{kpis.pending_count}</p>
+            <p className="text-2xl font-bold font-mono text-n-950">{kpis.pending_count}</p>
           </CardContent>
         </Card>
 
@@ -152,7 +152,7 @@ export default async function VendorBillAiReviewPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold font-mono text-[#1A1D24]">
+            <p className="text-2xl font-bold font-mono text-n-950">
               {kpis.avg_confidence !== null ? `${Math.round(kpis.avg_confidence * 100)}%` : '—'}
             </p>
           </CardContent>
@@ -199,7 +199,7 @@ export default async function VendorBillAiReviewPage() {
                       <TableCell className="font-mono text-sm">
                         <Link
                           href={`/vendor-bills/${bill.id}`}
-                          className="text-[#00B050] hover:underline"
+                          className="text-shiroi-gold-dark hover:underline"
                         >
                           {bill.bill_number}
                         </Link>
@@ -242,7 +242,7 @@ export default async function VendorBillAiReviewPage() {
                       <TableCell>
                         <Link
                           href={`/vendor-bills/${bill.id}`}
-                          className="text-sm font-medium text-[#00B050] hover:underline whitespace-nowrap"
+                          className="text-sm font-medium text-shiroi-gold-dark hover:underline whitespace-nowrap"
                         >
                           Review
                         </Link>

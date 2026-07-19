@@ -142,7 +142,7 @@ export function BoqEditableTable({
     });
     setSaving(false);
     if (poRes.success) {
-      setMessage(`Created ${poRes.poCount} PO(s) — awaiting approval`);
+      setMessage(`Created ${poRes.data.poCount} PO(s) — awaiting approval`);
       setSelected(new Set());
       setQuickPoVendor('');
       router.refresh();

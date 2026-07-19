@@ -1,8 +1,8 @@
 import { getUserProfile } from '@/lib/auth';
 import { getSupervisorDashboardData } from '@/lib/supervisor-queries';
-import { KpiCard } from '@/components/kpi-card';
 import { MyTasks } from '@/components/my-tasks';
 import {
+  KpiCard,
   Card,
   CardHeader,
   CardTitle,
@@ -27,7 +27,7 @@ export async function SupervisorDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold text-[#1A1D24]">Site Supervisor Dashboard</h1>
+      <h1 className="text-2xl font-heading font-bold text-n-950">Site Supervisor Dashboard</h1>
 
       {/* Active Project Card */}
       {data.activeProject ? (
@@ -35,16 +35,16 @@ export async function SupervisorDashboard() {
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <HardHat className="h-8 w-8 text-[#00B050]" />
+                <HardHat className="h-8 w-8 text-shiroi-gold-dark" />
                 <div>
-                  <h2 className="font-heading text-lg font-bold text-[#1A1D24]">
+                  <h2 className="font-heading text-lg font-bold text-n-950">
                     {data.activeProject.project_number}
                   </h2>
-                  <p className="text-sm text-[#5A5E6B]">
+                  <p className="text-sm text-n-600">
                     {data.activeProject.customer_name} &middot; {data.activeProject.site_city}
                   </p>
                   {data.activeProject.currentMilestone && (
-                    <p className="text-xs text-[#7C818E] mt-0.5">
+                    <p className="text-xs text-n-500 mt-0.5">
                       Current: {data.activeProject.currentMilestone}
                     </p>
                   )}
@@ -65,11 +65,11 @@ export async function SupervisorDashboard() {
         <Card>
           <CardContent className="py-8">
             <div className="flex flex-col items-center justify-center text-center">
-              <HardHat className="h-10 w-10 text-[#9CA0AB] mb-3" />
-              <h2 className="text-base font-heading font-bold text-[#1A1D24]">
+              <HardHat className="h-10 w-10 text-n-400 mb-3" />
+              <h2 className="text-base font-heading font-bold text-n-950">
                 No Active Project
               </h2>
-              <p className="text-sm text-[#7C818E] mt-1">
+              <p className="text-sm text-n-500 mt-1">
                 You are not currently assigned to any active project.
               </p>
             </div>
@@ -133,7 +133,7 @@ export async function SupervisorDashboard() {
             </CardHeader>
             <CardContent>
               {data.recentReports.length === 0 ? (
-                <p className="text-sm text-[#9CA0AB] py-4 text-center">
+                <p className="text-sm text-n-400 py-4 text-center">
                   No reports filed yet.
                 </p>
               ) : (
@@ -141,18 +141,18 @@ export async function SupervisorDashboard() {
                   {data.recentReports.map((report) => (
                     <div
                       key={report.id}
-                      className="flex items-center justify-between rounded-md border border-[#DFE2E8] px-3 py-2"
+                      className="flex items-center justify-between rounded-md border border-n-200 px-3 py-2"
                     >
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-[#1A1D24]">
+                        <span className="text-sm font-medium text-n-950">
                           {formatDate(report.report_date)}
                         </span>
-                        <span className="text-xs text-[#7C818E] truncate max-w-[160px]">
+                        <span className="text-xs text-n-500 truncate max-w-[160px]">
                           {report.panels_installed_today} panels installed
                         </span>
                       </div>
                       {report.computedLocked ? (
-                        <Lock className="h-4 w-4 text-[#9CA0AB]" />
+                        <Lock className="h-4 w-4 text-n-400" />
                       ) : (
                         <Badge variant="success">Editable</Badge>
                       )}

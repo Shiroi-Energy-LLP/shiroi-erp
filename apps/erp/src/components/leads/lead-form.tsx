@@ -6,7 +6,9 @@ import { createClient } from '@repo/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label, Select, useToast } from '@repo/ui';
 import { normalizePhone } from '@/lib/leads-helpers';
 import { ReferrerPicker } from '@/components/leads/referrer-picker';
+import { CompanyPicker } from '@/components/leads/company-picker';
 import { triggerLeadScore } from '@/lib/ai/trigger-lead-score';
+import { SYSTEM_TYPE_OPTIONS as SYSTEM_TYPES } from '@/lib/label-constants';
 import type { PartnerPickerOption } from '@/lib/partners-queries';
 import type { Database } from '@repo/types/database';
 
@@ -31,12 +33,6 @@ const SOURCES: { value: LeadSource; label: string }[] = [
   { value: 'walkin', label: 'Walk-in' },
 ];
 
-const SYSTEM_TYPES: { value: SystemType; label: string }[] = [
-  { value: 'on_grid', label: 'On Grid' },
-  { value: 'hybrid', label: 'Hybrid' },
-  { value: 'off_grid', label: 'Off Grid' },
-];
-
 const STATES = [
   'Tamil Nadu', 'Kerala', 'Karnataka', 'Andhra Pradesh', 'Telangana',
   'Maharashtra', 'Pondicherry',
@@ -44,9 +40,10 @@ const STATES = [
 
 interface LeadFormProps {
   partners?: PartnerPickerOption[];
+  companies?: { id: string; name: string }[];
 }
 
-export function LeadForm({ partners = [] }: LeadFormProps) {
+export function LeadForm({ partners = [], companies = [] }: LeadFormProps) {
   const router = useRouter();
   const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +66,8 @@ export function LeadForm({ partners = [] }: LeadFormProps) {
     map_link: '',
     notes: '',
     channel_partner_id: null as string | null,
+    company_id: null as string | null,
+    project_name: '',
   });
 
   function updateField(field: string, value: string) {
@@ -127,6 +126,8 @@ export function LeadForm({ partners = [] }: LeadFormProps) {
       map_link: trimmedMapLink || null,
       notes: form.notes.trim() || null,
       channel_partner_id: form.channel_partner_id,
+      company_id: form.company_id,
+      project_name: form.project_name.trim() || null,
       status: 'new' as const,
     });
 
@@ -261,8 +262,27 @@ export function LeadForm({ partners = [] }: LeadFormProps) {
             onChange={(id) => setForm((prev) => ({ ...prev, channel_partner_id: id }))}
           />
           <p className="text-xs text-n-500">
-            Optional. Pick &quot;Vivek Sridhar (Founder)&quot; or &quot;Management Referral&quot; for VIP-track leads.
+            Optional. Pick &quot;Vivek Sridhar (Founder)&quot; or &quot;Management Referral&quot; for MGMT REF leads.
           </p>
+
+          {/* Company / Account — links this lead to an existing B2B account or
+              lets the user create a new company stub inline. */}
+          <CompanyPicker
+            companies={companies}
+            value={form.company_id}
+            onChange={(id) => setForm((prev) => ({ ...prev, company_id: id }))}
+          />
+
+          <div className="space-y-2">
+            <Label htmlFor="project_name">Project Name <span className="text-n-400 font-normal">(optional)</span></Label>
+            <Input
+              id="project_name"
+              value={form.project_name}
+              onChange={(e) => updateField('project_name', e.target.value)}
+              placeholder="e.g. Rooftop Block-A"
+            />
+            <p className="text-xs text-n-500">e.g. a specific site/tower when this customer has multiple projects.</p>
+          </div>
 
           {/* Optional fields */}
           <div className="grid grid-cols-2 gap-4">

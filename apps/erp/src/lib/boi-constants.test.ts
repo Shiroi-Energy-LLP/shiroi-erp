@@ -41,8 +41,10 @@ describe('getCategoryLabel', () => {
     expect(getCategoryLabel('ic')).toBe('I&C (Installation & Commissioning)');
   });
 
-  it('falls back to a human-readable form for an unknown value', () => {
-    expect(getCategoryLabel('foo_bar')).toBe('foo bar');
+  it('falls back to a title-cased human-readable form for an unknown value', () => {
+    // Since 2026-06-11 (managed item_categories), unknown values — e.g. user-added
+    // categories not in the static label map — render prettified.
+    expect(getCategoryLabel('foo_bar')).toBe('Foo Bar');
   });
 });
 

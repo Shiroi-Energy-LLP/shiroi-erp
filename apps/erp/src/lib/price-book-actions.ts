@@ -3,6 +3,8 @@
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { AppRole } from '@/lib/roles';
+import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { sanitizeForIlike } from '@/lib/helpers/sanitize-or-filter';
 
 const ALLOWED_PRICE_BOOK_EDITORS: AppRole[] = [
   'founder',
@@ -69,8 +71,9 @@ export async function getPriceBookItems(params: {
   if (params.brand) query = query.eq('brand', params.brand);
   if (params.vendor) query = query.eq('vendor_name', params.vendor);
   if (params.search) {
+    const s = sanitizeForIlike(params.search);
     query = query.or(
-      `item_description.ilike.%${params.search}%,brand.ilike.%${params.search}%,vendor_name.ilike.%${params.search}%`
+      `item_description.ilike.${s},brand.ilike.${s},vendor_name.ilike.${s}`
     );
   }
 
@@ -97,9 +100,9 @@ export async function createPriceBookItem(input: {
   vendor_name?: string;
   default_qty?: number;
   specification?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const guard = await assertCanEditPriceBook();
-  if (!guard.ok) return { success: false, error: guard.error };
+  if (!guard.ok) return err(guard.error, guard.code);
 
   const op = '[createPriceBookItem]';
   const supabase = await createClient();
@@ -108,25 +111,26 @@ export async function createPriceBookItem(input: {
 
   const { error } = await supabase.from('price_book').insert({
     ...input,
+    gst_type: input.gst_type ?? 'supply',
     is_active: true,
     effective_from: today,
   } as any);
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/price-book');
-  return { success: true };
+  return ok(undefined);
 }
 
 export async function updatePriceBookItem(input: {
   id: string;
   data: Record<string, any>;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<ActionResult<void>> {
   const guard = await assertCanEditPriceBook();
-  if (!guard.ok) return { success: false, error: guard.error };
+  if (!guard.ok) return err(guard.error, guard.code);
 
   const op = '[updatePriceBookItem]';
   const supabase = await createClient();
@@ -150,16 +154,16 @@ export async function updatePriceBookItem(input: {
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/price-book');
-  return { success: true };
+  return ok(undefined);
 }
 
-export async function deletePriceBookItem(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deletePriceBookItem(id: string): Promise<ActionResult<void>> {
   const guard = await assertCanEditPriceBook();
-  if (!guard.ok) return { success: false, error: guard.error };
+  if (!guard.ok) return err(guard.error, guard.code);
 
   const op = '[deletePriceBookItem]';
   const supabase = await createClient();
@@ -171,11 +175,11 @@ export async function deletePriceBookItem(id: string): Promise<{ success: boolea
 
   if (error) {
     console.error(`${op} Failed:`, { code: error.code, message: error.message });
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/price-book');
-  return { success: true };
+  return ok(undefined);
 }
 
 /** Get distinct categories from active price book items */

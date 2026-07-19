@@ -21,7 +21,9 @@ import {
   TableHead,
   TableCell,
 } from '@repo/ui';
+import { formatINR, formatDate, formatDateFromTimestamp } from '@repo/ui/formatters';
 import { MarkPayoutPaidButton } from '@/components/partners/mark-payout-paid-button';
+import { PartnerActionMenu } from '@/components/partners/partner-action-menu';
 
 const PARTNER_TYPE_LABELS: Record<string, string> = {
   individual_broker: 'Individual Broker',
@@ -42,24 +44,6 @@ const COMMISSION_TYPE_LABELS: Record<string, string> = {
   percentage_of_revenue: '% of Revenue',
   fixed_per_deal: 'Fixed per Deal',
 };
-
-function formatINR(value: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 interface PartnerDetailProps {
   params: Promise<{ id: string }>;
@@ -91,7 +75,7 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-n-900">{partner.partner_name}</h1>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
@@ -111,6 +95,24 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
             </span>
           </div>
         </div>
+        <PartnerActionMenu
+          partner={{
+            id: partner.id,
+            partner_name: partner.partner_name,
+            contact_person: partner.contact_person,
+            phone: partner.phone,
+            email: partner.email,
+            whatsapp: partner.whatsapp,
+            partner_type: partner.partner_type,
+            commission_type: partner.commission_type,
+            commission_rate: Number(partner.commission_rate),
+            pan_number: partner.pan_number,
+            tds_applicable: partner.tds_applicable,
+            agreement_start_date: partner.agreement_start_date as string | null,
+            agreement_end_date: partner.agreement_end_date as string | null,
+            is_active: partner.is_active ?? true,
+          }}
+        />
       </div>
 
       {/* Summary cards */}
@@ -177,8 +179,8 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
             />
             <Row label="Rate" value={String(partner.commission_rate)} />
             <Row label="TDS Applicable" value={partner.tds_applicable ? 'Yes (5%)' : 'No'} />
-            <Row label="Agreement Start" value={formatDate(partner.agreement_start_date as string | null)} />
-            <Row label="Agreement End" value={formatDate(partner.agreement_end_date as string | null)} />
+            <Row label="Agreement Start" value={partner.agreement_start_date ? formatDate(partner.agreement_start_date as string) : '—'} />
+            <Row label="Agreement End" value={partner.agreement_end_date ? formatDate(partner.agreement_end_date as string) : '—'} />
             <Row
               label="Total Paid (all time)"
               value={formatINR(Number(partner.total_commission_paid ?? 0))}
@@ -264,7 +266,7 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
                     <TableCell className="font-medium">
                       <Link
                         href={`/sales/${l.id}`}
-                        className="text-shiroi-green hover:underline"
+                        className="text-shiroi-gold-dark hover:underline"
                       >
                         {l.customer_name}
                       </Link>
@@ -323,7 +325,7 @@ export default async function PartnerDetailPage({ params }: PartnerDetailProps) 
                     <TableCell className="text-right tabular-nums text-sm font-medium">
                       {formatINR(Number(p.net_amount))}
                     </TableCell>
-                    <TableCell className="text-xs text-n-500">{formatDate(p.paid_at)}</TableCell>
+                    <TableCell className="text-xs text-n-500">{formatDateFromTimestamp(p.paid_at)}</TableCell>
                     <TableCell className="text-xs text-n-500 font-mono">
                       {p.payment_reference ?? '—'}
                     </TableCell>

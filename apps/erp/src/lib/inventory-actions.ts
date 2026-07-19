@@ -4,6 +4,7 @@ import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/types/database';
 import { type ActionResult, ok, err } from '@/lib/types/actions';
+import { requireAuthUser } from '@/lib/auth';
 
 type CutRecordInsert = Database['public']['Tables']['inventory_cut_records']['Insert'];
 type MaterialType = Database['public']['Tables']['inventory_cut_records']['Row']['material_type'];
@@ -33,9 +34,9 @@ export async function recordCutLength(
   if (!input.specification.trim()) return err('Specification is required');
   if (input.lengthMeters <= 0) return err('Length must be greater than zero');
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   // Resolve profile.id → cut_by
   const { data: profile } = await supabase
@@ -78,9 +79,9 @@ export async function deleteCutRecord(recordId: string): Promise<ActionResult<vo
 
   if (!recordId) return err('Missing record ID');
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err('Not authenticated');
+  const authed = await requireAuthUser();
+  if (!authed.success) return authed;
+  const { user, supabase } = authed.data;
 
   // Verify caller role (founder or project_manager)
   const { data: profile } = await supabase
@@ -127,12 +128,12 @@ interface UpdateCutLengthInput {
 
 export async function updateCutLength(
   input: UpdateCutLengthInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<void>> {
   const op = '[updateCutLength]';
   console.log(`${op} Starting for piece: ${input.stockPieceId}, new length: ${input.newLengthM}m`);
 
-  if (!input.stockPieceId) return { success: false, error: 'Missing stock piece ID' };
-  if (input.newLengthM < 0) return { success: false, error: 'Length cannot be negative' };
+  if (!input.stockPieceId) return err('Missing stock piece ID', 'MISSING_PIECE_ID');
+  if (input.newLengthM < 0) return err('Length cannot be negative', 'NEGATIVE_LENGTH');
 
   const supabase = await createClient();
 
@@ -145,15 +146,15 @@ export async function updateCutLength(
 
   if (fetchErr || !piece) {
     console.error(`${op} Piece not found:`, fetchErr?.message);
-    return { success: false, error: 'Stock piece not found' };
+    return err('Stock piece not found', fetchErr?.code);
   }
 
   if (!piece.is_cut_length) {
-    return { success: false, error: 'This piece is not a cut-length item' };
+    return err('This piece is not a cut-length item', 'NOT_CUT_LENGTH');
   }
 
   if (piece.current_length_m !== null && input.newLengthM > piece.current_length_m) {
-    return { success: false, error: 'New length cannot exceed current length' };
+    return err('New length cannot exceed current length', 'LENGTH_EXCEEDS_CURRENT');
   }
 
   // Check if below minimum usable → auto-scrap will be handled by DB trigger
@@ -182,12 +183,12 @@ export async function updateCutLength(
 
   if (updateErr) {
     console.error(`${op} Update failed:`, updateErr.message);
-    return { success: false, error: updateErr.message };
+    return err(updateErr.message, updateErr.code);
   }
 
   revalidatePath('/inventory');
   console.log(`${op} Updated piece ${input.stockPieceId} to ${input.newLengthM}m${willBeScrap ? ' (auto-scrapped)' : ''}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -201,12 +202,12 @@ interface AllocateStockInput {
 
 export async function allocateToProject(
   input: AllocateStockInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<void>> {
   const op = '[allocateToProject]';
   console.log(`${op} Allocating piece ${input.stockPieceId} to project ${input.projectId}`);
 
   if (!input.stockPieceId || !input.projectId) {
-    return { success: false, error: 'Missing required fields' };
+    return err('Missing required fields', 'MISSING_FIELDS');
   }
 
   const supabase = await createClient();
@@ -221,12 +222,12 @@ export async function allocateToProject(
 
   if (error) {
     console.error(`${op} Allocation failed:`, error.message);
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/inventory');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -241,11 +242,11 @@ interface UpdateLocationInput {
 
 export async function updateStockLocation(
   input: UpdateLocationInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<void>> {
   const op = '[updateStockLocation]';
 
   if (!input.stockPieceId || !input.location) {
-    return { success: false, error: 'Missing required fields' };
+    return err('Missing required fields', 'MISSING_FIELDS');
   }
 
   const supabase = await createClient();
@@ -265,11 +266,11 @@ export async function updateStockLocation(
 
   if (error) {
     console.error(`${op} Update failed:`, error.message);
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/inventory');
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -283,12 +284,12 @@ interface ScrapStockInput {
 
 export async function scrapStockPiece(
   input: ScrapStockInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<void>> {
   const op = '[scrapStockPiece]';
   console.log(`${op} Scrapping piece: ${input.stockPieceId}`);
 
   if (!input.stockPieceId || !input.reason) {
-    return { success: false, error: 'Missing required fields' };
+    return err('Missing required fields', 'MISSING_FIELDS');
   }
 
   const supabase = await createClient();
@@ -306,11 +307,11 @@ export async function scrapStockPiece(
 
   if (error) {
     console.error(`${op} Scrap failed:`, error.message);
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/inventory');
-  return { success: true };
+  return ok(undefined);
 }
 
 // ---------------------------------------------------------------------------
@@ -325,11 +326,11 @@ interface InstallStockInput {
 
 export async function markAsInstalled(
   input: InstallStockInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ActionResult<void>> {
   const op = '[markAsInstalled]';
 
   if (!input.stockPieceId || !input.projectId) {
-    return { success: false, error: 'Missing required fields' };
+    return err('Missing required fields', 'MISSING_FIELDS');
   }
 
   const supabase = await createClient();
@@ -346,10 +347,10 @@ export async function markAsInstalled(
 
   if (error) {
     console.error(`${op} Install update failed:`, error.message);
-    return { success: false, error: error.message };
+    return err(error.message, error.code);
   }
 
   revalidatePath('/inventory');
   revalidatePath(`/projects/${input.projectId}`);
-  return { success: true };
+  return ok(undefined);
 }

@@ -66,9 +66,9 @@ export function CreateEmployeeForm() {
 
     setLoading(false);
 
-    if (res.success && res.tempPassword) {
+    if (res.success) {
       setResult({
-        tempPassword: res.tempPassword,
+        tempPassword: res.data.tempPassword,
         name: form.get('fullName') as string,
       });
       addToast({ variant: 'success', title: 'Employee created', description: `Account for ${form.get('fullName')} has been created.` });

@@ -1,15 +1,14 @@
 import * as React from 'react';
 import { getAllTasks } from '@/lib/all-tasks-queries';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
-import { getProjectsWithTasks } from '@/lib/tasks-queries';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import { TasksTable } from '@/components/tasks/tasks-table';
-import { SearchableProjectFilter } from '@/components/tasks/searchable-project-filter';
 import {
   Card,
   CardContent,
   Button,
 } from '@repo/ui';
+import { ListPageShell } from '@/components/list-page-shell';
 import { ClipboardList } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
@@ -45,7 +44,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  const [{ tasks, total }, employees, projects, filterProjects] = await Promise.all([
+  const [{ tasks, total }, employees, projects] = await Promise.all([
     getAllTasks({
       status: params.status || undefined,
       priority: params.priority || undefined,
@@ -58,7 +57,6 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
     }),
     getActiveEmployees(),
     getActiveProjects(),        // full list — for create/edit task dialogs
-    getProjectsWithTasks(),     // filtered list — only projects with tasks, for the filter dropdown
   ]);
 
   const totalPages = Math.ceil(total / perPage);
@@ -79,52 +77,47 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-heading font-bold text-n-900">
-            Tasks{' '}
-            <span className="text-sm font-normal text-n-500">
-              ({total} total)
-            </span>
-          </h1>
+    <ListPageShell
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <FilterBar basePath="/tasks" filterParams={['search', 'status', 'priority', 'project', 'assigned_to', 'category']}>
+              <FilterSelect paramName="status" className="w-28 text-xs h-8">
+                <option value="">All Status</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </FilterSelect>
+              <FilterSelect paramName="priority" className="w-28 text-xs h-8">
+                <option value="">All Priority</option>
+                {PRIORITY_OPTIONS.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </FilterSelect>
+              <FilterSelect paramName="assigned_to" className="w-40 text-xs h-8">
+                <option value="">All Engineers</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                ))}
+              </FilterSelect>
+              <SearchInput
+                placeholder="Search customer, project, or task…"
+                className="w-64 h-8 text-xs"
+              />
+            </FilterBar>
+          </div>
+          <CreateTaskDialog employees={employees} projects={projects} />
         </div>
-        <CreateTaskDialog employees={employees} projects={projects} />
-      </div>
+      }
+    >
+      <h1 className="text-lg font-heading font-bold text-n-900">
+        Tasks{' '}
+        <span className="text-sm font-normal text-n-500">
+          ({total} total)
+        </span>
+      </h1>
 
-      {/* Filters */}
-      <Card className="sticky top-0 z-20 shadow-sm">
-        <CardContent className="py-3">
-          <FilterBar basePath="/tasks" filterParams={['search', 'status', 'priority', 'project', 'assigned_to', 'category']}>
-            <FilterSelect paramName="status" className="w-28 text-xs h-8">
-              <option value="">All Status</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="priority" className="w-28 text-xs h-8">
-              <option value="">All Priority</option>
-              {PRIORITY_OPTIONS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect paramName="assigned_to" className="w-40 text-xs h-8">
-              <option value="">All Engineers</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
-              ))}
-            </FilterSelect>
-            <SearchableProjectFilter projects={filterProjects} />
-            <SearchInput
-              placeholder="Search task..."
-              className="w-48 h-8 text-xs"
-            />
-          </FilterBar>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
+      {/* Table — column header freezes at the top of the scroll region */}
       <Card>
         <CardContent className="p-0">
           {tasks.length === 0 ? (
@@ -138,25 +131,22 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-n-200 bg-n-50 text-left">
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Client</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Task Name</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Assigned To</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Status</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Priority</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Due Date</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Notes</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Done By</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-10">Log</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-16">Actions</th>
-                  </tr>
-                </thead>
-                <TasksTable tasks={tasks} employees={employees} projects={projects} />
-              </table>
-            </div>
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
+                <tr className="border-b border-n-200 bg-n-50 text-left">
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Client</th>
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Task Name</th>
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Assigned To</th>
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Status</th>
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Priority</th>
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Due Date</th>
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Notes</th>
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Done By</th>
+                  <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-16">Actions</th>
+                </tr>
+              </thead>
+              <TasksTable tasks={tasks} employees={employees} projects={projects} />
+            </table>
           )}
 
           {/* Pagination */}
@@ -185,6 +175,6 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }
