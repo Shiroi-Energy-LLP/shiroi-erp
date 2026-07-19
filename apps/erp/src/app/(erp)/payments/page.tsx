@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  CardLabel,
   Badge,
   Table,
   TableHeader,
@@ -61,33 +62,33 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
       <div className="grid grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Total Contracted</div>
+            <CardLabel>Total Contracted</CardLabel>
             <div className="text-xl font-bold font-mono text-n-900 mt-1">{shortINR(summary.total_contracted)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Total Received</div>
+            <CardLabel>Total Received</CardLabel>
             <div className="text-xl font-bold font-mono text-shiroi-green mt-1">{shortINR(summary.total_received)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Outstanding</div>
+            <CardLabel>Outstanding</CardLabel>
             <div className="text-xl font-bold font-mono text-red-600 mt-1">{shortINR(summary.total_outstanding)}</div>
             <div className="text-xs text-n-500">{summary.projects_with_outstanding} projects</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Total Invested</div>
+            <CardLabel>Total Invested</CardLabel>
             <div className="text-xl font-bold font-mono text-n-900 mt-1">{shortINR(summary.total_invested)}</div>
             <div className="text-xs text-n-500">POs + Site Expenses</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Net Position</div>
+            <CardLabel>Net Position</CardLabel>
             <div className={`text-xl font-bold font-mono mt-1 ${summary.net_position >= 0 ? 'text-shiroi-green' : 'text-red-600'}`}>
               {summary.net_position >= 0 ? '+' : ''}{shortINR(summary.net_position)}
             </div>
@@ -102,7 +103,7 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Expected This Week</div>
+                <CardLabel>Expected This Week</CardLabel>
                 <div className="text-2xl font-bold font-mono text-n-900 mt-1">{shortINR(summary.expected_this_week)}</div>
                 <div className="text-xs text-n-500">Next milestone payments from top active projects</div>
               </div>
@@ -113,7 +114,7 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Expected This Month</div>
+                <CardLabel>Expected This Month</CardLabel>
                 <div className="text-2xl font-bold font-mono text-n-900 mt-1">{shortINR(summary.expected_this_month)}</div>
                 <div className="text-xs text-n-500">All active project next milestones</div>
               </div>
@@ -122,11 +123,11 @@ export default async function PaymentsOverviewPage({ searchParams }: PaymentsPag
         </Card>
         {/* Follow-up tracker: milestones Prem has promised-dates for this week */}
         <Link href="/payments/tracker?filter=this_week">
-          <Card className="border-l-4 border-l-green-500 cursor-pointer hover:bg-n-50 transition-colors">
+          <Card interactive className="border-l-4 border-l-green-500">
             <CardContent className="pt-4 pb-3">
               <div className="flex items-center gap-1.5 mb-1">
                 <CalendarClock className="h-3.5 w-3.5 text-green-600" />
-                <div className="text-xs font-medium text-n-500 uppercase tracking-wider">Follow-Up Expected This Week</div>
+                <CardLabel>Follow-Up Expected This Week</CardLabel>
               </div>
               <div className={`text-2xl font-bold font-mono mt-1 ${thisWeekRows.length > 0 ? 'text-green-700' : 'text-n-400'}`}>
                 {thisWeekRows.length}

@@ -28,10 +28,23 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  /** Render a leading status dot (inherits the badge text colour via `bg-current`). */
+  dot?: boolean;
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+function Badge({ className, variant, dot, children, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props}>
+      {dot && (
+        <span
+          aria-hidden="true"
+          className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-current"
+        />
+      )}
+      {children}
+    </div>
+  );
 }
 
 export { Badge, badgeVariants };

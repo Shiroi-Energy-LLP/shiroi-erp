@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { InfoBox } from '@repo/ui';
 import { getSystemSettings } from '@/lib/system-settings-queries';
 
 /** Formats an ISO timestamp into a short human-readable relative string. */
@@ -36,42 +37,26 @@ export async function ProposalGateBanner() {
   const byStr = settings.updated_by_name ? ` by ${settings.updated_by_name}` : '';
 
   return (
-    <div className="border-l-4 border-l-amber-500 bg-amber-50 px-4 py-3 flex items-center justify-between gap-4 flex-wrap text-sm">
-      <p className="text-amber-900">
-        <span className="font-semibold">&#9888; Proposal gate disabled site-wide</span>
-        {' — '}Won transitions are allowed without a proposal.
-        {changedStr && (
-          <>
-            {' '}Re-enable in{' '}
-            <Link
-              href="/settings?tab=system"
-              className="underline underline-offset-2 hover:text-amber-700"
-            >
-              Settings &rarr; System
-            </Link>{' '}
-            when historical cleanup is complete.
-            {' '}Last changed {changedStr}{byStr}.
-          </>
-        )}
-        {!changedStr && (
-          <>
-            {' '}Re-enable in{' '}
-            <Link
-              href="/settings?tab=system"
-              className="underline underline-offset-2 hover:text-amber-700"
-            >
-              Settings &rarr; System
-            </Link>{' '}
-            when historical cleanup is complete.
-          </>
-        )}
-      </p>
-      <Link
-        href="/settings?tab=system"
-        className="shrink-0 text-xs font-medium text-amber-800 underline underline-offset-2 hover:text-amber-700"
-      >
-        Go to Settings
-      </Link>
-    </div>
+    <InfoBox variant="warning" title="Proposal gate disabled site-wide">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <p>
+          Won transitions are allowed without a proposal. Re-enable in{' '}
+          <Link
+            href="/settings?tab=system"
+            className="underline underline-offset-2 hover:opacity-80"
+          >
+            Settings &rarr; System
+          </Link>{' '}
+          when historical cleanup is complete.
+          {changedStr && <> Last changed {changedStr}{byStr}.</>}
+        </p>
+        <Link
+          href="/settings?tab=system"
+          className="shrink-0 text-xs font-medium underline underline-offset-2 hover:opacity-80"
+        >
+          Go to Settings
+        </Link>
+      </div>
+    </InfoBox>
   );
 }

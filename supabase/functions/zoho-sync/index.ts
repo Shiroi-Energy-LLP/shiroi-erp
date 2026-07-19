@@ -10,7 +10,7 @@
  *     for finance entries.
  *
  *   PUSH (ERP → Zoho): approved site-expense VOUCHERS only, via the
- *     claim_zoho_voucher_batch RPC (mig 203) over zoho_sync_queue.
+ *     claim_zoho_voucher_batch RPC (mig 204) over zoho_sync_queue.
  *     POST /books/v3/expenses (create) / PUT /books/v3/expenses/{id} (update).
  *
  * Trigger: n8n cron workflow (63-zoho-sync-cron.json) POSTs every 15 min with
@@ -81,7 +81,7 @@ const RUN_BUDGET_MS = 300_000;
 const FETCH_TIMEOUT_MS = 20_000;
 const DB_PAGE = 1000; // PostgREST default row cap — page every unbounded read
 
-// FK-safe pull order (spec §4). Must match the zoho_sync_state seed (mig 203).
+// FK-safe pull order (spec §4). Must match the zoho_sync_state seed (mig 204).
 const ENTITY_ORDER = [
   'chartofaccounts',
   'taxes',
@@ -1578,7 +1578,7 @@ async function runPull(ctx: SyncCtx, onlyEntity?: EntityName): Promise<void> {
   for (const entity of entities) {
     const state = stateByEntity.get(entity);
     if (!state) {
-      console.warn(`${op} no zoho_sync_state row for entity "${entity}"; skipping (run mig 203?)`);
+      console.warn(`${op} no zoho_sync_state row for entity "${entity}"; skipping (run mig 204?)`);
       continue;
     }
     if (deadlineExceeded(ctx)) {

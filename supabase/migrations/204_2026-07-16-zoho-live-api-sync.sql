@@ -1,4 +1,4 @@
--- Migration 203: Zoho Books live API sync — inbound pull state + voucher-only outbound push
+-- Migration 204: Zoho Books live API sync — inbound pull state + voucher-only outbound push
 -- See docs/superpowers/specs/2026-07-16-zoho-live-api-sync-design.md
 --
 -- Summary:

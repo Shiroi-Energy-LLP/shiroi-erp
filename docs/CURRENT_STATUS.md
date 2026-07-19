@@ -4,7 +4,7 @@
 > History lives in `docs/CHANGELOG.md`. Specs in `docs/superpowers/specs/`.
 > **"Last updated" is ONE line — replace it each session, never stack updates.** (This file reached 110 KB / a single 59 KB "Last updated" essay before the 2026-06-19 reset; detail belongs in the changelog + review docs, not here.)
 
-> **Last updated: 2026-07-16** — Zoho Books live API sync shipped to dev (mig 203; inbound pull of all finance entries + voucher-only write-back; `/settings/zoho-sync`; PR #10). Awaiting Vivek's Zoho self-client credentials for go-live. Spec `2026-07-16-zoho-live-api-sync-design.md`.
+> **Last updated: 2026-07-16** — Zoho Books live API sync shipped to dev (mig 204; inbound pull of all finance entries + voucher-only write-back; `/settings/zoho-sync`; PR #10). Awaiting Vivek's Zoho self-client credentials for go-live. Spec `2026-07-16-zoho-live-api-sync-design.md`.
 
 ---
 
@@ -28,7 +28,7 @@
 
 | Item | Status |
 |------|--------|
-| **Zoho Books live API sync** (`spec 2026-07-16-zoho-live-api-sync-design.md`, PR #10) | Shipped to dev (mig 203). Zoho→ERP pull of all 12 finance modules via `zoho-sync` Edge Function + n8n cron 63; ERP→Zoho write = approved vouchers only (non-voucher triggers dropped). `/settings/zoho-sync` admin UI. **Blocked on Vivek for go-live:** Zoho self-client OAuth creds + expense/paid-through account ids → `scripts/set-zoho-edge-secrets.ts` (set `ZOHO_PULL_SINCE=2026-04-17`) → deploy function → activate workflow 63. |
+| **Zoho Books live API sync** (`spec 2026-07-16-zoho-live-api-sync-design.md`, PR #10) | Shipped to dev (mig 204; applied to dev as `203_zoho_live_api_sync` before main's mig 203 landed — renumbered in-repo to 204). Zoho→ERP pull of all 12 finance modules via `zoho-sync` Edge Function + n8n cron 63; ERP→Zoho write = approved vouchers only (non-voucher triggers dropped). `/settings/zoho-sync` admin UI. **Blocked on Vivek for go-live:** Zoho self-client OAuth creds + expense/paid-through account ids → `scripts/set-zoho-edge-secrets.ts` (set `ZOHO_PULL_SINCE=2026-04-17`) → deploy function → activate workflow 63. |
 | **BOM + voucher import** (`spec 2026-06-21-bom-voucher-import-design.md`) | Shipped to dev (mig 198). `/bom-review/import` upload→parse→fuzzy-match→review→confirm pipeline live; 48 se-master-file sheets staged (`pending_bom_imports`) awaiting Manivel's per-sheet review/confirm; confirmed sheets cascade into `project_bois` + `project_boq_items` (contracted + actual + voucher). Phase-2: bulk rough-sheet voucher backfill + minting the ~40% missing projects (composes with `/om/import-review`). |
 | **Page-load perf audit** (`docs/reviews/2026-06-19-page-load-perf-audit.md`) | In progress, dev-only. Shipped: mig 190 (pg_trgm search + tasks/milestone index), [G1] request-scoped session `cache()`, mig 192 (`/procurement/orders` pagination + `get_purchase_order_status_counts` RPC for the dashboard KPIs). Pending: dev compute upsize (Vivek's call) + the remaining round-trip/cold-plan items. |
 | **Docs lean-reset** (`spec 2026-06-19-docs-lean-reset-design.md`) | ~Done. CHANGELOG 320→40 KB, this file reset, advisory CI length-check added. |
@@ -51,7 +51,7 @@
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **203** (2026-07-16 — Zoho live API sync) | None |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **204** (2026-07-16 — Zoho live API sync; applied as `203_zoho_live_api_sync`, renumbered to 204 when main's mig 203 tasks-RLS landed) | None |
 | **Prod** (`kfkydkwycgijvexqiysc`) | ~012 (last coordinated window) | **013–190** waiting on the next prod window. The live ERP at `erp.shiroienergy.com` points at **dev** Supabase, so this gap doesn't block users today. |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee-testing week (the Zoho-import tables are dev-only and won't all move).

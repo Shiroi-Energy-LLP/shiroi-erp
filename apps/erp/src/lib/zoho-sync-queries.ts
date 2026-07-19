@@ -4,7 +4,7 @@
 // See docs/superpowers/specs/2026-07-16-zoho-live-api-sync-design.md §7.
 //
 // RLS on zoho_sync_state / zoho_sync_runs allows SELECT for founder/finance
-// only (mig 203); the page additionally role-gates server-side before calling.
+// only (mig 204); the page additionally role-gates server-side before calling.
 
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';

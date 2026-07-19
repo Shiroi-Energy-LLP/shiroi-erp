@@ -112,7 +112,7 @@ Every run writes one row per entity to `zoho_sync_runs` and updates `zoho_sync_s
 - **Push:** `action='create'` → `POST /books/v3/expenses`; `action='update'` (voucher edited after a successful push) → `PUT /books/v3/expenses/{zoho_expense_id}`. Payload: amount, date, `reference_number = voucher_number`, description, project (via `zoho_project_mapping`), expense account resolved `zoho_account_codes.erp_expense_category = expense_categories.code` (of the voucher's `category_id`) → else `ZOHO_DEFAULT_EXPENSE_ACCOUNT_ID`; paid-through = `ZOHO_PAID_THROUGH_ACCOUNT_ID`. (Expenses carry no vendor link — no vendor field is sent.)
 - **Ack:** success → queue row `status='synced'`, `processed_at`, `zoho_response`; write `zoho_expense_id` back onto the `expenses` row (service-role update; the mig-069 UPDATE guard tolerates it). Failure → release claim, `retry_count+1`, `last_error`; at 5 attempts → `status='failed'` (surfaced in admin UI + founder dashboard sync-health card).
 
-## 6. Schema — migration `203_2026-07-16-zoho-live-api-sync.sql` (dev-applied, additive + cleanup)
+## 6. Schema — migration `204_2026-07-16-zoho-live-api-sync.sql` (dev-applied, additive + cleanup)
 
 1. `zoho_sync_state` — `entity TEXT PK`, `watermark TIMESTAMPTZ`, `page_cursor INT NOT NULL DEFAULT 1`, `last_run_at TIMESTAMPTZ`, `last_run_status TEXT CHECK (IN ('ok','error','partial'))`, `last_error TEXT`, `total_rows_synced BIGINT NOT NULL DEFAULT 0`. Seeded with the 12 entities.
 2. `zoho_sync_runs` — `id UUID PK DEFAULT gen_random_uuid()`, `mode TEXT CHECK (IN ('pull','push'))`, `entity TEXT`, `started_at/finished_at TIMESTAMPTZ`, `status TEXT CHECK (IN ('ok','error','partial'))`, `rows_fetched INT`, `rows_upserted INT`, `error TEXT`. Index `(started_at DESC)`.
