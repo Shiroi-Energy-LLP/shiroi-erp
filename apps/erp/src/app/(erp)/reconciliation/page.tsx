@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/auth';
 import { getReconciliationData } from '@/lib/reconciliation-queries';
 import { ReconciliationClient } from '@/components/reconciliation/reconciliation-client';
-import { KpiCard } from '@/components/kpi-card';
+import { KpiCard } from '@repo/ui';
 
 export const dynamic = 'force-dynamic';
 

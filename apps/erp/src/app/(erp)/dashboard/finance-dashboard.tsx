@@ -1,6 +1,6 @@
 import { getUserProfile } from '@/lib/auth';
 import { getFinanceDashboardData } from '@/lib/finance-queries';
-import { KpiCard } from '@/components/kpi-card';
+import { KpiCard } from '@repo/ui';
 import { MyTasks } from '@/components/my-tasks';
 import { CashAlertTable } from './cash-alert-table';
 import { shortINR } from '@repo/ui/formatters';

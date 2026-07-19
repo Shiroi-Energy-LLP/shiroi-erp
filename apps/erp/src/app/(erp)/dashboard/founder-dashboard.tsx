@@ -13,8 +13,7 @@ import {
 } from '@/lib/cached-dashboard-queries';
 import { getUserProfile } from '@/lib/auth';
 import { shortINR } from '@repo/ui/formatters';
-import { Eyebrow, Badge } from '@repo/ui';
-import { KpiCard } from '@/components/kpi-card';
+import { Eyebrow, Badge, KpiCard } from '@repo/ui';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui';
 import Link from 'next/link';
 

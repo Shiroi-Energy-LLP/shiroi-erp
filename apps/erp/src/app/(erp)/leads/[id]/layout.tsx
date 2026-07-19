@@ -12,7 +12,7 @@ import { CreateProjectFromLeadButton } from '@/components/sales/create-project-f
 import { ProposalGateBypassToggle } from '@/components/sales/proposal-gate-bypass-toggle';
 import { ProposalGateBanner } from '@/components/proposal-gate-banner';
 import { computeMargin } from '@/lib/closure-actions';
-import { Breadcrumb, Card, CardContent, Button } from '@repo/ui';
+import { Breadcrumb, Button, InfoBox } from '@repo/ui';
 import { formatDate } from '@repo/ui/formatters';
 import Link from 'next/link';
 
@@ -143,87 +143,81 @@ export default async function LeadDetailLayout({ params, children }: LeadDetailL
           server-side; this surfaces the requirement up-front.
           B1: founder + marketing_manager can bypass the gate for historical cleanup. */}
       {showNoProposalBanner && (
-        <Card className="border-l-4 border-l-amber-500 bg-amber-50/40">
-          <CardContent className="py-3">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="text-sm text-n-800">
-                {lead.proposal_gate_bypassed ? (
-                  <>
-                    <span className="font-semibold text-amber-700">
-                      ⚠ Cleanup mode — Won is allowed without a proposal.
-                    </span>{' '}
-                    Toggle off after cleanup.
-                  </>
-                ) : (
-                  <>
-                    <span className="font-semibold">No proposal yet.</span>{' '}
-                    Create a Quick Quote (fast lane) or a detailed proposal before
-                    marking this lead Won — the Won transition is blocked otherwise.
-                  </>
-                )}
-              </div>
-              {isGatedRole && (
-                <ProposalGateBypassToggle
-                  leadId={lead.id}
-                  currentlyBypassed={lead.proposal_gate_bypassed ?? false}
-                />
+        <InfoBox variant="warning">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              {lead.proposal_gate_bypassed ? (
+                <>
+                  <span className="font-semibold">
+                    Cleanup mode — Won is allowed without a proposal.
+                  </span>{' '}
+                  Toggle off after cleanup.
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold">No proposal yet.</span>{' '}
+                  Create a Quick Quote (fast lane) or a detailed proposal before
+                  marking this lead Won — the Won transition is blocked otherwise.
+                </>
               )}
             </div>
-          </CardContent>
-        </Card>
+            {isGatedRole && (
+              <ProposalGateBypassToggle
+                leadId={lead.id}
+                currentlyBypassed={lead.proposal_gate_bypassed ?? false}
+              />
+            )}
+          </div>
+        </InfoBox>
       )}
 
       {/* Detailed proposal nudge — shown when quick quote exists but detailed proposal not yet created */}
       {needsDetailedProposalNudge && (
-        <Card className="border-l-4 border-l-amber-400 bg-amber-50/30">
-          <CardContent className="py-3">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="text-sm text-n-800">
-                <span className="font-semibold">Detailed proposal not created yet</span>{' '}
-                — needed before this lead can be marked <strong>Won</strong>. Create it now in the Proposal tab.
-              </div>
-              <Link href={`/leads/${id}/proposal`}>
-                <Button size="sm" variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-50">
-                  Go to Proposal tab
-                </Button>
-              </Link>
+        <InfoBox variant="warning">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <span className="font-semibold">Detailed proposal not created yet</span>{' '}
+              — needed before this lead can be marked <strong>Won</strong>. Create it now in the Proposal tab.
             </div>
-          </CardContent>
-        </Card>
+            <Link href={`/leads/${id}/proposal`}>
+              <Button size="sm" variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-50">
+                Go to Proposal tab
+              </Button>
+            </Link>
+          </div>
+        </InfoBox>
       )}
 
       {/* Closure Soon banner - shows live margin band + Attempt Won button */}
       {lead.status === 'closure_soon' && margin && (
-        <Card className="border-l-4 border-l-amber-500 bg-amber-50/40">
-          <CardContent className="py-4">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="space-y-2 flex-1 min-w-[240px]">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-sm font-semibold text-n-800">Closure Soon</span>
-                  <ClosureBandBadge
-                    band={margin.band}
-                    grossMargin={margin.grossMargin}
-                    dataQuality={margin.dataQuality}
-                    size="lg"
-                  />
-                </div>
-                <ClosureBandHelper band={margin.band} dataQuality={margin.dataQuality} />
-                <div className="text-xs text-n-500 font-mono">
-                  Base: ₹{Math.round(margin.basePrice).toLocaleString('en-IN')} · BOM cost: ₹
-                  {Math.round(margin.bomCost).toLocaleString('en-IN')} · Site est: ₹
-                  {Math.round(margin.siteExpensesEst).toLocaleString('en-IN')}
-                </div>
-              </div>
-              <div>
-                <AttemptWonButton
-                  leadId={lead.id}
-                  disabled={margin.band === 'red'}
-                  canSkipMargin={isGatedRole}
+        <InfoBox variant="warning">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="space-y-2 flex-1 min-w-[240px]">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="font-semibold">Closure Soon</span>
+                <ClosureBandBadge
+                  band={margin.band}
+                  grossMargin={margin.grossMargin}
+                  dataQuality={margin.dataQuality}
+                  size="lg"
                 />
               </div>
+              <ClosureBandHelper band={margin.band} dataQuality={margin.dataQuality} />
+              <div className="text-xs text-n-500 font-mono">
+                Base: ₹{Math.round(margin.basePrice).toLocaleString('en-IN')} · BOM cost: ₹
+                {Math.round(margin.bomCost).toLocaleString('en-IN')} · Site est: ₹
+                {Math.round(margin.siteExpensesEst).toLocaleString('en-IN')}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <AttemptWonButton
+                leadId={lead.id}
+                disabled={margin.band === 'red'}
+                canSkipMargin={isGatedRole}
+              />
+            </div>
+          </div>
+        </InfoBox>
       )}
 
       {/* Tabs */}

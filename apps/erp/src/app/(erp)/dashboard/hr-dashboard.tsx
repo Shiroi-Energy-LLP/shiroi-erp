@@ -1,8 +1,8 @@
 import { getUserProfile } from '@/lib/auth';
 import { getHRDashboardData } from '@/lib/hr-dashboard-queries';
-import { KpiCard } from '@/components/kpi-card';
 import { MyTasks } from '@/components/my-tasks';
 import {
+  KpiCard,
   Card,
   CardHeader,
   CardTitle,
