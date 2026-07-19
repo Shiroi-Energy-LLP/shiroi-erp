@@ -20360,6 +20360,16 @@ export type Database = {
         }
         Relationships: []
       }
+      v_digest_leads_won_yesterday: {
+        Row: {
+          closed_date: string | null
+          customer_name: string | null
+          estimated_size_kwp: number | null
+          lead_id: string | null
+          owner_name: string | null
+        }
+        Relationships: []
+      }
       v_digest_leave_pending: {
         Row: {
           days_pending: number | null
@@ -20523,6 +20533,19 @@ export type Database = {
           sales_person_whatsapp_number: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["proposal_status"] | null
+        }
+        Relationships: []
+      }
+      v_digest_tasks_done_24h: {
+        Row: {
+          assignee_name: string | null
+          category: string | null
+          completed_at: string | null
+          customer_name: string | null
+          entity_type: string | null
+          id: string | null
+          project_number: string | null
+          title: string | null
         }
         Relationships: []
       }
