@@ -132,7 +132,7 @@
         "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $json.customer_phone }}",
-        "template": "erp_alert|en",
+        "template": "erp_alert_v2|en",
         "components": {
           "component": [
             {
@@ -141,11 +141,19 @@
                 "parameter": [
                   {
                     "type": "text",
-                    "text": "={{ $json.message_customer.split('\\n')[0] }}"
+                    "text": "={{ (((($json.message_customer) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[0] || ' ').slice(0, 1000) }}"
                   },
                   {
                     "type": "text",
-                    "text": "={{ ($json.message_customer.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                    "text": "={{ (((($json.message_customer) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[1] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ (((($json.message_customer) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[2] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ((((($json.message_customer) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean)).slice(3).join(' · ')) || ' ').slice(0, 1000) }}"
                   }
                 ]
               }
@@ -174,7 +182,7 @@
         "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $json.finance_head_whatsapp }}",
-        "template": "erp_alert|en",
+        "template": "erp_alert_v2|en",
         "components": {
           "component": [
             {
@@ -183,11 +191,19 @@
                 "parameter": [
                   {
                     "type": "text",
-                    "text": "={{ $json.message_finance.split('\\n')[0] }}"
+                    "text": "={{ (((($json.message_finance) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[0] || ' ').slice(0, 1000) }}"
                   },
                   {
                     "type": "text",
-                    "text": "={{ ($json.message_finance.split('\\n').slice(1).filter(l => l.trim()).join(' · ')) || ' ' }}"
+                    "text": "={{ (((($json.message_finance) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[1] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ (((($json.message_finance) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[2] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ((((($json.message_finance) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean)).slice(3).join(' · ')) || ' ').slice(0, 1000) }}"
                   }
                 ]
               }

@@ -7,7 +7,10 @@
       "name": "Error Trigger",
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -75,7 +78,10 @@
       "name": "Normalize error payload",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -83,15 +89,29 @@
         "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $env.VIVEK_WHATSAPP }}",
-        "template": "erp_alert|en",
+        "template": "erp_alert_v2|en",
         "components": {
           "component": [
             {
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  { "type": "text", "text": "={{ $json.title_param }}" },
-                  { "type": "text", "text": "={{ $json.body_param }}" }
+                  {
+                    "type": "text",
+                    "text": "={{ (((($json.title_param + '\\n\\n' + $json.body_param) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[0] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ (((($json.title_param + '\\n\\n' + $json.body_param) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[1] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ (((($json.title_param + '\\n\\n' + $json.body_param) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[2] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ((((($json.title_param + '\\n\\n' + $json.body_param) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean)).slice(3).join(' · ')) || ' ').slice(0, 1000) }}"
+                  }
                 ]
               }
             }
@@ -102,7 +122,10 @@
       "name": "Send WhatsApp to Vivek",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [500, 200],
+      "position": [
+        500,
+        200
+      ],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
@@ -117,15 +140,29 @@
         "operation": "sendTemplate",
         "phoneNumberId": "1140448799143790",
         "recipientPhoneNumber": "={{ $env.VINODH_WHATSAPP }}",
-        "template": "erp_alert|en",
+        "template": "erp_alert_v2|en",
         "components": {
           "component": [
             {
               "type": "body",
               "bodyParameters": {
                 "parameter": [
-                  { "type": "text", "text": "={{ $json.title_param }}" },
-                  { "type": "text", "text": "={{ $json.body_param }}" }
+                  {
+                    "type": "text",
+                    "text": "={{ (((($json.title_param + '\\n\\n' + $json.body_param) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[0] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ (((($json.title_param + '\\n\\n' + $json.body_param) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[1] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ (((($json.title_param + '\\n\\n' + $json.body_param) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean))[2] || ' ').slice(0, 1000) }}"
+                  },
+                  {
+                    "type": "text",
+                    "text": "={{ ((((($json.title_param + '\\n\\n' + $json.body_param) || '').split('\\n\\n').map(p => p.split('\\n').map(l => l.trim()).filter(Boolean).join(' · ')).filter(Boolean)).slice(3).join(' · ')) || ' ').slice(0, 1000) }}"
+                  }
                 ]
               }
             }
@@ -136,7 +173,10 @@
       "name": "Send WhatsApp to Vinodh",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
-      "position": [500, 400],
+      "position": [
+        500,
+        400
+      ],
       "credentials": {
         "whatsAppApi": {
           "id": "REPLACE_WITH_WHATSAPP_BUSINESS_CLOUD_CRED_ID",
@@ -148,13 +188,29 @@
   ],
   "connections": {
     "Error Trigger": {
-      "main": [[{ "node": "Normalize error payload", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Normalize error payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Normalize error payload": {
       "main": [
         [
-          { "node": "Send WhatsApp to Vivek", "type": "main", "index": 0 },
-          { "node": "Send WhatsApp to Vinodh", "type": "main", "index": 0 }
+          {
+            "node": "Send WhatsApp to Vivek",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp to Vinodh",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
@@ -169,9 +225,15 @@
     "timezone": "Asia/Kolkata"
   },
   "tags": [
-    { "name": "erp" },
-    { "name": "tier-6" },
-    { "name": "meta" }
+    {
+      "name": "erp"
+    },
+    {
+      "name": "tier-6"
+    },
+    {
+      "name": "meta"
+    }
   ],
   "meta": {
     "description": "Fires when any workflow in this n8n instance errors (via errorWorkflow setting). Sends an erp_alert template WhatsApp to Vivek + Vinodh with workflow name, failed node, error message (capped at 500 chars), and the execution URL. Replaces the prior Gmail node (2026-05-02 OAuth token expired after Google's 7-day testing-mode policy). All ops alerts on WhatsApp = one channel to monitor, no further Gmail-OAuth maintenance. Sridhar (Chairman) intentionally NOT cc'd here — chairman gets reports, not ops errors."

@@ -94,6 +94,7 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 - **[2026-06-07]** inverter-poll: n8n HTTP timeout 55s → 120s (false-error fix, no migration). → no migration · n8n workflow patch · module: om
 
+- **[2026-06-06]** WhatsApp digests/alerts readability: `erp_alert` → `erp_alert_v2` multi-paragraph carrier (4 blank-line slots `{{1}}`–`{{4}}`; ~50 Send nodes / 33 workflows). Send nodes split the composed body on blank lines into paragraphs, flattening inner single newlines to ` · ` (Meta bans newline/tab/4+ spaces inside param VALUES). **VIVEK ACTION: approve `erp_alert_v2` (UTILITY) on Meta Business Manager BEFORE pushing these workflows live** — old `erp_alert` stays approved/working until then; workflows 19/20/20b were kept on the current 2-slot send here to protect the live digests. → no migration · infra-only (n8n workflows + `templates.md`) · PR #4
 - **[2026-06-06]** SECURITY: scrubbed exposed plant-monitoring credentials from the repo (GitGuardian alerts). → no migration · module: om
 
 - **[2026-06-06]** smaller follow-ups round: 15a v3 + C1 v2 (55 fns) + C3 v2 (30 inline auth blocks) + orphan delete. → no migration · 2 new sub-files + 1 deletion + 33 modifications

@@ -209,6 +209,18 @@ $json.message.split('\n').slice(1).filter(l => l.trim()).join(' · ') || ' '
 
 When designing future workflow message strings, **don't bury the most important info past line 1** — the headline goes into `{{1}}`, everything else into `{{2}}` collapsed to a single line. Keep `{{2}}` informative but flat.
 
+**Update (2026-06-06):** the single-blob `erp_alert` flatten above produced one
+unreadable ` · ` line for multi-section digests. All Send nodes have been
+upgraded to the **`erp_alert_v2`** template (`scripts/upgrade-n8n-whatsapp-paragraphs.ts`),
+which has blank-line-separated slots `{{1}}`–`{{4}}` in the STATIC body. The
+Send node now splits the composed message on blank lines (`\n\n`) into
+paragraphs, flattens inner single newlines to ` · `, and packs them into the
+four slots — so each logical SECTION renders as its own paragraph. The
+parameter-value newline ban above still holds (items within a section stay
+` · `-joined), so structure your message with `\n\n` between sections and `\n`
+between items. **`erp_alert_v2` must be approved by Meta before these workflows
+go live** — see `infrastructure/n8n/templates.md`.
+
 
 
 ### 1. `$env.X` access is blocked by default in n8n 1.x
