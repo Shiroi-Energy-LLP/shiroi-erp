@@ -59,8 +59,11 @@ Render check uses playwright **1.61.0** (pins the cached chromium-1228 in
   KpiCard, DataTable (config wrapper), InfoBox, StageIndicator, FieldHint, plus
   conveniences (dot Badge, `required` asterisk, `CardLabel`, clickable Card).
   When added to `packages/ui`, they'll sync automatically as real components.
-- **Not yet ported:** the old project's guidelines cards, ERP screen mockups,
-  and presentation templates (non-code reference material) haven't been carried
-  into the unified project yet.
+- **Ported (2026-07-19):** the old project's design-language docs → markdown
+  guidelines (`.design-sync/guidelines/*.md`, via `cfg.guidelinesGlob`) covering
+  brand foundations, colour, type/spacing, and voice. **Not ported:** the old
+  project's ERP screen mockups + presentation templates — they're bound to the
+  old bundle/tokens and would render broken; regenerate screens from the real
+  components instead.
 - Grades are carried-forward working state in `.cache/` (gitignored); durable
   verified-state lives in the uploaded `_ds_sync.json`.

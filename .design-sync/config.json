@@ -8,6 +8,7 @@
   "cssEntry": "ds.css",
   "extraFonts": ["../../../.design-sync/assets/fonts.css"],
   "docsDir": "../../../.design-sync/docs",
+  "guidelinesGlob": "../../../.design-sync/guidelines/**/*.md",
   "readmeHeader": ".design-sync/conventions.md",
   "overrides": {
     "Dialog": { "cardMode": "single", "viewport": "820x560" },
