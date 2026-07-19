@@ -3,6 +3,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  FieldHint,
 } from '@repo/ui';
 import { formatINR } from '@repo/ui/formatters';
 import { EditableField } from './editable-field';
@@ -95,7 +96,7 @@ export function FinancialBox({
 
         {/* Actual expenses breakdown */}
         <div className="space-y-2">
-          <div className="text-xs text-n-500">Actual Expenses (from BOQ + vouchers)</div>
+          <FieldHint>Actual Expenses (from BOQ + vouchers)</FieldHint>
           <div className="text-lg font-mono font-semibold text-n-900">
             {formatINR(actualExpenses)}
           </div>
@@ -113,7 +114,7 @@ export function FinancialBox({
 
         {/* Margin */}
         <div>
-          <div className="text-xs text-n-500">Projected Margin</div>
+          <FieldHint>Projected Margin</FieldHint>
           <div className={`text-lg font-mono font-semibold ${marginColor}`}>
             {formatINR(marginAmount)}{' '}
             <span className="text-sm">({marginPct.toFixed(1)}%)</span>

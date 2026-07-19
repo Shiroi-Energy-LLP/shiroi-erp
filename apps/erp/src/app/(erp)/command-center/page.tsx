@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
 import { getCommandCenterData } from '@/lib/command-center-queries';
-import { KpiCard } from '@/components/kpi-card';
 import {
-  Table, TableHeader, TableBody, TableRow, TableHead, TableCell, shortINR,
+  KpiCard, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, shortINR,
 } from '@repo/ui';
 
 export const dynamic = 'force-dynamic';
