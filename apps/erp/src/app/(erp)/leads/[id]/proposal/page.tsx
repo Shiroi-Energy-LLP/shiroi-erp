@@ -48,8 +48,9 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
 
   const supabase = await createClient();
 
-  // Fetch everything in parallel
-  const [proposalsRes, leadMetaRes, priceBookRes, partnersRes, currentPartnerRes] = await Promise.all([
+  // Fetch everything in parallel. (G5 2026-07-19: the full price_book fetch
+  // moved below — it's only needed when the BOM editor actually renders.)
+  const [proposalsRes, leadMetaRes, partnersRes, currentPartnerRes] = await Promise.all([
     supabase
       .from('proposals')
       .select(
@@ -64,13 +65,6 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
       )
       .eq('id', leadId)
       .maybeSingle(),
-    supabase
-      .from('price_book')
-      .select('id, item_category, item_description, brand, unit, base_price')
-      .eq('is_active', true)
-      .is('deleted_at', null)
-      .order('item_category')
-      .order('base_price', { ascending: true }),
     supabase
       .from('channel_partners')
       .select('id, partner_name, partner_type, commission_type, commission_rate, tds_applicable')
@@ -97,7 +91,6 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
 
   const proposalList = proposalsRes.data ?? [];
   const leadMeta = leadMetaRes.data;
-  const priceBookItems = (priceBookRes.data ?? []) as PriceBookOption[];
   const availablePartners = partnersRes.data ?? [];
   const currentPartner = currentPartnerRes.data ?? null;
 
@@ -114,11 +107,14 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
     'detailed_proposal_sent',
   ].includes(lead.status);
 
-  // Draft proposal's BOM lines
+  // Draft proposal's BOM lines + price-book options for the editor.
+  // The full price_book read only happens when the BOM editor will render
+  // (draft exists + Path B stage) — most proposal-tab views skip it entirely.
   let draftBomLines: BomLineRow[] = [];
   let draftProposalStatus: string | null = null;
-  if (draftProposalId) {
-    const [linesRes, proposalRes] = await Promise.all([
+  let priceBookItems: PriceBookOption[] = [];
+  if (draftProposalId && isPathBStage) {
+    const [linesRes, proposalRes, priceBookRes] = await Promise.all([
       supabase
         .from('proposal_bom_lines')
         .select(
@@ -131,9 +127,17 @@ export default async function ProposalTab({ params }: ProposalTabProps) {
         .select('status')
         .eq('id', draftProposalId)
         .maybeSingle(),
+      supabase
+        .from('price_book')
+        .select('id, item_category, item_description, brand, unit, base_price')
+        .eq('is_active', true)
+        .is('deleted_at', null)
+        .order('item_category')
+        .order('base_price', { ascending: true }),
     ]);
     draftBomLines = (linesRes.data ?? []) as BomLineRow[];
     draftProposalStatus = proposalRes.data?.status ?? null;
+    priceBookItems = (priceBookRes.data ?? []) as PriceBookOption[];
   }
 
   const canFinalize =

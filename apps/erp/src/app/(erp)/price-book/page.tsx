@@ -1,8 +1,6 @@
 import {
   getPriceBookItems,
-  getPriceBookCategories,
-  getPriceBookBrands,
-  getPriceBookVendors,
+  getPriceBookFacets,
 } from '@/lib/price-book-actions';
 import { listItemCategories, listItemUnits } from '@/lib/item-catalog-queries';
 import { getUserProfile } from '@/lib/auth';
@@ -69,11 +67,10 @@ export default async function PriceBookPage({ searchParams }: PageProps) {
   const brand = (params.brand as string | undefined) || undefined;
   const vendor = (params.vendor as string | undefined) || undefined;
 
-  const [{ items, total }, categories, brands, vendors, itemCategories, itemUnits, profile] = await Promise.all([
+  // Facets come from one RPC (mig 208) instead of three full-table fetches.
+  const [{ items, total }, { categories, brands, vendors }, itemCategories, itemUnits, profile] = await Promise.all([
     getPriceBookItems({ page, per_page: PER_PAGE, search, category, brand, vendor }),
-    getPriceBookCategories(),
-    getPriceBookBrands(),
-    getPriceBookVendors(),
+    getPriceBookFacets(),
     listItemCategories(),
     listItemUnits(),
     getUserProfile(),

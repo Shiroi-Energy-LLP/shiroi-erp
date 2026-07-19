@@ -3,7 +3,7 @@ import { createClient } from '@repo/supabase/client';
 import { formatDateFromTimestamp } from '@repo/ui/formatters';
 
 import type { FileInfo } from './types';
-import { SCAN_FOLDERS, FOLDER_TO_CATEGORY } from './types';
+import { FOLDER_TO_CATEGORY } from './types';
 
 /**
  * Format helpers + the big storage-scan function.
@@ -44,10 +44,43 @@ export function formatDateTime(iso: string): string {
   });
 }
 
+/** Row shape returned by the `list_bucket_objects` RPC (mig 207). */
+interface BucketObjectRow {
+  name: string;
+  id: string | null;
+  created_at: string | null;
+  metadata: unknown;
+}
+
+/** Map one RPC row (full object path) into a FileInfo, splitting dirname/basename. */
+function toFileInfo(row: BucketObjectRow, bucket: string): FileInfo {
+  const lastSlash = row.name.lastIndexOf('/');
+  const base = lastSlash === -1 ? row.name : row.name.slice(lastSlash + 1);
+  const dir = lastSlash === -1 ? '' : row.name.slice(0, lastSlash);
+  const meta = (row.metadata ?? {}) as Record<string, unknown>;
+  return {
+    name: base,
+    id: row.id ?? row.name,
+    created_at: row.created_at ?? '',
+    metadata: {
+      size: meta.size as number | undefined,
+      mimetype: meta.mimetype as string | undefined,
+    },
+    pathPrefix: dir,
+    bucket,
+  };
+}
+
 /**
  * Load every file in project-files + site-photos for a given project,
  * across both path prefixes ("projectId/" and "projects/projectId/")
- * and the WhatsApp photo months. Returns a map keyed by category.
+ * and the WhatsApp photos. Returns a map keyed by category.
+ *
+ * One `list_bucket_objects` RPC per bucket (mig 207) replaces the old
+ * 13-folder × 2-prefix + whatsapp-month storage.search() walk (up to 33
+ * round-trips per view; storage.search was ~28% of all DB time). Files in
+ * folders outside FOLDER_TO_CATEGORY now surface under "general" instead
+ * of being invisible.
  *
  * Kept as a standalone function (not a hook) so the main shell can
  * call it from useEffect + after mutations without any React
@@ -60,88 +93,46 @@ export async function loadAllProjectFiles(
   const supabase = createClient();
 
   const pathPrefixes = [projectId, `projects/${projectId}`];
+  const waPrefix = `projects/${projectId}/whatsapp`;
 
-  // 1. Scan every folder × prefix combo in parallel
-  const categoryPromises = SCAN_FOLDERS.flatMap((folder) =>
-    pathPrefixes.map((prefix) => {
-      const fullPath = `${prefix}/${folder}`;
-      return supabase.storage
-        .from('project-files')
-        .list(fullPath, { limit: 200, sortBy: { column: 'created_at', order: 'desc' } })
-        .then(({ data, error }) => {
-          if (error && !error.message?.includes('not found')) {
-            console.error(`${op} List failed for ${fullPath}:`, error.message);
-          }
-          return {
-            category: FOLDER_TO_CATEGORY[folder] ?? 'general',
-            files: (data ?? [])
-              .filter((f) => f.name !== '.emptyFolderPlaceholder')
-              .map((f) => ({
-                name: f.name,
-                id: f.id ?? `${prefix}-${folder}-${f.name}`,
-                created_at: f.created_at ?? '',
-                metadata: {
-                  size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
-                  mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
-                },
-                pathPrefix: fullPath,
-                bucket: 'project-files',
-              } satisfies FileInfo)),
-          };
-        });
+  const [projectFilesRes, waRes] = await Promise.all([
+    supabase.rpc('list_bucket_objects', {
+      p_bucket: 'project-files',
+      p_prefixes: pathPrefixes,
+      p_limit: 2000,
     }),
-  );
-
-  // 2. WhatsApp photos live in a different bucket with a date-based folder structure
-  const waPromise = supabase.storage
-    .from('site-photos')
-    .list(`projects/${projectId}/whatsapp`, { limit: 100 })
-    .then(async ({ data: waMonths }) => {
-      if (!waMonths) return [] as FileInfo[];
-      const folders = waMonths.filter((m) => !m.id);
-      const recentFolders = folders.sort((a, b) => b.name.localeCompare(a.name)).slice(0, 6);
-      const monthResults = await Promise.all(
-        recentFolders.map((month) => {
-          const monthPath = `projects/${projectId}/whatsapp/${month.name}`;
-          return supabase.storage
-            .from('site-photos')
-            .list(monthPath, { limit: 200, sortBy: { column: 'created_at', order: 'desc' } })
-            .then(({ data: monthFiles }) =>
-              (monthFiles ?? [])
-                .filter((f) => f.name !== '.emptyFolderPlaceholder')
-                .map(
-                  (f) =>
-                    ({
-                      name: f.name,
-                      id: f.id ?? `wa-${month.name}-${f.name}`,
-                      created_at: f.created_at ?? '',
-                      metadata: {
-                        size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
-                        mimetype: (f.metadata as Record<string, unknown>)?.mimetype as
-                          | string
-                          | undefined,
-                      },
-                      pathPrefix: monthPath,
-                      bucket: 'site-photos',
-                    }) satisfies FileInfo,
-                ),
-            );
-        }),
-      );
-      return monthResults.flat();
-    });
-
-  const [categoryResults, waPhotos] = await Promise.all([
-    Promise.all(categoryPromises),
-    waPromise,
+    supabase.rpc('list_bucket_objects', {
+      p_bucket: 'site-photos',
+      p_prefixes: [waPrefix],
+      p_limit: 1200,
+    }),
   ]);
 
-  const allFiles: Record<string, FileInfo[]> = {};
-  for (const result of categoryResults) {
-    const existing = allFiles[result.category] ?? [];
-    existing.push(...result.files);
-    allFiles[result.category] = existing;
+  if (projectFilesRes.error) {
+    console.error(`${op} project-files listing failed:`, projectFilesRes.error.message);
   }
+  if (waRes.error) {
+    console.error(`${op} site-photos listing failed:`, waRes.error.message);
+  }
+
+  const allFiles: Record<string, FileInfo[]> = {};
+
+  for (const row of projectFilesRes.data ?? []) {
+    if (row.name.endsWith('.emptyFolderPlaceholder')) continue;
+    const prefix = pathPrefixes.find((p) => row.name.startsWith(`${p}/`));
+    if (!prefix) continue;
+    const rel = row.name.slice(prefix.length + 1); // "folder/…/file" or "file"
+    const firstSlash = rel.indexOf('/');
+    const topFolder = firstSlash === -1 ? '' : rel.slice(0, firstSlash);
+    const category = FOLDER_TO_CATEGORY[topFolder] ?? 'general';
+    const existing = allFiles[category] ?? [];
+    existing.push(toFileInfo(row, 'project-files'));
+    allFiles[category] = existing;
+  }
+
+  const waPhotos = (waRes.data ?? [])
+    .filter((row) => !row.name.endsWith('.emptyFolderPlaceholder'))
+    .map((row) => toFileInfo(row, 'site-photos'));
   if (waPhotos.length > 0) {
     allFiles['whatsapp'] = waPhotos;
   }

@@ -30,7 +30,7 @@
 |------|--------|
 | **Zoho Books live API sync** (`spec 2026-07-16-zoho-live-api-sync-design.md`, PR #10) | Shipped to dev (mig 204; applied to dev as `203_zoho_live_api_sync` before main's mig 203 landed — renumbered in-repo to 204). Zoho→ERP pull of all 12 finance modules via `zoho-sync` Edge Function + n8n cron 63; ERP→Zoho write = approved vouchers only (non-voucher triggers dropped). `/settings/zoho-sync` admin UI. **Blocked on Vivek for go-live:** Zoho self-client OAuth creds + expense/paid-through account ids → `scripts/set-zoho-edge-secrets.ts` (set `ZOHO_PULL_SINCE=2026-04-17`) → deploy function → activate workflow 63. |
 | **BOM + voucher import** (`spec 2026-06-21-bom-voucher-import-design.md`) | Shipped to dev (mig 198). `/bom-review/import` upload→parse→fuzzy-match→review→confirm pipeline live; 48 se-master-file sheets staged (`pending_bom_imports`) awaiting Manivel's per-sheet review/confirm; confirmed sheets cascade into `project_bois` + `project_boq_items` (contracted + actual + voucher). Phase-2: bulk rough-sheet voucher backfill + minting the ~40% missing projects (composes with `/om/import-review`). |
-| **Page-load perf audit** (`docs/reviews/2026-06-19-page-load-perf-audit.md`) | In progress, dev-only. Shipped: mig 190 (pg_trgm search + tasks/milestone index), [G1] request-scoped session `cache()`, mig 192 (`/procurement/orders` pagination + `get_purchase_order_status_counts` RPC for the dashboard KPIs). Pending: dev compute upsize (Vivek's call) + the remaining round-trip/cold-plan items. |
+| **Page-load perf audit** (`docs/reviews/2026-06-19-page-load-perf-audit.md` + `2026-07-19-erp-speed-full-report.md`) | Dev-only. June: mig 190 (pg_trgm), [G1] session `cache()`, migs 192/194/195/196 RPCs, om G5. July 19: mig 206 (RLS initplan wrap, 185 warns→0), mig 207 (`list_bucket_objects` kills storage.search fan-out), mig 208 (price-book facets), mig 209 (43 redundant indexes dropped), G5 finished (/tasks, /my-tasks, /activities, /price-book, proposal editor). **Pending: Vivek flips Vercel function region iad1→icn1 (the big one) + Micro→Small trial + picker smoke-test.** Reconciliation-page rewrite still open. |
 | **Docs lean-reset** (`spec 2026-06-19-docs-lean-reset-design.md`) | ~Done. CHANGELOG 320→40 KB, this file reset, advisory CI length-check added. |
 | **Theming → Solar Gold** | Token swap + 384-hex colour-shift + whole-rupee money shipped (June 18). Pending Vivek call: status-colour + label-map centralization (blocked on the label-wording decision). |
 | **Manivel reconciliation + Command Center** (migs 180–185) | Shipped to dev. Write-back of reconciled values into `projects` still pending. |
@@ -42,8 +42,9 @@
 
 - **Label-map wording** — system-type "On Grid" vs "On-Grid"; leave-type short vs long form (blocks the status/label-map centralization).
 - **`ProjectLite` type consolidation** + **5-way employee-dropdown helper** unification (merge-safe; awaiting founder review).
-- **~40 never-scanned-in-dev indexes** — drop before prod? (dev stats ≠ prod; revisit at prod-sizing time.)
+- **Never-scanned-in-dev indexes** — the provably-safe subset (43 prefix-covered/backup-table indexes) was dropped in mig 209 (2026-07-19); the remaining ~140 zero-scan candidates back live-but-rarely-used code filters — usage-based drops stay deferred to prod-sizing time (dev stats ≠ prod).
 - **Dev DB compute upsize** — projects/leads/search slowness is a CPU-starved ~1 GB instance, not query structure (`docs/reviews/2026-06-18-projects-leads-search-perf.md`); Small ≈ +$5/mo, prorated-hourly test possible.
+- **Vercel function region flip `iad1` → `icn1`** — the #1 lever from `docs/reviews/2026-07-19-erp-speed-full-report.md`; 5-min dashboard change (Settings → Functions → Function Region) + redeploy; Vivek does this on return.
 
 ---
 
@@ -51,7 +52,7 @@
 
 | Env | Latest applied | Pending |
 |-----|---------------|---------|
-| **Dev** (`actqtzoxjilqnldnacqz`) | **205** (2026-07-17 — morning-digest v3 views; 204 = 2026-07-16 Zoho live API sync; 203 = 2026-07-18 tasks-write RLS) | None |
+| **Dev** (`actqtzoxjilqnldnacqz`) | **209** (2026-07-19 — perf batch: 206 RLS initplan wrap, 207 storage-listing RPC, 208 price-book facets, 209 redundant-index drop; 205 = 2026-07-17 digest v3) | None |
 | **Prod** (`kfkydkwycgijvexqiysc`) | ~012 (last coordinated window) | **013–190** waiting on the next prod window. The live ERP at `erp.shiroienergy.com` points at **dev** Supabase, so this gap doesn't block users today. |
 
 **Prod deploy strategy:** batch-promote all pending migrations after employee-testing week (the Zoho-import tables are dev-only and won't all move).

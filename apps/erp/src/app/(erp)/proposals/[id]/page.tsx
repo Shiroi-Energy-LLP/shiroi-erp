@@ -43,17 +43,26 @@ export default async function ProposalDetailPage({ params }: ProposalDetailPageP
   const bomLines = proposal.proposal_bom_lines ?? [];
   const paymentMilestones = proposal.proposal_payment_schedule ?? [];
 
-  // Load files from Supabase Storage
+  // Load files from Supabase Storage — list_bucket_objects RPC (mig 207)
+  // avoids the expensive storage.search() path.
   const supabase = await createClient();
-  const { data: storedFiles } = await supabase.storage
-    .from('proposal-files')
-    .list(proposal.lead_id, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-  const proposalFiles = (storedFiles ?? []).map(f => ({
-    name: f.name,
-    id: f.id ?? f.name,
-    created_at: f.created_at ?? '',
-    metadata: { size: (f.metadata as Record<string, unknown>)?.size as number | undefined, mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined },
-  }));
+  const { data: storedFiles } = await supabase.rpc('list_bucket_objects', {
+    p_bucket: 'proposal-files',
+    p_prefixes: [proposal.lead_id],
+    p_limit: 100,
+  });
+  const proposalFiles = (storedFiles ?? [])
+    .filter(f => !f.name.endsWith('.emptyFolderPlaceholder'))
+    .map(f => {
+      const meta = (f.metadata ?? {}) as Record<string, unknown>;
+      const rel = f.name.slice(proposal.lead_id.length + 1);
+      return {
+        name: rel,
+        id: f.id ?? rel,
+        created_at: f.created_at ?? '',
+        metadata: { size: meta.size as number | undefined, mimetype: meta.mimetype as string | undefined },
+      };
+    });
 
   return (
     <div className="space-y-6">

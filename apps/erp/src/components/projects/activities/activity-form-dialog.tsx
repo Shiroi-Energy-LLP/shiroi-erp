@@ -14,7 +14,7 @@ import {
   Label,
   Select,
 } from '@repo/ui';
-import { addProjectActivity, updateProjectActivity } from '@/lib/project-activities-actions';
+import { addProjectActivity, updateProjectActivity, getActivityProjectOptions } from '@/lib/project-activities-actions';
 import type { ActivityStageOption, ProjectActivityRow } from '@/lib/project-activities-constants';
 import { ProjectCombobox } from '@/components/forms/project-combobox';
 
@@ -24,13 +24,27 @@ interface ActivityFormDialogProps {
   /** When set, the dialog edits this row; otherwise it creates. */
   existing?: ProjectActivityRow;
   trigger: React.ReactNode;
-  /** List of projects for global add (when projectId is absent). */
+  /** List of projects for global add (when projectId is absent).
+   *  Optional — when omitted, the dialog lazy-loads the list on first open
+   *  (G5: pages no longer eager-fetch ~500 projects per render). */
   projects?: { id: string; project_number: string | null; customer_name: string; project_name?: string | null }[];
 }
 
 export function ActivityFormDialog({ projectId, stages, existing, trigger, projects }: ActivityFormDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
+  const [fetchedProjects, setFetchedProjects] = React.useState<
+    NonNullable<ActivityFormDialogProps['projects']> | null
+  >(null);
+  // Global add mode (no fixed projectId, not editing) needs the picker list.
+  const needsProjectList = !projectId && !existing;
+  const projectOptions = projects ?? fetchedProjects ?? [];
+
+  React.useEffect(() => {
+    if (open && needsProjectList && projects === undefined && fetchedProjects === null) {
+      getActivityProjectOptions().then(setFetchedProjects);
+    }
+  }, [open, needsProjectList, projects, fetchedProjects]);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [pickedProjectId, setPickedProjectId] = React.useState('');
@@ -120,18 +134,22 @@ export function ActivityFormDialog({ projectId, stages, existing, trigger, proje
           <DialogTitle>{existing ? 'Edit activity' : 'Add activity'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          {/* Project picker — only when no projectId prop given */}
-          {!projectId && projects && (
+          {/* Project picker — only when no projectId prop given (global add) */}
+          {needsProjectList && (
             <div>
               <Label>Project *</Label>
               <ProjectCombobox
-                projects={projects}
+                projects={projectOptions}
                 value={pickedProjectId}
                 onChange={setPickedProjectId}
                 allowCustom
                 customValue={customProject}
                 onCustomChange={setCustomProject}
-                placeholder="Search project, or type a new name (Service/AMC/misc)…"
+                placeholder={
+                  projects === undefined && fetchedProjects === null
+                    ? 'Loading projects…'
+                    : 'Search project, or type a new name (Service/AMC/misc)…'
+                }
               />
             </div>
           )}

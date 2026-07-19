@@ -42,17 +42,26 @@ export default async function FilesTab({ params }: FilesTabProps) {
   const documents = docsResult.success ? await attachOpenUrls(docsResult.data) : [];
 
   // Legacy: files from proposal-files bucket (kept until phase 2 backfill).
-  const { data: proposalFiles } = await supabase.storage
-    .from('proposal-files')
-    .list(id, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+  // list_bucket_objects RPC (mig 207) — avoids the expensive storage.search() path.
+  const { data: proposalFiles } = await supabase.rpc('list_bucket_objects', {
+    p_bucket: 'proposal-files',
+    p_prefixes: [id],
+    p_limit: 100,
+  });
 
-  const legacyFiles = (proposalFiles ?? []).map((f) => ({
-    name: f.name,
-    id: f.id ?? f.name,
-    created_at: f.created_at ?? '',
-    size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
-    mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
-  }));
+  const legacyFiles = (proposalFiles ?? [])
+    .filter((f) => !f.name.endsWith('.emptyFolderPlaceholder'))
+    .map((f) => {
+      const meta = (f.metadata ?? {}) as Record<string, unknown>;
+      const rel = f.name.slice(id.length + 1);
+      return {
+        name: rel,
+        id: f.id ?? rel,
+        created_at: f.created_at ?? '',
+        size: meta.size as number | undefined,
+        mimetype: meta.mimetype as string | undefined,
+      };
+    });
 
   return (
     <div className="space-y-4">

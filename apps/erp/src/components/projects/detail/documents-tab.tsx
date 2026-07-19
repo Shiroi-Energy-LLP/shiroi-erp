@@ -54,18 +54,25 @@ export async function DocumentsTab({ projectId, leadId }: DocumentsTabProps) {
   }[] = [];
   if (leadId) {
     const supabase = await createClient();
-    const { data } = await supabase.storage
-      .from('proposal-files')
-      .list(leadId, { limit: 500, sortBy: { column: 'created_at', order: 'desc' } });
+    // list_bucket_objects RPC (mig 207) — avoids the expensive storage.search() path.
+    const { data } = await supabase.rpc('list_bucket_objects', {
+      p_bucket: 'proposal-files',
+      p_prefixes: [leadId],
+      p_limit: 500,
+    });
     leadFiles = (data ?? [])
-      .filter((f) => f.name !== '.emptyFolderPlaceholder')
-      .map((f) => ({
-        name: f.name,
-        id: f.id ?? f.name,
-        created_at: f.created_at ?? '',
-        size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
-        mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
-      }));
+      .filter((f) => !f.name.endsWith('.emptyFolderPlaceholder'))
+      .map((f) => {
+        const meta = (f.metadata ?? {}) as Record<string, unknown>;
+        const rel = f.name.slice(leadId.length + 1);
+        return {
+          name: rel,
+          id: f.id ?? rel,
+          created_at: f.created_at ?? '',
+          size: meta.size as number | undefined,
+          mimetype: meta.mimetype as string | undefined,
+        };
+      });
   }
 
   const handoverPdfPath = (projectRow as any)?.handover_pdf_path ?? null;

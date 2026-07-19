@@ -9,7 +9,6 @@ import { SearchableProjectSelect } from './searchable-project-select';
 
 interface QuickAddMyTaskProps {
   employees: { id: string; full_name: string }[];
-  projects: { id: string; project_number: string; customer_name: string; project_name?: string | null }[];
   currentUserId: string;
 }
 
@@ -24,7 +23,7 @@ interface QuickAddMyTaskProps {
  * project/due/priority/assignee so several tasks can be fired off in a row;
  * only the title clears.
  */
-export function QuickAddMyTask({ employees, projects, currentUserId }: QuickAddMyTaskProps) {
+export function QuickAddMyTask({ employees, currentUserId }: QuickAddMyTaskProps) {
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
   const [title, setTitle] = React.useState('');
@@ -76,7 +75,6 @@ export function QuickAddMyTask({ employees, projects, currentUserId }: QuickAddM
       />
       <div className="w-48">
         <SearchableProjectSelect
-          projects={projects}
           value={projectId}
           onChange={setProjectId}
           placeholder="Project (optional)"

@@ -58,21 +58,30 @@ export function ProposalFiles({ leadId, proposalNumber, initialFiles }: Proposal
         }
       }
 
-      // Refresh file list
-      const { data: updatedFiles } = await supabase.storage
-        .from('proposal-files')
-        .list(leadId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+      // Refresh file list — list_bucket_objects RPC (mig 207) avoids the
+      // expensive storage.search() path.
+      const { data: updatedFiles } = await supabase.rpc('list_bucket_objects', {
+        p_bucket: 'proposal-files',
+        p_prefixes: [leadId],
+        p_limit: 100,
+      });
 
       if (updatedFiles) {
-        setFiles(updatedFiles.map(f => ({
-          name: f.name,
-          id: f.id ?? f.name,
-          created_at: f.created_at ?? '',
-          metadata: {
-            size: (f.metadata as Record<string, unknown>)?.size as number | undefined,
-            mimetype: (f.metadata as Record<string, unknown>)?.mimetype as string | undefined,
-          },
-        })));
+        setFiles(updatedFiles
+          .filter(f => !f.name.endsWith('.emptyFolderPlaceholder'))
+          .map(f => {
+            const meta = (f.metadata ?? {}) as Record<string, unknown>;
+            const rel = f.name.slice(leadId.length + 1);
+            return {
+              name: rel,
+              id: f.id ?? rel,
+              created_at: f.created_at ?? '',
+              metadata: {
+                size: meta.size as number | undefined,
+                mimetype: meta.mimetype as string | undefined,
+              },
+            };
+          }));
       }
     } catch (error) {
       console.error(`${op} Failed:`, error instanceof Error ? error.message : String(error));

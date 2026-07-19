@@ -1,5 +1,7 @@
 # ERP Speed — Full Report (Code + Infrastructure)
 
+> **Execution status (2026-07-19, same day):** P0-2 and P1 items DONE on dev — mig 206 (RLS initplan wrap: 185 advisor warnings → 0), mig 207 (`list_bucket_objects` RPC replaces all 6 app `storage.search` call-site groups; Documents tab 33→2 calls), mig 208 (price-book facets RPC), mig 209 (43 provably-redundant indexes dropped), and the full G5 lazy-load sweep (`/tasks`, `/my-tasks`, `/activities`, `/price-book`, proposal editor). CI green (types/lint/patterns/build). **Remaining for Vivek: P0-1 Vercel region flip `iad1`→`icn1` (+ reset `pg_stat_statements` just before), P0-3 Micro→Small trial, and a 2-min picker smoke-test** (open: create-task dialog, My Tasks quick-add, Add Activity dialog, a project Documents tab, lead design Files panel — each picker/file list should populate on first open). Reconciliation-page rewrite deliberately not attempted (big rewrite, separate session).
+
 **Date:** 2026-07-19
 **Question asked:** "The ERP is slow — is it the code, or the hardware/hosting?"
 **Answer in one line:** It is mostly **geography** (a Chennai→US→Seoul round-trip topology), partly the **starved Micro DB instance**, partly **RLS policy CPU overhead**, and only residually the code — the June-19 code audit already shipped most of the code-side fixes.

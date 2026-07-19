@@ -182,46 +182,28 @@ export async function deletePriceBookItem(id: string): Promise<ActionResult<void
   return ok(undefined);
 }
 
-/** Get distinct categories from active price book items */
-export async function getPriceBookCategories(): Promise<string[]> {
+/**
+ * Distinct category/brand/vendor lists for the /price-book filter dropdowns.
+ * One `get_price_book_facets` RPC (mig 208) replaces three full-table
+ * single-column fetches + JS Set dedup (2026-07-19 perf work).
+ */
+export async function getPriceBookFacets(): Promise<{
+  categories: string[];
+  brands: string[];
+  vendors: string[];
+}> {
+  const op = '[getPriceBookFacets]';
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('price_book')
-    .select('item_category')
-    .is('deleted_at', null)
-    .eq('is_active', true);
+  const { data, error } = await supabase.rpc('get_price_book_facets');
 
-  const cats = new Set((data ?? []).map((d: any) => d.item_category as string));
-  return [...cats].sort();
-}
-
-/** Get distinct brands from active price book items */
-export async function getPriceBookBrands(): Promise<string[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('price_book')
-    .select('brand')
-    .is('deleted_at', null)
-    .eq('is_active', true)
-    .not('brand', 'is', null);
-
-  const brands = new Set(
-    (data ?? []).map((d: any) => d.brand as string).filter(Boolean)
-  );
-  return [...brands].sort();
-}
-
-/** Get distinct vendors from active price book items */
-export async function getPriceBookVendors(): Promise<string[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('price_book')
-    .select('vendor_name')
-    .is('deleted_at', null)
-    .not('vendor_name', 'is', null);
-
-  const vendors = new Set(
-    (data ?? []).map((d: any) => d.vendor_name as string).filter(Boolean)
-  );
-  return [...vendors].sort();
+  if (error) {
+    console.error(`${op} Failed:`, { code: error.code, message: error.message });
+    return { categories: [], brands: [], vendors: [] };
+  }
+  const facets = (data ?? {}) as { categories?: string[]; brands?: string[]; vendors?: string[] };
+  return {
+    categories: facets.categories ?? [],
+    brands: facets.brands ?? [],
+    vendors: facets.vendors ?? [],
+  };
 }

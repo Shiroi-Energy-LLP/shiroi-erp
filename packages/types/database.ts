@@ -21068,6 +21068,7 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_price_book_facets: { Args: never; Returns: Json }
       get_project_activities_summary: {
         Args: {
           p_from?: string
@@ -21285,6 +21286,15 @@ export type Database = {
       link_pending_import_to_project: {
         Args: { p_import_id: string; p_project_id: string }
         Returns: string
+      }
+      list_bucket_objects: {
+        Args: { p_bucket: string; p_limit?: number; p_prefixes: string[] }
+        Returns: {
+          created_at: string
+          id: string
+          metadata: Json
+          name: string
+        }[]
       }
       list_pending_imports: {
         Args: {

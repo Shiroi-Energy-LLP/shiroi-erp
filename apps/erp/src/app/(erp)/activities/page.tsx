@@ -7,7 +7,6 @@ import {
   listProjectActivities,
   getActivitiesSummary,
   getActivityStageOptions,
-  getProjectOptionsForActivities,
   ACTIVITIES_PAGE_SIZE,
 } from '@/lib/project-activities-queries';
 import { getUserProfile } from '@/lib/auth';
@@ -47,11 +46,12 @@ export default async function ActivitiesPage({ searchParams }: Props) {
     stageId: params.stage || undefined,
   };
 
-  const [{ rows, hasMore }, summary, stages, projects, profile] = await Promise.all([
+  // G5: the Add Activity dialog lazy-loads its ~500-project picker on first
+  // open (getActivityProjectOptions action) — no eager fetch here.
+  const [{ rows, hasMore }, summary, stages, profile] = await Promise.all([
     listProjectActivities({ ...filters, search: params.search || undefined, page }),
     getActivitiesSummary(filters),
     getActivityStageOptions(),
-    getProjectOptionsForActivities(),
     getUserProfile(),
   ]);
 
@@ -81,7 +81,6 @@ export default async function ActivitiesPage({ searchParams }: Props) {
           {canManage && (
             <ActivityFormDialog
               stages={stages}
-              projects={projects}
               trigger={<Button size="sm"><Plus className="h-3.5 w-3.5 mr-1" /> Add Activity</Button>}
             />
           )}

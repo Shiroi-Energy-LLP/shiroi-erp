@@ -21,10 +21,9 @@ function getPriorityVariant(priority: string): 'error' | 'warning' | 'info' | 'o
 interface TasksTableProps {
   tasks: any[];
   employees: { id: string; full_name: string }[];
-  projects: { id: string; project_number: string; customer_name: string; project_name?: string | null }[];
 }
 
-export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
+export function TasksTable({ tasks, employees }: TasksTableProps) {
   return (
     <tbody>
       {tasks.map((task: any) => {
@@ -121,7 +120,7 @@ export function TasksTable({ tasks, employees, projects }: TasksTableProps) {
                     project_id: task.project_id,
                   }}
                   employees={employees}
-                  projects={projects}
+                  projectLabel={projectInfo?.customer_name ?? null}
                 />
                 <DeleteTaskButton taskId={task.id} title={task.title} />
               </div>

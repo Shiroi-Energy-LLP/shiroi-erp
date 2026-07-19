@@ -1,6 +1,6 @@
 import { getCurrentEmployeeId } from '@/lib/auth';
 import { getMyTasksDetailed } from '@/lib/all-tasks-queries';
-import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
+import { getActiveEmployees } from '@/lib/tasks-actions';
 import { TasksTable } from '@/components/tasks/tasks-table';
 import { QuickAddMyTask } from '@/components/tasks/quick-add-my-task';
 import { KpiCard, Card, CardContent, Eyebrow } from '@repo/ui';
@@ -32,10 +32,11 @@ export default async function MyTasksPage() {
     );
   }
 
-  const [tasks, employees, projects] = await Promise.all([
+  // G5: the quick-add project picker lazy-loads on first open
+  // (SearchableProjectSelect self-fetch) — no eager ~480-project fetch here.
+  const [tasks, employees] = await Promise.all([
     getMyTasksDetailed(employeeId),
     getActiveEmployees(),
-    getActiveProjects(),
   ]);
 
   const total = tasks.length;
@@ -47,7 +48,6 @@ export default async function MyTasksPage() {
       header={
         <QuickAddMyTask
           employees={employees}
-          projects={projects}
           currentUserId={employeeId}
         />
       }
@@ -90,7 +90,7 @@ export default async function MyTasksPage() {
                   <th className={`${TH} w-16`}>Actions</th>
                 </tr>
               </thead>
-              <TasksTable tasks={tasks} employees={employees} projects={projects} />
+              <TasksTable tasks={tasks} employees={employees} />
             </table>
           )}
         </CardContent>

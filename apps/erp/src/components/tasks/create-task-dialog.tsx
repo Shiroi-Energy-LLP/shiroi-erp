@@ -12,10 +12,9 @@ import { SearchableProjectSelect } from './searchable-project-select';
 
 interface CreateTaskDialogProps {
   employees: { id: string; full_name: string }[];
-  projects: { id: string; project_number: string; customer_name: string; project_name?: string | null }[];
 }
 
-export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ employees }: CreateTaskDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -79,7 +78,6 @@ export function CreateTaskDialog({ employees, projects }: CreateTaskDialogProps)
           <div>
             <Label className="text-xs">Project Name</Label>
             <SearchableProjectSelect
-              projects={projects}
               value={selectedProject}
               onChange={handleProjectChange}
             />

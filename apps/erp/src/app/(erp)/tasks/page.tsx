@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { getAllTasks } from '@/lib/all-tasks-queries';
-import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
+import { getActiveEmployees } from '@/lib/tasks-actions';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import { TasksTable } from '@/components/tasks/tasks-table';
 import {
@@ -44,7 +44,9 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
   const currentPage = Number(params.page) || 1;
   const perPage = 50;
 
-  const [{ tasks, total }, employees, projects] = await Promise.all([
+  // G5: project pickers in the create/edit dialogs lazy-load on first open
+  // (SearchableProjectSelect self-fetch) — no eager ~480-project fetch here.
+  const [{ tasks, total }, employees] = await Promise.all([
     getAllTasks({
       status: params.status || undefined,
       priority: params.priority || undefined,
@@ -56,7 +58,6 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       per_page: perPage,
     }),
     getActiveEmployees(),
-    getActiveProjects(),        // full list — for create/edit task dialogs
   ]);
 
   const totalPages = Math.ceil(total / perPage);
@@ -106,7 +107,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
               />
             </FilterBar>
           </div>
-          <CreateTaskDialog employees={employees} projects={projects} />
+          <CreateTaskDialog employees={employees} />
         </div>
       }
     >
@@ -145,7 +146,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
                   <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-16">Actions</th>
                 </tr>
               </thead>
-              <TasksTable tasks={tasks} employees={employees} projects={projects} />
+              <TasksTable tasks={tasks} employees={employees} />
             </table>
           )}
 

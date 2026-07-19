@@ -48,6 +48,19 @@ function revalidate(projectId?: string) {
   revalidatePath('/activities');
 }
 
+/**
+ * G5 lazy-load (2026-07-19 perf work): project picker options for the global
+ * Add Activity dialog, fetched on first dialog open instead of eagerly on
+ * every /activities render (~500 rows). Thin action wrapper so the client
+ * dialog can call the server-only query.
+ */
+export async function getActivityProjectOptions(): Promise<
+  { id: string; project_number: string | null; customer_name: string; project_name: string | null }[]
+> {
+  const { getProjectOptionsForActivities } = await import('@/lib/project-activities-queries');
+  return getProjectOptionsForActivities();
+}
+
 export async function addProjectActivity(input: {
   projectId?: string;
   projectNameCustom?: string;

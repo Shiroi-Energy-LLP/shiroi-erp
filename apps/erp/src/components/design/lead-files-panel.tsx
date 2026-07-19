@@ -68,35 +68,41 @@ export function LeadFilesPanel({ leadId, readOnly = false }: LeadFilesPanelProps
 
   const reloadFiles = React.useCallback(async () => {
     const supabase = createClient();
-    const categoryResults = await Promise.all(
-      LEAD_FILE_CATEGORIES.map(async (cat) => {
-        const pathPrefix = `leads/${leadId}/${cat.value}`;
-        const { data, error } = await supabase.storage.from(BUCKET).list(pathPrefix, {
-          limit: 500,
-          sortBy: { column: 'created_at', order: 'desc' },
-        });
-        if (error) {
-          console.error(`[LeadFilesPanel.load] ${cat.value} failed:`, error.message);
-          return [cat.value, [] as FileInfo[]] as const;
-        }
-        const entries = (data ?? [])
-          .filter((entry) => entry.name && !entry.name.endsWith('/'))
-          .map(
-            (entry): FileInfo => ({
-              name: entry.name,
-              id: entry.id ?? `${pathPrefix}/${entry.name}`,
-              created_at: entry.created_at ?? new Date().toISOString(),
-              metadata: (entry.metadata ?? {}) as FileInfo['metadata'],
-              pathPrefix,
-              bucket: BUCKET,
-            }),
-          );
-        return [cat.value, entries] as const;
-      }),
-    );
+    // One list_bucket_objects RPC (mig 207) replaces the per-category
+    // storage.search() fan-out (7 round-trips → 1).
+    const basePrefix = `leads/${leadId}`;
+    const { data, error } = await supabase.rpc('list_bucket_objects', {
+      p_bucket: BUCKET,
+      p_prefixes: LEAD_FILE_CATEGORIES.map((cat) => `${basePrefix}/${cat.value}`),
+      p_limit: 3500,
+    });
+    if (error) {
+      console.error('[LeadFilesPanel.load] failed:', error.message);
+      setFiles({});
+      setLoading(false);
+      return;
+    }
     const byCategory: Record<string, FileInfo[]> = {};
-    for (const [cat, entries] of categoryResults) {
-      byCategory[cat] = entries;
+    for (const cat of LEAD_FILE_CATEGORIES) {
+      byCategory[cat.value] = [];
+    }
+    for (const row of data ?? []) {
+      if (row.name.endsWith('.emptyFolderPlaceholder')) continue;
+      const rel = row.name.slice(basePrefix.length + 1); // "category/…/file"
+      const firstSlash = rel.indexOf('/');
+      if (firstSlash === -1) continue;
+      const cat = rel.slice(0, firstSlash);
+      const bucket = byCategory[cat];
+      if (!bucket) continue;
+      const lastSlash = row.name.lastIndexOf('/');
+      bucket.push({
+        name: row.name.slice(lastSlash + 1),
+        id: row.id ?? row.name,
+        created_at: row.created_at ?? new Date().toISOString(),
+        metadata: ((row.metadata ?? {}) as FileInfo['metadata']),
+        pathPrefix: row.name.slice(0, lastSlash),
+        bucket: BUCKET,
+      });
     }
     setFiles(byCategory);
     setLoading(false);
