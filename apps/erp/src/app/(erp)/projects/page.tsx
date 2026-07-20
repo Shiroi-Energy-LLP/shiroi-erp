@@ -4,6 +4,7 @@ import { ProjectsTableWrapper } from '@/components/projects/projects-table-wrapp
 import { ProjectsSummaryHeader } from '@/components/projects/projects-summary-header';
 import { getDefaultColumns } from '@/components/data-table/column-config';
 import { FilterSelect } from '@/components/filter-select';
+import { FilterMultiSelect } from '@/components/filter-multi-select';
 import { FilterBar } from '@/components/filter-bar';
 import { ProjectsSearchBox } from '@/components/projects/projects-search-box';
 import { dateToFy, fyOptions } from '@/lib/helpers/fiscal-year';
@@ -41,9 +42,16 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   const now = new Date();
   const fyList = fyOptions(now.getFullYear(), now.getMonth());
 
+  // Multi-select: comma-separated ?status= param, validated against the known
+  // enum values so junk in the URL never reaches PostgREST.
+  const validStatuses = new Set<string>(STATUS_OPTIONS.map((s) => s.value));
+  const statusFilter = (params.status ?? '')
+    .split(',')
+    .filter((s): s is ProjectStatus => validStatuses.has(s));
+
   const [result, views, statusSummary] = await Promise.all([
     getProjects({
-      status: (params.status as ProjectStatus) || undefined,
+      status: statusFilter.length > 0 ? statusFilter : undefined,
       search: params.search || undefined,
       fy: params.year || undefined,
       page,
@@ -82,12 +90,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
   const filterBar = (
     <FilterBar basePath="/projects" filterParams={['search', 'status', 'year']}>
-      <FilterSelect paramName="status" className="w-44 h-9 text-sm">
-        <option value="">All Statuses</option>
-        {STATUS_OPTIONS.map((s) => (
-          <option key={s.value} value={s.value}>{s.label}</option>
-        ))}
-      </FilterSelect>
+      <FilterMultiSelect paramName="status" label="Statuses" options={STATUS_OPTIONS} />
       <FilterSelect paramName="year" className="w-36 h-9 text-sm">
         <option value="">All years</option>
         {fyList.map((fy) => (

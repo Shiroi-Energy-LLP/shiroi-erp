@@ -5,7 +5,8 @@ import { formatCustomerProject } from './customer-project';
 type ProjectStatus = Database['public']['Enums']['project_status'];
 
 export interface ProjectFilters {
-  status?: ProjectStatus;
+  /** Multi-select: rows matching ANY of these statuses (single-element array = old behavior) */
+  status?: ProjectStatus[];
   search?: string;
   fy?: string;
   page?: number;
@@ -61,17 +62,19 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
   let query = supabase
     .from('projects')
     .select(
-      'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, site_city, advance_amount, customer_phone, notes, project_name, company_id, employees!projects_project_manager_id_fkey(full_name), companies!projects_company_id_fkey(name)',
+      'id, project_number, customer_name, system_type, system_size_kwp, status, completion_pct, planned_start_date, planned_end_date, actual_start_date, actual_end_date, next_followup_date, created_at, project_manager_id, ceig_required, ceig_cleared, contracted_value, site_city, advance_amount, customer_phone, notes, project_name, company_id, employees!projects_project_manager_id_fkey(full_name), companies!projects_company_id_fkey(name)',
       { count: 'estimated' },
     )
     .is('deleted_at', null);
 
-  // Dynamic sort
-  const sortCol = filters.sort ?? 'created_at';
+  // Dynamic sort. Status sorts by the generated status_rank column (mig 210)
+  // so 'completed' lands last instead of following enum declaration order.
+  const requestedSort = filters.sort ?? 'created_at';
+  const sortCol = requestedSort === 'status' ? 'status_rank' : requestedSort;
   const sortAsc = filters.dir === 'asc';
   query = query.order(sortCol, { ascending: sortAsc });
 
-  if (filters.status) query = query.eq('status', filters.status);
+  if (filters.status && filters.status.length > 0) query = query.in('status', filters.status);
   if (filters.fy && /^\d{4}-\d{2}$/.test(filters.fy)) {
     const startYear = parseInt(filters.fy.slice(0, 4), 10);
     const fyFrom = `${startYear}-04-01`;
