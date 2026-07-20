@@ -14950,6 +14950,7 @@ export type Database = {
           approval_status: string
           approved_by: string | null
           created_at: string
+          delivery_place: string | null
           dispatch_stage: string | null
           dispatched_at: string | null
           expected_delivery_date: string | null
@@ -14960,6 +14961,7 @@ export type Database = {
           loi_storage_path: string | null
           notes: string | null
           payment_due_date: string | null
+          payment_terms: string | null
           payment_terms_days: number
           pdf_storage_path: string | null
           po_date: string
@@ -14974,9 +14976,11 @@ export type Database = {
           status: string
           subtotal: number
           total_amount: number
+          transport: string | null
           updated_at: string
           vendor_dispatch_date: string | null
-          vendor_id: string
+          vendor_id: string | null
+          vendor_name: string | null
           vendor_tracking_number: string | null
           zoho_po_id: string | null
         }
@@ -14992,6 +14996,7 @@ export type Database = {
           approval_status?: string
           approved_by?: string | null
           created_at?: string
+          delivery_place?: string | null
           dispatch_stage?: string | null
           dispatched_at?: string | null
           expected_delivery_date?: string | null
@@ -15002,6 +15007,7 @@ export type Database = {
           loi_storage_path?: string | null
           notes?: string | null
           payment_due_date?: string | null
+          payment_terms?: string | null
           payment_terms_days?: number
           pdf_storage_path?: string | null
           po_date?: string
@@ -15016,9 +15022,11 @@ export type Database = {
           status?: string
           subtotal?: number
           total_amount?: number
+          transport?: string | null
           updated_at?: string
           vendor_dispatch_date?: string | null
-          vendor_id: string
+          vendor_id?: string | null
+          vendor_name?: string | null
           vendor_tracking_number?: string | null
           zoho_po_id?: string | null
         }
@@ -15034,6 +15042,7 @@ export type Database = {
           approval_status?: string
           approved_by?: string | null
           created_at?: string
+          delivery_place?: string | null
           dispatch_stage?: string | null
           dispatched_at?: string | null
           expected_delivery_date?: string | null
@@ -15044,6 +15053,7 @@ export type Database = {
           loi_storage_path?: string | null
           notes?: string | null
           payment_due_date?: string | null
+          payment_terms?: string | null
           payment_terms_days?: number
           pdf_storage_path?: string | null
           po_date?: string
@@ -15058,9 +15068,11 @@ export type Database = {
           status?: string
           subtotal?: number
           total_amount?: number
+          transport?: string | null
           updated_at?: string
           vendor_dispatch_date?: string | null
-          vendor_id?: string
+          vendor_id?: string | null
+          vendor_name?: string | null
           vendor_tracking_number?: string | null
           zoho_po_id?: string | null
         }
@@ -20655,6 +20667,22 @@ export type Database = {
           credentials_id: string
         }[]
       }
+      create_boi_po: {
+        Args: {
+          p_delivery_date: string
+          p_delivery_place: string
+          p_item_ids: string[]
+          p_payment_terms: string
+          p_prepared_by: string
+          p_project_id: string
+          p_transport: string
+          p_vendor_name: string
+        }
+        Returns: {
+          out_po_id: string
+          out_po_number: string
+        }[]
+      }
       create_inverter_partition_for_month: {
         Args: { target_month: string }
         Returns: undefined
@@ -20672,6 +20700,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       current_employee_id: { Args: never; Returns: string }
+      delete_boi_po: {
+        Args: { p_po_id: string; p_revert: boolean }
+        Returns: undefined
+      }
       drop_expired_inverter_oauth_states: { Args: never; Returns: number }
       drop_old_inverter_partitions: { Args: never; Returns: undefined }
       enqueue_payment_escalations: { Args: never; Returns: number }
@@ -20734,6 +20766,19 @@ export type Database = {
         Returns: {
           completed_count: number
           scheduled_count: number
+        }[]
+      }
+      get_boi_status_totals: {
+        Args: {
+          p_category?: string
+          p_project_id?: string
+          p_search?: string
+          p_vendor?: string
+        }
+        Returns: {
+          line_count: number
+          status: string
+          total_amount: number
         }[]
       }
       get_bom_review_summary: { Args: never; Returns: Json }
@@ -21185,6 +21230,18 @@ export type Database = {
           pending_deliveries: number
         }[]
       }
+      get_purchase_project_rollup: {
+        Args: never
+        Returns: {
+          boi_total: number
+          expenses_total: number
+          profit_pct: number
+          project_budget: number
+          project_id: string
+          project_name: string
+          system_size: number
+        }[]
+      }
       get_purchase_request_aggregates: {
         Args: { p_project_ids: string[] }
         Returns: {
@@ -21409,6 +21466,7 @@ export type Database = {
           score: number
         }[]
       }
+      next_boi_po_number: { Args: never; Returns: string }
       plant_monitoring_detect_brand: {
         Args: { portal_url: string }
         Returns: string

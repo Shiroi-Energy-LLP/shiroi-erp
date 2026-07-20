@@ -208,11 +208,11 @@ export function TabPo({
                                 }}
                                 vendor={{
                                   company_name:
-                                    vendorById.get(po.vendor_id)?.company_name ??
+                                    vendorById.get(po.vendor_id ?? '')?.company_name ??
                                     po.vendors?.company_name ??
                                     '—',
-                                  email: vendorById.get(po.vendor_id)?.email ?? null,
-                                  phone: vendorById.get(po.vendor_id)?.phone ?? null,
+                                  email: vendorById.get(po.vendor_id ?? '')?.email ?? null,
+                                  phone: vendorById.get(po.vendor_id ?? '')?.phone ?? null,
                                 }}
                               />
                             )}
