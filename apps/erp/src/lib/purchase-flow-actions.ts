@@ -45,6 +45,7 @@ import {
   type BoiPoMetaInput,
   type BoiPoRow,
   type BoiStatus,
+  type BoiStatusTotalsResult,
   type BulkAddFromPriceBookInput,
   type CreateBoiPoInput,
   type IntakeItemInput,
@@ -54,8 +55,10 @@ import {
 import {
   getBoiLineById,
   getBoiPoById,
+  getBoiStatusTotals,
   searchPriceBookItems,
 } from './purchase-flow-queries';
+import type { BoiKpiFilters } from './purchase-flow-queries';
 
 type AppRole = Database['public']['Enums']['app_role'];
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -934,6 +937,25 @@ export async function submitIntakeItems(
     return ok({ inserted: inserts.length });
   } catch (e) {
     console.error(`${op} threw:`, { projectId, error: e, timestamp: new Date().toISOString() });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+/**
+ * Client-callable KPI refresh for the BOI workspace (spec §5.2): the status
+ * cards must track every non-status filter without a full page reload. Read
+ * only — but gated to price-visible roles since the result is money.
+ */
+export async function getBoiStatusTotalsAction(
+  filters: BoiKpiFilters,
+): Promise<ActionResult<BoiStatusTotalsResult>> {
+  const op = '[getBoiStatusTotalsAction]';
+  try {
+    const gate = await requireRoleIn(PRICE_VISIBLE_ROLES);
+    if (!gate.success) return gate;
+    return ok(await getBoiStatusTotals(filters));
+  } catch (e) {
+    console.error(`${op} threw:`, { error: e, timestamp: new Date().toISOString() });
     return err(e instanceof Error ? e.message : 'Unknown error');
   }
 }
