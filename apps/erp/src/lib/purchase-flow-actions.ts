@@ -20,8 +20,12 @@
 // total_price convention (matches project-bom-actions.ts / procurement-
 // actions.ts / mig-151 CHECK): GST-INCLUSIVE = qty × rate × (1 + gst/100).
 //
-// PDF: createBoiPo returns { poId, poNumber } only — the PDF render/upload
-// step is added by Task 4 (plan), which extends this action.
+// PDF: createBoiPo renders the minimal spec-§6.2.4 document (shared helper in
+// purchase-flow-pdf.tsx) and uploads it to Storage (project-files bucket,
+// `<project_id>/purchase-orders/<po_number>.pdf` — the Files-tab convention,
+// so the PO surfaces under the project's "Purchase Orders" folder). PDF
+// failure NEVER fails the PO (spec §6.2.5) — the result carries pdfWarning
+// and the download route regenerates from the frozen rows regardless.
 // =============================================================================
 
 import Decimal from 'decimal.js';
@@ -48,6 +52,7 @@ import {
   type BoiStatusTotalsResult,
   type BulkAddFromPriceBookInput,
   type CreateBoiPoInput,
+  type CreateBoiPoResult,
   type IntakeItemInput,
   type PriceBookSearchResultForAction,
   type ProjectOption,
@@ -58,6 +63,7 @@ import {
   getBoiStatusTotals,
   searchPriceBookItems,
 } from './purchase-flow-queries';
+import { getBoiPoPdfData, renderBoiPoPdfBuffer } from './purchase-flow-pdf';
 import type { BoiKpiFilters } from './purchase-flow-queries';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -545,11 +551,13 @@ export async function deleteBoiLines(ids: string[]): Promise<ActionResult<{ dele
  * Instant PO from selected BOI lines — calls the atomic create_boi_po RPC
  * (mig 210): server re-reads the lines by id, computes totals in SQL, inserts
  * the source='boi_quick' PO + frozen items, flips lines to order_placed.
- * PDF generation is layered on by Task 4; until then callers get {poId, poNumber}.
+ * Then renders the minimal PDF (spec §6.2.4) and uploads it to Storage;
+ * PDF/upload failure does NOT fail the PO (spec §6.2.5) — the result comes
+ * back success with pdfWarning set instead.
  */
 export async function createBoiPo(
   input: CreateBoiPoInput,
-): Promise<ActionResult<{ poId: string; poNumber: string }>> {
+): Promise<ActionResult<CreateBoiPoResult>> {
   const op = '[createBoiPo]';
   try {
     const gate = await requireRoleIn(PURCHASE_WRITE_ROLES);
@@ -591,10 +599,48 @@ export async function createBoiPo(
     const row = data?.[0];
     if (!row) return err('PO creation returned no result');
 
+    // --- PDF render + Storage upload (never fails the PO — spec §6.2.5) ----
+    let pdfWarning: string | undefined;
+    try {
+      const pdfData = await getBoiPoPdfData(supabase, row.out_po_id);
+      if (!pdfData) throw new Error('PO reload for PDF returned no data');
+      const pdfBuffer = await renderBoiPoPdfBuffer(pdfData);
+
+      // Files-tab convention (mig 010): project-files/<project_id>/<folder>/<file>.
+      // The 'purchase-orders' folder is a known Files-tab category, so the PDF
+      // also surfaces on the project's Files page.
+      const storagePath = `${input.projectId}/purchase-orders/${row.out_po_number}.pdf`;
+
+      // SYSTEM OP: the project-files INSERT storage policy (mig 010) covers
+      // founder/project_manager/site_supervisor only — purchase_officer must
+      // also be able to store the PO PDF, so the upload runs on the admin
+      // client. Path + content are fully server-derived (nothing client-sent).
+      const admin = createAdminClient();
+      const { error: uploadError } = await admin.storage
+        .from('project-files')
+        .upload(storagePath, pdfBuffer, { contentType: 'application/pdf', upsert: true });
+      if (uploadError) throw new Error(`Storage upload failed: ${uploadError.message}`);
+
+      // po_write RLS covers PURCHASE_WRITE_ROLES — user client is fine here.
+      const { error: pathError } = await supabase
+        .from('purchase_orders')
+        .update({ pdf_storage_path: storagePath, updated_at: new Date().toISOString() })
+        .eq('id', row.out_po_id);
+      if (pathError) throw new Error(`pdf_storage_path save failed: ${pathError.message}`);
+    } catch (pdfErr) {
+      console.error(`${op} PDF render/upload failed (PO ${row.out_po_number} still created):`, {
+        poId: row.out_po_id,
+        error: pdfErr instanceof Error ? pdfErr.message : pdfErr,
+        timestamp: new Date().toISOString(),
+      });
+      pdfWarning =
+        'PO created, but storing the PDF failed — the Download button regenerates it anytime.';
+    }
+
     revalidatePath('/purchase');
     revalidatePath('/purchase/orders');
     revalidatePath('/purchase/projects');
-    return ok({ poId: row.out_po_id, poNumber: row.out_po_number });
+    return ok({ poId: row.out_po_id, poNumber: row.out_po_number, pdfWarning });
   } catch (e) {
     console.error(`${op} threw:`, { error: e, timestamp: new Date().toISOString() });
     return err(e instanceof Error ? e.message : 'Unknown error');

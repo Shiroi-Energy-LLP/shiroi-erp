@@ -40,12 +40,14 @@ import {
   type BoiLineRow,
   type BoiStatus,
   type BoiStatusTotalsResult,
+  type CreateBoiPoResult,
   type ProjectOption,
 } from '@/lib/purchase-flow-constants';
 import { BoiTable } from './boi-table';
 import { BoiBulkBar } from './boi-bulk-bar';
 import { BoiAddItemModal } from './boi-add-item-modal';
 import { BoiBulkAddModal } from './boi-bulk-add-modal';
+import { CreatePoModal } from './create-po-modal';
 import { ProjectCombobox } from './project-combobox';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -193,6 +195,13 @@ export function BoiWorkspace({
   const [addOpen, setAddOpen] = React.useState(false);
   const [editRow, setEditRow] = React.useState<BoiLineRow | null>(null);
   const [bulkAddOpen, setBulkAddOpen] = React.useState(false);
+  const [createPoOpen, setCreatePoOpen] = React.useState(false);
+
+  // Selected rows in visible order — the create-PO modal's working set.
+  const selectedRows = React.useMemo(
+    () => filtered.filter((r) => selected.has(r.id)),
+    [filtered, selected],
+  );
 
   // --- mutations ----------------------------------------------------------
   function handleRowUpdated(fresh: BoiLineRow) {
@@ -248,6 +257,28 @@ export function BoiWorkspace({
     } else {
       addToast({ variant: 'destructive', title: 'Status change failed', description: result.error });
     }
+  }
+
+  /** Post-create patch (spec §6.2.8): included lines flip to order_placed,
+   *  gain their PO linkage + the PO's vendor string (the RPC stamped both),
+   *  selection clears. Toast + PDF download already happened in the modal. */
+  function handlePoCreated(result: CreateBoiPoResult, itemIds: string[], vendorName: string) {
+    const idSet = new Set(itemIds);
+    setLines((prev) =>
+      prev.map((l) =>
+        idSet.has(l.id)
+          ? {
+              ...l,
+              procurement_status: 'order_placed',
+              purchase_order_id: result.poId,
+              po_number: result.poNumber,
+              vendor_name: vendorName || l.vendor_name,
+            }
+          : l,
+      ),
+    );
+    setSelected(new Set());
+    void refreshTotals();
   }
 
   async function handleBulkDelete() {
@@ -410,7 +441,9 @@ export function BoiWorkspace({
         <BoiBulkBar
           count={selected.size}
           busy={bulkBusy}
+          canWrite={canWrite}
           onChangeStatus={(s) => void handleBulkStatus(s)}
+          onCreatePo={() => setCreatePoOpen(true)}
           onDeleteSelected={() => void handleBulkDelete()}
           onClearSelection={() => setSelected(new Set())}
         />
@@ -454,6 +487,13 @@ export function BoiWorkspace({
         onProjectCreated={(p) => setProjects((prev) => [p, ...prev])}
         defaultProjectId={projectId}
         onSaved={handleBulkAdded}
+      />
+      <CreatePoModal
+        open={createPoOpen}
+        onOpenChange={setCreatePoOpen}
+        selectedRows={selectedRows}
+        projects={projects}
+        onCreated={handlePoCreated}
       />
     </ListPageShell>
   );

@@ -271,6 +271,15 @@ export interface CreateBoiPoInput {
   deliveryPlace?: string | null;
 }
 
+/** Result of createBoiPo. pdfWarning is set when the PO was created but the
+ *  PDF render/upload step failed (spec §6.2.5 — PDF failure never fails the
+ *  PO; the download route regenerates from the frozen rows anyway). */
+export interface CreateBoiPoResult {
+  poId: string;
+  poNumber: string;
+  pdfWarning?: string;
+}
+
 /** PO edit modal payload — metadata only, items/amounts frozen (spec §6.3/§7).
  *  undefined = leave unchanged; null = clear. */
 export interface BoiPoMetaInput {

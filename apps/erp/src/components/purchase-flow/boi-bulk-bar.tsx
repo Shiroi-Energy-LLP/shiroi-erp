@@ -3,8 +3,9 @@
 // =============================================================================
 // BOI bulk action bar (spec §5.5) — appears above the table when ≥1 row is
 // selected: "N selected" · status dropdown + Change Status · 📄 Create PO
-// (Task 4 wires it — rendered disabled for now) · 🗑 Delete Selected · Clear
-// Selection. Confirm dialogs live in the workspace handlers.
+// (opens the create-po-modal, spec §6) · 🗑 Delete Selected · Clear Selection.
+// Confirm dialogs live in the workspace handlers. All mutating buttons are
+// disabled for non-write roles (finance is price-visible but cannot write).
 // =============================================================================
 
 import * as React from 'react';
@@ -19,7 +20,11 @@ import {
 interface BoiBulkBarProps {
   count: number;
   busy: boolean;
+  /** Write-capable role (PURCHASE_WRITE_ROLES) — finance sees the bar but all
+   *  mutating buttons (incl. Create PO) stay disabled. */
+  canWrite: boolean;
   onChangeStatus: (status: BoiStatus) => void;
+  onCreatePo: () => void;
   onDeleteSelected: () => void;
   onClearSelection: () => void;
 }
@@ -27,7 +32,9 @@ interface BoiBulkBarProps {
 export function BoiBulkBar({
   count,
   busy,
+  canWrite,
   onChangeStatus,
+  onCreatePo,
   onDeleteSelected,
   onClearSelection,
 }: BoiBulkBarProps) {
@@ -42,7 +49,7 @@ export function BoiBulkBar({
       <Select
         value={status}
         onChange={(e) => setStatus(e.target.value as BoiStatus)}
-        disabled={busy}
+        disabled={busy || !canWrite}
         className="h-7 w-40 text-xs"
         aria-label="Bulk status"
       >
@@ -55,7 +62,7 @@ export function BoiBulkBar({
       <Button
         size="sm"
         variant="outline"
-        disabled={busy}
+        disabled={busy || !canWrite}
         onClick={() => onChangeStatus(status)}
         className="h-7 text-xs"
       >
@@ -64,12 +71,11 @@ export function BoiBulkBar({
 
       <span className="mx-1 h-4 w-px bg-amber-200" />
 
-      {/* Task 4 wires the Create-PO modal — stub kept visible so the muscle-
-          memory layout is already in place. */}
       <Button
         size="sm"
-        disabled
-        title="Create PO — wired in next step"
+        disabled={busy || !canWrite}
+        title={canWrite ? 'Create a PO from the selected items' : 'Your role cannot create POs'}
+        onClick={onCreatePo}
         className="h-7 gap-1 text-xs"
       >
         <FileText className="h-3.5 w-3.5" /> Create PO
@@ -78,7 +84,7 @@ export function BoiBulkBar({
       <Button
         size="sm"
         variant="outline"
-        disabled={busy}
+        disabled={busy || !canWrite}
         onClick={onDeleteSelected}
         className="h-7 gap-1 text-xs text-red-600 hover:bg-red-50"
       >
