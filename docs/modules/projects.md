@@ -15,7 +15,7 @@ Migration 031 collapsed 11→8 statuses:
 
 Status is editable in-place in the `ProjectHeader` dropdown. Change is audited through `log_project_status_change` (which looks up `employees.id` via `profile_id = auth.uid()` — see migration 031).
 
-**Status sort order (mig 210):** sorting the /projects list by Status orders by the generated `projects.status_rank` column (workflow order, `completed` always last), not the enum's declaration order. The list's status filter is a **multi-select** (`FilterMultiSelect`, comma-separated `?status=` param, validated server-side against the enum before querying).
+**Status sort order (mig 212):** sorting the /projects list by Status orders by the generated `projects.status_rank` column (workflow order, `completed` always last), not the enum's declaration order. The list's status filter is a **multi-select** (`FilterMultiSelect`, comma-separated `?status=` param, validated server-side against the enum before querying).
 
 ## Tabs (13 — in order)
 
@@ -193,7 +193,7 @@ Drag-and-drop recategorization uses Supabase Storage `.move()` — which is an U
 - `project_activities` — daily activity log w/ SE/OS/contractor manpower counts, `stage_id` → master, soft-delete, `get_project_activities_summary` RPC (mig 174). **2026-06-16 (mig 184):** `project_id` is now nullable + a free-text `project_name_custom` fallback (CHECK one-of-two) so PMs/founders can log Service/AMC/misc activities not tied to an ERP project — via `ProjectCombobox.allowCustom` on the global /activities Add dialog; the list shows the custom label (no link) and `addProjectActivity`/`updateProjectActivity`/`deleteProjectActivity` match by activity id.
 - `project_boq_item_history` — append-only BOI item edit audit (`changes` JSONB old→new, `changed_by` → employees; mig 175)
 - `projects.completion_pct` — trigger-maintained cache of `get_project_completion_pct` (mig 173); do NOT write it by hand
-- `projects.next_followup_date` + `projects.status_rank` (mig 210) — list-page follow-up date (optional column, inline-editable) and generated status sort order (`completed`=8, last; never write). `trg_sync_project_followup_task` mirrors the lead follow-up sync (mig 108): setting the date upserts an open `project_followup` task (`entity_type='project'` + `project_id` both set, assigned to the PM → oldest active PM → founder), changing it moves the due date, clearing it (or soft-deleting the project) closes the task. List columns **Expected Start / Expected Completion** reuse `planned_start_date` / `planned_end_date` (same fields as the Timeline box; indexed in 210 for sorting). All three columns hidden by default (column picker / saved views).
+- `projects.next_followup_date` + `projects.status_rank` (mig 212) — list-page follow-up date (optional column, inline-editable) and generated status sort order (`completed`=8, last; never write). `trg_sync_project_followup_task` mirrors the lead follow-up sync (mig 108): setting the date upserts an open `project_followup` task (`entity_type='project'` + `project_id` both set, assigned to the PM → oldest active PM → founder), changing it moves the due date, clearing it (or soft-deleting the project) closes the task. List columns **Expected Start / Expected Completion** reuse `planned_start_date` / `planned_end_date` (same fields as the Timeline box; indexed in 212 for sorting). All three columns hidden by default (column picker / saved views).
 
 ## Key Files
 

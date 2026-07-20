@@ -67,7 +67,7 @@ export async function getProjects(filters: ProjectFilters = {}): Promise<Paginat
     )
     .is('deleted_at', null);
 
-  // Dynamic sort. Status sorts by the generated status_rank column (mig 210)
+  // Dynamic sort. Status sorts by the generated status_rank column (mig 212)
   // so 'completed' lands last instead of following enum declaration order.
   const requestedSort = filters.sort ?? 'created_at';
   const sortCol = requestedSort === 'status' ? 'status_rank' : requestedSort;

@@ -1,5 +1,6 @@
 -- ============================================================================
--- Migration 210 — Projects: next_followup_date + status_rank + follow-up task sync
+-- Migration 212 — Projects: next_followup_date + status_rank + follow-up task sync
+-- (Renumbered from 210 — a parallel purchase-flow session took 210/211 first.)
 -- Date: 2026-07-20
 -- Spec: docs/superpowers/specs/2026-07-20-projects-list-dates-followup-multistatus-design.md
 -- Why: (1) /projects list gains Expected Start / Expected Completion (reusing
@@ -19,7 +20,7 @@ BEGIN;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS next_followup_date DATE;
 
 COMMENT ON COLUMN projects.next_followup_date IS
-  'Next follow-up date shown/edited on the /projects list. Trigger-synced to an open project_followup task (mig 210).';
+  'Next follow-up date shown/edited on the /projects list. Trigger-synced to an open project_followup task (mig 212).';
 
 CREATE INDEX IF NOT EXISTS idx_projects_next_followup
   ON projects(next_followup_date) WHERE deleted_at IS NULL;

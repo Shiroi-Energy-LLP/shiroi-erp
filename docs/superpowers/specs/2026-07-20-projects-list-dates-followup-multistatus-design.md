@@ -18,7 +18,7 @@ The `/projects` list can't answer three PM questions:
 - The three date columns are **hidden by default** (available via the column picker; saveable in views, mig 178).
 - Setting Next Follow-up **auto-syncs a task**, mirroring the lead behaviour (mig 108) — DB trigger, not app-level.
 
-## Schema — Migration 210 (`210_2026-07-20-projects-followup-and-status-rank.sql`)
+## Schema — Migration 212 (`212_2026-07-20-projects-followup-and-status-rank.sql`; renumbered from 210 — the parallel purchase-flow session took 210/211)
 
 1. `ALTER TABLE projects ADD COLUMN next_followup_date DATE;`
    + `CREATE INDEX idx_projects_next_followup ON projects(next_followup_date) WHERE deleted_at IS NULL;`

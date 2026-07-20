@@ -154,7 +154,7 @@ export const PROJECT_COLUMNS: ColumnDef[] = [
   { key: 'activities', label: 'Activities', defaultVisible: true, sortable: false, editable: false, fieldType: 'activities_link' },
   { key: 'year', label: 'Year', sortKey: 'order_date', defaultVisible: true, sortable: true, editable: true, fieldType: 'fy' },
   // Expected Start / Expected Completion reuse the Timeline-box planned dates (mig 004a);
-  // Next Follow-up (mig 210) trigger-syncs an open project_followup task to the PM.
+  // Next Follow-up (mig 212) trigger-syncs an open project_followup task to the PM.
   { key: 'planned_start_date', label: 'Expected Start', sortKey: 'planned_start_date', defaultVisible: false, sortable: true, editable: true, fieldType: 'date', format: 'date' },
   { key: 'planned_end_date', label: 'Expected Completion', sortKey: 'planned_end_date', defaultVisible: false, sortable: true, editable: true, fieldType: 'date', format: 'date' },
   { key: 'next_followup_date', label: 'Next Follow-up', sortKey: 'next_followup_date', defaultVisible: false, sortable: true, editable: true, fieldType: 'date', format: 'date' },
