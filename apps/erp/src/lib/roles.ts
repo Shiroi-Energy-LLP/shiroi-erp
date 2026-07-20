@@ -91,7 +91,36 @@ const ITEMS = {
   salesTeamTasks: { label: 'Team Tasks',        href: '/sales/tasks',        icon: 'ClipboardList' },
   salesPatterns:  { label: 'Win/Loss Patterns', href: '/sales/patterns',     icon: 'BarChart3' },
   salesTerritories: { label: 'Territories',     href: '/sales/territories',  icon: 'Globe' },
+  // Purchase flow (BOI Manager parity — /purchase route group). The nav schema
+  // has no children, so the 5 status views are sibling links of Bill of Items
+  // (each is /purchase pre-locked to one status via ?status=…).
+  billOfItems:      { label: 'Bill of Items',     href: '/purchase',                        icon: 'ListChecks' },
+  boiYetToFinalize: { label: 'Yet to Finalize',   href: '/purchase?status=yet_to_finalize', icon: 'ClipboardList' },
+  boiYetToPlace:    { label: 'Yet to Place',      href: '/purchase?status=yet_to_place',    icon: 'ClipboardList' },
+  boiOrderPlaced:   { label: 'Order Placed',      href: '/purchase?status=order_placed',    icon: 'ClipboardList' },
+  boiReceived:      { label: 'Received',          href: '/purchase?status=received',        icon: 'ClipboardList' },
+  boiDelivered:     { label: 'Delivered',         href: '/purchase?status=delivered',       icon: 'ClipboardList' },
+  boiPoLog:         { label: 'Purchase Orders',   href: '/purchase/orders',                 icon: 'ShoppingCart' },
+  boiProjects:      { label: 'Projects',          href: '/purchase/projects',               icon: 'HardHat' },
+  boiIntake:        { label: 'Add Bill of Items', href: '/purchase/intake',                 icon: 'ListChecks' },
 } as const satisfies Record<string, NavItem>;
+
+// Shared "Purchase" section for price-visible roles (founder, project_manager,
+// purchase_officer, finance). site_supervisor instead gets the single
+// boiIntake link inside their existing Procurement section.
+const PURCHASE_SECTION: NavSection = {
+  label: 'Purchase',
+  items: [
+    ITEMS.billOfItems,
+    ITEMS.boiYetToFinalize,
+    ITEMS.boiYetToPlace,
+    ITEMS.boiOrderPlaced,
+    ITEMS.boiReceived,
+    ITEMS.boiDelivered,
+    ITEMS.boiPoLog,
+    ITEMS.boiProjects,
+  ],
+};
 
 // ---------------------------------------------------------------------------
 // Section definitions per role
@@ -103,6 +132,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Design',       items: [ITEMS.designQueue] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.activities] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
+    PURCHASE_SECTION,
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.vendors, ITEMS.priceBook, ITEMS.inventory] },
     { label: 'O&M',          items: [ITEMS.omVisits, ITEMS.amcSchedule, ITEMS.serviceTickets, ITEMS.plantMonitoring, ITEMS.importReview, ITEMS.inverters] },
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.profitability] },
@@ -127,6 +157,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Overview',     items: [ITEMS.commandCenter, ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports, ITEMS.activities, ITEMS.reconciliation] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
+    PURCHASE_SECTION,
     { label: 'Execution',    items: [ITEMS.qcGates] },
     { label: 'Procurement',  items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.inventory] },
     { label: 'Reference',    items: [ITEMS.priceBook] },
@@ -146,7 +177,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Overview',     items: [ITEMS.dashboard] },
     { label: 'My Work',      items: [ITEMS.myReports, ITEMS.myTasks, ITEMS.expenses] },
     { label: 'Projects',     items: [ITEMS.projects, ITEMS.activities] },
-    { label: 'Procurement',  items: [ITEMS.matRequisitions] },
+    { label: 'Procurement',  items: [ITEMS.matRequisitions, ITEMS.boiIntake] },
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   sales_engineer: [
@@ -168,6 +199,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   ],
   purchase_officer: [
     { label: 'Overview',         items: [ITEMS.dashboard, ITEMS.myTasks] },
+    PURCHASE_SECTION,
     { label: 'Procurement',      items: [ITEMS.purchaseOrders, ITEMS.matRequisitions, ITEMS.deliveries, ITEMS.inventory] },
     { label: 'Expenses',         items: [ITEMS.expenses] },
     { label: 'Vendor Management', items: [ITEMS.vendors, ITEMS.priceBook] },
@@ -181,6 +213,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Billing',      items: [ITEMS.invoices, ITEMS.payments] },
     { label: 'Vendor',       items: [ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.msmeCompliance] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
+    PURCHASE_SECTION,
     { label: 'Analysis',     items: [ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality] },

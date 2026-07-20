@@ -41,9 +41,10 @@ describe('navSectionsForRole', () => {
     const sectionLabels = sections.map((s) => s.label);
     // Marketing revamp added Contacts/Admin; commit 7d7eb75 swapped the
     // vouchers section for Expenses; commit a4fae6f added an Account section
-    // (Settings) on every non-customer role — 12 sections total.
+    // (Settings) on every non-customer role; the BOI purchase flow added the
+    // Purchase section — 13 sections total.
     expect(sectionLabels).toEqual([
-      'Overview', 'Sales', 'Design', 'Projects', 'Expenses',
+      'Overview', 'Sales', 'Design', 'Projects', 'Expenses', 'Purchase',
       'Procurement', 'O&M', 'Finance', 'Contacts', 'HR', 'Admin', 'Account',
     ]);
   });
@@ -72,11 +73,12 @@ describe('navSectionsForRole', () => {
     expect(design!.items.at(0)?.label).toBe('Design Queue');
   });
 
-  it('purchase_officer returns Overview + Procurement + Expenses + Vendor Management + Contacts + Admin + Account', () => {
+  it('purchase_officer returns Overview + Purchase + Procurement + Expenses + Vendor Management + Contacts + Admin + Account', () => {
+    // Purchase (BOI flow) leads their nav — it is their main workflow.
     const sections = navSectionsForRole('purchase_officer' as AppRole);
     const labels = sections.map((s) => s.label);
     expect(labels).toEqual([
-      'Overview', 'Procurement', 'Expenses', 'Vendor Management', 'Contacts', 'Admin', 'Account',
+      'Overview', 'Purchase', 'Procurement', 'Expenses', 'Vendor Management', 'Contacts', 'Admin', 'Account',
     ]);
   });
 
@@ -101,13 +103,13 @@ describe('navSectionsForRole', () => {
     expect(labels).toEqual(['Overview', 'O&M', 'Expenses', 'Account']);
   });
 
-  it('project_manager returns 9 sections', () => {
+  it('project_manager returns 10 sections', () => {
     const sections = navSectionsForRole('project_manager' as AppRole);
-    // 9 = previous 5 + Expenses (commit 7d7eb75, formerly Approvals/vouchers)
-    // + Reference (priceBook, Task 15) + Contacts + Account.
-    expect(sections).toHaveLength(9);
+    // 10 = previous 5 + Expenses (commit 7d7eb75, formerly Approvals/vouchers)
+    // + Reference (priceBook, Task 15) + Contacts + Account + Purchase (BOI flow).
+    expect(sections).toHaveLength(10);
     expect(sections.map((s) => s.label)).toEqual([
-      'Overview', 'Projects', 'Expenses', 'Execution', 'Procurement',
+      'Overview', 'Projects', 'Expenses', 'Purchase', 'Execution', 'Procurement',
       'Reference', 'O&M', 'Contacts', 'Account',
     ]);
   });
@@ -128,13 +130,13 @@ describe('navSectionsForRole', () => {
     ]);
   });
 
-  it('finance returns 9 sections', () => {
+  it('finance returns 10 sections', () => {
     const sections = navSectionsForRole('finance' as AppRole);
-    // 9 = previous 5 + Expenses (commit 7d7eb75, formerly Approvals/vouchers)
-    // + Contacts + Admin + Account.
+    // 10 = previous 5 + Expenses (commit 7d7eb75, formerly Approvals/vouchers)
+    // + Contacts + Admin + Account + Purchase (BOI flow, read-only money view).
     expect(sections.map((s) => s.label)).toEqual([
-      'Overview', 'Cash', 'Billing', 'Vendor', 'Expenses', 'Analysis',
-      'Contacts', 'Admin', 'Account',
+      'Overview', 'Cash', 'Billing', 'Vendor', 'Expenses', 'Purchase',
+      'Analysis', 'Contacts', 'Admin', 'Account',
     ]);
   });
 
