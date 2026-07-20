@@ -67,6 +67,60 @@ export function displayBoiStatus(raw: string): BoiStatus {
 }
 
 // ---------------------------------------------------------------------------
+// Project-level procurement badges (projects table, mig 041 CHECKs) — the
+// /purchase/projects rollup renders these as editable badge-selects (spec §3).
+// NOTE deliberate deltas from the sheet: the DB CHECK has 4 statuses (not the
+// sheet's 3) and only high/medium priority (no 'low').
+// ---------------------------------------------------------------------------
+
+export const PROJECT_PROCUREMENT_STATUSES = [
+  'yet_to_place',
+  'order_placed',
+  'partially_received',
+  'received',
+] as const;
+
+export type ProjectProcurementStatus = (typeof PROJECT_PROCUREMENT_STATUSES)[number];
+
+export const PROJECT_PROCUREMENT_STATUS_LABELS: Record<ProjectProcurementStatus, string> = {
+  yet_to_place: 'Yet to Place',
+  order_placed: 'Order Placed',
+  partially_received: 'Partially Received',
+  received: 'Received',
+};
+
+export const PROJECT_PROCUREMENT_STATUS_COLORS: Record<ProjectProcurementStatus, string> = {
+  yet_to_place: 'bg-amber-100 text-amber-800 border-amber-200',
+  order_placed: 'bg-blue-100 text-blue-800 border-blue-200',
+  partially_received: 'bg-violet-100 text-violet-800 border-violet-200',
+  received: 'bg-green-100 text-green-800 border-green-200',
+};
+
+export function isProjectProcurementStatus(value: string): value is ProjectProcurementStatus {
+  return (PROJECT_PROCUREMENT_STATUSES as readonly string[]).includes(value);
+}
+
+export const PROJECT_PROCUREMENT_PRIORITIES = ['high', 'medium'] as const;
+
+export type ProjectProcurementPriority = (typeof PROJECT_PROCUREMENT_PRIORITIES)[number];
+
+export const PROJECT_PROCUREMENT_PRIORITY_LABELS: Record<ProjectProcurementPriority, string> = {
+  high: 'High',
+  medium: 'Medium',
+};
+
+export const PROJECT_PROCUREMENT_PRIORITY_COLORS: Record<ProjectProcurementPriority, string> = {
+  high: 'bg-red-100 text-red-800 border-red-200',
+  medium: 'bg-amber-100 text-amber-800 border-amber-200',
+};
+
+export function isProjectProcurementPriority(
+  value: string,
+): value is ProjectProcurementPriority {
+  return (PROJECT_PROCUREMENT_PRIORITIES as readonly string[]).includes(value);
+}
+
+// ---------------------------------------------------------------------------
 // GST + PO defaults (spec §5.1 / §6.1)
 // ---------------------------------------------------------------------------
 

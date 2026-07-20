@@ -43,6 +43,10 @@ import {
   PRICE_VISIBLE_ROLES,
   PURCHASE_WRITE_ROLES,
   isBoiStatus,
+  isProjectProcurementPriority,
+  isProjectProcurementStatus,
+  type ProjectProcurementPriority,
+  type ProjectProcurementStatus,
   type BoiEditableField,
   type BoiLineInput,
   type BoiLineRow,
@@ -70,6 +74,7 @@ type AppRole = Database['public']['Enums']['app_role'];
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 type SupabaseAdminClient = ReturnType<typeof createAdminClient>;
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
+type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
 type BoqItemInsert = Database['public']['Tables']['project_boq_items']['Insert'];
 type BoqItemUpdate = Database['public']['Tables']['project_boq_items']['Update'];
 type PurchaseOrderUpdate = Database['public']['Tables']['purchase_orders']['Update'];
@@ -1002,6 +1007,72 @@ export async function getBoiStatusTotalsAction(
     return ok(await getBoiStatusTotals(filters));
   } catch (e) {
     console.error(`${op} threw:`, { error: e, timestamp: new Date().toISOString() });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Project procurement badges (spec §3 — /purchase/projects rollup)
+// ---------------------------------------------------------------------------
+
+/**
+ * Updates the projects table's procurement_status / procurement_priority
+ * badge columns (mig 041 CHECKs) from the rollup's badge-selects. Status may
+ * be cleared back to NULL (the column is nullable); priority is high|medium
+ * only. The heavier v2 flow reads the same columns, so both screens stay in
+ * sync. (Deliberately NOT reusing procurement-actions.updateProcurementPriority
+ * — that legacy action has no role gate and an `as any` cast.)
+ */
+export async function updateProjectProcurement(
+  projectId: string,
+  patch: {
+    status?: ProjectProcurementStatus | null;
+    priority?: ProjectProcurementPriority;
+  },
+): Promise<ActionResult<void>> {
+  const op = '[updateProjectProcurement]';
+  try {
+    const gate = await requireRoleIn(PURCHASE_WRITE_ROLES);
+    if (!gate.success) return gate;
+    const { supabase } = gate.data;
+
+    if (!cleanText(projectId)) return err('Missing project id', 'VALIDATION');
+
+    const update: ProjectUpdate = {};
+    if (patch.status !== undefined) {
+      // Runtime whitelist — the TS type alone can be bypassed by a crafted call.
+      if (patch.status !== null && !isProjectProcurementStatus(patch.status)) {
+        return err('Invalid procurement status', 'VALIDATION');
+      }
+      update.procurement_status = patch.status;
+    }
+    if (patch.priority !== undefined) {
+      if (!isProjectProcurementPriority(patch.priority)) {
+        return err('Invalid procurement priority', 'VALIDATION');
+      }
+      update.procurement_priority = patch.priority;
+    }
+    if (Object.keys(update).length === 0) return err('Nothing to update', 'VALIDATION');
+    update.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update(update)
+      .eq('id', projectId)
+      .select('id')
+      .maybeSingle();
+
+    if (error) {
+      console.error(`${op} update failed:`, { projectId, patch, code: error.code, message: error.message, timestamp: new Date().toISOString() });
+      return err(error.message, error.code);
+    }
+    if (!data) return err('Project not found', 'NOT_FOUND');
+
+    revalidatePath('/purchase/projects');
+    revalidatePath('/procurement'); // v2 board renders the same badge columns
+    return ok(undefined);
+  } catch (e) {
+    console.error(`${op} threw:`, { projectId, error: e, timestamp: new Date().toISOString() });
     return err(e instanceof Error ? e.message : 'Unknown error');
   }
 }

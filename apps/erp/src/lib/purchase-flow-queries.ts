@@ -411,7 +411,21 @@ export async function getBoiPoById(id: string): Promise<BoiPoRow | null> {
 // Project rollup (spec §3) — thin wrapper over get_purchase_project_rollup
 // ---------------------------------------------------------------------------
 
-export async function getPurchaseProjectRollup(): Promise<PurchaseProjectRollupRow[]> {
+/**
+ * Rollup row + the projects table's editable procurement badge columns
+ * (mig 041) — the RPC itself doesn't return them, so they're joined in here
+ * with one extra chunked select on projects (query-side join per the plan;
+ * no RPC change needed).
+ */
+export interface PurchaseRollupRow extends PurchaseProjectRollupRow {
+  procurement_status: string | null;
+  procurement_priority: string | null;
+}
+
+/** .in() id-chunk size — keeps the PostgREST GET URL well under limits. */
+const ROLLUP_JOIN_CHUNK = 100;
+
+export async function getPurchaseProjectRollup(): Promise<PurchaseRollupRow[]> {
   const op = '[getPurchaseProjectRollup]';
   const supabase = await createClient();
 
@@ -424,7 +438,36 @@ export async function getPurchaseProjectRollup(): Promise<PurchaseProjectRollupR
     console.error(`${op} RPC returned null data`);
     return [];
   }
-  return data;
+  if (data.length === 0) return [];
+
+  // Join procurement_status/priority for exactly the rollup's project ids.
+  // A lookup failure degrades to null badges rather than failing the page.
+  const byId = new Map<string, { status: string | null; priority: string | null }>();
+  const ids = data.map((r) => r.project_id);
+  for (let i = 0; i < ids.length; i += ROLLUP_JOIN_CHUNK) {
+    const chunk = ids.slice(i, i + ROLLUP_JOIN_CHUNK);
+    const { data: projRows, error: projError } = await supabase
+      .from('projects')
+      .select('id, procurement_status, procurement_priority')
+      .in('id', chunk);
+    if (projError) {
+      console.error(`${op} procurement-fields lookup failed:`, {
+        chunkStart: i,
+        code: projError.code,
+        message: projError.message,
+      });
+      continue;
+    }
+    for (const p of projRows ?? []) {
+      byId.set(p.id, { status: p.procurement_status, priority: p.procurement_priority });
+    }
+  }
+
+  return data.map((r) => ({
+    ...r,
+    procurement_status: byId.get(r.project_id)?.status ?? null,
+    procurement_priority: byId.get(r.project_id)?.priority ?? null,
+  }));
 }
 
 // ---------------------------------------------------------------------------
