@@ -8,8 +8,10 @@
 
 ## Specs — design docs (the *what* & *why*)
 
-_50 files in `docs/superpowers/specs/`_
+_52 files in `docs/superpowers/specs/`_
 
+- `2026-07-20` **Purchase Flow — "Bill of Items Manager" Functional Spec (for ERP re-implementat…** — `2026-07-20-purchase-flow-boi-manager-spec.md`
+- `2026-07-20` **Projects List — Expected Dates, Next Follow-up, Multi-Status Filter, Completed-…** — _projects (docs/modules/proj…_ · **Approved (design sign-off by Vivek 2026-07-…** · `2026-07-20-projects-list-dates-followup-multistatus-design.md`
 - `2026-07-16` **Zoho Books Live API Sync — Design (2026-07-16)** — a live API connection with Zoho Books so that all finance entries flow Zoho → ERP on a schedule, plus a write API used… · `2026-07-16-zoho-live-api-sync-design.md`
 - `2026-07-01` **Repo Structure — Token-Optimization Restructure — Design Spec** — _cross-cutting / docs + repo…_ · **✅ Implemented (docs-layer changes only; no…** · `2026-07-01-token-optimization-restructure-design.md`
 - `2026-06-27` **Service Ticket Module — Detail Page, Timeline, KPIs & Filters** — _O&M (/om/tickets)_ · `2026-06-27-service-ticket-detail-and-timeline-design.md`
@@ -63,8 +65,9 @@ _50 files in `docs/superpowers/specs/`_
 
 ## Plans — implementation logs (the *how*, task-by-task)
 
-_44 files in `docs/superpowers/plans/`_
+_45 files in `docs/superpowers/plans/`_
 
+- `2026-07-20` **Purchase Flow — BOI Manager Replication Implementation Plan** — Replicate Manivel's "Bill of Items Manager" purchase flow (price book → project BOI → multi-select → instant PO + PDF)… · `2026-07-20-purchase-flow-boi-manager.md`
 - `2026-06-16` **Manivel Feedback Batch 3 — Implementation Plan** — Ship Vivek's third Manivel feedback list — projects-list dashboard + ops columns, free-text projects on activities/tick… · `2026-06-16-manivel-feedback-batch3.md`
 - `2026-06-11` **Project Feedback Batch 2 Implementation Plan** — Ship the 12-item feedback batch — FY filter, soft project delete, project auto-search everywhere, /tasks milestone pick… · `2026-06-11-project-feedback-batch2.md`
 - `2026-06-10` **Fable Review Implementation Plan — June 10, 2026** — Work through every actionable finding in the two June-10 review docs (docs/reviews/2026-06-10-codebase-and-module-revie… · `2026-06-10-review-implementation.md`
@@ -112,8 +115,9 @@ _44 files in `docs/superpowers/plans/`_
 
 ## Reviews — audits & multi-area sweeps
 
-_14 files in `docs/reviews/`_
+_15 files in `docs/reviews/`_
 
+- `2026-07-19` **ERP Speed — Full Report (Code + Infrastructure)** — `2026-07-19-erp-speed-full-report.md`
 - `2026-06-19` **Page-Load Performance Audit & Suggested Changes** — `2026-06-19-page-load-perf-audit.md`
 - `2026-06-18` **UI Theming Audit — How Centralized Are Colours & Fonts?** — `2026-06-18-ui-theming-audit.md`
 - `2026-06-18` **Redundancy Sweep — Pending Decisions (for Vivek)** — `2026-06-18-redundancy-pending-decisions.md`
