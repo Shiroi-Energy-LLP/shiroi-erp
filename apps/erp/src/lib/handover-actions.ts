@@ -38,12 +38,17 @@ export async function generateHandoverPack(
     return err('Project not found', projectErr?.code);
   }
 
-  // Get linked proposal
-  const { data: proposal } = await supabase
-    .from('proposals')
-    .select('id, proposal_number, system_size_kwp, system_type, total_after_discount, proposal_bom_lines(*)')
-    .eq('id', project.proposal_id)
-    .single();
+  // Get linked proposal (nullable since mig 211 — projects minted from the
+  // BOI quick purchase flow have no sales origin; handover then falls back
+  // to the project columns and an empty BOM, same as a failed fetch).
+  const proposalId = project.proposal_id;
+  const { data: proposal } = proposalId
+    ? await supabase
+        .from('proposals')
+        .select('id, proposal_number, system_size_kwp, system_type, total_after_discount, proposal_bom_lines(*)')
+        .eq('id', proposalId)
+        .single()
+    : { data: null };
 
   // Get warranty info from BOM
   // (Type-safety review 2026-05-30 #2): the actual proposal_bom_lines columns

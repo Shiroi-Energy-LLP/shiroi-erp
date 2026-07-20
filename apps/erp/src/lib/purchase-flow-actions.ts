@@ -27,6 +27,7 @@
 import Decimal from 'decimal.js';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@repo/supabase/server';
+import { createAdminClient } from '@repo/supabase/admin';
 import type { Database } from '@repo/types/database';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
 import { getSessionContext, getCurrentEmployeeId } from '@/lib/auth';
@@ -48,6 +49,7 @@ import {
   type CreateBoiPoInput,
   type IntakeItemInput,
   type PriceBookSearchResultForAction,
+  type ProjectOption,
 } from './purchase-flow-constants';
 import {
   getBoiLineById,
@@ -57,6 +59,8 @@ import {
 
 type AppRole = Database['public']['Enums']['app_role'];
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+type SupabaseAdminClient = ReturnType<typeof createAdminClient>;
+type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
 type BoqItemInsert = Database['public']['Tables']['project_boq_items']['Insert'];
 type BoqItemUpdate = Database['public']['Tables']['project_boq_items']['Update'];
 type PurchaseOrderUpdate = Database['public']['Tables']['purchase_orders']['Update'];
@@ -132,9 +136,11 @@ function validateBoiLineInput(input: BoiLineInput): string | null {
 }
 
 /** Re-reads price-book rows by id server-side (client values are never the
- *  source of truth for catalog fields — spec §6.2.1 / §11). */
+ *  source of truth for catalog fields — spec §6.2.1 / §11). Accepts the admin
+ *  client for the intake path (site_supervisor has no price_book SELECT since
+ *  mig 211 — see the SYSTEM OP note in submitIntakeItems). */
 async function fetchPriceBookRows(
-  supabase: SupabaseServerClient,
+  supabase: SupabaseServerClient | SupabaseAdminClient,
   op: string,
   ids: string[],
 ): Promise<
@@ -732,6 +738,128 @@ export async function deleteBoiPoAction(
 }
 
 // ---------------------------------------------------------------------------
+// Quick project creation (plan delta — combobox "type a brand-new project")
+// ---------------------------------------------------------------------------
+
+/**
+ * Mints a minimal real `projects` row from a typed name so the BOI combobox
+ * can create projects inline (user requirement; plan delta). The row has no
+ * sales origin: lead_id/proposal_id stay NULL (made nullable in mig 211) and
+ * project_number comes from generate_doc_number('PROJ') — the same convention
+ * createProjectFromLead uses. The mig-104 BEFORE INSERT trigger fills
+ * project_manager_id with the latest active PM.
+ *
+ * Idempotent combobox behavior: a case-insensitive display-name match against
+ * existing non-deleted projects returns the EXISTING project instead of
+ * erroring (display name = COALESCE(NULLIF(project_name,''), customer_name),
+ * same as getProjectOptions).
+ */
+export async function quickCreateProject(name: string): Promise<ActionResult<ProjectOption>> {
+  const op = '[quickCreateProject]';
+  try {
+    const gate = await requireRoleIn(PURCHASE_WRITE_ROLES);
+    if (!gate.success) return gate;
+    const { supabase } = gate.data;
+
+    const trimmed = (name ?? '').trim();
+    if (!trimmed) return err('Project name is required', 'VALIDATION');
+    if (trimmed.length > 200) return err('Project name is too long (max 200 characters)', 'VALIDATION');
+
+    // Case-insensitive duplicate check. Single-column .ilike is parameterized
+    // (no PostgREST .or() syntax hazards), and a pattern with %/_ escaped and
+    // no wildcards added is exactly case-insensitive equality.
+    const exactPattern = trimmed.replace(/[\\%_]/g, (m) => `\\${m}`);
+    const dupSelect = 'id, project_name, customer_name, project_number';
+    const [byProjectName, byCustomerName] = await Promise.all([
+      supabase
+        .from('projects')
+        .select(dupSelect)
+        .ilike('project_name', exactPattern)
+        .is('deleted_at', null)
+        .limit(5),
+      supabase
+        .from('projects')
+        .select(dupSelect)
+        .ilike('customer_name', exactPattern)
+        .is('deleted_at', null)
+        .limit(5),
+    ]);
+    if (byProjectName.error) {
+      console.error(`${op} duplicate check (project_name) failed:`, { code: byProjectName.error.code, message: byProjectName.error.message });
+      return err(byProjectName.error.message, byProjectName.error.code);
+    }
+    if (byCustomerName.error) {
+      console.error(`${op} duplicate check (customer_name) failed:`, { code: byCustomerName.error.code, message: byCustomerName.error.message });
+      return err(byCustomerName.error.message, byCustomerName.error.code);
+    }
+
+    const displayName = (row: { project_name: string | null; customer_name: string }): string =>
+      row.project_name?.trim() || row.customer_name;
+    const existing = [...(byProjectName.data ?? []), ...(byCustomerName.data ?? [])].find(
+      (row) => displayName(row).toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (existing) {
+      // Idempotent: hand back the project that already answers to this name.
+      return ok({
+        id: existing.id,
+        name: displayName(existing),
+        project_number: existing.project_number,
+      });
+    }
+
+    const { data: docNum, error: docErr } = await supabase.rpc('generate_doc_number', {
+      doc_type: 'PROJ',
+    });
+    if (docErr || !docNum) {
+      console.error(`${op} project-number generation failed:`, { code: docErr?.code, message: docErr?.message, timestamp: new Date().toISOString() });
+      return err(docErr?.message ?? 'Could not allocate a project number', docErr?.code);
+    }
+
+    // Minimal real row. NOT NULL columns without defaults (verified against
+    // the live schema): project_number, customer_name, customer_phone,
+    // site_address_line1, site_city, system_size_kwp, system_type,
+    // panel_count, contracted_value, advance_amount, advance_received_at.
+    // lead_id/proposal_id are nullable since mig 211 (no sales origin).
+    const insert: ProjectInsert = {
+      project_number: docNum,
+      project_name: trimmed,
+      customer_name: trimmed,
+      customer_phone: 'NA',
+      site_address_line1: 'Pending',
+      site_city: 'Chennai',
+      site_state: 'Tamil Nadu',
+      system_type: 'on_grid',
+      system_size_kwp: 0,
+      panel_count: 0,
+      contracted_value: 0,
+      advance_amount: 0,
+      advance_received_at: new Date().toISOString().slice(0, 10),
+      status: 'order_received',
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert(insert)
+      .select('id, project_name, customer_name, project_number')
+      .single();
+
+    if (error) {
+      console.error(`${op} insert failed:`, { name: trimmed, code: error.code, message: error.message, timestamp: new Date().toISOString() });
+      return err(error.message, error.code);
+    }
+    if (!data) return err('Project insert returned no row');
+
+    revalidatePath('/purchase');
+    revalidatePath('/purchase/projects');
+    revalidatePath('/projects');
+    return ok({ id: data.id, name: displayName(data), project_number: data.project_number });
+  } catch (e) {
+    console.error(`${op} threw:`, { error: e, timestamp: new Date().toISOString() });
+    return err(e instanceof Error ? e.message : 'Unknown error');
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Site-engineer intake (spec §11) + role-aware Price Book search (spec §1)
 // ---------------------------------------------------------------------------
 
@@ -759,8 +887,14 @@ export async function submitIntakeItems(
       if (invalid) return err(invalid, 'VALIDATION');
     }
 
+    // SYSTEM OP: price_book read on behalf of site engineer — prices stripped
+    // server-side (spec §1). Mig 211 removed site_supervisor from the
+    // price_book_read policy, so the PB-row resolution (which DOES need
+    // base_price/gst_rate to stamp the new BOI lines) runs on the admin
+    // client. The resolved prices only ever land in the INSERT below — the
+    // response to the client is a bare count, never price data.
     const pb = await fetchPriceBookRows(
-      supabase,
+      createAdminClient(),
       op,
       items.map((i) => i.priceBookId),
     );

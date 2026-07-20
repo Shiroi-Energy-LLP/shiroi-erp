@@ -12,6 +12,7 @@
 
 import Decimal from 'decimal.js';
 import { createClient } from '@repo/supabase/server';
+import { createAdminClient } from '@repo/supabase/admin';
 import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 import {
   BOI_STATUSES,
@@ -369,7 +370,16 @@ export async function getBoiPos(options: GetBoiPosOptions = {}): Promise<BoiPosR
     Array<{ sum: number | null }>
   >();
   if (aggError) {
-    console.error(`${op} sum aggregate failed:`, { code: aggError.code, message: aggError.message });
+    // LOUD on purpose: this aggregate depends on pgrst.db_aggregates_enabled
+    // being 'true' on the authenticator role (mig 211). If that config ever
+    // regresses, PostgREST returns PGRST123 and the PO-log KPI silently shows
+    // ₹0 — this log line is the only tell.
+    console.error(
+      `${op} total_amount.sum() aggregate FAILED — PO-log KPI will show 0. ` +
+        `If code is PGRST123, pgrst.db_aggregates_enabled on the authenticator role ` +
+        `has regressed (restore via mig 211 §3 + NOTIFY pgrst).`,
+      { code: aggError.code, message: aggError.message, timestamp: new Date().toISOString() },
+    );
   } else {
     totalValue = Number(aggData?.[0]?.sum ?? 0);
   }
@@ -436,6 +446,10 @@ export interface PriceBookSearchResult {
  * the database query. Callers serving site_supervisor MUST pass false (the
  * searchPriceBookAction wrapper derives the flag from the viewer's role).
  *
+ * Since mig 211 site_supervisor has NO price_book SELECT policy at all
+ * (data-plane price stripping), so the stripped branch reads via the admin
+ * client — see the SYSTEM OP note below.
+ *
  * The two branches carry their select strings as separate template literals
  * (a ternary select would widen to `string` and break result inference).
  */
@@ -447,11 +461,11 @@ export async function searchPriceBookItems(
   const trimmed = term.trim();
   if (!trimmed) return { rows: [], total: 0 };
 
-  const supabase = await createClient();
   const s = sanitizeForIlike(trimmed);
   const orFilter = `item_description.ilike.${s},brand.ilike.${s},item_category.ilike.${s},vendor_name.ilike.${s}`;
 
   if (opts.includePrices) {
+    const supabase = await createClient();
     const { data, error, count } = await supabase
       .from('price_book')
       .select(
@@ -475,7 +489,13 @@ export async function searchPriceBookItems(
     return { rows: data, total: count ?? data.length };
   }
 
-  const { data, error, count } = await supabase
+  // SYSTEM OP: price_book read on behalf of site engineer — prices stripped
+  // server-side (spec §1). Mig 211 removed site_supervisor from the
+  // price_book_read policy, so this branch must bypass RLS; the select string
+  // below never touches base_price/gst_rate, so no price data can leave the
+  // query. The caller (searchPriceBookAction) has already role-gated access.
+  const admin = createAdminClient();
+  const { data, error, count } = await admin
     .from('price_book')
     .select(
       'id, item_category, item_description, brand, model, unit, vendor_name, default_qty',

@@ -13323,12 +13323,13 @@ export type Database = {
           inverter_brand: string | null
           inverter_capacity_kw: number | null
           inverter_model: string | null
-          lead_id: string
+          lead_id: string | null
           location_map_link: string | null
           needs_site_design: boolean
           needs_site_design_note: string | null
           needs_site_design_requested_at: string | null
           needs_site_design_requested_by: string | null
+          next_followup_date: string | null
           notes: string | null
           order_date: string | null
           panel_brand: string | null
@@ -13346,7 +13347,7 @@ export type Database = {
           project_name: string | null
           project_number: string
           project_type: string
-          proposal_id: string
+          proposal_id: string | null
           review_status: string
           scope_civil: string | null
           scope_la: string | null
@@ -13360,6 +13361,7 @@ export type Database = {
           site_state: string
           site_supervisor_id: string | null
           status: Database["public"]["Enums"]["project_status"]
+          status_rank: number | null
           status_updated_at: string
           structure_type: string | null
           system_size_kwp: number
@@ -13420,12 +13422,13 @@ export type Database = {
           inverter_brand?: string | null
           inverter_capacity_kw?: number | null
           inverter_model?: string | null
-          lead_id: string
+          lead_id?: string | null
           location_map_link?: string | null
           needs_site_design?: boolean
           needs_site_design_note?: string | null
           needs_site_design_requested_at?: string | null
           needs_site_design_requested_by?: string | null
+          next_followup_date?: string | null
           notes?: string | null
           order_date?: string | null
           panel_brand?: string | null
@@ -13443,7 +13446,7 @@ export type Database = {
           project_name?: string | null
           project_number: string
           project_type?: string
-          proposal_id: string
+          proposal_id?: string | null
           review_status?: string
           scope_civil?: string | null
           scope_la?: string | null
@@ -13457,6 +13460,7 @@ export type Database = {
           site_state?: string
           site_supervisor_id?: string | null
           status?: Database["public"]["Enums"]["project_status"]
+          status_rank?: number | null
           status_updated_at?: string
           structure_type?: string | null
           system_size_kwp: number
@@ -13517,12 +13521,13 @@ export type Database = {
           inverter_brand?: string | null
           inverter_capacity_kw?: number | null
           inverter_model?: string | null
-          lead_id?: string
+          lead_id?: string | null
           location_map_link?: string | null
           needs_site_design?: boolean
           needs_site_design_note?: string | null
           needs_site_design_requested_at?: string | null
           needs_site_design_requested_by?: string | null
+          next_followup_date?: string | null
           notes?: string | null
           order_date?: string | null
           panel_brand?: string | null
@@ -13540,7 +13545,7 @@ export type Database = {
           project_name?: string | null
           project_number?: string
           project_type?: string
-          proposal_id?: string
+          proposal_id?: string | null
           review_status?: string
           scope_civil?: string | null
           scope_la?: string | null
@@ -13554,6 +13559,7 @@ export type Database = {
           site_state?: string
           site_supervisor_id?: string | null
           status?: Database["public"]["Enums"]["project_status"]
+          status_rank?: number | null
           status_updated_at?: string
           structure_type?: string | null
           system_size_kwp?: number
