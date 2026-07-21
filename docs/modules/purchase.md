@@ -239,6 +239,20 @@ Bulk-loads Shiroi's hand-maintained per-project BOM sheets (the `se-master-file`
 
 **Phase-2 (not built):** automated rough-sheet voucher consolidation (fuzzy MT/VN → line mapping); minting the ~40% of sheets with no matching project (stays `/om/import-review`'s job — create the project there, attach its BOM here).
 
+## Quick purchase flow — BOI Manager parity (2026-07-21, migs 210/211/213)
+
+Replicates Manivel's Google-Sheets "Bill of Items Manager" (spec `2026-07-20-purchase-flow-boi-manager-spec.md` — extracted from the live Apps Script source). Coexists with the v2 competitive flow on the same tables; quick POs carry `purchase_orders.source = 'boi_quick'` (v2 = `'erp'`).
+
+**Routes:** `/purchase` (BOI workspace: full `project_boq_items` table, inline single-field edits, status-money KPI row that ignores the status filter, 5 sidebar status views via `?status=`, add-single w/ price-book autocomplete, bulk-add from price book, multi-select bulk bar → Change Status / Create PO / Delete) · `/purchase/orders` (PO log: search, KPIs, metadata-only edit, delete w/ default-ON revert-to-Yet-to-Place) · `/purchase/projects` (rollup: contracted_value vs BOI total vs expenses vs profit %; procurement status/priority badge-selects) · `/purchase/intake` (mobile-first site-engineer app: price-stripped price-book search → qty → submit as `yet_to_finalize`).
+
+**RPCs (migs 210/211/213):** `create_boi_po` (atomic: re-reads lines by id, SQL totals, PO-0001 sequence via `next_boi_po_number()`, freezes `purchase_order_items`, flips lines to `order_placed`; rejects already-PO'd lines) · `delete_boi_po(id, revert)` · `get_boi_status_totals` (KPI money; search haystack includes project name; `ready_to_dispatch` folds into `received`) · `get_purchase_project_rollup` (SECURITY DEFINER, role-gated).
+
+**Roles:** `PRICE_VISIBLE_ROLES` = founder/PM/purchase_officer/finance (finance is read-only — UI disables writes, RLS enforces); `PURCHASE_WRITE_ROLES` = founder/PM/purchase_officer; `site_supervisor` = intake only, prices stripped server-side (mig 211 removed them from `price_book_read`; intake PB reads run on the admin client as labelled system ops).
+
+**PO PDFs:** deliberately minimal layout (no letterhead/GSTIN/signature — the team's format), generated at creation + on-demand at `/api/purchase/[poId]/pdf`, stored at `project-files/<project_id>/purchase-orders/<po_number>.pdf` (surfaces in the project Files tab).
+
+**Deliberate deltas from the sheet:** real project FKs (combobox quick-creates a minimal project via `quickCreateProject` — mig 211 made `projects.lead_id/proposal_id` nullable for this); vendor required on PO; categories from the `item_categories` master (not the sheet's 15-item list); `procurement_priority` has no `'low'` (mig 041 CHECK); spreadsheet export is CSV (SheetJS not an erp-app dep); PDFs print "Rs." (₹ glyph missing in react-pdf builtin Helvetica); price-book and expenses screens are the existing ERP pages, not rebuilt. Open item: site supervisors can still see prices via the projects BOQ/BOM tabs (pre-existing read policy, needs a product decision).
+
 ## Past Decisions & Specs
 
 - **Migration 103 (May 2, 2026) — `purchase_orders_status_check` finally allows `'dispatched'`.** v2 (migration 060/065) wired the `draft → dispatched → acknowledged` flow but the legacy CHECK constraint added in migration 041 only listed `('draft','approved','sent','acknowledged','partially_delivered','fully_delivered','closed','cancelled')`. Every `sendPOToVendor` / `markPODispatched` call hit `new row for relation "purchase_orders" violates check constraint "purchase_orders_status_check"`. Migration 103 drops + recreates the constraint with `'dispatched'` added; legacy values retained for backward-compat. Same-day code fixes: `createVendorAdHoc` wrote `vendor_type='supplier'` (not in the enum) → changed to `'other'` (`as any` cast also removed); Download PDF now surfaces server errors inline instead of silently swallowing into `console.error`; Copy-link button removed from PO send dialog (the URL `/procurement/<poId>` is internal-only and sent vendors to login).
