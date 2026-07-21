@@ -13,9 +13,19 @@
 //
 // FOCUS RULE: the filter bar lives in the stable ListPageShell header and is
 // never remounted — the search input keeps focus while typing; filtering is
-// debounced into `search`. URL carries ?project= (history.replaceState — no
-// navigation, no server refetch) and ?status= (locked status views, set by
-// the sidebar links and left untouched here).
+// debounced into `search`. EVERY filter mirrors into the URL via
+// history.replaceState (no navigation, no server refetch) so it survives
+// navigating away and back (spec §12): ?project= · ?category= · ?vendor= ·
+// ?search= · ?fstatus= (the free status dropdown — deliberately a DIFFERENT
+// param from ?status=, which is the sidebar's locked-status-view marker and
+// is left untouched here).
+//
+// PROP SYNC RULE: single-row mutations patch `lines`/`totals` locally from the
+// action's returned row — the actions no longer revalidate /purchase, and the
+// initialLines/initialTotals sync effect is guarded by a deliberate-refresh
+// flag so incidental RSC prop churn (e.g. another action's revalidate) can
+// never clobber locally-patched state. Only handleBulkAdded (count-only
+// result) raises the flag and router.refresh()es.
 // =============================================================================
 
 import * as React from 'react';
@@ -61,6 +71,12 @@ interface BoiWorkspaceProps {
   /** Set when the page was opened as a locked status view (?status=…). */
   lockedStatus: BoiStatus | null;
   initialProjectId: string | null;
+  /** Free status-dropdown filter restored from ?fstatus= (never set when the
+   *  view is status-locked). */
+  initialStatusFilter: BoiStatus | null;
+  initialCategory: string;
+  initialVendor: string;
+  initialSearch: string;
 }
 
 export function BoiWorkspace({
@@ -71,6 +87,10 @@ export function BoiWorkspace({
   categories,
   lockedStatus,
   initialProjectId,
+  initialStatusFilter,
+  initialCategory,
+  initialVendor,
+  initialSearch,
 }: BoiWorkspaceProps) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -82,17 +102,19 @@ export function BoiWorkspace({
   const [lines, setLines] = React.useState(initialLines);
   const [totals, setTotals] = React.useState(initialTotals);
   const [projects, setProjects] = React.useState(initialProjects);
-  React.useEffect(() => setLines(initialLines), [initialLines]);
-  React.useEffect(() => setTotals(initialTotals), [initialTotals]);
   React.useEffect(() => setProjects(initialProjects), [initialProjects]);
+  // initialLines/initialTotals sync is deliberate-refresh-guarded — see the
+  // effect below refreshTotals (PROP SYNC RULE in the header comment).
+  const pendingServerSync = React.useRef(false);
+  const lastServerProps = React.useRef({ lines: initialLines, totals: initialTotals });
 
   // --- filters ------------------------------------------------------------
   const [projectId, setProjectId] = React.useState<string | null>(initialProjectId);
-  const [statusFilter, setStatusFilter] = React.useState<BoiStatus | null>(null);
-  const [category, setCategory] = React.useState('');
-  const [vendor, setVendor] = React.useState('');
-  const [searchInput, setSearchInput] = React.useState('');
-  const [search, setSearch] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState<BoiStatus | null>(initialStatusFilter);
+  const [category, setCategory] = React.useState(initialCategory);
+  const [vendor, setVendor] = React.useState(initialVendor);
+  const [searchInput, setSearchInput] = React.useState(initialSearch);
+  const [search, setSearch] = React.useState(initialSearch);
   const effectiveStatus = lockedStatus ?? statusFilter;
 
   // Debounce the free-text search — the input itself never remounts, so the
@@ -102,14 +124,24 @@ export function BoiWorkspace({
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  // Persist the project filter into the URL without navigating (keeps
-  // ?status= intact for locked views; survives in-session back/forward).
+  // Persist EVERY filter into the URL without navigating (spec §12 — filters
+  // survive leaving and returning). ?status= stays sidebar-owned (locked
+  // views); the free status dropdown persists as ?fstatus= so returning to
+  // the page restores the dropdown instead of locking the view. `search` is
+  // the debounced value, so the URL updates at most every 300ms.
   React.useEffect(() => {
     const url = new URL(window.location.href);
-    if (projectId) url.searchParams.set('project', projectId);
-    else url.searchParams.delete('project');
+    const setOrDelete = (key: string, value: string | null) => {
+      if (value) url.searchParams.set(key, value);
+      else url.searchParams.delete(key);
+    };
+    setOrDelete('project', projectId);
+    if (!lockedStatus) setOrDelete('fstatus', statusFilter);
+    setOrDelete('category', category || null);
+    setOrDelete('vendor', vendor || null);
+    setOrDelete('search', search || null);
     window.history.replaceState(null, '', url.toString());
-  }, [projectId]);
+  }, [projectId, statusFilter, category, vendor, search, lockedStatus]);
 
   const filtered = React.useMemo(() => {
     const q = search.toLowerCase();
@@ -158,10 +190,31 @@ export function BoiWorkspace({
   React.useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
-      return; // initial totals came from the server render
+      return; // initial totals came from the server render (all filters applied)
     }
     void refreshTotals();
   }, [refreshTotals]);
+
+  // Deliberate-refresh-guarded prop sync (PROP SYNC RULE): server props are
+  // adopted ONLY when a handler raised pendingServerSync before calling
+  // router.refresh() (bulk add — the one flow with a count-only result).
+  // Incidental prop churn (another action's revalidatePath, unrelated RSC
+  // re-renders) is tracked but ignored, so locally-patched rows/totals from
+  // inline edits are never clobbered. After adopting, totals are re-derived
+  // via the RPC when a filter is active — the refreshed server render computes
+  // them from the URL params, which can lag the live state (debounce window).
+  React.useEffect(() => {
+    const changed =
+      initialLines !== lastServerProps.current.lines ||
+      initialTotals !== lastServerProps.current.totals;
+    if (!changed) return;
+    lastServerProps.current = { lines: initialLines, totals: initialTotals };
+    if (!pendingServerSync.current) return;
+    pendingServerSync.current = false;
+    setLines(initialLines);
+    setTotals(initialTotals);
+    if (projectId || category || vendor || search) void refreshTotals();
+  }, [initialLines, initialTotals, projectId, category, vendor, search, refreshTotals]);
 
   // --- selection (visible rows only; filters silently prune — spec §5.5) ---
   const [selected, setSelected] = React.useState<ReadonlySet<string>>(new Set());
@@ -218,8 +271,10 @@ export function BoiWorkspace({
   function handleBulkAdded() {
     // Batch insert returns only a count — re-render the server page for the
     // fresh rows (client filter/selection state survives router.refresh).
+    // Raise the deliberate-refresh flag so the guarded prop-sync effect adopts
+    // the refreshed props (and re-runs refreshTotals when filters are active).
+    pendingServerSync.current = true;
     router.refresh();
-    void refreshTotals();
   }
 
   async function handleDeleteRow(row: BoiLineRow) {

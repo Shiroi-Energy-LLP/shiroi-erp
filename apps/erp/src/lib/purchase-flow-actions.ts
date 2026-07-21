@@ -247,7 +247,8 @@ export async function addBoiLine(input: BoiLineInput): Promise<ActionResult<BoiL
     const fresh = await getBoiLineById(data.id);
     if (!fresh) return err('Saved, but failed to reload the row — refresh the list');
 
-    revalidatePath('/purchase');
+    // No revalidatePath('/purchase'): the workspace patches its state from the
+    // returned row (spec §12 — no full refetch on single-row mutations).
     revalidatePath('/purchase/projects');
     return ok(fresh);
   } catch (e) {
@@ -304,7 +305,8 @@ export async function updateBoiLine(
     const fresh = await getBoiLineById(id);
     if (!fresh) return err('Saved, but failed to reload the row — refresh the list');
 
-    revalidatePath('/purchase');
+    // No revalidatePath('/purchase'): the workspace patches its state from the
+    // returned row (spec §12 — no full refetch on single-row mutations).
     revalidatePath('/purchase/projects');
     return ok(fresh);
   } catch (e) {
@@ -396,7 +398,8 @@ export async function updateBoiLineField(
     const fresh = await getBoiLineById(id);
     if (!fresh) return err('Saved, but failed to reload the row — refresh the list');
 
-    revalidatePath('/purchase');
+    // No revalidatePath('/purchase'): inline edits patch the client cache from
+    // the returned row (spec §12 — no full refetch on single-cell commits).
     revalidatePath('/purchase/projects');
     return ok(fresh);
   } catch (e) {
@@ -539,7 +542,8 @@ export async function deleteBoiLines(ids: string[]): Promise<ActionResult<{ dele
       return err(error.message, error.code);
     }
 
-    revalidatePath('/purchase');
+    // No revalidatePath('/purchase'): the workspace removes deleted rows from
+    // its state directly (single-row 🗑 and bulk delete both patch locally).
     revalidatePath('/purchase/projects');
     return ok({ deleted: data?.length ?? 0 });
   } catch (e) {

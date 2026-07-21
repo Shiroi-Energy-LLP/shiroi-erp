@@ -45,11 +45,27 @@ export default async function PurchasePage({ searchParams }: PageProps) {
       ? params.project
       : null;
 
+  // Persisted client filters (spec §12 — the workspace mirrors every filter
+  // into the URL via history.replaceState; this page hands them back as
+  // initial state — filtering itself stays client-side). ?fstatus= is the
+  // free status dropdown; it is ignored when the view is status-locked.
+  const fstatusRaw = typeof params.fstatus === 'string' ? params.fstatus : null;
+  const initialStatusFilter: BoiStatus | null =
+    !lockedStatus && fstatusRaw && isBoiStatus(fstatusRaw) ? fstatusRaw : null;
+  const initialCategory = typeof params.category === 'string' ? params.category : '';
+  const initialVendor = typeof params.vendor === 'string' ? params.vendor : '';
+  const initialSearch = typeof params.search === 'string' ? params.search.trim() : '';
+
   const [lines, totals, projects, categories] = await Promise.all([
     getBoiLines(),
-    // KPI cards ignore the status filter (spec §5.2) — only project carries in
-    // from the URL; the other filters start empty on a fresh load.
-    getBoiStatusTotals({ projectId: initialProjectId ?? undefined }),
+    // KPI cards ignore the status filter (spec §5.2) but track every other
+    // filter — restored URL filters feed the RPC so the first paint is right.
+    getBoiStatusTotals({
+      projectId: initialProjectId ?? undefined,
+      category: initialCategory || undefined,
+      vendor: initialVendor || undefined,
+      search: initialSearch || undefined,
+    }),
     getProjectOptions(),
     listItemCategories(),
   ]);
@@ -63,6 +79,10 @@ export default async function PurchasePage({ searchParams }: PageProps) {
       categories={categories.map((c) => ({ value: c.value, label: c.label }))}
       lockedStatus={lockedStatus}
       initialProjectId={initialProjectId}
+      initialStatusFilter={initialStatusFilter}
+      initialCategory={initialCategory}
+      initialVendor={initialVendor}
+      initialSearch={initialSearch}
     />
   );
 }

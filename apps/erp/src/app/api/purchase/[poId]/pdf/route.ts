@@ -62,6 +62,7 @@ export async function GET(
       stack: e instanceof Error ? e.stack : undefined,
       timestamp: new Date().toISOString(),
     });
-    return new NextResponse(`PDF generation failed: ${message}`, { status: 500 });
+    // Generic body — the full error (message + stack) stays in the server log.
+    return new NextResponse('PDF generation failed', { status: 500 });
   }
 }

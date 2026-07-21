@@ -14,6 +14,7 @@ import { Button, Select } from '@repo/ui';
 import {
   BOI_STATUSES,
   BOI_STATUS_LABELS,
+  isBoiStatus,
   type BoiStatus,
 } from '@/lib/purchase-flow-constants';
 
@@ -48,7 +49,11 @@ export function BoiBulkBar({
 
       <Select
         value={status}
-        onChange={(e) => setStatus(e.target.value as BoiStatus)}
+        onChange={(e) => {
+          // Runtime guard, not a blind cast — invalid values are ignored.
+          const v = e.target.value;
+          if (isBoiStatus(v)) setStatus(v);
+        }}
         disabled={busy || !canWrite}
         className="h-7 w-40 text-xs"
         aria-label="Bulk status"

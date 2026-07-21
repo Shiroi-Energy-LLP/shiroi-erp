@@ -9,8 +9,9 @@
 //   Vendor = first distinct vendor · Project = first distinct project ·
 //   Payment Terms "Credit" · Transport "At Actual" · Delivery Date/Place empty.
 // On save → createBoiPo (server re-reads lines by id; prices never sent) →
-// success: open the PDF download in a new tab, patch rows via onCreated,
-// toast "PO-00NN created ✓" (+ pdfWarning when Storage failed), close.
+// success: trigger the PDF download (programmatic anchor — popup-blocker
+// safe), patch rows via onCreated, toast "PO-00NN created ✓" (+ pdfWarning
+// when Storage failed), close.
 // =============================================================================
 
 import * as React from 'react';
@@ -133,9 +134,15 @@ export function CreatePoModal({
       return;
     }
 
-    // Immediate download in a new tab — the route regenerates from the
-    // frozen rows, so this works even when the Storage upload failed.
-    window.open(`/api/purchase/${result.data.poId}/pdf`, '_blank', 'noopener');
+    // Immediate download via a programmatic anchor click — unlike
+    // window.open after an async gap, this survives popup blockers (the
+    // Content-Disposition: attachment route downloads without leaving the
+    // page). Works even when the Storage upload failed: the route
+    // regenerates the PDF from the frozen rows.
+    const a = document.createElement('a');
+    a.href = `/api/purchase/${result.data.poId}/pdf`;
+    a.download = '';
+    a.click();
     addToast({
       variant: result.data.pdfWarning ? 'warning' : 'success',
       title: `${result.data.poNumber} created ✓`,
