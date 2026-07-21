@@ -54,6 +54,7 @@ import {
   type ProjectOption,
 } from '@/lib/purchase-flow-constants';
 import { BoiTable } from './boi-table';
+import { BoiExportButtons } from './boi-export';
 import { BoiBulkBar } from './boi-bulk-bar';
 import { BoiAddItemModal } from './boi-add-item-modal';
 import { BoiBulkAddModal } from './boi-bulk-add-modal';
@@ -435,6 +436,19 @@ export function BoiWorkspace({
             </Button>
           )}
           <div className="ml-auto flex items-center gap-2">
+            {/* Exports (spec §5.2 order: Clear · Excel · PDF · Add Multiple ·
+                Add Item) — cover exactly the filtered rows in current order */}
+            <BoiExportButtons
+              rows={filtered}
+              showPrices={showPrices}
+              categoryLabels={categoryLabels}
+              projectName={
+                projectId ? (projects.find((p) => p.id === projectId)?.name ?? null) : null
+              }
+              statusLabel={effectiveStatus ? BOI_STATUS_LABELS[effectiveStatus] : null}
+              categoryLabel={category ? (categoryLabels[category] ?? category) : null}
+              vendorLabel={vendor || null}
+            />
             {canWrite && (
               <>
                 <Button
