@@ -46,6 +46,19 @@ function fmtQty(qty: number): string {
 }
 
 /**
+ * Route-facing wrapper: builds the viewer-privileged client itself so API
+ * routes never import the Supabase factory directly (forbidden-pattern R15).
+ * Dynamic import keeps this module's static supabase imports type-only.
+ */
+export async function getBoiPoPdfDataForViewer(
+  poId: string,
+): Promise<BoiPoPdfData | null> {
+  const { createClient } = await import('@repo/supabase/server');
+  const supabase = await createClient();
+  return getBoiPoPdfData(supabase, poId);
+}
+
+/**
  * Assembles the typed props for BoiPoPdf from the frozen PO record.
  * Returns null when the PO doesn't exist or is not a boi_quick PO (the
  * download route 404s on null; v2 POs keep their own letterhead PDF).

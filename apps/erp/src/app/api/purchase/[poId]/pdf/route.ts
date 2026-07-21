@@ -11,10 +11,12 @@
 // Only source='boi_quick' POs are served — v2 POs use /api/procurement/[poId]/pdf.
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@repo/supabase/server';
 import { getSessionContext } from '@/lib/auth';
 import { PRICE_VISIBLE_ROLES } from '@/lib/purchase-flow-constants';
-import { getBoiPoPdfData, renderBoiPoPdfBuffer } from '@/lib/purchase-flow-pdf';
+import {
+  getBoiPoPdfDataForViewer,
+  renderBoiPoPdfBuffer,
+} from '@/lib/purchase-flow-pdf';
 
 export async function GET(
   _request: NextRequest,
@@ -32,8 +34,7 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const supabase = await createClient();
-    const data = await getBoiPoPdfData(supabase, poId);
+    const data = await getBoiPoPdfDataForViewer(poId);
     if (!data) {
       return NextResponse.json({ error: 'PO not found' }, { status: 404 });
     }
