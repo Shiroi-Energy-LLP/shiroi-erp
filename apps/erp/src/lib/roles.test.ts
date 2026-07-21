@@ -201,6 +201,18 @@ describe('navItemsForRole (backward compat)', () => {
     expect(hrefs).toContain('/hr/employees');
   });
 
+  it('site_supervisor sees the BOI intake link', () => {
+    const hrefs = navItemsForRole('site_supervisor' as AppRole).map((i) => i.href);
+    expect(hrefs).toContain('/purchase/intake');
+  });
+
+  it('purchase_officer sees the BOI purchase routes', () => {
+    const hrefs = navItemsForRole('purchase_officer' as AppRole).map((i) => i.href);
+    expect(hrefs).toContain('/purchase');
+    expect(hrefs).toContain('/purchase/orders');
+    expect(hrefs).toContain('/purchase/projects');
+  });
+
   it('site_supervisor does not see HR nav', () => {
     const items = navItemsForRole('site_supervisor' as AppRole);
     const hrefs = items.map((i) => i.href);

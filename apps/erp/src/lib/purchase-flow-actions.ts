@@ -702,7 +702,7 @@ export async function updateBoiPoMeta(
       if (!vendorName) return err('Vendor name cannot be empty', 'VALIDATION');
       update.vendor_name = vendorName;
       // Best-effort vendor re-match (case-insensitive exact, like the RPC).
-      const escaped = vendorName.replace(/[%_]/g, '\\$&');
+      const escaped = vendorName.replace(/[\\%_]/g, '\\$&');
       const { data: vendor, error: vendorError } = await supabase
         .from('vendors')
         .select('id')

@@ -192,7 +192,12 @@ export async function getBoiStatusTotals(
     p_project_id: filters.projectId || undefined,
     p_category: filters.category || undefined,
     p_vendor: filters.vendor || undefined,
-    p_search: filters.search?.trim() || undefined,
+    // Escape ILIKE metacharacters — the RPC interpolates '%'||p_search||'%',
+    // so a raw %/_ would act as a wildcard while the client table search
+    // treats it literally.
+    p_search: filters.search?.trim()
+      ? filters.search.trim().replace(/[\\%_]/g, (m) => `\\${m}`)
+      : undefined,
   });
 
   if (error) {

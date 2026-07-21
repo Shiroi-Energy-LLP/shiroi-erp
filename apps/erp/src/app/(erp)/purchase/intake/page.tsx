@@ -22,6 +22,9 @@ export default async function PurchaseIntakePage() {
   const { role, profile } = await getSessionContext();
   if (!role) redirect('/login');
 
+  // finance is price-visible but not write-capable (submitIntakeItems + RLS
+  // would reject the submit) — send them to the workspace instead of a dead end.
+  if (role === 'finance') redirect('/purchase');
   const allowed = new Set<string>([...INTAKE_ROLES, ...PRICE_VISIBLE_ROLES]);
   if (!allowed.has(role)) redirect('/dashboard');
 

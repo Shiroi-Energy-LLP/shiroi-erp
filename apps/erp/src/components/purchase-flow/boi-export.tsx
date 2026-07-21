@@ -108,7 +108,12 @@ function computeGrandTotal(rows: BoiLineRow[]): number {
 }
 
 function csvEscape(value: string): string {
-  return /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+  // Neutralize spreadsheet formula injection: prefix ' when a cell leads with
+  // =, +, @ (or a non-numeric -), so Excel treats it as text, not a formula.
+  const risky =
+    /^[=+@]/.test(value) || (value.startsWith('-') && !/^-\d+(\.\d+)?$/.test(value));
+  const safe = risky ? `'${value}` : value;
+  return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
 function buildCsv(
