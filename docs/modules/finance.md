@@ -38,6 +38,28 @@ Direction inverted vs the 2026-04 design: **Zoho Books is the inbound source of 
 - **Admin:** `/settings/zoho-sync` (founder + finance) — watermarks, run history, voucher-push health, manual trigger (`triggerZohoSync` action).
 - **Go-live (pending Vivek):** Zoho self-client creds → `scripts/set-zoho-edge-secrets.ts` (**set `ZOHO_PULL_SINCE=2026-04-17`** — payments grain caveat, spec §4) → deploy function → activate workflow 63. n8n workflow 62 (old outbound scaffold) deleted.
 
+## Payment Dashboard supersede (July 25, 2026 — mig 214, dev only)
+
+Prem's `Payment Dashboard.xlsx` (Drive) was applied as the authoritative source for the 26 live
+projects it maps to 1:1. `projects.contracted_value` set to the sheet PO; the received-total
+difference posted as **one dated counter-entry per project** (`PD-ADJ-20260725-*`, `source='erp'`).
+No `UPDATE`/`DELETE` on `customer_payments` — Tier-3 holds and every adjustment is reversible by
+deleting its `PD-ADJ-*` row.
+
+- **Scope guard:** the sheet is 35 projects / ₹2.81 Cr against a ledger of 501 projects / ₹70.4 Cr
+  (1,078 `zoho_import` payments back to 2023). A literal "replace everything" was rejected; the
+  other 466 projects are untouched.
+- **Net effect:** 20 counter-entries, −₹3,30,189 net (+₹24.1L added, −₹27.4L reversed).
+- **Re-run safety:** the migration `RAISE EXCEPTION`s unless the name mapping resolves to exactly
+  26 unique active projects, so it fails closed rather than half-applying.
+- **9 rows unapplied** (ambiguous / unmatched / soft-deleted) and 7 material reversals worth a second
+  look — both tabulated in `docs/reviews/2026-07-25-payment-dashboard-supersede.md`.
+
+Gotcha worth remembering: matching a spreadsheet to projects on `customer_name` is unreliable here —
+`project_name` is NULL for most rows, duplicate projects exist (`Mr Rajan Babu` twice), and spellings
+drift (`Sri Suprapatham`/`Sri Suprabatham`, `Karan`/`Kiran Vellore`). Always verify against
+`contracted_value` before posting money.
+
 ## Overview
 
 The finance module owns every rupee in and out of Shiroi — customer invoicing with GST splits and FY-aware document numbering, Tier-3 immutable customer payment records that cascade consultant commission payouts, vendor payment tracking with MSME 45-day statutory SLA alerts, and a PM-facing site-expense voucher approval queue. Payment follow-up tasks are materialised automatically by DB triggers per proposal milestone SLA, escalated hourly via `pg_cron`, and surfaced as a dedicated tab in `/payments`. All dashboard aggregations run through SQL RPCs (never JS `.reduce()` over money rows) and are wrapped in `unstable_cache` for the founder dashboard hot path.
