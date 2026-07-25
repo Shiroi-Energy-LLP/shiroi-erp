@@ -83,6 +83,13 @@ export async function createServiceTicket(input: {
   issueType: string;
   severity: string;
   assignedTo?: string;
+  /** Defaults to 'open'. Creating straight into resolved/closed stamps the resolution fields. */
+  status?: TicketStatus;
+  /** "Done By" — explicit employee attribution. */
+  doneBy?: string | null;
+  serviceAmount?: number;
+  /** Back-dated creation, 'YYYY-MM-DD'. Defaults to now. */
+  createdAt?: string;
 }): Promise<ActionResult<{ ticketId: string; ticketNumber: string }>> {
   const op = '[createServiceTicket]';
   console.log(`${op} Starting: ${input.title}`);
@@ -117,6 +124,8 @@ export async function createServiceTicket(input: {
     : 1;
   const ticketNumber = `TKT-${String(nextNum).padStart(4, '0')}`;
 
+  const status: TicketStatus = input.status ?? 'open';
+
   const insert: ServiceTicketInsert = {
     project_id: input.projectId || null,
     project_name_custom: input.projectId ? null : (input.projectNameCustom?.trim() ?? null),
@@ -124,12 +133,25 @@ export async function createServiceTicket(input: {
     description: input.description,
     issue_type: input.issueType,
     severity: input.severity,
-    status: 'open',
+    status,
     ticket_number: ticketNumber,
     raised_by_employee: employee.id,
     assigned_to: input.assignedTo || null,
+    resolved_by: input.doneBy || null,
+    service_amount: input.serviceAmount ?? 0,
     sla_hours: slaHoursForSeverity(input.severity),
   };
+
+  // Back-dated entry — service work is routinely logged days after the visit.
+  // Stamped at IST midday (06:30 UTC) so the UTC-stored value never renders as
+  // the previous day in Asia/Kolkata.
+  if (input.createdAt) insert.created_at = `${input.createdAt}T06:30:00.000Z`;
+
+  // Created straight into resolved/closed: apply the same stamping the toggle
+  // uses, or the row sits closed with a null resolved_at.
+  const stamp: ServiceTicketUpdate = {};
+  applyStatusTransition(stamp, status, employee.id, input.doneBy || null);
+  Object.assign(insert, stamp);
 
   const { data, error } = await supabase
     .from('om_service_tickets')
@@ -147,6 +169,9 @@ export async function createServiceTicket(input: {
   revalidatePath('/om/tickets');
 
   void emitOmTicketCreated(data.id);
+  // Logged as already-done: downstream resolution consumers would otherwise
+  // never see this ticket, since no status transition will ever fire.
+  if (status === 'resolved' || status === 'closed') void emitOmTicketResolved(data.id);
 
   return ok({ ticketId: data.id, ticketNumber: data.ticket_number });
 }
@@ -215,6 +240,8 @@ export async function updateServiceTicket(input: {
   severity?: string;
   status?: TicketStatus;
   assignedTo?: string;
+  /** "Done By" — explicit employee attribution. `null` clears, `undefined` leaves as-is. */
+  doneBy?: string | null;
   serviceAmount?: number;
   resolutionNotes?: string;
 }): Promise<ActionResult<void>> {
@@ -228,7 +255,7 @@ export async function updateServiceTicket(input: {
   // Load current row so the system-event log can summarise what actually changed.
   const { data: current, error: loadError } = await supabase
     .from('om_service_tickets')
-    .select('title, issue_type, severity, status, assigned_to, service_amount, project_id, project_name_custom')
+    .select('title, issue_type, severity, status, assigned_to, resolved_by, service_amount, project_id, project_name_custom')
     .eq('id', input.ticketId)
     .maybeSingle();
   if (loadError) {
@@ -279,9 +306,16 @@ export async function updateServiceTicket(input: {
   // Status edits go through the same resolution-stamping logic as the inline toggle.
   let statusChanged = false;
   if (input.status !== undefined && input.status !== current.status) {
-    applyStatusTransition(updateData, input.status, await getCurrentEmployeeId());
+    applyStatusTransition(updateData, input.status, await getCurrentEmployeeId(), current.resolved_by ?? null);
     statusChanged = true;
     changes.push(`status → ${STATUS_LABELS[input.status] ?? input.status}`);
+  }
+
+  // Applied after the transition so an explicit "Done By" always beats the
+  // fill-if-empty auto-stamp above.
+  if (input.doneBy !== undefined && (input.doneBy || null) !== (current.resolved_by ?? null)) {
+    updateData.resolved_by = input.doneBy || null;
+    changes.push(input.doneBy ? 'done by' : 'done by cleared');
   }
 
   const { error } = await supabase
@@ -319,20 +353,22 @@ function applyStatusTransition(
   updateData: ServiceTicketUpdate,
   newStatus: TicketStatus,
   actorId: string | null,
+  currentResolvedBy: string | null,
 ): void {
   updateData.status = newStatus;
   const nowIso = new Date().toISOString();
-  if (newStatus === 'resolved') {
+  if (newStatus === 'resolved' || newStatus === 'closed') {
     updateData.resolved_at = nowIso;
-    if (actorId) updateData.resolved_by = actorId;
-  } else if (newStatus === 'closed') {
-    updateData.closed_at = nowIso;
-    updateData.resolved_at = nowIso;
-    if (actorId) updateData.resolved_by = actorId;
+    if (newStatus === 'closed') updateData.closed_at = nowIso;
+    // Fill-if-empty: "Done By" is an explicit picker now, so the actor is only a
+    // fallback for tickets nobody has attributed yet. Overwriting here would put
+    // the admin who clicked the toggle over the technician who did the work.
+    if (actorId && !currentResolvedBy) updateData.resolved_by = actorId;
   } else if (newStatus === 'open') {
     updateData.resolved_at = null;
-    updateData.resolved_by = null;
     updateData.closed_at = null;
+    // resolved_by deliberately preserved — reopening shouldn't erase a
+    // deliberately entered technician. Clear it via the Done By picker instead.
   }
 }
 
@@ -348,8 +384,17 @@ export async function updateTicketStatus(
   if (!user) return err('Not authenticated');
 
   const actorId = await getCurrentEmployeeId();
+
+  // Needed so the auto-stamp stays fill-if-empty and never clobbers an
+  // explicitly picked "Done By".
+  const { data: current } = await supabase
+    .from('om_service_tickets')
+    .select('resolved_by')
+    .eq('id', ticketId)
+    .maybeSingle();
+
   const updateData: ServiceTicketUpdate = {};
-  applyStatusTransition(updateData, newStatus, actorId);
+  applyStatusTransition(updateData, newStatus, actorId, current?.resolved_by ?? null);
 
   const { error } = await supabase
     .from('om_service_tickets')

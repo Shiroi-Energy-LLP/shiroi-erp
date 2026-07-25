@@ -16,6 +16,7 @@ interface TicketEditPanelProps {
     severity: string;
     status: string;
     assigned_to: string | null;
+    resolved_by: string | null;
     service_amount: number;
     resolution_notes: string | null;
     project_id: string | null;
@@ -58,6 +59,7 @@ export function TicketEditPanel({ ticket, employees, projects }: TicketEditPanel
       severity: form.get('severity') as string,
       status: form.get('status') as TicketStatus,
       assignedTo: form.get('assignedTo') as string || undefined,
+      doneBy: (form.get('doneBy') as string) || null,
       serviceAmount: serviceAmountStr ? parseFloat(serviceAmountStr) : 0,
       resolutionNotes: form.get('resolutionNotes') as string || undefined,
     });
@@ -138,18 +140,29 @@ export function TicketEditPanel({ ticket, employees, projects }: TicketEditPanel
           </Select>
         </div>
       </div>
-      <div>
-        <Label htmlFor="serviceAmount" className="text-xs">Service Amount (₹)</Label>
-        <Input
-          id="serviceAmount"
-          name="serviceAmount"
-          type="number"
-          step="0.01"
-          min="0"
-          defaultValue={ticket.service_amount || ''}
-          placeholder="0.00"
-          className="h-8 text-xs"
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor="doneBy" className="text-xs">Done By</Label>
+          <Select id="doneBy" name="doneBy" defaultValue={ticket.resolved_by ?? ''} className="h-8 text-xs">
+            <option value="">— Not set —</option>
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="serviceAmount" className="text-xs">Service Amount (₹)</Label>
+          <Input
+            id="serviceAmount"
+            name="serviceAmount"
+            type="number"
+            step="0.01"
+            min="0"
+            defaultValue={ticket.service_amount || ''}
+            placeholder="0.00"
+            className="h-8 text-xs"
+          />
+        </div>
       </div>
       <div>
         <Label htmlFor="resolutionNotes" className="text-xs">Resolution Notes</Label>

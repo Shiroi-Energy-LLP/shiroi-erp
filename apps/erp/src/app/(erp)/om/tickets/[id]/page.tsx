@@ -122,6 +122,7 @@ export default async function TicketDetailPage({ params }: PageProps) {
                   severity: ticket.severity,
                   status: ticket.status,
                   assigned_to: ticket.assigned_to,
+                  resolved_by: ticket.resolved_by,
                   service_amount: ticket.service_amount ?? 0,
                   resolution_notes: ticket.resolution_notes ?? null,
                   project_id: ticket.project_id,

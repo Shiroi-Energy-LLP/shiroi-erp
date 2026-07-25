@@ -3,7 +3,6 @@ import { getAllTickets, getServiceTicketKpis } from '@/lib/service-ticket-action
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
 import { formatDate, formatINR as formatINRBase } from '@repo/ui/formatters';
 import { CreateTicketDialog } from '@/components/om/create-ticket-dialog';
-import { EditTicketDialog } from '@/components/om/edit-ticket-dialog';
 import { DeleteTicketButton } from '@/components/om/delete-ticket-button';
 import { TicketStatusToggle } from '@/components/om/ticket-status-toggle';
 import { TicketProjectFilter } from '@/components/om/ticket-project-filter';
@@ -13,7 +12,7 @@ import {
   Button,
 } from '@repo/ui';
 import { ListPageShell } from '@/components/list-page-shell';
-import { Wrench } from 'lucide-react';
+import { Wrench, Pencil } from 'lucide-react';
 import { SearchInput } from '@/components/search-input';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
@@ -253,19 +252,14 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                         {/* Actions */}
                         <td className="px-2 py-1.5 whitespace-nowrap">
                           <div className="flex gap-0.5">
-                            <EditTicketDialog
-                              ticket={{
-                                id: ticket.id,
-                                title: ticket.title,
-                                description: ticket.description ?? '',
-                                issue_type: ticket.issue_type,
-                                severity: ticket.severity,
-                                assigned_to: ticket.assigned_to,
-                                service_amount: ticket.service_amount ?? 0,
-                                resolution_notes: ticket.resolution_notes ?? null,
-                              }}
-                              employees={employees}
-                            />
+                            {/* Edit opens the detail page — the only all-fields edit surface. */}
+                            <Link
+                              href={`/om/tickets/${ticket.id}`}
+                              className="inline-flex h-6 w-6 items-center justify-center rounded text-n-500 hover:bg-n-100 hover:text-n-800"
+                              title="Edit ticket"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Link>
                             <DeleteTicketButton ticketId={ticket.id} ticketTitle={ticket.title} />
                           </div>
                         </td>
