@@ -122,8 +122,26 @@ The AMC list page runs on `text-[9px]`/`text-[10px]`. List and detail pages move
 - **#21** client components import only from actions / client-safe constants.
 - **#24** no writes during render.
 
+## Addendum — 4g. om_technician write access (migration 220, approved 2026-07-30)
+
+Raised as out-of-scope during implementation, then approved by Vivek in the same session.
+
+`om_visit_schedules.om_schedules_write` and `om_contracts.om_contracts_write` were both `FOR ALL` limited to founder + project_manager (mig 005d). The O&M technician — the role that performs the visits — could open every AMC screen and change nothing, and because RLS rejects a write by affecting 0 rows rather than raising, the UI reported success. Affected: visit status, reschedule, assign engineer, work-done/issues/resolution/feedback/notes, report upload, contract Open/Closed toggle, Create AMC, close-out. Mig 218 compounded it by granting DELETE on a visit the same role could not edit.
+
+Fix: realign both tables with this module's existing convention (`tickets_update` on `om_service_tickets` = founder + project_manager + om_technician), replacing each `FOR ALL` with explicit INSERT / UPDATE / DELETE policies. A `FOR ALL` policy carrying only `USING` supplies no `WITH CHECK`, which makes its INSERT path read as an accident rather than a decision. `om_contracts` gets no hard DELETE policy — `deleteAmc()` is a soft close (`status → 'cancelled'`), covered by UPDATE.
+
+Two defects in mig 218 fixed at the same time:
+
+1. Its three `om_visit_events` policies were copied from mig 199 and use a bare `auth.uid()` inside the subquery, re-introducing 3 of the `auth_rls_initplan` warnings that mig 206 had cleared repo-wide (185 → 0). Now `get_my_role()`; advisor back to **0**.
+2. `om_visit_events.created_by` had no covering index despite being joined on every timeline read (`author:employees!om_visit_events_created_by_fkey`). Added (NEVER-DO #17).
+
+**Verification** — the policy change was proved, not assumed. Dev has no `om_technician` profile, so a rolled-back transaction temporarily promoted a profile, set `request.jwt.claims`, switched to the `authenticated` role so RLS applied, and attempted the three writes: visit UPDATE **1 row**, contract UPDATE **1 row**, `om_visit_events` INSERT **1 row**. Rollback confirmed clean (0 leftover om_technician profiles, 0 probe rows).
+
+**Generalisable lesson:** a read policy that includes a role while the write policy excludes it yields a screen that looks editable and silently discards edits. Worth auditing other modules for the same read/write asymmetry.
+
 ## Out of scope
 
 - Renaming the `/purchase/projects` route.
 - Storing original report filenames (would need a `report_file_names` column; basename is sufficient for now).
 - Any prod migration — dev only, per the standing rule.
+- Auditing other modules for the same read/write policy asymmetry (flagged above; not done here).

@@ -31,7 +31,10 @@ O&M is the post-handover side of the system — everything that happens after a 
   - One `AmcVisitCard` per visit — expandable: editable details (date, status, engineer, work done, issues, resolution, feedback, notes), **Service Reports** (view + download via signed URL, plus upload), **Work Activity** timeline, and **per-visit delete**
   - Work Activity = `om_visit_events` (mig 218), the per-visit twin of `om_ticket_events`. `created_by` FKs **`employees(id)`** — resolve via `getCurrentEmployeeId()`, never `auth.uid()`
   - Report filenames aren't stored (`report_file_paths` is paths only), so the UI labels each file with its path basename
-  - Delete roles widened to founder + om_technician + project_manager (`AMC_DELETE_ROLES` in `amc-constants.ts`); mig 218 adds the matching `om_schedules_delete` RLS policy, since the pre-existing `om_schedules_write` FOR ALL policy covered founder + PM only
+  - Delete roles widened to founder + om_technician + project_manager (`AMC_DELETE_ROLES` in `amc-constants.ts`)
+  - **2026-07-30 (mig 220) — om_technician write access.** `om_visit_schedules.om_schedules_write` and `om_contracts.om_contracts_write` were both `FOR ALL` limited to founder + project_manager (mig 005d), so the role that actually performs AMC visits could open every AMC screen and change nothing. Every write failed **silently** — RLS rejects by returning 0 rows affected, not an error, so the UI reported success: visit status dropdown, reschedule, assign engineer, work-done/issues/resolution/feedback/notes, report upload (`report_file_paths`), the contract Open/Closed toggle, Create AMC, and close-out. Mig 220 realigns both tables with this module's own convention (`tickets_update` = founder + PM + om_technician) and replaces `FOR ALL` with explicit INSERT/UPDATE/DELETE policies — a `FOR ALL` policy carrying only `USING` supplies no `WITH CHECK`, so its INSERT behaviour reads as an accident. Contracts get no hard DELETE policy: `deleteAmc()` is a soft close (`status → 'cancelled'`), which UPDATE covers.
+  - **Watch for this pattern elsewhere:** a read policy that includes a role while the write policy does not produces a screen that looks editable and silently discards edits. Verify with an impersonation probe, not by eyeballing the UI.
+  - Policy predicates use the STABLE SECURITY DEFINER `get_my_role()` helper, never a bare `auth.uid()` subquery — mig 206 wrapped these repo-wide to kill 185 `auth_rls_initplan` warnings, and mig 218 had accidentally re-introduced 3 of them (mig 220 fixes; advisor back to 0)
 - `/om/plant-monitoring` — credential storage + future inverter live data
   - 3 summary cards (total, per-brand, missing credentials)
   - Sticky filter bar (project combobox / brand / search) — project filter is a searchable combobox, not a plain select
@@ -261,6 +264,7 @@ Eight n8n workflows (`infrastructure/n8n/workflows/40-customer-proposal-sent.jso
 - Migration 128 (`bom_actual_vs_budgetary` + `get_om_profitability` RPC + `learning_modules` + `learning_progress` + `onboarding_progress`)
 - Migration 199 (`om_ticket_events` timeline + ticket attachment arrays + ticket DELETE policy + `get_service_ticket_kpis()`)
 - Migration 218 (`om_visit_events` per-visit Work Activity + `om_schedules_delete` policy)
+- Migration 220 (om_technician write access on `om_visit_schedules` + `om_contracts`; `FOR ALL` → explicit per-command policies; `get_my_role()` initplan fix; `om_visit_events.created_by` index)
 - `docs/superpowers/specs/2026-07-30-purchase-bom-ticket-amc-fixes-design.md` (AMC detail page, per-visit activity/delete, BOM wrap-text, formatDate timestamp fix)
 - `docs/superpowers/specs/2026-04-16-plant-monitoring-design.md`
 - `docs/superpowers/plans/2026-04-16-plant-monitoring.md`
