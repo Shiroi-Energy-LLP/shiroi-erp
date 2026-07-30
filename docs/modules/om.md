@@ -22,9 +22,16 @@ O&M is the post-handover side of the system — everything that happens after a 
   - **Detail page `/om/tickets/[id]` (2026-06-27, mig 199):** opened from the Title. Header (ticket #, status toggle, meta grid incl. severity/SLA/done-by/amount) + hard-delete. Three sections: (1) **all-fields edit panel** (`TicketEditPanel` → `updateServiceTicket`, now also accepts project reassignment + status, logs a system event summarising changed fields); (2) **Supporting Documents** — ticket-level multi-file upload (`attachment_paths`/`attachment_names TEXT[]` on `om_service_tickets`); (3) **Work Progress & Activity** — a combined reverse-chron timeline from `om_ticket_events` (`entry_type ∈ note|system`): manual notes (each with an optional single file) interleaved with auto system events (create / status change / edits / doc add). Composer at top; system rows are non-deletable, manual notes are. All mutations `revalidatePath` both `/om/tickets` and `/om/tickets/[id]` so list + detail stay in sync. Files live in `project-files` (client-side upload + short-lived signed-URL view via `AttachmentLink`). Shared option lists/label maps live in `lib/ticket-constants.ts` (client-safe, no server imports — NEVER-DO #21).
   - **2026-06-16 (mig 183):** closed/resolved rows are no longer struck-through/dimmed — the inline status badge already reads "Closed" (the `line-through`/`opacity-50` was removed). Tickets can be raised against a **free-text project name** (Service/AMC/misc not in the projects list): `project_id` is nullable with a `project_name_custom` fallback (CHECK one-of-two); the create dialog uses `ProjectCombobox.allowCustom` and the list shows the custom label when there's no linked project.
 - `/om/amc` — contract-centric AMC table
-  - 9 columns: Project Name clickable, Category Free/Paid, Scheduled Visits X/Y expandable, Status Open/Closed toggle, Next AMC Date, Completed Date, Notes, Actions, Report
+  - 9 columns: Project Name clickable, Category Free/Paid, **Scheduled Visits X/Y → links to `/om/amc/[id]`**, Status Open/Closed toggle, Next AMC Date, Completed Date, Amount (paid AMCs), Notes, Actions
   - Create AMC: Free = auto-creates 3 visits, Paid = prompts duration/visits/amount; project picked via `ProjectCombobox` (2026-06-11 — keeps the Free→commissioned-only list switch + commissioned-date autofill)
-  - `AmcVisitTracker` per-contract expandable sub-table with inline status + edit panel (work done, issues, resolution, customer feedback, report file upload to `project-files` bucket)
+  - Project **filter** is a searchable combobox (`AmcProjectFilter`, 2026-07-30) — was a plain `<select>` of every AMC project
+  - **2026-07-30:** Completed Date read `Invalid Date` — it comes from `om_visit_schedules.completed_at` (TIMESTAMPTZ) but went through `formatDate()`, whose date-only `+T00:00:00+05:30` suffix makes a timestamp unparseable. `formatDate()` now detects a time component and delegates to `formatDateFromTimestamp()`, so ~25 latent sites across the app were fixed at once. Prefer `formatDateFromTimestamp()` explicitly for timestamp columns.
+- `/om/amc/[id]` — AMC contract detail (2026-07-30, mig 218); replaced the old `AmcVisitTracker` inline expander
+  - Header: contract number, project link, category badge, status toggle, start/end, visits completed, next visit, completed date, duration, and **Service Amount (`annual_value`) for `paid_amc` only**
+  - One `AmcVisitCard` per visit — expandable: editable details (date, status, engineer, work done, issues, resolution, feedback, notes), **Service Reports** (view + download via signed URL, plus upload), **Work Activity** timeline, and **per-visit delete**
+  - Work Activity = `om_visit_events` (mig 218), the per-visit twin of `om_ticket_events`. `created_by` FKs **`employees(id)`** — resolve via `getCurrentEmployeeId()`, never `auth.uid()`
+  - Report filenames aren't stored (`report_file_paths` is paths only), so the UI labels each file with its path basename
+  - Delete roles widened to founder + om_technician + project_manager (`AMC_DELETE_ROLES` in `amc-constants.ts`); mig 218 adds the matching `om_schedules_delete` RLS policy, since the pre-existing `om_schedules_write` FOR ALL policy covered founder + PM only
 - `/om/plant-monitoring` — credential storage + future inverter live data
   - 3 summary cards (total, per-brand, missing credentials)
   - Sticky filter bar (project combobox / brand / search) — project filter is a searchable combobox, not a plain select
@@ -47,7 +54,7 @@ O&M is the post-handover side of the system — everything that happens after a 
 
 ## Key Business Rules
 
-- **Ticket numbering (rewritten 2026-07-30, mig 215)**: `TKT-0001` style, generated **only** by the `om_service_tickets.ticket_number` column DEFAULT → `next_ticket_number()` (sequence-backed, atomic; same pattern as `next_boi_po_number()`). **Never pass `ticket_number` from application or trigger code.** Until mig 215 four separate generators competed: the IR triggers minted `TKT-<project_number>-IR-<YYYYMMDD>` (no serial, so two failing readings on one project-day collided and aborted the parent report save), `createServiceTicket` derived the next number from `ticket_number.split('-').pop()` seeded by `ORDER BY created_at DESC LIMIT 1`, and mig 050 used `CAST(SPLIT_PART(ticket_number,'-',2) AS INT)`. The IR row `TKT-SHIROI/PROJ/2025-26/0036-IR-20260411` broke all three at once — the TS path counted up date-shaped integers from it (`TKT-20260412`…`TKT-20260426`), the mig-050 cast raised `invalid_text_representation` on every run, and back-dated tickets (fixed `06:30Z` stamp → identical `created_at`, non-deterministic `LIMIT 1` tie-break) made the TS path re-emit a live number → `duplicate key value violates unique constraint om_service_tickets_ticket_number_key`. Mig 215 renumbered the 15 existing tickets chronologically to `TKT-0001`..`TKT-0015`; numbers already sent via WhatsApp/n8n or indexed in RAG no longer resolve (re-run `scripts/rag/ingest-service-tickets.ts`).
+- **Ticket numbering (rewritten 2026-07-30, mig 215)**: `TKT-0001` style, generated **only** by the `om_service_tickets.ticket_number` column DEFAULT → `next_ticket_number()` (sequence-backed, atomic; same pattern as `next_boi_po_number()`). **Never pass `ticket_number` from application or trigger code.** Until mig 215 **five** separate generators competed: the IR triggers minted `TKT-<project_number>-IR-<YYYYMMDD>` (no serial, so two failing readings on one project-day collided and aborted the parent report save), `createServiceTicket` derived the next number from `ticket_number.split('-').pop()` seeded by `ORDER BY created_at DESC LIMIT 1`, mig 050 used `CAST(SPLIT_PART(ticket_number,'-',2) AS INT)`, and the AI anomaly auto-ticket path (`lib/ai/anomaly-narrator.ts`) had its own copy of the TS logic — it survived the first pass of the fix and would have collided with the sequence on its very next run. The IR row `TKT-SHIROI/PROJ/2025-26/0036-IR-20260411` broke all three at once — the TS path counted up date-shaped integers from it (`TKT-20260412`…`TKT-20260426`), the mig-050 cast raised `invalid_text_representation` on every run, and back-dated tickets (fixed `06:30Z` stamp → identical `created_at`, non-deterministic `LIMIT 1` tie-break) made the TS path re-emit a live number → `duplicate key value violates unique constraint om_service_tickets_ticket_number_key`. Mig 215 renumbered the 15 existing tickets chronologically to `TKT-0001`..`TKT-0015`; numbers already sent out via WhatsApp/n8n no longer resolve to the same ticket. No RAG re-ingest was needed — `rag_chunks` was verified empty (0 rows) at the time of the renumber.
 - **SLA**: critical severity = 4h (IR test failure creates auto-ticket).
 - **Service ticket auto-creation**:
   - IR reading < 0.5 MΩ on commissioning → DB trigger creates critical ticket (4h SLA). Fires only on a transition into the sub-threshold state; since mig 215 dropped the number-based accidental dedup, a genuine re-transition on the same day now creates a second ticket instead of aborting the parent report save.
@@ -117,13 +124,20 @@ O&M is the post-handover side of the system — everything that happens after a 
 apps/erp/src/app/(erp)/om/
   visits/page.tsx
   tickets/page.tsx
+  tickets/[id]/page.tsx
   amc/page.tsx
+  amc/[id]/page.tsx            (contract detail — visit cards, reports, work activity)
   plant-monitoring/page.tsx
 
 apps/erp/src/lib/
   amc-actions.ts               (createAmc, updateVisitStatus, rescheduleVisit,
-                                assignVisitEngineer, uploadVisitReport — 8 actions total)
+                                assignVisitEngineer, uploadVisitReport, deleteAmcVisit,
+                                getAmcContractDetail, getVisitEvents/addVisitEvent/deleteVisitEvent)
+  amc-constants.ts             (client-safe: VISIT_STATUS_OPTIONS, visitStatusVariant,
+                                AMC_DELETE_ROLES — NEVER-DO #21)
   amc-queries.ts               (getAllAmcData with client-side visit-count grouping)
+  storage-client.ts            (browser-side Storage upload + signed-URL helpers; keeps the
+                                browser Supabase client out of app/ and components/ per R15)
   service-ticket-actions.ts    (updateServiceTicket, updateTicketStatus, deleteServiceTicket)
   ticket-queries.ts            (getAllTickets paginated)
   plant-monitoring-actions.ts + plant-monitoring-queries.ts
@@ -133,7 +147,9 @@ apps/erp/src/components/forms/
 
 apps/erp/src/components/om/
   ticket-status-toggle.tsx, edit-ticket-dialog.tsx
-  amc-visit-tracker.tsx, amc-status-toggle.tsx, create-amc-dialog.tsx
+  amc-visit-card.tsx, amc-visit-timeline.tsx, amc-project-filter.tsx
+  amc-status-toggle.tsx, create-amc-dialog.tsx, delete-amc-button.tsx
+  (amc-visit-tracker.tsx was deleted 2026-07-30 — superseded by /om/amc/[id])
   plant-monitoring-password-cell.tsx   (eye toggle + 30s auto-remask + copy)
   project-filter-combobox.tsx          (URL-aware wrapper around ProjectCombobox for plant-monitoring filter bar)
 
@@ -243,6 +259,9 @@ Eight n8n workflows (`infrastructure/n8n/workflows/40-customer-proposal-sent.jso
 - Migration 126 (`claimed_at` + `processed_at` + `retry_count` on `zoho_sync_queue`)
 - Migration 127 (`milestone_photos` + `haversine_distance_m()` + `customer_outreach_queue`)
 - Migration 128 (`bom_actual_vs_budgetary` + `get_om_profitability` RPC + `learning_modules` + `learning_progress` + `onboarding_progress`)
+- Migration 199 (`om_ticket_events` timeline + ticket attachment arrays + ticket DELETE policy + `get_service_ticket_kpis()`)
+- Migration 218 (`om_visit_events` per-visit Work Activity + `om_schedules_delete` policy)
+- `docs/superpowers/specs/2026-07-30-purchase-bom-ticket-amc-fixes-design.md` (AMC detail page, per-visit activity/delete, BOM wrap-text, formatDate timestamp fix)
 - `docs/superpowers/specs/2026-04-16-plant-monitoring-design.md`
 - `docs/superpowers/plans/2026-04-16-plant-monitoring.md`
 - `docs/superpowers/specs/2026-04-17-plant-monitoring-project-combobox-design.md` (searchable project picker, no migration)
