@@ -2450,7 +2450,7 @@ export type Database = {
         Insert: {
           created_at?: string
           dc_date?: string
-          dc_number: string
+          dc_number?: string
           delivered_at?: string | null
           dispatch_from?: string | null
           dispatch_to?: string | null
@@ -4755,54 +4755,6 @@ export type Database = {
           }
         ]
       }
-      inverter_readings_2026_04: {
-        Row: {
-          ac_current_a: number | null
-          ac_frequency_hz: number | null
-          ac_power_kw: number | null
-          ac_voltage_v: number | null
-          dc_power_kw: number | null
-          energy_today_kwh: number | null
-          energy_total_kwh: number | null
-          error_code: string | null
-          inverter_id: string
-          raw_payload: Json | null
-          recorded_at: string
-          status: string | null
-          temperature_c: number | null
-        }
-        Insert: {
-          ac_current_a?: number | null
-          ac_frequency_hz?: number | null
-          ac_power_kw?: number | null
-          ac_voltage_v?: number | null
-          dc_power_kw?: number | null
-          energy_today_kwh?: number | null
-          energy_total_kwh?: number | null
-          error_code?: string | null
-          inverter_id: string
-          raw_payload?: Json | null
-          recorded_at: string
-          status?: string | null
-          temperature_c?: number | null
-        }
-        Update: {
-          ac_current_a?: number | null
-          ac_frequency_hz?: number | null
-          ac_power_kw?: number | null
-          ac_voltage_v?: number | null
-          dc_power_kw?: number | null
-          energy_today_kwh?: number | null
-          energy_total_kwh?: number | null
-          error_code?: string | null
-          inverter_id?: string
-          raw_payload?: Json | null
-          recorded_at?: string
-          status?: string | null
-          temperature_c?: number | null
-        }
-        Relationships: []
-      }
       inverter_readings_2026_05: {
         Row: {
           ac_current_a: number | null
@@ -5078,33 +5030,6 @@ export type Database = {
         ]
       }
       inverter_string_readings: {
-        Row: {
-          current_a: number | null
-          inverter_id: string
-          power_kw: number | null
-          recorded_at: string
-          string_number: number
-          voltage_v: number | null
-        }
-        Insert: {
-          current_a?: number | null
-          inverter_id: string
-          power_kw?: number | null
-          recorded_at: string
-          string_number: number
-          voltage_v?: number | null
-        }
-        Update: {
-          current_a?: number | null
-          inverter_id?: string
-          power_kw?: number | null
-          recorded_at?: string
-          string_number?: number
-          voltage_v?: number | null
-        }
-        Relationships: []
-      }
-      inverter_string_readings_2026_04: {
         Row: {
           current_a: number | null
           inverter_id: string
@@ -9035,7 +8960,7 @@ export type Database = {
           amc_duration_months?: number | null
           annual_value?: number
           auto_renewal?: boolean
-          contract_number: string
+          contract_number?: string
           contract_storage_path?: string | null
           contract_type: string
           created_at?: string
@@ -12698,6 +12623,29 @@ export type Database = {
             foreignKeyName: "project_cost_variances_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+          ]
+      }
+      project_dc_counters: {
+        Row: {
+          last_seq: number
+          project_id: string
+        }
+        Insert: {
+          last_seq?: number
+          project_id: string
+        }
+        Update: {
+          last_seq?: number
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_dc_counters_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
           }
@@ -21731,7 +21679,12 @@ export type Database = {
           score: number
         }[]
       }
+      next_amc_contract_number: {
+        Args: { p_category: string }
+        Returns: string
+      }
       next_boi_po_number: { Args: never; Returns: string }
+      next_dc_number: { Args: { p_project_id: string }; Returns: string }
       next_ticket_number: { Args: never; Returns: string }
       plant_monitoring_detect_brand: {
         Args: { portal_url: string }

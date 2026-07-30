@@ -62,21 +62,13 @@ export async function createAmcSchedule(input: {
 
   if (!employee) return err('Employee profile not found');
 
-  // Generate contract number
-  const { data: lastContract } = await supabase
-    .from('om_contracts')
-    .select('contract_number')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const nextNum = lastContract?.contract_number
-    ? parseInt(lastContract.contract_number.split('-').pop() ?? '0', 10) + 1
-    : 1;
-
   const isFree = input.category === 'free_amc';
-  const prefix = isFree ? 'AMC-FREE' : 'AMC-PAID';
-  const contractNumber = `${prefix}-${String(nextNum).padStart(4, '0')}`;
+
+  // contract_number is deliberately NOT computed here. Mig 221 moved numbering
+  // into the om_contracts_set_contract_number BEFORE INSERT trigger, backed by
+  // one sequence per category. The old read-then-insert generator was not
+  // atomic: two concurrent creates in the same category collided on the unique
+  // index, and two in *different* categories silently shared a serial.
 
   // Calculate dates
   let startDate: string;
@@ -106,7 +98,6 @@ export async function createAmcSchedule(input: {
   const contractInsert: OmContractInsert = {
     project_id: input.projectId,
     created_by: employee.id,
-    contract_number: contractNumber,
     contract_type: isFree ? 'warranty_period' : 'amc_basic',
     amc_category: input.category,
     amc_duration_months: durationMonths,
