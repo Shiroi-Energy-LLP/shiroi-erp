@@ -1,7 +1,16 @@
 import { Suspense } from 'react';
-import { createClient } from '@repo/supabase/server';
-import { listExpenses, getExpenseKPIs, type ListExpensesFilters } from '@/lib/expenses-queries';
+import Link from 'next/link';
+import {
+  listExpenses,
+  getExpenseKPIs,
+  getExpenseFilteredTotals,
+  listSubmitterOptions,
+  listExpenseProjectOptions,
+  type ListExpensesFilters,
+} from '@/lib/expenses-queries';
 import { getActiveCategories } from '@/lib/expense-categories-queries';
+import { getSessionContext } from '@/lib/auth';
+import { canSubmitOnBehalf, EXPENSE_STATUSES, EXPENSE_SCOPES } from '@/lib/expenses-constants';
 import { ExpenseKPIs } from '@/components/expenses/expense-kpis';
 import { ExpenseFilters } from '@/components/expenses/expense-filters';
 import { ExpenseTable } from '@/components/expenses/expense-table';
@@ -16,6 +25,7 @@ interface Props {
     status?: string;
     category?: string;
     submitter?: string;
+    project?: string;
     page?: string;
   }>;
 }
@@ -23,15 +33,13 @@ interface Props {
 export default async function ExpensesPage({ searchParams }: Props) {
   const params = await searchParams;
 
-  const validStatuses = ['submitted', 'verified', 'approved', 'rejected'] as const;
-  type StatusType = typeof validStatuses[number];
-  const statusParam = validStatuses.includes(params.status as StatusType)
+  type StatusType = typeof EXPENSE_STATUSES[number];
+  const statusParam = EXPENSE_STATUSES.includes(params.status as StatusType)
     ? (params.status as StatusType)
     : undefined;
 
-  const validScopes = ['all', 'project', 'general'] as const;
-  type ScopeType = typeof validScopes[number];
-  const scopeParam = validScopes.includes(params.scope as ScopeType)
+  type ScopeType = typeof EXPENSE_SCOPES[number];
+  const scopeParam = EXPENSE_SCOPES.includes(params.scope as ScopeType)
     ? (params.scope as ScopeType)
     : 'all';
 
@@ -41,34 +49,45 @@ export default async function ExpensesPage({ searchParams }: Props) {
     status: statusParam,
     categoryId: params.category,
     submittedBy: params.submitter,
+    projectId: params.project,
     page: params.page ? parseInt(params.page, 10) : 1,
   };
 
-  const supabase = await createClient();
+  // The filtered KPI is only interesting once something narrows the list.
+  const hasFilters = Boolean(
+    params.search || params.project || params.category || params.submitter
+    || params.status || (params.scope && params.scope !== 'all'),
+  );
 
-  const [kpis, { rows, total }, categories] = await Promise.all([
-    getExpenseKPIs(),
-    listExpenses(filters),
-    getActiveCategories(),
-  ]);
+  const [kpis, filteredTotals, { rows }, categories, submitters, projectOpts, session] =
+    await Promise.all([
+      getExpenseKPIs(),
+      getExpenseFilteredTotals(filters),
+      listExpenses(filters),
+      getActiveCategories(),
+      listSubmitterOptions(),
+      listExpenseProjectOptions(),
+      getSessionContext(),
+    ]);
 
-  const { data: submittersData } = await supabase
-    .from('employees')
-    .select('id, full_name')
-    .eq('is_active', true)
-    .order('full_name');
-  const submitters = (submittersData ?? []).map((s) => ({ id: s.id, full_name: s.full_name ?? '' }));
+  const categoryOpts = categories.map((c) => ({ id: c.id, label: c.label }));
+  const currentPage = Math.max(1, filters.page ?? 1);
+  const pageSize = 25; // listExpenses default
+  // The RPC count is exact, so page bounds are trustworthy (the list's own
+  // count is `estimated` per NEVER-DO #13).
+  const lastPage = Math.max(1, Math.ceil(filteredTotals.count / pageSize));
+  const firstRow = filteredTotals.count === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const lastRow = (currentPage - 1) * pageSize + rows.length;
 
-  const { data: projectsData } = await supabase
-    .from('projects')
-    .select('id, project_number, customer_name, project_name')
-    .order('created_at', { ascending: false })
-    .limit(500);
-  const projectOpts = (projectsData ?? []).map((p) => ({
-    id: p.id, project_number: p.project_number, customer_name: p.customer_name, project_name: p.project_name,
-  }));
-
-  const currentPage = filters.page ?? 1;
+  function pageHref(target: number): string {
+    const p = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (key !== 'page' && value) p.set(key, value);
+    }
+    if (target > 1) p.set('page', String(target));
+    const qs = p.toString();
+    return qs ? `/expenses?${qs}` : '/expenses';
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -79,23 +98,40 @@ export default async function ExpensesPage({ searchParams }: Props) {
         </div>
         <AddExpenseDialog
           projects={projectOpts}
-          categories={categories.map((c) => ({ id: c.id, label: c.label }))}
+          categories={categoryOpts}
+          submitters={submitters}
+          canSubmitOnBehalf={canSubmitOnBehalf(session.role)}
         />
       </div>
 
-      <ExpenseKPIs kpis={kpis} />
+      <ExpenseKPIs kpis={kpis} filtered={filteredTotals} hasFilters={hasFilters} />
       <Suspense>
         <ExpenseFilters
-          categories={categories.map((c) => ({ id: c.id, label: c.label }))}
+          categories={categoryOpts}
           submitters={submitters}
+          projects={projectOpts}
         />
       </Suspense>
       <Suspense>
         <ExpenseTable rows={rows} />
       </Suspense>
 
-      <div className="text-xs text-gray-500 mt-2">
-        Showing {rows.length} of {total} · Page {currentPage}
+      <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+        <div>
+          Showing {firstRow}–{lastRow} of {filteredTotals.count} · Page {currentPage} of {lastPage}
+        </div>
+        <div className="flex gap-2">
+          {currentPage > 1 && (
+            <Link href={pageHref(currentPage - 1)} className="text-blue-600 hover:underline">
+              ← Previous
+            </Link>
+          )}
+          {currentPage < lastPage && (
+            <Link href={pageHref(currentPage + 1)} className="text-blue-600 hover:underline">
+              Next →
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );

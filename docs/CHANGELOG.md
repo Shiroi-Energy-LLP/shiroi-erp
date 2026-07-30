@@ -10,6 +10,8 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ## July 2026
 
+- **[2026-07-30]** feat(expenses): list-page rework — spec column order, all cells wrap (no h-scroll), clickable project, project autocomplete filter, filter-aware KPI (exact count + ₹ total), Prev/Next paging, submit-on-behalf for Founder/*_manager/Finance (`entered_by`). Fixed PM seeing 'Submitter —' on 5,114 of 6,283 rows. → mig 217 (dev) · review `2026-07-30-expenses-list-rework.md` · module: expenses
+
 - **[2026-07-30]** fix(om/tickets): "duplicate key … ticket_number_key" on create — four rival number generators poisoned each other (IR-trigger date-shaped numbers → TS `split('-').pop()`; mig-050 `SPLIT_PART` cast threw every run). All four now omit the column: atomic `next_ticket_number()` as the DEFAULT. Renumbered 15 tickets → TKT-0001..0015. → mig 215 (dev) · module: om
 
 - **[2026-07-25]** feat(om/tickets): Service-ticket gap-fill — 10 of a 12-point request already shipped 2026-06-27; closed the 3 real gaps. **Done By** is now an explicit picker (still `resolved_by`; auto-stamp is fill-if-empty, reopen no longer nulls it); row **Edit** → `/om/tickets/[id]`, drifted quick-edit dialog deleted; **Create** reaches header parity (+Status, Done By, Amount, back-dated Created). → no migration · spec `2026-07-25-service-ticket-done-by-and-create-parity-design.md` · module: om

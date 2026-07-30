@@ -1,19 +1,28 @@
+import { cache } from 'react';
 import { createClient } from '@repo/supabase/server';
 import type { Database } from '@repo/types/database';
 import { sanitizeForIlike } from './helpers/sanitize-or-filter';
 import { getSessionContext, getCurrentEmployeeId } from '@/lib/auth';
+import { EXPENSE_STATUSES, EXPENSE_SCOPES } from './expenses-constants';
 
 export type Expense = Database['public']['Tables']['expenses']['Row'];
 export type ExpenseStatus = 'submitted' | 'verified' | 'approved' | 'rejected';
+
+// Re-exported from the no-server-imports constants module so client components
+// can `import type` / read these without dragging the server client in (#21).
+export { EXPENSE_STATUSES, EXPENSE_SCOPES };
 
 export interface ExpenseListRow {
   id: string;
   voucher_number: string;
   project_id: string | null;
   project_number: string | null;
+  project_name: string | null;
   customer_name: string | null;
   submitted_by: string | null;
   submitter_name: string | null;
+  entered_by: string | null;
+  entered_by_name: string | null;
   category_id: string;
   category_label: string | null;
   category_code: string | null;
@@ -27,6 +36,46 @@ export interface ExpenseListRow {
   rejected_at: string | null;
   rejected_reason: string | null;
   document_count: number;
+}
+
+/**
+ * id → full_name for every employee the caller may see on an expense screen,
+ * via the `list_expense_employees` RPC (mig 215 §E).
+ *
+ * Why not a PostgREST embed on `employees`? `expenses_select_own` lets
+ * founder/project_manager/finance read EVERY voucher, but `employees_read` only
+ * lets founder/hr_manager read every employee — so the embed silently returned
+ * NULL and the PM saw 'Submitter —' on 5,114 of the 6,283 rows they can
+ * otherwise see (measured on dev, 2026-07-30). The RPC is a narrow
+ * SECURITY DEFINER projection of id/full_name/is_active only.
+ *
+ * Request-scoped `cache()`: the list page resolves names, filter options and
+ * the on-behalf picker from one round-trip. Identity is NOT cached here — this
+ * is a name lookup, not a session (NEVER-DO #22).
+ */
+const getExpenseEmployeeDirectory = cache(async (): Promise<
+  Array<{ id: string; full_name: string; is_active: boolean }>
+> => {
+  const op = '[getExpenseEmployeeDirectory]';
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('list_expense_employees');
+  if (error) {
+    console.error(`${op} failed`, { error, timestamp: new Date().toISOString() });
+    return [];
+  }
+  if (!data) return [];
+  return data.map((e) => ({ id: e.id, full_name: e.full_name ?? '', is_active: e.is_active }));
+});
+
+const getExpenseEmployeeNames = cache(async (): Promise<Map<string, string>> => {
+  const directory = await getExpenseEmployeeDirectory();
+  return new Map(directory.map((e) => [e.id, e.full_name]));
+});
+
+/** Resolve an employees.id to a display name, or null when unknown/unset. */
+function employeeName(names: Map<string, string>, id: string | null): string | null {
+  if (!id) return null;
+  return names.get(id) || null;
 }
 
 export interface ListExpensesFilters {
@@ -56,11 +105,10 @@ export async function listExpenses(filters: ListExpensesFilters = {}): Promise<{
     .from('expenses')
     .select(
       `
-      id, voucher_number, project_id, submitted_by, category_id, description,
+      id, voucher_number, project_id, submitted_by, entered_by, category_id, description,
       amount, expense_date, status, submitted_at, verified_at, approved_at,
       rejected_at, rejected_reason,
-      projects:projects(project_number, customer_name),
-      submitter:employees!expenses_submitted_by_fkey(full_name),
+      projects:projects(project_number, project_name, customer_name),
       category:expense_categories(label, code),
       documents:expense_documents(id)
     `,
@@ -85,15 +133,14 @@ export async function listExpenses(filters: ListExpensesFilters = {}): Promise<{
     );
   }
 
-  const { data, error, count } = await query;
+  const [{ data, error, count }, names] = await Promise.all([query, getExpenseEmployeeNames()]);
   if (error) {
     console.error(`${op} failed`, { filters, error });
     return { rows: [], total: 0 };
   }
 
   const rows: ExpenseListRow[] = (data ?? []).map((r) => {
-    const project = (r.projects as unknown as { project_number: string | null; customer_name: string | null } | null) ?? null;
-    const submitter = (r.submitter as unknown as { full_name: string | null } | null) ?? null;
+    const project = (r.projects as unknown as { project_number: string | null; project_name: string | null; customer_name: string | null } | null) ?? null;
     const cat = (r.category as unknown as { label: string | null; code: string | null } | null) ?? null;
     const docs = (r.documents as unknown as { id: string }[] | null) ?? [];
     return {
@@ -101,9 +148,12 @@ export async function listExpenses(filters: ListExpensesFilters = {}): Promise<{
       voucher_number: r.voucher_number,
       project_id: r.project_id,
       project_number: project?.project_number ?? null,
+      project_name: project?.project_name ?? null,
       customer_name: project?.customer_name ?? null,
       submitted_by: r.submitted_by,
-      submitter_name: submitter?.full_name ?? null,
+      submitter_name: employeeName(names, r.submitted_by),
+      entered_by: r.entered_by,
+      entered_by_name: employeeName(names, r.entered_by),
       category_id: r.category_id,
       category_label: cat?.label ?? null,
       category_code: cat?.code ?? null,
@@ -145,14 +195,10 @@ export async function getExpense(id: string): Promise<(ExpenseListRow & {
     .from('expenses')
     .select(
       `
-      id, voucher_number, project_id, submitted_by, category_id, description,
+      id, voucher_number, project_id, submitted_by, entered_by, category_id, description,
       amount, expense_date, status, submitted_at, verified_at, approved_at,
       rejected_at, rejected_reason, verified_by, approved_by, rejected_by,
-      projects:projects(project_number, customer_name),
-      submitter:employees!expenses_submitted_by_fkey(full_name),
-      verifier:employees!expenses_verified_by_fkey(full_name),
-      approver:employees!expenses_approved_by_fkey(full_name),
-      rejecter:employees!expenses_rejected_by_fkey(full_name),
+      projects:projects(project_number, project_name, customer_name),
       category:expense_categories(label, code),
       documents:expense_documents(id, file_path, file_name, file_size, mime_type, uploaded_at)
     `,
@@ -166,11 +212,10 @@ export async function getExpense(id: string): Promise<(ExpenseListRow & {
   }
   if (!data) return null;
 
-  const project = (data.projects as unknown as { project_number: string | null; customer_name: string | null } | null) ?? null;
-  const submitter = (data.submitter as unknown as { full_name: string | null } | null) ?? null;
-  const verifier = (data.verifier as unknown as { full_name: string | null } | null) ?? null;
-  const approver = (data.approver as unknown as { full_name: string | null } | null) ?? null;
-  const rejecter = (data.rejecter as unknown as { full_name: string | null } | null) ?? null;
+  // Stage names come from the RPC directory, not an employees embed — see the
+  // getExpenseEmployeeDirectory comment for why the embed is RLS-blind here.
+  const names = await getExpenseEmployeeNames();
+  const project = (data.projects as unknown as { project_number: string | null; project_name: string | null; customer_name: string | null } | null) ?? null;
   const cat = (data.category as unknown as { label: string | null; code: string | null } | null) ?? null;
   const docs = (data.documents as unknown as Array<{
     id: string;
@@ -186,15 +231,18 @@ export async function getExpense(id: string): Promise<(ExpenseListRow & {
     voucher_number: data.voucher_number,
     project_id: data.project_id,
     project_number: project?.project_number ?? null,
+    project_name: project?.project_name ?? null,
     customer_name: project?.customer_name ?? null,
     submitted_by: data.submitted_by,
-    submitter_name: submitter?.full_name ?? null,
+    submitter_name: employeeName(names, data.submitted_by),
+    entered_by: data.entered_by,
+    entered_by_name: employeeName(names, data.entered_by),
     verified_by: data.verified_by,
-    verified_by_name: verifier?.full_name ?? null,
+    verified_by_name: employeeName(names, data.verified_by),
     approved_by: data.approved_by,
-    approved_by_name: approver?.full_name ?? null,
+    approved_by_name: employeeName(names, data.approved_by),
     rejected_by: data.rejected_by,
-    rejected_by_name: rejecter?.full_name ?? null,
+    rejected_by_name: employeeName(names, data.rejected_by),
     category_id: data.category_id,
     category_label: cat?.label ?? null,
     category_code: cat?.code ?? null,
@@ -210,6 +258,105 @@ export async function getExpense(id: string): Promise<(ExpenseListRow & {
     document_count: docs.length,
     documents: docs,
   };
+}
+
+/**
+ * Exact count + SUM(amount) over the *same* filter set `listExpenses` applies —
+ * feeds the filter-aware KPI card. Aggregation happens in SQL (NEVER-DO #12),
+ * and the RPC is SECURITY INVOKER so RLS scopes it identically to the list.
+ *
+ * Note this count is exact, unlike the list's `count: 'estimated'` (NEVER-DO
+ * #13) — the KPI is the number to trust when the two disagree.
+ */
+export async function getExpenseFilteredTotals(
+  filters: ListExpensesFilters = {},
+): Promise<{ count: number; total: number }> {
+  const op = '[getExpenseFilteredTotals]';
+  const supabase = await createClient();
+
+  const search = filters.search?.trim();
+  // 'general' in projectId is the sentinel for project_id IS NULL — the RPC
+  // expresses that through p_scope, not p_project_id.
+  const generalOnly = filters.projectId === 'general' || filters.scope === 'general';
+  const projectId = filters.projectId && filters.projectId !== 'general' ? filters.projectId : undefined;
+
+  const { data, error } = await supabase.rpc('get_expense_filtered_totals', {
+    p_search: search || undefined,
+    p_scope: generalOnly ? 'general' : (filters.scope ?? 'all'),
+    p_status: filters.status ?? undefined,
+    p_category_id: filters.categoryId || undefined,
+    p_submitted_by: filters.submittedBy || undefined,
+    p_project_id: projectId,
+    p_date_from: filters.dateFrom || undefined,
+    p_date_to: filters.dateTo || undefined,
+  });
+
+  if (error) {
+    console.error(`${op} failed`, { filters, error, timestamp: new Date().toISOString() });
+    return { count: 0, total: 0 };
+  }
+  const row = (data ?? [])[0];
+  return { count: Number(row?.expense_count ?? 0), total: Number(row?.total_amount ?? 0) };
+}
+
+export interface SubmitterOption {
+  id: string;
+  full_name: string;
+}
+
+/**
+ * Active employees for the Submitter filter + the on-behalf picker.
+ *
+ * Sourced from `list_expense_employees` rather than a direct `employees` read:
+ * `employees_read` shows a project_manager only their own row plus direct
+ * reports, which left the Submitter filter with a single option for the role
+ * that can see every voucher.
+ *
+ * This is also the authorization list for delegated entry — `submitExpense`
+ * accepts a submitter only if it appears here for that caller, so the picker
+ * and the server-side check can never drift apart.
+ */
+export async function listSubmitterOptions(): Promise<SubmitterOption[]> {
+  const directory = await getExpenseEmployeeDirectory();
+  return directory
+    .filter((e) => e.is_active)
+    .map((e) => ({ id: e.id, full_name: e.full_name }));
+}
+
+export interface ExpenseProjectOption {
+  id: string;
+  project_number: string | null;
+  project_name: string | null;
+  customer_name: string | null;
+}
+
+/**
+ * Project options for the auto-search comboboxes (filter bar + add dialog).
+ *
+ * Deliberately unbounded: the combobox filters client-side, so a `.limit()`
+ * here silently makes the capped-out projects unfilterable (NEVER-DO #25). The
+ * page previously capped at 500 while `projects` already held 507 rows. Payload
+ * is 4 short columns per project; revisit with a server-side searched combobox
+ * if the table grows past a few thousand rows.
+ */
+export async function listExpenseProjectOptions(): Promise<ExpenseProjectOption[]> {
+  const op = '[listExpenseProjectOptions]';
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id, project_number, customer_name, project_name')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error(`${op} failed`, { error, timestamp: new Date().toISOString() });
+    return [];
+  }
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    project_number: p.project_number,
+    project_name: p.project_name,
+    customer_name: p.customer_name,
+  }));
 }
 
 export async function getExpensesByProject(projectId: string): Promise<ExpenseListRow[]> {

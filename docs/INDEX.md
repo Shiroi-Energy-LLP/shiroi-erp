@@ -8,8 +8,9 @@
 
 ## Specs — design docs (the *what* & *why*)
 
-_53 files in `docs/superpowers/specs/`_
+_54 files in `docs/superpowers/specs/`_
 
+- `2026-07-30` **Purchase / BOM / Service-Ticket / AMC fixes — design** — **approved (Vivek, 2026-07-30)** · `2026-07-30-purchase-bom-ticket-amc-fixes-design.md`
 - `2026-07-25` **Service Ticket — Done By, create parity, single edit surface** — _om (Service Tickets)_ · `2026-07-25-service-ticket-done-by-and-create-parity-design.md`
 - `2026-07-20` **Purchase Flow — "Bill of Items Manager" Functional Spec (for ERP re-implementat…** — `2026-07-20-purchase-flow-boi-manager-spec.md`
 - `2026-07-20` **Projects List — Expected Dates, Next Follow-up, Multi-Status Filter, Completed-…** — _projects (docs/modules/proj…_ · **Approved (design sign-off by Vivek 2026-07-…** · `2026-07-20-projects-list-dates-followup-multistatus-design.md`
@@ -116,9 +117,11 @@ _45 files in `docs/superpowers/plans/`_
 
 ## Reviews — audits & multi-area sweeps
 
-_16 files in `docs/reviews/`_
+_18 files in `docs/reviews/`_
 
+- `2026-07-30` **Expenses list-page rework — 2026-07-30** — `2026-07-30-expenses-list-rework.md`
 - `2026-07-25` **Price Book — FY26-27 rate card import (2026-07-25)** — `2026-07-25-price-book-fy26-27-import.md`
+- `2026-07-25` **Payment Dashboard supersede — 2026-07-25** — `2026-07-25-payment-dashboard-supersede.md`
 - `2026-07-19` **ERP Speed — Full Report (Code + Infrastructure)** — `2026-07-19-erp-speed-full-report.md`
 - `2026-06-19` **Page-Load Performance Audit & Suggested Changes** — `2026-06-19-page-load-perf-audit.md`
 - `2026-06-18` **UI Theming Audit — How Centralized Are Colours & Fonts?** — `2026-06-18-ui-theming-audit.md`

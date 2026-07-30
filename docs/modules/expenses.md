@@ -37,7 +37,7 @@ submitted → [Founder approves] → approved
 
 | Table | Purpose |
 |-------|---------|
-| `expenses` | Core voucher rows (renamed from `project_site_expenses`). `project_id` now nullable. |
+| `expenses` | Core voucher rows (renamed from `project_site_expenses`). `project_id` now nullable. `entered_by` (mig 217) = who keyed a delegated voucher; NULL = the submitter filed it themselves. |
 | `expense_categories` | Master list of categories (travel, food, lodging, site_material, tools, consumables, labour_advance, miscellaneous). Founder + Finance can add/edit. |
 | `expense_documents` | File references per expense (PDF/image). FK → `expenses.id` ON DELETE CASCADE. |
 | `employees.voucher_prefix` | 3–5 letter unique prefix per active employee. Auto-derived from full_name on INSERT. |
@@ -52,7 +52,8 @@ submitted → [Founder approves] → approved
 
 | File | Role |
 |------|------|
-| `apps/erp/src/lib/expenses-queries.ts` | `listExpenses`, `getExpense`, `getExpensesByProject`, `getExpenseKPIs` |
+| `apps/erp/src/lib/expenses-queries.ts` | `listExpenses`, `getExpense`, `getExpensesByProject`, `getExpenseKPIs`, `getExpenseFilteredTotals`, `listSubmitterOptions`, `listExpenseProjectOptions` |
+| `apps/erp/src/lib/expenses-constants.ts` | `EXPENSE_STATUSES`, `EXPENSE_SCOPES`, `DELEGATED_ENTRY_ROLES`, `canSubmitOnBehalf` — no server imports, safe for `'use client'` (NEVER-DO #21) |
 | `apps/erp/src/lib/expenses-actions.ts` | `submitExpense`, `updateExpense`, `verifyExpense`, `approveExpense`, `rejectExpense`, `deleteExpense`, `revertExpense`, `uploadExpenseDocument`, `deleteExpenseDocument` |
 | `apps/erp/src/lib/expense-categories-queries.ts` | `listCategories`, `getActiveCategories` |
 | `apps/erp/src/lib/expense-categories-actions.ts` | `addCategory`, `updateCategory`, `toggleCategoryActive` |
@@ -66,19 +67,25 @@ submitted → [Founder approves] → approved
 
 ## 5. Role access matrix
 
-| Role | Submit | View own | View all | Verify (project) | Approve | Reject | Revert | Category admin |
-|------|--------|----------|----------|------------------|---------|--------|--------|----------------|
-| founder | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| project_manager | ✓ | ✓ | ✓ (project-linked) | ✓ | — | ✓ (submitted only) | — | — |
-| finance | ✓ | ✓ | ✓ | — | — | — | — | ✓ |
-| site_supervisor | ✓ | ✓ | — | — | — | — | — | — |
-| designer | ✓ | ✓ | — | — | — | — | — | — |
-| marketing_manager | ✓ | ✓ | — | — | — | — | — | — |
-| sales_engineer | ✓ | ✓ | — | — | — | — | — | — |
-| purchase_officer | ✓ | ✓ | — | — | — | — | — | — |
-| hr_manager | ✓ | ✓ | — | — | — | — | — | — |
-| om_technician | ✓ | ✓ | — | — | — | — | — | — |
-| customer | — | — | — | — | — | — | — | — |
+| Role | Submit | On behalf | View own | View all | Verify (project) | Approve | Reject | Revert | Category admin |
+|------|--------|-----------|----------|----------|------------------|---------|--------|--------|----------------|
+| founder | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| project_manager | ✓ | ✓ | ✓ | ✓ (project-linked) | ✓ | — | ✓ (submitted only) | — | — |
+| finance | ✓ | ✓ | ✓ | ✓ | — | — | — | — | ✓ |
+| hr_manager | ✓ | ✓ | ✓ | — | — | — | — | — | — |
+| marketing_manager | ✓ | ✓ | ✓ | — | — | — | — | — | — |
+| site_supervisor | ✓ | — | ✓ | — | — | — | — | — | — |
+| designer | ✓ | — | ✓ | — | — | — | — | — | — |
+| sales_engineer | ✓ | — | ✓ | — | — | — | — | — | — |
+| purchase_officer | ✓ | — | ✓ | — | — | — | — | — | — |
+| om_technician | ✓ | — | ✓ | — | — | — | — | — | — |
+| customer | — | — | — | — | — | — | — | — | — |
+
+> **On behalf** = may file a voucher whose `submitted_by` is another employee (mig 217). The picker only offers people that role can see via `list_expense_employees()`, and the server action re-validates against that same list.
+
+---
+
+**Delegated entry (mig 217):** founder, project_manager, hr_manager, marketing_manager and finance can file a voucher on behalf of another employee — Submitter picker in the Add dialog. `submitted_by` stays the claimant (voucher prefix + reimbursement follow them); `entered_by` records the keyer. Everyone else is self-submit only, enforced by the `expenses_insert_self` RLS policy, not just the UI.
 
 ---
 
@@ -89,6 +96,10 @@ submitted → [Founder approves] → approved
 - **`get_expense_kpis` RPC** — aggregation in SQL (NEVER-DO #12 compliance). Returns 4 KPIs scoped to the caller's role.
 - **Legacy rows backfilled** with `UNASSIGNED-###` sentinel voucher numbers (1164 rows at migration time).
 - **`/vouchers` page** redirects to `/expenses?status=submitted`.
+- **Employee names come from an RPC, not a PostgREST embed** (mig 217 §E). `expenses_select_own` lets founder/PM/finance read every voucher but `employees_read` only lets founder/hr_manager read every employee, so the `submitter:employees(full_name)` embed returned NULL — measured on dev 2026-07-30: the PM saw "Submitter —" on 5,114 of 6,283 visible rows and a one-name Submitter filter. `list_expense_employees()` is a SECURITY DEFINER projection of `id/full_name/is_active` only, and also serves the on-behalf picker + its server-side authorization check.
+- **`generate_voucher_number` is SECURITY DEFINER** (mig 217 §D) — as INVOKER it read `voucher_prefix` under the caller's RLS, so delegated entry for a non-report failed with a misleading `employee % has no voucher_prefix`.
+- **Filter-aware KPI card** — `get_expense_filtered_totals` mirrors `ListExpensesFilters` and returns an **exact** count, unlike the list's `count: 'estimated'`. Trust the KPI when the two disagree.
+- **Column order + wrapping** are Vivek's 2026-07-30 spec: `Project Name | Submitter | Category | Description | Amount | Voucher No. | Status`, with the old Docs column folded into the voucher cell as a 📎 count. Wrapping needs `table-fixed` + `<colgroup>` widths — an auto-layout table widens to its longest cell no matter what wrapping classes the cells carry.
 
 ---
 

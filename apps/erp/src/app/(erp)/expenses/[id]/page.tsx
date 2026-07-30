@@ -85,6 +85,12 @@ export default async function ExpenseDetail({ params }: { params: Promise<{ id: 
               : <em className="text-gray-500">General expense — no project</em>}
           </Row>
           <Row label="Submitter">{expense.submitter_name ?? '—'}</Row>
+          {expense.entered_by_name && (
+            <Row label="Entered by">
+              {expense.entered_by_name}
+              <span className="text-gray-500"> (on behalf of {expense.submitter_name ?? 'submitter'})</span>
+            </Row>
+          )}
           <Row label="Category">{expense.category_label ?? '—'}</Row>
           <Row label="Expense date">{expense.expense_date ?? '—'}</Row>
           <Row label="Description"><span className="whitespace-pre-wrap">{expense.description ?? '—'}</span></Row>

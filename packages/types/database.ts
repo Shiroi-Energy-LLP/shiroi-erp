@@ -20737,6 +20737,10 @@ export type Database = {
       }
     }
     Functions: {
+      _boq_caller_can_view_project: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
       approve_bom_import: {
         Args: { p_id: string; p_lines: Json; p_project_id: string }
         Returns: string
@@ -20920,6 +20924,48 @@ export type Database = {
           completed_count: number
           scheduled_count: number
         }[]
+      }
+      get_boi_boq_items_masked: {
+        Args: { p_boi_id: string }
+        Returns: {
+          actual_quantity: number | null
+          actual_total_price: number | null
+          actual_unit_price: number | null
+          bill_status: string
+          boi_id: string | null
+          bom_line_id: string | null
+          brand: string | null
+          created_at: string
+          dispatched_qty: number
+          gst_rate: number
+          gst_type: string
+          hsn_code: string | null
+          id: string
+          item_category: string
+          item_description: string
+          line_number: number
+          model: string | null
+          notes: string | null
+          price_book_id: string | null
+          procurement_status: string
+          project_id: string
+          purchase_order_id: string | null
+          quantity: number
+          received_qty: number
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at: string
+          vendor_id: string | null
+          vendor_name: string | null
+          voucher_no: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "project_boq_items"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_boi_status_totals: {
         Args: {
@@ -21298,6 +21344,48 @@ export type Database = {
           total_se: number
         }[]
       }
+      get_project_boq_items_masked: {
+        Args: { p_project_id: string }
+        Returns: {
+          actual_quantity: number | null
+          actual_total_price: number | null
+          actual_unit_price: number | null
+          bill_status: string
+          boi_id: string | null
+          bom_line_id: string | null
+          brand: string | null
+          created_at: string
+          dispatched_qty: number
+          gst_rate: number
+          gst_type: string
+          hsn_code: string | null
+          id: string
+          item_category: string
+          item_description: string
+          line_number: number
+          model: string | null
+          notes: string | null
+          price_book_id: string | null
+          procurement_status: string
+          project_id: string
+          purchase_order_id: string | null
+          quantity: number
+          received_qty: number
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at: string
+          vendor_id: string | null
+          vendor_name: string | null
+          voucher_no: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "project_boq_items"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_project_cable_summary: {
         Args: { p_project_id: string }
         Returns: {
@@ -21520,6 +21608,14 @@ export type Database = {
           id: string
           metadata: Json
           name: string
+        }[]
+      }
+      list_expense_employees: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          is_active: boolean
         }[]
       }
       list_pending_imports: {

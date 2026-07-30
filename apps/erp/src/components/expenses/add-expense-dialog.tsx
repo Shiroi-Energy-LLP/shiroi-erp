@@ -17,14 +17,17 @@ import {
 import { submitExpense } from '@/lib/expenses-actions';
 import { ProjectCombobox } from '@/components/forms/project-combobox';
 
-interface ProjectOpt { id: string; project_number: string | null; customer_name: string | null }
+interface ProjectOpt { id: string; project_number: string | null; project_name?: string | null; customer_name: string | null }
 interface CategoryOpt { id: string; label: string }
+interface SubmitterOpt { id: string; full_name: string }
 
 export function AddExpenseDialog({
   projects,
   categories,
   defaultProjectId,
   lockProject = false,
+  submitters = [],
+  canSubmitOnBehalf = false,
 }: {
   projects: ProjectOpt[];
   categories: CategoryOpt[];
@@ -32,11 +35,20 @@ export function AddExpenseDialog({
   defaultProjectId?: string;
   /** Lock the picker to defaultProjectId — no General option, no re-pick. */
   lockProject?: boolean;
+  /** Active employees for the on-behalf picker. Only read when canSubmitOnBehalf. */
+  submitters?: SubmitterOpt[];
+  /**
+   * Show the "Submitter" picker so a Founder / *_manager / Finance can file a
+   * voucher for an engineer. UI hint only — `submitExpense` re-checks the role
+   * server-side and RLS (mig 215) is the second gate.
+   */
+  canSubmitOnBehalf?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submittedById, setSubmittedById] = useState<string>('');
   const [projectId, setProjectId] = useState<string>(defaultProjectId ?? '');
   const [isGeneral, setIsGeneral] = useState(false);
   const [categoryId, setCategoryId] = useState<string>('');
@@ -46,6 +58,7 @@ export function AddExpenseDialog({
 
   useEffect(() => {
     if (!open) {
+      setSubmittedById('');
       setProjectId(defaultProjectId ?? '');
       setIsGeneral(false);
       setCategoryId('');
@@ -61,6 +74,7 @@ export function AddExpenseDialog({
   const comboboxProjects = projects.map((p) => ({
     id: p.id,
     project_number: p.project_number,
+    project_name: p.project_name ?? null,
     customer_name: p.customer_name ?? p.project_number ?? p.id.slice(0, 8),
   }));
   const lockedProject = lockProject
@@ -84,6 +98,7 @@ export function AddExpenseDialog({
       description,
       amount: amt,
       expenseDate,
+      submittedById: canSubmitOnBehalf ? (submittedById || null) : null,
     });
     if (!r.success) { setError(r.error); setSaving(false); return; }
 
@@ -97,6 +112,21 @@ export function AddExpenseDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader><DialogTitle>Submit expense</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          {canSubmitOnBehalf && submitters.length > 0 && (
+            <div>
+              <Label>Submitter</Label>
+              <Select value={submittedById} onChange={(e) => setSubmittedById(e.target.value)}>
+                <option value="">Myself</option>
+                {submitters.map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+              </Select>
+              {submittedById && (
+                <p className="text-xs text-blue-600 mt-1">
+                  The voucher is filed under this employee — their voucher prefix, their
+                  reimbursement. You are recorded as the one who entered it.
+                </p>
+              )}
+            </div>
+          )}
           <div>
             <Label>Project</Label>
             {lockProject ? (
