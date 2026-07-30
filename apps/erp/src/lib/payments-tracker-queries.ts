@@ -119,7 +119,14 @@ export interface PaymentScheduleFollowUp {
   expected_payment_date: string | null;
   follow_up_note: string | null;
   follow_up_count: number;
-  /** project_id is resolved through proposals.lead_id → projects.lead_id */
+  /**
+   * Resolved through `projects.proposal_id` (FK `projects_proposal_id_fkey`),
+   * the only direct proposals↔projects relationship. It is UNIQUE, so PostgREST
+   * treats the embed as one-to-one and returns an object rather than an array.
+   *
+   * NOT via `proposals.lead_id → projects.lead_id`: that is a *sibling* hop
+   * through `leads`, which PostgREST cannot embed (see the query below).
+   */
   project_id: string | null;
 }
 
@@ -148,7 +155,7 @@ export async function getPaymentScheduleFollowUps(): Promise<PaymentScheduleFoll
       proposals!proposal_payment_schedule_proposal_id_fkey(
         status,
         lead_id,
-        projects!projects_lead_id_fkey(id)
+        projects!projects_proposal_id_fkey(id)
       )
     `)
     .order('milestone_order', { ascending: true });
