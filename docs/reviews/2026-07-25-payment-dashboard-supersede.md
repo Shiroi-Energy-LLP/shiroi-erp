@@ -62,17 +62,22 @@ as counter-entries.
 
 These were left untouched because applying them would post money against a guessed customer.
 
-| Sheet row | Sheet PO / kW | Situation |
-|---|---|---|
-| **GANESH** | ₹3,63,000 / 5 | 3 candidates: `Ganesh` (yet_to_start, PO 0), `M/s Latha Ganesh` (₹3,50,283, completed), `Ramaniyam Ganesha` (PO 0, completed). Sheet's next stage is Material Delivery (due 28-Jul-26), which fits the `yet_to_start` one. |
-| **BABU** | ₹2,43,000 / 4.2 | 8 candidates (`Babu`, `Mr Babu Govindarajan`, `Mr. Ramesh Babu 3.3 Kw`, `Rajan babu`, `Mr Rajan Babu` ×2, `Mr. Ramesh Babu TVS Hamlet`, `Suresh Babu ECR`). None has a PO near ₹2,43,000. Note `Mr Rajan Babu` appears twice — a duplicate project row. |
-| **CHETTINAD** | ₹4,00,000 / 10 | `Chettinad Cement` (PO 0) vs `Chettinad Grinding Unit` (₹5,65,220). Neither matches. |
-| **NATIONAL SCHOOL** | ₹5,42,182 / 12 | `National School` (₹4,97,182) vs `National School Mayavaram` (₹7,33,457). Neither exact; the first is closer. |
-| **SREEKUMAR** | ₹6,92,971 / 10.8 | Nearest is `Ramaniyam Sri Kumar` (₹6,90,000) — plausible but the name differs enough to be a different customer. |
-| **KARAN VELLORE** | ₹8,00,000 / 16 | Nearest is `Kiran Vellore` (₹8,27,632). Karan vs Kiran — likely the same project, needs confirming. |
-| **RAMANIYAM PURNA** | ₹2,82,742 / 5 | No candidate in the ERP at all. Note `Ramaniyam Sridevi` has the identical PO (₹2,82,742) — possibly a second unit of the same order that was never created as a project. |
-| **S&P - THE ADDRESS** | ₹1,15,133 / 5 | Only near match is `S&P Signature - Club house` (₹1,25,762) — different building. Likely a missing project. |
-| **SRINIVASAN GEEYAM** | ₹5,65,000 / 5 | `Srinivasan Geeyam Ref` exists but was **soft-deleted 2026-06-22** (`deleted_at` set). Sheet shows it Closed with ₹5,65,000 fully received. Needs undeleting before any figure can be posted. |
+Combined: ₹40,04,028 PO / ₹22,53,576 received / ₹17,50,452 outstanding still unrepresented.
+
+Matching by `system_size_kwp` (the sheet carries kW per row) resolved these much further than
+name-matching alone — four now have a candidate matching the sheet's kW exactly.
+
+| Sheet row | Sheet PO / kW | Best candidate | Situation |
+|---|---|---|---|
+| **GANESH** | ₹3,63,000 / 5 | `Ganesh` (5.00 kWp, PO ₹0, waiting_net_metering) | 3 candidates; the other two are `completed`, which the sheet's "Material Delivery, due 28-Jul-26" rules out. Recommended. |
+| **BABU** | ₹2,43,000 / 4.2 | `Babu` (**4.20 kWp**, PO ₹2,61,323, yet_to_start) | Only 4.2 kWp candidate out of 8. Recommended. Separately: `Mr Rajan Babu` exists **twice** as identical live projects (6.63 kWp, ₹4,37,266) — de-dupe needed, unrelated to this sheet. |
+| **CHETTINAD** | ₹4,00,000 / 10 | `Chettinad Grinding Unit` (10.00 kWp, PO ₹5,65,220) | Only live option — `Chettinad Cement` (also 10 kWp) is soft-deleted. ₹1.65 L PO gap: is the sheet tracking the deleted Cement site instead? |
+| **NATIONAL SCHOOL** | ₹5,42,182 / 12 | `National School` (15.00 kWp, PO ₹4,97,182) | Only live option — `National School Mayavaram` is soft-deleted. Neither matches on kW (15 vs 12) or PO (₹45,000 apart). |
+| **SREEKUMAR** | ₹6,92,971 / 10.8 | `Ramaniyam Sri Kumar` (10.00 kWp, PO ₹6,90,000) | Only candidate in the ERP. PO within ₹2,971 — likely the same project, but the names differ enough to be two customers, and it posts ₹6.46 L. |
+| **KARAN VELLORE** | ₹8,00,000 / 16 | `Kiran Vellore` (**16.00 kWp**, PO ₹8,27,632) | kW and surname match exactly; Karan/Kiran is likely a spelling slip. **Soft-deleted** — needs undeleting first. |
+| **RAMANIYAM PURNA** | ₹2,82,742 / 5 | `Ramaniyam Purna Krishna` (3.60 kWp, PO ₹0, order_received) | Exists after all (an earlier pass reported none). `order_received` fits a ₹0-collected row; kW disagrees. `Ramaniyam Sridevi` carries the identical ₹2,82,742 PO — possibly two units of one order. Nothing financial at risk (₹0 either way). |
+| **S&P - THE ADDRESS** | ₹1,15,133 / 5 | `S&P Signature - Club house` (2.40 kWp, PO ₹1,25,762) | Different building, half the kW. **Most likely a project never created in the ERP** — would need creating before ₹92,091 can be posted. |
+| **SRINIVASAN GEEYAM** | ₹5,65,000 / 5 | `Srinivasan Geeyam Ref` (10.00 kWp, PO ₹1,15,565, ₹2,65,000 received) | Messiest of the nine: **soft-deleted 2026-06-22** while the sheet tracks it as live and Closed at ₹5,65,000; PO, received and kW all disagree. Check the actual order first. |
 
 Once these are ruled on, extend the same migration pattern — add the rows to `pd_sheet`, bump the
 expected-count guard, and re-run.
@@ -83,3 +88,10 @@ expected-count guard, and re-run.
   The ERP models these through `proposal_payment_schedule` milestones and the payment-followup task
   trigger, not as free text on the project. Mapping them would need its own design pass.
 - Prod is untouched, per the standing dev-only rule.
+
+## Concurrency caveat
+
+Between two passes over the same data during this task, `Ganesh` moved from `order_received` to
+`waiting_net_metering` and `Babu`'s `contracted_value` went from ₹0 to ₹2,61,323 — a parallel session
+was editing `projects` at the same time. Re-read the figures at the moment of ruling rather than
+trusting the snapshots in this document.
