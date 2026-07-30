@@ -10,6 +10,8 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ## July 2026
 
+- **[2026-07-30]** fix(om/tickets): "duplicate key … ticket_number_key" on create — four rival number generators poisoned each other (IR-trigger date-shaped numbers → TS `split('-').pop()`; mig-050 `SPLIT_PART` cast threw every run). All four now omit the column: atomic `next_ticket_number()` as the DEFAULT. Renumbered 15 tickets → TKT-0001..0015. → mig 215 (dev) · module: om
+
 - **[2026-07-25]** feat(om/tickets): Service-ticket gap-fill — 10 of a 12-point request already shipped 2026-06-27; closed the 3 real gaps. **Done By** is now an explicit picker (still `resolved_by`; auto-stamp is fill-if-empty, reopen no longer nulls it); row **Edit** → `/om/tickets/[id]`, drifted quick-edit dialog deleted; **Create** reaches header parity (+Status, Done By, Amount, back-dated Created). → no migration · spec `2026-07-25-service-ticket-done-by-and-create-parity-design.md` · module: om
 
 - **[2026-07-25]** data(finance): receivables superseded from Prem's `Payment Dashboard.xlsx` (dev) — 26 of 35 rows mapped 1:1; PO values set + 20 Tier-3 counter-entries (net −₹3.3L). No UPDATE/DELETE on `customer_payments`; Zoho ledger for the other 466 projects untouched. 9 rows unmapped — need ruling. → mig 214 (dev) · review `2026-07-25-payment-dashboard-supersede.md` · module: finance

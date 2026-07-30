@@ -3818,6 +3818,7 @@ export type Database = {
           category_id: string
           created_at: string
           description: string | null
+          entered_by: string | null
           expense_date: string | null
           id: string
           project_id: string | null
@@ -3842,6 +3843,7 @@ export type Database = {
           category_id: string
           created_at?: string
           description?: string | null
+          entered_by?: string | null
           expense_date?: string | null
           id?: string
           project_id?: string | null
@@ -3866,6 +3868,7 @@ export type Database = {
           category_id?: string
           created_at?: string
           description?: string | null
+          entered_by?: string | null
           expense_date?: string | null
           id?: string
           project_id?: string | null
@@ -3903,6 +3906,20 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_entered_by_fkey"
+            columns: ["entered_by"]
+            isOneToOne: false
+            referencedRelation: "employee_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_entered_by_fkey"
+            columns: ["entered_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
@@ -4930,6 +4947,54 @@ export type Database = {
         }
         Relationships: []
       }
+      inverter_readings_2026_08: {
+        Row: {
+          ac_current_a: number | null
+          ac_frequency_hz: number | null
+          ac_power_kw: number | null
+          ac_voltage_v: number | null
+          dc_power_kw: number | null
+          energy_today_kwh: number | null
+          energy_total_kwh: number | null
+          error_code: string | null
+          inverter_id: string
+          raw_payload: Json | null
+          recorded_at: string
+          status: string | null
+          temperature_c: number | null
+        }
+        Insert: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id: string
+          raw_payload?: Json | null
+          recorded_at: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Update: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id?: string
+          raw_payload?: Json | null
+          recorded_at?: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Relationships: []
+      }
       inverter_readings_daily: {
         Row: {
           day: string
@@ -5121,6 +5186,33 @@ export type Database = {
         Relationships: []
       }
       inverter_string_readings_2026_07: {
+        Row: {
+          current_a: number | null
+          inverter_id: string
+          power_kw: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v: number | null
+        }
+        Insert: {
+          current_a?: number | null
+          inverter_id: string
+          power_kw?: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v?: number | null
+        }
+        Update: {
+          current_a?: number | null
+          inverter_id?: string
+          power_kw?: number | null
+          recorded_at?: string
+          string_number?: number
+          voltage_v?: number | null
+        }
+        Relationships: []
+      }
+      inverter_string_readings_2026_08: {
         Row: {
           current_a: number | null
           inverter_id: string
@@ -9215,7 +9307,7 @@ export type Database = {
           sla_deadline?: string | null
           sla_hours?: number
           status?: Database["public"]["Enums"]["ticket_status"]
-          ticket_number: string
+          ticket_number?: string
           title: string
           updated_at?: string
           visit_report_id?: string | null
@@ -9535,6 +9627,61 @@ export type Database = {
             referencedColumns: ["id"]
           }
           ]
+      }
+      om_visit_events: {
+        Row: {
+          attachment_name: string | null
+          attachment_path: string | null
+          body: string
+          created_at: string
+          created_by: string | null
+          entry_type: string
+          id: string
+          visit_id: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          body: string
+          created_at?: string
+          created_by?: string | null
+          entry_type: string
+          id?: string
+          visit_id: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          entry_type?: string
+          id?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "om_visit_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employee_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "om_visit_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "om_visit_events_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "om_visit_schedules"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       om_visit_reports: {
         Row: {
@@ -20874,6 +21021,22 @@ export type Database = {
           project_number: string
         }[]
       }
+      get_expense_filtered_totals: {
+        Args: {
+          p_category_id?: string
+          p_date_from?: string
+          p_date_to?: string
+          p_project_id?: string
+          p_scope?: string
+          p_search?: string
+          p_status?: string
+          p_submitted_by?: string
+        }
+        Returns: {
+          expense_count: number
+          total_amount: number
+        }[]
+      }
       get_expense_kpis: {
         Args: { p_employee_id: string; p_role: string }
         Returns: {
@@ -21473,6 +21636,7 @@ export type Database = {
         }[]
       }
       next_boi_po_number: { Args: never; Returns: string }
+      next_ticket_number: { Args: never; Returns: string }
       plant_monitoring_detect_brand: {
         Args: { portal_url: string }
         Returns: string

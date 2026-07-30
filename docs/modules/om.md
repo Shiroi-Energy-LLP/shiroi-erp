@@ -10,7 +10,7 @@ O&M is the post-handover side of the system — everything that happens after a 
 ## Screens / Routes
 
 - `/om/visits` — scheduled + past visits
-- `/om/tickets` — service ticket list (ticket numbers still mint internally as TKT-NNN but are **no longer displayed** — column removed 2026-06-11 per Vivek; `created_at` auto-records and shows as Created)
+- `/om/tickets` — service ticket list (ticket numbers still mint internally as TKT-NNNN but are **no longer displayed** — column removed 2026-06-11 per Vivek; `created_at` auto-records and shows as Created)
   - **9-column table (trimmed 2026-06-27, mig 199):** Project, **Title (links to `/om/tickets/[id]`)**, Issue Type, Assigned To, Status, Created, **Done By** (= `resolved_by`), **Amount (₹)**, Actions. Severity + SLA Due columns dropped from the list (severity still fully editable in the form + shown on the detail page).
   - **3 KPI cards (2026-06-27):** Open Services / Closed Services / Total Service Amount, from `get_service_ticket_kpis()` (one SQL call: Open = status NOT IN (resolved,closed), Closed = IN (resolved,closed), plus `SUM(service_amount)`). Replaced the standalone Total-Amount header stat (`get_service_ticket_amount_total()` RPC retained for back-compat).
   - Inline status toggle (6 statuses: open/assigned/in_progress/resolved/closed/escalated — auto-sets `resolved_at`, `closed_at`)
@@ -47,11 +47,11 @@ O&M is the post-handover side of the system — everything that happens after a 
 
 ## Key Business Rules
 
-- **Ticket numbering**: `TKT-001`, `TKT-002` via `String(parseInt(...)).padStart(3, '0')` (migration 043).
+- **Ticket numbering (rewritten 2026-07-30, mig 215)**: `TKT-0001` style, generated **only** by the `om_service_tickets.ticket_number` column DEFAULT → `next_ticket_number()` (sequence-backed, atomic; same pattern as `next_boi_po_number()`). **Never pass `ticket_number` from application or trigger code.** Until mig 215 four separate generators competed: the IR triggers minted `TKT-<project_number>-IR-<YYYYMMDD>` (no serial, so two failing readings on one project-day collided and aborted the parent report save), `createServiceTicket` derived the next number from `ticket_number.split('-').pop()` seeded by `ORDER BY created_at DESC LIMIT 1`, and mig 050 used `CAST(SPLIT_PART(ticket_number,'-',2) AS INT)`. The IR row `TKT-SHIROI/PROJ/2025-26/0036-IR-20260411` broke all three at once — the TS path counted up date-shaped integers from it (`TKT-20260412`…`TKT-20260426`), the mig-050 cast raised `invalid_text_representation` on every run, and back-dated tickets (fixed `06:30Z` stamp → identical `created_at`, non-deterministic `LIMIT 1` tie-break) made the TS path re-emit a live number → `duplicate key value violates unique constraint om_service_tickets_ticket_number_key`. Mig 215 renumbered the 15 existing tickets chronologically to `TKT-0001`..`TKT-0015`; numbers already sent via WhatsApp/n8n or indexed in RAG no longer resolve (re-run `scripts/rag/ingest-service-tickets.ts`).
 - **SLA**: critical severity = 4h (IR test failure creates auto-ticket).
 - **Service ticket auto-creation**:
-  - IR reading < 0.5 MΩ on commissioning → DB trigger creates critical ticket (4h SLA).
-  - Inverter alert scan (daily pg_cron): `PR < 0.70` OR `offline > 60min` OR `fault > 0` → creates TKT-NNN with 7-day dedup window (migration 050, `create_service_tickets_from_inverter_alerts()`).
+  - IR reading < 0.5 MΩ on commissioning → DB trigger creates critical ticket (4h SLA). Fires only on a transition into the sub-threshold state; since mig 215 dropped the number-based accidental dedup, a genuine re-transition on the same day now creates a second ticket instead of aborting the parent report save.
+  - Inverter alert scan (daily pg_cron): `PR < 0.70` OR `offline > 60min` OR `fault > 0` → creates a ticket with a 7-day dedup window (migration 050, `create_service_tickets_from_inverter_alerts()`; numbering fixed in mig 215 — the old `CAST(SPLIT_PART(...) AS INT)` had been throwing on every run).
 - **AMC categories**: `free_amc` (warranty — 3 visits auto) / `paid_amc` (customer-purchased with duration/visits/amount).
 - **Plant monitoring credential sync**: `fn_sync_plant_monitoring_from_commissioning()` triggers on `commissioning_reports` UPDATE when `status` becomes `submitted`/`finalized` AND all three monitoring fields are non-null. Upserts via `ON CONFLICT (project_id, portal_url)` so re-submissions refresh, don't duplicate.
 - **Inverter reading timestamp guard (2026-06-09)**: `inverter_readings` is monthly RANGE-partitioned with **no default partition**, so a vendor-supplied `recorded_at` outside the live months — e.g. a datalogger whose clock is frozen in the past or set ahead — would hard-error the upsert (`no partition of relation ... found for row`) and silently drop the reading. The poller clamps any timestamp >1h future / >36h past to poll time via `clampRecordedAt` (`packages/inverter-adapters/src/base.ts`, mirrored inline in the `inverter-poll` Edge Function); the raw vendor value is retained in `raw_payload`. **Do not add a `_default` partition** — out-of-range rows in it would block the monthly `create_inverter_partition_for_month` cron. First offender: plant VJHRE4U02Q (Block-E Radiance), frozen at `2026-02-03` → flagged for an O&M site check.
@@ -60,7 +60,7 @@ O&M is the post-handover side of the system — everything that happens after a 
 
 ## Key Tables
 
-- `om_service_tickets` (TKT-NNN, `service_amount NUMERIC(14,2)`, `closed_at`, `resolution_notes`; `attachment_paths`/`attachment_names TEXT[]` for ticket-level docs — mig 199)
+- `om_service_tickets` (`ticket_number` TKT-0001 style — DEFAULT `next_ticket_number()`, never set by app code (mig 215), `service_amount NUMERIC(14,2)`, `closed_at`, `resolution_notes`; `attachment_paths`/`attachment_names TEXT[]` for ticket-level docs — mig 199)
 - `om_ticket_events` (mig 199 — combined detail-page timeline: `entry_type` note|system, `body`, optional `attachment_path`/`attachment_name`, `created_by` → employees; FK `ticket_id` ON DELETE CASCADE; index `(ticket_id, created_at DESC)`; RLS read founder/PM/om_tech/finance, insert+delete founder/PM/om_tech)
 - `om_contracts` (`amc_category`, `amc_duration_months`, `annual_value`)
 - `om_visit_schedules` (`scheduled_date`, `visit_number`, `status`)

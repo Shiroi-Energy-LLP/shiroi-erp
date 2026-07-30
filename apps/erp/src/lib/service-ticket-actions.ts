@@ -111,19 +111,6 @@ export async function createServiceTicket(input: {
 
   if (!employee) return err('Employee profile not found');
 
-  // Generate ticket number
-  const { data: lastTicket } = await supabase
-    .from('om_service_tickets')
-    .select('ticket_number')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const nextNum = lastTicket?.ticket_number
-    ? parseInt(lastTicket.ticket_number.split('-').pop() ?? '0', 10) + 1
-    : 1;
-  const ticketNumber = `TKT-${String(nextNum).padStart(4, '0')}`;
-
   const status: TicketStatus = input.status ?? 'open';
 
   const insert: ServiceTicketInsert = {
@@ -134,7 +121,11 @@ export async function createServiceTicket(input: {
     issue_type: input.issueType,
     severity: input.severity,
     status,
-    ticket_number: ticketNumber,
+    // ticket_number is deliberately omitted — the DB column DEFAULT
+    // (next_ticket_number(), mig 215) is the single source of truth. Computing it
+    // here is what produced duplicate-key failures: the old code seeded from
+    // `ORDER BY created_at DESC LIMIT 1`, which back-dated tickets (identical
+    // 06:30Z stamps, non-deterministic tie-break) made re-emit an existing number.
     raised_by_employee: employee.id,
     assigned_to: input.assignedTo || null,
     resolved_by: input.doneBy || null,
