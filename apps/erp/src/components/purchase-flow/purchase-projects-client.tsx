@@ -167,7 +167,7 @@ export function PurchaseProjectsClient({
       }
     >
       <h1 className="text-lg font-heading font-bold text-n-900">
-        Purchase Projects{' '}
+        Purchase Budgets{' '}
         <span className="text-sm font-normal text-n-500">({filtered.length} projects)</span>
       </h1>
 

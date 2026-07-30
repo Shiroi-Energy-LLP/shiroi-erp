@@ -10,9 +10,13 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ## July 2026
 
+- **[2026-07-31]** fix(projects/security): strip BOM/BOQ cost from site supervisors. `project_boq_items_read` drops `site_supervisor`; BOM/BOQ tabs now read via SECURITY DEFINER RPCs `get_project_boq_items_masked`/`get_boi_boq_items_masked` (NULL cost columns for non cost-visible roles, visibility mirrors `projects_read`); `StepBoq` gates price columns/summaries behind `showCost`. Resolves the leak deferred in mig 211 note #5. SQL proof: PM→cost present, non-cost-visible role→cost NULL. → mig 219 (dev) · module: purchase
+
+- **[2026-07-30]** fix(purchase/bom/om): 11-item feedback sweep — Purchase nav "Projects"→"Budgets"; BOM wrap-text on all 3 surfaces (`/bom-review` → ListPageShell + sticky thead, proposal BOM, project BOM tab); `formatDate()` now tolerates TIMESTAMPTZ, fixing ticket **Created** + AMC **Completed Date** "Invalid Date" repo-wide (~25 latent sites); new `/om/amc/[id]` detail page (visit cards, report view/download, per-visit Work Activity, per-visit delete, paid-AMC Service Amount) + AMC project autosearch filter. → mig 218 (dev) · spec `2026-07-30-purchase-bom-ticket-amc-fixes-design.md` · modules: purchase, om
+
 - **[2026-07-30]** feat(expenses): list-page rework — spec column order, all cells wrap (no h-scroll), clickable project, project autocomplete filter, filter-aware KPI (exact count + ₹ total), Prev/Next paging, submit-on-behalf for Founder/*_manager/Finance (`entered_by`). Fixed PM seeing 'Submitter —' on 5,114 of 6,283 rows. → mig 217 (dev) · review `2026-07-30-expenses-list-rework.md` · module: expenses
 
-- **[2026-07-30]** fix(om/tickets): "duplicate key … ticket_number_key" on create — four rival number generators poisoned each other (IR-trigger date-shaped numbers → TS `split('-').pop()`; mig-050 `SPLIT_PART` cast threw every run). All four now omit the column: atomic `next_ticket_number()` as the DEFAULT. Renumbered 15 tickets → TKT-0001..0015. → mig 215 (dev) · module: om
+- **[2026-07-30]** fix(om/tickets): "duplicate key … ticket_number_key" on create — five rival number generators collided (IR-trigger date-shaped numbers → TS `split('-').pop()`; mig-050 `SPLIT_PART` cast threw every run; AI anomaly path too). All five now omit the column: atomic `next_ticket_number()` as the DEFAULT. Renumbered 15 tickets → TKT-0001..0015. → mig 215 (dev) · module: om
 
 - **[2026-07-25]** feat(om/tickets): Service-ticket gap-fill — 10 of a 12-point request already shipped 2026-06-27; closed the 3 real gaps. **Done By** is now an explicit picker (still `resolved_by`; auto-stamp is fill-if-empty, reopen no longer nulls it); row **Edit** → `/om/tickets/[id]`, drifted quick-edit dialog deleted; **Create** reaches header parity (+Status, Done By, Amount, back-dated Created). → no migration · spec `2026-07-25-service-ticket-done-by-and-create-parity-design.md` · module: om
 

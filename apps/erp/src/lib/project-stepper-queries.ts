@@ -178,16 +178,18 @@ export async function getBoisForProject(projectId: string) {
   }));
 }
 
-/** Fetch BOQ items for a specific BOI version */
+/**
+ * Fetch BOQ items for a specific BOI version.
+ * Reads through the cost-masking RPC (mig 219): the SECURITY DEFINER function
+ * NULLs the cost columns (unit_price, gst_rate, total_price, actual prices,
+ * price_book_id) for non cost-visible roles (e.g. site_supervisor) and gates
+ * visibility to the caller's projects. Cost-visible roles get real cost.
+ */
 export async function getBoiItems(boiId: string) {
   const op = '[getBoiItems]';
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('project_boq_items')
-    .select('id, boi_id, line_number, item_category, item_description, brand, model, quantity, unit, unit_price, gst_rate, total_price, procurement_status, notes, created_at')
-    .eq('boi_id', boiId)
-    .order('line_number', { ascending: true });
+  const { data, error } = await supabase.rpc('get_boi_boq_items_masked', { p_boi_id: boiId });
 
   if (error) {
     console.error(`${op} Query failed:`, { code: error.code, message: error.message, boiId });
@@ -204,12 +206,14 @@ export async function getStepBoqData(projectId: string) {
 
   const supabase = await createClient();
 
-  // Try new BOQ items table first (migration 024)
-  const { data: boqItems, error: boqError } = await supabase
-    .from('project_boq_items')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('line_number', { ascending: true });
+  // Try new BOQ items table first (migration 024). Reads through the
+  // cost-masking RPC (mig 219) — cost columns come back NULL for non
+  // cost-visible roles (site_supervisor) and real for cost-visible roles;
+  // visibility is gated to the caller's projects inside the RPC.
+  const { data: boqItems, error: boqError } = await supabase.rpc(
+    'get_project_boq_items_masked',
+    { p_project_id: projectId },
+  );
 
   if (!boqError && boqItems && boqItems.length > 0) {
     return { type: 'items' as const, items: boqItems as any[], variances: [] };

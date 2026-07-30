@@ -7,13 +7,11 @@ R13|apps/erp/src/lib/pm-queries.ts:124:      .select('id', { count: 'exact', hea
 R13|apps/erp/src/lib/pm-queries.ts:96:      .select('id', { count: 'exact', head: true })
 R15|apps/erp/src/app/(auth)/login/login-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/app/(erp)/admin/rag-debug/ingest-state-actions.ts:10:import { createClient } from '@repo/supabase/server';
-R15|apps/erp/src/app/(erp)/bom-review/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/data-quality/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/deliveries/page.tsx:1:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/design/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/expenses/[id]/page.tsx:3:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/expenses/categories/page.tsx:2:import { createClient } from '@repo/supabase/server';
-R15|apps/erp/src/app/(erp)/expenses/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/hr/certifications/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/hr/training/page.tsx:2:import { createClient } from '@repo/supabase/server';
 R15|apps/erp/src/app/(erp)/leads/[id]/files/page.tsx:3:import { createClient } from '@repo/supabase/server';
@@ -42,7 +40,6 @@ R15|apps/erp/src/components/hr/leave-request-form.tsx:5:import { createClient } 
 R15|apps/erp/src/components/leads/lead-files-list.tsx:4:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/lead-form.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/leads/status-change.tsx:5:import { createClient } from '@repo/supabase/client';
-R15|apps/erp/src/components/om/amc-visit-tracker.tsx:7:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/om/attachment-link.tsx:4:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/om/ticket-attachments.tsx:5:import { createClient } from '@repo/supabase/client';
 R15|apps/erp/src/components/om/ticket-timeline.tsx:5:import { createClient } from '@repo/supabase/client';

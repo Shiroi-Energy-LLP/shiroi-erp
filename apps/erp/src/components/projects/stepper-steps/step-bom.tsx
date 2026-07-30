@@ -81,28 +81,27 @@ export async function StepBom({ projectId }: StepBomProps) {
               <CardTitle className="text-sm text-n-500">Legacy Items ({legacyItems.length})</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm [&_td]:align-top">
+              {/* No overflow wrapper — every column wraps instead of scrolling. */}
+              <table className="w-full table-fixed text-sm [&_td]:align-top">
                   <thead>
                     <tr className="border-b border-n-200 bg-n-50">
-                      <th className="px-2 py-1.5 text-left font-medium text-n-500">Category</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-n-500">Item</th>
-                      <th className="px-2 py-1.5 text-right font-medium text-n-500">Qty</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-n-500">Unit</th>
+                      <th className="w-[22%] px-3 py-2 text-left font-medium text-n-500">Category</th>
+                      <th className="px-3 py-2 text-left font-medium text-n-500">Item</th>
+                      <th className="w-[12%] px-3 py-2 text-right font-medium text-n-500">Qty</th>
+                      <th className="w-[14%] px-3 py-2 text-left font-medium text-n-500">Unit</th>
                     </tr>
                   </thead>
                   <tbody>
                     {legacyItems.map((item: any) => (
                       <tr key={item.id} className="border-b border-n-100">
-                        <td className="px-2 py-1.5">{getCategoryLabel(item.item_category)}</td>
-                        <td className="px-2 py-1.5">{item.item_description}</td>
-                        <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{item.quantity}</td>
-                        <td className="px-2 py-1.5 whitespace-nowrap">{item.unit}</td>
+                        <td className="whitespace-normal break-words px-3 py-2">{getCategoryLabel(item.item_category)}</td>
+                        <td className="whitespace-normal break-words px-3 py-2">{item.item_description}</td>
+                        <td className="px-3 py-2 text-right font-mono tabular-nums">{item.quantity}</td>
+                        <td className="whitespace-normal break-words px-3 py-2">{item.unit}</td>
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
+              </table>
             </CardContent>
           </Card>
         )}
@@ -209,16 +208,16 @@ export async function StepBom({ projectId }: StepBomProps) {
               )}
 
               {/* Compact BOI Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm [&_td]:align-top">
+              {/* No overflow wrapper — every column wraps instead of scrolling. */}
+              <table className="w-full table-fixed text-sm [&_td]:align-top">
                   <thead>
                     <tr className="border-b border-n-200 bg-n-050">
-                      <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[150px]">Category</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-n-500">Item Name</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[100px]">Make/Brand</th>
-                      <th className="px-2 py-1.5 text-right font-medium text-n-500 w-[60px]">Qty</th>
-                      <th className="px-2 py-1.5 text-left font-medium text-n-500 w-[70px]">Unit</th>
-                      <th className="px-2 py-1.5 w-8"></th>
+                      <th className="w-[18%] px-3 py-2 text-left font-medium text-n-500">Category</th>
+                      <th className="px-3 py-2 text-left font-medium text-n-500">Item Name</th>
+                      <th className="w-[15%] px-3 py-2 text-left font-medium text-n-500">Make/Brand</th>
+                      <th className="w-[9%] px-3 py-2 text-right font-medium text-n-500">Qty</th>
+                      <th className="w-[10%] px-3 py-2 text-left font-medium text-n-500">Unit</th>
+                      <th className="w-16 px-3 py-2"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -226,16 +225,16 @@ export async function StepBom({ projectId }: StepBomProps) {
                       <tr key={item.id}
                         className={`border-b border-n-100 hover:bg-n-050 group boi-row-${boi.id}`}
                         data-category={item.item_category}>
-                        <td className="px-2 py-1 font-medium text-n-950">
+                        <td className="whitespace-normal break-words px-3 py-1.5 font-medium text-n-950">
                           {getCategoryLabel(item.item_category)}
                         </td>
-                        <td className="px-2 py-1 text-n-700">{item.item_description}</td>
-                        <td className="px-2 py-1 text-n-500">
+                        <td className="whitespace-normal break-words px-3 py-1.5 text-n-700">{item.item_description}</td>
+                        <td className="whitespace-normal break-words px-3 py-1.5 text-n-500">
                           {[item.brand, item.model].filter(Boolean).join(' ') || '\u2014'}
                         </td>
-                        <td className="px-2 py-1 text-right font-mono text-n-700 whitespace-nowrap">{item.quantity}</td>
-                        <td className="px-2 py-1 text-n-500 whitespace-nowrap">{item.unit}</td>
-                        <td className="px-2 py-1 whitespace-nowrap">
+                        <td className="px-3 py-1.5 text-right font-mono tabular-nums text-n-700">{item.quantity}</td>
+                        <td className="whitespace-normal break-words px-3 py-1.5 text-n-500">{item.unit}</td>
+                        <td className="px-3 py-1.5">
                           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             {canManageItems && (
                               <BoiEditButton projectId={projectId} item={item} units={catalogUnits} />
@@ -265,8 +264,7 @@ export async function StepBom({ projectId }: StepBomProps) {
                       </tr>
                     )}
                   </tbody>
-                </table>
-              </div>
+              </table>
             </CardContent>
           </Card>
         );

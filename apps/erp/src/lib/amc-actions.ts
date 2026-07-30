@@ -4,6 +4,7 @@ import type { Database } from '@repo/types/database';
 import { createClient } from '@repo/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ok, err, type ActionResult } from '@/lib/types/actions';
+import { getCurrentEmployeeId } from '@/lib/auth';
 
 type OmContractStatus = Database['public']['Enums']['om_contract_status'];
 
@@ -18,6 +19,9 @@ type OmContractUpdate = Database['public']['Tables']['om_contracts']['Update'];
 type OmVisitSchedule = Database['public']['Tables']['om_visit_schedules']['Row'];
 type OmVisitScheduleInsert = Database['public']['Tables']['om_visit_schedules']['Insert'];
 type OmVisitScheduleUpdate = Database['public']['Tables']['om_visit_schedules']['Update'];
+
+type OmVisitEvent = Database['public']['Tables']['om_visit_events']['Row'];
+type OmVisitEventInsert = Database['public']['Tables']['om_visit_events']['Insert'];
 
 type ProjectLite = {
   id: string;
@@ -578,6 +582,174 @@ export async function getVisitsForContract(contractId: string): Promise<AmcVisit
   }
 
   return data ?? [];
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AMC Contract Detail (/om/amc/[id])
+// ═══════════════════════════════════════════════════════════════════════
+
+export type AmcContractDetail = Pick<
+  OmContract,
+  | 'id' | 'contract_number' | 'contract_type' | 'amc_category' | 'amc_duration_months'
+  | 'start_date' | 'end_date' | 'annual_value' | 'status' | 'visits_included'
+  | 'project_id' | 'notes' | 'created_at'
+> & {
+  projects: { project_number: string; customer_name: string } | null;
+};
+
+export async function getAmcContractDetail(
+  contractId: string,
+): Promise<AmcContractDetail | null> {
+  const op = '[getAmcContractDetail]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('om_contracts')
+    .select(
+      'id, contract_number, contract_type, amc_category, amc_duration_months, start_date, end_date, annual_value, status, visits_included, project_id, notes, created_at, projects!om_contracts_project_id_fkey(project_number, customer_name)',
+    )
+    .eq('id', contractId)
+    .maybeSingle()
+    .returns<AmcContractDetail | null>();
+
+  if (error) {
+    console.error(`${op} Failed:`, { contractId, code: error.code, message: error.message });
+    return null;
+  }
+  if (!data) {
+    console.warn(`${op} No contract found`, { contractId });
+    return null;
+  }
+
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Delete a single scheduled visit
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Hard-deletes one visit row. `om_visit_events` cascades (mig 218). Report
+ * files already uploaded to Storage are left in place — same behaviour as
+ * ticket deletion, so a mis-click never destroys a signed service report.
+ */
+export async function deleteAmcVisit(visitId: string): Promise<ActionResult<void>> {
+  const op = '[deleteAmcVisit]';
+  console.log(`${op} Deleting visit: ${visitId}`);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return err('Not authenticated');
+
+  const { data: visit, error: fetchError } = await supabase
+    .from('om_visit_schedules')
+    .select('contract_id')
+    .eq('id', visitId)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error(`${op} Lookup failed:`, { visitId, code: fetchError.code, message: fetchError.message });
+    return err(fetchError.message, fetchError.code);
+  }
+  if (!visit) return err('Visit not found');
+
+  const { error } = await supabase
+    .from('om_visit_schedules')
+    .delete()
+    .eq('id', visitId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { visitId, code: error.code, message: error.message });
+    return err(error.message, error.code);
+  }
+
+  revalidatePath('/om/amc');
+  revalidatePath(`/om/amc/${visit.contract_id}`);
+  return ok(undefined);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Per-visit Work Activity timeline (mig 218)
+// ═══════════════════════════════════════════════════════════════════════
+
+export type VisitEventRow = Pick<
+  OmVisitEvent,
+  'id' | 'entry_type' | 'body' | 'attachment_path' | 'attachment_name' | 'created_by' | 'created_at'
+> & {
+  author: { full_name: string } | null;
+};
+
+export async function getVisitEvents(visitId: string): Promise<VisitEventRow[]> {
+  const op = '[getVisitEvents]';
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('om_visit_events')
+    .select(
+      'id, entry_type, body, attachment_path, attachment_name, created_by, created_at, author:employees!om_visit_events_created_by_fkey(full_name)',
+    )
+    .eq('visit_id', visitId)
+    .order('created_at', { ascending: false })
+    .returns<VisitEventRow[]>();
+
+  if (error) {
+    console.error(`${op} Failed:`, { visitId, code: error.code, message: error.message });
+    return [];
+  }
+
+  return data ?? [];
+}
+
+export async function addVisitEvent(input: {
+  visitId: string;
+  body: string;
+  attachmentPath?: string;
+  attachmentName?: string;
+}): Promise<ActionResult<void>> {
+  const op = '[addVisitEvent]';
+  console.log(`${op} Adding activity to visit ${input.visitId}`);
+
+  const supabase = await createClient();
+  // created_by is a FK to employees(id) — never auth.uid() / profiles.id.
+  const employeeId = await getCurrentEmployeeId();
+  if (!employeeId) return err('No employee record for the current user');
+
+  const insert: OmVisitEventInsert = {
+    visit_id: input.visitId,
+    entry_type: 'note',
+    body: input.body,
+    attachment_path: input.attachmentPath ?? null,
+    attachment_name: input.attachmentName ?? null,
+    created_by: employeeId,
+  };
+
+  const { error } = await supabase.from('om_visit_events').insert(insert);
+
+  if (error) {
+    console.error(`${op} Failed:`, {
+      visitId: input.visitId, code: error.code, message: error.message, timestamp: new Date().toISOString(),
+    });
+    return err(error.message, error.code);
+  }
+
+  revalidatePath('/om/amc');
+  return ok(undefined);
+}
+
+export async function deleteVisitEvent(eventId: string): Promise<ActionResult<void>> {
+  const op = '[deleteVisitEvent]';
+  console.log(`${op} Deleting activity entry ${eventId}`);
+
+  const supabase = await createClient();
+  const { error } = await supabase.from('om_visit_events').delete().eq('id', eventId);
+
+  if (error) {
+    console.error(`${op} Failed:`, { eventId, code: error.code, message: error.message });
+    return err(error.message, error.code);
+  }
+
+  revalidatePath('/om/amc');
+  return ok(undefined);
 }
 
 // ═══════════════════════════════════════════════════════════════════════

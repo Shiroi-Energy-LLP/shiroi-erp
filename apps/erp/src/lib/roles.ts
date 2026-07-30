@@ -101,7 +101,7 @@ const ITEMS = {
   boiReceived:      { label: 'Received',          href: '/purchase?status=received',        icon: 'ClipboardList' },
   boiDelivered:     { label: 'Delivered',         href: '/purchase?status=delivered',       icon: 'ClipboardList' },
   boiPoLog:         { label: 'Purchase Orders',   href: '/purchase/orders',                 icon: 'ShoppingCart' },
-  boiProjects:      { label: 'Projects',          href: '/purchase/projects',               icon: 'HardHat' },
+  boiProjects:      { label: 'Budgets',           href: '/purchase/projects',               icon: 'HardHat' },
   boiIntake:        { label: 'Add Bill of Items', href: '/purchase/intake',                 icon: 'ListChecks' },
 } as const satisfies Record<string, NavItem>;
 

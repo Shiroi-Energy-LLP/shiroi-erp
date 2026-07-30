@@ -15,7 +15,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getTicketDetail } from '@/lib/service-ticket-actions';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
-import { formatDate, formatINR } from '@repo/ui/formatters';
+import { formatDateFromTimestamp, formatINR } from '@repo/ui/formatters';
 import { Card, CardContent, Badge } from '@repo/ui';
 import { ArrowLeft } from 'lucide-react';
 import { issueTypeLabel, severityVariant } from '@/lib/ticket-constants';
@@ -93,10 +93,11 @@ export default async function TicketDetailPage({ params }: PageProps) {
               </Badge>
             </MetaItem>
             <MetaItem label="Assigned To">{assigneeName ?? '—'}</MetaItem>
-            <MetaItem label="Created">{formatDate(ticket.created_at)}</MetaItem>
+            {/* Both are TIMESTAMPTZ — formatDate's date-only suffix broke them. */}
+            <MetaItem label="Created">{formatDateFromTimestamp(ticket.created_at)}</MetaItem>
             <MetaItem label="SLA Due">
               {ticket.sla_deadline ? (
-                <span className={ticket.sla_breached ? 'text-red-600 font-medium' : ''}>{formatDate(ticket.sla_deadline)}</span>
+                <span className={ticket.sla_breached ? 'text-red-600 font-medium' : ''}>{formatDateFromTimestamp(ticket.sla_deadline)}</span>
               ) : '—'}
             </MetaItem>
             <MetaItem label="Done By">{resolvedByName ?? '—'}</MetaItem>

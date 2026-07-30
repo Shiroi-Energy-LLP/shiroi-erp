@@ -2,20 +2,19 @@ import * as React from 'react';
 import { getAllAmcData, getProjectsWithAmc } from '@/lib/amc-actions';
 import { getActiveEmployees } from '@/lib/tasks-actions';
 import { getUserProfile } from '@/lib/auth';
-import { formatDate } from '@repo/ui/formatters';
+import { formatDate, formatDateFromTimestamp, formatINR } from '@repo/ui/formatters';
 import { CreateAmcDialog } from '@/components/om/create-amc-dialog';
 import { AmcStatusToggle } from '@/components/om/amc-status-toggle';
-import { AmcVisitTracker } from '@/components/om/amc-visit-tracker';
 import { DeleteAmcButton } from '@/components/om/delete-amc-button';
-
-const AMC_DELETE_ROLES = ['founder', 'om_technician'] as const;
+import { AmcProjectFilter } from '@/components/om/amc-project-filter';
+import { AMC_DELETE_ROLES, AMC_OPEN_STATUSES } from '@/lib/amc-constants';
 import {
   Card,
   CardContent,
   Badge,
 } from '@repo/ui';
 import { ListPageShell } from '@/components/list-page-shell';
-import { CalendarCheck } from 'lucide-react';
+import { CalendarCheck, ChevronRight } from 'lucide-react';
 import { FilterSelect } from '@/components/filter-select';
 import { FilterBar } from '@/components/filter-bar';
 import Link from 'next/link';
@@ -47,12 +46,13 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
     : false;
 
   const hasFilters = params.status || params.category || params.project;
+  const isOpenStatus = (s: string) => (AMC_OPEN_STATUSES as readonly string[]).includes(s);
 
   // Summary stats
-  const openContracts = contracts.filter((c: any) => c.status === 'active' || c.status === 'quoted').length;
-  const closedContracts = contracts.filter((c: any) => c.status === 'expired' || c.status === 'cancelled').length;
-  const freeCount = contracts.filter((c: any) => c.amc_category === 'free_amc').length;
-  const paidCount = contracts.filter((c: any) => c.amc_category === 'paid_amc').length;
+  const openContracts = contracts.filter((c) => isOpenStatus(c.status)).length;
+  const closedContracts = contracts.length - openContracts;
+  const freeCount = contracts.filter((c) => c.amc_category === 'free_amc').length;
+  const paidCount = contracts.filter((c) => c.amc_category === 'paid_amc').length;
 
   return (
     <ListPageShell
@@ -70,12 +70,8 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                 <option value="free_amc">Free AMC</option>
                 <option value="paid_amc">Paid AMC</option>
               </FilterSelect>
-              <FilterSelect paramName="project" className="w-52 text-xs h-8">
-                <option value="">All Projects</option>
-                {filterProjects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.customer_name}</option>
-                ))}
-              </FilterSelect>
+              {/* Autosearch — the old plain <select> listed every project. */}
+              <AmcProjectFilter projects={filterProjects} />
             </FilterBar>
           </div>
           <CreateAmcDialog employees={employees} />
@@ -91,35 +87,35 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
 
       {/* Summary Cards — scroll away */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="px-3 py-2.5 bg-white border border-n-200 rounded-lg">
-          <div className="text-[10px] text-n-500 uppercase tracking-wider">Total AMC</div>
-          <div className="text-xl font-bold text-n-900 mt-0.5">{contracts.length}</div>
-          <div className="text-[10px] text-n-400 mt-0.5">
+        <div className="rounded-lg border border-n-200 bg-white px-3 py-2.5">
+          <div className="text-[11px] uppercase tracking-wider text-n-500">Total AMC</div>
+          <div className="mt-0.5 text-xl font-bold text-n-900">{contracts.length}</div>
+          <div className="mt-0.5 text-[11px] text-n-400">
             {freeCount} free · {paidCount} paid
           </div>
         </div>
-        <div className="px-3 py-2.5 bg-white border border-red-200 rounded-lg">
-          <div className="text-[10px] text-red-600 uppercase tracking-wider">Open</div>
-          <div className="text-xl font-bold text-red-700 mt-0.5">{openContracts}</div>
+        <div className="rounded-lg border border-red-200 bg-white px-3 py-2.5">
+          <div className="text-[11px] uppercase tracking-wider text-red-600">Open</div>
+          <div className="mt-0.5 text-xl font-bold text-red-700">{openContracts}</div>
         </div>
-        <div className="px-3 py-2.5 bg-white border border-green-200 rounded-lg">
-          <div className="text-[10px] text-green-600 uppercase tracking-wider">Closed</div>
-          <div className="text-xl font-bold text-green-700 mt-0.5">{closedContracts}</div>
+        <div className="rounded-lg border border-green-200 bg-white px-3 py-2.5">
+          <div className="text-[11px] uppercase tracking-wider text-green-600">Closed</div>
+          <div className="mt-0.5 text-xl font-bold text-green-700">{closedContracts}</div>
         </div>
-        <div className="px-3 py-2.5 bg-white border border-blue-200 rounded-lg">
-          <div className="text-[10px] text-blue-600 uppercase tracking-wider">Free vs Paid</div>
-          <div className="text-lg font-bold text-blue-700 mt-0.5">{freeCount} / {paidCount}</div>
+        <div className="rounded-lg border border-blue-200 bg-white px-3 py-2.5">
+          <div className="text-[11px] uppercase tracking-wider text-blue-600">Free vs Paid</div>
+          <div className="mt-0.5 text-lg font-bold text-blue-700">{freeCount} / {paidCount}</div>
         </div>
       </div>
 
-      {/* AMC Table — 9 columns */}
+      {/* AMC Table */}
       <Card>
         <CardContent className="p-0">
           {contracts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <CalendarCheck className="h-10 w-10 text-n-300 mb-3" />
               <h2 className="text-sm font-heading font-bold text-n-700">No AMC Records</h2>
-              <p className="text-xs text-n-500 max-w-[320px] mt-1">
+              <p className="mt-1 max-w-[320px] text-xs text-n-500">
                 {hasFilters
                   ? 'No AMC contracts match your current filters.'
                   : 'No AMC set up for this project. Create AMC to begin tracking visits.'}
@@ -129,35 +125,34 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
             <table className="w-full text-sm [&_td]:align-top">
               <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(229_231_235)]">
                   <tr className="border-b border-n-200 bg-n-50 text-left">
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Project Name</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Category</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Scheduled Visits</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Status</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Next AMC Date</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Completed Date</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider">Notes</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-20">Actions</th>
-                    <th className="px-2 py-2 text-[10px] font-semibold text-n-500 uppercase tracking-wider w-20">Report</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500">Project Name</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500">Category</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500">Scheduled Visits</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500">Status</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500">Next AMC Date</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500">Completed Date</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500">Amount</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500">Notes</th>
+                    <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-n-500 w-20">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {contracts.map((contract: any) => {
-                    const projectInfo = contract.projects as { project_number: string; customer_name: string } | null;
+                  {contracts.map((contract) => {
+                    const projectInfo = contract.projects;
                     const isFree = contract.amc_category === 'free_amc';
-                    const isOpen = contract.status === 'active' || contract.status === 'quoted';
-                    const completedCount = contract.completed_visit_count as number;
-                    const totalCount = contract.total_visit_count as number;
-                    const reportCount = 0; // reports are per-visit inside AmcVisitTracker
+                    const isOpen = isOpenStatus(contract.status);
+                    const completedCount = contract.completed_visit_count;
+                    const totalCount = contract.total_visit_count;
 
                     return (
                       <tr
                         key={contract.id}
-                        className={`border-b border-n-100 hover:bg-n-50 align-top ${!isOpen ? 'opacity-60' : ''}`}
+                        className={`border-b border-n-100 align-top hover:bg-n-50 ${!isOpen ? 'opacity-60' : ''}`}
                       >
                         {/* Project Name — clickable link */}
-                        <td className="px-2 py-2">
+                        <td className="px-3 py-2.5">
                           {projectInfo ? (
-                            <Link href={`/projects/${contract.project_id}`} className="text-p-600 hover:underline font-medium">
+                            <Link href={`/projects/${contract.project_id}`} className="font-medium text-p-600 hover:underline">
                               {projectInfo.customer_name}
                             </Link>
                           ) : (
@@ -166,28 +161,29 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Category */}
-                        <td className="px-2 py-2">
+                        <td className="px-3 py-2.5">
                           <Badge
                             variant={isFree ? 'outline' : 'info'}
-                            className="text-[10px] px-1.5 py-0"
+                            className="px-1.5 py-0 text-[11px]"
                           >
                             {isFree ? 'Free AMC' : 'Paid AMC'}
                           </Badge>
                         </td>
 
-                        {/* Scheduled Visits — "X / Y" with expandable tracker */}
-                        <td className="px-2 py-2">
-                          <AmcVisitTracker
-                            contractId={contract.id}
-                            visitsIncluded={contract.visits_included}
-                            employees={employees}
-                            completedCount={completedCount}
-                            totalCount={totalCount}
-                          />
+                        {/* Scheduled Visits — opens the contract detail page */}
+                        <td className="px-3 py-2.5">
+                          <Link
+                            href={`/om/amc/${contract.id}`}
+                            className="inline-flex items-center gap-0.5 text-xs font-medium text-p-600 hover:text-p-700 hover:underline"
+                            title="View all scheduled visits"
+                          >
+                            {completedCount} / {totalCount}
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </Link>
                         </td>
 
                         {/* Status — Open/Closed inline toggle */}
-                        <td className="px-2 py-2">
+                        <td className="px-3 py-2.5">
                           <AmcStatusToggle
                             contractId={contract.id}
                             currentStatus={contract.status}
@@ -195,11 +191,11 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                         </td>
 
                         {/* Next AMC Date */}
-                        <td className="px-2 py-2 text-n-600 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-3 py-2.5 text-n-600">
                           {contract.next_visit_date ? (
                             <span className={
                               contract.next_visit_date < new Date().toISOString().split('T')[0]!
-                                ? 'text-red-600 font-medium'
+                                ? 'font-medium text-red-600'
                                 : 'text-n-700'
                             }>
                               {formatDate(contract.next_visit_date)}
@@ -209,17 +205,28 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                           )}
                         </td>
 
-                        {/* Completed Date — last completed visit */}
-                        <td className="px-2 py-2 text-n-500 whitespace-nowrap">
+                        {/* Completed Date — last completed visit.
+                            completed_at is TIMESTAMPTZ; formatDate's date-only
+                            suffix rendered this as "Invalid Date". */}
+                        <td className="whitespace-nowrap px-3 py-2.5 text-n-600">
                           {contract.last_completed_date ? (
-                            formatDate(contract.last_completed_date)
+                            formatDateFromTimestamp(contract.last_completed_date)
+                          ) : (
+                            <span className="text-n-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Amount — paid AMCs only */}
+                        <td className="whitespace-nowrap px-3 py-2.5 text-n-700 tabular-nums">
+                          {!isFree && (contract.annual_value ?? 0) > 0 ? (
+                            formatINR(contract.annual_value)
                           ) : (
                             <span className="text-n-300">—</span>
                           )}
                         </td>
 
                         {/* Notes */}
-                        <td className="px-2 py-2 text-n-600 max-w-[240px] whitespace-normal break-words">
+                        <td className="max-w-[240px] whitespace-normal break-words px-3 py-2.5 text-n-600">
                           {contract.notes ? (
                             <span title={contract.notes}>{contract.notes}</span>
                           ) : (
@@ -227,10 +234,10 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                           )}
                         </td>
 
-                        {/* Actions — contract number + per-row delete (founder + om_technician) */}
-                        <td className="px-2 py-2 whitespace-nowrap">
-                          <div className="flex items-center gap-1">
-                            <span className="text-[9px] text-n-300 font-mono">{contract.contract_number}</span>
+                        {/* Actions — contract number + per-row delete */}
+                        <td className="whitespace-nowrap px-3 py-2.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-[10px] text-n-300">{contract.contract_number}</span>
                             {canDeleteAmc && (
                               <DeleteAmcButton
                                 contractId={contract.id}
@@ -238,17 +245,6 @@ export default async function AmcPage({ searchParams }: AmcPageProps) {
                               />
                             )}
                           </div>
-                        </td>
-
-                        {/* Report — per-visit reports are accessible via the visit tracker */}
-                        <td className="px-2 py-2 whitespace-nowrap">
-                          {completedCount > 0 ? (
-                            <span className="text-green-600 font-medium text-[10px]">
-                              {completedCount} visit{completedCount !== 1 ? 's' : ''}
-                            </span>
-                          ) : (
-                            <span className="text-n-300">—</span>
-                          )}
                         </td>
                       </tr>
                     );

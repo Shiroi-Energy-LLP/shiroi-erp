@@ -1,10 +1,28 @@
-import { createClient } from '@repo/supabase/server';
+/**
+ * /bom-review — review and fix BOM line items across all proposals.
+ *
+ * Converted to ListPageShell so the category filter bar and the table header
+ * stay frozen while rows scroll, and the table no longer needs its own
+ * horizontal scroller — every column wraps instead.
+ *
+ * NEVER-DO compliance:
+ * - #13: count:'estimated' on proposal_bom_lines (~24.7k rows).
+ * - #15: reads live in bom-review-queries.ts, not inline in the page.
+ * - #21: the client table imports labels from bom-review-constants.ts.
+ * - #25: paginated via count + .range(), never a bare .limit().
+ */
+
 import Link from 'next/link';
-import { Card, CardContent, Badge, Eyebrow, EmptyState } from '@repo/ui';
-import { ListChecks, Flag, Upload } from 'lucide-react';
+import { Card, CardContent, EmptyState } from '@repo/ui';
+import { ListChecks, Upload } from 'lucide-react';
+import { ListPageShell } from '@/components/list-page-shell';
+import { getBomReviewSummary, getBomReviewLines } from '@/lib/bom-review-queries';
+import { bomCategoryLabel } from '@/lib/bom-review-constants';
 import { BomReviewTable } from './bom-review-table';
 
 export const metadata = { title: 'BOM Review' };
+
+const PER_PAGE = 100;
 
 interface PageProps {
   searchParams: Promise<{ category?: string; proposal_id?: string; page?: string }>;
@@ -15,68 +33,94 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
   const categoryFilter = params.category ?? '';
   const proposalFilter = params.proposal_id ?? '';
   const page = Math.max(1, parseInt(params.page ?? '1', 10));
-  const perPage = 100;
 
-  const supabase = await createClient();
+  const [summary, { lines, filteredCount }] = await Promise.all([
+    getBomReviewSummary(),
+    getBomReviewLines({
+      category: categoryFilter || undefined,
+      proposalId: proposalFilter || undefined,
+      page,
+      perPage: PER_PAGE,
+    }),
+  ]);
 
-  // ── Summary stats (mig 194) ──
-  // One RPC returns the four counts + per-category breakdown in a single pass,
-  // replacing 3 count:'exact' on proposal_bom_lines (~24.7k rows) + a data_flags
-  // count + an unbounded item_category scan that pulled every row into Node.
-  const { data: summaryRaw } = await supabase.rpc('get_bom_review_summary');
-  const summary = (summaryRaw ?? {}) as unknown as {
-    total: number;
-    with_rate: number;
-    no_rate: number;
-    flagged: number;
-    category_counts: Record<string, number>;
-  };
-  const totalCount = summary.total ?? 0;
-  const withRateCount = summary.with_rate ?? 0;
-  const noRateCount = summary.no_rate ?? 0;
-  const flaggedCount = summary.flagged ?? 0;
-  const categoryCounts: Record<string, number> = summary.category_counts ?? {};
+  const totalPages = Math.ceil(filteredCount / PER_PAGE);
 
-  // ── Paginated BOM lines ──
-  let query = supabase
-    .from('proposal_bom_lines')
-    .select('*, proposals!inner(proposal_number, lead_id)', { count: 'estimated' })
-    .order('item_category', { ascending: true })
-    .order('line_number', { ascending: true })
-    .range((page - 1) * perPage, page * perPage - 1);
+  function pageUrl(p: number) {
+    const q = new URLSearchParams();
+    if (categoryFilter) q.set('category', categoryFilter);
+    if (proposalFilter) q.set('proposal_id', proposalFilter);
+    if (p > 1) q.set('page', String(p));
+    const qs = q.toString();
+    return `/bom-review${qs ? `?${qs}` : ''}`;
+  }
 
-  if (categoryFilter) query = query.eq('item_category', categoryFilter);
-  if (proposalFilter) query = query.eq('proposal_id', proposalFilter);
+  function categoryUrl(cat: string) {
+    const q = new URLSearchParams();
+    if (cat) q.set('category', cat);
+    if (proposalFilter) q.set('proposal_id', proposalFilter);
+    const qs = q.toString();
+    return `/bom-review${qs ? `?${qs}` : ''}`;
+  }
 
-  const { data: bomLines, count: filteredCount } = await query;
-  const totalPages = Math.ceil((filteredCount ?? 0) / perPage);
+  const chipBase = 'rounded-full px-3 py-1 text-xs font-medium transition-colors';
+  const chipOn = 'bg-shiroi-gold text-shiroi-ink';
+  const chipOff = 'bg-n-100 text-n-600 hover:bg-n-200';
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Eyebrow className="mb-1">BOM REVIEW</Eyebrow>
-          <h1 className="text-2xl font-heading font-bold text-n-950">BOM Line Items Review</h1>
-          <p className="text-sm text-n-500">
-            Review and fix BOM data across all proposals. Double-click any cell to edit.
-          </p>
+    <ListPageShell
+      header={
+        <div className="flex items-start justify-between gap-4">
+          {/* Category chips — frozen with the header band */}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <span className="text-xs text-n-500">Category:</span>
+            <Link
+              href={categoryUrl('')}
+              className={`${chipBase} ${!categoryFilter ? chipOn : chipOff}`}
+            >
+              All ({summary.total.toLocaleString('en-IN')})
+            </Link>
+            {Object.entries(summary.category_counts)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 20)
+              .map(([cat, count]) => (
+                <Link
+                  key={cat}
+                  href={categoryUrl(cat)}
+                  className={`${chipBase} ${categoryFilter === cat ? chipOn : chipOff}`}
+                >
+                  {bomCategoryLabel(cat)} ({count.toLocaleString('en-IN')})
+                </Link>
+              ))}
+          </div>
+          <Link
+            href="/bom-review/import"
+            className="inline-flex h-8 flex-shrink-0 items-center gap-1.5 rounded-md bg-shiroi-gold px-3 text-xs font-medium text-shiroi-ink hover:bg-shiroi-gold/90"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Import from Excel
+          </Link>
         </div>
-        <Link
-          href="/bom-review/import"
-          className="flex-shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-shiroi-gold text-shiroi-ink text-xs font-medium hover:bg-shiroi-gold/90"
-        >
-          <Upload className="h-3.5 w-3.5" />
-          Import from Excel
-        </Link>
+      }
+    >
+      <div className="space-y-1">
+        <h1 className="text-lg font-heading font-bold text-n-950">
+          BOM Line Items Review{' '}
+          <span className="text-sm font-normal text-n-500">
+            ({filteredCount.toLocaleString('en-IN')} lines)
+          </span>
+        </h1>
+        <p className="text-sm text-n-500">
+          Review and fix BOM data across all proposals. Double-click any cell to edit.
+        </p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
             <p className="text-2xl font-heading font-bold text-n-950">
-              {(totalCount ?? 0).toLocaleString('en-IN')}
+              {summary.total.toLocaleString('en-IN')}
             </p>
             <p className="text-xs text-n-500">Total BOM Lines</p>
           </CardContent>
@@ -84,7 +128,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
         <Card>
           <CardContent className="pt-4">
             <p className="text-2xl font-heading font-bold text-green-600">
-              {(withRateCount ?? 0).toLocaleString('en-IN')}
+              {summary.with_rate.toLocaleString('en-IN')}
             </p>
             <p className="text-xs text-n-500">With Rate</p>
           </CardContent>
@@ -92,7 +136,7 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
         <Card>
           <CardContent className="pt-4">
             <p className="text-2xl font-heading font-bold text-orange-600">
-              {(noRateCount ?? 0).toLocaleString('en-IN')}
+              {summary.no_rate.toLocaleString('en-IN')}
             </p>
             <p className="text-xs text-n-500">Missing Rate</p>
           </CardContent>
@@ -100,79 +144,50 @@ export default async function BomReviewPage({ searchParams }: PageProps) {
         <Card>
           <CardContent className="pt-4">
             <p className="text-2xl font-heading font-bold text-red-600">
-              {flaggedCount ?? 0}
+              {summary.flagged.toLocaleString('en-IN')}
             </p>
             <p className="text-xs text-n-500">Flagged Items</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Category Filter */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-sm text-n-500">Category:</span>
-        <Link
-          href="/bom-review"
-          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-            !categoryFilter ? 'bg-shiroi-gold text-shiroi-ink' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          All ({totalCount?.toLocaleString('en-IN')})
-        </Link>
-        {Object.entries(categoryCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 20)
-          .map(([cat, count]) => (
-            <Link
-              key={cat}
-              href={`/bom-review?category=${cat}`}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                categoryFilter === cat ? 'bg-shiroi-gold text-shiroi-ink' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {cat.replace(/_/g, ' ')} ({count.toLocaleString('en-IN')})
-            </Link>
-          ))}
-      </div>
-
       {/* BOM Table */}
       <Card>
         <CardContent className="p-0">
-          {(bomLines ?? []).length === 0 ? (
+          {lines.length === 0 ? (
             <EmptyState
               icon={<ListChecks className="h-12 w-12" />}
               title="No BOM lines found"
-              description={categoryFilter ? `No items in category "${categoryFilter.replace(/_/g, ' ')}"` : 'No BOM line items in the database.'}
+              description={
+                categoryFilter
+                  ? `No items in category "${bomCategoryLabel(categoryFilter)}"`
+                  : 'No BOM line items in the database.'
+              }
             />
           ) : (
-            <BomReviewTable data={bomLines ?? []} />
+            <BomReviewTable data={lines} startIndex={(page - 1) * PER_PAGE} />
           )}
         </CardContent>
       </Card>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
+        <div className="flex items-center justify-center gap-3 pb-2">
           {page > 1 && (
-            <Link
-              href={`/bom-review?page=${page - 1}${categoryFilter ? `&category=${categoryFilter}` : ''}`}
-              className="px-3 py-1 rounded bg-gray-100 text-sm hover:bg-gray-200"
-            >
+            <Link href={pageUrl(page - 1)} className="rounded bg-n-100 px-3 py-1 text-sm hover:bg-n-200">
               Previous
             </Link>
           )}
-          <span className="px-3 py-1 text-sm text-n-500">
+          <span className="text-sm text-n-500">
             Page {page} of {totalPages}
           </span>
           {page < totalPages && (
-            <Link
-              href={`/bom-review?page=${page + 1}${categoryFilter ? `&category=${categoryFilter}` : ''}`}
-              className="px-3 py-1 rounded bg-gray-100 text-sm hover:bg-gray-200"
-            >
+            <Link href={pageUrl(page + 1)} className="rounded bg-n-100 px-3 py-1 text-sm hover:bg-n-200">
               Next
             </Link>
           )}
         </div>
       )}
-    </div>
+    </ListPageShell>
   );
 }

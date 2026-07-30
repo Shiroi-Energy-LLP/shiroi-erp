@@ -59,22 +59,25 @@ const GST_LABEL: Record<GSTType, string> = {
 export function BOMTable({ lines }: { lines: BOMLine[] }) {
   const sorted = [...lines].sort((a, b) => a.line_number - b.line_number);
 
+  // `Table` already supplies its own bordered scroll container, so the previous
+  // overflow-x-auto wrapper only added a second scrollbar. table-fixed with
+  // explicit widths lets Description and Brand wrap instead of pushing the
+  // table wider than the page.
   return (
-    <div className="overflow-x-auto">
-      <Table>
+    <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">#</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Brand / Model</TableHead>
-            <TableHead className="text-right">Qty</TableHead>
-            <TableHead>Unit</TableHead>
-            <TableHead className="text-right">Unit Price</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-            <TableHead>GST Type</TableHead>
-            <TableHead>Scope</TableHead>
-            <TableHead>Correction</TableHead>
+            <TableHead className="w-10">#</TableHead>
+            <TableHead className="w-[11%]">Category</TableHead>
+            <TableHead className="w-[22%]">Description</TableHead>
+            <TableHead className="w-[13%]">Brand / Model</TableHead>
+            <TableHead className="w-[7%] text-right">Qty</TableHead>
+            <TableHead className="w-[7%]">Unit</TableHead>
+            <TableHead className="w-[10%] text-right">Unit Price</TableHead>
+            <TableHead className="w-[10%] text-right">Total</TableHead>
+            <TableHead className="w-[9%]">GST Type</TableHead>
+            <TableHead className="w-[8%]">Scope</TableHead>
+            <TableHead className="w-[12%]">Correction</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -114,8 +117,7 @@ export function BOMTable({ lines }: { lines: BOMLine[] }) {
             ))
           )}
         </TableBody>
-      </Table>
-    </div>
+    </Table>
   );
 }
 

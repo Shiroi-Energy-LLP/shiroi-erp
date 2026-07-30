@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { getAllTickets, getServiceTicketKpis } from '@/lib/service-ticket-actions';
 import { getActiveEmployees, getActiveProjects } from '@/lib/tasks-actions';
-import { formatDate, formatINR as formatINRBase } from '@repo/ui/formatters';
+import { formatDateFromTimestamp, formatINR as formatINRBase } from '@repo/ui/formatters';
 import { CreateTicketDialog } from '@/components/om/create-ticket-dialog';
 import { DeleteTicketButton } from '@/components/om/delete-ticket-button';
 import { TicketStatusToggle } from '@/components/om/ticket-status-toggle';
@@ -234,9 +234,9 @@ export default async function ServiceTicketsPage({ searchParams }: TicketsPagePr
                           />
                         </td>
 
-                        {/* Created */}
+                        {/* Created — created_at is TIMESTAMPTZ, not a date-only column */}
                         <td className="px-2 py-1.5 text-n-500 whitespace-nowrap">
-                          {formatDate(ticket.created_at)}
+                          {formatDateFromTimestamp(ticket.created_at)}
                         </td>
 
                         {/* Done By */}

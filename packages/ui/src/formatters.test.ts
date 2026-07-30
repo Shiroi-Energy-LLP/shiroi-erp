@@ -56,3 +56,25 @@ describe('formatDate (date-only, server-tz-safe)', () => {
     expect(formatDate('2026-01-01')).toBe('01 Jan 2026');
   });
 });
+
+describe('formatDate (timestamp tolerance)', () => {
+  // Pre-fix these all returned "Invalid Date": appending 'T00:00:00+05:30' to a
+  // string that already had a time component produced an unparseable date.
+  // This was the Service Ticket "Created" and AMC "Completed Date" bug.
+  it('accepts a TIMESTAMPTZ ISO string', () => {
+    expect(formatDate('2026-07-30T05:00:00.000Z')).toBe('30 Jul 2026');
+  });
+
+  it('converts to IST before picking the calendar day', () => {
+    // 23:00 UTC on the 29th is 04:30 IST on the 30th.
+    expect(formatDate('2026-07-29T23:00:00.000Z')).toBe('30 Jul 2026');
+  });
+
+  it('accepts a space-separated Postgres timestamp', () => {
+    expect(formatDate('2026-07-30 05:00:00+00')).toBe('30 Jul 2026');
+  });
+
+  it('returns an em dash for empty input', () => {
+    expect(formatDate('')).toBe('—');
+  });
+});

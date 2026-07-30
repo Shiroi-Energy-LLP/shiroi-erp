@@ -41,7 +41,21 @@ export function toIST(utcTimestamp: string): string {
   });
 }
 
+/**
+ * Format a date-only string ("YYYY-MM-DD") as Indian date "DD MMM YYYY".
+ *
+ * Date-only values are pinned to IST midnight so a UTC server doesn't render
+ * them a day early. Inputs that already carry a time component (a TIMESTAMPTZ
+ * ISO string) would be corrupted by that suffix — `"…T05:00:00Z" + "T00:00:00…"`
+ * parses as Invalid Date — so those are delegated to formatDateFromTimestamp.
+ * Callers with a known timestamp should use that function directly; this guard
+ * exists because the two are easy to mix up and the failure is user-visible.
+ */
 export function formatDate(dateString: string): string {
+  if (!dateString) return '—';
+  if (dateString.includes('T') || dateString.includes(' ')) {
+    return formatDateFromTimestamp(dateString);
+  }
   return new Date(dateString + 'T00:00:00+05:30').toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
