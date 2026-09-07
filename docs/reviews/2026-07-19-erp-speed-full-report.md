@@ -117,3 +117,24 @@ The June-19 audit (`docs/reviews/2026-06-19-page-load-perf-audit.md`) fixed most
 ---
 
 *Related: `docs/reviews/2026-06-19-page-load-perf-audit.md` (per-page code audit), `docs/reviews/2026-06-18-projects-leads-search-perf.md` (storage contention diagnosis), `docs/superpowers/specs/2026-06-09-dev-to-prod-migration-design.md` (cutover — add the Mumbai region decision).*
+
+---
+
+## 6. 2026-09-07 follow-up — after the icn1 flip, what is still slow and why
+
+Measured the same day, after production served `bom1::icn1`.
+
+**Network tax is gone at the request level.** `auth/v1/user` from the Seoul colo: 25–40 ms warm (was ~900 ms from IAD). Unauthenticated `/projects` redirect: 0.56–0.78 s (was 0.5–2.4 s). RSC payloads are small (29–55 KB), so transfer size is not a factor.
+
+**But logged-in page loads are still 1.7–4.5 s**, because the usage pattern (click, read for a minute, click) hits every cold path each time. Ranked by measured cost:
+
+| # | Cause | Evidence | Fix |
+|---|---|---|---|
+| 1 | **PostgREST connection pool idles out after ~30 s.** Each page then opens 1–10 fresh Postgres backends. | Controlled bursts against `item_units?limit=1`: 1 request after 45 s idle = **927 ms** vs 196 ms warm; 10 parallel after idle = **1.2–3.6 s** vs 0.5 s; after only 20 s idle = 0.57 s. `SET client_encoding` count in `pg_stat_statements` rises by exactly the burst size per cold page. Supabase does not expose `db-pool-max-idletime`. | (a) DB Small trial (cheaper backend spin-up + no CPU starvation during the burst), (b) a keep-warm ping every ~20 s via pg_cron + pg_net (`pg_net` not yet installed; a test pinger from a laptop kept the pool alive but collided with a page load once — keep it to ≤6 parallel), (c) fewer parallel queries per tab (bundle into one RPC). |
+| 2 | **Cold plans / first execution per connection.** | `get_project_boq_items_masked`: 532 ms first call, ~55 ms second. Total DB exec for the whole BOQ tab is ~730 ms warm. | Same as #1; plus optimise that RPC (1,739 blocks for one project). |
+| 3 | **Serial auth hops per navigation.** Middleware `auth.getUser()` → layout `getUser()` → `profiles` → `getProjectHeader` → page → `contacts` (details) — 4–5 dependent round-trips before the stream completes; RSC probe headers arrive after 0.5–1.4 s. | JWKS shows the project signs with **ES256**, so `supabase.auth.getClaims()` can verify the session locally (no network) in middleware and `getAuthUser`. Removes 2 hops per navigation. Trade-off: revoked sessions live until token expiry (~1 h). |
+| 4 | **Vercel function variance (Hobby plan).** Identical RSC requests 0.69–1.97 s with instance rotation (`l8x99`/`x2hjk`/`9dhv9`), one 12.4 s outlier; HTML document 3.5–4 s. Runtime logs are not reachable via API on Hobby, so cold-start cost is inferred, not measured. | Watch after #1–#3; Pro plan only if the variance persists. |
+
+**Numbers for the record (logged-in, Chennai, DCL of the navigation):** before flip — projects list 5.1 s, details 2.65 s, BOQ 2.0 s, execution 2.2 s, survey 2.6 s, dashboard 2.7 s. After flip, cold pool — details 3.0 s, BOQ 4.5 s, execution 1.66 s, survey 2.16 s. After flip, warm pool + warm function (RSC fetch) — details 0.84 s, execution 0.84 s, survey 1.1 s, BOQ 1.1 s. That last row is the achievable floor with today's code; #1–#3 are what stand between the users and it.
+
+**Hygiene done today:** `pg_stat_statements` reset at 11:27 UTC (P2-2), so future means reflect current behaviour.
