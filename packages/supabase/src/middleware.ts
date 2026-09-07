@@ -44,12 +44,18 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // Refresh the session. Do NOT use getSession() here — getUser() contacts
-  // the Auth server and ensures the token is still valid.
+  // Refresh the session and validate it. `getClaims()` (not `getSession()`)
+  // verifies the JWT signature locally against the project's JWKS — the project
+  // signs with ES256 (asymmetric), so this costs no network round-trip to the
+  // Auth server on the hot path. It still calls getSession() internally, which
+  // refreshes an expired token and rotates the cookies via setAll(). If the key
+  // were ever symmetric (HS256) supabase-js falls back to getUser() by itself.
+  // Trade-off accepted 2026-09-07: a revoked/banned session stays valid until
+  // its access token expires (~1 h) instead of being rejected immediately.
   // Timeout after 5s to avoid MIDDLEWARE_INVOCATION_TIMEOUT on Vercel.
   try {
     const { error } = await Promise.race([
-      supabase.auth.getUser(),
+      supabase.auth.getClaims(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Auth timeout (5s)')), 5000),
       ),

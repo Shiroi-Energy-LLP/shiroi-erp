@@ -7,7 +7,7 @@ import { err, type ActionResult } from '@/lib/types/actions';
 type AppRole = Database['public']['Enums']['app_role'];
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
-/** Minimal user shape returned by Supabase auth.getUser() */
+/** Minimal user shape derived from the verified JWT claims (auth.getClaims()) */
 interface AuthUser {
   id: string;
   email?: string;
@@ -29,12 +29,20 @@ export interface SessionContext {
 }
 
 /**
- * The ONE validated `auth.getUser()` per request — a network round-trip to the
- * GoTrue auth server that validates the token (NOT `getSession()`, which only
- * decodes the cookie). Wrapped in React `cache()` so every caller in a render
- * pass shares the single call. **User-only**: does NOT fetch the profile, so
- * server actions that just need to validate a user (requireAuthUser) don't pay
- * for a profiles read. Callers needing role/profile use getSessionContext().
+ * The ONE validated identity check per request. Uses `auth.getClaims()`, which
+ * verifies the JWT signature locally against the project's JWKS (the project
+ * signs with ES256) — no network round-trip to the Auth server, unlike
+ * `getUser()`. It is NOT `getSession()`: the signature is checked, so a forged
+ * or tampered cookie is rejected. supabase-js falls back to `getUser()` on its
+ * own if the key were ever symmetric. Wrapped in React `cache()` so every
+ * caller in a render pass shares the single call. **User-only**: does NOT fetch
+ * the profile, so server actions that just need to validate a user
+ * (requireAuthUser) don't pay for a profiles read. Callers needing role/profile
+ * use getSessionContext().
+ *
+ * Trade-off accepted 2026-09-07 (perf): a revoked/banned session stays valid
+ * until its access token expires (~1 h) instead of being rejected immediately.
+ * The middleware (`@repo/supabase/middleware`) makes the same call.
  *
  * SECURITY (NEVER-DO #22): `cache` MUST be React's request-scoped `cache` — it
  * is discarded after each request. NEVER memoize identity in `unstable_cache`,
@@ -44,18 +52,19 @@ export interface SessionContext {
 const getAuthUser = cache(async (): Promise<{ id: string; email: string | null } | null> => {
   const op = '[getAuthUser]';
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) {
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (error || !claims?.sub) {
     if (error) console.error(`${op} Auth error:`, { message: error.message });
     return null;
   }
-  return { id: user.id, email: user.email ?? null };
+  return { id: claims.sub, email: typeof claims.email === 'string' ? claims.email : null };
 });
 
 /**
  * Full identity context (user + profile + role), cached once per request.
  * Use for any role/profile-gated path. Builds on getAuthUser() so the validated
- * `auth.getUser()` network call is shared with the user-only callers.
+ * `auth.getClaims()` verification is shared with the user-only callers.
  *
  * Server actions re-resolve identity via this helper (now cheap) — they must
  * never trust a `role`/`userId` passed in from the client.
