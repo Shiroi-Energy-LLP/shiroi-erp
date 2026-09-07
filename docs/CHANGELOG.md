@@ -10,6 +10,7 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ## September 2026
 
+- **[2026-09-07]** perf: (1) **mig 222** `postgrest_keep_warm()` — pg_cron every 20 s fires 8 async pg_net GETs at our own REST endpoint so PostgREST's pool never idles out (it drops connections after ~30 s; a stepper tab's 10-query burst after idle was 1.2–3.6 s, now 0.45–0.76 s). Vault secrets `postgrest_keepalive_url/apikey` set per env (manual). Also schedules `purge-cron-run-details` (3-day retention). (2) `auth.getClaims()` replaces `getUser()` in the middleware + `getAuthUser` — local ES256 JWKS verify, no GoTrue round-trip per navigation; revoked sessions live until token expiry (~1 h). → 222 · `reviews/2026-07-19-erp-speed-full-report.md` §6
 - **[2026-09-07]** perf(infra): Vercel functions pinned to **icn1 (Seoul)** via `apps/erp/vercel.json` — colocated with the Supabase DB (ap-northeast-2). Root cause of the ERP-wide slowness (P0-1 of `reviews/2026-07-19-erp-speed-full-report.md`, pending since July): functions defaulted to iad1, so every Supabase round-trip cost ~0.9 s at the edge (IAD colo origin_time p50 867 ms vs BOM 177 ms) and pages chain 4–6 of them. Before (Chennai, logged in): projects list 5.1 s, project details 2.65 s, stepper tabs 2.0–2.6 s, dashboard 2.7 s. No code change.
 
 ## July 2026

@@ -419,7 +419,7 @@ Key files:
 
 ### 4.17 Session/identity resolution — cache once, never cross-request (NEVER-DO #22, June 19, 2026)
 
-`supabase.auth.getUser()` is a **network round-trip to the GoTrue auth server** that *validates* the token (never `getSession()`, which only decodes the cookie). It is both the most security-critical call and, when duplicated, the biggest page-load cost — the 2026-06-19 perf audit found pages resolving the profile/role 2–3× per render (`/hr/[id]` did it 3×).
+The identity check must *verify* the token — never `getSession()`, which only decodes the cookie. **Since 2026-09-07 the hot path uses `supabase.auth.getClaims()`**: the project signs JWTs with ES256, so supabase-js verifies the signature locally against the cached JWKS (no round-trip to GoTrue; it falls back to `getUser()` by itself if the key were ever HS256). Before that it was `getUser()`, a network round-trip that cost 25–900 ms per call depending on region, and the 2026-06-19 perf audit found pages resolving the profile/role 2–3× per render (`/hr/[id]` did it 3×). Accepted trade-off of `getClaims()`: a revoked/banned session stays valid until its access token expires (~1 h). The middleware (`packages/supabase/src/middleware.ts`) makes the same call, which also refreshes an expired token and rotates cookies.
 
 **The pattern:** one resolver, wrapped in **React `cache()`**, threaded into every role helper:
 
@@ -428,7 +428,8 @@ Key files:
 import { cache } from 'react';
 export const getSessionContext = cache(async () => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();   // the ONE validated network call
+  const { data } = await supabase.auth.getClaims();           // the ONE verified identity check (local JWKS verify)
+  const user = data?.claims?.sub ? { id: data.claims.sub } : null;
   if (!user) return { userId: null, role: null, employeeId: null, profile: null };
   const { data: profile } = await supabase.from('profiles')
     .select('id, role, full_name, email, is_active').eq('id', user.id).maybeSingle();
