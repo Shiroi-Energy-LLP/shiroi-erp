@@ -1,5 +1,7 @@
 # ERP Speed — Full Report (Code + Infrastructure)
 
+> **Update 2026-09-07:** P0-1 DONE — functions pinned to `icn1` via `apps/erp/vercel.json` (`regions: ["icn1"]`), preview deployment confirmed `regions:["icn1"]`. Re-measured today before the flip from a logged-in Chennai session: projects list 5.1 s, project details 2.65 s, stepper tabs 2.0–2.6 s, dashboard 2.7 s; Supabase edge logs showed IAD-colo origin_time p50 867 ms per request vs 177 ms from BOM. P0-3 (Micro→Small) still open — `shared_buffers` is still 224 MB.
+>
 > **Execution status (2026-07-19, same day):** P0-2 and P1 items DONE on dev — mig 206 (RLS initplan wrap: 185 advisor warnings → 0), mig 207 (`list_bucket_objects` RPC replaces all 6 app `storage.search` call-site groups; Documents tab 33→2 calls), mig 208 (price-book facets RPC), mig 209 (43 provably-redundant indexes dropped), and the full G5 lazy-load sweep (`/tasks`, `/my-tasks`, `/activities`, `/price-book`, proposal editor). CI green (types/lint/patterns/build). **Remaining for Vivek: P0-1 Vercel region flip `iad1`→`icn1` (+ reset `pg_stat_statements` just before), P0-3 Micro→Small trial, and a 2-min picker smoke-test** (open: create-task dialog, My Tasks quick-add, Add Activity dialog, a project Documents tab, lead design Files panel — each picker/file list should populate on first open). Reconciliation-page rewrite deliberately not attempted (big rewrite, separate session).
 
 **Date:** 2026-07-19

@@ -8,6 +8,10 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ---
 
+## September 2026
+
+- **[2026-09-07]** perf(infra): Vercel functions pinned to **icn1 (Seoul)** via `apps/erp/vercel.json` — colocated with the Supabase DB (ap-northeast-2). Root cause of the ERP-wide slowness (P0-1 of `reviews/2026-07-19-erp-speed-full-report.md`, pending since July): functions defaulted to iad1, so every Supabase round-trip cost ~0.9 s at the edge (IAD colo origin_time p50 867 ms vs BOM 177 ms) and pages chain 4–6 of them. Before (Chennai, logged in): projects list 5.1 s, project details 2.65 s, stepper tabs 2.0–2.6 s, dashboard 2.7 s. No code change.
+
 ## July 2026
 
 - **[2026-07-30]** fix(om/amc): AMC `contract_number` had mig 215's three ticket-numbering defects, caught before they fired — non-atomic read-then-insert, seeded by `created_at DESC LIMIT 1` not MAX, `split('-').pop()`. Concurrent creates collided, or **silently shared a serial** across categories. Fixed: one sequence per category via a BEFORE INSERT trigger (a DEFAULT can't read `amc_category`); renumbered 9 rows. → mig 221 (dev) · module: om
