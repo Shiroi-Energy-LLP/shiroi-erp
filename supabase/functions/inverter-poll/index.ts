@@ -73,6 +73,7 @@ interface InverterDue {
   monitoring_device_id: string | null;
   monitoring_credentials_id: string | null;
   polling_interval_minutes: number;
+  last_poll_at: string | null;
   last_reading_at: string | null;
   rated_capacity_kw: number;
 }
@@ -1042,18 +1043,24 @@ Deno.serve(async (req: Request) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Query inverters due for a poll directly (includes project_id + rated_capacity_kw
-  // which get_inverters_due_for_poll RPC does not expose).
+  // Query inverters due for a poll via the RPC, which applies the real rule:
+  //   last_poll_at IS NULL OR last_poll_at + polling_interval_minutes < NOW()
+  //
+  // This MUST be an RPC, not a PostgREST filter: PostgREST cannot compare two
+  // columns, so the filter this replaced hardcoded `last_poll_at < now - 5min`
+  // and ignored `inverters.polling_interval_minutes` entirely — the column was
+  // dead configuration, and because the cron interval (5 min) equalled the
+  // hardcoded threshold, any cycle following a full sweep found nothing due and
+  // returned processed:0. (Migration 223 added project_id + rated_capacity_kw to
+  // the RPC's result — their absence is why it was bypassed in the first place.)
+  //
+  // The explicit .order() re-asserts the RPC's own ORDER BY at the PostgREST
+  // level so the ordering can't be lost when Postgres inlines the set-returning
+  // function. It is load-bearing: inverters deferred by POLL_BUDGET_MS keep
+  // their old last_poll_at and must sort first on the next cycle.
   const { data: due, error: dueError } = await supabase
-    .from('inverters')
-    .select(
-      'id, project_id, brand, model, serial_number, monitoring_site_id, monitoring_device_id, monitoring_credentials_id, polling_interval_minutes, last_reading_at, rated_capacity_kw',
-    )
-    .eq('polling_enabled', true)
-    .neq('current_status', 'decommissioned')
-    .or('last_poll_at.is.null,last_poll_at.lt.' + new Date(Date.now() - 5 * 60 * 1000).toISOString())
-    .order('last_poll_at', { ascending: true, nullsFirst: true })
-    .limit(100);
+    .rpc('get_inverters_due_for_poll', { batch_limit: 100 })
+    .order('last_poll_at', { ascending: true, nullsFirst: true });
 
   if (dueError) {
     console.error(`${op} inverters query failed:`, dueError);
@@ -1066,7 +1073,7 @@ Deno.serve(async (req: Request) => {
   const inverters = (due ?? []) as InverterDue[];
   if (inverters.length === 0) {
     return new Response(
-      JSON.stringify({ processed: 0, succeeded: 0, failed: 0, duration_ms: Date.now() - startedAt }),
+      JSON.stringify({ due: 0, processed: 0, succeeded: 0, failed: 0, deferred: 0, duration_ms: Date.now() - startedAt }),
       { headers: { 'Content-Type': 'application/json' } },
     );
   }

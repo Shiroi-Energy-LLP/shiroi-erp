@@ -98,10 +98,7 @@ above, so expect ~2–3 slices per sweep instead of 2 — each still bounded by 
 
 ## 5. Open follow-ups (not touched)
 
-- **Due-filter ignores `polling_interval_minutes`.** The query hardcodes
-  `last_poll_at < now() - 5 min` although the column (and the file header) imply a per-inverter
-  interval. Pre-fix this also meant *every other* 5-min cycle returned `processed: 0` in ~1.6 s —
-  the real fleet cadence was 10 min, not the advertised 5.
+- ~~**Due-filter ignores `polling_interval_minutes`.**~~ **FIXED same day — see §6.**
 - **~11 s per sweep is pure sleeping**: the 600 ms politeness gap after each Growatt installer-token
   call (19 plants) guards against error `10012 error_frequently_access`. Left as-is; the honest lever
   if 5-min cadence is ever needed is bounded concurrency per vendor, not removing the gap.
@@ -111,3 +108,69 @@ above, so expect ~2–3 slices per sweep instead of 2 — each still bounded by 
   one daytime confirmation that real telemetry flows, since these count as `succeeded`).
 - Plant `10467798` datalogger clock still frozen at `2026-02-03` (clamped by `clampRecordedAt`;
   already flagged for a site check in `docs/modules/om.md`).
+
+---
+
+## 6. Follow-up shipped — due-filter now honours `polling_interval_minutes` (2026-09-25, later same evening)
+
+**What was wrong.** The due-query was hand-rolled in PostgREST:
+
+```ts
+.or('last_poll_at.is.null,last_poll_at.lt.' + new Date(Date.now() - 5 * 60 * 1000).toISOString())
+```
+
+PostgREST cannot compare two columns in a filter, so the per-inverter rule the file header
+advertised (`last_poll_at + polling_interval_minutes < NOW`) was impossible to express there and had
+been flattened to a hardcoded 5 minutes. Two consequences:
+
+1. `inverters.polling_interval_minutes` was **dead configuration** — editing it changed nothing.
+2. The cron interval (5 min) *equalled* the threshold, so any cycle following a full sweep found
+   nothing due and returned `processed: 0` in ~1.6 s. Real fleet cadence was 10 min, not 5.
+
+An RPC meant to encapsulate exactly this (`get_inverters_due_for_poll`, migration 050) already
+existed and already had the correct SQL predicate — it was bypassed only because it did not return
+`project_id` or `rated_capacity_kw`, both of which the poller needs to write `inverter_readings`.
+
+**Fix.** Migration **223** drops and recreates the RPC with `project_id`, `rated_capacity_kw` and
+`last_poll_at` added to `RETURNS TABLE` (DROP + CREATE because the signature changes; re-applies
+migration 141's `SET search_path = public, pg_temp`). The Edge Function now calls it:
+
+```ts
+const { data: due, error: dueError } = await supabase
+  .rpc('get_inverters_due_for_poll', { batch_limit: 100 })
+  .order('last_poll_at', { ascending: true, nullsFirst: true });
+```
+
+The explicit `.order()` is retained deliberately — it re-asserts the RPC's own `ORDER BY` at the
+PostgREST level so it cannot be lost if Postgres inlines the set-returning function. It is
+load-bearing: inverters deferred by `POLL_BUDGET_MS` keep their old `last_poll_at` and must sort
+first on the next cycle. `last_poll_at` was added to the RPC's result purely so this outer sort has
+a column to sort on. `POLL_BUDGET_MS` (45 s) and `FETCH_TIMEOUT_MS` (10 s) are **unchanged**.
+
+Deployed as **v14**, `verify_jwt` still `false`.
+
+**Verification.** Two-sided, on the same inverter (`095efc32…`, Growatt), `last_poll_at` pinned 10
+minutes in the past throughout:
+
+| `polling_interval_minutes` | Expected | Observed |
+|---|---|---|
+| 15 | not due (10 < 15) — *the old 5-min filter would have returned it* | `{due: 0, processed: 0}` |
+| 5 | due (10 > 5) | `{due: 1, processed: 1, succeeded: 1}` |
+
+Full-fleet sweeps stayed inside the budget and far under the ~91 s ceiling
+(`{due: 37, processed: 33, deferred: 4, duration_ms: 45600}` then `{due: 37, processed: 37,
+duration_ms: 39305}`), and a sweep followed immediately by another correctly returned
+`{due: 0}` instead of re-polling.
+
+**Fleet left at `polling_interval_minutes = 15`** (Vivek's call). All 37 rows still carry the table
+default, so the now-live config means the real cadence becomes **15 min**, down from the ~10 min the
+hardcoded filter produced — expect `inverter_readings` to settle near **~2,100/day rather than
+~3,100/day**. That is a deliberate trade, not a regression; drop the column to 5 on any inverter that
+needs tighter resolution and it now takes effect. This supersedes the 09-26 expectation in §4 that
+readings return to ~3,100/day.
+
+**Testing artifact worth knowing:** running five sweeps inside four minutes tripped Growatt's
+`error_code=10012 error_frequently_access` on the installer-token call, producing 2–10 `failed`
+inverters per run. Sungrow and FIMER never failed. The 600 ms politeness gap in the Growatt path
+assumes one sweep per cron tick — back-to-back manual invocations defeat it. Not a code defect;
+don't read those failure counts as a regression.
