@@ -157,10 +157,18 @@ minutes in the past throughout:
 | 15 | not due (10 < 15) — *the old 5-min filter would have returned it* | `{due: 0, processed: 0}` |
 | 5 | due (10 > 5) | `{due: 1, processed: 1, succeeded: 1}` |
 
-Full-fleet sweeps stayed inside the budget and far under the ~91 s ceiling
-(`{due: 37, processed: 33, deferred: 4, duration_ms: 45600}` then `{due: 37, processed: 37,
-duration_ms: 39305}`), and a sweep followed immediately by another correctly returned
-`{due: 0}` instead of re-polling.
+Full-fleet behaviour, after letting Growatt's rate limiter cool down (see the testing-artifact note
+below) — one sweep, nothing else in flight:
+
+```
+POST /functions/v1/inverter-poll → 200 in 47.2s
+  {due:37, processed:35, succeeded:35, failed:0, deferred:2, duration_ms:46450}
+```
+
+Budget honoured (46.5 s then stop, 2 deferred), 47.2 s wall-clock against the ~91 s ceiling, and
+**zero failures across all three vendors**. A sweep followed immediately by another correctly
+returns `{due: 0}` instead of re-polling, and a sweep 11 minutes after the previous one also returns
+`{due: 0}` — 11 < 15, which is the interval doing its job.
 
 **Fleet left at `polling_interval_minutes = 15`** (Vivek's call). All 37 rows still carry the table
 default, so the now-live config means the real cadence becomes **15 min**, down from the ~10 min the
