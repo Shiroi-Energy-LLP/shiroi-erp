@@ -120,10 +120,17 @@ function syntheticReading(ratedCapacityKw: number): NormalizedReading {
 // Sungrow, Growatt) can't stall the whole sequential batch. POLL_BUDGET_MS caps
 // the cumulative wall-clock: once exceeded we stop starting new inverters and
 // defer them to the next cycle (they keep their old last_poll_at and sort first
-// next time). Worst case ≈ POLL_BUDGET_MS + one inverter's fetches, comfortably
-// under the n8n node timeout.
+// next time). Worst case ≈ POLL_BUDGET_MS + one inverter's fetches (at most ~3
+// capped fetches on the Growatt legacy / FIMER paths, so ~30s) + a few DB calls.
+//
+// The binding ceiling is NOT the n8n node timeout (120s) — it is Cloudflare in
+// front of *.supabase.co, which aborts the origin connection at ~91s and hands
+// back an HTML "Error 522 Connection timed out" page. Measured 2026-09-25: every
+// failing cycle that day died at 90.9–91.8s. 45s budget → ~75s worst case, ~16s
+// of headroom under 522, and ~20 inverters per cycle so the 37-inverter fleet
+// sweeps in two 5-min cycles.
 const FETCH_TIMEOUT_MS = 10_000;
-const POLL_BUDGET_MS = 30_000;
+const POLL_BUDGET_MS = 45_000;
 
 // fetch() with an AbortController-based timeout. Deno's fetch never times out on
 // its own, so a vendor endpoint that accepts the connection but never responds

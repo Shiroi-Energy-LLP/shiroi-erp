@@ -1,0 +1,113 @@
+# Inverter-poll WhatsApp alert flood — Cloudflare 522 from an undeployed timeout guard
+
+**Date:** 2026-09-25 · **Module:** O&M (plant monitoring) · **Env:** dev only (`actqtzoxjilqnldnacqz`)
+**Reported as:** "check the whatsapp messages. polling seems to have an error constantly."
+
+---
+
+## 1. Symptom, measured
+
+Workflow **60 — Inverter poll cron** (`s8fR9YlNxvtouRfr`) has `errorWorkflow: 8v9P5gxXqPfYNWOp`
+= **55 — Global Error Handler**, which sends the WhatsApp alert. One alert per failed cycle:
+
+| Day | Alerts fired (wf 55 executions) | Poll cycles: err / ok | Fail rate |
+|-----|--------------------------------|-----------------------|-----------|
+| 2026-09-12 → 09-15 | 1–2/day (baseline, unrelated) | 0–1 / 180 | 0–1% |
+| 2026-09-16 | 20 | 19 / 161 | 11% |
+| 2026-09-19 | 51 | 48 / 132 | 27% |
+| 2026-09-22 | 79 | 78 / 102 | 43% |
+| 2026-09-25 | **76** | 75 / 105 | **42%** |
+
+Not a new alerting bug — the alerts were correct. Polling really was failing ~42% of cycles.
+
+**Data actually lost** (`inverter_readings`, 37-inverter fleet):
+
+| Day | Readings | vs healthy |
+|-----|---------|-----------|
+| 2026-09-12 … 09-14 | 3,137–3,145 | baseline |
+| 2026-09-25 | **1,705** | **−46%** |
+
+All 37 inverters still returned *something* every day, so this was reading **density** loss
+(gaps inside the day), not blind inverters — which is why it never showed up as an offline alert.
+
+## 2. Root cause
+
+Two error signatures, both the same underlying cause:
+
+| Signature | Count (last 25 failures) | What it is |
+|-----------|--------------------------|------------|
+| `500` + Cloudflare HTML `Error 522 Connection timed out`, exec **90.9–91.8 s** | 9 | Cloudflare (in front of `*.supabase.co`) aborts the origin connection at ~91 s. Function is still running; n8n records HTTP 500. |
+| `ECONNABORTED` at exactly **120.0 s** | 15 | The function outlived n8n's own HTTP-node timeout (`timeout: 120000`). |
+| `500` `Could not query the database for the schema cache. Retrying.` | 1 | Unrelated transient PostgREST blip. Left alone. |
+
+The deployed `inverter-poll` was **version 12, deployed 2026-06-09**. Commit **4017a73
+(2026-06-10)** — *"fix(om): inverter-poll per-fetch timeout + wall-clock budget (salvage PR #5)"* —
+added the two guards that prevent exactly this failure, and **was never deployed**. Diff of
+deployed v12 vs repo was *only* those guards:
+
+- `FETCH_TIMEOUT_MS = 10_000` — `AbortController` cap on every vendor call. Deno's `fetch` never
+  times out on its own, so a vendor endpoint that accepts the connection and never answers blocked
+  the whole sequential batch indefinitely → the 120 s `ECONNABORTED` signature.
+- `POLL_BUDGET_MS` — stop *starting* new inverters once the wall-clock budget is spent; deferred
+  inverters keep their old `last_poll_at`, sort first next cycle (`.order('last_poll_at')`), and
+  get picked up 5 min later. Without it, every cycle tried all 37 due inverters in one invocation
+  (~80–91 s of vendor round-trips) → the 522 signature.
+
+**Why it started 2026-09-16 and not in June.** Cycle duration was *not* creeping up — success p50
+held at 54–60 s every day from 09-11 to 09-25. The fleet did not grow either (37 since 2026-06-05).
+What matters is that ~80–91 s of work sat directly on a ~91 s ceiling: **dusk cycles finish in
+~55 s and pass, daytime cycles need >91 s and 522**. So failures arrive in long contiguous daylight
+blocks rather than scattered — on 09-25 every work-cycle from **09:31 to 15:21 IST** died at
+90.9–91.8 s, then everything from 15:26 onward passed at 53–62 s. Vendor-side latency drift through
+mid-September was enough to push the daylight window over the line.
+
+## 3. Fix
+
+1. **Deployed the repo version** → `inverter-poll` **v13**, `verify_jwt` still `false`
+   (the function does its own `Authorization: Bearer <SERVICE_ROLE_KEY>` check; `true` would 401 the cron).
+2. **`POLL_BUDGET_MS` 30_000 → 45_000.** The original constant was chosen against n8n's 120 s node
+   timeout, but that is *not* the binding ceiling — Cloudflare's ~91 s is, and it sits *below* it.
+   45 s budget + worst-case tail (≤3 capped fetches ≈ 30 s, plus a few DB calls) ≈ 75 s, leaving
+   ~16 s of headroom under 522.
+
+Deployed via **Supabase CLI + the `shiroi-erp-mgmt` PAT** —
+`supabase functions deploy inverter-poll --project-ref <ref> --no-verify-jwt` with
+`SUPABASE_ACCESS_TOKEN` exported from `.env.local`. This works; the old "CLI is 403-locked, deploy
+via MCP" note in `docs/modules/om.md` was about the stale `supabase login` token and is now corrected.
+
+## 4. Verification
+
+Two manual invocations, same request shape as the cron (20:51 and 20:53 IST):
+
+```
+POST /functions/v1/inverter-poll → 200 in 48.3s  {due:37, processed:11, succeeded:11, failed:0, deferred:26, duration_ms:45472}
+POST /functions/v1/inverter-poll → 200 in 32.3s  {due:26, processed:26, succeeded:26, failed:0, deferred:0,  duration_ms:31712}
+```
+
+- Budget honoured (45.5 s then stop), both well under the 91 s ceiling, **zero failures**.
+- Deferral rotates correctly: slice 1 = 11 inverters (it pays the per-cycle fixed costs — Growatt
+  legacy logins, Sungrow login, FIMER auth), slice 2 = the remaining 26 at ~1.2 s each.
+- **All 37** `inverters.last_poll_at` refreshed across the two cycles → full fleet swept in 2 cycles
+  = 10 min, matching the healthy pre-09-16 cadence.
+- Four CI gates green (`check-types`, `lint`, `check-forbidden-patterns.sh`, `build`).
+
+**Not yet proven:** the cron window is 05:00–19:55 IST and the fix landed at ~20:40, so the first
+real daylight run is 2026-09-26 05:00. Daytime per-inverter cost is higher than the dusk numbers
+above, so expect ~2–3 slices per sweep instead of 2 — each still bounded by the budget. Confirm on
+09-26 that wf 55 alert count is back to ~0 and `inverter_readings` is back near 3,100/day.
+
+## 5. Open follow-ups (not touched)
+
+- **Due-filter ignores `polling_interval_minutes`.** The query hardcodes
+  `last_poll_at < now() - 5 min` although the column (and the file header) imply a per-inverter
+  interval. Pre-fix this also meant *every other* 5-min cycle returned `processed: 0` in ~1.6 s —
+  the real fleet cadence was 10 min, not the advertised 5.
+- **~11 s per sweep is pure sleeping**: the 600 ms politeness gap after each Growatt installer-token
+  call (19 plants) guards against error `10012 error_frequently_access`. Left as-is; the honest lever
+  if 5-min cadence is ever needed is bounded concurrency per vendor, not removing the gap.
+- **n8n node timeout (120 s) is above the platform ceiling (~91 s)**, so it can never fire usefully.
+  Harmless now that runs return in ~30–50 s; drop it to ~90 s if the signature ever returns.
+- **Sungrow returned `no data` for all 17 devices** in the dusk runs (expected after sunset — worth
+  one daytime confirmation that real telemetry flows, since these count as `succeeded`).
+- Plant `10467798` datalogger clock still frozen at `2026-02-03` (clamped by `clampRecordedAt`;
+  already flagged for a site check in `docs/modules/om.md`).
