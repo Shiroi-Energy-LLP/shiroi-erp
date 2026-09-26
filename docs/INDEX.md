@@ -117,8 +117,9 @@ _45 files in `docs/superpowers/plans/`_
 
 ## Reviews — audits & multi-area sweeps
 
-_19 files in `docs/reviews/`_
+_20 files in `docs/reviews/`_
 
+- `2026-09-26 · **Module:** infra (surfaced via O&M plant monitoring) · **Env:** dev (`actqtzoxjilqnldnacqz`, which the live ERP uses)` **Dev DB froze for ~5 h — inverter-poll 522s were a symptom; keep-warm cron remov…** — _infra (surfaced via O&M pla…_ · `2026-09-26-dev-db-freeze-keep-warm.md`
 - `2026-09-25 · **Module:** O&M (plant monitoring) · **Env:** dev only (`actqtzoxjilqnldnacqz`)` **Inverter-poll WhatsApp alert flood — Cloudflare 522 from an undeployed timeout…** — _O&M (plant monitoring) · En…_ · `2026-09-25-inverter-poll-522-alert-flood.md`
 - `2026-07-30` **Expenses list-page rework — 2026-07-30** — `2026-07-30-expenses-list-rework.md`
 - `2026-07-25` **Price Book — FY26-27 rate card import (2026-07-25)** — `2026-07-25-price-book-fy26-27-import.md`
