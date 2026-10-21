@@ -81,6 +81,7 @@ const ITEMS = {
   waImportQueue:  { label: 'WA Import Queue',   href: '/whatsapp-import',    icon: 'MessageSquare' },
   dataQuality:    { label: 'Data Quality',      href: '/data-quality',       icon: 'Flag' },
   reconciliation: { label: 'Reconciliation',    href: '/reconciliation',     icon: 'ListChecks' },
+  sheetSync:      { label: 'Sheet Sync',        href: '/sheet-sync',         icon: 'Activity' },
   commandCenter:  { label: 'Command Center',    href: '/command-center',     icon: 'LayoutDashboard' },
   bomReview:      { label: 'BOM Review',        href: '/bom-review',         icon: 'ListChecks' },
   expenses:       { label: 'Expenses',          href: '/expenses',           icon: 'Receipt' },
@@ -138,7 +139,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
     { label: 'Finance',      items: [ITEMS.cashFlow, ITEMS.invoices, ITEMS.payments, ITEMS.vendorBills, ITEMS.vendorBillsReview, ITEMS.vendorPayments, ITEMS.profitability] },
     { label: 'Contacts',    items: [ITEMS.contacts, ITEMS.companies] },
     { label: 'HR',           items: [ITEMS.employees, ITEMS.leave, ITEMS.payroll, ITEMS.training, ITEMS.certifications] },
-    { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality, ITEMS.bomReview, ITEMS.reconciliation] },
+    { label: 'Admin',        items: [ITEMS.waImportQueue, ITEMS.dataQuality, ITEMS.bomReview, ITEMS.reconciliation, ITEMS.sheetSync] },
     { label: 'Account',      items: [ITEMS.settings] },
   ],
   marketing_manager: [
@@ -155,7 +156,7 @@ const SECTIONS_BY_ROLE: Record<AppRole, NavSection[]> = {
   ],
   project_manager: [
     { label: 'Overview',     items: [ITEMS.commandCenter, ITEMS.dashboard, ITEMS.myTasks, ITEMS.myReports] },
-    { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports, ITEMS.activities, ITEMS.reconciliation] },
+    { label: 'Projects',     items: [ITEMS.projects, ITEMS.tasks, ITEMS.dailyReports, ITEMS.activities, ITEMS.reconciliation, ITEMS.sheetSync] },
     { label: 'Expenses',     items: [ITEMS.expenses] },
     PURCHASE_SECTION,
     { label: 'Execution',    items: [ITEMS.qcGates] },

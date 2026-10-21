@@ -4447,6 +4447,285 @@ export type Database = {
           }
         ]
       }
+      gsheet_changes: {
+        Row: {
+          change_type: string
+          detected_at: string
+          field: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          project_id: string | null
+          project_key: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          row_key: string
+          run_id: string | null
+          source_id: string
+          tab: string
+        }
+        Insert: {
+          change_type: string
+          detected_at?: string
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          project_id?: string | null
+          project_key?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          row_key: string
+          run_id?: string | null
+          source_id: string
+          tab: string
+        }
+        Update: {
+          change_type?: string
+          detected_at?: string
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          project_id?: string | null
+          project_key?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          row_key?: string
+          run_id?: string | null
+          source_id?: string
+          tab?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsheet_changes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_changes_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "employee_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_changes_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_changes_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sync_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_changes_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sources"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      gsheet_project_links: {
+        Row: {
+          link_method: string
+          linked_at: string
+          linked_by: string | null
+          project_id: string | null
+          project_key: string
+          source_id: string
+        }
+        Insert: {
+          link_method: string
+          linked_at?: string
+          linked_by?: string | null
+          project_id?: string | null
+          project_key: string
+          source_id: string
+        }
+        Update: {
+          link_method?: string
+          linked_at?: string
+          linked_by?: string | null
+          project_id?: string | null
+          project_key?: string
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsheet_project_links_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "employee_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_project_links_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_project_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_project_links_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sources"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      gsheet_rows: {
+        Row: {
+          data: Json
+          first_seen_at: string
+          last_changed_at: string
+          last_seen_at: string
+          project_key: string | null
+          removed_at: string | null
+          row_hash: string
+          row_key: string
+          sheet_row: number | null
+          source_id: string
+          tab: string
+        }
+        Insert: {
+          data: Json
+          first_seen_at?: string
+          last_changed_at?: string
+          last_seen_at?: string
+          project_key?: string | null
+          removed_at?: string | null
+          row_hash: string
+          row_key: string
+          sheet_row?: number | null
+          source_id: string
+          tab: string
+        }
+        Update: {
+          data?: Json
+          first_seen_at?: string
+          last_changed_at?: string
+          last_seen_at?: string
+          project_key?: string | null
+          removed_at?: string | null
+          row_hash?: string
+          row_key?: string
+          sheet_row?: number | null
+          source_id?: string
+          tab?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsheet_rows_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sources"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      gsheet_sources: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          last_error: string | null
+          last_run_at: string | null
+          last_status: string | null
+          spreadsheet_id: string
+          tabs: string[]
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          spreadsheet_id: string
+          tabs: string[]
+          title: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          spreadsheet_id?: string
+          tabs?: string[]
+          title?: string
+        }
+        Relationships: []
+      }
+      gsheet_sync_runs: {
+        Row: {
+          error: string | null
+          finished_at: string | null
+          id: string
+          inserts: number
+          removes: number
+          rows_seen: number
+          source_id: string
+          started_at: string
+          status: string
+          updates: number
+        }
+        Insert: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          inserts?: number
+          removes?: number
+          rows_seen?: number
+          source_id: string
+          started_at?: string
+          status?: string
+          updates?: number
+        }
+        Update: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          inserts?: number
+          removes?: number
+          rows_seen?: number
+          source_id?: string
+          started_at?: string
+          status?: string
+          updates?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsheet_sync_runs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sources"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       hr_letters: {
         Row: {
           created_at: string
@@ -4755,102 +5034,6 @@ export type Database = {
           }
         ]
       }
-      inverter_readings_2026_05: {
-        Row: {
-          ac_current_a: number | null
-          ac_frequency_hz: number | null
-          ac_power_kw: number | null
-          ac_voltage_v: number | null
-          dc_power_kw: number | null
-          energy_today_kwh: number | null
-          energy_total_kwh: number | null
-          error_code: string | null
-          inverter_id: string
-          raw_payload: Json | null
-          recorded_at: string
-          status: string | null
-          temperature_c: number | null
-        }
-        Insert: {
-          ac_current_a?: number | null
-          ac_frequency_hz?: number | null
-          ac_power_kw?: number | null
-          ac_voltage_v?: number | null
-          dc_power_kw?: number | null
-          energy_today_kwh?: number | null
-          energy_total_kwh?: number | null
-          error_code?: string | null
-          inverter_id: string
-          raw_payload?: Json | null
-          recorded_at: string
-          status?: string | null
-          temperature_c?: number | null
-        }
-        Update: {
-          ac_current_a?: number | null
-          ac_frequency_hz?: number | null
-          ac_power_kw?: number | null
-          ac_voltage_v?: number | null
-          dc_power_kw?: number | null
-          energy_today_kwh?: number | null
-          energy_total_kwh?: number | null
-          error_code?: string | null
-          inverter_id?: string
-          raw_payload?: Json | null
-          recorded_at?: string
-          status?: string | null
-          temperature_c?: number | null
-        }
-        Relationships: []
-      }
-      inverter_readings_2026_06: {
-        Row: {
-          ac_current_a: number | null
-          ac_frequency_hz: number | null
-          ac_power_kw: number | null
-          ac_voltage_v: number | null
-          dc_power_kw: number | null
-          energy_today_kwh: number | null
-          energy_total_kwh: number | null
-          error_code: string | null
-          inverter_id: string
-          raw_payload: Json | null
-          recorded_at: string
-          status: string | null
-          temperature_c: number | null
-        }
-        Insert: {
-          ac_current_a?: number | null
-          ac_frequency_hz?: number | null
-          ac_power_kw?: number | null
-          ac_voltage_v?: number | null
-          dc_power_kw?: number | null
-          energy_today_kwh?: number | null
-          energy_total_kwh?: number | null
-          error_code?: string | null
-          inverter_id: string
-          raw_payload?: Json | null
-          recorded_at: string
-          status?: string | null
-          temperature_c?: number | null
-        }
-        Update: {
-          ac_current_a?: number | null
-          ac_frequency_hz?: number | null
-          ac_power_kw?: number | null
-          ac_voltage_v?: number | null
-          dc_power_kw?: number | null
-          energy_today_kwh?: number | null
-          energy_total_kwh?: number | null
-          error_code?: string | null
-          inverter_id?: string
-          raw_payload?: Json | null
-          recorded_at?: string
-          status?: string | null
-          temperature_c?: number | null
-        }
-        Relationships: []
-      }
       inverter_readings_2026_07: {
         Row: {
           ac_current_a: number | null
@@ -4900,6 +5083,102 @@ export type Database = {
         Relationships: []
       }
       inverter_readings_2026_08: {
+        Row: {
+          ac_current_a: number | null
+          ac_frequency_hz: number | null
+          ac_power_kw: number | null
+          ac_voltage_v: number | null
+          dc_power_kw: number | null
+          energy_today_kwh: number | null
+          energy_total_kwh: number | null
+          error_code: string | null
+          inverter_id: string
+          raw_payload: Json | null
+          recorded_at: string
+          status: string | null
+          temperature_c: number | null
+        }
+        Insert: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id: string
+          raw_payload?: Json | null
+          recorded_at: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Update: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id?: string
+          raw_payload?: Json | null
+          recorded_at?: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Relationships: []
+      }
+      inverter_readings_2026_09: {
+        Row: {
+          ac_current_a: number | null
+          ac_frequency_hz: number | null
+          ac_power_kw: number | null
+          ac_voltage_v: number | null
+          dc_power_kw: number | null
+          energy_today_kwh: number | null
+          energy_total_kwh: number | null
+          error_code: string | null
+          inverter_id: string
+          raw_payload: Json | null
+          recorded_at: string
+          status: string | null
+          temperature_c: number | null
+        }
+        Insert: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id: string
+          raw_payload?: Json | null
+          recorded_at: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Update: {
+          ac_current_a?: number | null
+          ac_frequency_hz?: number | null
+          ac_power_kw?: number | null
+          ac_voltage_v?: number | null
+          dc_power_kw?: number | null
+          energy_today_kwh?: number | null
+          energy_total_kwh?: number | null
+          error_code?: string | null
+          inverter_id?: string
+          raw_payload?: Json | null
+          recorded_at?: string
+          status?: string | null
+          temperature_c?: number | null
+        }
+        Relationships: []
+      }
+      inverter_readings_2026_10: {
         Row: {
           ac_current_a: number | null
           ac_frequency_hz: number | null
@@ -5056,60 +5335,6 @@ export type Database = {
         }
         Relationships: []
       }
-      inverter_string_readings_2026_05: {
-        Row: {
-          current_a: number | null
-          inverter_id: string
-          power_kw: number | null
-          recorded_at: string
-          string_number: number
-          voltage_v: number | null
-        }
-        Insert: {
-          current_a?: number | null
-          inverter_id: string
-          power_kw?: number | null
-          recorded_at: string
-          string_number: number
-          voltage_v?: number | null
-        }
-        Update: {
-          current_a?: number | null
-          inverter_id?: string
-          power_kw?: number | null
-          recorded_at?: string
-          string_number?: number
-          voltage_v?: number | null
-        }
-        Relationships: []
-      }
-      inverter_string_readings_2026_06: {
-        Row: {
-          current_a: number | null
-          inverter_id: string
-          power_kw: number | null
-          recorded_at: string
-          string_number: number
-          voltage_v: number | null
-        }
-        Insert: {
-          current_a?: number | null
-          inverter_id: string
-          power_kw?: number | null
-          recorded_at: string
-          string_number: number
-          voltage_v?: number | null
-        }
-        Update: {
-          current_a?: number | null
-          inverter_id?: string
-          power_kw?: number | null
-          recorded_at?: string
-          string_number?: number
-          voltage_v?: number | null
-        }
-        Relationships: []
-      }
       inverter_string_readings_2026_07: {
         Row: {
           current_a: number | null
@@ -5138,6 +5363,60 @@ export type Database = {
         Relationships: []
       }
       inverter_string_readings_2026_08: {
+        Row: {
+          current_a: number | null
+          inverter_id: string
+          power_kw: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v: number | null
+        }
+        Insert: {
+          current_a?: number | null
+          inverter_id: string
+          power_kw?: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v?: number | null
+        }
+        Update: {
+          current_a?: number | null
+          inverter_id?: string
+          power_kw?: number | null
+          recorded_at?: string
+          string_number?: number
+          voltage_v?: number | null
+        }
+        Relationships: []
+      }
+      inverter_string_readings_2026_09: {
+        Row: {
+          current_a: number | null
+          inverter_id: string
+          power_kw: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v: number | null
+        }
+        Insert: {
+          current_a?: number | null
+          inverter_id: string
+          power_kw?: number | null
+          recorded_at: string
+          string_number: number
+          voltage_v?: number | null
+        }
+        Update: {
+          current_a?: number | null
+          inverter_id?: string
+          power_kw?: number | null
+          recorded_at?: string
+          string_number?: number
+          voltage_v?: number | null
+        }
+        Relationships: []
+      }
+      inverter_string_readings_2026_10: {
         Row: {
           current_a: number | null
           inverter_id: string
@@ -5877,6 +6156,96 @@ export type Database = {
         Relationships: []
       }
       lead_activities_2026_08: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string
+          next_action: string | null
+          next_action_date: string | null
+          outcome: string | null
+          performed_by: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_activities_2026_09: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string
+          next_action: string | null
+          next_action_date: string | null
+          outcome: string | null
+          performed_by: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          outcome?: string | null
+          performed_by?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_activities_2026_10: {
         Row: {
           activity_date: string
           activity_type: string
@@ -20294,6 +20663,27 @@ export type Database = {
         }
         Relationships: []
       }
+      gsheet_unlinked_projects: {
+        Row: {
+          location: string | null
+          project_key: string | null
+          project_name: string | null
+          sheet_row: number | null
+          size: string | null
+          source_id: string | null
+          status: string | null
+          years: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsheet_rows_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sources"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       v_digest_employees_birthday_today: {
         Row: {
           age_today: number | null
@@ -21057,12 +21447,15 @@ export type Database = {
         Returns: {
           brand: string
           id: string
+          last_poll_at: string
           last_reading_at: string
           model: string
           monitoring_credentials_id: string
           monitoring_device_id: string
           monitoring_site_id: string
           polling_interval_minutes: number
+          project_id: string
+          rated_capacity_kw: number
           serial_number: string
         }[]
       }
@@ -21533,6 +21926,17 @@ export type Database = {
           won_value: number
         }[]
       }
+      gsheet_apply_snapshot: {
+        Args: {
+          p_rows: Json
+          p_run_id: string
+          p_source: string
+          p_tab: string
+        }
+        Returns: Json
+      }
+      gsheet_norm: { Args: { p: string }; Returns: string }
+      gsheet_sync_tick: { Args: never; Returns: undefined }
       haversine_distance_m: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -22319,12 +22723,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -22348,11 +22752,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -22373,11 +22777,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -22398,11 +22802,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -22415,11 +22819,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

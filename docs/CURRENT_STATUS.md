@@ -34,6 +34,7 @@
 | **Docs lean-reset** (`spec 2026-06-19-docs-lean-reset-design.md`) | ~Done. CHANGELOG 320→40 KB, this file reset, advisory CI length-check added. |
 | **Theming → Solar Gold** | Token swap + 384-hex colour-shift + whole-rupee money shipped (June 18). Pending Vivek call: status-colour + label-map centralization (blocked on the label-wording decision). |
 | **Manivel reconciliation + Command Center** (migs 180–185) | Shipped to dev. Write-back of reconciled values into `projects` still pending. |
+| **Manivel Google Sheet live sync** (mig 224, `gsheet-sync`) | Phase 1 on dev: dashboard sheet mirrored every 10 min, change log + `/sheet-sync`. Blocked: Manivel must share both sheets with the service account as Editor (BOI = 403). Phase 2 (auto-apply + write-back) needs field-ownership sign-off — spec §9. |
 | **Inverter monitoring** | FIMER/ABB + Sungrow + Deye live on dev; 4 residential FIMER EID lookups (Harsha / Baskar / Siddarth / Sriram) pending a portal lookup. |
 
 ---

@@ -177,6 +177,10 @@ Auxiliary sub-routes under `/projects/[id]/milestones`, `/delays`, `/change-orde
 
 Drag-and-drop recategorization uses Supabase Storage `.move()` — which is an UPDATE on `storage.objects` under the hood (see **gotcha #2**). Auto-populated DC / QC / Survey PDFs via `GeneratedDocRow`. WhatsApp photos surface via site-photos bucket under `projects/{id}/whatsapp/`. Lead files from `proposal-files` bucket are also shown (for projects that came through the sales funnel).
 
+## Manivel Google Sheet live sync (mig 224)
+
+Edge fn `gsheet-sync` (pg_cron `gsheet-sync` */10 → `gsheet_sync_tick()` → pg_net) reads Manivel's sheets with the `shiroi-migaration@…` service account (Edge secrets `GOOGLE_SERVICE_ACCOUNT_JSON`, `GSHEET_SYNC_SECRET`; Vault `gsheet_sync_url`/`gsheet_sync_secret`) and diffs each tab in SQL (`gsheet_apply_snapshot`) into `gsheet_rows` / `gsheet_changes` / `gsheet_project_links`. Phase 1 never writes core tables; plant-monitoring passwords are dropped before the DB. Review UI `/sheet-sync`. Spec `docs/superpowers/specs/2026-10-21-manivel-sheet-live-sync-design.md`.
+
 ## Key Tables
 
 - `projects` — 8-status enum, `boi_locked`, `boq_completed`, `actuals_locked`, `ceig_scope`, `estimated_site_expenses_budget`, scope_la/civil/meter, cable brand/model, billing_address, location_map_link, order_date, primary_contact_id

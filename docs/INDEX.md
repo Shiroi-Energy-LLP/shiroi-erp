@@ -8,8 +8,9 @@
 
 ## Specs — design docs (the *what* & *why*)
 
-_54 files in `docs/superpowers/specs/`_
+_55 files in `docs/superpowers/specs/`_
 
+- `2026-10-21` **Manivel Google Sheet ↔ ERP Live Sync — Design** — `2026-10-21-manivel-sheet-live-sync-design.md`
 - `2026-07-30` **Purchase / BOM / Service-Ticket / AMC fixes — design** — **approved (Vivek, 2026-07-30)** · `2026-07-30-purchase-bom-ticket-amc-fixes-design.md`
 - `2026-07-25` **Service Ticket — Done By, create parity, single edit surface** — _om (Service Tickets)_ · `2026-07-25-service-ticket-done-by-and-create-parity-design.md`
 - `2026-07-20` **Purchase Flow — "Bill of Items Manager" Functional Spec (for ERP re-implementat…** — `2026-07-20-purchase-flow-boi-manager-spec.md`
