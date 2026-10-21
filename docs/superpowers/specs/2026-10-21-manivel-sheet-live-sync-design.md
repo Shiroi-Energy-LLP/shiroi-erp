@@ -91,14 +91,26 @@ before the RPC call; `data` keeps only `has_credentials: true|false`.
 2. else exactly one live project whose normalised `COALESCE(project_name, customer_name)` equals it → `exact`.
 3. else unlinked → shown on the review page for a manual link.
 
-## 6. Field ownership (proposed defaults — confirm with Manivel before phase 2)
+## 6. Field ownership — DECIDED 2026-10-21 (Vivek)
 
-| ERP owns (sheet becomes a read-only view in phase 2) | Sheet owns (phase 2 auto-applies into ERP) | Review queue only |
-|---|---|---|
-| contracted value, size, order date, PO/expense costs, receipts | project status*, remarks, task status/notes, service status/notes, activities | Budgets "Actual Cost"/"Project Cost" vs ERP (→ `/reconciliation`) |
+* **Manivel's dashboard sheet wins everything.** The ERP is not the working tool for now; phase 2
+  makes the sheet the source of truth and overwrites the linked ERP fields.
+* **Master project list = dashboard Projects tab (310).** Bill of Items is a subset of it.
+* Phase-2 write-back to the sheet is therefore limited to the `ERP ID` column (no ERP-owned columns).
 
-\* Sheet status values ("Completed", "In Progress", …) need an explicit mapping to the `projects` lifecycle
-enum before auto-apply — phase 2.
+Status map (sheet → `project_status`, verified against all 310 rows — every value maps):
+
+| Sheet | ERP |
+|---|---|
+| Completed | completed |
+| Yet to Start | yet_to_start |
+| In Progress, On Progress | in_progress |
+| Waiting for Net Meter, Waiting for Meter | waiting_net_metering |
+| Holding from client | holding_client |
+| Holding from Shiroi | holding_shiroi |
+| Meter Client Scope | meter_client_scope |
+
+`order_received` has no sheet equivalent; linked projects in that state take the sheet's value.
 
 ## 7. UI — `/sheet-sync` (founder + PM)
 
@@ -119,4 +131,14 @@ error · **Unlinked sheet projects** with a project combobox → manual link · 
 1. Manivel shares both sheets with the service account as **Editor** (BOI is blocked until then).
 2. Which Projects list is master — dashboard (310) or BOI (275)?
 3. OK to append an `ERP ID` column at the far right of each Projects tab (phase 2)?
-4. Confirm §6 field ownership + status mapping.
+4. ~~Confirm §6 field ownership + status mapping~~ — decided 2026-10-21, see §6.
+
+**Status 2026-10-21 (later):**
+- (1) Dashboard sheet: service account is now **Editor** (shared from Vivek's Chrome as svivek.88@gmail.com).
+  **BOI still 403**: it is shared only with vivek@shiroienergy.com / coord@ / manivel@, none of which is
+  signed in to that Chrome. Share it from one of those accounts.
+- (2) Master = dashboard (310); BOI is a subset.
+- Phase-2 rules still to confirm: (a) a blank/₹0 sheet cell does NOT erase an ERP value;
+  (b) the 64 unlinked sheet projects become new ERP projects after the manual-link pass;
+  (c) sheet "Project Cost" → `projects.contracted_value`; "Actual Cost" stays in
+  `project_reconciliation.sheet_actual_cost` (the ERP has no stored actual-cost column).
