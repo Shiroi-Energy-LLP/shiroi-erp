@@ -10,6 +10,7 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ## October 2026
 
+- **[2026-10-21]** feat(projects): sheet-sync phase 2 — Manivel's dashboard sheet now WINS: overwrites linked ERP projects (name/size/status/locality/contract value; blanks never erase), created 64 missing projects, writes ERP ID col back to the sheet; every overwrite in `gsheet_apply_log` → **mig 225** · spec `2026-10-21-manivel-sheet-live-sync-design.md`
 - **[2026-10-21]** feat(projects): Manivel Google Sheet live sync phase 1 (sheet→ERP mirror, dev) — Edge fn `gsheet-sync` + pg_cron */10, field-level change log, auto project links (245/309), `/sheet-sync` review page; BOI sheet awaits Manivel's share → **mig 224** · spec `2026-10-21-manivel-sheet-live-sync-design.md`
 - **[2026-10-21]** docs(finance): read-only Zoho Books audit (GET-only API pull, no writes) — ₹17.4 Cr unapplied receipts, ₹23.8 Cr unadjusted vendor advances (₹22.1 Cr Ritechoice), 18 B2B invoices/₹6.87 Cr without IRN, GST never set off, 0 expenses project-tagged; + accounts-team handbook. → `reviews/2026-10-21-zoho-books-audit.md` · `guides/zoho-books-accounts-guide.md` · finance
 

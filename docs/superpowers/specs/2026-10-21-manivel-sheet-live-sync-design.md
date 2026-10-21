@@ -142,3 +142,14 @@ error · **Unlinked sheet projects** with a project combobox → manual link · 
   (b) the 64 unlinked sheet projects become new ERP projects after the manual-link pass;
   (c) sheet "Project Cost" → `projects.contracted_value`; "Actual Cost" stays in
   `project_reconciliation.sheet_actual_cost` (the ERP has no stored actual-cost column).
+
+## 10. Phase 2 — shipped to dev 2026-10-21 (mig 225)
+
+* `gsheet_apply_projects()` runs after every sync of the master source (`gsheet_sources.apply_projects`).
+  Field map: Project Name → `project_name`; Size → `system_size_kwp`; Status → `status` (§6 map);
+  Location → `site_address_line2`; Budgets Project Cost → `contracted_value`; Years / Project Cost /
+  Actual Cost → `project_reconciliation`. **Remarks is not applied** (it would clobber ERP `notes`).
+* Blank-equivalents ('', Nil, NA, -, 0, ₹0) never overwrite. Every change → `gsheet_apply_log` (old → new).
+* First run: 64 projects created, 231 updated (604 fields), payment follow-up tasks suppressed;
+  second run: 0 changes (idempotent). 310 `ERP ID` cells written to column I of the Projects tab.
+* Still mirror-only: Tasks, Services, Activities, Plant Monitoring, Project details.

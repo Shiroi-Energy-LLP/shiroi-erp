@@ -1,7 +1,10 @@
 /**
  * gsheet-sync Edge Function
  *
- * Manivel's Google Sheets → ERP live mirror (phase 1, read-only toward core tables).
+ * Manivel's Google Sheets → ERP live sync. Phase 1 mirrors + diffs; phase 2 (mig 225)
+ * makes the master sheet WIN: gsheet_apply_projects() overwrites linked ERP projects
+ * and creates missing ones, then the ERP project number is written into the sheet's
+ * far-right "ERP ID" column (the only write to the sheet).
  * Spec: docs/superpowers/specs/2026-10-21-manivel-sheet-live-sync-design.md · mig 224.
  *
  *   For every enabled row in gsheet_sources: read all configured tabs with the
@@ -36,8 +39,10 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 // @ts-expect-error — Deno-style URL import
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-// Phase 1 only reads. Phase 2 (write-back) widens this to .../auth/spreadsheets.
-const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+// Phase 2 writes the ERP ID column back into the master sheet (mig 225).
+const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+// Far-right column in the master Projects tab carrying the ERP project number.
+const ERP_ID_HEADER = 'ERP ID';
 const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
 
 // Row identity per tab (spec §4). A non-blank `ID` column always wins.
@@ -57,12 +62,14 @@ const PROJECT_COLUMNS = ['Project Name', 'Project'];
 // Columns whose value is free text / identity-insensitive in keys are normalised; these stay raw.
 const RAW_KEY_COLUMNS = new Set(['Date', 'Assigned date', 'Amount']);
 // Row-position counters renumber on every insert — mirroring them would log noise updates.
-const IGNORED_COLUMNS = new Set(['S.No', 'No', 'Sl.No', 'S No']);
+const IGNORED_COLUMNS = new Set(['S.No', 'No', 'Sl.No', 'S No', ERP_ID_HEADER]);
 const SECRET_COLUMNS = new Set(['username', 'password', 'user name', 'pass word']);
 
 type Json = Record<string, unknown>;
-interface SourceRow { id: string; spreadsheet_id: string; tabs: string[] }
-interface SnapshotRow { row_key: string; project_key: string | null; sheet_row: number; data: Record<string, string> }
+interface SourceRow { id: string; spreadsheet_id: string; tabs: string[]; apply_projects: boolean }
+interface SnapshotRow {
+  row_key: string; project_key: string | null; sheet_row: number; data: Record<string, string>; erp_ref: string | null;
+}
 interface TabResult { tab: string; ok: boolean; result?: Json; error?: string }
 
 // Mirrors norm() in scripts/reconcile-manivel.ts and gsheet_norm() in mig 224.
@@ -111,8 +118,12 @@ async function getGoogleAccessToken(saJson: string): Promise<string> {
   return body.access_token;
 }
 
-async function sheetsGet(token: string, url: string): Promise<Json> {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+async function sheetsGet(token: string, url: string, init?: { method: string; body: unknown }): Promise<Json> {
+  const res = await fetch(url, {
+    method: init?.method ?? 'GET',
+    headers: { Authorization: `Bearer ${token}`, ...(init ? { 'Content-Type': 'application/json' } : {}) },
+    body: init ? JSON.stringify(init.body) : undefined,
+  });
   const body = await res.json() as Json;
   if (!res.ok) {
     const err = (body.error as { code?: number; message?: string } | undefined);
@@ -138,6 +149,7 @@ function shapeTab(tab: string, values: string[][]): SnapshotRow[] {
   const keyCols = KEY_COLUMNS[tab] ?? [headers.find((h) => h) ?? ''];
   const projectCol = PROJECT_COLUMNS.find((c) => headers.includes(c)) ?? null;
   const hasId = headers.includes('ID');
+  const erpCol = headers.indexOf(ERP_ID_HEADER);
   const dupCount = new Map<string, number>();
   const out: SnapshotRow[] = [];
 
@@ -173,9 +185,67 @@ function shapeTab(tab: string, values: string[][]): SnapshotRow[] {
       project_key: projectCol && data[projectCol] ? norm(data[projectCol]) : null,
       sheet_row: r + 1,
       data,
+      erp_ref: erpCol >= 0 ? ((row[erpCol] ?? '').toString().trim() || null) : null,
     });
   }
   return out;
+}
+
+// ─── ERP ID write-back ──────────────────────────────────────────────────────
+
+function colLetter(index: number): string {
+  let n = index + 1;
+  let out = '';
+  while (n > 0) {
+    const m = (n - 1) % 26;
+    out = String.fromCharCode(65 + m) + out;
+    n = Math.floor((n - 1) / 26);
+  }
+  return out;
+}
+
+/**
+ * Writes each linked project's ERP number into the Projects tab's "ERP ID" column
+ * (created after the last header if missing). Re-reads the tab right before writing
+ * and only writes a cell when that row still holds the same Project Name, so a row
+ * Manivel inserted or moved seconds earlier is never stamped with the wrong number.
+ */
+// deno-lint-ignore no-explicit-any
+async function writeErpIds(supabase: any, token: string, source: SourceRow): Promise<number> {
+  const op = '[writeErpIds]';
+  const { data: targets, error } = await supabase
+    .from('gsheet_erp_id_targets').select('sheet_row, project_name, project_number').eq('source_id', source.id);
+  if (error) throw new Error(`${op} targets: ${error.message}`);
+  if (!targets) throw new Error(`${op} targets returned no data`);
+
+  const fresh = await sheetsGet(token, `${SHEETS_API}/${source.spreadsheet_id}/values/${encodeURIComponent("'Projects'")}?valueRenderOption=FORMATTED_VALUE`);
+  const values = (fresh.values as string[][] | undefined) ?? [];
+  if (!values.length) return 0;
+
+  const headers = values[0].map((h) => (h ?? '').toString().trim());
+  const nameCol = headers.indexOf('Project Name');
+  if (nameCol < 0) throw new Error(`${op} Projects tab has no "Project Name" header`);
+  let erpCol = headers.indexOf(ERP_ID_HEADER);
+  const updates: { range: string; values: string[][] }[] = [];
+  if (erpCol < 0) {
+    erpCol = headers.reduce((last, h, i) => (h ? i : last), -1) + 1;
+    updates.push({ range: `'Projects'!${colLetter(erpCol)}1`, values: [[ERP_ID_HEADER]] });
+  }
+
+  for (const t of targets as { sheet_row: number; project_name: string | null; project_number: string }[]) {
+    const row = values[t.sheet_row - 1];
+    if (!row) continue;
+    if ((row[nameCol] ?? '').toString().trim() !== (t.project_name ?? '').trim()) continue;
+    if ((row[erpCol] ?? '').toString().trim() === t.project_number) continue;
+    updates.push({ range: `'Projects'!${colLetter(erpCol)}${t.sheet_row}`, values: [[t.project_number]] });
+  }
+  if (!updates.length) return 0;
+
+  await sheetsGet(token, `${SHEETS_API}/${source.spreadsheet_id}/values:batchUpdate`, {
+    method: 'POST',
+    body: { valueInputOption: 'RAW', data: updates },
+  });
+  return updates.length;
 }
 
 // ─── Sync ───────────────────────────────────────────────────────────────────
@@ -225,6 +295,27 @@ async function syncSource(supabase: any, token: string, source: SourceRow): Prom
           results.push({ tab, ok: false, error: msg });
         }
       }
+
+      // Master source: the sheet wins — apply to ERP projects, then stamp ERP IDs back into the sheet.
+      const okTabs = new Set(results.filter((r) => r.ok).map((r) => r.tab));
+      if (source.apply_projects && okTabs.has('Projects') && okTabs.has('Budgets')) {
+        try {
+          const { data, error } = await supabase.rpc('gsheet_apply_projects', {
+            p_source: source.id, p_run_id: run.id, p_dry_run: false,
+          });
+          if (error) throw new Error(error.message);
+          if (!data) throw new Error('gsheet_apply_projects returned no data');
+          results.push({ tab: '→ ERP projects', ok: true, result: data as Json });
+
+          const written = await writeErpIds(supabase, token, source);
+          results.push({ tab: '→ sheet ERP ID', ok: true, result: { cells_written: written } });
+        } catch (e) {
+          status = 'partial';
+          const msg = e instanceof Error ? e.message : String(e);
+          console.error(`${op} apply/write-back failed`, { source: source.id, error: msg, timestamp: new Date().toISOString() });
+          results.push({ tab: '→ ERP projects', ok: false, error: msg });
+        }
+      }
     }
   } catch (e) {
     status = 'error';
@@ -255,7 +346,7 @@ async function runSync(onlySource: string | null): Promise<Record<string, TabRes
   const saJson = (Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON') ?? '').trim();
   if (!saJson) throw new Error(`${op} GOOGLE_SERVICE_ACCOUNT_JSON not set`);
 
-  let q = supabase.from('gsheet_sources').select('id, spreadsheet_id, tabs').eq('enabled', true);
+  let q = supabase.from('gsheet_sources').select('id, spreadsheet_id, tabs, apply_projects').eq('enabled', true);
   if (onlySource) q = q.eq('id', onlySource);
   const { data: sources, error } = await q;
   if (error) throw new Error(`${op} load sources: ${error.message}`);

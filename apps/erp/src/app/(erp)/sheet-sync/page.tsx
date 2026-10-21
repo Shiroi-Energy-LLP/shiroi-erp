@@ -9,15 +9,16 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Sheet Sync · Shiroi ERP' };
 
 interface Props {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; logPage?: string }>;
 }
 
 export default async function SheetSyncPage({ searchParams }: Props) {
   await requireRole(['founder', 'project_manager']);
   const params = await searchParams;
   const page = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1);
+  const logPage = Math.max(1, Number.parseInt(params.logPage ?? '1', 10) || 1);
 
-  const [data, projects] = await Promise.all([getSheetSyncData(page), getProjectOptionsForActivities()]);
+  const [data, projects] = await Promise.all([getSheetSyncData(page, logPage), getProjectOptionsForActivities()]);
   const lastRun = data.sources
     .map((s) => s.last_run_at)
     .filter((t): t is string => !!t)
@@ -29,9 +30,10 @@ export default async function SheetSyncPage({ searchParams }: Props) {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Sheet Sync</h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-500">
-          Live mirror of Manivel&apos;s Google Sheets, refreshed every 10 minutes. Every edit he makes in the sheet
-          shows up below as a change. Link sheet projects that weren&apos;t matched automatically. Nothing here
-          modifies ERP projects yet.
+          Live sync with Manivel&apos;s Google Sheets, every 10 minutes. His dashboard sheet is the master: its
+          Projects + Budgets tabs overwrite the linked ERP projects (name, size, status, locality, contract value),
+          missing projects are created, and each project&apos;s ERP number is written into the sheet&apos;s
+          &quot;ERP ID&quot; column. Blank or ₹0 cells never erase ERP values. Every overwrite is logged below.
         </p>
       </div>
 

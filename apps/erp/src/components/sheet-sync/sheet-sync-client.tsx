@@ -206,9 +206,52 @@ export function SheetSyncClient({ data, projects }: { data: SheetSyncData; proje
         )}
         {totalPages > 1 && (
           <div className="flex items-center gap-3 text-sm">
-            {data.page > 1 && <Link className="underline" href={`/sheet-sync?page=${data.page - 1}`}>← Newer</Link>}
+            {data.page > 1 && <Link className="underline" href={`/sheet-sync?page=${data.page - 1}&logPage=${data.logPage}`}>← Newer</Link>}
             <span className="text-slate-500">Page {data.page} of {totalPages}</span>
-            {data.page < totalPages && <Link className="underline" href={`/sheet-sync?page=${data.page + 1}`}>Older →</Link>}
+            {data.page < totalPages && <Link className="underline" href={`/sheet-sync?page=${data.page + 1}&logPage=${data.logPage}`}>Older →</Link>}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-semibold">ERP overwrites from the sheet ({data.overwritesTotal})</h2>
+        <p className="text-sm text-slate-500">What the sync changed in ERP projects — the old value is kept here so any change can be traced or reverted.</p>
+        {data.overwrites.length === 0 ? (
+          <p className="text-sm text-slate-500">No ERP projects have been changed by the sync yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>When</TableHead><TableHead>Project</TableHead><TableHead>Action</TableHead>
+                  <TableHead>Field</TableHead><TableHead>Old → New</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.overwrites.map((o) => (
+                  <TableRow key={o.id}>
+                    <TableCell className="whitespace-nowrap text-xs">{istDateTime(o.applied_at)}</TableCell>
+                    <TableCell className="text-xs">
+                      <Link className="underline" href={`/projects/${o.project_id}`}>{o.projectLabel ?? o.project_id.slice(0, 8)}</Link>
+                    </TableCell>
+                    <TableCell><Badge className={o.action === 'create' ? changeBadge('insert') : changeBadge('update')}>{o.action}</Badge></TableCell>
+                    <TableCell className="text-xs">{o.field ?? '—'}</TableCell>
+                    <TableCell className="max-w-[420px] break-words text-xs">
+                      {o.action === 'create'
+                        ? <span>{o.new_value}</span>
+                        : <><span className="text-slate-500 line-through">{o.old_value || '∅'}</span> → <span>{o.new_value || '∅'}</span></>}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        {Math.ceil(data.overwritesTotal / PAGE_SIZE) > 1 && (
+          <div className="flex items-center gap-3 text-sm">
+            {data.logPage > 1 && <Link className="underline" href={`/sheet-sync?page=${data.page}&logPage=${data.logPage - 1}`}>← Newer</Link>}
+            <span className="text-slate-500">Page {data.logPage} of {Math.ceil(data.overwritesTotal / PAGE_SIZE)}</span>
+            {data.logPage < Math.ceil(data.overwritesTotal / PAGE_SIZE) && <Link className="underline" href={`/sheet-sync?page=${data.page}&logPage=${data.logPage + 1}`}>Older →</Link>}
           </div>
         )}
       </section>

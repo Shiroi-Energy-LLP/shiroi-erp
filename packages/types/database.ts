@@ -4447,6 +4447,64 @@ export type Database = {
           }
         ]
       }
+      gsheet_apply_log: {
+        Row: {
+          action: string
+          applied_at: string
+          field: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          project_id: string
+          run_id: string | null
+          source_id: string
+        }
+        Insert: {
+          action: string
+          applied_at?: string
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          project_id: string
+          run_id?: string | null
+          source_id: string
+        }
+        Update: {
+          action?: string
+          applied_at?: string
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          project_id?: string
+          run_id?: string | null
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsheet_apply_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_apply_log_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sync_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gsheet_apply_log_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sources"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       gsheet_changes: {
         Row: {
           change_type: string
@@ -4645,6 +4703,7 @@ export type Database = {
       }
       gsheet_sources: {
         Row: {
+          apply_projects: boolean
           created_at: string
           enabled: boolean
           id: string
@@ -4656,6 +4715,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          apply_projects?: boolean
           created_at?: string
           enabled?: boolean
           id: string
@@ -4667,6 +4727,7 @@ export type Database = {
           title: string
         }
         Update: {
+          apply_projects?: boolean
           created_at?: string
           enabled?: boolean
           id?: string
@@ -20663,6 +20724,23 @@ export type Database = {
         }
         Relationships: []
       }
+      gsheet_erp_id_targets: {
+        Row: {
+          project_name: string | null
+          project_number: string | null
+          sheet_row: number | null
+          source_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsheet_rows_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "gsheet_sources"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       gsheet_unlinked_projects: {
         Row: {
           location: string | null
@@ -21926,6 +22004,10 @@ export type Database = {
           won_value: number
         }[]
       }
+      gsheet_apply_projects: {
+        Args: { p_dry_run?: boolean; p_run_id: string; p_source: string }
+        Returns: Json
+      }
       gsheet_apply_snapshot: {
         Args: {
           p_rows: Json
@@ -21935,7 +22017,13 @@ export type Database = {
         }
         Returns: Json
       }
+      gsheet_blank: { Args: { p: string }; Returns: boolean }
+      gsheet_map_status: {
+        Args: { p: string }
+        Returns: Database["public"]["Enums"]["project_status"]
+      }
       gsheet_norm: { Args: { p: string }; Returns: string }
+      gsheet_num: { Args: { p: string }; Returns: number }
       gsheet_sync_tick: { Args: never; Returns: undefined }
       haversine_distance_m: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }

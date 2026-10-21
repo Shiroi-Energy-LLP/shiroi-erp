@@ -179,7 +179,7 @@ Drag-and-drop recategorization uses Supabase Storage `.move()` — which is an U
 
 ## Manivel Google Sheet live sync (mig 224)
 
-Edge fn `gsheet-sync` (pg_cron `gsheet-sync` */10 → `gsheet_sync_tick()` → pg_net) reads Manivel's sheets with the `shiroi-migaration@…` service account (Edge secrets `GOOGLE_SERVICE_ACCOUNT_JSON`, `GSHEET_SYNC_SECRET`; Vault `gsheet_sync_url`/`gsheet_sync_secret`) and diffs each tab in SQL (`gsheet_apply_snapshot`) into `gsheet_rows` / `gsheet_changes` / `gsheet_project_links`. Phase 1 never writes core tables; plant-monitoring passwords are dropped before the DB. Review UI `/sheet-sync`. Spec `docs/superpowers/specs/2026-10-21-manivel-sheet-live-sync-design.md`.
+Edge fn `gsheet-sync` (pg_cron `gsheet-sync` */10 → `gsheet_sync_tick()` → pg_net) reads Manivel's sheets with the `shiroi-migaration@…` service account (Edge secrets `GOOGLE_SERVICE_ACCOUNT_JSON`, `GSHEET_SYNC_SECRET`; Vault `gsheet_sync_url`/`gsheet_sync_secret`) and diffs each tab in SQL (`gsheet_apply_snapshot`) into `gsheet_rows` / `gsheet_changes` / `gsheet_project_links`. Phase 2 (mig 225): `gsheet_apply_projects()` makes the master dashboard sheet win — Projects+Budgets overwrite linked `projects` (blank/₹0 never erase), missing projects are created, every overwrite is logged in `gsheet_apply_log`, and the ERP number goes into the sheet's far-right `ERP ID` column (rename-proof link). First bulk apply suppresses `trg_payment_followup` via `shiroi.gsheet_bulk`. Plant-monitoring passwords are dropped before the DB. Review UI `/sheet-sync`. Spec `docs/superpowers/specs/2026-10-21-manivel-sheet-live-sync-design.md`.
 
 ## Key Tables
 

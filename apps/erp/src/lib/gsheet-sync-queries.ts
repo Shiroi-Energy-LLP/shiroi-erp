@@ -11,10 +11,15 @@ type SourceRow = Database['public']['Tables']['gsheet_sources']['Row'];
 type RunRow = Database['public']['Tables']['gsheet_sync_runs']['Row'];
 type ChangeRow = Database['public']['Tables']['gsheet_changes']['Row'];
 type UnlinkedRow = Database['public']['Views']['gsheet_unlinked_projects']['Row'];
+type ApplyLogRow = Database['public']['Tables']['gsheet_apply_log']['Row'];
 
 export const CHANGES_PAGE_SIZE = 50;
 
 export interface SheetSyncChange extends ChangeRow {
+  projectLabel: string | null;
+}
+
+export interface SheetSyncOverwrite extends ApplyLogRow {
   projectLabel: string | null;
 }
 
@@ -28,14 +33,18 @@ export interface SheetSyncData {
   changes: SheetSyncChange[];
   changesTotal: number;
   page: number;
+  overwrites: SheetSyncOverwrite[];
+  overwritesTotal: number;
+  logPage: number;
 }
 
-export async function getSheetSyncData(page: number): Promise<SheetSyncData> {
+export async function getSheetSyncData(page: number, logPage: number): Promise<SheetSyncData> {
   const op = '[getSheetSyncData]';
   const supabase = await createClient();
   const from = (page - 1) * CHANGES_PAGE_SIZE;
+  const logFrom = (logPage - 1) * CHANGES_PAGE_SIZE;
 
-  const [srcRes, runRes, rowsRes, pendingRes, linkedRes, unlinkedRes, changesRes] = await Promise.all([
+  const [srcRes, runRes, rowsRes, pendingRes, linkedRes, unlinkedRes, changesRes, logRes] = await Promise.all([
     supabase.from('gsheet_sources').select('*').order('id'),
     supabase.from('gsheet_sync_runs').select('*').order('started_at', { ascending: false }).range(0, 9),
     supabase.from('gsheet_rows').select('row_key', { count: 'estimated', head: true }).is('removed_at', null),
@@ -44,15 +53,19 @@ export async function getSheetSyncData(page: number): Promise<SheetSyncData> {
     supabase.from('gsheet_unlinked_projects').select('*').order('project_name').range(0, 999),
     supabase.from('gsheet_changes').select('*', { count: 'estimated' })
       .order('detected_at', { ascending: false }).range(from, from + CHANGES_PAGE_SIZE - 1),
+    supabase.from('gsheet_apply_log').select('*', { count: 'estimated' })
+      .order('applied_at', { ascending: false }).range(logFrom, logFrom + CHANGES_PAGE_SIZE - 1),
   ]);
 
   for (const [name, res] of [['sources', srcRes], ['runs', runRes], ['rows', rowsRes], ['pending', pendingRes],
-    ['linked', linkedRes], ['unlinked', unlinkedRes], ['changes', changesRes]] as const) {
+    ['linked', linkedRes], ['unlinked', unlinkedRes], ['changes', changesRes], ['apply log', logRes]] as const) {
     if (res.error) console.error(`${op} ${name} query failed`, { code: res.error.code, message: res.error.message });
   }
 
   const changes = changesRes.data ?? [];
-  const projectIds = [...new Set(changes.map((c) => c.project_id).filter((id): id is string => !!id))];
+  const overwrites = logRes.data ?? [];
+  const projectIds = [...new Set([...changes.map((c) => c.project_id), ...overwrites.map((o) => o.project_id)]
+    .filter((id): id is string => !!id))];
   const labels = new Map<string, string>();
   if (projectIds.length) {
     const { data: projects, error } = await supabase
@@ -73,5 +86,8 @@ export async function getSheetSyncData(page: number): Promise<SheetSyncData> {
     changes: changes.map((c) => ({ ...c, projectLabel: c.project_id ? labels.get(c.project_id) ?? null : null })),
     changesTotal: changesRes.count ?? 0,
     page,
+    overwrites: overwrites.map((o) => ({ ...o, projectLabel: labels.get(o.project_id) ?? null })),
+    overwritesTotal: logRes.count ?? 0,
+    logPage,
   };
 }
