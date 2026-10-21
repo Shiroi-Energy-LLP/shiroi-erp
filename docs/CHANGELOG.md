@@ -8,6 +8,10 @@ Format: `[YYYY-MM-DD] <headline> → <migration(s) if any> · <spec if any> · <
 
 ---
 
+## October 2026
+
+- **[2026-10-21]** docs(finance): read-only Zoho Books audit (GET-only API pull, no writes) — ₹17.4 Cr unapplied receipts, ₹23.8 Cr unadjusted vendor advances (₹22.1 Cr Ritechoice), 18 B2B invoices/₹6.87 Cr without IRN, GST never set off, 0 expenses project-tagged; + accounts-team handbook. → `reviews/2026-10-21-zoho-books-audit.md` · `guides/zoho-books-accounts-guide.md` · finance
+
 ## September 2026
 
 - **[2026-09-26]** fix(infra): dev DB froze 08:41–13:30 IST (ACTIVE_HEALTHY but unreachable; inverter-poll 522s were a symptom). Restarted; **mig 223** drops mig 222's keep-warm cron (PostgREST timeout errors ~9× since 09-07). Cold-pool latency returns. → `reviews/2026-09-26-dev-db-freeze-keep-warm.md` · infra
